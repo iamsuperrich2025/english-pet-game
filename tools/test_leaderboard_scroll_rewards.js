@@ -17,6 +17,9 @@ assert(ui.includes('class="lbf-scroll"') && ui.includes('aria-label="เลื�
 assert(/\.lbf-scroll\{[^}]*overflow-y:auto;[^}]*overflow-x:hidden;/s.test(lobbyCss), "leaderboard must allow only vertical scrolling");
 assert(/\.lbf-scroll::-webkit-scrollbar\{[^}]*display:none/s.test(lobbyCss), "leaderboard scrollbar must be hidden");
 
+assert(ui.includes("const LB_TP_DISPLAY = 100;"), "typing full leaderboard must use the same display limit as coins");
+assert(/if\(tab === 'tp'\)[\s\S]*?slice\(0, LB_TP_DISPLAY\)/.test(ui), "typing rank rows must include players below the prize Top 10");
+
 const doubled = [20000,18000,16000,14000,12000,10000,8000,6000,4000,2000];
 const m = tp.match(/prizes:\s*\[([^\]]+)\]/);
 assert(m, "typing award needs a custom prize table");

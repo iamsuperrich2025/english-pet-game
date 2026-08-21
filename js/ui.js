@@ -1569,7 +1569,8 @@ const LB_ASSET_TOP = 100;                              // 🏆 ทรัพย�
 const LB_ONLINE_TOP = 100;                             // 🌐 เหรียญออนไลน์สะสมตลอดกาล Top 100 · รางวัลเฉพาะ Top 10
 const LB_WS_TOP = 10;                                  // 🔎 แท็บค้นหาคำโชว์ Top 10 all time (ตามที่ผู้ใช้สั่ง)
 const LB_PM_TOP = 10;                                  // 🖼️ แท็บจับคู่ภาพโชว์ Top 10 all time (เรตเดียวกัน)
-const LB_TP_TOP = 10;                                  // ⌨️ แท็บพิมพ์คำโชว์ Top 10 all time (เรตเดียวกัน)
+const LB_TP_TOP = 10;                                  // ⌨️ Top 10 ที่ได้รับรางวัลรายเดือน
+const LB_TP_DISPLAY = 100;                             // ⌨️ กระดานเต็มจอโชว์อันดับที่เหลือทั้งหมดเหมือนหมวดเหรียญ
 const LB_BB_TOP = 10;                                  // 🫧 แท็บฟองโชว์ Top 10 all time
 const LB_SG_TOP = 10;                                  // 🎯 แท็บยิงเป้าคำโชว์ Top 10 all time (เรตเดียวกัน)
 let lbTab = 'coins';                                   // แท็บกระดานที่เปิดอยู่
@@ -1787,7 +1788,7 @@ function lbRankRows(tab){
   if(tab === 'tp'){   // ⌨️ รอบ 649-650: เกมพิมพ์คำ — จัดอันดับด้วย "จำนวนคำ" (tw) · โชว์เหรียญสะสม (tp) คู่กัน
     const map = {}; (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g, tw:r.tw||0, tp:r.tp||0}; });
     if(includeMe) map[myId] = {id:myId, n:meName, g:meG, tw:Math.round(state.tpWords||0), tp:Math.round(state.tpScore||0)};
-    const rows = Object.values(map).filter(r=>r.tw > 0).sort((a,b)=> (b.tw - a.tw) || (b.tp - a.tp)).slice(0, LB_TP_TOP);
+    const rows = Object.values(map).filter(r=>r.tw > 0).sort((a,b)=> (b.tw - a.tw) || (b.tp - a.tp)).slice(0, LB_TP_DISPLAY);
     return rows.map((r,i)=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n,
       sc:`⌨️ ${fmtNum(r.tw)} คำ<span class="sc-sub"> · ${fmtNum(r.tp)} เหรียญ</span>`, val:r.tw,
       pz:(typeof TpAward !== 'undefined') ? TpAward.prizeFor(i+1) : 0, me:r.id===myId}));
@@ -2117,7 +2118,7 @@ function openLeaderboardFull(){
       return;
     }
 
-    const cap = __lbfTab === 'assets' ? LB_ASSET_TOP : __lbfTab === 'online' ? LB_ONLINE_TOP : __lbfTab === 'ws' ? LB_WS_TOP : __lbfTab === 'pm' ? LB_PM_TOP : __lbfTab === 'tp' ? LB_TP_TOP : __lbfTab === 'bb' ? LB_BB_TOP : __lbfTab === 'sg' ? LB_SG_TOP : 100;
+    const cap = __lbfTab === 'assets' ? LB_ASSET_TOP : __lbfTab === 'online' ? LB_ONLINE_TOP : __lbfTab === 'ws' ? LB_WS_TOP : __lbfTab === 'pm' ? LB_PM_TOP : __lbfTab === 'tp' ? LB_TP_DISPLAY : __lbfTab === 'bb' ? LB_BB_TOP : __lbfTab === 'sg' ? LB_SG_TOP : 100;
     const all = lbRankRows(__lbfTab).slice(0, cap);
     const top = all.slice(0, 5);          // 🏆 โพเดียม (ตัวละครยืนลดหลั่น)
     const rest = all.slice(5);            // ที่เหลือ → กริด 5 คอลัมน์เหมือนเดิม
