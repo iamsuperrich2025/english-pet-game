@@ -49,7 +49,9 @@ LAZY_MANIFESTS = (
 # ไฟล์ที่ tools/build_web.mjs อ่านโดยตรงเพื่อสร้าง immutable alias จึงต้องอยู่ใน git HEAD
 # ไม่ใช่แค่มีใน working tree มิฉะนั้น local build ผ่าน แต่ staged deploy จาก git archive จะพัง
 REQUIRED_BUILD_ASSETS = (
-    ("tools/build_web.mjs", "img/f1/cockpit_body_realistic.png"),
+    ("tools/build_web.mjs", "img/f1/cockpit_turn_center.webp"),
+    ("tools/build_web.mjs", "img/f1/cockpit_turn_left.webp"),
+    ("tools/build_web.mjs", "img/f1/cockpit_turn_right.webp"),
     ("tools/build_web.mjs", "img/f1/peer_car_25d.webp"),
 )
 

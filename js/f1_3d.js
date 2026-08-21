@@ -49,7 +49,7 @@ const ROAD_FOV  = 74;
 /* ⏪🏜️🛞 รอบ 911 — เกียร์ถอย + เกิดใหม่เมื่อหลุดสนาม + ล้อหน้ามุมคนขับ */
 const REV_A      = 7;    // ⏪ อัตราเร่งถอยหลัง (m/s²)
 const REV_MAX    = 8;    // ความเร็วถอยสูงสุด (m/s ≈ 29 กม./ชม.)
-const OFFTRACK_S = 2;    // 🏜️ อยู่บนทรายต่อเนื่องกี่วิ = เกิดใหม่บนแทร็กบริเวณนั้น
+const OFFTRACK_S = 2;    // 🌀 อยู่พ้นผิวถนน (runoff/ทราย) ต่อเนื่องกี่วิ = เปิดประตูมิติกลับจุดใกล้เดิม
 const FPW_F      = 1.35; // 🛞 ล้อหน้ามุมคนขับ: เยื้องไปหน้ารถ (ม.) — 1.35 ให้ล้อฉาย ~44° โผล่ช่องโปร่งริมจอ (1.58 จะโดนแขนคาร์บอนของภาพบังมิด)
 const FPW_S      = 0.87; //    เยื้องข้าง (ม.)
 const FPW_R      = 0.34; //    รัศมีล้อ (ม.)
@@ -65,6 +65,7 @@ const WHEEL_HUB_X  = 49.41;  // แกนหมุน (ปุ่มกลมก�
 const WHEEL_HUB_Y  = 63.96;  // ⚠️ แก้ภาพใหม่เมื่อไหร่ ต้องเอาค่า hub pct จากสคริปต์มาใส่ตรงนี้ด้วย
 const WHEEL_RATIO  = 2.2;    // อัตราทด: มุมล้อหน้าจริง (องศา) → องศาที่หมุนบนภาพ (สุดพวงมาลัย ~43°)
 const WHEEL_MAX_DEG= 44;     // เพดานองศา — เกินกว่านี้ภาพถ่ายมุมเดียวเริ่มดูบิดผิดรูป
+const QUALITY_HAND_MAX_DEG=14; // มุมที่วัดได้จากขอบจอในภาพมือซ้าย/ขวา; จอสดต้องเอียงตรงเฟรมมือ
 /* 🚥 รอบ 918: แถบไฟ LED รอบเครื่องบนพวงมาลัย — ไฟในภาพถูก "ดับ" ไว้แล้วที่ img/f1/wheel_body.webp
    เกมวาดดวงไฟจริงทับตรงตำแหน่งเดิมของภาพ (ตำแหน่งเป็น % เจนจาก tools/f1_split_leds.py)
    ⚠️ เปลี่ยนภาพพวงมาลัยใหม่ = รันสคริปต์นั้นใหม่ แล้วเอาอาร์เรย์ F1_LEDS มาแทนของเดิม */
@@ -143,7 +144,7 @@ const PIT_LIMIT    = 22.2;    // จำกัดความเร็วใน�
 let built=false, running=false, rafId=0, lastT=0;
 let scene, camera, renderer;
 let envLights=null, activeGraphicsMode='battery', activeEnvironmentProfile=null;
-let realisticRoot=null, realisticTier='off', realisticStats=null;
+let realisticRoot=null, legacyArchitectureRoot=null, realisticTier='off', realisticStats=null;
 let wrapEl, screenEl, hudEl, wordEl, coinsEl, banEl, introEl, exitBox, boardEl, chatBarEl, selfMsgEl;
 let speedEl, gearEl, lapEl, bestEl, mapCv, mapCtx, mapBase=null, wrongEl, drsEl;
 let knobEl, padThr=0, padBr=false, steerCtl=0, kL=false, kR=false, kThr=false, kBack=false;
@@ -151,8 +152,8 @@ let keydownFn, keyupFn, resizeFn;
 /* รถเรา */
 let px=0, pz=0, yaw=0, vx=0, vz=0, spd=0, steer=0, slide=0, carGrp=null, wheels=[], steerParts=[];
 let camPos=null, camInit=false, camYaw=0, shakeT=0;
-let camMode='cockpit', cockpitEl=null, camBtnEl=null;   // 🪖 รอบ 901 — มุมคนขับเป็นภาพหลัก
-let padRev=false, revNow=false, sandT=0, respEl=null, fpWheels=null;   // ⏪🏜️🛞 รอบ 911
+let camMode='cockpit', cockpitEl=null, cockpitTurnEl=null, cockpitTurnSrc='', camBtnEl=null;   // 🪖 รอบ 901 — มุมคนขับเป็นภาพหลัก
+let padRev=false, revNow=false, sandT=0, respEl=null, portalEl=null, portalActive=false, portalT=0, portalJumped=false, portalTargetIdx=0, fpWheels=null;   // ⏪🏜️🛞 รอบ 911
 let wheelEl=null, qualityWheelEl=null, wheelDeg=null, wheelSy=1; // 🎡 ชั้นพวงมาลัยแยก: Battery image + Quality procedural wheel
 let ledsEl=null, ledEls=[], ledN=-1, ledRpm=0, ledFlashT=0, ledFlash=false;  // 🚥 รอบ 918 — ชั้นดวงไฟ LED รอบเครื่อง
 let dashEl=null, dashCtx=null, dashK=1, dashRpm=0, dashSig='';   // 🔢 รอบ 916 — จอตัวเลขจริงบนพวงมาลัย (K = พิกเซลภาพ→พิกเซล canvas)
@@ -808,6 +809,12 @@ function linePose(obj,line,i,lat,y){
   obj.rotation.set(0,Math.atan2(line.tx[i],line.tz[i]),0);
   obj.scale.set(1,1,1); obj.updateMatrix();
 }
+/* อาคาร skyline วางห่างจากแทร็กจุดต้นทาง แต่สนามวนกลับมาใกล้กันได้: ตรวจซ้ำกับ
+   เส้นแทร็ก "ทุกช่วง" ก่อนสร้าง กันกล่องเมืองไปตกบนถนนอีกฝั่งของสนาม */
+function tracksideSpotClear(i,lat,clearance){
+  const x=LINE.x[i]+LINE.nx[i]*lat,z=LINE.z[i]+LINE.nz[i]*lat;
+  return Math.abs(surfAt(x,z).lat)>HALF_W+RUNOFF_W+clearance;
+}
 function instancedFromSpots(geo,mat,spots,place){
   const mesh=new THREE.InstancedMesh(geo,mat,spots.length), d=new THREE.Object3D();
   spots.forEach((spot,i)=>{place(d,spot,i);d.updateMatrix();mesh.setMatrixAt(i,d.matrix);});
@@ -822,7 +829,7 @@ function buildRealisticCircuit(tier){
       ?{barStep:4,fenceStep:8,lightStep:14,boards:32,stands:5,city:54,pit:10}
       :{barStep:6,fenceStep:12,lightStep:18,boards:20,stands:3,city:30,pit:7};
   const stats={tier,instances:0,meshGroups:0,barriers:0,fencePosts:0,lightPoles:0,boards:0,
-    grandstands:cfg.stands,city:cfg.city,pitBays:PITL?cfg.pit:0,bridges:tier==='low'?1:3,marshalPosts:8};
+    grandstands:cfg.stands,city:0,culledRoadCity:0,pitBays:PITL?cfg.pit:0,bridges:tier==='low'?1:3,marshalPosts:8};
 
   /* ผิวแทร็กคุณภาพสูงทับผิวเดิมเฉพาะโหมดนี้: micro variation + roughness + racing groove */
   const roadMat=new THREE.MeshStandardMaterial({map:realisticAsphaltTex(),color:0x8f949c,roughness:.86,metalness:.025});
@@ -987,9 +994,16 @@ function buildRealisticCircuit(tier){
   root.add(instancedFromSpots(new THREE.BoxGeometry(3.4,3.1,4.2),new THREE.MeshLambertMaterial({color:0xf07822}),marshalSpots,
     (d,s)=>linePose(d,LINE,s.i,s.side*(barrierOff+4.2),1.55)));
   const rnd=seededRand(2511), citySpots=[];
-  for(let n=0;n<cfg.city;n++) citySpots.push({i:(n*Math.floor(LINE.n/cfg.city)+13)%LINE.n,side:n%2?1:-1,h:8+rnd()*28,off:95+rnd()*145});
+  for(let n=0;n<cfg.city;n++){
+    const s={i:(n*Math.floor(LINE.n/cfg.city)+13)%LINE.n,side:n%2?1:-1,
+      h:8+rnd()*28,off:95+rnd()*145,w:12+rnd()*18,d:10+rnd()*22};
+    const radius=Math.hypot(s.w,s.d)*.5+3;
+    if(tracksideSpotClear(s.i,s.side*s.off,radius)) citySpots.push(s);
+    else stats.culledRoadCity++;
+  }
+  stats.city=citySpots.length;
   const city=instancedFromSpots(new THREE.BoxGeometry(1,1,1),new THREE.MeshLambertMaterial({color:0x17283a}),citySpots,(d,s)=>{
-    linePose(d,LINE,s.i,s.side*s.off,s.h/2); d.scale.set(12+rnd()*18,s.h,10+rnd()*22);
+    linePose(d,LINE,s.i,s.side*s.off,s.h/2); d.scale.set(s.w,s.h,s.d);
   });
   root.add(city); stats.instances+=bridgeSpots.length+marshalSpots.length+citySpots.length; stats.meshGroups+=3;
 
@@ -1146,7 +1160,9 @@ function buildTrackScene(){
     geo.setIndex(idx); geo.computeVertexNormals();
     scene.add(new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:0x4a4e55})));
   }
-  scene.add(buildBuildings());
+  legacyArchitectureRoot=buildBuildings();
+  legacyArchitectureRoot.name='F1_LEGACY_OSM_ARCHITECTURE';
+  scene.add(legacyArchitectureRoot);
 }
 
 /* ============================================================
@@ -1272,17 +1288,22 @@ const CSS=`
   background:url('img/f1/cockpit_body.webp') center bottom/cover no-repeat}   /* bottom -8% = จมูกรถจมลงใต้จอ เปิดมุมมองแทร็กกว้างขึ้น */
 #f1-wrap.fp #f1-cockpit{display:block}
 /* Realistic Circuit ต้องเห็น halo/จมูก/พวงมาลัย แต่ไม่ให้ภาพค็อกพิทปิดถนนเกือบทั้งจอ */
-#f1-wrap.realistic.fp #f1-cockpit{inset:0;background-image:url('img/f1/cockpit_body_realistic.png?v=4');
+#f1-wrap.realistic.fp #f1-cockpit{inset:0;background-image:url('img/f1/cockpit_turn_center.webp');
   background-size:100% auto;background-position:center calc(100% + 1vh)}
 /* Realistic uses one coherent helmet-eye plate. The legacy 1536x1024 wheel layers
    belong to Battery Saver and would otherwise create a second, misaligned photo. */
-#f1-wrap.realistic.fp #f1-wheel,#f1-wrap.realistic.fp #f1-leds{display:none!important}
+#f1-wrap.realistic.fp #f1-wheel,#f1-wrap.realistic.fp #f1-leds,#f1-wrap.realistic.fp #f1-quality-wheel{display:none!important}
+/* ภาพเลี้ยวทับเฉพาะตอนมีมุมพวงมาลัย: car/halo เหมือนเฟรมกลางและ opacity ไล่ตาม steer
+   ทำให้มือทั้งสองข้างหมุนตามจริงโดยใช้เพียง overlay เดียวบนมือถือ */
+#f1-cockpit-turn{display:none!important;left:0!important;right:0;top:auto!important;bottom:-1vh;width:100%;height:auto;
+  z-index:0;opacity:0;transform:none!important;will-change:opacity}
+#f1-wrap.realistic.fp #f1-cockpit-turn{display:block!important}
 /* Quality cockpit ใช้พวงมาลัยแยกชั้นแบบ procedural — บังพวงมาลัยที่ติดตายใน plate และหมุนตามฟิสิกส์จริง */
 #f1-quality-wheel{position:absolute;left:40.1vw;bottom:-1.5vh;width:19.8vw;height:17.5vw;z-index:1;display:none;
   transform-origin:50% 62%;will-change:transform;clip-path:polygon(15% 10%,85% 10%,100% 34%,92% 92%,68% 100%,32% 100%,8% 92%,0 34%);
   background:linear-gradient(145deg,#657281 0 3%,#111923 4% 13%,#05080d 14% 82%,#25313d 83% 94%,#8794a0 95% 100%);
   box-shadow:0 0 0 2px rgba(199,224,242,.52),0 0 20px rgba(0,0,0,.95),inset 0 0 0 8px #05070a}
-#f1-wrap.realistic.fp #f1-quality-wheel{display:block}
+#f1-wrap.realistic.fp #f1-quality-wheel{display:none}
 #f1-quality-wheel:before{content:'';position:absolute;inset:13% 16% 17%;clip-path:polygon(8% 0,92% 0,100% 30%,88% 100%,12% 100%,0 30%);
   background:linear-gradient(180deg,#1d2b37,#03070b 48%,#121b24);box-shadow:inset 0 0 0 2px rgba(103,216,255,.32)}
 #f1-quality-wheel:after{content:'VOCAB GP';position:absolute;left:28%;right:28%;top:11%;height:9%;border-radius:999px;
@@ -1350,6 +1371,30 @@ const CSS=`
 /* 🏜️ รอบ 911: ป้ายเกิดใหม่หลังหลุดสนาม */
 #f1-resp{position:absolute;top:42%;left:50%;transform:translateX(-50%);background:rgba(18,168,84,.92);color:#fff;
   font-weight:900;font-size:20px;border-radius:12px;padding:8px 18px;display:none;z-index:7}
+/* 🌀 หลุดแนวถนน → ประตูมิติแบบ procedural (ไม่มีภาพเต็มจอเพิ่ม): วงแหวน/ประกายใช้ CSS GPU layer */
+#f1-portal{position:absolute;inset:0;z-index:6;pointer-events:none;overflow:hidden;opacity:0;
+  background:radial-gradient(ellipse at 50% 44%,rgba(130,35,255,.18),rgba(5,2,18,0) 58%);transition:opacity .16s}
+#f1-portal .gate{position:absolute;left:50%;top:44%;width:min(69vw,760px);height:min(59vh,470px);border-radius:50%;
+  transform:translate(-50%,-50%) scale(.08);opacity:0;border:clamp(6px,1.2vw,15px) solid rgba(228,178,255,.94);
+  box-shadow:0 0 12px #fff,0 0 34px #d83cff,0 0 76px #792cff,inset 0 0 26px #cc48ff;
+  transition:transform .62s cubic-bezier(.18,.85,.25,1.2),opacity .16s;will-change:transform,opacity}
+#f1-portal .gate:before,#f1-portal .gate:after{content:'';position:absolute;inset:-8%;border-radius:50%;border:4px dashed #ff70f2;
+  box-shadow:0 0 22px #b52cff;animation:f1portalpulse .58s ease-in-out infinite alternate}
+#f1-portal .gate:after{inset:5%;border-color:#58bfff;animation-delay:-.29s;animation-duration:.74s}
+#f1-portal .core{position:absolute;inset:5%;border-radius:50%;background:radial-gradient(ellipse,rgba(14,8,45,.02) 34%,rgba(161,42,255,.16) 64%,rgba(255,112,244,.42));
+  box-shadow:inset 0 0 55px rgba(117,55,255,.8)}
+#f1-portal .sparks{position:absolute;inset:-14%}
+#f1-portal .sparks i{--a:0deg;position:absolute;left:50%;top:50%;width:clamp(4px,.65vw,9px);height:clamp(18px,3.5vw,52px);
+  border-radius:99px;background:linear-gradient(#fff,#ff55ed,transparent);transform-origin:50% 0;
+  transform:rotate(var(--a)) translateY(-38vh);filter:drop-shadow(0 0 6px #d94dff);animation:f1portalspark .7s ease-in infinite}
+#f1-portal .sparks i:nth-child(2){--a:40deg;animation-delay:-.1s}#f1-portal .sparks i:nth-child(3){--a:80deg;animation-delay:-.35s}
+#f1-portal .sparks i:nth-child(4){--a:120deg;animation-delay:-.2s}#f1-portal .sparks i:nth-child(5){--a:160deg;animation-delay:-.5s}
+#f1-portal .sparks i:nth-child(6){--a:200deg;animation-delay:-.28s}#f1-portal .sparks i:nth-child(7){--a:240deg;animation-delay:-.42s}
+#f1-portal .sparks i:nth-child(8){--a:280deg;animation-delay:-.18s}#f1-portal .sparks i:nth-child(9){--a:320deg;animation-delay:-.6s}
+#f1-portal.on{opacity:1}#f1-portal.on .gate{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#f1-portal.jump{opacity:1;background:rgba(245,225,255,.88)}#f1-portal.jump .gate{opacity:0;transform:translate(-50%,-50%) scale(1.28)}
+@keyframes f1portalpulse{from{opacity:.38;transform:scale(.96)}to{opacity:1;transform:scale(1.035)}}
+@keyframes f1portalspark{0%{opacity:0;scale:.2}32%{opacity:1}100%{opacity:0;scale:1.35}}
 /* 🪽 ป้าย DRS (รอบ 898) — ซ่อนตอนไม่อยู่ในโซน · เทาตอนยังเปิดไม่ได้ · เขียวเรืองตอนเปิด */
 #f1-drs{position:absolute;right:10px;bottom:calc(var(--f1-pedb) + 150px);z-index:6;pointer-events:none;display:none;text-align:right;
   border-radius:12px;padding:4px 11px;font-weight:900;font-size:19px;line-height:1.15;letter-spacing:.5px}
@@ -1534,6 +1579,7 @@ function buildDom(){
     <canvas id="f1-cv"></canvas>
     <div id="f1-cockpit"><img id="f1-wheel" alt=""><div id="f1-leds"></div>
       <div id="f1-quality-wheel" aria-hidden="true"><i class="qw-grip l"></i><i class="qw-grip r"></i><i class="qw-led"></i></div>
+      <img id="f1-cockpit-turn" alt="" aria-hidden="true">
       <canvas id="f1-dash"></canvas></div>
     <div id="f1-word"></div>
     <div id="f1-laps"></div>
@@ -1549,7 +1595,8 @@ function buildDom(){
     <div id="f1-lights"><div class="row"><i></i><i></i><i></i><i></i><i></i></div><b>🚦 รอไฟดับก่อนออกตัว</b></div>
     <div id="f1-gap"></div>
     <div id="f1-wrong">↩️ วิ่งผิดทาง! กลับรถ</div>
-    <div id="f1-resp">🏁 กลับเข้าแทร็ก!</div>
+    <div id="f1-portal" aria-hidden="true"><div class="gate"><div class="core"></div><div class="sparks"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+    <div id="f1-resp">🌀 กลับเข้าเส้นทางแล้ว!</div>
     <div id="f1-ban"></div>
     <div id="f1-selfmsg"></div>
     <button id="f1-chatbtn">💬</button>
@@ -1614,6 +1661,7 @@ function buildDom(){
   lapEl=wrapEl.querySelector('#f1-laps');
   wrongEl=wrapEl.querySelector('#f1-wrong');
   respEl=wrapEl.querySelector('#f1-resp');   // 🏜️ รอบ 911
+  portalEl=wrapEl.querySelector('#f1-portal');
   drsEl=wrapEl.querySelector('#f1-drs');
   knobEl=wrapEl.querySelector('#f1-knob');
   /* 🚦👻 รอบ 902 */
@@ -1631,6 +1679,7 @@ function buildDom(){
   wrapEl.querySelector('#f1-leave').addEventListener('click',exitWorld);
   /* 🪖 รอบ 901: ปุ่มสลับมุมมอง คนขับ ↔ เห็นรถทั้งคัน */
   cockpitEl=wrapEl.querySelector('#f1-cockpit');
+  cockpitTurnEl=wrapEl.querySelector('#f1-cockpit-turn');
   qualityWheelEl=wrapEl.querySelector('#f1-quality-wheel');
   camBtnEl=wrapEl.querySelector('#f1-cambtn');
   /* 🎡 รอบ 913: ชั้นพวงมาลัย — โหลดไม่ได้ = ถอยไปใช้ภาพเดิมที่มีพวงมาลัยติดมาในตัว (ไม่ให้เหลือค็อกพิทไม่มีพวงมาลัย) */
@@ -1644,6 +1693,8 @@ function buildDom(){
   wheelEl.addEventListener('load',layoutWheel);
   buildLeds();                         // 🚥 รอบ 918 — สร้างดวงไฟก่อนโหลดภาพ
   wheelEl.src='img/f1/wheel_body.webp';   // 🚥 รอบ 918 — ภาพที่ไฟดับหมด (ไฟจริงเกมวาดเอง)
+  /* เฟรมเลี้ยวโหลดล่วงหน้า 2 ภาพเท่านั้น; เฟรมกลางเป็น background WebP เบา */
+  for(const src of ['img/f1/cockpit_turn_left.webp','img/f1/cockpit_turn_right.webp']){ const im=new Image();im.src=src; }
   /* 🔢 รอบ 916: จอตัวเลขจริงบนพวงมาลัย — เครื่องที่ไม่มี canvas 2d ก็ปล่อยจอในภาพไปตามเดิม ไม่ให้ทั้งโลกพัง */
   dashEl=wrapEl.querySelector('#f1-dash');
   dashCtx=(dashEl&&dashEl.getContext)?dashEl.getContext('2d'):null;
@@ -2013,17 +2064,41 @@ function drsHud(){
 /* ============================================================
    🏁 ฟิสิกส์ + จับเวลา
    ============================================================ */
-/* 🏜️ รอบ 911: เกิดใหม่บนแทร็ก ณ จุดใกล้ที่หลุดออกไป — หันตามทิศแข่ง ความเร็ว 0 */
-function respawnOnTrack(){
+/* 🌀 กลับบนแทร็ก ณ จุดใกล้ที่หลุดออกไป — ใช้หลังแสงวาร์ปบังภาพแล้ว */
+function respawnOnTrack(targetIdx,showMessage=true){
   sandT=0;
-  const i=nearIdx(px,pz,myIdx);
+  const i=Number.isInteger(targetIdx)?targetIdx:nearIdx(px,pz,myIdx);
   px=LINE.x[i]; pz=LINE.z[i];
   yaw=Math.atan2(LINE.tx[i],LINE.tz[i]);
   vx=vz=0; spd=0; steer=0; slide=0; myIdx=i; camInit=false;
-  if(respEl){
+  if(showMessage&&respEl){
     respEl.style.display='block';
     clearTimeout(respawnOnTrack._tm);
     respawnOnTrack._tm=setTimeout(()=>{respEl.style.display='none';},1500);
+  }
+}
+function beginPortalReturn(){
+  if(portalActive) return;
+  portalActive=true; portalT=0; portalJumped=false; sandT=0;
+  portalTargetIdx=nearIdx(px,pz,myIdx);
+  vx*=.22; vz*=.22; spd=Math.hypot(vx,vz);
+  if(portalEl) portalEl.className='on';
+  if(state.haptic!==false&&navigator.vibrate) navigator.vibrate([45,35,90]);
+}
+function portalTick(dt){
+  portalT+=dt;
+  vx*=Math.pow(.025,dt); vz*=Math.pow(.025,dt); spd=Math.hypot(vx,vz);
+  if(!portalJumped&&portalT>=.68){
+    portalJumped=true;
+    respawnOnTrack(portalTargetIdx,false);
+    if(portalEl) portalEl.className='on jump';
+  }
+  if(carGrp){carGrp.position.set(px,0,pz);carGrp.rotation.y=yaw;}
+  if(portalT>=1.16){
+    portalActive=false; portalT=0;
+    if(portalEl) portalEl.className='';
+    if(respEl){respEl.style.display='block';clearTimeout(respawnOnTrack._tm);
+      respawnOnTrack._tm=setTimeout(()=>{respEl.style.display='none';},1250);}
   }
 }
 function barrierBounce(){
@@ -2043,6 +2118,8 @@ function barrierBounce(){
   return true;
 }
 function physTick(dt){
+  /* วาร์ปกำลังทำงาน: ล็อกแรงขับ/การเก็บรอบชั่วคราว แล้วปล่อยกลับหลังจบแสง */
+  if(portalActive){portalTick(dt);return;}
   /* 🚦 รอบ 902: ก่อนไฟดับ คันเร่งไม่ทำงาน (เบรก/พวงมาลัยยังได้ — เร่งเครื่องรอได้ตามปกติ) */
   const thr=lightsLocked()?0:clamp(padThr+(kThr?1:0),0,1);
   const braking=padBr||kBack;
@@ -2133,9 +2210,9 @@ function physTick(dt){
   if((slide>0.35&&spd>14)||surf==='sand'&&spd>6) puffSmoke(surf==='sand');
   const audioThr=clamp(padThr+(kThr?1:0),0,1);     // ให้เร่งเครื่องรอไฟสตาร์ทได้ โดยไม่ส่งแรงไปที่ล้อ
   Snd.tick(spd,audioThr,slide>0.4&&spd>12,dt,drsOn,braking,camMode);   // sample RPM + เกียร์ + cockpit/chase
-  /* 🏜️ รอบ 911: หลุดสนามทั้งคัน (ผิวทราย) ต่อเนื่องครบ OFFTRACK_S วิ → เกิดใหม่บนแทร็กบริเวณนั้น */
-  if(surf==='sand') sandT+=dt; else sandT=0;
-  if(sandT>=OFFTRACK_S) respawnOnTrack();
+  /* หลุดจากผิวถนนแข่งต่อเนื่อง: runoff/ทรายเปิดประตูมิติ แล้วกลับตรง track segment ใกล้จุดที่หลุด */
+  if(surf==='sand'||surf==='runoff') sandT+=dt; else sandT=0;
+  if(sandT>=OFFTRACK_S) beginPortalReturn();
   /* จับเวลา + เช็คทิศ */
   progressTick(dt);
 }
@@ -2878,6 +2955,8 @@ function wheelTick(){
   if(!shaking&&!wheelShakeOn&&wheelDeg!==null&&Math.abs(deg-wheelDeg)<0.05) return;
   wheelShakeOn=shaking;
   wheelDeg=deg;
+  const quality=activeGraphicsMode==='quality';
+  const handDeg=clamp(deg,-QUALITY_HAND_MAX_DEG,QUALITY_HAND_MAX_DEG);
   let sx=0, sy2=0;
   if(shaking){
     const a=shakeAmp*clamp(spd/SHAKE_SPD_REF,0,1);
@@ -2885,13 +2964,20 @@ function wheelTick(){
     sy2=Math.sin(shakeT*Math.PI*2*SHAKE_HZ*1.7+1.3)*a*0.6;
   }
   const r=(shaking?'translate('+sx.toFixed(2)+'px,'+sy2.toFixed(2)+'px) ':'')+'rotate('+deg.toFixed(2)+'deg)';
+  const qr=(shaking?'translate('+sx.toFixed(2)+'px,'+sy2.toFixed(2)+'px) ':'')+'rotate('+handDeg.toFixed(2)+'deg)';
   const tr=Math.abs(wheelSy-1)<0.01?r
     :'scaleY('+wheelSy.toFixed(4)+') '+r+' scaleY('+(1/wheelSy).toFixed(4)+')';
   wheelEl.style.transform=tr;
-  if(qualityWheelEl) qualityWheelEl.style.transform=r;
+  if(cockpitTurnEl){
+    if(quality&&Math.abs(handDeg)>.05){
+      const src=handDeg<0?'img/f1/cockpit_turn_left.webp':'img/f1/cockpit_turn_right.webp';
+      if(src!==cockpitTurnSrc){cockpitTurnSrc=src;cockpitTurnEl.src=src;}
+      cockpitTurnEl.style.opacity=String(clamp(Math.abs(handDeg)/QUALITY_HAND_MAX_DEG,0,1));
+    }else cockpitTurnEl.style.opacity='0';
+  }
   if(knobEl) knobEl.style.setProperty('--ctl-turn',(deg*1.25).toFixed(2)+'deg');
   if(ledsEl) ledsEl.style.transform=wheelEl.style.transform;   // 🚥 รอบ 918 — ดวงไฟหมุนไปกับพวงมาลัย
-  if(dashEl) dashEl.style.transform=activeGraphicsMode==='quality'?r:tr; // Quality ไม่รับ scaleY ของภาพ legacy
+  if(dashEl) dashEl.style.transform=quality?qr:tr; // Quality ใช้องศาเดียวกับภาพมือ ±14°
 }
 /* ============================================================
    🔢 รอบ 916 — จอบนพวงมาลัยเป็น "ของจริง"
@@ -3146,6 +3232,9 @@ function applyEnvironmentProfile(profile,mode){
     scene.add(realisticRoot);
   }
   if(realisticRoot) realisticRoot.visible=realistic;
+  /* Realistic ใช้สถาปัตยกรรม modular ที่วางตาม track-space เท่านั้น; ซ่อน OSM footprint เดิม
+     ทั้งกลุ่มเพื่อไม่ให้ก้อนอาคารจากผังจริงซ้อน/ขวางถนน ส่วน Battery Saver ยังเก็บของเดิมไว้ */
+  if(legacyArchitectureRoot) legacyArchitectureRoot.visible=!realistic;
   if(wrapEl) wrapEl.classList.toggle('realistic',realistic);
   if(fpWheels) fpWheels.visible=camMode==='cockpit'&&!realistic;
   if(camMode==='cockpit'&&cockpitEl) requestAnimationFrame(layoutWheel);
@@ -3192,7 +3281,8 @@ function start(options){
   pz=LINE.z[gi]+LINE.nz[gi]*side;
   yaw=Math.atan2(LINE.tx[gi],LINE.tz[gi]);
   vx=vz=spd=0; steer=0; slide=0; steerCtl=0; padThr=0; padBr=false;
-  padRev=false; revNow=false; sandT=0;   // ⏪🏜️ รอบ 911
+  padRev=false; revNow=false; sandT=0; portalActive=false; portalT=0; portalJumped=false;
+  if(portalEl) portalEl.className='';   // ⏪🏜️🌀
   kL=kR=kThr=kBack=false;
   myIdx=gi; surfNow='track';
   drsOn=false; drsInZone=false; drsGap=0; drsFlapK=0; drsBrake=false;                // 🪽 รอบ 904
@@ -3243,6 +3333,8 @@ function exitWorld(){
   window.removeEventListener('keyup',keyupFn);
   window.removeEventListener('resize',resizeFn);
   Snd.stop();
+  portalActive=false; portalT=0; portalJumped=false;
+  if(portalEl) portalEl.className='';
   letters.forEach(l=>scene.remove(l.spr)); letters=[]; word=null;
   smokes.forEach(s=>scene.remove(s.m)); smokes=[];
   ghostHide(); paintLights(0);
@@ -3272,6 +3364,7 @@ window.F1World={
     get room(){return room}, set room(v){room=v}, renderBoard,
     give(){ letters.slice().forEach(l=>{ word.got.push(l.idx); scene.remove(l.spr); }); letters=[]; completeWord(); },
     surfAt, nearIdx, trackPointAhead, pickWord, collectTick, physTick, barrierBounce,
+    beginPortalReturn, portalTick, respawnOnTrack,
     get word(){return word?{en:word.en,got:word.got.slice(),complete:!!word.complete,
       letterCount:letters.length,distances:letters.map(l=>l.lapDistance)}:null;},
     /* 🪽 รอบ 904 */
@@ -3328,6 +3421,8 @@ window.F1World={
         rect:{x:r.x,y:r.y,w:r.width,h:r.height}}; },
     layoutDash:()=>layoutWheel(), dashTick, dashRpmTick, setDashRpm(v){ dashRpm=clamp(v,0,1); dashSig=''; },
     get surf(){return surfNow}, setSurf(v){ surfNow=v; },   // 🫨🎡 รอบ 914 — เทสต์มือสั่นโดยไม่ต้องขับจริงไปชน kerb
+    get portal(){return {active:portalActive,t:portalT,jumped:portalJumped,target:portalTargetIdx,
+      cls:portalEl?portalEl.className:''};},
     get camMode(){return camMode}, setCamMode(v){ camMode=v; applyCamMode(); },
     get peers(){return peers},
     fakePeer(uid,x,z,extra){ onPeer(uid,Object.assign({n:'เทส '+uid,x,z,yaw:0},extra||{})); return peers[uid]; },
@@ -3337,7 +3432,10 @@ window.F1World={
     get graphics(){return {mode:activeGraphicsMode,profile:activeEnvironmentProfile,built,running,
       scene:scene||null,renderer:renderer||null,instancePolicy:'single',realistic:{
         built:!!realisticRoot,visible:!!(realisticRoot&&realisticRoot.visible),tier:realisticTier,
+        legacyArchitectureHidden:!!(legacyArchitectureRoot&&!legacyArchitectureRoot.visible),
         stats:realisticStats?Object.assign({},realisticStats):null}}},
+    get hands(){return {frame:cockpitTurnSrc,opacity:cockpitTurnEl?Number(cockpitTurnEl.style.opacity||0):0,
+      deg:wheelDeg===null?0:clamp(wheelDeg,-QUALITY_HAND_MAX_DEG,QUALITY_HAND_MAX_DEG)};},
     racingLineLat,
     applyEnvironmentProfile,
     snd:Snd, gearOf,

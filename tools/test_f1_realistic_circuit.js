@@ -1,4 +1,4 @@
-/* Regression guard for round 1125: Realistic Circuit is additive and Battery Saver stays intact. */
+/* Regression guard: all eight requested Realistic Circuit gameplay/visual contracts. */
 'use strict';
 const assert=require('assert');
 const fs=require('fs');
@@ -30,8 +30,19 @@ assert.ok(/activeGraphicsMode==='quality'[\s\S]{0,160}racingLineLat/.test(f1),
   'quality collectibles must follow the computed racing line');
 assert.ok(/function footprintCrossesRoad\([\s\S]*pointInFootprint/.test(f1),
   'OSM buildings crossing the road must be culled before construction');
+assert.ok(/legacyArchitectureRoot\.visible=!realistic/.test(f1),
+  'Realistic Circuit must hide the entire legacy OSM architecture group to prevent stacked road boxes');
+assert.ok(/function tracksideSpotClear\([\s\S]*surfAt/.test(f1)&&/culledRoadCity/.test(f1),
+  'procedural skyline buildings must be culled against every track segment, not only their source segment');
 assert.ok(/function barrierBounce\([\s\S]*BARRIER_BOUNCE/.test(f1)&&/px\+=vx\*dt; pz\+=vz\*dt;\s*barrierBounce\(\)/.test(f1),
   'trackside barrier must clamp and reflect vehicle velocity after movement');
+assert.ok(/function beginPortalReturn\([\s\S]*portalTargetIdx=nearIdx/.test(f1)&&
+  /function portalTick\([\s\S]*respawnOnTrack\(portalTargetIdx,false\)/.test(f1),
+  'off-road recovery must open a portal and return to the nearest local track segment');
+assert.ok(/surf==='sand'\|\|surf==='runoff'/.test(f1)&&/if\(portalActive\)\{portalTick\(dt\);return;\}/.test(f1),
+  'portal recovery must detect sustained departure from the racing surface and lock physics during the jump');
+assert.ok(/#f1-portal[^]*@keyframes f1portalpulse/.test(f1),
+  'portal must be an animated lightweight procedural overlay, not another full-screen raster asset');
 
 const words=f1.slice(f1.indexOf('function spawnLetters'),f1.indexOf('เพื่อนร่วมสนาม'));
 assert.ok(/const gap=TOTAL\/word\.en\.length/.test(words),'letter gap must equal lap distance divided by word length');
@@ -57,6 +68,22 @@ const peerAsset=path.join(root,'img/f1/peer_car_25d.webp');
 assert.ok(fs.existsSync(peerAsset),'optimized peer-car WebP must ship with the runtime');
 assert.ok(fs.statSync(peerAsset).size<=80*1024,'peer-car WebP must stay under the 80 KiB mobile budget');
 
+/* Steering must move the driver's hands as well as the wheel, using lightweight alpha frames. */
+for(const dir of ['center','left','right']){
+  const rel=`img/f1/cockpit_turn_${dir}.webp`;
+  const asset=path.join(root,rel);
+  assert.ok(f1.includes(rel),`runtime must reference ${rel}`);
+  assert.ok(fs.existsSync(asset),`${rel} must ship with the runtime`);
+  assert.ok(fs.statSync(asset).size<=90*1024,`${rel} must stay under the 90 KiB mobile budget`);
+}
+assert.ok(/QUALITY_HAND_MAX_DEG=14/.test(f1),'live dashboard angle must match the measured ±14° hand frames');
+assert.ok(/cockpitTurnEl\.style\.opacity/.test(f1)&&/cockpit_turn_left\.webp[^]*cockpit_turn_right\.webp/.test(f1),
+  'left/right hand frames must blend from the center frame using the real steering value');
+assert.ok(/if\(dashEl\) dashEl\.style\.transform=quality\?qr:tr/.test(f1),
+  'live wheel dashboard must rotate with the same clamped angle as the hands');
+assert.ok(/#f1-wrap\.realistic\.fp #f1-wheel[^\n]*#f1-quality-wheel\{display:none!important\}/.test(f1),
+  'quality cockpit must not render a duplicate procedural wheel over the photographed hands');
+
 /* Exact Phase-1 Battery Saver profile guard: this visual upgrade must not trade its quality away. */
 for(const token of [
   "DEFAULT_MODE='battery'", "pixelRatioCap:2", "powerPreference:'default'", "toneMapping:'none'",
@@ -64,6 +91,10 @@ for(const token of [
   'hemisphere:0.72', 'keyLight:1.05', 'warmLight:0.35', "assetSet:'f1-current'"
 ]) assert.ok(modes.includes(token),`Battery Saver contract changed: ${token}`);
 assert.ok(modes.includes("assetSet:'f1-realistic-circuit-v2'"));
+assert.ok(modes.includes("ENTRY_MODE='quality'")&&modes.includes('SELECTOR_ENABLED=false'),
+  'entry must go straight to Realistic Circuit while preserving the hidden Battery Saver selector');
+assert.ok(/F1Modes\.getSelection\(F1Modes\.ENTRY_MODE\|\|'quality'\)/.test(
+  fs.readFileSync(path.join(root,'js/ui.js'),'utf8')),'world entry must explicitly request the Realistic profile');
 assert.strictEqual((f1.match(/new THREE\.Scene\(/g)||[]).length,1,'must keep one shared scene');
 assert.strictEqual((f1.match(/new THREE\.WebGLRenderer\(/g)||[]).length,1,'must keep one shared renderer');
 
