@@ -19,13 +19,11 @@
   /* ========== TUNE ZONE — ตำแหน่ง/ขนาดภาพปืน (จูนกับภาพจริงแล้ว อย่าเดาใหม่) ========== */
   const TUNE = {
     FOV: 58, FOV_AIM: 30,       // มุมกล้องปกติ/ตอนเล็ง (เล็ง = ซูมเข้า)
-    HOLD_H: 64,                 // สูงภาพปืนถือ (vh)
-    HOLD_R: -2, HOLD_B: -4,     // ชดเชยขอบขวา/ล่าง (vh — ติดลบ = ล้นขอบเล็กน้อย)
-    MUZ_X: 0.14, MUZ_Y: 0.06,   // จุดปลายกระบอก (สัดส่วนบนภาพ hold — ไว้วางแฟลชอัดลม)
-    AIM_H: 122,                 // สูงภาพเล็ง (vh)
-    AIM_CX: 0.507, AIM_CY: 0.425, // จุดกึ่งกลางรูศูนย์เล็งบนภาพ (วัดจาก alpha จริงด้วย sight.py) — ห้ามแก้ค่านี้ (ค่าวัดจริง)
-    AIM_SX: 50, AIM_SY: 50,     // จุดบนจอที่รูศูนย์ทาบ (% กว้าง / % สูง) = จุดที่กระสุนออก (ห้ามแก้ — ต้องตรงกับความแม่นจริง)
-    AIM_DOT_GAP: 6.25,          // 🎯 รอบ 956: ผู้ใช้ขอให้จุดแดงลอยอยู่ "เหนือ" แท่นศูนย์ยิงปลายปืน (ไม่ใช่ทับพอดี)
+    HOLD_H: 45, HOLD_R: 14, HOLD_B: 7, // ยกพ้นปุ่มยิงขวาและคงอยู่มุมขวาล่างตามภาพต้นฉบับ
+    MUZ_X: 0.445, MUZ_Y: 0.36,          // กึ่งกลางปากกระบอกครีมด้านซ้ายของ sprite
+    AIM_H: 52, AIM_CX: 0.5, AIM_CY: 0.5, // โหมดเล็งใช้ชิ้นเดิมขยายเบา ๆ ไม่มีศูนย์ปืนจริง
+    AIM_SX: 50, AIM_SY: 50,
+    AIM_DOT_GAP: 0,             // ปืนชุดใหม่มีดาวศูนย์หน้าอยู่ตรงจุดยิงจริง จึงไม่ต้องชดเชยภาพลง
                                  //    ขยับภาพปืนลง (ไม่ใช่ขยับจุดแดง!) ผ่าน translateY เพิ่ม — จุดยิงจริงยังอยู่กึ่งกลางจอเป๊ะ ไม่กระทบความแม่น
     SNAP_R: 0.045,              // 🎯 รอบ 932: รัศมีช่วยเล็ง (สัดส่วนด้านสั้นของจอ) ~22px ที่จอสูง 491
   };                            //    ครึ่งหนึ่งของระยะห่างระหว่างแผ่น (~24px) → เล็งใกล้ใบไหนโดนใบนั้น ไม่ข้ามไปใบอื่น
@@ -37,9 +35,9 @@
   const ROWS=[                                 // หิ้ง 3 ชั้นไล่ระดับแบบอัฒจันทร์ — ไกลขึ้น สูงขึ้น แผ่นใหญ่ขึ้น
     /* 🎯 รอบ 923: ผู้ใช้สั่งขยายระยะเป้าออกไปอีก 3 เท่า — คูณ z อย่างเดียว (สูง/กว้าง/ขนาดแผ่นเท่าเดิม)
        ยิงยากขึ้นตามระยะจริง (raycaster แม่นทุกระยะอยู่แล้ว) โหมดเล็งซูม FOV แคบลงช่วยชดเชยความไกล */
-    {z:-27,  y:1.05, n:6, w:8.6,  size:0.95},  // (ตอนวัดจริง ชั้นเท่ากันจะบังกันหมด — ต้องยกชั้นหลังพ้นหัวแผ่นชั้นหน้า)
-    {z:-40.5,y:2.35, n:6, w:11.2, size:1.12},
-    {z:-54,  y:4.35, n:6, w:13.8, size:1.32},
+    {z:-27,  y:1.05, n:6, w:12.9, size:1.43},
+    {z:-40.5,y:2.35, n:6, w:16.8, size:1.68},
+    {z:-54,  y:4.35, n:6, w:20.7, size:1.98},
   ];
   const AZ='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const PASTEL=['#ff8a80','#ffd180','#ffff8d','#ccff90','#80d8ff','#b388ff','#ff80ab','#a7ffeb'];
@@ -256,11 +254,17 @@
     const ground=new THREE.Mesh(new THREE.CircleGeometry(90,48), new THREE.MeshLambertMaterial({map:grassTex()}));
     ground.rotation.x=-Math.PI/2; scene.add(ground);
 
+    /* 🎨 รอบ 1193: ฉากหลัง 3D ลูกกวาดสร้างเฉพาะเกมยิงเป้าคำ — เว้นกลางภาพโล่งให้เป้าอ่านง่าย */
+    const candyBg=new THREE.TextureLoader().load('img/shootword/carnival-bg.webp?v=1193');
+    candyBg.minFilter=THREE.LinearFilter;
+    const candyPlane=new THREE.Mesh(new THREE.PlaneGeometry(190,107),
+      new THREE.MeshBasicMaterial({map:candyBg,fog:false}));
+    candyPlane.position.set(0,31.5,-79); candyPlane.userData.noHit=true; scene.add(candyPlane);
+
     buildBooth();
     buildStands();
     buildSign();
-    buildFerris();
-    buildTents();
+    /* ชิงช้าสวรรค์/เต็นท์อยู่ในฉากใหม่แล้ว จึงไม่วางโมเดลเก่าซ้ำให้ภาพรก */
     buildBalloons();
     buildClouds();
     buildDucks();
@@ -491,7 +495,7 @@
     const now=performance.now();
     if(now-lastShot<COOLDOWN || boardLock>0 || !running) return;
     lastShot=now;
-    SND.shot(); recoilFx();
+    SND.shot(); recoilFx(); starShotFx(px,py);
     const ndc=new THREE.Vector2((px/innerWidth)*2-1, -(py/innerHeight)*2+1);
     raycaster.setFromCamera(ndc, camera);
     const hits=raycaster.intersectObjects(scene.children,true)
@@ -648,15 +652,14 @@
 #sg-overlay canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 #sg-gun-hold{position:absolute;pointer-events:none;z-index:3;
   height:${TUNE.HOLD_H}vh;right:${TUNE.HOLD_R}vh;bottom:${TUNE.HOLD_B}vh;
-  filter:drop-shadow(0 6px 14px rgba(0,0,0,.35));transition:transform .09s ease-out}
+  filter:drop-shadow(0 8px 12px rgba(75,38,120,.3));transition:transform .09s ease-out}
 #sg-gun-aim{position:absolute;pointer-events:none;z-index:3;display:none;
-  height:${TUNE.AIM_H}vh;left:${TUNE.AIM_SX}vw;top:${TUNE.AIM_SY}vh;
-  transform:translate(-${(TUNE.AIM_CX*100).toFixed(1)}%,calc(-${(TUNE.AIM_CY*100).toFixed(1)}% + ${TUNE.AIM_DOT_GAP}vh));
+  height:${TUNE.AIM_H}vh;right:${TUNE.HOLD_R}vh;bottom:${TUNE.HOLD_B}vh;transform:scale(1.04);
   transition:transform .07s ease-out}
 #sg-overlay.aim #sg-gun-hold{display:none}
 #sg-overlay.aim #sg-gun-aim{display:block}
 #sg-gun-hold.kick{transform:translate(6px,14px) rotate(1.6deg)}
-#sg-gun-aim.kick{transform:translate(-${(TUNE.AIM_CX*100).toFixed(1)}%,calc(-${(TUNE.AIM_CY*100).toFixed(1)}% + ${TUNE.AIM_DOT_GAP}vh + 12px))}
+#sg-gun-aim.kick{transform:translate(8px,12px) scale(1.04) rotate(1.5deg)}
 #sg-muzzle{position:absolute;width:60px;height:60px;margin:-30px;border-radius:50%;pointer-events:none;z-index:4;opacity:0;
   background:radial-gradient(circle,rgba(255,255,255,.95),rgba(255,240,190,.55) 45%,transparent 70%)}
 #sg-muzzle.on{animation:sgMuz .14s ease-out}
@@ -664,28 +667,34 @@
 #sg-hud{position:absolute;inset:0;z-index:5;pointer-events:none}
 #sg-hud>*{pointer-events:auto}
 #sg-word{position:absolute;top:1vh;left:50%;transform:translateX(-50%);text-align:center;cursor:pointer;
-  background:rgba(29,32,58,.72);border:2px solid #ffd54f;border-radius:14px;
-  padding:.6vh 14px .9vh;max-width:min(92vw,620px);backdrop-filter:blur(3px)}
-#sg-word .th{color:#ffe9a8;font-size:clamp(11px,2.6vh,15px);line-height:1.25}
-#sg-word .th small{color:#9fb8d8;font-weight:400;margin-left:6px;font-size:.82em}
+  background:linear-gradient(180deg,#8751bd,#65409e);border:4px solid #fff0c8;border-radius:22px;
+  padding:.55vh 20px .9vh;max-width:min(90vw,650px);box-shadow:0 5px 0 #dc8c42,0 8px 18px rgba(93,48,126,.32),inset 0 0 0 2px #ffc85f}
+#sg-word:before,#sg-word:after{content:'★';position:absolute;top:50%;transform:translateY(-50%);color:#ffd34f;text-shadow:0 2px 0 #c77b25;font-size:clamp(14px,3vh,22px)}
+#sg-word:before{left:-14px}#sg-word:after{right:-14px}
+#sg-word .th{color:#fff8df;font-size:clamp(11px,2.6vh,15px);line-height:1.25;text-shadow:0 2px 0 #553080}
+#sg-word .th small{color:#f5d9ff;font-weight:600;margin-left:6px;font-size:.82em}
 #sg-slots{display:flex;gap:clamp(3px,.8vh,6px);justify-content:center;margin-top:.5vh}
-.sg-slot{width:clamp(20px,4.6vh,30px);height:clamp(24px,5.4vh,36px);border-radius:6px;
+.sg-slot{width:clamp(20px,4.6vh,30px);height:clamp(24px,5.4vh,36px);border-radius:8px;
   display:flex;align-items:center;justify-content:center;font-weight:900;
-  font-size:clamp(14px,3.6vh,22px);background:#fffdf6;color:#c9c2b4;border-bottom:3px solid #d9d2c2}
+  font-size:clamp(14px,3.6vh,22px);background:linear-gradient(#fffef7,#ffe6bd);color:#9b5b7c;border:2px solid #fff;border-bottom:4px solid #dc9d5f;box-shadow:0 2px 5px rgba(76,39,97,.25)}
+.sg-slot:nth-child(4n+1){background:linear-gradient(#fff9cd,#ffd85e)}
+.sg-slot:nth-child(4n+2){background:linear-gradient(#f9e9ff,#c99bea)}
+.sg-slot:nth-child(4n+3){background:linear-gradient(#e8fff4,#8edbb7)}
+.sg-slot:nth-child(4n){background:linear-gradient(#ffeaf1,#ff9ebd)}
 .sg-slot.got{background:#9ccc65;color:#fff;border-bottom-color:#7cb342;animation:sgPop .3s}
 .sg-slot.now{background:#ffd54f;color:#7a5800;border-bottom-color:#f0a800;animation:sgNow 1s infinite}
 @keyframes sgNow{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 @keyframes sgPop{0%{transform:scale(.5)}60%{transform:scale(1.25)}100%{transform:scale(1)}}
 #sg-tl{position:absolute;top:1vh;left:1vh;display:flex;flex-direction:column;gap:.8vh;align-items:flex-start}
-#sg-coins,#sg-chip{background:rgba(29,32,58,.72);border-radius:12px;padding:.5vh 10px;color:#fff;
-  font-size:clamp(11px,2.8vh,15px);font-weight:700;border:1.5px solid rgba(255,255,255,.25)}
-#sg-chip{cursor:pointer;border-color:#ffd54f;color:#ffe9a8}
-#sg-exit{position:absolute;top:1vh;right:1vh;background:rgba(29,32,58,.72);color:#ffb3c1;border:1.5px solid #ff80ab;
-  border-radius:12px;padding:.5vh 12px;font:700 clamp(11px,2.8vh,15px) Kanit,system-ui;cursor:pointer}
+#sg-coins,#sg-chip{background:linear-gradient(180deg,#7851bd,#59398f);border-radius:999px;padding:.55vh 12px;color:#fff;
+  font-size:clamp(11px,2.8vh,15px);font-weight:800;border:3px solid #ffe4a0;box-shadow:0 3px 0 #c56e51,0 5px 12px rgba(69,35,102,.25)}
+#sg-chip{cursor:pointer;color:#fff6c8}
+#sg-exit{position:absolute;top:1vh;right:1vh;background:linear-gradient(180deg,#ff849b,#ed4d72);color:#fff;border:3px solid #fff0c8;
+  border-radius:999px;padding:.55vh 14px;font:800 clamp(11px,2.8vh,15px) Kanit,system-ui;cursor:pointer;box-shadow:0 3px 0 #b83259,0 5px 12px rgba(126,37,78,.25)}
 /* 🎯 รอบ 955: ปุ่มยิงโต 3 เท่าแล้วกินพื้นที่มุมล่างทั้งสองข้าง → ย้ายปุ่ม "เล็ง" ขึ้นมุมขวาบน (ใต้ปุ่มออก)
    ไม่งั้นวงกลมยิงฝั่งขวาทับปุ่มนี้จนกดไม่ได้ */
 #sg-aimbtn{position:absolute;right:1.6vh;top:10vh;width:clamp(52px,11vh,72px);height:clamp(52px,11vh,72px);
-  border-radius:50%;border:3px solid #ffd54f;background:rgba(29,32,58,.78);color:#ffe9a8;cursor:pointer;
+  border-radius:50%;border:4px solid #fff0c8;background:linear-gradient(145deg,#8d63d2,#58358e);color:#fff6c8;cursor:pointer;
   font:700 clamp(9px,2.2vh,12px) Kanit,system-ui;line-height:1.15;z-index:6}
 #sg-aimbtn .ic{display:block;font-size:clamp(16px,4vh,24px)}
 #sg-aimbtn.on{background:#ffd54f;color:#5a4300;border-color:#fff}
@@ -698,28 +707,29 @@
    แก้ 2 ชั้น: ① ผู้ใช้สั่งขยาย 3 เท่า → 40vh (≈ 3× ของเดิมทุกขนาดจอ) ย้ายไปมุมล่างซ้าย-ขวา (นิ้วโป้งทั้งสองข้างถึงพอดี
    และวงใหญ่ขนาดนี้ถ้าลอยกลางจอจะบังเป้า) ② ::before ขยายพื้นที่รับสัมผัสล้นออกอีก 26px รอบวง (มองไม่เห็น)
    = กดเฉียดขอบก็ยังยิง ไม่กลายเป็นลากจอ */
-.sg-shoot{position:absolute;bottom:1.6vh;width:clamp(150px,40vh,260px);height:clamp(150px,40vh,260px);
-  border-radius:50%;border:4px solid #ffd54f;background:rgba(255,95,109,.46);color:#fff;cursor:pointer;
+.sg-shoot{position:absolute;bottom:max(1.6vh,env(safe-area-inset-bottom));width:clamp(112px,30vh,195px);height:clamp(112px,30vh,195px);
+  border-radius:50%;border:7px solid #fff1c7;background:radial-gradient(circle at 35% 25%,rgba(255,177,199,.92),rgba(238,77,126,.82));color:#fff;cursor:pointer;
   font:900 clamp(15px,3.6vh,22px) Kanit,system-ui;line-height:1.15;z-index:6;
-  box-shadow:0 5px 0 rgba(198,40,56,.5),0 8px 18px rgba(0,0,0,.25);-webkit-tap-highlight-color:transparent}
+  box-shadow:0 0 0 4px #ffb8ce,0 6px 0 #ba3c6a,0 10px 22px rgba(100,35,92,.3),inset 0 0 22px rgba(255,255,255,.55);-webkit-tap-highlight-color:transparent}
 .sg-shoot::before{content:'';position:absolute;inset:-26px;border-radius:50%}   /* พื้นที่กดเผื่อ (ล่องหน) */
-.sg-shoot .ic{display:block;font-size:clamp(46px,12vh,80px)}
+.sg-shoot .ic{display:block;font-size:clamp(34px,8vh,58px);filter:drop-shadow(0 2px 0 #d28b9e)}
 .sg-shoot.down{transform:translateY(3px);box-shadow:0 2px 0 rgba(198,40,56,.5),0 4px 10px rgba(0,0,0,.2)}
 #sg-shoot-l{left:1.6vh}
 #sg-shoot-r{right:1.6vh}
 /* ✛ กากบาทกึ่งกลางจอ — บอกเด็กว่ากดปุ่มยิงแล้วกระสุนจะไปตรงไหน */
-#sg-cross{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:22px;height:22px;pointer-events:none;z-index:4;opacity:.62}
-#sg-cross i{position:absolute;display:block;background:#fff;box-shadow:0 0 3px rgba(0,0,0,.75)}
-#sg-cross i:nth-child(1){left:50%;top:2px;bottom:2px;width:2px;margin-left:-1px}
-#sg-cross i:nth-child(2){top:50%;left:2px;right:2px;height:2px;margin-top:-1px}
+#sg-cross{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:38px;height:38px;pointer-events:none;z-index:4;border:3px solid #fff1a8;border-radius:50%;filter:drop-shadow(0 2px 3px rgba(91,47,111,.55));transition:.12s}
+#sg-cross:before{content:'★';position:absolute;inset:0;display:grid;place-items:center;color:#ffd43b;font-size:20px;text-shadow:0 2px 0 #d88a28,0 0 7px #fff}
+#sg-cross i{position:absolute;display:block;background:#fff1a8;border-radius:2px}
+#sg-cross i:nth-child(1){left:50%;top:-8px;bottom:-8px;width:2px;margin-left:-1px}
+#sg-cross i:nth-child(2){top:50%;left:-8px;right:-8px;height:2px;margin-top:-1px}
 /* 🔴 รอบ 936: โหมดเล็ง เดิมซ่อนกากบาททิ้งทั้งอัน (นึกว่าศูนย์ปืนในภาพพอ) — ผู้ใช้เล็ง B "อยู่ในวงศูนย์แล้ว"
    แต่จุดยิงจริงอยู่ต่ำกว่านั้น ~30px เลยยิงลอดช่องว่าง → เปลี่ยนเป็นจุดแดงเล็กตรงจุดยิงจริงเป๊ะ ๆ แทน
    (เอาแผ่นตัวอักษรมาทาบจุดแดง = โดนแน่)
    🎯 รอบ 1002: ผู้ใช้สั่งลบจุดแดงทิ้ง (ดูรก) — ซ่อนทั้งอัน ⚠️ ความเสี่ยงเดิมจากรอบ 936 ยังอยู่ (จุดยิงจริงไม่ตรงรูศูนย์ในภาพเป๊ะ
    ยิ่งห่างขึ้นอีกหลัง AIM_DOT_GAP รอบ 1001) กันพลาดด้วย SNAP_R (รัศมีช่วยเล็ง) แทน — ถ้าเจอบั๊ก "เล็งอยู่ในศูนย์แล้วไม่โดน" ให้กลับมาดูจุดนี้ */
-#sg-overlay.aim #sg-cross{display:none}
-#sg-hint{position:absolute;bottom:1.2vh;left:50%;transform:translateX(-50%);color:#fff;
-  background:rgba(29,32,58,.6);border-radius:10px;padding:.4vh 12px;font-size:clamp(10px,2.4vh,13px);
+#sg-overlay.aim #sg-cross{transform:translate(-50%,-50%) scale(1.08);filter:drop-shadow(0 0 8px #fff36d)}
+#sg-hint{position:absolute;bottom:1.2vh;left:50%;transform:translateX(-50%);color:#62437c;
+  background:linear-gradient(180deg,#fffdf0,#ffe7bd);border:3px solid #fff;border-radius:999px;padding:.45vh 18px;font-size:clamp(10px,2.4vh,13px);font-weight:700;box-shadow:0 3px 0 #e6a65b,0 6px 16px rgba(87,45,111,.25);
   white-space:nowrap;transition:opacity .6s}
 #sg-streak{position:absolute;top:16vh;left:50%;transform:translateX(-50%);color:#ffd54f;font-weight:900;
   font-size:clamp(15px,4.5vh,26px);text-shadow:0 2px 8px rgba(0,0,0,.5);opacity:0;pointer-events:none}
@@ -743,6 +753,7 @@
 .sg-conf{position:absolute;top:-4vh;z-index:8;pointer-events:none;border-radius:2px;
   animation:sgConf linear forwards}
 @keyframes sgConf{100%{transform:translateY(110vh) rotate(720deg)}}
+.sg-starshot{position:absolute;z-index:7;pointer-events:none;color:#ffe24d;font-size:22px;text-shadow:0 0 8px #fff,0 0 14px #ff8ec5;transition:left .16s linear,top .16s linear,transform .16s ease-in,opacity .16s}
 #sg-intro{position:absolute;inset:0;z-index:9;background:rgba(20,24,48,.66);display:flex;align-items:center;justify-content:center}
 #sg-intro .card{background:linear-gradient(165deg,#fff9e8,#ffe9c2);border:3px solid #ffb300;border-radius:18px;
   max-width:min(94vw,520px);max-height:94vh;padding:1.6vh 22px;text-align:center;color:#5a4300}
@@ -759,8 +770,8 @@
     injectCss();
     overlay=document.createElement('div'); overlay.id='sg-overlay';
     overlay.innerHTML=`
-      <img id="sg-gun-hold" src="img/gun/hold.webp" alt="">
-      <img id="sg-gun-aim" src="img/gun/aim.webp" alt="">
+      <img id="sg-gun-hold" src="img/shootword/star-blaster.webp?v=1193" alt="">
+      <img id="sg-gun-aim" src="img/shootword/star-blaster.webp?v=1193" alt="">
       <div id="sg-muzzle"></div>
       <div id="sg-cross"><i></i><i></i></div>
       <div id="sg-hud">
@@ -768,10 +779,10 @@
         <div id="sg-tl"><b id="sg-coins"></b><span id="sg-chip" class="sga-open" role="button" title="ดูอันดับ Top 10 / รางวัลรายเดือน"></span></div>
         <button id="sg-exit" type="button">✕ ออก</button>
         <button id="sg-aimbtn" type="button"><span class="ic">🎯</span>เล็ง</button>
-        <button id="sg-shoot-l" class="sg-shoot" type="button"><span class="ic">🔫</span>ยิง</button>
-        <button id="sg-shoot-r" class="sg-shoot" type="button"><span class="ic">🔫</span>ยิง</button>
+        <button id="sg-shoot-l" class="sg-shoot" type="button"><span class="ic">⭐</span>ยิง</button>
+        <button id="sg-shoot-r" class="sg-shoot" type="button"><span class="ic">⭐</span>ยิง</button>
         <div id="sg-streak"></div>
-        <div id="sg-hint">👆 แตะแผ่น/กดปุ่ม 🔫 = ยิง · ลากนิ้ว = มองรอบซุ้ม · แตะคำบนป้าย = ฟังเสียง+ใบ้</div>
+        <div id="sg-hint">⭐ 🎯 เล็งตัวอักษร · แตะปุ่มดาว = ยิง · 🔊 แตะป้ายเพื่อฟังเสียง</div>
         <div id="sg-banner"></div>
         <div id="sg-fx"></div>
       </div>`;
@@ -841,6 +852,15 @@
     b.innerHTML=`<div class="w">${w}</div><div class="m">${(typeof escapeHTML==='function')?escapeHTML(th):th}</div>
       <div class="p">+${pts} 🪙 +${pts} แต้ม${perfect?' ✨ ไม่พลาดเลย!':''}</div>`;
     b.classList.remove('on'); void b.offsetWidth; b.classList.add('on');
+  }
+  /* ⭐ กระสุนเวทมนตร์เบา ๆ: DOM ชิ้นเดียว/นัด ไม่มีควันหรือปลอกกระสุน */
+  function starShotFx(tx,ty){
+    if(!fxEl||document.documentElement.classList.contains('no-anim')) return;
+    const g=overlay.querySelector(aimMode?'#sg-gun-aim':'#sg-gun-hold');
+    const r=g.getBoundingClientRect(),s=document.createElement('div'); s.className='sg-starshot'; s.textContent='★';
+    s.style.left=(r.left+r.width*TUNE.MUZ_X)+'px'; s.style.top=(r.top+r.height*TUNE.MUZ_Y)+'px'; fxEl.appendChild(s);
+    requestAnimationFrame(()=>{ s.style.left=tx+'px'; s.style.top=ty+'px'; s.style.transform='scale(.35) rotate(180deg)'; s.style.opacity='.25'; });
+    setTimeout(()=>s.remove(),190);
   }
   function confetti(){
     if(document.documentElement.classList.contains('no-anim')) return;
@@ -977,9 +997,10 @@
         /* 🔫 รอบ 955: ยึดนิ้วไว้ที่ปุ่ม — นิ้วเด็กกดแล้วไถออกนอกวง จะไม่กลายเป็น "ลากจอ = กล้องเบน" */
         try{ b.setPointerCapture(e.pointerId); }catch(_){}
         b.classList.add('down');
-        shoot(innerWidth*0.5, innerHeight*0.5);
+        const sx=innerWidth*(aimMode?TUNE.AIM_SX/100:0.5), sy=innerHeight*(aimMode?TUNE.AIM_SY/100:0.5);
+        shoot(sx,sy);
         if(holdTimer) clearInterval(holdTimer);
-        holdTimer=setInterval(()=> shoot(innerWidth*0.5, innerHeight*0.5), COOLDOWN);
+        holdTimer=setInterval(()=> shoot(innerWidth*(aimMode?TUNE.AIM_SX/100:0.5),innerHeight*(aimMode?TUNE.AIM_SY/100:0.5)), COOLDOWN);
       });
       b.addEventListener('pointerup', stop);
       b.addEventListener('pointerleave', stop);
