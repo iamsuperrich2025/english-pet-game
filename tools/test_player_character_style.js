@@ -10,6 +10,8 @@ assert(src.includes("playerStyle='legacy-adventure'"),'Adventure must keep an ex
 assert(src.includes('function softCuboidGeo(w,h,d,r)'),'rounded cuboid geometry helper must exist');
 assert(src.includes('new THREE.BoxGeometry(w,h,d,2,2,2)'),'soft geometry must keep low subdivision for mobile');
 assert(src.includes('g.userData.softCuboid=true'),'soft geometry must be inspectable in runtime QA');
+assert(src.includes('function softFaceAtlasGeo(w,h,d,r)'),'standard heads must share a one-material face atlas geometry');
+assert(src.includes('g.userData.faceAtlas=true'),'face atlas geometry must be inspectable in runtime QA');
 assert(src.includes('grantQaTickets:()=>{ state.driveTicket=true; state.hauntTicket=true; state.soccerTicket=true; }'),'visual QA may grant only the three P0 tickets in memory');
 
 const legacy=src.slice(src.indexOf('function makeLegacyAdventureFigure'),src.indexOf('function makeSoftCuboidChibiFigure'));
@@ -28,10 +30,12 @@ assert(!payload.includes('playerStyle'),'visual metadata must never enter the mu
 
 const soccer=src.slice(src.indexOf('function makeSoccerPlayer'),src.indexOf('function soccerNewSpot'));
 assert(soccer.includes('softCuboidGeo('),'local Soccer player must use the standard geometry');
-assert(soccer.includes("blkFaceMat('blk1')"),'Soccer player must have the friendly standard face');
+assert(soccer.includes("softFaceAtlasMat('blk1')"),'Soccer player must keep the friendly face in one draw slot');
+assert(!soccer.includes("[skin,skin,skin,skin,skin,blkFaceMat('blk1')]"),'Soccer head must not regress to six material groups');
 assert(preview.includes('data-mode="drive"')&&preview.includes('data-mode="haunt"')&&preview.includes('data-mode="soccer"'),'visual QA must cover every P0 mode');
 assert(preview.includes('viewport:[w.innerWidth,w.innerHeight]'),'visual QA must report the exact game viewport');
 assert(preview.includes('standard draw '),'visual QA must compare standard and legacy draw budgets');
+assert(preview.includes("report.local.drawSlots+'/19'")&&preview.includes('report.local.drawSlots===19'),'visual QA must enforce the pre-P0 Soccer draw budget');
 assert(standard.includes('| P0 ✅ | Drive, Haunted Hotel, and Soccer'),'migration register must record P0 completion');
 assert(standard.includes('makeLegacyAdventureFigure()'),'migration register must retain the Adventure exception path');
 

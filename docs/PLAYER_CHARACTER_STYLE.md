@@ -58,7 +58,7 @@ This register turns the rule into an actionable reskin plan. A status of **audit
 
 | Priority | World/mode | Current implementation | Required action |
 |---|---|---|---|
-| P0 ✅ | Drive, Haunted Hotel, and Soccer in Adventure3D | Shared low-subdivision `softCuboidGeo()` / `makeSoftCuboidChibiFigure()` path; Soccer local player uses the same language | Conforming since round 1200. Preserve `makeLegacyAdventureFigure()` / `makeLegacyAdventureWalkPeer()` as the isolated original-Adventure path and keep the runtime draw-budget regression. |
+| P0 ✅ | Drive, Haunted Hotel, and Soccer in Adventure3D | Shared low-subdivision `softCuboidGeo()` / `makeSoftCuboidChibiFigure()` path; Soccer local player uses the same language | Conforming since round 1200; one-material face atlas tightened the standard head budget in round 1202. Preserve `makeLegacyAdventureFigure()` / `makeLegacyAdventureWalkPeer()` as the isolated original-Adventure path and keep the runtime draw-budget regression. |
 | P0 | All new 3D worlds/modes | No single mandatory acceptance gate existed | Use this document in the brief and review before approval; do not introduce a new legacy-style avatar. |
 | P1 | Vocab Arena | Local and peer players are `img/blocks/*.png` billboards in the 3D scene | Replace or rebake with a Soft Cuboid Chibi design, then verify local/peer consistency and gameplay readability. |
 | P1 | Helicopter and Drone modes | Some player/peer phases use profile-image sprites rather than the shared 3D character | Audit each visible phase and migrate any visible human player representation to the canonical style. Vehicle-only phases are not character assets. |

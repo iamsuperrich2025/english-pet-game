@@ -82,7 +82,9 @@
         const report={viewport:[w.innerWidth,w.innerHeight],mode,peer:budget(peer),standard:budget(standard),legacy:budget(legacy)};
         if(mode==='soccer')report.local=budget(w.Adventure3D._t.soccer.playerMesh);
         metrics.textContent=JSON.stringify(report,null,2);
-        status.textContent=mode+' · '+report.viewport.join('×')+' · standard draw '+report.standard.drawSlots+' = legacy '+report.legacy.drawSlots;
+        const localNote=mode==='soccer'?' · local draw '+report.local.drawSlots+'/19':'';
+        if(mode==='soccer') report.localBudgetOk=report.local.drawSlots===19;
+        status.textContent=mode+' · '+report.viewport.join('×')+' · standard draw '+report.standard.drawSlots+' ≤ legacy '+report.legacy.drawSlots+localNote;
         current=mode;
       }catch(err){status.textContent='ERROR: '+err.message;metrics.textContent=String(err.stack||err);}
     }

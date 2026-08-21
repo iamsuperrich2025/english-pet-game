@@ -709,6 +709,7 @@ const BLOCK_AVATARS={
   blk8:{name:'มิ้นตี้',      skin:0xffd9ae, shirt:0x4db6ac, pants:0x37474f, hair:0xf5f5f5, style:'tall', car:0x00897b, blush:true},
 };
 const _blkGeo={}, _blkMat={}, _blkFace={}, _blkThumbs={};
+const _softFaceMat={};
 function blkGeo(w,h,d){ const k=w+'_'+h+'_'+d; return _blkGeo[k]||(_blkGeo[k]=new THREE.BoxGeometry(w,h,d)); }
 function blkMat(color){ return _blkMat[color]||(_blkMat[color]=new THREE.MeshLambertMaterial({color})); }
 function blkCyl(r,h){ const k='c'+r+'_'+h; return _blkGeo[k]||(_blkGeo[k]=new THREE.CylinderGeometry(r,r,h,14)); }
@@ -744,6 +745,33 @@ function blkFaceMat(id){
   c.strokeStyle='#8d4a35'; c.lineWidth=6; c.lineCap='round';
   c.beginPath(); c.arc(64,72,20,Math.PI*.22,Math.PI*.78); c.stroke();
   return _blkFace[id]=new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(cv)});
+}
+/* รอบ 1202: รวมผิวหัว+หน้าไว้ material เดียว ลดหัวจาก 6 draw slots เหลือ 1
+   UV ครึ่งซ้ายเป็นสีผิวล้วน ส่วนครึ่งขวาเป็นหน้าเดิม; geometry cache ร่วมทุกตัวละครขนาดเดียวกัน */
+function softFaceAtlasGeo(w,h,d,r){
+  const k='softFace_'+w+'_'+h+'_'+d+'_'+r;
+  if(_blkGeo[k]) return _blkGeo[k];
+  const g=softCuboidGeo(w,h,d,r).clone(), uv=g.attributes.uv;
+  for(let i=0;i<uv.count;i++) uv.setX(i,uv.getX(i)*.5);
+  const front=g.groups[5], seen=new Set();
+  if(front){
+    for(let i=front.start;i<front.start+front.count;i++){
+      const vi=g.index?g.index.getX(i):i;
+      if(!seen.has(vi)){ uv.setX(vi,uv.getX(vi)+.5); seen.add(vi); }
+    }
+  }
+  uv.needsUpdate=true;
+  g.userData.softCuboid=true; g.userData.faceAtlas=true;
+  return _blkGeo[k]=g;
+}
+function softFaceAtlasMat(id){
+  if(_softFaceMat[id]) return _softFaceMat[id];
+  const a=BLOCK_AVATARS[id]||BLOCK_AVATARS.blk1, cv=document.createElement('canvas');
+  cv.width=256; cv.height=128;
+  const c=cv.getContext('2d');
+  c.fillStyle='#'+('000000'+a.skin.toString(16)).slice(-6); c.fillRect(0,0,256,128);
+  c.drawImage(blkFaceMat(id).map.image,128,0,128,128);
+  return _softFaceMat[id]=new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(cv)});
 }
 /* Legacy เดิมของ Adventure World: เก็บรูปทรง/สัดส่วนแข็งเดิมครบ และไม่มีการเรียก softCuboidGeo */
 function makeLegacyAdventureFigure(id, seated){
@@ -813,7 +841,7 @@ function makeSoftCuboidChibiFigure(id, seated){
       piv.add(arm); g.add(piv); g.userData.limbs.push(piv);
     }
   });
-  const head=new THREE.Mesh(softCuboidGeo(.7,.62,.62,.18),[skin,skin,skin,skin,skin,blkFaceMat(id)]);
+  const head=new THREE.Mesh(softFaceAtlasGeo(.7,.62,.62,.18),softFaceAtlasMat(id));
   head.position.y=hipY+.82; g.add(head);
   const topY=hipY+1.13;
   if(a.style==='cap'){
@@ -11398,7 +11426,7 @@ function makeSoccerPlayer(shirtColor,no,shortColor,pat){
     const arm=new THREE.Mesh(softCuboidGeo(.18,.4,.22,.075),blkMat(armC)); arm.position.set(s*.42,.76,0); arm.rotation.z=s*-.08; g.add(arm);
     const hand=new THREE.Mesh(softCuboidGeo(.16,.15,.18,.065),skin); hand.position.set(s*.45,.51,0); g.add(hand);
   });
-  const head=new THREE.Mesh(softCuboidGeo(.68,.6,.6,.18),[skin,skin,skin,skin,skin,blkFaceMat('blk1')]); head.position.y=1.29; g.add(head);
+  const head=new THREE.Mesh(softFaceAtlasGeo(.68,.6,.6,.18),softFaceAtlasMat('blk1')); head.position.y=1.29; g.add(head);
   const hair=new THREE.Mesh(softCuboidGeo(.7,.17,.62,.065),hairM); hair.position.y=1.54; g.add(hair);
   g.userData.legs=legs;
   g.userData.playerStyle='soft-cuboid-chibi-3d';
