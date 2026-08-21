@@ -28,6 +28,13 @@ const KERB_W       = 1.6;     // ความกว้างขอบ kerb
 const RUNOFF_W     = 9;       // runoff ยางมะตอยข้างแทร็ก (สไตล์ Bahrain)
 const BARRIER_LAT  = HALF_W+RUNOFF_W-.55; // จุดชนจริงอยู่ด้านในกำแพงเล็กน้อย กันรถเร็วทะลุ mesh
 const BARRIER_BOUNCE=.48;     // คืนแรงด้านข้าง 48% ให้รู้สึกว่าเด้ง แต่ไม่ปิงปองรุนแรง
+/* 🏎️💥 รอบ 1208 — กล่องชนรถ F1 จริง (แกนตาม yaw) + impulse/แรงเสียดทานตอนเบียด */
+const CAR_HALF_W   = 1.02;    // รถกว้าง ~2.04 ม.
+const CAR_HALF_L   = 2.68;    // รถยาว ~5.36 ม.
+const CAR_RESTITUTION=.34;    // คืนความเร็วตามแนวชน 34% — เด้งแต่ไม่ปิงปอง
+const CAR_SIDE_FRICTION=.38;  // กินความเร็วสัมพัทธ์ตามแนวที่รถเบียดกัน
+const CAR_RUB_DRAG = 4.2;     // แรงต้านต่อวินาทีขณะสีข้างต่อเนื่อง
+const CAR_SEP_EPS  = .025;    // เว้นผิวเล็กน้อยหลังแยก กันเลข floating-point สั่น
 const SAMPLE_M     = 5;       // ระยะห่างจุด sample เส้นแทร็ก
 /* 🪖 มุมมองในห้องคนขับ (รอบ 901) — ภาพหลัก first-person + ปุ่ม 📷 สลับมุมเห็นทั้งคัน */
 const FP_EYE   = 1.04;   // ความสูงสายตาคนขับ (ม.)
@@ -1371,30 +1378,47 @@ const CSS=`
 /* 🏜️ รอบ 911: ป้ายเกิดใหม่หลังหลุดสนาม */
 #f1-resp{position:absolute;top:42%;left:50%;transform:translateX(-50%);background:rgba(18,168,84,.92);color:#fff;
   font-weight:900;font-size:20px;border-radius:12px;padding:8px 18px;display:none;z-index:7}
-/* 🌀 หลุดแนวถนน → ประตูมิติแบบ procedural (ไม่มีภาพเต็มจอเพิ่ม): วงแหวน/ประกายใช้ CSS GPU layer */
-#f1-portal{position:absolute;inset:0;z-index:6;pointer-events:none;overflow:hidden;opacity:0;
-  background:radial-gradient(ellipse at 50% 44%,rgba(130,35,255,.18),rgba(5,2,18,0) 58%);transition:opacity .16s}
-#f1-portal .gate{position:absolute;left:50%;top:44%;width:min(69vw,760px);height:min(59vh,470px);border-radius:50%;
-  transform:translate(-50%,-50%) scale(.08);opacity:0;border:clamp(6px,1.2vw,15px) solid rgba(228,178,255,.94);
-  box-shadow:0 0 12px #fff,0 0 34px #d83cff,0 0 76px #792cff,inset 0 0 26px #cc48ff;
+/* 🌀 รอบ 1208: ประตูมิติขาว–ชมพู–ม่วงตามต้นแบบ ศูนย์กลางโปร่งเห็นสนามปลายทาง */
+#f1-portal{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:hidden;opacity:0;
+  background:radial-gradient(ellipse at 50% 44%,transparent 0 29%,rgba(255,45,226,.16) 46%,rgba(89,23,180,.22) 61%,transparent 76%),
+    conic-gradient(from 9deg at 50% 44%,transparent 0 5%,rgba(218,50,255,.12) 5.5%,transparent 6.5% 14%,rgba(105,48,255,.13) 15%,transparent 16% 100%);
+  filter:saturate(1.28);transition:opacity .16s}
+#f1-portal .gate{position:absolute;left:50%;top:39%;width:min(69vw,760px);height:min(48vh,390px);border-radius:48%;
+  transform:translate(-50%,-50%) scale(.08);opacity:0;border:clamp(8px,1.35vw,17px) solid rgba(255,248,255,.98);
+  box-shadow:0 0 8px #fff,0 0 20px #fff,0 0 42px #ff2bdf,0 0 88px #9f25ff,0 0 145px rgba(73,18,180,.75),
+    inset 0 0 18px #fff,inset 0 0 42px #ff31df,inset 0 0 82px rgba(103,32,255,.72);
   transition:transform .62s cubic-bezier(.18,.85,.25,1.2),opacity .16s;will-change:transform,opacity}
-#f1-portal .gate:before,#f1-portal .gate:after{content:'';position:absolute;inset:-8%;border-radius:50%;border:4px dashed #ff70f2;
-  box-shadow:0 0 22px #b52cff;animation:f1portalpulse .58s ease-in-out infinite alternate}
-#f1-portal .gate:after{inset:5%;border-color:#58bfff;animation-delay:-.29s;animation-duration:.74s}
-#f1-portal .core{position:absolute;inset:5%;border-radius:50%;background:radial-gradient(ellipse,rgba(14,8,45,.02) 34%,rgba(161,42,255,.16) 64%,rgba(255,112,244,.42));
-  box-shadow:inset 0 0 55px rgba(117,55,255,.8)}
-#f1-portal .sparks{position:absolute;inset:-14%}
-#f1-portal .sparks i{--a:0deg;position:absolute;left:50%;top:50%;width:clamp(4px,.65vw,9px);height:clamp(18px,3.5vw,52px);
-  border-radius:99px;background:linear-gradient(#fff,#ff55ed,transparent);transform-origin:50% 0;
-  transform:rotate(var(--a)) translateY(-38vh);filter:drop-shadow(0 0 6px #d94dff);animation:f1portalspark .7s ease-in infinite}
-#f1-portal .sparks i:nth-child(2){--a:40deg;animation-delay:-.1s}#f1-portal .sparks i:nth-child(3){--a:80deg;animation-delay:-.35s}
-#f1-portal .sparks i:nth-child(4){--a:120deg;animation-delay:-.2s}#f1-portal .sparks i:nth-child(5){--a:160deg;animation-delay:-.5s}
-#f1-portal .sparks i:nth-child(6){--a:200deg;animation-delay:-.28s}#f1-portal .sparks i:nth-child(7){--a:240deg;animation-delay:-.42s}
-#f1-portal .sparks i:nth-child(8){--a:280deg;animation-delay:-.18s}#f1-portal .sparks i:nth-child(9){--a:320deg;animation-delay:-.6s}
+/* วงพลังงานซ้อนเหลื่อมกัน: ขาวร้อนด้านใน ชมพูไฟฟ้ากลาง ม่วงเข้มด้านนอก */
+#f1-portal .gate:before,#f1-portal .gate:after{content:'';position:absolute;border-radius:50%;mix-blend-mode:screen}
+#f1-portal .gate:before{inset:-10%;border:clamp(3px,.5vw,7px) solid rgba(255,24,223,.82);
+  box-shadow:0 0 10px #fff,0 0 32px #ff28de,0 0 64px #7e22ff;animation:f1portalpulse .46s ease-in-out infinite alternate}
+#f1-portal .gate:after{inset:-17%;border:3px dashed rgba(164,76,255,.88);filter:drop-shadow(0 0 10px #ba35ff);
+  animation:f1portalorbit 2.2s linear infinite}
+#f1-portal .core{position:absolute;inset:1.5%;border-radius:48%;background:radial-gradient(ellipse,
+  transparent 0 43%,rgba(255,255,255,.08) 49%,rgba(255,36,222,.24) 61%,rgba(94,20,220,.24) 76%,transparent 91%);
+  box-shadow:inset 0 0 18px #fff,inset 0 0 48px rgba(255,34,223,.92),inset 0 0 96px rgba(94,31,255,.72)}
+#f1-portal .core:before,#f1-portal .core:after{content:'';position:absolute;inset:5%;border-radius:50%;
+  border:2px solid rgba(255,255,255,.72);filter:drop-shadow(0 0 8px #ff42e6);animation:f1portalpulse .34s ease-in-out infinite alternate-reverse}
+#f1-portal .core:after{inset:-4%;border-width:1px;border-style:dashed;border-color:#cf52ff;animation-duration:.62s}
+#f1-portal .sparks{position:absolute;inset:-30%;filter:drop-shadow(0 0 8px #ec46ff)}
+#f1-portal .sparks i{--a:0deg;position:absolute;left:50%;top:50%;width:clamp(2px,.38vw,6px);height:clamp(34px,6.5vw,96px);
+  border-radius:99px;background:linear-gradient(#fff 0 8%,#ff53ec 32%,rgba(118,35,255,.5) 62%,transparent);
+  transform-origin:50% 0;transform:rotate(var(--a)) translateY(-43vh);animation:f1portalspark .72s ease-in infinite}
+#f1-portal .sparks i:nth-child(2){--a:20deg;animation-delay:-.12s}#f1-portal .sparks i:nth-child(3){--a:40deg;animation-delay:-.36s}
+#f1-portal .sparks i:nth-child(4){--a:60deg;animation-delay:-.21s}#f1-portal .sparks i:nth-child(5){--a:80deg;animation-delay:-.53s}
+#f1-portal .sparks i:nth-child(6){--a:100deg;animation-delay:-.29s}#f1-portal .sparks i:nth-child(7){--a:120deg;animation-delay:-.44s}
+#f1-portal .sparks i:nth-child(8){--a:140deg;animation-delay:-.18s}#f1-portal .sparks i:nth-child(9){--a:160deg;animation-delay:-.61s}
+#f1-portal .sparks i:nth-child(10){--a:180deg;animation-delay:-.08s}#f1-portal .sparks i:nth-child(11){--a:200deg;animation-delay:-.47s}
+#f1-portal .sparks i:nth-child(12){--a:220deg;animation-delay:-.24s}#f1-portal .sparks i:nth-child(13){--a:240deg;animation-delay:-.58s}
+#f1-portal .sparks i:nth-child(14){--a:260deg;animation-delay:-.16s}#f1-portal .sparks i:nth-child(15){--a:280deg;animation-delay:-.39s}
+#f1-portal .sparks i:nth-child(16){--a:300deg;animation-delay:-.67s}#f1-portal .sparks i:nth-child(17){--a:320deg;animation-delay:-.31s}
+#f1-portal .sparks i:nth-child(18){--a:340deg;animation-delay:-.5s}
 #f1-portal.on{opacity:1}#f1-portal.on .gate{opacity:1;transform:translate(-50%,-50%) scale(1)}
-#f1-portal.jump{opacity:1;background:rgba(245,225,255,.88)}#f1-portal.jump .gate{opacity:0;transform:translate(-50%,-50%) scale(1.28)}
+#f1-portal.jump{opacity:1;background:radial-gradient(ellipse at 50% 39%,#fff 0,rgba(255,214,251,.94) 34%,rgba(171,66,255,.75) 58%,rgba(38,9,78,.3) 100%)}
+#f1-portal.jump .gate{opacity:0;transform:translate(-50%,-50%) scale(1.28)}
 @keyframes f1portalpulse{from{opacity:.38;transform:scale(.96)}to{opacity:1;transform:scale(1.035)}}
-@keyframes f1portalspark{0%{opacity:0;scale:.2}32%{opacity:1}100%{opacity:0;scale:1.35}}
+@keyframes f1portalorbit{to{transform:rotate(360deg)}}
+@keyframes f1portalspark{0%{opacity:0;scale:.2}25%{opacity:1}100%{opacity:0;scale:1.5}}
 /* 🪽 ป้าย DRS (รอบ 898) — ซ่อนตอนไม่อยู่ในโซน · เทาตอนยังเปิดไม่ได้ · เขียวเรืองตอนเปิด */
 #f1-drs{position:absolute;right:10px;bottom:calc(var(--f1-pedb) + 150px);z-index:6;pointer-events:none;display:none;text-align:right;
   border-radius:12px;padding:4px 11px;font-weight:900;font-size:19px;line-height:1.15;letter-spacing:.5px}
@@ -1595,7 +1619,7 @@ function buildDom(){
     <div id="f1-lights"><div class="row"><i></i><i></i><i></i><i></i><i></i></div><b>🚦 รอไฟดับก่อนออกตัว</b></div>
     <div id="f1-gap"></div>
     <div id="f1-wrong">↩️ วิ่งผิดทาง! กลับรถ</div>
-    <div id="f1-portal" aria-hidden="true"><div class="gate"><div class="core"></div><div class="sparks"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+    <div id="f1-portal" aria-hidden="true"><div class="gate"><div class="core"></div><div class="sparks"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
     <div id="f1-resp">🌀 กลับเข้าเส้นทางแล้ว!</div>
     <div id="f1-ban"></div>
     <div id="f1-selfmsg"></div>
@@ -2117,6 +2141,61 @@ function barrierBounce(){
   if(state.haptic!==false&&navigator.vibrate) navigator.vibrate(35);
   return true;
 }
+/* จุดชน OBB ของรถสองคัน — คืน normal จากรถ B มาหารถ A และระยะที่ซ้อนกันน้อยที่สุด */
+function carContact(ax,az,ay,bx,bz,by){
+  const dx=bx-ax,dz=bz-az;
+  const afx=Math.sin(ay),afz=Math.cos(ay),arx=afz,arz=-afx;
+  const bfx=Math.sin(by),bfz=Math.cos(by),brx=bfz,brz=-bfx;
+  const axes=[[arx,arz],[afx,afz],[brx,brz],[bfx,bfz]];
+  let best=Infinity,bnx=0,bnz=0;
+  for(const a of axes){
+    const nx=a[0],nz=a[1],proj=dx*nx+dz*nz;
+    const ra=CAR_HALF_W*Math.abs(nx*arx+nz*arz)+CAR_HALF_L*Math.abs(nx*afx+nz*afz);
+    const rb=CAR_HALF_W*Math.abs(nx*brx+nz*brz)+CAR_HALF_L*Math.abs(nx*bfx+nz*bfz);
+    const over=ra+rb-Math.abs(proj);
+    if(over<=0) return null;
+    if(over<best){
+      const side=proj>=0?1:-1;
+      best=over;bnx=-nx*side;bnz=-nz*side;   // B → A
+    }
+  }
+  return {nx:bnx,nz:bnz,depth:best};
+}
+function resolvePeerCars(dt){
+  let hit=false;
+  for(const uid in peers){
+    const p=peers[uid];
+    if(!p||!p.cur) continue;
+    const c=carContact(px,pz,yaw,p.cur.x,p.cur.z,p.yawCur||0);
+    if(!c) continue;
+    hit=true;
+    /* แยกรถออกตามแกนสั้นสุดก่อนเสมอ จึงไม่มีเฟรมไหนที่รถสองคันทับ/วิ่งทะลุกัน */
+    px+=c.nx*(c.depth+CAR_SEP_EPS);
+    pz+=c.nz*(c.depth+CAR_SEP_EPS);
+    const pvx=p.vxCur||0,pvz=p.vzCur||0;
+    const rvx=vx-pvx,rvz=vz-pvz;
+    const vn=rvx*c.nx+rvz*c.nz;
+    const tx=-c.nz,tz=c.nx,vt=rvx*tx+rvz*tz;
+    if(vn<0){
+      /* impulse ของมวลเท่ากันในมุมมอง local: สะท้อนแนวชน + ลดแนวไถลด้วยแรงเสียดทาน */
+      const out=-vn*CAR_RESTITUTION;
+      vx=pvx+c.nx*out+tx*vt*(1-CAR_SIDE_FRICTION);
+      vz=pvz+c.nz*out+tz*vt*(1-CAR_SIDE_FRICTION);
+      const now=performance.now();
+      if(now>p.hitUntil){
+        p.hitUntil=now+180;
+        if(state.haptic!==false&&navigator.vibrate) navigator.vibrate(Math.min(55,18+Math.round(-vn*1.4)));
+      }
+    }else{
+      /* รถที่แนบสีข้างกันอยู่แล้วมีแรงต้านจริง ไม่ลื่นผ่านกันเหมือนไม่มีมวล */
+      const rub=Math.max(0,1-CAR_RUB_DRAG*dt);
+      vx=pvx+c.nx*Math.max(0,vn)+tx*vt*rub;
+      vz=pvz+c.nz*Math.max(0,vn)+tz*vt*rub;
+    }
+  }
+  if(hit) spd=Math.hypot(vx,vz);
+  return hit;
+}
 function physTick(dt){
   /* วาร์ปกำลังทำงาน: ล็อกแรงขับ/การเก็บรอบชั่วคราว แล้วปล่อยกลับหลังจบแสง */
   if(portalActive){portalTick(dt);return;}
@@ -2191,6 +2270,7 @@ function physTick(dt){
   vx=fx2*vF+fz2*vL;
   vz=fz2*vF+(-fx2)*vL;
   px+=vx*dt; pz+=vz*dt;
+  resolvePeerCars(dt);
   barrierBounce();
   spd=Math.hypot(vx,vz);
   revNow=vF<-0.3;                                      // ⏪ รอบ 911 — ให้ HUD โชว์เกียร์ R
@@ -2717,6 +2797,7 @@ function netSend(force){
   lastNetSend=now;
   const payload={n:((typeof onlineDisplayName==='function'&&onlineDisplayName())||state.playerName||'ผู้เล่น'),
     x:Math.round(px*10)/10, z:Math.round(pz*10)/10, yaw:Math.round(yaw*100)/100, w:sessionWords,
+    vx:Math.round(vx*10)/10, vz:Math.round(vz*10)/10,
     d:drsOn?1:0};   // 🪽 รอบ 907: สถานะ DRS — เพื่อนเห็นไฟเขียวท้ายรถตอนเราเปิดปีก
   if(myChat&&Date.now()-myChat.ts<CHAT_MS+1000){ payload.c=myChat.text; payload.ct=myChat.ts; }
   room.send(payload,force);
@@ -2736,15 +2817,14 @@ function buildPeer(uid,p){
   if(p.grp) scene.remove(p.grp);
   p.grp=new THREE.Group();
   const col=new THREE.Color(peerColor(uid)).getHex();
-  const mat=new THREE.SpriteMaterial({map:TexLib.peerCar,transparent:true,alphaTest:.025,depthWrite:false});
-  (TexUsers.peerCar||(TexUsers.peerCar=[])).push(mat);
-  const car=new THREE.Sprite(mat);car.scale.set(6.4,3.69,1);car.position.y=1.8;car.renderOrder=5;
-  car.userData.view='camera-facing-rear-three-quarter';p.grp.add(car);p.grp.userData.peerCar25d=car;
+  /* 🏎️ รอบ 1208: รถเพื่อนต้องเป็นวัตถุ 3D ที่วางบนพื้นและหันตาม yaw จริง
+     ภาพ 2.5D เดิมหันเข้าหากล้องตลอด จึงดูเหมือนรถลอย/บิดขวางแทร็กจากมุม cockpit */
+  const car=buildF1Car(col);
+  p.grp.add(car);p.grp.userData.peerCar3d=car;
   const shadow=new THREE.Mesh(new THREE.CircleGeometry(1.55,18),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.24,depthWrite:false}));
   shadow.scale.set(1,1.85,1);shadow.rotation.x=-Math.PI/2;shadow.position.y=.025;p.grp.add(shadow);
-  const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:TexLib.glow,color:0x2dff8c,transparent:true,
-    opacity:0,depthWrite:false,blending:THREE.AdditiveBlending}));
-  gl.scale.set(.82,.38,1);gl.position.set(0,1.05,-.85);p.grp.add(gl);p.grp.userData.drsGlow=gl;
+  p.grp.userData.drsGlow=attachDrsGlow(car);
+  p.grp.userData.drsFlap=car.userData.drsFlap||null;
   const pg=(typeof gradeOf==='function')?gradeOf(uid,p.g):'';
   const nm=makeTextSprite(p.n,'rgba(16,26,44,.85)','#ffffff','🏎️',pg);
   nm.scale.set(8,2,1); nm.position.y=4.05;
@@ -2761,12 +2841,15 @@ function onPeer(uid,d){
   let p=peers[uid];
   if(!p){
     p=peers[uid]={n:d.n||'เพื่อน',cur:{x:d.x,z:d.z},tgt:{x:d.x,z:d.z},
-      yawCur:d.yaw||0,yawTgt:d.yaw||0,w:d.w||0,g:d.g,lastCt:0,drsTgt:0,drsK:0};
+      yawCur:d.yaw||0,yawTgt:d.yaw||0,vxCur:d.vx||0,vzCur:d.vz||0,
+      vxTgt:d.vx||0,vzTgt:d.vz||0,w:d.w||0,g:d.g,lastCt:0,drsTgt:0,drsK:0,hitUntil:0};
     buildPeer(uid,p);
     renderBoard();
   }
   p.n=d.n||p.n;
   p.tgt.x=d.x; p.tgt.z=d.z; p.yawTgt=d.yaw||0;
+  if(typeof d.vx==='number') p.vxTgt=d.vx;
+  if(typeof d.vz==='number') p.vzTgt=d.vz;
   p.drsTgt=d.d?1:0;   // 🪽 รอบ 907 — เพื่อนที่ยังไม่อัปเดตโค้ด (d ไม่มีค่า) = ปิดเสมอ ไม่ throw
   if((d.w||0)!==p.w){ p.w=d.w||0; renderBoard(); }
   if(d.c&&d.ct&&d.ct!==p.lastCt){
@@ -2801,6 +2884,8 @@ function peerTick(dt){
     const p=peers[uid];
     p.cur.x=lerp(p.cur.x,p.tgt.x,k);
     p.cur.z=lerp(p.cur.z,p.tgt.z,k);
+    p.vxCur=lerp(p.vxCur||0,p.vxTgt||0,k);
+    p.vzCur=lerp(p.vzCur||0,p.vzTgt||0,k);
     let dy=p.yawTgt-p.yawCur;
     while(dy>Math.PI) dy-=Math.PI*2;
     while(dy<-Math.PI) dy+=Math.PI*2;
@@ -2813,6 +2898,8 @@ function peerTick(dt){
     p.drsK=lerp(p.drsK||0,p.drsTgt||0,clamp(dt*9,0,1));
     const gl=p.grp&&p.grp.userData&&p.grp.userData.drsGlow;
     if(gl) gl.material.opacity=p.drsK*0.85;
+    const flap=p.grp&&p.grp.userData&&p.grp.userData.drsFlap;
+    if(flap) flap.rotation.x=lerp(DRS_FLAP_SHUT,DRS_FLAP_OPEN,p.drsK);
   }
 }
 function netLeave(){
@@ -3184,10 +3271,10 @@ function hudTick(){
 let mapAt=0, relocAt=0;
 function frame(dt,now){
   lightsTick(dt);          // 🚦 รอบ 902 — ต้องมาก่อน physTick (ล็อกคันเร่งจนไฟดับ)
+  peerTick(dt);            // 🏎️💥 รอบ 1208 — อัปเดตรถเพื่อนก่อนแก้การชน ให้ภาพ/ฟิสิกส์ใช้ตำแหน่งเฟรมเดียวกัน
   physTick(dt);
   ghostTick(dt);           // 👻 รอบ 902
   collectTick();
-  peerTick(dt);
   smokeTick(dt);
   fpWheelTick(dt);         // 🛞 รอบ 911 — ต้องมาหลัง physTick (ใช้ px/pz/yaw ล่าสุด)
   camTick(dt);
@@ -3362,6 +3449,9 @@ window.F1World={
     get letters(){return letters},
     /* 👥 รอบ 939 — เทสต์ปุ่ม "ไปหาเพื่อน" บนกระดาน (ยัด room ปลอมได้โดยไม่ต้องต่อ Firebase จริง) */
     get room(){return room}, set room(v){room=v}, renderBoard,
+    /* 🏎️ รอบ 1208 — hook สำหรับยืนยันรถเพื่อน 3D จากมุม cockpit โดยไม่แตะ Firebase */
+    get peers(){return peers}, onPeer, peerTick,
+    carContact, resolvePeerCars,
     give(){ letters.slice().forEach(l=>{ word.got.push(l.idx); scene.remove(l.spr); }); letters=[]; completeWord(); },
     surfAt, nearIdx, trackPointAhead, pickWord, collectTick, physTick, barrierBounce,
     beginPortalReturn, portalTick, respawnOnTrack,

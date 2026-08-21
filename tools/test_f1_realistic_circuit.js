@@ -34,7 +34,7 @@ assert.ok(/legacyArchitectureRoot\.visible=!realistic/.test(f1),
   'Realistic Circuit must hide the entire legacy OSM architecture group to prevent stacked road boxes');
 assert.ok(/function tracksideSpotClear\([\s\S]*surfAt/.test(f1)&&/culledRoadCity/.test(f1),
   'procedural skyline buildings must be culled against every track segment, not only their source segment');
-assert.ok(/function barrierBounce\([\s\S]*BARRIER_BOUNCE/.test(f1)&&/px\+=vx\*dt; pz\+=vz\*dt;\s*barrierBounce\(\)/.test(f1),
+assert.ok(/function barrierBounce\([\s\S]*BARRIER_BOUNCE/.test(f1)&&/px\+=vx\*dt; pz\+=vz\*dt;[\s\S]{0,80}barrierBounce\(\)/.test(f1),
   'trackside barrier must clamp and reflect vehicle velocity after movement');
 assert.ok(/function beginPortalReturn\([\s\S]*portalTargetIdx=nearIdx/.test(f1)&&
   /function portalTick\([\s\S]*respawnOnTrack\(portalTargetIdx,false\)/.test(f1),
@@ -43,6 +43,13 @@ assert.ok(/surf==='sand'\|\|surf==='runoff'/.test(f1)&&/if\(portalActive\)\{port
   'portal recovery must detect sustained departure from the racing surface and lock physics during the jump');
 assert.ok(/#f1-portal[^]*@keyframes f1portalpulse/.test(f1),
   'portal must be an animated lightweight procedural overlay, not another full-screen raster asset');
+assert.ok(/#f1-portal \.gate[^]*#fff[^]*#ff2bdf[^]*#9f25ff/.test(f1),
+  'portal lighting must layer a white-hot core, electric pink and deep violet');
+assert.ok(/\.core[^]*transparent 0 43%/.test(f1),
+  'portal center must stay transparent so the destination track remains visible');
+const portalHtml=f1.slice(f1.indexOf('id="f1-portal"'),f1.indexOf('id="f1-resp"'));
+assert.strictEqual((portalHtml.match(/<i><\/i>/g)||[]).length,18,
+  'portal must keep the dense 18-ray energy burst from the visual reference');
 
 const words=f1.slice(f1.indexOf('function spawnLetters'),f1.indexOf('เพื่อนร่วมสนาม'));
 assert.ok(/const gap=TOTAL\/word\.en\.length/.test(words),'letter gap must equal lap distance divided by word length');
@@ -59,14 +66,32 @@ const receive=f1.slice(f1.indexOf('function onPeer'),f1.indexOf('function showPe
 assert.ok(!/\b(?:word|letters)\s*=|scene\.remove\(.*spr/.test(receive),'peer updates must never remove local letters');
 
 const peer=f1.slice(f1.indexOf('function buildPeer'),f1.indexOf('function onPeer'));
-assert.ok(peer.includes('TexLib.peerCar')&&peer.includes("view='camera-facing-rear-three-quarter'"),
-  'remote racers must use the camera-facing 2.5D peer-car sprite');
-assert.ok(!/buildF1Car|makeCar\(/.test(peer),'remote racers must not build heavy 3D cars');
-assert.ok(/peer_car_25d\.webp/.test(f1)&&!/peer_car_25d\.png/.test(f1),
-  'peer sprite runtime must use the optimized transparent WebP, never the heavier PNG');
-const peerAsset=path.join(root,'img/f1/peer_car_25d.webp');
-assert.ok(fs.existsSync(peerAsset),'optimized peer-car WebP must ship with the runtime');
-assert.ok(fs.statSync(peerAsset).size<=80*1024,'peer-car WebP must stay under the 80 KiB mobile budget');
+assert.ok(peer.includes('buildF1Car(col)')&&peer.includes('peerCar3d'),
+  'remote racers must use a ground-aligned 3D car that follows their real yaw');
+assert.ok(!/THREE\.Sprite|camera-facing-rear-three-quarter|peerCar25d/.test(peer),
+  'remote racers must never use a camera-facing flat sprite');
+assert.ok(peer.includes('attachDrsGlow(car)')&&peer.includes('drsFlap'),
+  'remote 3D cars must retain their DRS visual state');
+
+/* Multiplayer cars must be solid oriented bodies, with bounce + rubbing resistance. */
+for(const token of ['CAR_HALF_W','CAR_HALF_L','CAR_RESTITUTION','CAR_SIDE_FRICTION','CAR_RUB_DRAG'])
+  assert.ok(f1.includes(token),`missing peer collision tuning constant: ${token}`);
+assert.ok(/function carContact\([\s\S]*axes=\[\[arx,arz\],\[afx,afz\],\[brx,brz\],\[bfx,bfz\]\]/.test(f1),
+  'car collision must use both oriented axes from both racers');
+assert.ok(/function resolvePeerCars\([\s\S]*CAR_RESTITUTION[\s\S]*CAR_SIDE_FRICTION[\s\S]*CAR_RUB_DRAG/.test(f1),
+  'peer collision must apply rebound impulse and side-rubbing resistance');
+assert.ok(/px\+=vx\*dt; pz\+=vz\*dt;\s*resolvePeerCars\(dt\);\s*barrierBounce\(\)/.test(f1),
+  'peer separation must run after movement and before the track barrier clamp');
+assert.ok(/vx:Math\.round\(vx\*10\)\/10, vz:Math\.round\(vz\*10\)\/10/.test(f1),
+  'network payload must provide relative velocity for physical impacts');
+const num=name=>Number(f1.match(new RegExp(`const ${name}\\s*=\\s*([.\\d]+)`))[1]);
+const contactSrc=f1.slice(f1.indexOf('function carContact'),f1.indexOf('function resolvePeerCars'));
+const carContact=Function(`const CAR_HALF_W=${num('CAR_HALF_W')},CAR_HALF_L=${num('CAR_HALF_L')};${contactSrc};return carContact;`)();
+assert.strictEqual(carContact(0,0,0,0,6,0),null,'cars farther than one body length must not collide');
+const noseHit=carContact(0,0,0,0,5,0);
+assert.ok(noseHit&&noseHit.depth>0&&noseHit.nz<0,'front-to-rear overlap must push the local car backward');
+const sideHit=carContact(0,0,0,1.8,0,Math.PI/2);
+assert.ok(sideHit&&sideHit.depth>0,'rotated cars must remain solid during a side squeeze');
 
 /* Steering must move the driver's hands as well as the wheel, using lightweight alpha frames. */
 for(const dir of ['center','left','right']){

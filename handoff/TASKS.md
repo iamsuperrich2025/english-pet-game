@@ -28,6 +28,10 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (21 ส.ค.) — อ่านก่อน
+- **รอบ 1208 · รถเพื่อน F1 ไม่ลอย/ไม่บิดเข้ากล้อง:** ต้นตอคือ camera-facing 2.5D sprite ที่ไม่เคยหันตามแทร็ก; เปลี่ยนเป็น low-poly F1 3D วางฐาน y=0 และหมุนตาม remote yaw จริง โดยคงเงา/ป้ายชื่อ/DRS (`js/f1_3d.js`)
+- เพิ่ม solid OBB ตาม yaw ของรถทุกคันและส่ง velocity ผ่าน NetRoom: ชนแล้วแยกไม่ทะลุ, สะท้อน 34%, มีแรงเสียดทานตอนเบียด; Browser QA ชน 22 m/s ได้ `hit=true` และเด้งกลับ 7.48 m/s
+- ปรับประตูมิติเป็นแกนขาวร้อน–ชมพูไฟฟ้า–ม่วงเข้ม 3 ชั้น + 18 energy rays, ศูนย์กลางโปร่งเห็นสนามและวางหลัง cockpit ตามภาพต้นแบบ; QA 730×400 ผ่าน
+- syntax + F1 Realistic + solo/ghost + collision/portal regressions ผ่าน (`tools/test_f1_realistic_circuit.js`)
 - **รอบ 1207 · Realistic Circuit ปิดช่องว่างภาพ/สนาม + ประตูมิติ:** เปลี่ยนค็อกพิทเป็น WebP alpha 3 เฟรม (กลาง/เลี้ยวซ้าย/เลี้ยวขวา) ให้มือทั้งสองกับพวงมาลัยหันไปทางเดียวกันตาม steering จริง รวมเพียง 204,792B และซ่อน procedural wheel เก่าที่เคยซ้อนภาพ (`img/f1/cockpit_turn_*.webp`, `js/f1_3d.js`)
 - ปิด legacy OSM architecture ทั้งก้อนเฉพาะ Realistic และคัด skyline ทุกหลังกับ track footprint จึงไม่มีกล่อง/อาคารโผล่กลางถนน; Battery Saver เก็บของเดิมไว้ครบ กำแพงข้างสนามยัง clamp+เด้ง
 - รถค้างบน runoff/ทราย 2 วินาทีเปิดประตูมิติ procedural สีม่วง แล้ววาร์ปกลับจุดถนนใกล้ตำแหน่งที่หลุด; ไม่เพิ่ม texture หนัก และ browser QA ยืนยันสถานะ `runoff → portal=true → track` อัตโนมัติ
