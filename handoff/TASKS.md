@@ -40,10 +40,6 @@
 - **รอบ 1205 · ผีในโรงแรมโปร่งใส 20%:** จำกัด opacity ของผีที่ลอยในฉากและตอนบุกเข้าห้องไว้ที่ 0.20 โดยภาพ jump scare เต็มจอคงเดิม (`js/hauntedhotelghost.js`); syntax + Haunted Hotel regression ผ่าน
 - **รอบ 1204 · ลดน้ำหนักรถผู้เล่นอื่น 87.8%:** crop ขอบโปร่ง + WebP alpha 640×369 q86/method 6 เหลือ 58,124B จาก PNG 476,443B; PSNR ฉากกลางคืน 33.55dB และคง procedural fallback (`img/f1/peer_car_25d.webp`)
 - Runtime/build/check/test เปลี่ยนเป็น WebP immutable ทั้งชุด, ปรับ sprite aspect ตรงภาพ และเพิ่มงบ regression ≤80KiB; local build ข้าม tracked asset เก่าที่ถูกลบก่อน commit ได้โดยไม่กระทบ git-archive deploy
-- **รอบ 1203 · Realistic Circuit premium + gameplay:** พวงมาลัย HUD/จอหมุนตามเลี้ยว, อาคาร/อัฒจันทร์เป็น modular 3D ไม่มี photo facade, ป้ายมีโครงจริง และคัด footprint ที่รุกเขตถนน (`js/f1_3d.js`)
-- เข้าสนาม Realistic โดยตรงชั่วคราว (Battery Saver/selector ยังอยู่), กำแพงชนแล้ว clamp+เด้ง, หนึ่งคำต่อรอบและวางตัวอักษรห่าง `TOTAL/word.length`; multiplayer เก็บตัวอักษร local ของใครของมัน ไม่แย่งกัน
-- รถผู้เล่นอื่นเปลี่ยนเป็น camera-facing 2.5D sprite โปร่งใส 768×512 (`img/f1/peer_car_25d.png`) พร้อม fallback/immutable build asset ลดภาระจากโมเดล 3D เต็มคัน
-- Focused regressions 5 ชุด + syntax/diff/asset check ผ่าน; Browser Realistic 1320×619 ยืนยัน steering, even letters, barrier bounce, peer sprite และ production build `.1083` 8,359 ไฟล์ 461.4MiB ผ่านก่อน multiplayer isolation guard
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`

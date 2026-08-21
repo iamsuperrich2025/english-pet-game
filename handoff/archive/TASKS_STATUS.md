@@ -5253,3 +5253,11 @@
 - Node/Hotel regressions ผ่าน; Browser เกมจริงยืนยันหน้า atlas + viewport 1320×619/812×375 และ build `.1082` 8,357 ไฟล์ 460.5MiB + PWA/cache/TWA validator ผ่าน
 - **รอบ 1201 · อันดับพิมพ์คำแสดงผู้เล่นที่เหลือครบ:** แยก Top 10 ผู้รับรางวัลออกจากจำนวนแสดงเต็มจอ และขยายรายการเป็น Top 100 เท่าหมวดเหรียญ โดยอันดับ 11–100 ไม่มีรางวัลเพิ่ม (`js/ui.js`)
 - เพิ่ม regression กันตัดกลับเหลือ 10; syntax/diff ผ่าน และ Browser demo 100 คนที่ 812×375/1320×619 ยืนยันอันดับ 100 เลื่อนเห็นจริง กล่องอยู่ใน viewport, overflow X=0, console error 0
+
+
+## ⏬ ย้ายเมื่อ 2026-08-21 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1203 · Realistic Circuit premium + gameplay:** พวงมาลัย HUD/จอหมุนตามเลี้ยว, อาคาร/อัฒจันทร์เป็น modular 3D ไม่มี photo facade, ป้ายมีโครงจริง และคัด footprint ที่รุกเขตถนน (`js/f1_3d.js`)
+- เข้าสนาม Realistic โดยตรงชั่วคราว (Battery Saver/selector ยังอยู่), กำแพงชนแล้ว clamp+เด้ง, หนึ่งคำต่อรอบและวางตัวอักษรห่าง `TOTAL/word.length`; multiplayer เก็บตัวอักษร local ของใครของมัน ไม่แย่งกัน
+- รถผู้เล่นอื่นเปลี่ยนเป็น camera-facing 2.5D sprite โปร่งใส 768×512 (`img/f1/peer_car_25d.png`) พร้อม fallback/immutable build asset ลดภาระจากโมเดล 3D เต็มคัน
+- Focused regressions 5 ชุด + syntax/diff/asset check ผ่าน; Browser Realistic 1320×619 ยืนยัน steering, even letters, barrier bounce, peer sprite และ production build `.1083` 8,359 ไฟล์ 461.4MiB ผ่านก่อน multiplayer isolation guard
