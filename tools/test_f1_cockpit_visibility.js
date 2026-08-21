@@ -47,7 +47,8 @@ assert.match(ui,/const f1EngineUrl=['"]__VW_F1_ENGINE_URL__['"][\s\S]{0,160}load
   'The local build must not reuse a stale pre-fix F1 engine from browser/service-worker cache');
 assert.match(src,/VIP PIT GARAGE[\s\S]*data-car-color/,'A premium pre-race color-selection garage must be present');
 assert.match(src,/localStorage\.setItem\(CAR_COLOR_KEY,playerCarStyle\.key\)/,'Selected car color must persist locally');
-assert.match(src,/cl:CAR_STYLES\.indexOf\(playerCarStyle\)/,'Multiplayer payload must carry the selected car color');
+assert.match(src,/cw:F1_COLOR_WIRE\+playerCarStyle\.key/,
+  'Multiplayer payload must carry the selected car color through the NetRoom-safe wire field');
 assert.match(src,/buildPeerF1Car\(playerCarStyle\.value\)/,'The local 3D car must use the selected shared low-poly color');
 assert.match(build,/const F1_COCKPIT_ASSETS[\s\S]*\['red', 'blue', 'green', 'yellow', 'orange'\]/,
   'Build must enumerate every supported cockpit color');

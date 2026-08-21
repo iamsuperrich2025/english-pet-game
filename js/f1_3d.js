@@ -145,9 +145,9 @@ const STEER_MAX    = 0.34;    // มุมเลี้ยวสูงสุด (
 const STEER_HI     = 0.052;   // มุมเลี้ยวตอนเร็วสุด (โค้งปลายตรง ~ขยับนิดเดียว)
 const SURF_RUNOFF  = {grip:0.62, drag:1.6};   // สัมประสิทธิ์บน runoff
 const SURF_SAND    = {grip:0.28, drag:7.0};   // บนทราย: ลื่น + หน่วงแรง
-/* 🪽🏎️ รอบ 1216 — ทางกระโดดเป็นเลนข้างแบบ optional; racing line กลางสนามไม่ยกตัว */
+/* 🪽🏎️ รอบ 1217 — ทางกระโดดอยู่กึ่งกลางทางหลัก; ยังมีช่องราบริมแทร็กให้เลือกหลบได้ */
 const JUMP_GRAVITY = 9.81;    // m/s² — แกนดิ่งใช้แรงโน้มถ่วงจริง แยกจากฟิสิกส์ยาง X/Z
-const JUMP_LANE_LAT= 11.25;   // อยู่ใน runoff แต่ขอบ entry แตะผิว track จึงเลือกเข้าได้โดยไม่โดน portal
+const JUMP_LANE_LAT= 0;       // centerline ทางหลัก — ไม่เหยียบ runoff จึงไม่ถูก portal ก่อนถึงเนิน
 const JUMP_ENTRY_M = 30;
 const JUMP_RISE_M  = 60;
 const JUMP_GAP_M   = 25;
@@ -167,6 +167,9 @@ const CHAT_PRESETS = ['เร็วจัด! 🔥','แซงสวยมาก
 /* 🎨 รอบ 1216: สีรถชุดเดียวกันทั้ง cockpit, รถเรา และรถที่เพื่อนเห็น
    จำกัดไว้เฉพาะสีที่มี cockpit ครบ 3 เฟรม เพื่อไม่ให้ภาพคนขับกับโมเดลสลับสี */
 const CAR_COLOR_KEY='vwF1CarColor';
+/* NetRoom ส่งเฉพาะชื่อฟิลด์กลางที่ประกาศไว้: cw จะถูกบีบเป็น q แล้วประกอบคืนครบ
+   และผ่าน rules ของ legacy /world ด้วย; ตัวรับยังอ่าน cl เพื่อรองรับ packet ช่วงเปลี่ยนผ่าน */
+const F1_COLOR_WIRE='f1c:';
 const CAR_STYLES=Object.freeze([
   {key:'red',   label:'แดง เรซซิง', hex:'#e10600', value:0xe10600},
   {key:'blue',  label:'น้ำเงิน อิเล็กทริก',hex:'#0090ff',value:0x0090ff},
@@ -614,8 +617,8 @@ function nearIdx(x,z,hint){
 }
 
 /* ============================================================
-   🌌🪽 รอบ 1216 — FANTASY OPTIONAL AIR ROUTES (GPU COOL)
-   สามเลนกระโดดอยู่ข้าง racing line: geometry/material ใช้ร่วม, ของซ้ำเป็น instancing,
+   🌌🪽 รอบ 1217 — FANTASY MAIN-LINE AIR ROUTES (GPU COOL)
+   สามเนินอยู่กลางทางหลัก (ริมถนนยังราบให้หลบ): geometry/material ใช้ร่วม, ของซ้ำเป็น instancing,
    beacon ใช้ LOD; ไม่มี texture/PBR/reflection/dynamic light/shadow/particle ใหม่
    ============================================================ */
 function jumpDeltaD(i,j){
@@ -680,7 +683,7 @@ function jumpProbe(x,z,hint){
   if(p){p.i=i;p.lat=lat;}
   return p;
 }
-function chooseJumpStart(frac,side){
+function chooseJumpStart(frac){
   const desired=(sfIdx+Math.round(frac*LINE.n))%LINE.n;
   const span=Math.ceil((JUMP_ENTRY_M+JUMP_RISE_M+JUMP_GAP_M+JUMP_LAND_M+JUMP_EXIT_M)/SAMPLE_M);
   let best=desired,bestScore=Infinity,bestMax=Infinity;
@@ -690,7 +693,7 @@ function chooseJumpStart(frac,side){
     for(let k=0;k<=span;k+=2){
       const i=(st+k)%LINE.n,c=Math.abs(LINE.curv[i]);sum+=c;maxC=Math.max(maxC,c);
       if(PITL&&k%8===0){
-        const x=LINE.x[i]+LINE.nx[i]*side*JUMP_LANE_LAT,z=LINE.z[i]+LINE.nz[i]*side*JUMP_LANE_LAT;
+        const x=LINE.x[i],z=LINE.z[i];
         const pa=pitAt(x,z);if(pa&&pa.d<PIT_HALF_W+4) pitPenalty+=4;
       }
     }
@@ -702,12 +705,11 @@ function chooseJumpStart(frac,side){
 }
 function prepareFantasyJumps(){
   if(JUMPS.length) return JUMPS;
-  const sides=[1,-1,1];
   JUMPS=JUMP_FRACTIONS.map((frac,n)=>{
-    const pick=chooseJumpStart(frac,sides[n]),takeoffD=JUMP_ENTRY_M+JUMP_RISE_M;
+    const pick=chooseJumpStart(frac),takeoffD=JUMP_ENTRY_M+JUMP_RISE_M;
     const landStartD=takeoffD+JUMP_GAP_M,landEndD=landStartD+JUMP_LAND_M;
-    return {id:n+1,label:['AURORA','NEBULA','SOLAR'][n],color:JUMP_COLORS[n],side:sides[n],
-      lat:sides[n]*JUMP_LANE_LAT,startIdx:pick.i,maxCurvature:pick.maxCurvature,
+    return {id:n+1,label:['AURORA','NEBULA','SOLAR'][n],color:JUMP_COLORS[n],side:0,
+      lat:JUMP_LANE_LAT,startIdx:pick.i,maxCurvature:pick.maxCurvature,
       entryM:JUMP_ENTRY_M,riseM:JUMP_RISE_M,gapM:JUMP_GAP_M,landM:JUMP_LAND_M,
       exitM:JUMP_EXIT_M,recoverM:JUMP_RECOVER_M,height:JUMP_HEIGHT,landH:JUMP_LAND_H,
       takeoffD,landStartD,landEndD,endD:landEndD+JUMP_EXIT_M,recoverD:landEndD+JUMP_EXIT_M+JUMP_RECOVER_M,
@@ -745,7 +747,7 @@ function fantasyRampGeometry(){
 }
 function buildFantasyCircuit(){
   prepareFantasyJumps();
-  const root=new THREE.Group();root.name='F1_FANTASY_OPTIONAL_AIR_ROUTES';
+  const root=new THREE.Group();root.name='F1_FANTASY_MAIN_AIR_ROUTES';
   const rampMat=new THREE.MeshLambertMaterial({color:0x263755,emissive:0x07152a,emissiveIntensity:.62,side:THREE.DoubleSide});
   const ramp=new THREE.Mesh(fantasyRampGeometry(),rampMat);ramp.name='F1_FANTASY_SHARED_RAMP_SURFACE';root.add(ramp);
   const edgeGeo=new THREE.BoxGeometry(.18,.11,1),edgeMat=new THREE.MeshBasicMaterial({color:0xffffff,toneMapped:false});
@@ -793,7 +795,7 @@ function buildFantasyCircuit(){
     const p=jumpPose(j,j.takeoffD,j.lat,j.height+4.25);lod.position.set(p.x,p.y,p.z);lod.rotation.y=p.yaw;
     lod.userData={jumpId:j.id,lodDistances:[0,220]};root.add(lod);
   }
-  root.userData.stats={jumps:JUMPS.length,optionalLane:true,mainRacingLineRaised:false,sharedRampGeometry:1,
+  root.userData.stats={jumps:JUMPS.length,optionalLane:true,mainRacingLineRaised:true,flatBypassEdges:true,sharedRampGeometry:1,
     instancedGroups:3,lodBeacons:JUMPS.length,textures:0,pbr:0,reflections:0,dynamicLights:0,dynamicShadows:0,particles:0,
     rampTriangles:ramp.geometry.index.count/3,edgeInstances:edgeSpecs.length,supportInstances:pierSpecs.length,finInstances:finSpecs.length};
   fantasyStats=root.userData.stats;
@@ -2213,7 +2215,8 @@ const CSS=`
 #f1-topright #f1-coins{color:var(--f1-gold);border-color:rgba(255,209,46,.58)}
 #f1-steer{left:10px;bottom:9px;width:min(25vw,180px);height:min(25vw,180px);max-height:43vh;max-width:43vh;
   border:1px solid rgba(160,216,244,.62);border-radius:50%;background:radial-gradient(circle,#0c1623 0 27%,#43505d 28% 31%,#07101a 32% 51%,#75818b 52% 54%,rgba(9,16,27,.66) 55% 70%,rgba(103,216,255,.12));
-  box-shadow:inset 0 0 0 4px rgba(2,7,13,.72),inset 0 0 18px #000,0 0 0 1px #05080c,0 8px 26px rgba(0,0,0,.52)}
+  box-shadow:inset 0 0 0 4px rgba(2,7,13,.72),inset 0 0 18px #000,0 0 0 1px #05080c,0 8px 26px rgba(0,0,0,.52);
+  pointer-events:none;will-change:left,top}
 #f1-steer:before{content:'‹                                      ›';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   color:#c8e8fb;font:900 clamp(17px,3vw,29px)/1 monospace;letter-spacing:.05em;text-shadow:0 0 9px var(--f1-cyan)}
 #f1-knob{--ctl-turn:0deg;top:18%;left:18%!important;width:64%;height:64%;margin:0;border-radius:38%;font-size:clamp(19px,3.5vw,34px);
@@ -2408,19 +2411,42 @@ function buildDom(){
     sendChat(CHAT_PRESETS[i]); chatBarEl.classList.remove('on');
   }));
   wrapEl.querySelector('#f1-chatbtn').addEventListener('click',()=>chatBarEl.classList.toggle('on'));
-  /* พวงมาลัยลาก */
+  /* 🎮 รอบ 1217: floating steering pad — แตะ/ลากตรงไหนก็ได้ในครึ่งจอซ้าย
+     ศูนย์พวงมาลัยย้ายใต้จุดแตะ, pointer capture ทำให้ลากออกนอกวงแล้วยังคุมต่อเนื่อง */
   const steerBox=wrapEl.querySelector('#f1-steer');
-  let sid=null;
-  function steerTo(cx){
-    const r=steerBox.getBoundingClientRect();
-    const t=clamp((cx-r.left)/r.width*2-1,-1,1);
-    steerCtl=t;
-    knobEl.style.left=(50+t*50*(1-(knobEl.offsetWidth||56)/r.width))+'%';   // 🔄 รอบ 911 — knob โตขึ้น อ่านขนาดจริง
+  let sid=null,steerAnchorX=0,steerRadius=60;
+  const steerBlock='button,#f1-board,#f1-map,#f1-word,#f1-laps,#f1-garage,#f1-intro,#f1-exitbox,#f1-legal,#f1-chatbar';
+  function placeSteer(cx,cy){
+    const wr=wrapEl.getBoundingClientRect(),r=steerBox.getBoundingClientRect();
+    const hx=r.width*.5,hy=r.height*.5,pad=6;
+    const minX=hx+pad,maxX=Math.max(minX,wr.width*.5-hx-pad);
+    const minY=hy+pad,maxY=Math.max(minY,wr.height-hy-pad);
+    const x=clamp(cx-wr.left,minX,maxX),y=clamp(cy-wr.top,minY,maxY);
+    steerBox.style.left=x+'px';steerBox.style.top=y+'px';steerBox.style.bottom='auto';
+    steerBox.style.transform='translate(-50%,-50%)';
+    steerBox.dataset.centerX=x.toFixed(1);steerBox.dataset.centerY=y.toFixed(1);
+    steerRadius=Math.max(32,r.width*.42);
   }
-  steerBox.addEventListener('pointerdown',e=>{ sid=e.pointerId; steerBox.setPointerCapture(sid); steerTo(e.clientX); });
-  steerBox.addEventListener('pointermove',e=>{ if(sid===e.pointerId) steerTo(e.clientX); });
-  const sEnd=e=>{ if(sid===e.pointerId){ sid=null; steerCtl=0; knobEl.style.left='50%'; } };
-  steerBox.addEventListener('pointerup',sEnd); steerBox.addEventListener('pointercancel',sEnd);
+  function steerTo(cx){
+    steerCtl=clamp((cx-steerAnchorX)/steerRadius,-1,1);
+    steerBox.dataset.value=steerCtl.toFixed(3);
+  }
+  function resetSteer(rehome){
+    sid=null;steerCtl=0;steerBox.dataset.active='0';steerBox.dataset.value='0.000';
+    if(rehome){steerBox.style.removeProperty('left');steerBox.style.removeProperty('top');
+      steerBox.style.removeProperty('bottom');steerBox.style.removeProperty('transform');}
+  }
+  wrapEl.addEventListener('pointerdown',e=>{
+    const wr=wrapEl.getBoundingClientRect(),blocked=e.target.closest&&e.target.closest(steerBlock);
+    if(sid!==null||e.clientX>wr.left+wr.width*.5||blocked||(e.pointerType==='mouse'&&e.button!==0))return;
+    e.preventDefault();sid=e.pointerId;steerAnchorX=e.clientX;placeSteer(e.clientX,e.clientY);
+    steerBox.dataset.active='1';steerTo(e.clientX);wrapEl.setPointerCapture(sid);
+  });
+  wrapEl.addEventListener('pointermove',e=>{if(sid===e.pointerId){e.preventDefault();steerTo(e.clientX);}});
+  const sEnd=e=>{if(sid===e.pointerId)resetSteer(false);};
+  wrapEl.addEventListener('pointerup',sEnd);wrapEl.addEventListener('pointercancel',sEnd);
+  wrapEl.addEventListener('lostpointercapture',e=>{if(sid===e.pointerId)resetSteer(false);});
+  steerBox._f1Reset=()=>resetSteer(true);
   /* คันเร่ง/เบรก */
   /* ⏪ รอบ 911: ปุ่มเกียร์ถอยหลัง */
   const revB=wrapEl.querySelector('#f1-reverse');
@@ -3545,7 +3571,7 @@ function netSend(force){
   const payload={n:((typeof onlineDisplayName==='function'&&onlineDisplayName())||state.playerName||'ผู้เล่น'),
     x:Math.round(px*10)/10, y:Math.round(py*20)/20, z:Math.round(pz*10)/10,
     yaw:Math.round(yaw*100)/100, p:Math.round(pitch*100)/100, a:airborne?1:0, w:sessionWords,
-    cl:CAR_STYLES.indexOf(playerCarStyle),
+    cw:F1_COLOR_WIRE+playerCarStyle.key,
     vx:Math.round(vx*10)/10, vz:Math.round(vz*10)/10,
     vy:Math.round(vy*10)/10,
     d:drsOn?1:0};   // 🪽 รอบ 907: สถานะ DRS — เพื่อนเห็นไฟเขียวท้ายรถตอนเราเปิดปีก
@@ -3563,6 +3589,16 @@ function peerColorIndex(uid,requested){
   if(Number.isInteger(requested)&&requested>=0&&requested<CAR_STYLES.length)return requested;
   let h=0; for(let i=0;i<uid.length;i++) h=(h*31+uid.charCodeAt(i))>>>0;
   return h%PEER_COLORS.length;
+}
+function packetCarColorIndex(uid,d){
+  const direct=d&&d.cl;
+  if(Number.isInteger(direct)&&direct>=0&&direct<CAR_STYLES.length)return direct;
+  const wire=d&&typeof d.cw==='string'?d.cw:'';
+  if(wire.startsWith(F1_COLOR_WIRE)){
+    const key=wire.slice(F1_COLOR_WIRE.length),idx=CAR_STYLES.findIndex(s=>s.key===key);
+    if(idx>=0)return idx;
+  }
+  return peerColorIndex(uid);
 }
 function peerColor(uid,requested){
   return PEER_COLORS[peerColorIndex(uid,requested)];
@@ -3609,12 +3645,12 @@ function onPeer(uid,d){
     p=peers[uid]={n:d.n||'เพื่อน',cur:{x:d.x,z:d.z},tgt:{x:d.x,z:d.z},
       yawCur:d.yaw||0,yawTgt:d.yaw||0,vxCur:d.vx||0,vzCur:d.vz||0,
       vxTgt:d.vx||0,vzTgt:d.vz||0,yCur:d.y||0,yTgt:d.y||0,vyCur:d.vy||0,vyTgt:d.vy||0,
-      pitchCur:d.p||0,pitchTgt:d.p||0,airborne:!!d.a,w:d.w||0,g:d.g,colorIdx:peerColorIndex(uid,d.cl),lastCt:0,drsTgt:0,drsK:0,hitUntil:0};
+      pitchCur:d.p||0,pitchTgt:d.p||0,airborne:!!d.a,w:d.w||0,g:d.g,colorIdx:packetCarColorIndex(uid,d),lastCt:0,drsTgt:0,drsK:0,hitUntil:0};
     buildPeer(uid,p);
     renderBoard();
   }
   p.n=d.n||p.n;
-  const colorIdx=peerColorIndex(uid,d.cl);
+  const colorIdx=packetCarColorIndex(uid,d);
   if(colorIdx!==p.colorIdx){p.colorIdx=colorIdx;buildPeer(uid,p);}
   p.tgt.x=d.x; p.tgt.z=d.z; p.yawTgt=d.yaw||0;
   if(typeof d.y==='number')p.yTgt=d.y;
@@ -3694,6 +3730,27 @@ function netLeave(){
   if(room){ room.leave(); room=null; }
   for(const uid in peers) dropPeer(uid);
 }
+/* 🛡️ รอบ 1217: แผง multiplayer ต้องอยู่ถัดจากกล่องรอบ/เวลา ไม่ใช้ top ตายตัว
+   จอแคบจนชนกล่องคำศัพท์ค่อยย้ายลงใต้ HUD ทั้งสอง โดยไม่วัด layout ทุก frame */
+function layoutBoard(){
+  if(!wrapEl||!lapEl||!boardEl||!boardEl.classList.contains('on')) return;
+  const wrap=wrapEl.getBoundingClientRect(),lap=lapEl.getBoundingClientRect();
+  const board=boardEl.getBoundingClientRect();
+  if(!board.width||!board.height) return;
+  const edge=8,gap=10,maxX=Math.max(edge,wrap.width-board.width-edge);
+  let x=clamp(lap.right-wrap.left+gap,edge,maxX);
+  let y=Math.max(edge,lap.top-wrap.top);
+  const word=wordEl&&wordEl.getBoundingClientRect();
+  const overlaps=(a,b,pad=6)=>b&&b.width&&b.height&&
+    a.left<b.right+pad&&a.right>b.left-pad&&a.top<b.bottom+pad&&a.bottom>b.top-pad;
+  const candidate=()=>({left:wrap.left+x,right:wrap.left+x+board.width,
+    top:wrap.top+y,bottom:wrap.top+y+board.height});
+  if(overlaps(candidate(),lap)||overlaps(candidate(),word)){
+    y=Math.max(lap.bottom,word&&word.height?word.bottom:wrap.top)-wrap.top+gap;
+  }
+  boardEl.style.left=Math.round(x)+'px';
+  boardEl.style.top=Math.round(y)+'px';
+}
 function renderBoard(){
   if(!boardEl) return;
   const uids=Object.keys(peers);
@@ -3705,7 +3762,7 @@ function renderBoard(){
       g:peers[u].grade||((typeof gradeOf==='function')?gradeOf(u):'')}))
     .concat([me]).sort((a,b)=>b.w-a.w).slice(0,5);
   const sig=note+'|'+rows.map(r=>r.n+':'+r.w+':'+r.g).join('|');
-  if(sig===boardSig){ boardEl.classList.add('on'); return; }
+  if(sig===boardSig){ boardEl.classList.add('on'); layoutBoard(); return; }
   boardSig=sig;
   boardEl.innerHTML='<div class="m-bd-h">🏆 คำที่เก็บได้รอบนี้</div>'+rows.map((r,i)=>
     `<div class="m-bd-r${r.me?' me':''}"><span>${i===0?'🥇':i===1?'🥈':i===2?'🥉':'　'}</span>`+
@@ -3713,6 +3770,7 @@ function renderBoard(){
     `<span class="m-bd-w">${r.w}</span></div>`).join('')
     +(note?`<div style="padding:4px 2px;font-size:.82em;line-height:1.35;opacity:.92">${note}</div>`:'');
   boardEl.classList.add('on');
+  layoutBoard();
 }
 
 /* ============================================================
@@ -4163,6 +4221,7 @@ function fit(){
   camera.aspect=w/h;
   camera.updateProjectionMatrix();
   layoutWheel();   // 🎡 รอบ 913 — หมุนจอ/ย่อขยาย = กรอบภาพค็อกพิทเปลี่ยน ต้องวางพวงมาลัยใหม่
+  layoutBoard();   // 📱 รอบ 1217 — หมุนจอแล้วยังต้องอยู่ถัด HUD โดยไม่ซ้อนกลับมา
 }
 
 /* ============================================================
@@ -4253,7 +4312,8 @@ function start(options){
   inPit=false; pitLaneNow=false; pitLimited=false; lapPitted=false;
   resetLights();            // 🚦 รอบ 902 — ตั้งลำดับไฟใหม่ทุกครั้งที่เข้าสนาม
   ghostLoad(); ghostReset(); ghostHide();
-  knobEl.style.left='50%';
+  const steerBox=wrapEl.querySelector('#f1-steer');
+  if(steerBox&&steerBox._f1Reset)steerBox._f1Reset();
   netJoin();
   fit();
   pickWord();
@@ -4379,7 +4439,7 @@ window.F1World={
     /* 🎨 รอบ 1216 — สีรถ/cockpit/packet ต้องอ้าง style เดียวกัน */
     get carStyle(){return {key:playerCarStyle.key,label:playerCarStyle.label,hex:playerCarStyle.hex,
       index:CAR_STYLES.indexOf(playerCarStyle),center:cockpitAsset('center'),left:cockpitAsset('left'),right:cockpitAsset('right')};},
-    paintPlayerStyle, cockpitAsset, peerColor,
+    paintPlayerStyle, cockpitAsset, peerColor, packetCarColorIndex,
     /* 🎡 รอบ 913 — พวงมาลัยแยกชั้น */
     get wheel(){ if(!wheelEl) return {el:null};
       const r=wheelEl.getBoundingClientRect(), c=cockpitEl.getBoundingClientRect();

@@ -5,16 +5,17 @@ const path=require('path');
 const root=process.argv[2]?path.resolve(process.argv[2]):path.resolve(__dirname,'..');
 const src=fs.readFileSync(path.join(root,'js','f1_3d.js'),'utf8');
 
-const zone=src.slice(src.indexOf('FANTASY OPTIONAL AIR ROUTES'),src.indexOf('/* ผิวใต้ล้อ:'));
+const zone=src.slice(src.indexOf('FANTASY MAIN-LINE AIR ROUTES'),src.indexOf('/* ผิวใต้ล้อ:'));
 assert.ok(zone.length>1000,'fantasy jump zone must exist');
 assert.match(src,/const JUMP_FRACTIONS=\[\.16,\.47,\.76\]/,'exactly three well-spaced optional jump sectors are required');
 assert.match(src,/const JUMP_GRAVITY\s*=\s*9\.81/,'vertical motion must use real Earth gravity');
-assert.match(src,/const JUMP_LANE_LAT=\s*11\.25/,'jump lane must remain beside the 7.5 m half-width main track');
+assert.match(src,/const JUMP_LANE_LAT=\s*0/,'jump lane must sit on the main-route centerline, never in runoff');
 assert.match(src,/return lerp\(3\.95,3\.15,d\/j\.entryM\)/,'entry fan must touch the track before narrowing onto the ramp');
 assert.match(src,/if\(d<=j\.landEndD\) return 3\.80/,'landing deck must be at least 7.6 m wide');
-assert.match(src,/mainRacingLineRaised:false/,'main racing line must remain flat and unobstructed');
-assert.match(src,/if\(a<=HALF_W\) s='track';\s*else if\(jump\) s='jump';/,
-  'main track must win surface classification before the optional side route');
+assert.match(src,/mainRacingLineRaised:true,flatBypassEdges:true/,
+  'the main racing line must contain the ramp while both flat road edges remain available');
+assert.match(src,/side:0,\s*lat:JUMP_LANE_LAT/,
+  'all three ramps must be centered instead of alternating through side runoff');
 
 assert.ok((zone.match(/new THREE\.InstancedMesh/g)||[]).length>=3,'repeated fantasy parts must be instanced');
 assert.match(zone,/new THREE\.LOD\(\)/,'launch beacon must use distance LOD');
@@ -31,6 +32,8 @@ assert.match(src,/landFromJump\([\s\S]*const keep=clamp\(1-impact\*\.006,\.90,1\
   'landing must preserve most momentum while applying a bounded physical impact loss');
 assert.match(src,/if\(missedJump\|\|\(!airborne&&\(surf==='sand'\|\|surf==='runoff'\)\)\)/,
   'failed jumps must use the existing portal without teleporting a valid airborne car');
+assert.match(src,/const JUMP_LANE_LAT=\s*0[\s\S]*if\(a<=HALF_W\) s='track'/,
+  'a car approaching the centered ramp must remain on track and must not trigger the runoff portal');
 
 const h=Number(src.match(/const JUMP_HEIGHT\s*=\s*([\d.]+)/)[1]);
 const rise=Number(src.match(/const JUMP_RISE_M\s*=\s*([\d.]+)/)[1]);
