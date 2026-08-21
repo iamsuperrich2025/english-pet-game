@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Player Character Style QA</title>
+  <style>
+    html,body,#game{position:fixed;inset:0;width:100%;height:100%;margin:0;border:0;background:#101827}
+    #qa{position:fixed;z-index:99999;top:6px;left:50%;transform:translateX(-50%);display:flex;gap:5px;
+      align-items:center;padding:5px 7px;border-radius:14px;background:rgba(8,16,30,.86);color:#fff;
+      font:600 12px/1.2 system-ui,sans-serif;box-shadow:0 4px 16px #0008;white-space:nowrap}
+    button{border:0;border-radius:9px;padding:6px 9px;background:#dce8ff;color:#17345e;font-weight:800;cursor:pointer}
+    button:hover{background:#fff}
+    #status{max-width:540px;overflow:hidden;text-overflow:ellipsis}
+    #metrics{position:fixed;z-index:99999;right:7px;bottom:7px;max-width:min(520px,70vw);margin:0;padding:7px 9px;
+      border-radius:10px;background:rgba(8,16,30,.82);color:#d9f6ff;font:11px/1.35 ui-monospace,monospace;pointer-events:none}
+    @media(max-width:900px){#metrics{display:none}#qa{top:3px;padding:3px 5px;gap:3px;font-size:10px}button{padding:4px 6px}}
+  </style>
+</head>
+<body>
+  <iframe id="game" src="../index_classic.html?p0-player-style-qa=1"></iframe>
+  <div id="qa">
+    <b>🧸 P0 QA</b>
+    <button data-mode="drive">Drive</button>
+    <button data-mode="haunt">Hotel</button>
+    <button data-mode="soccer">Soccer</button>
+    <span id="status">กำลังโหลดเกมจริง…</span>
+  </div>
+  <pre id="metrics">runtime metrics: waiting</pre>
+  <script>
+  (()=>{
+    const frame=document.getElementById('game'), status=document.getElementById('status'), metrics=document.getElementById('metrics');
+    let current='';
+    const wait=ms=>new Promise(r=>setTimeout(r,ms));
+    function loadScript(w,src){
+      return new Promise((resolve,reject)=>{
+        const s=w.document.createElement('script'); s.src=src; s.onload=resolve; s.onerror=reject; w.document.head.appendChild(s);
+      });
+    }
+    function budget(obj){
+      const out={style:obj&&obj.userData&&obj.userData.playerStyle||'',meshes:0,drawSlots:0,vertices:0,softMeshes:0};
+      if(!obj)return out;
+      obj.traverse(o=>{ if(!o.isMesh)return; out.meshes++;
+        out.drawSlots+=Array.isArray(o.material)?Math.max(1,o.geometry.groups.length):1;
+        const p=o.geometry&&o.geometry.attributes&&o.geometry.attributes.position; out.vertices+=p?p.count:0;
+        if(o.geometry&&o.geometry.userData&&o.geometry.userData.softCuboid)out.softMeshes++;
+      });
+      return out;
+    }
+    async function ensure(w,mode){
+      if(!w.THREE)await loadScript(w,'../js/vendor/three.min.js');
+      if(mode==='drive'&&!w.KPP_CITY)await loadScript(w,'../js/data/city_kpp.js');
+      if(typeof w.loadAdv3d!=='function')throw Error('loadAdv3d unavailable');
+      await w.loadAdv3d();
+      if(!w.Adventure3D)throw Error('Adventure3D unavailable');
+    }
+    function dismissPanels(w){
+      ['#adv-intro','#adv-carstart','#adv-lawinfo'].forEach(sel=>{const e=w.document.querySelector(sel);if(e)e.classList.remove('on');if(e)e.style.display='none';});
+      const t=w.Adventure3D._t; t.running=false;
+    }
+    function placePeer(w,mode){
+      const t=w.Adventure3D._t, cam=t.camera(), dir=new w.THREE.Vector3(); cam.getWorldDirection(dir); dir.y=0; dir.normalize();
+      const dist=mode==='drive'?9:5, side=mode==='soccer'?3:0;
+      const x=cam.position.x+dir.x*dist-dir.z*side, z=cam.position.z+dir.z*dist+dir.x*side;
+      t.onPeerData('p0-style-peer',{n:'Soft Chibi',av:'blk4',x,z,y:mode==='haunt'?0:1.5,yaw:Math.atan2(dir.x,dir.z)});
+      t.peersTick(.016); t.renderNow();
+      return t.peers['p0-style-peer']&&t.peers['p0-style-peer'].spr;
+    }
+    async function show(mode){
+      const w=frame.contentWindow; status.textContent='กำลังเปิด '+mode+'…';
+      try{
+        if(current&&w.Adventure3D)w.Adventure3D._t.exitWorld();
+        await ensure(w,mode); w.Adventure3D._t.playerCharacterStyle.grantQaTickets(); w.Adventure3D.start(mode); await wait(250);
+        if(mode==='soccer'){
+          w.Adventure3D._t.soccer.kitGo();
+          const pm=w.Adventure3D._t.soccer.playerMesh, cam=w.Adventure3D._t.camera();
+          if(pm){ pm.rotation.y=0; cam.position.set(pm.position.x,1.65,pm.position.z-3.2); cam.lookAt(pm.position.x,.88,pm.position.z); }
+        }
+        dismissPanels(w); await wait(120);
+        const peer=placePeer(w,mode), hooks=w.Adventure3D._t.playerCharacterStyle;
+        const standard=hooks.softFigure('blk4',false), legacy=hooks.legacyFigure('blk4',false);
+        const report={viewport:[w.innerWidth,w.innerHeight],mode,peer:budget(peer),standard:budget(standard),legacy:budget(legacy)};
+        if(mode==='soccer')report.local=budget(w.Adventure3D._t.soccer.playerMesh);
+        metrics.textContent=JSON.stringify(report,null,2);
+        status.textContent=mode+' · '+report.viewport.join('×')+' · standard draw '+report.standard.drawSlots+' = legacy '+report.legacy.drawSlots;
+        current=mode;
+      }catch(err){status.textContent='ERROR: '+err.message;metrics.textContent=String(err.stack||err);}
+    }
+    frame.addEventListener('load',()=>{status.textContent='พร้อมตรวจ Drive / Hotel / Soccer';});
+    document.querySelectorAll('button[data-mode]').forEach(b=>b.addEventListener('click',()=>show(b.dataset.mode)));
+  })();
+  </script>
+</body>
+</html>

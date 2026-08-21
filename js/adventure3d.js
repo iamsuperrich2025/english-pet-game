@@ -692,10 +692,11 @@ function adShopRender(){
 
 
 /* ============================================================
-   🧱 ตัวละครบล็อก (โลกขับรถ) — เลือกก่อนออกรถ · เพื่อนใน map เห็นเป็นหุ่นบล็อกขับรถบล็อก
-   สไตล์ของเล่นบล็อกทั่วไป ออกแบบเอง (ห้ามก๊อปทรงมินิฟิกเกอร์การค้า — เครื่องหมายการค้า)
+   🧸 รอบ 1200: ตัวละครผู้เล่น Soft Cuboid Chibi 3D (Drive / Haunted Hotel / Soccer)
+   Adventure World โหมดเดิมใช้ makeLegacyAdventureFigure() แยกไว้ชัดเจน ห้ามเปลี่ยนตาม shared path
+   สไตล์ของเล่นเหลี่ยมนุ่ม ออกแบบเอง (ห้ามก๊อปทรง avatar ของแพลตฟอร์ม/มินิฟิกเกอร์การค้า)
    ส่งรหัสผ่าน field av เดิมใน /world ('blk1'..'blk8' ≤8 ตัวอักษร ผ่าน rules เดิม ไม่ต้อง publish ใหม่)
-   geometry/material แชร์ร่วมกันทุกตัว (cache ไม่ dispose) — ต่อ peer มีของตัวเองแค่ป้ายชื่อ
+   geometry/material แชร์ร่วมกันทุกตัว + จำนวน mesh เท่า legacy (คง draw budget มือถือ)
    ============================================================ */
 const BLOCK_AVATARS={
   blk1:{name:'เรซเซอร์แดง',  skin:0xffcf9e, shirt:0xe53935, pants:0x1e58c8, hair:0x2b2320, style:'flat', car:0xd32f2f},
@@ -711,6 +712,24 @@ const _blkGeo={}, _blkMat={}, _blkFace={}, _blkThumbs={};
 function blkGeo(w,h,d){ const k=w+'_'+h+'_'+d; return _blkGeo[k]||(_blkGeo[k]=new THREE.BoxGeometry(w,h,d)); }
 function blkMat(color){ return _blkMat[color]||(_blkMat[color]=new THREE.MeshLambertMaterial({color})); }
 function blkCyl(r,h){ const k='c'+r+'_'+h; return _blkGeo[k]||(_blkGeo[k]=new THREE.CylinderGeometry(r,r,h,14)); }
+/* Rounded cuboid แบบเบา: BoxGeometry แบ่งเพียง 2 ช่วงแล้วดัน vertex รอบแกนกลาง
+   geometry ถูก cache ตามขนาด จึงไม่เพิ่ม draw call / allocation ต่อ peer และยังคง material groups ทั้ง 6 หน้า */
+function softCuboidGeo(w,h,d,r){
+  r=Math.min(r==null?Math.min(w,h,d)*.24:r,w*.49,h*.49,d*.49);
+  const k='soft_'+w+'_'+h+'_'+d+'_'+r;
+  if(_blkGeo[k]) return _blkGeo[k];
+  const g=new THREE.BoxGeometry(w,h,d,2,2,2), p=g.attributes.position;
+  const ix=w*.5-r, iy=h*.5-r, iz=d*.5-r;
+  for(let i=0;i<p.count;i++){
+    const x=p.getX(i), y=p.getY(i), z=p.getZ(i);
+    const qx=Math.max(-ix,Math.min(ix,x)), qy=Math.max(-iy,Math.min(iy,y)), qz=Math.max(-iz,Math.min(iz,z));
+    const dx=x-qx, dy=y-qy, dz=z-qz, len=Math.hypot(dx,dy,dz)||1;
+    p.setXYZ(i,qx+dx/len*r,qy+dy/len*r,qz+dz/len*r);
+  }
+  p.needsUpdate=true; g.computeVertexNormals(); g.computeBoundingBox(); g.computeBoundingSphere();
+  g.userData.softCuboid=true;
+  return _blkGeo[k]=g;
+}
 /* หน้ายิ้มตาโต วาดลง texture ด้าน -Z ของหัว (ทิศหน้ารถ) */
 function blkFaceMat(id){
   if(_blkFace[id]) return _blkFace[id];
@@ -726,8 +745,8 @@ function blkFaceMat(id){
   c.beginPath(); c.arc(64,72,20,Math.PI*.22,Math.PI*.78); c.stroke();
   return _blkFace[id]=new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(cv)});
 }
-/* หุ่นบล็อกยืน/นั่ง สูง ~1.7 หน่วย หันหน้า -Z (seated=ไม่มีขา แขนเอื้อมจับพวงมาลัย) */
-function makeBlockFigure(id, seated){
+/* Legacy เดิมของ Adventure World: เก็บรูปทรง/สัดส่วนแข็งเดิมครบ และไม่มีการเรียก softCuboidGeo */
+function makeLegacyAdventureFigure(id, seated){
   const a=BLOCK_AVATARS[id]||BLOCK_AVATARS.blk1;
   const g=new THREE.Group();
   const skin=blkMat(a.skin), shirt=blkMat(a.shirt), pants=blkMat(a.pants), hairM=blkMat(a.hair);
@@ -764,8 +783,55 @@ function makeBlockFigure(id, seated){
     hair.position.y=topY+(a.style==='tall'?.13:.05); g.add(hair);
     if(a.style==='pony'){ const tail=new THREE.Mesh(blkGeo(.18,.34,.16),hairM); tail.position.set(0,hipY+.92,.3); g.add(tail); }
   }
+  g.userData.playerStyle='legacy-adventure';
   return g;
 }
+/* Soft Cuboid Chibi 3D สูง ~1.7 หน่วย หันหน้า -Z
+   หัวใหญ่ ตัวสั้น แขนขาสั้น ปลายมน; seated ไม่มีขาและเอื้อมจับพวงมาลัยเหมือน payload/animation เดิม */
+function makeSoftCuboidChibiFigure(id, seated){
+  const a=BLOCK_AVATARS[id]||BLOCK_AVATARS.blk1;
+  const g=new THREE.Group();
+  const skin=blkMat(a.skin), shirt=blkMat(a.shirt), pants=blkMat(a.pants), hairM=blkMat(a.hair);
+  const hipY=seated?.06:.46;
+  g.userData.limbs=[];
+  if(!seated) [-.16,.16].forEach(x=>{
+    const piv=new THREE.Group(); piv.position.set(x,.46,0);
+    const leg=new THREE.Mesh(softCuboidGeo(.25,.4,.29,.09),pants); leg.position.y=-.2; piv.add(leg);
+    g.add(piv); g.userData.limbs.push(piv);
+  });
+  const torso=new THREE.Mesh(softCuboidGeo(.64,.54,.42,.14),shirt); torso.position.y=hipY+.27; g.add(torso);
+  [-1,1].forEach(s=>{
+    if(seated){
+      const arm=new THREE.Mesh(softCuboidGeo(.19,.42,.23,.08),shirt);
+      arm.position.set(s*.42,hipY+.31,-.12); arm.rotation.z=s*-.12; arm.rotation.x=-1;
+      const hand=new THREE.Mesh(softCuboidGeo(.17,.15,.19,.065),skin); hand.position.y=-.28; arm.add(hand);
+      g.add(arm);
+    }else{
+      const piv=new THREE.Group(); piv.position.set(s*.42,hipY+.49,0);
+      const arm=new THREE.Mesh(softCuboidGeo(.19,.42,.23,.08),shirt); arm.position.y=-.2; arm.rotation.z=s*-.1;
+      const hand=new THREE.Mesh(softCuboidGeo(.17,.15,.19,.065),skin); hand.position.y=-.28; arm.add(hand);
+      piv.add(arm); g.add(piv); g.userData.limbs.push(piv);
+    }
+  });
+  const head=new THREE.Mesh(softCuboidGeo(.7,.62,.62,.18),[skin,skin,skin,skin,skin,blkFaceMat(id)]);
+  head.position.y=hipY+.82; g.add(head);
+  const topY=hipY+1.13;
+  if(a.style==='cap'){
+    const cap=new THREE.Mesh(softCuboidGeo(.74,.17,.65,.065),hairM); cap.position.y=topY+.035; g.add(cap);
+    const brim=new THREE.Mesh(softCuboidGeo(.63,.075,.31,.03),hairM); brim.position.set(0,topY-.015,-.43); g.add(brim);
+  }else{
+    const hh=a.style==='tall'?.3:.16;
+    const hair=new THREE.Mesh(softCuboidGeo(.72,hh,.64,Math.min(.075,hh*.35)),hairM);
+    hair.position.y=topY+(a.style==='tall'?.12:.045); g.add(hair);
+    if(a.style==='pony'){
+      const tail=new THREE.Mesh(softCuboidGeo(.2,.34,.18,.07),hairM); tail.position.set(0,hipY+.91,.37); g.add(tail);
+    }
+  }
+  g.userData.playerStyle='soft-cuboid-chibi-3d';
+  return g;
+}
+/* Standard shared path สำหรับ Drive/picker; Adventure ห้ามเรียก alias นี้ */
+function makeBlockFigure(id,seated){ return makeSoftCuboidChibiFigure(id,seated); }
 /* รถบล็อกเปิดประทุน หัวรถ -Z พวงมาลัยขวาแบบไทย · ล้อเก็บใน userData.wheels ให้หมุนตอนวิ่ง */
 function makeBlockCar(id){
   const a=BLOCK_AVATARS[id]||BLOCK_AVATARS.blk1;
@@ -847,16 +913,25 @@ function makeBlockPeer(name, av, uid, grade){
     });
   }
   const label=blkNameSprite(name,grade); label.position.set(0,2.85,0); g.add(label);
+  g.userData.playerStyle='soft-cuboid-chibi-3d';
   return g;
 }
-/* เพื่อนในโลกเดิน (adv/haunt) = หุ่นบล็อกเต็มตัวยืนบนพื้น เดินแกว่งแขน-ขาจริง + ป้ายชื่อ */
-function makeBlockWalkPeer(name, av, uid, grade){
+function makeWalkPeerWithFigure(name,av,uid,grade,figureFactory){
   const bid=BLOCK_AVATARS[av]?av:'blk'+(1+String(uid||'').split('').reduce((h,ch)=>(h*31+ch.charCodeAt(0))>>>0,0)%8);
   const g=new THREE.Group();
-  const fig=makeBlockFigure(bid,false); g.add(fig);
+  const fig=figureFactory(bid,false); g.add(fig);
   const label=blkNameSprite(name,grade); label.position.set(0,2.25,0); g.add(label);
   g.userData.limbs=fig.userData.limbs;      // ให้ tickPeers หมุนแกว่งได้ตรงๆ
+  g.userData.playerStyle=fig.userData.playerStyle;
   return g;
+}
+/* Adventure World โหมดเดิม: legacy path แยกจากมาตรฐานใหม่โดยตั้งใจ */
+function makeLegacyAdventureWalkPeer(name,av,uid,grade){
+  return makeWalkPeerWithFigure(name,av,uid,grade,makeLegacyAdventureFigure);
+}
+/* Haunted Hotel / Soccer peers: มาตรฐาน Soft Cuboid Chibi 3D */
+function makeSoftChibiWalkPeer(name,av,uid,grade){
+  return makeWalkPeerWithFigure(name,av,uid,grade,makeSoftCuboidChibiFigure);
 }
 function disposeBlockPeer(g){
   g.traverse(o=>{ if(o.userData&&o.userData.own){ if(o.material.map)o.material.map.dispose(); o.material.dispose(); } });
@@ -4494,16 +4569,18 @@ function onPeerData(uid,d){
   if(typeof d.x!=='number' || typeof d.z!=='number') return;
   const py=(typeof d.y==='number')?d.y:1.5;
   let p=peers[uid];
-  const walkBlk=(mode==='adv'||mode==='haunt'||mode==='soccer');   // 🧱 โลกเดิน/สนามฟุตบอล: เพื่อน = หุ่นบล็อกเดินได้ (มาร่วมเตะในสนามเดียวกัน)
+  const legacyWalk=(mode==='adv');                               // 🌍 Adventure เดิม = legacy path ห้ามรับ reskin ร่วม
+  const softWalk=(mode==='haunt'||mode==='soccer');               // 🧸 Hotel/Soccer = Soft Cuboid Chibi 3D
+  const walkBlk=legacyWalk||softWalk;
   const mechBlk=(mode==='mecha');                                  // 🤖 รอบ 941: โลกหุ่นยนต์: เพื่อน = หุ่นรบ 3D ตัวที่เขาเลือก (เดิมเป็น sprite รูปโปรไฟล์ — ผู้ใช้ทัก)
   if(!p){
     // 🧱 โลกขับรถ: เพื่อน = รถบล็อก+หุ่นบล็อก 3D หมุนตาม yaw · โลกเดิน = หุ่นบล็อกเดิน · เฮลิฯ/โดรนคง sprite เดิม
     /* 🎖️ รอบ 644: ระดับชั้นของเพื่อนอ่านจาก presence ที่โหลดไว้แล้ว (gradeOf) — ไม่มี field ใหม่ใน /winfo ไม่ต้องแก้ rules */
     const pg=(typeof gradeOf==='function')?gradeOf(uid,d.g):'';
-    p=peers[uid]={spr:M.drive?makeBlockPeer(d.n,d.av,uid,pg):mechBlk?makeMechaPeer(d.n,d.av,uid,pg):walkBlk?makeBlockWalkPeer(d.n,d.av,uid,pg):makePeerSprite(d.n,d.av,pg),
+    p=peers[uid]={spr:M.drive?makeBlockPeer(d.n,d.av,uid,pg):mechBlk?makeMechaPeer(d.n,d.av,uid,pg):legacyWalk?makeLegacyAdventureWalkPeer(d.n,d.av,uid,pg):softWalk?makeSoftChibiWalkPeer(d.n,d.av,uid,pg):makePeerSprite(d.n,d.av,pg),
                   grade:pg,
                   cur:{x:d.x,z:d.z,y:py}, tgt:{x:d.x,z:d.z,y:py}, n:d.n||'เพื่อน',
-                  blk:!!M.drive, walk:walkBlk, mech:mechBlk, av:d.av, yawCur:d.yaw||0, yawTgt:d.yaw||0, stride:0, swing:0};
+                  blk:!!M.drive, walk:walkBlk, legacyWalk, mech:mechBlk, av:d.av, yawCur:d.yaw||0, yawTgt:d.yaw||0, stride:0, swing:0};
     p.spr.position.set(d.x,(p.walk&&M.hotel)?py:((p.blk||p.walk||p.mech)?0:py),d.z);
     if(p.blk||p.walk||p.mech) p.spr.rotation.y=p.yawCur;
     scene.add(p.spr);
@@ -4512,7 +4589,7 @@ function onPeerData(uid,d){
   }else if((p.blk||p.walk||p.mech) && d.av!==p.av){
     // เพื่อนออก-เข้าใหม่ด้วยตัวบล็อก/หุ่นตัวอื่น (child_changed) → สร้างตัวใหม่ตามที่เลือก
     scene.remove(p.spr); disposeBlockPeer(p.spr);
-    p.av=d.av; p.spr=p.blk?makeBlockPeer(d.n,d.av,uid,p.grade):p.mech?makeMechaPeer(d.n,d.av,uid,p.grade):makeBlockWalkPeer(d.n,d.av,uid,p.grade);
+    p.av=d.av; p.spr=p.blk?makeBlockPeer(d.n,d.av,uid,p.grade):p.mech?makeMechaPeer(d.n,d.av,uid,p.grade):p.legacyWalk?makeLegacyAdventureWalkPeer(d.n,d.av,uid,p.grade):makeSoftChibiWalkPeer(d.n,d.av,uid,p.grade);
     p.spr.position.set(p.cur.x,0,p.cur.z); p.spr.rotation.y=p.yawCur;
     scene.add(p.spr);
   }else if(M.heli && d.av!==p.av){
@@ -11291,18 +11368,18 @@ function soccerShirtTex(col,pat,face){
   }
   const t=new THREE.CanvasTexture(cv); t.anisotropy=4; return t;
 }
-/* หุ่นนักเตะบล็อก: เสื้อลาย+โลโก้ · กางเกงเลือกสี · เบอร์หลังเสื้อ (หัน +Z = ด้านหลัง เห็นจากกล้องหลังบอล) · ขวา = ขาเตะ */
+/* Soft Cuboid Chibi 3D นักฟุตบอล: หัวใหญ่ ตัว/แขนขาสั้น ปลายมน · คงจำนวน mesh และ animation ขาเดิม */
 function makeSoccerPlayer(shirtColor,no,shortColor,pat){
   shortColor=shortColor==null?0xf4f4f4:shortColor; pat=pat||'plain';
   const g=new THREE.Group();
   g.rotation.order='YXZ';   // 🧍 รอบ 852: หมุน yaw ก่อนค่อยเอนตัว (rotation.x) — การเอนจึงสัมพัทธ์กับทิศที่หันเสมอ
   const skin=blkMat(0xffcf9e), shorts=blkMat(shortColor), hairM=blkMat(0x2b2320), boot=blkMat(0x232323);
   const legs=[];
-  [-0.15,0.15].forEach(x=>{
-    const piv=new THREE.Group(); piv.position.set(x,.5,0);
-    const thigh=new THREE.Mesh(blkGeo(.22,.34,.24),shorts); thigh.position.y=-.17; piv.add(thigh);
-    const shin=new THREE.Mesh(blkGeo(.2,.3,.22),skin); shin.position.y=-.46; piv.add(shin);
-    const bt=new THREE.Mesh(blkGeo(.22,.14,.34),boot); bt.position.set(0,-.62,.05); piv.add(bt);
+  [-.16,.16].forEach(x=>{
+    const piv=new THREE.Group(); piv.position.set(x,.48,0);
+    const thigh=new THREE.Mesh(softCuboidGeo(.24,.31,.27,.085),shorts); thigh.position.y=-.155; piv.add(thigh);
+    const shin=new THREE.Mesh(softCuboidGeo(.21,.27,.23,.075),skin); shin.position.y=-.425; piv.add(shin);
+    const bt=new THREE.Mesh(softCuboidGeo(.24,.14,.35,.055),boot); bt.position.set(0,-.585,.05); piv.add(bt);
     g.add(piv); legs.push(piv);
   });
   // 👕 รอบ 939: ลำตัว 6 หน้า — อก(-z)/หลัง(+z) มีลาย+โลโก้ · ข้างลำตัวลายล้วน · บน-ล่างสีพื้น
@@ -11310,20 +11387,21 @@ function makeSoccerPlayer(shirtColor,no,shortColor,pat){
   const mChest=new THREE.MeshLambertMaterial({map:soccerShirtTex(shirtColor,pat,'chest')});
   const mBack=new THREE.MeshLambertMaterial({map:soccerShirtTex(shirtColor,pat,'back')});
   const mPlainT=blkMat(shirtColor);
-  const torso=new THREE.Mesh(new THREE.BoxGeometry(.58,.62,.34),
+  const torso=new THREE.Mesh(softCuboidGeo(.62,.54,.4,.13),
     [mSide,mSide,mPlainT,mPlainT,mBack,mChest]);   // [+x,-x,+y,-y,+z(หลัง),-z(อก)]
-  torso.position.y=.82; g.add(torso);
+  torso.position.y=.76; g.add(torso);
   const num=new THREE.Mesh(new THREE.PlaneGeometry(.4,.4),
     new THREE.MeshBasicMaterial({map:soccerNumTex(no),transparent:true}));
-  num.position.set(0,.86,.18); g.add(num);                       // ด้าน +Z (หลัง) — ขยับลงหลบโลโก้บนหลัง
+  num.position.set(0,.79,.208); g.add(num);                      // ด้าน +Z (หลัง) — ขยับลงหลบโลโก้บนหลัง
   const armC = pat==='sleeves' ? ssSec(shirtColor) : shirtColor; // ✨ ลาย "แขนต่างสี"
   [-1,1].forEach(s=>{
-    const arm=new THREE.Mesh(blkGeo(.15,.5,.2),blkMat(armC)); arm.position.set(s*.4,.82,0); arm.rotation.z=s*-.08; g.add(arm);
-    const hand=new THREE.Mesh(blkGeo(.14,.14,.16),skin); hand.position.set(s*.44,.53,0); g.add(hand);
+    const arm=new THREE.Mesh(softCuboidGeo(.18,.4,.22,.075),blkMat(armC)); arm.position.set(s*.42,.76,0); arm.rotation.z=s*-.08; g.add(arm);
+    const hand=new THREE.Mesh(softCuboidGeo(.16,.15,.18,.065),skin); hand.position.set(s*.45,.51,0); g.add(hand);
   });
-  const head=new THREE.Mesh(blkGeo(.44,.44,.44),skin); head.position.y=1.32; g.add(head);
-  const hair=new THREE.Mesh(blkGeo(.48,.16,.48),hairM); hair.position.y=1.5; g.add(hair);
+  const head=new THREE.Mesh(softCuboidGeo(.68,.6,.6,.18),[skin,skin,skin,skin,skin,blkFaceMat('blk1')]); head.position.y=1.29; g.add(head);
+  const hair=new THREE.Mesh(softCuboidGeo(.7,.17,.62,.065),hairM); hair.position.y=1.54; g.add(hair);
   g.userData.legs=legs;
+  g.userData.playerStyle='soft-cuboid-chibi-3d';
   return g;
 }
 /* 🎲 รอบ 404 (ผู้ใช้): สุ่มจุดยืนเตะใหม่ทุกครั้ง — มุม/ระยะต่างกันทุกลูก ต้องเล็งใหม่เสมอ
@@ -13038,6 +13116,13 @@ window.Adventure3D={
     get letters(){return letters}, get monsters(){return monsters}, get words(){return words},
     get inv(){return inv}, get peers(){return peers}, get hp(){return hp}, get mode(){return mode},
     get running(){return running}, set running(v){running=v},
+    playerCharacterStyle:{
+      standard:'soft-cuboid-chibi-3d', legacyMode:'adv',
+      grantQaTickets:()=>{ state.driveTicket=true; state.hauntTicket=true; state.soccerTicket=true; },
+      softFigure:(id,seated)=>makeSoftCuboidChibiFigure(id||'blk1',!!seated),
+      legacyFigure:(id,seated)=>makeLegacyAdventureFigure(id||'blk1',!!seated),
+      soccerFigure:()=>makeSoccerPlayer(0xe53935,'10',0xf4f4f4,'plain')
+    },
     camera:()=>camera, damagePlayer, spawnGhost, tinvCheck, onPeerData, exitWorld, sendChat, Voice, tinvLinked, showPodium, endRound,
     /* เดินเฟรมเอง 1 ก้าว (แท็บ preview ถูก throttle rAF แทบไม่วิ่ง · SnapLab ใช้ตัวนี้ถ่ายภาพ) */
     /* 🏨 รอบ 684: hook เทสต์โรงแรมผีสิง (ไฟดับ/ไฟฉาย/ลิฟต์/ตู้/ผี) */
@@ -13269,7 +13354,7 @@ window.Adventure3D={
     get letterRespawns(){ return letterRespawns.map(r=>({...r})); },              // 🔠⏱️ เทสต์: ดูคิวรอเกิดใหม่
     pickUp:(i)=>pickUpLetter(i),                                                 // 🔠 เทสต์: เก็บตัวอักษรตรง ๆ ไม่ต้องเดินชน
     // ⚽ รอบ 852: testkit โลกฟุตบอล — สถานะไฟ/ควัน/ท่าตัวนักเตะ + ยิงตรง ๆ (เทสต์ overdrive/ลูกไฟ)
-    get soccer(){ return { aimYaw, sChg, sCharging, sbLive, sbFlame, sbVel:{x:sbVel.x,y:sbVel.y,z:sbVel.z},
+    get soccer(){ return { aimYaw, sChg, sCharging, sbLive, sbFlame, sbVel:{x:sbVel.x,y:sbVel.y,z:sbVel.z}, kitGo:soccerKitGo, playerMesh:soccerPlayer,
       fireOn:fireGrp?fireGrp.visible:false, smokeLive:smokePool.filter(p=>p.life>0).length,
       player:soccerPlayer?{x:+soccerPlayer.position.x.toFixed(3),z:+soccerPlayer.position.z.toFixed(3),
         ry:+soccerPlayer.rotation.y.toFixed(3),rx:+soccerPlayer.rotation.x.toFixed(3)}:null,

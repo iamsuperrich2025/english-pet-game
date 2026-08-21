@@ -28,6 +28,9 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (21 ส.ค.) — อ่านก่อน
+- **รอบ 1200 · P0 ตัวละคร Soft Cuboid Chibi 3D:** Drive/Haunted Hotel/Soccer ใช้ rounded cuboid cache + สัดส่วนหัวใหญ่ตัวสั้นและใบหน้ายิ้ม; Soccer local/peer ตรงกัน ส่วน Adventure เดิมแยก `makeLegacyAdventureFigure()` จึงไม่รับ reskin (`js/adventure3d.js`)
+- multiplayer `av` payload/controls คงเดิม; standard กับ legacy เท่ากัน 10 meshes/15 draw slots (540 vs 240 vertices และแชร์ geometry) พร้อม Node regression + Haunted Hotel regression ผ่าน
+- Browser QA เกมจริงครบ 3 โหมดที่ 1320×619/812×375, canvas/viewport/overflow ตรงทุกพิกเซล; build `.1080` 8,357 ไฟล์ 460.5MiB + PWA/cache/TWA validator ผ่าน และเพิ่ม visual harness ใน `tools/player_character_style_preview.html`
 - **รอบ 1199 · Word Search เป็น Dreamy Pastel ตามภาพอ้างอิงโดยไม่มีสัตว์:** ยกเครื่องฟ้า–ม่วง/หัวป้าย/ชิปคำลูกกวาด/กรอบช่องครีม/ปุ่มล่าง และคง gameplay/คำตามชั้น/คอมโบ/ใบ้เดิม (`css/lobby.css`, `js/wordsearch.js`, `index_classic.html`)
 - Browser visual QA 1320×619 + 812×375: 80 ช่อง/8 ชิป/ทุกชิ้น inside, body+board overflow 0, console error 0; syntax/combo regression/diff และ production build `.1079` 8,357 ไฟล์ 460.5MiB + PWA/cache/TWA validator ผ่าน
 - **รอบ 1198 · ส่ง source of truth ที่เป็นไฟล์ใหม่ให้ครบ:** รอบ 1197 ผูกกฎครบแต่ตัว launcher เลือกเฉพาะ tracked files จึงเพิ่ม `docs/PLAYER_CHARACTER_STYLE.md` เข้า Git โดยตรงและตรวจ `git ls-files` หลังส่ง

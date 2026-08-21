@@ -21,7 +21,7 @@ Snapshot verified 2026-08-09. Keep only durable facts here.
 
 ## Asset and animation strategy
 
-- Visible 3D player characters use the mandatory **Soft Cuboid Chibi 3D** standard in all new and existing covered worlds. The Invasion/Mothership world and original Adventure mode retain their established character styles; the canonical specification and review checklist are in `docs/PLAYER_CHARACTER_STYLE.md`.
+- Visible 3D player characters use the mandatory **Soft Cuboid Chibi 3D** standard in all new and existing covered worlds. Adventure3D P0 is implemented for Drive, Haunted Hotel peers, and Soccer local/peer players through shared cached low-subdivision rounded cuboids; original Adventure remains isolated on its unchanged hard-box legacy builder. Invasion/Mothership also retains its established style; the canonical specification and review checklist are in `docs/PLAYER_CHARACTER_STYLE.md`.
 - Three.js and GLTFLoader are vendored. World scripts and many datasets load on demand; the service worker pre-caches only the essential City shell and content-addresses lazy assets so unchanged GLB/audio/textures survive deployments.
 - Runtime assets mix manually optimized `*_lite.glb`, WebP/PNG/JPG textures, procedural geometry/canvas textures, audio files, and generated effects.
 - Lobby pet animation prefers baked transparent sprite sheets/CSS steps or video/image fallbacks where live 3D is unnecessary. The central lobby scene uses GLB idle clips with `AnimationMixer`.
