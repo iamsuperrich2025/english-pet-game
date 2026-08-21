@@ -1,4 +1,6 @@
-รอบ 1201: แสดงอันดับพิมพ์คำครบทุกคนต่อจาก Top 10
-FILE: js/ui.js
-FILE: tools/test_leaderboard_scroll_rewards.js
+รอบ 1202: คืน draw budget ตัวละคร Soft Cuboid Chibi ด้วย face atlas
+FILE: docs/PLAYER_CHARACTER_STYLE.md
 FILE: handoff/TASKS.md
+FILE: js/adventure3d.js
+FILE: tools/player_character_style_preview.html
+FILE: tools/test_player_character_style.js
