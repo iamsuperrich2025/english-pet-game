@@ -5245,3 +5245,11 @@
 ## ⏬ ย้ายเมื่อ 2026-08-21 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
 
 - **รอบ 1200 · P0 ตัวละคร Soft Cuboid Chibi 3D:** Drive/Haunted Hotel/Soccer ใช้ rounded cuboid cache + สัดส่วนหัวใหญ่ตัวสั้นและใบหน้ายิ้ม; Soccer local/peer ตรงกัน ส่วน Adventure เดิมแยก `makeLegacyAdventureFigure()` จึงไม่รับ reskin (`js/adventure3d.js`)
+
+
+## ⏬ ย้ายเมื่อ 2026-08-21 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1202 · P0 face atlas คืน draw budget:** รวมหัว Soft Chibi เป็น material เดียวโดยคงหน้าเดิม ทำให้ standard 10 draw slots (legacy 15) และ Soccer local 19/19 เท่าก่อน P0; Adventure legacy/payload เดิมไม่เปลี่ยน (`js/adventure3d.js`)
+- Node/Hotel regressions ผ่าน; Browser เกมจริงยืนยันหน้า atlas + viewport 1320×619/812×375 และ build `.1082` 8,357 ไฟล์ 460.5MiB + PWA/cache/TWA validator ผ่าน
+- **รอบ 1201 · อันดับพิมพ์คำแสดงผู้เล่นที่เหลือครบ:** แยก Top 10 ผู้รับรางวัลออกจากจำนวนแสดงเต็มจอ และขยายรายการเป็น Top 100 เท่าหมวดเหรียญ โดยอันดับ 11–100 ไม่มีรางวัลเพิ่ม (`js/ui.js`)
+- เพิ่ม regression กันตัดกลับเหลือ 10; syntax/diff ผ่าน และ Browser demo 100 คนที่ 812×375/1320×619 ยืนยันอันดับ 100 เลื่อนเห็นจริง กล่องอยู่ใน viewport, overflow X=0, console error 0

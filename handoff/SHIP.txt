@@ -1,6 +1,10 @@
-รอบ 1206: กระชับ handoff history อย่างปลอดภัย
-FILE: tools/rotate_handoff.py
+รอบ 1207: มือหมุนตามพวงมาลัย + ลบอาคารกลางถนน + ประตูมิติกลับสนาม
+FILE: js/f1_3d.js
+FILE: img/f1/cockpit_turn_center.webp
+FILE: img/f1/cockpit_turn_left.webp
+FILE: img/f1/cockpit_turn_right.webp
+FILE: tools/build_web.mjs
+FILE: tools/check_missing_assets.py
+FILE: tools/test_f1_cockpit_visibility.js
+FILE: tools/test_f1_realistic_circuit.js
 FILE: handoff/TASKS.md
-FILE: handoff/archive/TASKS_STATUS.md
-FILE: handoff/CODE_MAP.md
-FILE: handoff/ARCHITECTURE.md
