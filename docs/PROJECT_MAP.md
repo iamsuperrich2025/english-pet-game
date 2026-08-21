@@ -120,6 +120,14 @@ NOTES: Canvas 2D gameplay with two-layer PNG turret assets under `assets/images/
 
 ## Player, camera, collision, animation, and NPCs
 
+SYSTEM: Visible 3D player-character visual standard
+PURPOSE: Defines the mandatory Soft Cuboid Chibi 3D style, covered player avatars, acceptance criteria, migration rule, and world exceptions.
+PRIMARY FILE: `docs/PLAYER_CHARACTER_STYLE.md`
+RELATED FILES: Player/peer builders in each 3D engine, `js/netroom.js`, character asset prompts and model/image assets
+PUBLIC ENTRY POINTS / KEY SYMBOLS: World-local player and peer avatar builders
+DEPENDENCIES: Target world's existing art direction and the explicit Invasion/Mothership and original Adventure-mode exceptions.
+NOTES: Read before creating, replacing, reskinning, or approving any visible 3D player character. The rule applies to new and existing covered worlds.
+
 SYSTEM: Player movement and mobile controls
 PURPOSE: Handles keyboard/pointer/touch input and mode-specific player/vehicle movement.
 PRIMARY FILE: `js/adventure3d.js`

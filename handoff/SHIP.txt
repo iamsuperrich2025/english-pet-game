@@ -1,3 +1,1 @@
-รอบ 1196: แก้แขนลอยและเหลือการยิงปกติโหมดเดียว
-FILE: js/shootword.js
-FILE: handoff/TASKS.md
+รอบ 1197: บังคับมาตรฐานตัวละครผู้เล่น Soft Cuboid Chibi 3D

@@ -78,6 +78,7 @@ AI ตัวอื่น (Codex ฯลฯ) เขียนไฟล์ลงเ�
 | แตะ Firebase / publish rules (ส่งเต็มทั้งหน้าเสมอ) | `C:\Users\rober\english-pet-game\handoff\RULES.md` |
 | หาว่าฟังก์ชัน/ค่าคงที่/CSS selector อยู่บรรทัดไหน · หาช่วงบรรทัดของทั้งระบบ/โลก 3D (🗂️ สารบัญโซน) | Grep ชื่อ/ชื่อโซนใน `C:\Users\rober\english-pet-game\handoff\CODE_MAP.md` (เจนอัตโนมัติ ห้ามแก้มือ · บั๊ก UI เริ่มหา selector ที่นี่) |
 | โครงสร้างโค้ด/ภาพรวมสถาปัตยกรรม | `C:\Users\rober\english-pet-game\handoff\ARCHITECTURE.md` |
+| สร้าง/รีสกิน/ตรวจรับตัวละครผู้เล่น 3D ที่มองเห็นได้ | `C:\Users\rober\english-pet-game\docs\PLAYER_CHARACTER_STYLE.md` — Soft Cuboid Chibi 3D บังคับ; ยกเว้นโลกยานแม่ + Adventure World โหมดเดิม |
 | แก้ระบบเกม (สัตว์/บ้าน/บิล/แรงค์/โรงงาน/ตลาด/ออนไลน์/ของขวัญ) | `C:\Users\rober\english-pet-game\handoff\GAME_RULES.md` |
 | ดูสเปก backlog เต็ม | `C:\Users\rober\english-pet-game\handoff\BACKLOG.md` |
 | ประวัติรอบเก่า (รายละเอียดเต็มทุกรอบ) | **Grep** `รอบ <เลข>` ใน `C:\Users\rober\english-pet-game\handoff\archive\TASKS_ROUNDS.md` (+`HANDOFF_STATUS.md` · รอบ 1–30 = `handoff\HISTORY.md`) — ห้ามอ่านทั้งไฟล์ |

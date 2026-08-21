@@ -28,6 +28,8 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (21 ส.ค.) — อ่านก่อน
+- **รอบ 1197 · บังคับมาตรฐานตัวละครผู้เล่น Soft Cuboid Chibi 3D:** เพิ่ม source of truth + ทะเบียนทยอย reskin (P0: drive/hotel/soccer; P1: Arena/heli/drone/City) พร้อม checklist งานออกแบบ/ตรวจรับ; ยกเว้นโลกยานแม่และ Adventure World โหมดเดิม (`docs/PLAYER_CHARACTER_STYLE.md`)
+- ผูกกฎเข้ากับ `PROJECT_MAP`, `CURRENT_STATE`, `GAME_RULES` และ router ใน `HANDOFF` เพื่อให้ session ถัดไปอ่านถูกจุด; ตรวจข้อความ/ลิงก์/ข้อยกเว้นด้วยสคริปต์เอกสารแล้ว
 - **รอบ 1196 · ยิงเป้าคำเหลือการยิงปกติโหมดเดียว:** แก้แขน Star Blaster ให้ต่อพ้นขอบล่าง, ลบดาวกลาง crosshair และถอดปุ่มเล็ง/มุมกว้างพร้อมยกเลิกภาพเล็งที่ทดลอง จึงเปิดด้วยปืนมุมขวาล่างตามปกติเสมอ (`js/shootword.js`)
 - Browser 1320×619/812×375 ยืนยัน `aim=false`, ไม่มีปุ่มสลับ/ภาพเล็ง, ปุ่มยิงสองข้างทำงาน, overflow 0, console error 0; Node syntax + diff ผ่าน
 - **รอบ 1194 · ยิงเป้าคำเป็น Cute Carnival Toy Shooter:** ถอด rifle/ถุงมือสมจริง ใช้ Star Blaster+มือ chibi ที่ยึดรูปทรงจากภาพอ้างอิง, ฉาก candy carnival, HUD/ปุ่ม/เป้าดาว/กระสุนดาว และขยายบูธ 1.5× โดยคง gameplay/คะแนน/คำศัพท์/เสียงเดิม (`js/shootword.js`, `img/shootword/*`)
