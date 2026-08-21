@@ -1,21 +1,8 @@
-รอบ 1216: เพิ่มสนามแฟนตาซี เนินเหิน รั้วปลอดภัย และ VIP Garage เลือกสีรถ
+รอบ 1217: แก้สีรถ multiplayer เนินทางหลัก floating steering และ HUD ไม่ทับกัน
+FILE: handoff/TASKS.md
 FILE: js/f1_3d.js
-FILE: img/f1/cockpit_turn_center_blue.webp
-FILE: img/f1/cockpit_turn_left_blue.webp
-FILE: img/f1/cockpit_turn_right_blue.webp
-FILE: img/f1/cockpit_turn_center_green.webp
-FILE: img/f1/cockpit_turn_left_green.webp
-FILE: img/f1/cockpit_turn_right_green.webp
-FILE: img/f1/cockpit_turn_center_yellow.webp
-FILE: img/f1/cockpit_turn_left_yellow.webp
-FILE: img/f1/cockpit_turn_right_yellow.webp
-FILE: img/f1/cockpit_turn_center_orange.webp
-FILE: img/f1/cockpit_turn_left_orange.webp
-FILE: img/f1/cockpit_turn_right_orange.webp
-FILE: tools/build_web.mjs
-FILE: tools/check_missing_assets.py
+FILE: tools/test_f1_board_layout.js
 FILE: tools/test_f1_cockpit_visibility.js
 FILE: tools/test_f1_fantasy_jumps.js
-FILE: tools/test_f1_realistic_circuit.js
-FILE: tools/test_f1_solo_ghost.js
-FILE: handoff/TASKS.md
+FILE: tools/test_f1_floating_steer.js
+FILE: tools/test_f1_multiplayer_color.js
