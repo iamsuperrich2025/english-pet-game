@@ -19,9 +19,9 @@
   /* ========== TUNE ZONE — ตำแหน่ง/ขนาดภาพปืน (จูนกับภาพจริงแล้ว อย่าเดาใหม่) ========== */
   const TUNE = {
     FOV: 58, FOV_AIM: 30,       // มุมกล้องปกติ/ตอนเล็ง (เล็ง = ซูมเข้า)
-    HOLD_H: 45, HOLD_R: 14, HOLD_B: 7, // ยกพ้นปุ่มยิงขวาและคงอยู่มุมขวาล่างตามภาพต้นฉบับ
+    HOLD_H: 45, HOLD_R: 14, HOLD_B: -1, // ให้ปลอกแขนต่อออกนอกขอบล่าง จึงไม่เห็นปลาย alpha ตัดลอยกลางจอ
     MUZ_X: 0.445, MUZ_Y: 0.36,          // กึ่งกลางปากกระบอกครีมด้านซ้ายของ sprite
-    AIM_H: 52, AIM_CX: 0.5, AIM_CY: 0.5, // โหมดเล็งใช้ชิ้นเดิมขยายเบา ๆ ไม่มีศูนย์ปืนจริง
+    AIM_H: 240, AIM_CX: 0.5, AIM_CY: 0.22, // แนบตา: ปลายปืนหน้าอยู่กลางจอ ท้ายปืน/แขนล้นออกขอบ; ไม่มี scope
     AIM_SX: 50, AIM_SY: 50,
     AIM_DOT_GAP: 0,             // ปืนชุดใหม่มีดาวศูนย์หน้าอยู่ตรงจุดยิงจริง จึงไม่ต้องชดเชยภาพลง
                                  //    ขยับภาพปืนลง (ไม่ใช่ขยับจุดแดง!) ผ่าน translateY เพิ่ม — จุดยิงจริงยังอยู่กึ่งกลางจอเป๊ะ ไม่กระทบความแม่น
@@ -49,7 +49,7 @@
   /* 🎯 รอบ 932 (บั๊กผู้ใช้ "ยิงตัวอักษรแล้วไม่มีอะไรเกิดขึ้น"): pitch เริ่มต้นเดิม 0.10 ตั้งไว้ตอนเป้ายังอยู่ใกล้
      พอรอบ 923 ขยายระยะเป้า 3 เท่า มุมมองไปยังหิ้งแบนลงเหลือ ~0.00-0.06 rad → กล้องเงยสูงข้ามหัวแผ่นตลอด
      กากบาท/ปุ่มยิง (ยิงกลางจอเสมอ) จึงพุ่งไปโดนฉากหลัง ไม่โดนแผ่นสักที · 0.04 = กลางกลุ่มเป้าทั้ง 3 แถว */
-  let yaw=0, pitch=0.04, aimMode=false, lastShot=0, boardLock=0;
+  let yaw=0, pitch=0.04, aimMode=false, lastShot=0, boardLock=0; // รอบ 1196: เหลือการยิงมุมปกติโหมดเดียว ไม่มีปุ่มเล็ง
   let word=null, pos=0, misses=0, streak=0;    // คำปัจจุบัน {w,th} · ตำแหน่งตัวถัดไป · ยิงพลาดในคำนี้
   let queue=[], qGrade=null;                   // คิวคำไม่ซ้ำจนหมดคลัง (สูตรเดียวกับ ws)
   let plates=[], ducks=[], balloons=[], clouds=[], bulbs=[], tickers=[];
@@ -654,12 +654,12 @@
   height:${TUNE.HOLD_H}vh;right:${TUNE.HOLD_R}vh;bottom:${TUNE.HOLD_B}vh;
   filter:drop-shadow(0 8px 12px rgba(75,38,120,.3));transition:transform .09s ease-out}
 #sg-gun-aim{position:absolute;pointer-events:none;z-index:3;display:none;
-  height:${TUNE.AIM_H}vh;right:${TUNE.HOLD_R}vh;bottom:${TUNE.HOLD_B}vh;transform:scale(1.04);
+  height:${TUNE.AIM_H}vh;left:50%;top:50%;transform:translate(-50%,-${(TUNE.AIM_CY*100).toFixed(1)}%);
   transition:transform .07s ease-out}
 #sg-overlay.aim #sg-gun-hold{display:none}
 #sg-overlay.aim #sg-gun-aim{display:block}
 #sg-gun-hold.kick{transform:translate(6px,14px) rotate(1.6deg)}
-#sg-gun-aim.kick{transform:translate(8px,12px) scale(1.04) rotate(1.5deg)}
+#sg-gun-aim.kick{transform:translate(-50%,calc(-${(TUNE.AIM_CY*100).toFixed(1)}% + 12px)) scale(1.015)}
 #sg-muzzle{position:absolute;width:60px;height:60px;margin:-30px;border-radius:50%;pointer-events:none;z-index:4;opacity:0;
   background:radial-gradient(circle,rgba(255,255,255,.95),rgba(255,240,190,.55) 45%,transparent 70%)}
 #sg-muzzle.on{animation:sgMuz .14s ease-out}
@@ -691,13 +691,6 @@
 #sg-chip{cursor:pointer;color:#fff6c8}
 #sg-exit{position:absolute;top:1vh;right:1vh;background:linear-gradient(180deg,#ff849b,#ed4d72);color:#fff;border:3px solid #fff0c8;
   border-radius:999px;padding:.55vh 14px;font:800 clamp(11px,2.8vh,15px) Kanit,system-ui;cursor:pointer;box-shadow:0 3px 0 #b83259,0 5px 12px rgba(126,37,78,.25)}
-/* 🎯 รอบ 955: ปุ่มยิงโต 3 เท่าแล้วกินพื้นที่มุมล่างทั้งสองข้าง → ย้ายปุ่ม "เล็ง" ขึ้นมุมขวาบน (ใต้ปุ่มออก)
-   ไม่งั้นวงกลมยิงฝั่งขวาทับปุ่มนี้จนกดไม่ได้ */
-#sg-aimbtn{position:absolute;right:1.6vh;top:10vh;width:clamp(52px,11vh,72px);height:clamp(52px,11vh,72px);
-  border-radius:50%;border:4px solid #fff0c8;background:linear-gradient(145deg,#8d63d2,#58358e);color:#fff6c8;cursor:pointer;
-  font:700 clamp(9px,2.2vh,12px) Kanit,system-ui;line-height:1.15;z-index:6}
-#sg-aimbtn .ic{display:block;font-size:clamp(16px,4vh,24px)}
-#sg-aimbtn.on{background:#ffd54f;color:#5a4300;border-color:#fff}
 /* 🔫 รอบ 923: ปุ่มยิงเฉพาะ 2 ตำแหน่งซ้าย-ขวาล่างจอ (ผู้ใช้ขอ — เดิมมีแค่แตะจอสั้นๆ = ยิง)
    ยิงตรงกึ่งกลางจอเสมอ (จุดเดียวกับรูศูนย์เล็ง) · ต่อมารอบ 926: ผู้ใช้ส่งภาพวงกลม 1/2 — ย้ายขึ้นมากลางจอ
    (เดิมชิดขอบล่างสุด) top:40% translateY กึ่งกลางแนวตั้ง เว้นระยะพ้นปุ่ม 🎯 เล็งด้านล่าง · โปร่งใส 50% (.85→.5) */
@@ -718,7 +711,7 @@
 #sg-shoot-r{right:1.6vh}
 /* ✛ กากบาทกึ่งกลางจอ — บอกเด็กว่ากดปุ่มยิงแล้วกระสุนจะไปตรงไหน */
 #sg-cross{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:38px;height:38px;pointer-events:none;z-index:4;border:3px solid #fff1a8;border-radius:50%;filter:drop-shadow(0 2px 3px rgba(91,47,111,.55));transition:.12s}
-#sg-cross:before{content:'★';position:absolute;inset:0;display:grid;place-items:center;color:#ffd43b;font-size:20px;text-shadow:0 2px 0 #d88a28,0 0 7px #fff}
+#sg-cross:before{content:none} /* รอบ 1195: เอาดาวกลางเป้าออก ไม่บังตัวอักษร */
 #sg-cross i{position:absolute;display:block;background:#fff1a8;border-radius:2px}
 #sg-cross i:nth-child(1){left:50%;top:-8px;bottom:-8px;width:2px;margin-left:-1px}
 #sg-cross i:nth-child(2){top:50%;left:-8px;right:-8px;height:2px;margin-top:-1px}
@@ -771,14 +764,12 @@
     overlay=document.createElement('div'); overlay.id='sg-overlay';
     overlay.innerHTML=`
       <img id="sg-gun-hold" src="img/shootword/star-blaster.webp?v=1193" alt="">
-      <img id="sg-gun-aim" src="img/shootword/star-blaster.webp?v=1193" alt="">
       <div id="sg-muzzle"></div>
       <div id="sg-cross"><i></i><i></i></div>
       <div id="sg-hud">
         <div id="sg-word"></div>
         <div id="sg-tl"><b id="sg-coins"></b><span id="sg-chip" class="sga-open" role="button" title="ดูอันดับ Top 10 / รางวัลรายเดือน"></span></div>
         <button id="sg-exit" type="button">✕ ออก</button>
-        <button id="sg-aimbtn" type="button"><span class="ic">🎯</span>เล็ง</button>
         <button id="sg-shoot-l" class="sg-shoot" type="button"><span class="ic">⭐</span>ยิง</button>
         <button id="sg-shoot-r" class="sg-shoot" type="button"><span class="ic">⭐</span>ยิง</button>
         <div id="sg-streak"></div>
@@ -794,7 +785,6 @@
     hintEl=overlay.querySelector('#sg-hint');
     streakEl=overlay.querySelector('#sg-streak');
     overlay.querySelector('#sg-exit').addEventListener('click', close);
-    overlay.querySelector('#sg-aimbtn').addEventListener('click', toggleAim);
     bindShootBtns();
     /* 🏆 กดแต้ม → กระดานประกาศรางวัล (ผูกเองแบบ typing.js — เผื่อยังไม่เคยเปิดกระดานอันดับ) */
     hudChip.addEventListener('click', ()=>{ if(typeof SgAward!=='undefined') SgAward.open(); });
@@ -972,16 +962,6 @@
     overlay.addEventListener('pointercancel', e=>{ pts.delete(e.pointerId); });
     window.addEventListener('resize', onResize);
   }
-  function toggleAim(){
-    aimMode=!aimMode;
-    overlay.classList.toggle('aim', aimMode);
-    const b=overlay.querySelector('#sg-aimbtn');
-    b.classList.toggle('on', aimMode);
-    b.innerHTML=aimMode?'<span class="ic">👁</span>มุมกว้าง':'<span class="ic">🎯</span>เล็ง';
-    camera.fov=aimMode?TUNE.FOV_AIM:TUNE.FOV; camera.updateProjectionMatrix();
-    SND.thud();
-    if(hintEl) hintEl.textContent=aimMode?'🎯 ลากนิ้วเลื่อนศูนย์ให้ทาบแผ่น แล้วแตะจอ/กดปุ่ม 🔫 เพื่อยิง':'👆 แตะแผ่น/กดปุ่ม 🔫 = ยิง · ลากนิ้ว = มองรอบซุ้ม';
-  }
   /* 🔫 รอบ 923: ปุ่มยิง 2 ตำแหน่งซ้าย-ขวาล่างจอ — ยิงตรงกึ่งกลางจอเสมอ (จุดเดียวกับรูศูนย์เล็ง AIM_SX/AIM_SY = 50/50)
      pointerdown ไม่ใช่ click — ลดหน่วง เหมือนแป้นพิมพ์คำใน typing.js */
   /* 🔫🔁 รอบ 959 (ผู้ใช้สั่ง "กดค้างรัวได้"): กดค้าง = ยิงรัวซ้ำทุก COOLDOWN ms (310ms/นัด — cooldown เดิม
@@ -1020,7 +1000,7 @@
     d.innerHTML=`<div class="card">
       <h2>🎯 ยิงเป้าคำศัพท์ · สวนสนุก</h2>
       <p>ยิงแผ่นตัวอักษรให้<b>สะกดตรงตามคำบนป้าย</b> ทีละตัว<br>
-      👆 แตะแผ่น = ยิง · ลากนิ้ว = มองรอบซุ้ม · ปุ่ม 🎯 = เล็งซูมผ่านศูนย์ปืน<br>
+      👆 แตะแผ่น/กดปุ่มดาว = ยิง · ลากนิ้ว = เลื่อนเป้า<br>
       🔫 ปุ่มยิงซ้าย-ขวาล่างจอ = ยิงตรงกึ่งกลางจอเสมอ<br>
       ครบคำได้ <b>ความยาว × 2 เหรียญ+แต้ม</b> · ไม่พลาดเลย <b>+${PERFECT_BONUS}</b> · เจอเป็ด 🦆 ยิงได้ +${DUCK_COIN} 🪙</p>
       <p style="font-size:.85em;opacity:.8">แต้มสะสมขึ้นกระดานอันดับ 🎯 — Top 10 รับรางวัลทุกวันที่ 1 (10,000–1,000 🪙)</p>
@@ -1099,7 +1079,7 @@
     get shakeMag(){return shakeMag;},
     set boardLock(v){boardLock=v;}, set lastShot(v){lastShot=v;},
     step(dt){ tick(dt||0.016); if(renderer)renderer.render(scene,camera); },
-    shoot, hitPlate, hitDuck, nextWord, dealBoard, pool, takeWord, toggleAim,
+    shoot, hitPlate, hitDuck, nextWord, dealBoard, pool, takeWord,
     setView(y,p){ yaw=y; pitch=p; },
     TUNE, ROWS, PT_PER_LETTER, PERFECT_BONUS, DUCK_COIN, COOLDOWN,
   }};
