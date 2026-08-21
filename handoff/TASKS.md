@@ -28,6 +28,9 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (21 ส.ค.) — อ่านก่อน
+- **รอบ 1190 · กระดานอันดับยอดตรง lobby + อ่านง่ายและเลื่อนแนวตั้ง:** หมวดเหรียญใช้ `state.coins` สดของเจ้าของบัญชีและ sync หลังทุก save (signature กันเขียนซ้ำ) จึงไม่ค้าง snapshot แบบเคส “มะลิ”; กราฟใช้ยอดสดเดียวกัน
+- ทุกหมวดมีพื้นที่เลื่อนขึ้นลง ซ่อน scrollbar/ล็อกแนวนอน และขยายตัวอักษร; กราฟ Top 30 เปลี่ยนเป็นแถวแนวนอนอ่านชื่อ+คะแนนชัด ครอบทั้งจอ 812×375/1320×619
+- หมวดพิมพ์คำ Top 10 จ่ายจริง 20,000→2,000 ผ่าน prize table เฉพาะหมวด; syntax + regression 4 ชุดผ่าน, Browser overflow X=0/scroll Y ผ่าน/console error 0, build `.1074` 8,355 ไฟล์ 460.2MiB + PWA/cache/TWA validator ผ่าน
 - **รอบ 1189 · ปิดช่องซื้อบ้านลดระดับ + กู้ Moji love gay:** live RTDB คืน `basic→medium` และคืน 1,000 coins (`347,275→348,275`) พร้อม repair log; อ่านกลับตรง payload ทุกตัวอักษร
 - audit 51 บัญชีเทียบ snapshot 20 ส.ค. กับ live ไม่พบ downgrade รายอื่นหลัง baseline; schema เก่าไม่มีประวัติซื้อรายบุคคลก่อนวันนั้น จึงไม่เดาคืนจากยอดเหรียญ และเพิ่ม `homePurchaseLog` จำกัด 20 รายการสำหรับตรวจครั้งต่อไป
 - `homeDowngradeLocked` ล็อกต่ำกว่าทั้ง render/click/confirm; test 8 policy cases + syntax/diff ผ่าน, Browser 1000×640/812×375 กล่องไม่ล้นและ console error 0, build `.1073` 8,355 ไฟล์ 460.2MiB + PWA/cache/TWA validator ผ่าน

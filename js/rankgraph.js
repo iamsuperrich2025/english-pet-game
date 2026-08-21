@@ -53,6 +53,15 @@
         if(typeof rankUserExcluded==='function' && rankUserExcluded(ch.key,v.n)) return;
         out.push(Object.assign({id:ch.key},v));
       });
+      /* เจ้าของบัญชีใช้ state สดเหมือนกระดานอันดับหลัก ไม่รอ snapshot Firebase รอบถัดไป */
+      const myId=typeof onlineKey==='function'?onlineKey():'';
+      if(myId && typeof state!=='undefined' && state.student && !(typeof isTester==='function'&&isTester())){
+        const mine={id:myId,n:(state.profileName||state.student.first||'ผู้เล่น')+(typeof badgeSuffix==='function'?badgeSuffix():''),g:state.student.grade||'',
+          coins:Math.round(state.coins||0),av:Math.round(typeof assetValue==='function'?assetValue():0),oe:Math.round(state.onlineEarned||0),
+          bk:Math.round(state.mechaBoss||0),ws:Math.round(state.wsScore||0),pm:Math.round(state.pmScore||0),tw:Math.round(state.tpWords||0),
+          bb:Math.round(state.bbScore||0),sg:Math.round(state.sgScore||0)};
+        const at=out.findIndex(v=>v.id===myId); if(at>=0) out[at]=Object.assign({},out[at],mine); else out.push(mine);
+      }
       cache=out; cacheAt=Date.now(); return out;
     });
   }
@@ -67,24 +76,26 @@
     const cat=CATS.find(c=>c.key===selected)||CATS[0];
     const rows=rowsFrom(players,cat);
     if(!rows.length) return `<div class="rg-empty">${cat.icon} หมวดนี้ยังไม่มีคะแนน — มาเป็นคนแรกบนกราฟกัน!</div>`;
-    const W=1400,H=500,L=54,R=28,T=62,B=42;
-    const max=Math.max(1,rows[0].val), innerW=W-L-R, innerH=H-T-B;
-    const x=i=>L+(rows.length===1?innerW/2:i*innerW/(rows.length-1));
-    const y=v=>T+(1-v/max)*innerH;
-    const pts=rows.map((r,i)=>`${x(i).toFixed(1)},${y(r.val).toFixed(1)}`).join(' ');
+    /* กราฟแนวนอนแบบหนึ่งผู้เล่นต่อหนึ่งแถว: ตัวอักษรใหญ่ได้จริงทุกจอ และเลื่อนเฉพาะขึ้นลง */
+    const W=1000,ROW=50,T=20,B=26,L=245,R=125,H=T+B+rows.length*ROW;
+    const max=Math.max(1,rows[0].val), innerW=W-L-R;
+    const x=v=>L+(v/max)*innerW;
+    const y=i=>T+i*ROW+ROW/2;
+    const pts=rows.map((r,i)=>`${x(r.val).toFixed(1)},${y(i).toFixed(1)}`).join(' ');
     const grid=[0,.25,.5,.75,1].map(p=>{
-      const yy=(T+innerH*(1-p)).toFixed(1);
-      return `<line x1="${L}" y1="${yy}" x2="${W-R}" y2="${yy}"/><text x="${L-8}" y="${+yy+4}" text-anchor="end">${esc(fmt(max*p))}</text>`;
+      const xx=(L+innerW*p).toFixed(1);
+      return `<line x1="${xx}" y1="${T}" x2="${xx}" y2="${H-B}"/><text x="${xx}" y="${H-2}" text-anchor="middle">${esc(fmt(max*p))}</text>`;
     }).join('');
     const dots=rows.map((r,i)=>{
-      const xx=x(i), yy=y(r.val), above=i%2===0, ly=above?Math.max(16,yy-12):Math.min(H-8,yy+18);
+      const xx=x(r.val), yy=y(i);
       return `<g class="rg-point" tabindex="0" role="img" aria-label="อันดับ ${i+1} ${esc(r.name)} ${esc(fmt(r.val))}">
-        <line class="rg-stem" x1="${xx}" y1="${yy}" x2="${xx}" y2="${above?ly+3:ly-11}"/>
-        <circle cx="${xx}" cy="${yy}" r="6"/><text class="rg-name" x="${xx}" y="${ly}" text-anchor="middle">${esc(r.name)}</text>
-        <text class="rg-rank" x="${xx}" y="${H-12}" text-anchor="middle">${i+1}</text>
+        <text class="rg-rank" x="18" y="${yy+6}">${i+1}</text>
+        <text class="rg-name" x="66" y="${yy+6}">${esc(r.name)}</text>
+        <line class="rg-bar" x1="${L}" y1="${yy}" x2="${xx}" y2="${yy}"/>
+        <circle cx="${xx}" cy="${yy}" r="7"/><text class="rg-score" x="${Math.min(W-R+12,xx+15)}" y="${yy+6}">${esc(fmt(r.val))}</text>
         <title>อันดับ ${i+1} · ${esc(r.name)} · ${esc(fmt(r.val))}</title></g>`;
     }).join('');
-    return `<div class="rg-chart-head"><b style="color:${cat.color}">${cat.icon} ${esc(cat.label)} · Top ${TOP}</b><span>แตะ/ชี้จุดเพื่อดูชื่อและคะแนน</span></div>
+    return `<div class="rg-chart-head"><b style="color:${cat.color}">${cat.icon} ${esc(cat.label)} · Top ${rows.length}</b><span>เลื่อนขึ้นลงเพื่อดูผู้เล่นทั้งหมด</span></div>
       <svg class="rg-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="กราฟอันดับ Top ${TOP} หมวด${esc(cat.label)}" style="--rg-c:${cat.color}">
         <g class="rg-grid">${grid}</g><polyline class="rg-line" points="${pts}"/>${dots}
       </svg>`;

@@ -18,6 +18,7 @@
    ============================================================ */
 window.TpAward = window.makeMonthAward({
   id:       'tp',
+  prizes:   [20000, 18000, 16000, 14000, 12000, 10000, 8000, 6000, 4000, 2000],
   path:     'tpAward',                       // /tpAward/<YYYY-MM> ใน RTDB
   field:    'tw',                            // 🥇 ฟิลด์ที่ใช้จัดอันดับ = จำนวนคำที่พิมพ์ (all time)
   scoreOf:  ()=> (typeof state !== 'undefined' ? (state.tpWords || 0) : 0),

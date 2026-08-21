@@ -713,6 +713,9 @@ function loadState(){
 function saveState(){
   state.savedAt = Date.now();          // ตราเวลาเซฟ (ไว้เทียบกับเซฟ cloud ใน auth.js)
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  /* 🪙 กระดานอันดับต้องตามยอดใน lobby ทันที ไม่รอ heartbeat 1 นาที
+     onlinePushScore มี signature กันเขียนซ้ำอยู่แล้ว จึงเรียกหลังทุก save ได้โดยไม่เพิ่ม write เมื่อยอด/สถิติไม่เปลี่ยน */
+  if(typeof onlinePushScore === 'function') onlinePushScore();
 }
 let state = loadState();
 

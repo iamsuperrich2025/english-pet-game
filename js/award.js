@@ -67,6 +67,10 @@
      โรงงาน: สร้างเครื่องจ่ายรางวัล 1 ตัวต่อ 1 กระดาน
      ============================================================ */
   function makeMonthAward(cfg){
+    /* แต่ละเกมกำหนดตารางรางวัลเฉพาะของตัวเองได้; ไม่ส่งมา = ใช้ตารางมาตรฐานเดิม */
+    const PRIZES = Array.isArray(cfg.prizes) && cfg.prizes.length ? cfg.prizes.slice() : window.AwardCore.PRIZES.slice();
+    const TOP = PRIZES.length;
+    const prizeFor = (rank)=> (rank >= 1 && rank <= TOP) ? PRIZES[rank - 1] : 0;
     const F  = cfg.field;                       // ฟิลด์ที่ใช้ "จัดอันดับ" บน /leaderboard
     const F2 = cfg.field2 || '';                // ฟิลด์รองที่โชว์คู่กัน (มีเฉพาะบางกระดาน)
     const U  = cfg.unit || 'แต้ม', U2 = cfg.unit2 || '';

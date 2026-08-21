@@ -2742,7 +2742,7 @@ button.pi-dress-pip:active{transform:scale(.94);}
 .lbf-overlay{position:fixed;inset:0;z-index:90;background:rgba(8,22,48,.72);
   display:flex;align-items:flex-start;justify-content:center;padding:1.8vh 0;animation:fadeIn .2s;}
 /* height:auto = กล่องสูงพอดีเนื้อหา (ไม่บังคับ 92vh ที่ดันแถวล่างตกขอบบนจอเตี้ย) · cap 96vh กันล้น */
-.lbf-box{position:relative;width:96vw;height:auto;max-height:96vh;overflow:hidden;
+.lbf-box{position:relative;width:96vw;height:96dvh;max-height:96dvh;overflow:hidden;
   display:flex;flex-direction:column;
   background:linear-gradient(180deg,#12294c,#0b1a34);border:2px solid #3a76d8;border-radius:18px;
   box-shadow:0 24px 60px rgba(0,0,0,.6);padding:14px 16px;
@@ -2773,17 +2773,24 @@ button.pi-dress-pip:active{transform:scale(.94);}
    ซ้าย(ก่อนหัวข้อ) · ขวา(หลังแท็บ) — รอบ 249 ผู้ใช้: เพิ่มปุ่มปิดซ้ายบน */
 .lbf-close{position:static;margin-left:8px;flex:0 0 auto;}
 .lbf-close-l{position:static;margin:0 10px 0 0;flex:0 0 auto;}
-.lbf-body{flex:1 1 auto;display:flex;align-items:flex-start;justify-content:center;min-height:0;}
-.lbf-grid{display:grid;grid-template-columns:repeat(5,1fr);grid-auto-flow:column;
-  gap:5px 12px;width:100%;}
+.lbf-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;touch-action:pan-y;overscroll-behavior:contain;
+  scrollbar-width:none;-ms-overflow-style:none;padding:2px 4px 10px;}
+.lbf-scroll::-webkit-scrollbar{display:none;width:0;height:0;}
+.lbf-body{display:flex;align-items:flex-start;justify-content:center;min-height:0;}
+.lbf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-flow:row;
+  gap:7px 14px;width:100%;}
 .lbf-cell{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;
-  padding:0 9px;border-radius:8px;background:rgba(255,255,255,.045);
-  font-size:clamp(9px,1.5vh,12.5px);line-height:1.1;}
+  min-height:36px;padding:6px 12px;border-radius:9px;background:rgba(255,255,255,.055);
+  font-size:clamp(14px,1.8vh,18px);line-height:1.2;}
 .lbf-cell.me{background:rgba(120,210,255,.16);outline:1px solid rgba(120,210,255,.45);}
 .lbf-cell .r{flex:0 0 auto;min-width:2.1em;text-align:right;font-weight:800;color:#ffd76a;}
 .lbf-cell .nm{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   color:#e6f2ff;cursor:pointer;}
 .lbf-cell .sc{flex:0 0 auto;color:#9ec8e8;font-weight:700;white-space:nowrap;}
+@media (max-width:760px){
+  .lbf-grid{grid-template-columns:1fr;gap:6px;}
+  .lbf-cell{font-size:14px;min-height:34px;padding:5px 9px;}
+}
 
 /* 🗂️ รอบ 677: แท็บเข็มแยกกระดานย่อยทีละสาย — เนื้อหายาวกว่าแท็บอื่นมาก (10 สาย) จึงให้เลื่อนในตัว
    scrollbar ซ่อน (แพทเทิร์นเดียวกับ .pl-feed/.pl-wide .pl-body) แทนการยัดทุกอย่างให้พอดีจอแบบแท็บอื่น
@@ -2889,10 +2896,14 @@ button.pi-dress-pip:active{transform:scale(.94);}
    (ต้องอยู่ "หลัง" กฎ base ของ .lbf-bcat-row ในไฟล์ ไม่งั้นแพ้ cascade เพราะ specificity เท่ากัน) */
 @media (max-height:420px){
   .lbf-bcat-head small{display:none;}
-  .lbf-bcat-row{padding:1px 5px;gap:5px;font-size:10px;}
-  .lbf-bcat-row .bcr-rank{font-size:12px;}
+  .lbf-bcat-row{padding:4px 6px;gap:6px;font-size:14px;}
+  .lbf-bcat-row .bcr-rank{font-size:15px;}
   .lbf-bcat{padding:6px 9px;}
 }
+.lbf-scroll>.lbf-bcat-wrap{min-height:auto;overflow:visible;grid-auto-rows:minmax(280px,auto);}
+.lbf-box .bxr-list{overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-ms-overflow-style:none;}
+.lbf-box .bxr-list::-webkit-scrollbar{display:none;width:0;height:0;}
+.lbf-box .bxr-row{font-size:clamp(14px,1.9vh,18px);min-height:38px;}
 
 /* 🏆 รอบ 247: โพเดียม Top 5 — ตัวละครที่เลือกยืนลดหลั่นบนแท่น (เรียง L→R = 4,2,1,3,5) */
 .lbf-podium{flex:0 0 auto;display:flex;align-items:flex-end;justify-content:center;
@@ -2908,9 +2919,9 @@ button.pi-dress-pip:active{transform:scale(.94);}
 .pod-label{width:100%;display:flex;flex-direction:column;align-items:center;gap:0;
   padding:0 4px 2px;min-height:0;}
 .pod-name{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  font-weight:800;font-size:clamp(11px,1.8vh,14px);color:#e6f2ff;cursor:pointer;}
+  font-weight:800;font-size:clamp(14px,2vh,18px);color:#e6f2ff;cursor:pointer;}
 .pod-sc{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  font-size:clamp(10px,1.6vh,13px);font-weight:800;color:#9ec8e8;}
+  font-size:clamp(13px,1.8vh,16px);font-weight:800;color:#9ec8e8;}
 /* ตัวละครใหญ่ (ผู้ใช้ขอ) + แท่นสูงลดหลั่น พีคกลาง=อันดับ1 */
 /* ความสูงแท่นตั้งจาก JS (baseVh ตามคะแนนจริง) — ที่นี่คุมแค่ "สีเหรียญ" + ขนาดตัวละคร
    ตัวละคร: อันดับ 1 ใหญ่สุด ลดหลั่นออกข้าง (เน้นแชมป์) */

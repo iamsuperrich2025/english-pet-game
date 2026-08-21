@@ -1813,8 +1813,13 @@ function lbRankRows(tab){
     return rows.map((r,i)=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🖼️ ${fmtNum(r.pm)}`, val:r.pm,
       pz:(typeof PmAward !== 'undefined') ? PmAward.prizeFor(i+1) : 0, me:r.id===myId}));
   }
-  return (Online.board || []).map((r,i)=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🪙 ${fmtNum(r.coins)}`, val:r.coins,
-    pz:(typeof CoinAward !== 'undefined') ? CoinAward.prizeFor(i+1) : 0, me:r.id===myId}));
+  /* 🪙 ใช้ยอดสดจาก state สำหรับเจ้าของบัญชีเสมอ เหมือนทุกหมวดด้านบน
+     เดิมหมวด coins เป็นหมวดเดียวที่คืน Online.board ตรง ๆ จึงเห็น snapshot เก่าระหว่างรอ sync */
+  const map = {}; (Online.board || []).forEach(r=>{ map[r.id] = r; });
+  if(includeMe) map[myId] = {id:myId, n:meName, g:meG, coins:Math.round(state.coins||0)};
+  return Object.values(map).filter(r=>typeof r.coins === 'number').sort((a,b)=>b.coins-a.coins).slice(0, LEADERBOARD_SIZE)
+    .map((r,i)=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🪙 ${fmtNum(r.coins)}`, val:r.coins,
+      pz:(typeof CoinAward !== 'undefined') ? CoinAward.prizeFor(i+1) : 0, me:r.id===myId}));
 }
 
 /* ============================================================
@@ -2066,8 +2071,8 @@ function openLeaderboardFull(){
        (สูตรเดียวกับแท็บ xr ด้านล่าง) · id ให้ bxRankNoteRefresh() เขียนทับได้หลังรู้ผลจาก DB */
     if(__lbfTab === 'bx'){
       ov.innerHTML = `<div class="lbf-box">${closeHeadHtml('🏁 สอบใหญ่คะแนนสูงสุด/เร็วสุด')}
-        <div class="lbf-note" id="bxr-note">${(typeof bxRankNote === 'function') ? bxRankNote() : ''}</div>
-        <div class="bxr-body" id="lbf-bx"></div></div>`;
+        <div class="lbf-scroll"><div class="lbf-note" id="bxr-note">${(typeof bxRankNote === 'function') ? bxRankNote() : ''}</div>
+        <div class="bxr-body" id="lbf-bx"></div></div></div>`;
       bindLbfChrome();
       if(typeof bxRankMount === 'function') bxRankMount(ov.querySelector('#lbf-bx'));
       return;
@@ -2078,8 +2083,8 @@ function openLeaderboardFull(){
           จึงอาจติด deny คนละสถานะกัน (rules publish แยกอิสระต่อกัน) · id ให้ xrkNoteRefresh() เขียนทับได้ */
     if(__lbfTab === 'xr'){
       ov.innerHTML = `<div class="lbf-box">${closeHeadHtml('🏁 ข้อสอบมาตรฐานคะแนนสูงสุด/เร็วสุด')}
-        <div class="lbf-note" id="xrk-note"></div>
-        <div class="bxr-body" id="lbf-xr"></div></div>`;
+        <div class="lbf-scroll"><div class="lbf-note" id="xrk-note"></div>
+        <div class="bxr-body" id="lbf-xr"></div></div></div>`;
       bindLbfChrome();
       if(typeof xrkMount === 'function') xrkMount(ov.querySelector('#lbf-xr'));
       return;
@@ -2107,7 +2112,7 @@ function openLeaderboardFull(){
         </div>`;
       }).join('')}</div>`
         : `<div class="lb-empty">ยังไม่มีใครได้เข็มเลย — เล่นเก่งๆ เก็บเข็มเป็นคนแรกเลย! 🏅</div>`;
-      ov.innerHTML = `<div class="lbf-box lbf-box-bcat">${closeHeadHtml('🏅 อันดับเข็ม · แยกตามสาย')}${body}</div>`;
+      ov.innerHTML = `<div class="lbf-box lbf-box-bcat">${closeHeadHtml('🏅 อันดับเข็ม · แยกตามสาย')}<div class="lbf-scroll">${body}</div></div>`;
       bindLbfChrome();
       return;
     }
@@ -2116,8 +2121,6 @@ function openLeaderboardFull(){
     const all = lbRankRows(__lbfTab).slice(0, cap);
     const top = all.slice(0, 5);          // 🏆 โพเดียม (ตัวละครยืนลดหลั่น)
     const rest = all.slice(5);            // ที่เหลือ → กริด 5 คอลัมน์เหมือนเดิม
-    const n = rest.length;
-    const rpc = Math.min(19, Math.max(1, Math.ceil(n / 5)));
     // ความสูงแท่น "สอดคล้องคะแนนจริง" — normalize คะแนน Top 5 → 3–11vh (คนคะแนนมาก แท่นสูง)
     const vals = top.map(r=> +r.val || 0);
     const maxV = Math.max(...vals), minV = Math.min(...vals);
@@ -2151,10 +2154,12 @@ function openLeaderboardFull(){
     const allTime = (__lbfTab === 'online' || __lbfTab === 'ws' || __lbfTab === 'pm' || __lbfTab === 'tp' || __lbfTab === 'bb' || __lbfTab === 'sg') ? ' (all time)' : '';
     ov.innerHTML = `<div class="lbf-box">
       ${closeHeadHtml(`${title} · Top ${cap}${allTime}`)}
-      ${lbfAwardBarHtml(__lbfTab)}
-      ${podHtml}
-      ${rest.length ? `<div class="lbf-body"><div class="lbf-grid" style="grid-template-rows:repeat(${rpc},1fr);height:${Math.min(46, rpc*2.35).toFixed(1)}vh">${cells}</div></div>`
-                    : (top.length ? '' : '<div class="lb-empty">ยังไม่มีใครขึ้นกระดาน — เล่นเก็บแต้มเป็นคนแรกเลย! 🥇</div>')}
+      <div class="lbf-scroll" tabindex="0" aria-label="เลื่อนดูอันดับผู้เล่นทั้งหมด">
+        ${lbfAwardBarHtml(__lbfTab)}
+        ${podHtml}
+        ${rest.length ? `<div class="lbf-body"><div class="lbf-grid">${cells}</div></div>`
+                      : (top.length ? '' : '<div class="lb-empty">ยังไม่มีใครขึ้นกระดาน — เล่นเก็บแต้มเป็นคนแรกเลย! 🥇</div>')}
+      </div>
     </div>`;
     bindLbfChrome();
     seatPodChars(ov);   // เท้าติดแท่น + ลดช่องเหนือหัว (ชดเชยขอบใสในรูป blk)
