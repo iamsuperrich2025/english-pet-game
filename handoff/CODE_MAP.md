@@ -417,7 +417,7 @@ gradeChangeTo:64 · gradeLockNote:91 · openGradeChange:100
 
 ## js/hauntedhoteldirector.js (321 บรรทัด · 0 รายการ)
 
-## js/hauntedhotelghost.js (237 บรรทัด · 0 รายการ)
+## js/hauntedhotelghost.js (239 บรรทัด · 0 รายการ)
 
 ## js/hauntedhotelsession.js (255 บรรทัด · 0 รายการ)
 

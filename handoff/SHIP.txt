@@ -1,11 +1,8 @@
-รอบ 1203: ยกเครื่อง Realistic Circuit และเกมเพลย์ F1 แบบพรีเมียม
+รอบ 1204: บีบภาพรถผู้เล่นอื่นเป็น WebP โปร่งใส 58KB
 FILE: js/f1_3d.js
-FILE: js/f1_modes.js
-FILE: js/ui.js
 FILE: tools/build_web.mjs
 FILE: tools/check_missing_assets.py
-FILE: tools/test_f1_cockpit_visibility.js
-FILE: tools/test_f1_modes.js
 FILE: tools/test_f1_realistic_circuit.js
 FILE: img/f1/peer_car_25d.png
+FILE: img/f1/peer_car_25d.webp
 FILE: handoff/TASKS.md
