@@ -28,6 +28,10 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (21 ส.ค.) — อ่านก่อน
+- **รอบ 1203 · Realistic Circuit premium + gameplay:** พวงมาลัย HUD/จอหมุนตามเลี้ยว, อาคาร/อัฒจันทร์เป็น modular 3D ไม่มี photo facade, ป้ายมีโครงจริง และคัด footprint ที่รุกเขตถนน (`js/f1_3d.js`)
+- เข้าสนาม Realistic โดยตรงชั่วคราว (Battery Saver/selector ยังอยู่), กำแพงชนแล้ว clamp+เด้ง, หนึ่งคำต่อรอบและวางตัวอักษรห่าง `TOTAL/word.length`; multiplayer เก็บตัวอักษร local ของใครของมัน ไม่แย่งกัน
+- รถผู้เล่นอื่นเปลี่ยนเป็น camera-facing 2.5D sprite โปร่งใส 768×512 (`img/f1/peer_car_25d.png`) พร้อม fallback/immutable build asset ลดภาระจากโมเดล 3D เต็มคัน
+- Focused regressions 5 ชุด + syntax/diff/asset check ผ่าน; Browser Realistic 1320×619 ยืนยัน steering, even letters, barrier bounce, peer sprite และ production build `.1083` 8,359 ไฟล์ 461.4MiB ผ่านก่อน multiplayer isolation guard
 - **รอบ 1202 · P0 face atlas คืน draw budget:** รวมหัว Soft Chibi เป็น material เดียวโดยคงหน้าเดิม ทำให้ standard 10 draw slots (legacy 15) และ Soccer local 19/19 เท่าก่อน P0; Adventure legacy/payload เดิมไม่เปลี่ยน (`js/adventure3d.js`)
 - Node/Hotel regressions ผ่าน; Browser เกมจริงยืนยันหน้า atlas + viewport 1320×619/812×375 และ build `.1082` 8,357 ไฟล์ 460.5MiB + PWA/cache/TWA validator ผ่าน
 - **รอบ 1201 · อันดับพิมพ์คำแสดงผู้เล่นที่เหลือครบ:** แยก Top 10 ผู้รับรางวัลออกจากจำนวนแสดงเต็มจอ และขยายรายการเป็น Top 100 เท่าหมวดเหรียญ โดยอันดับ 11–100 ไม่มีรางวัลเพิ่ม (`js/ui.js`)

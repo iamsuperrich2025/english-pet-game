@@ -6,6 +6,8 @@
 
 const STORAGE_KEY='vwF1GraphicsMode';
 const DEFAULT_MODE='battery';
+const ENTRY_MODE='quality';
+const SELECTOR_ENABLED=false; // ปิดหน้าตัวเลือกชั่วคราว แต่เก็บ Battery Saver และ selector ไว้ครบ
 const CONTRACT='vw.f1.environment-profile/v1';
 
 function freezeProfile(value){
@@ -116,7 +118,7 @@ function openSelector(options){
 }
 
 root.F1Modes=Object.freeze({
-  CONTRACT,STORAGE_KEY,DEFAULT_MODE,MODES,PROFILES,
+  CONTRACT,STORAGE_KEY,DEFAULT_MODE,ENTRY_MODE,SELECTOR_ENABLED,MODES,PROFILES,
   normalize,getSelectedMode:readPreference,setSelectedMode:writePreference,getSelection:selection,
   openSelector,closeSelector:removeSelector,
 });

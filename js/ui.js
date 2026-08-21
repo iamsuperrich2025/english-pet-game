@@ -7476,7 +7476,7 @@ async function enterF1_3D(){
     advLoading = false;
   }
   try{
-    const graphics=window.F1Modes?F1Modes.getSelection():null;
+    const graphics=window.F1Modes?F1Modes.getSelection(F1Modes.ENTRY_MODE||'quality'):null;
     F1World.start(graphics?{graphicsMode:graphics.id,environmentProfile:graphics.environment}:undefined);
     return worldEntryStarted();
   }catch(e){ return worldEntryStopped('เครื่องสร้างสนามแข่งรถไม่สำเร็จ', e); }
@@ -7717,7 +7717,9 @@ function railWorldClick(w){
   }
   if(w.mode==='f1'){
     loadScriptOnce('js/f1_modes.js').then(()=>{
-      F1Modes.openSelector({onContinue:()=>openWorldEntryDialog(w)});
+      /* รอบ 1203: เข้าสนาม Realistic โดยตรงชั่วคราว; เก็บ Battery Saver/selector ไว้ในโมดูลโดยไม่แสดง */
+      F1Modes.setSelectedMode(F1Modes.ENTRY_MODE||'quality');
+      openWorldEntryDialog(w);
     }).catch(err=>world3DFail('ตัวเลือก Vocab World Racing',err));
     return;
   }

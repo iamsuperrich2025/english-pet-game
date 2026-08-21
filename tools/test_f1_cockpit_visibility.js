@@ -11,9 +11,15 @@ assert.match(src,/const RFP_FOV\s*=\s*66/,'Realistic cockpit must use a natural 
 assert.match(src,/#f1-wrap\.realistic\.fp #f1-cockpit\{[^}]*background-size:100% auto[^}]*calc\(100% \+ 1vh\)/,
   'Realistic cockpit must be a wide lower plate with a road-dominant helmet-eye view');
 assert.match(src,/realistic\.fp #f1-cockpit\{[^}]*cockpit_body_realistic\.png/,
-  'Realistic mode must use the wheel-free cockpit layer');
+  'Realistic mode must use the wide premium cockpit layer');
 assert.match(src,/#f1-wrap\.realistic\.fp #f1-wheel,#f1-wrap\.realistic\.fp #f1-leds\{display:none!important\}/,
   'Realistic must not overlay the legacy wheel frame over its integrated cockpit plate');
+assert.match(src,/#f1-wrap\.realistic\.fp #f1-quality-wheel\{display:block\}/,
+  'Realistic must show the separate procedural steering-wheel layer');
+assert.match(src,/qualityWheelEl\.style\.transform=r/,
+  'Quality steering wheel must receive the same live steering transform as physics');
+assert.match(src,/knobEl\.style\.setProperty\('--ctl-turn'/,
+  'Touch/keyboard steering control must visibly rotate with actual steer');
 assert.match(src,/#f1-wrap\.realistic\.fp #f1-dash\{display:block!important[^}]*left:44vw[^}]*top:calc\(101vh - 14vw\)/,
   'Realistic must retain a correctly aligned live dashboard');
 assert.match(src,/g\.name=['"]F1_FP_WHEELS['"]/,

@@ -10,7 +10,7 @@
    · 👻 รถเงา (รอบ 902): บันทึกเส้นทาง Best Lap ลง localStorage แล้วปล่อยรถโปร่งแสงวิ่งซ้ำให้ไล่แข่งกับตัวเอง
    · multiplayer ผ่าน NetRoom map 'f1' (สนามละ 10 คน) — เห็นรถเพื่อน+ชื่อ+แชท+กระดานคำ
    · โมเดลรถ: โหลด img/models/f1_car.glb ถ้ามี (ผู้ใช้จะหามาวาง) — ไม่มี = รถ F1 ประกอบเอง (nose/ปีก/halo/ล้อหมุน)
-   · texture จริง: probe img/f1/*.jpg (ผู้ใช้เจนภาพมาวางตาม PROMPTS_F1.md) — ไม่มี = canvas วาดเองทุกแผ่น
+   · สิ่งปลูกสร้างเป็น modular 3D + clean material; ไม่ใช้ภาพถ่าย facade/crowd/pit/tower แปะบนโมเดล
    · เข้าโลก: js/ui.js enterF1_3D (WORLD3D แถว f1) · ห้ามแตะไฟล์นี้จาก moto3d (คนละ engine)
    ───────────────────────────────────────────────────────────────────── */
 (function(){
@@ -21,12 +21,13 @@
    ============================================================ */
 const REWARD       = 60;      // 🪙 ประกอบคำสำเร็จ
 const LETTER_COIN  = 2;       // 🪙 เก็บตัวอักษร 1 ตัว
-const LETTER_COPIES= 3;       // ตัวอักษรเดียวกันวางกี่จุด
 const COLLECT_R    = 8;       // รัศมีเก็บ (รถเร็ว ต้องกว้าง)
 const DONE_KEY     = 'f1Done';
 const HALF_W       = 7.5;     // ครึ่งความกว้างแทร็ก (เมตร) — F1 จริง 12-15ม.
 const KERB_W       = 1.6;     // ความกว้างขอบ kerb
 const RUNOFF_W     = 9;       // runoff ยางมะตอยข้างแทร็ก (สไตล์ Bahrain)
+const BARRIER_LAT  = HALF_W+RUNOFF_W-.55; // จุดชนจริงอยู่ด้านในกำแพงเล็กน้อย กันรถเร็วทะลุ mesh
+const BARRIER_BOUNCE=.48;     // คืนแรงด้านข้าง 48% ให้รู้สึกว่าเด้ง แต่ไม่ปิงปองรุนแรง
 const SAMPLE_M     = 5;       // ระยะห่างจุด sample เส้นแทร็ก
 /* 🪖 มุมมองในห้องคนขับ (รอบ 901) — ภาพหลัก first-person + ปุ่ม 📷 สลับมุมเห็นทั้งคัน */
 const FP_EYE   = 1.04;   // ความสูงสายตาคนขับ (ม.)
@@ -152,7 +153,7 @@ let px=0, pz=0, yaw=0, vx=0, vz=0, spd=0, steer=0, slide=0, carGrp=null, wheels=
 let camPos=null, camInit=false, camYaw=0, shakeT=0;
 let camMode='cockpit', cockpitEl=null, camBtnEl=null;   // 🪖 รอบ 901 — มุมคนขับเป็นภาพหลัก
 let padRev=false, revNow=false, sandT=0, respEl=null, fpWheels=null;   // ⏪🏜️🛞 รอบ 911
-let wheelEl=null, wheelDeg=null, wheelSy=1;             // 🎡 รอบ 913 — ชั้นพวงมาลัยที่หมุนได้ (sy = อัตราภาพถูกยืดแนวตั้ง)
+let wheelEl=null, qualityWheelEl=null, wheelDeg=null, wheelSy=1; // 🎡 ชั้นพวงมาลัยแยก: Battery image + Quality procedural wheel
 let ledsEl=null, ledEls=[], ledN=-1, ledRpm=0, ledFlashT=0, ledFlash=false;  // 🚥 รอบ 918 — ชั้นดวงไฟ LED รอบเครื่อง
 let dashEl=null, dashCtx=null, dashK=1, dashRpm=0, dashSig='';   // 🔢 รอบ 916 — จอตัวเลขจริงบนพวงมาลัย (K = พิกเซลภาพ→พิกเซล canvas)
 let wheelShakeOn=false;                                  // 🫨🎡 รอบ 914 — เฟรมก่อนหน้ามีการสั่นค้างไหม (กันสั่นค้างตอนกลับเข้าแทร็กเรียบ)
@@ -424,37 +425,6 @@ function sandTex(){
     }
   },256,256,60,60);
 }
-function crowdTex(){
-  return texFromCanvas((g,w,h)=>{
-    g.fillStyle='#20242e'; g.fillRect(0,0,w,h);
-    for(let r=0;r<10;r++)for(let i=0;i<46;i++){
-      g.fillStyle=['#e8c08c','#c98d5a','#f2d6a8'][i%3];
-      g.fillRect(i*w/46+(r%2?3:0), r*h/10+2, 3, 3);
-      g.fillStyle=['#d33','#36c','#eee','#fc2','#3c9','#c3e','#f80','#0af'][(i*7+r)%8];
-      g.fillRect(i*w/46+(r%2?3:0)-1, r*h/10+5, 5, 5);
-    }
-  },512,128,1,1);
-}
-function garageTex(){
-  return texFromCanvas((g,w,h)=>{
-    g.fillStyle='#8e959e'; g.fillRect(0,0,w,h);
-    for(let i=0;i<8;i++){
-      g.fillStyle='#2a2e34'; g.fillRect(i*w/8+4,h*0.28,w/8-8,h*0.7);
-      g.fillStyle='#4a5058';
-      for(let r=0;r<5;r++) g.fillRect(i*w/8+4,h*0.28+r*h*0.14,w/8-8,2);
-    }
-    g.fillStyle='#c8ced6'; g.fillRect(0,0,w,h*0.1);
-  },512,128,1,1);
-}
-function towerTex(){
-  return texFromCanvas((g,w,h)=>{
-    g.fillStyle='#1c2f45'; g.fillRect(0,0,w,h);
-    for(let r=0;r<14;r++)for(let i=0;i<24;i++){
-      g.fillStyle=Math.random()<0.55?'#ffdf8a':'#0e1a28';
-      g.fillRect(i*w/24+2,r*h/14+2,w/24-4,h/14-4);
-    }
-  },256,256,3,1);
-}
 function adTex(txt,fg,bg){
   return texFromCanvas((g,w,h)=>{
     g.fillStyle=bg; g.fillRect(0,0,w,h);
@@ -462,16 +432,6 @@ function adTex(txt,fg,bg){
     g.fillText(txt,w/2,h/2+2);
   },512,64,1,1);
 }
-function tentTex(){
-  return texFromCanvas((g,w,h)=>{
-    const gr=g.createLinearGradient(0,0,0,h);
-    gr.addColorStop(0,'#ffffff'); gr.addColorStop(1,'#c9d2dd');
-    g.fillStyle=gr; g.fillRect(0,0,w,h);
-    g.strokeStyle='rgba(120,130,150,0.5)';
-    for(let i=0;i<8;i++){ g.beginPath(); g.moveTo(i*w/8,0); g.lineTo(w/2,h); g.stroke(); }
-  },256,128,1,1);
-}
-
 /* ============================================================
    ✏️ sprite ตัวอักษร / ป้ายชื่อ (canvas → sprite)
    ============================================================ */
@@ -664,54 +624,141 @@ function polyCentroid(pts){
   let x=0,z=0; for(const p of pts){x+=p[0];z+=p[1];}
   return [x/pts.length,z/pts.length];
 }
+function pointInFootprint(x,z,pts){
+  let inside=false;
+  for(let i=0,j=pts.length-1;i<pts.length;j=i++){
+    const a=pts[i],b=pts[j];
+    if(((a[1]>z)!==(b[1]>z)) && x<(b[0]-a[0])*(z-a[1])/(b[1]-a[1])+a[0]) inside=!inside;
+  }
+  return inside;
+}
+/* OSM บางก้อนคร่อม centerline/ผิว runoff จนกลายเป็นกล่องทึบบนถนน — ตัดเฉพาะ footprint ที่รุกเขตขับ */
+function footprintCrossesRoad(pts){
+  for(let i=0;i<LINE.n;i+=4) if(pointInFootprint(LINE.x[i],LINE.z[i],pts)) return true;
+  for(const p of pts){
+    const s=surfAt(p[0],p[1]);
+    if(Math.abs(s.lat)<HALF_W+KERB_W+.8) return true;
+  }
+  return false;
+}
+function footprintFrame(pts){
+  const c=polyCentroid(pts);
+  let best=0, ax=1, az=0;
+  for(let i=0;i<pts.length;i++){
+    const a=pts[i], b=pts[(i+1)%pts.length], dx=b[0]-a[0], dz=b[1]-a[1], d=dx*dx+dz*dz;
+    if(d>best){best=d; const l=Math.sqrt(d)||1; ax=dx/l; az=dz/l;}
+  }
+  const bx=-az,bz=ax;
+  let minA=1e9,maxA=-1e9,minB=1e9,maxB=-1e9;
+  for(const p of pts){
+    const dx=p[0]-c[0],dz=p[1]-c[1],a=dx*ax+dz*az,b=dx*bx+dz*bz;
+    minA=Math.min(minA,a);maxA=Math.max(maxA,a);minB=Math.min(minB,b);maxB=Math.max(maxB,b);
+  }
+  return {c,ax,az,bx,bz,w:Math.max(4,maxA-minA),d:Math.max(4,maxB-minB),yaw:-Math.atan2(az,ax)};
+}
+function premiumMats(){
+  return {
+    concrete:new THREE.MeshStandardMaterial({color:0xb9c0c8,roughness:.78,metalness:.04}),
+    panel:new THREE.MeshStandardMaterial({color:0xe8edf2,emissive:0x111820,emissiveIntensity:.34,roughness:.35,metalness:.22}),
+    roof:new THREE.MeshStandardMaterial({color:0x697580,emissive:0x222d38,emissiveIntensity:.68,roughness:.38,metalness:.54}),
+    charcoal:new THREE.MeshStandardMaterial({color:0x17202a,roughness:.52,metalness:.32}),
+    silver:new THREE.MeshStandardMaterial({color:0x8f9eab,roughness:.28,metalness:.72}),
+    seat:new THREE.MeshStandardMaterial({color:0x22384f,roughness:.64,metalness:.08}),
+    accent:new THREE.MeshStandardMaterial({color:0xd81a1a,emissive:0x4c0404,emissiveIntensity:.52,roughness:.38,metalness:.28}),
+    glow:new THREE.MeshBasicMaterial({color:0xe8f7ff,toneMapped:false}),
+    glass:new THREE.MeshStandardMaterial({color:0x153b58,emissive:0x071824,emissiveIntensity:.58,roughness:.12,
+      metalness:.36,transparent:true,opacity:.76,side:THREE.DoubleSide}),
+    ao:new THREE.MeshBasicMaterial({color:0x070b10,transparent:true,opacity:.42,depthWrite:false}),
+    crowd:[0xd95763,0x38a4d8,0xf3c84b,0x2eb67d,0xe8edf2,0x835ac7].map(c=>new THREE.MeshLambertMaterial({color:c}))
+  };
+}
+function instancedParts(root,geo,mat,parts){
+  if(!parts.length) return null;
+  const mesh=new THREE.InstancedMesh(geo,mat,parts.length),d=new THREE.Object3D();
+  parts.forEach((p,i)=>{
+    d.position.set(p.x,p.y,p.z); d.rotation.set(p.rx||0,p.ry||0,p.rz||0);
+    d.scale.set(p.sx||1,p.sy||1,p.sz||1); d.updateMatrix(); mesh.setMatrixAt(i,d.matrix);
+  });
+  mesh.instanceMatrix.needsUpdate=true; root.add(mesh); return mesh;
+}
+function localPart(list,f,x,y,z,sx,sy,sz,extra){
+  list.push(Object.assign({x:f.c[0]+f.ax*x+f.bx*z,y,z:f.c[1]+f.az*x+f.bz*z,ry:f.yaw,sx,sy,sz},extra||{}));
+}
+/* ============================================================
+   🏟️ PREMIUM MODULAR CIRCUIT ARCHITECTURE — รอบ 1203
+   อาคาร/อัฒจันทร์เป็น geometry + clean materials เท่านั้น ไม่มีภาพ facade/crowd แปะผนัง
+   ============================================================ */
 function buildBuildings(){
-  const g=new THREE.Group();
-  const crowdMat=matLit('crowd');
-  const bldMat=new THREE.MeshLambertMaterial({color:0x9aa3ad});
-  const glassMat=matLit('tower');
-  const tentMat=matLam('tent',{side:THREE.DoubleSide});
-  let pitDone=false;
+  const g=new THREE.Group(),m=premiumMats(),unit=new THREE.BoxGeometry(1,1,1);
+  const seats=[],posts=[],beams=[],roofs=[],rails=[],lights=[],ao=[],heads=[],crowd=m.crowd.map(()=>[]),doors=[];
+  let pitDone=false,bi=0,culledRoadBuildings=0;
   for(const b of (F1_MAP.bld||[])){
-    const c=polyCentroid(b.p);
+    if(footprintCrossesRoad(b.p)){ culledRoadBuildings++; continue; }
+    const f=footprintFrame(b.p),c=f.c;
     if(b.t==='gs'){
-      /* อัฒจันทร์จริง: ฐานทึบ + ผนังคนดู + หลังคาผ้าใบขาว (เอกลักษณ์ Bahrain) */
-      g.add(extrudeFootprint(b.p,3.2,bldMat,0));
-      g.add(extrudeFootprint(b.p.map(p=>[c[0]+(p[0]-c[0])*0.94,c[1]+(p[1]-c[1])*0.94]),8.5,crowdMat,3.2));
-      const roof=extrudeFootprint(b.p.map(p=>[c[0]+(p[0]-c[0])*1.05,c[1]+(p[1]-c[1])*1.05]),0.7,tentMat,13.4);
-      g.add(roof);
-      /* เสาหลังคา */
-      const post=new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.35,13.5,6),new THREE.MeshLambertMaterial({color:0xdde3ea}));
-      for(let k=0;k<b.p.length;k+=Math.max(1,b.p.length/6|0)){
-        const m2=post.clone(); m2.position.set(b.p[k][0],6.7,b.p[k][1]); g.add(m2);
-      }
-    }else if(b.t==='tw'){
-      /* 🗼 Sakhir Tower — ทรงกระบอกแก้ว + จานชมวิว 2 ชั้น + ยอดเสา (ตามภาพจริง) */
-      const tw=new THREE.Group();
-      tw.add(new THREE.Mesh(new THREE.CylinderGeometry(5.2,6.5,40,14),glassMat));
-      tw.children[0].position.y=20;
-      const disc=new THREE.Mesh(new THREE.CylinderGeometry(10.5,8.5,5,16),new THREE.MeshLambertMaterial({color:0xe8ecf2}));
-      disc.position.y=42; tw.add(disc);
-      const disc2=new THREE.Mesh(new THREE.CylinderGeometry(7,9.5,3.4,16),glassMat);
-      disc2.position.y=46; tw.add(disc2);
-      const tip=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.6,10,6),new THREE.MeshLambertMaterial({color:0xb8bfc9}));
-      tip.position.y=52; tw.add(tip);
-      /* ไฟวิบวับยอดเสา */
-      const beacon=new THREE.Mesh(new THREE.SphereGeometry(0.7,8,6),new THREE.MeshBasicMaterial({color:0xff3030}));
-      beacon.position.y=57.4; tw.add(beacon); tw.userData.beacon=beacon;
-      tw.position.set(c[0],0,c[1]);
-      g.add(tw); g.userData.tower=tw;
-    }else{
-      /* อาคารพิท/ทีม: หลังที่ใกล้ pit lane สุด = พิทหลัก (facade โรงรถ) */
-      let mat=bldMat,h=7+Math.random()*3;
-      if(!pitDone&&F1_MAP.pit&&F1_MAP.pit.length){
-        const pc=F1_MAP.pit[F1_MAP.pit.length>>1];
-        if(Math.hypot(c[0]-pc[0],c[1]-pc[1])<120){
-          mat=matLit('garage'); h=11; pitDone=true;
+      const near=nearIdx(c[0],c[1]),toTrackX=LINE.x[near]-c[0],toTrackZ=LINE.z[near]-c[1];
+      const front=(toTrackX*f.bx+toTrackZ*f.bz)>=0?1:-1, rows=7, usableD=Math.min(28,f.d*.88), rowD=usableD/rows;
+      g.add(extrudeFootprint(b.p,1.15,m.charcoal,0));
+      for(let r=0;r<rows;r++){
+        const z=front*(-usableD*.5+(r+.5)*rowD),y=1.25+r*.72;
+        localPart(seats,f,0,y,z,f.w*.94,.48,rowD*.88);
+        localPart(ao,f,0,y-.29,z-front*rowD*.43,f.w*.92,.12,.16);
+        const people=Math.max(3,Math.min(10,Math.round(f.w/18)));
+        for(let q=0;q<people;q++){
+          const x=(-.42+(q+.5)/people*.84)*f.w, show=((q*7+r*3+bi)%5)!==0;
+          if(!show) continue;
+          const col=(q+r+bi)%crowd.length;
+          localPart(crowd[col],f,x,y+.54,z,0.34,.62,.28);
+          localPart(heads,f,x,y+1.04,z,0.23,.23,.23);
         }
       }
-      g.add(extrudeFootprint(b.p,h,mat,0));
+      for(const x of [-f.w*.46,0,f.w*.46]){
+        localPart(posts,f,x,6.9,-front*usableD*.48,.24,6.9,.24);
+        localPart(posts,f,x,6.9, front*usableD*.48,.24,6.9,.24);
+      }
+      localPart(beams,f,0,12.7,front*usableD*.45,f.w*.99,.20,.22);
+      localPart(beams,f,0,12.7,-front*usableD*.45,f.w*.99,.20,.22);
+      localPart(roofs,f,0,13.15,0,f.w*1.05,.38,usableD*1.16,{rz:-front*.025});
+      localPart(rails,f,0,6.7,front*(usableD*.52),f.w*.96,.10,.10);
+      localPart(lights,f,0,12.55,front*(usableD*.50),f.w*.88,.07,.12);
+    }else if(b.t==='tw'){
+      const tw=new THREE.Group();
+      const core=new THREE.Mesh(new THREE.CylinderGeometry(5.3,6.6,40,16),m.glass); core.position.y=20; tw.add(core);
+      for(const y of [8,17,26,35]){ const ring=new THREE.Mesh(new THREE.CylinderGeometry(6.8,6.8,.55,16),m.silver);ring.position.y=y;tw.add(ring); }
+      const lounge=new THREE.Mesh(new THREE.CylinderGeometry(10.8,8.4,4.7,18),m.panel); lounge.position.y=42;tw.add(lounge);
+      const loungeGlass=new THREE.Mesh(new THREE.CylinderGeometry(8.5,9.6,3.2,18),m.glass);loungeGlass.position.y=46;tw.add(loungeGlass);
+      const crown=new THREE.Mesh(new THREE.CylinderGeometry(7.1,8.6,.55,18),m.glow);crown.position.y=48;tw.add(crown);
+      const tip=new THREE.Mesh(new THREE.CylinderGeometry(.28,.55,10,7),m.silver);tip.position.y=53;tw.add(tip);
+      const beacon=new THREE.Mesh(new THREE.SphereGeometry(.65,8,6),m.accent);beacon.position.y=58.2;tw.add(beacon);tw.userData.beacon=beacon;
+      tw.position.set(c[0],0,c[1]);g.add(tw);g.userData.tower=tw;
+    }else{
+      const pitNear=F1_MAP.pit&&F1_MAP.pit.length?F1_MAP.pit[F1_MAP.pit.length>>1]:null;
+      const isPit=!pitDone&&pitNear&&Math.hypot(c[0]-pitNear[0],c[1]-pitNear[1])<120;
+      const h=isPit?11:7.2+(bi%4)*.85; if(isPit) pitDone=true;
+      g.add(extrudeFootprint(b.p,h*.62,m.concrete,0));
+      const upper=b.p.map(p=>[c[0]+(p[0]-c[0])*.965,c[1]+(p[1]-c[1])*.965]);
+      g.add(extrudeFootprint(upper,h*.25,m.glass,h*.62));
+      g.add(extrudeFootprint(b.p.map(p=>[c[0]+(p[0]-c[0])*1.018,c[1]+(p[1]-c[1])*1.018]),.36,m.panel,h*.87));
+      localPart(lights,f,0,h*.88+.18,0,f.w*.88,.06,Math.min(f.d*.82,1.1));
+      localPart(ao,f,0,.08,0,f.w*.96,.06,f.d*.96);
+      if(isPit||f.w>34){
+        const bays=Math.max(3,Math.min(12,Math.round(f.w/10))),front=1;
+        for(let q=0;q<bays;q++){
+          const x=(-.5+(q+.5)/bays)*f.w*.9;
+          localPart(doors,f,x,2.25,front*(f.d*.5+.03),f.w*.82/bays,3.8,.16);
+        }
+        localPart(beams,f,0,5.0,front*(f.d*.5+1.25),f.w*.98,.18,2.7);
+      }
     }
+    bi++;
   }
+  instancedParts(g,unit,m.seat,seats); instancedParts(g,unit,m.silver,posts);
+  instancedParts(g,unit,m.charcoal,beams); instancedParts(g,unit,m.roof,roofs);
+  instancedParts(g,unit,m.silver,rails); instancedParts(g,unit,m.glow,lights);
+  instancedParts(g,unit,m.ao,ao); instancedParts(g,unit,m.charcoal,doors);
+  crowd.forEach((p,i)=>instancedParts(g,unit,m.crowd[i],p));
+  instancedParts(g,new THREE.OctahedronGeometry(1,.0),new THREE.MeshLambertMaterial({color:0xd7aa82}),heads);
+  g.userData.architecture={photoTextures:0,grandstandRows:7,modular:true,glass:true,culledRoadBuildings};
   return g;
 }
 
@@ -847,24 +894,50 @@ function buildRealisticCircuit(tier){
     boardSets[n%brands.length].push({i,side});
   }
   const boardGeo=new THREE.PlaneGeometry(12,1.65); boardGeo.rotateY(Math.PI/2);
+  const boardAll=[].concat(...boardSets);
+  root.add(instancedFromSpots(new THREE.BoxGeometry(.24,1.95,12.35),
+    new THREE.MeshStandardMaterial({color:0x111923,roughness:.38,metalness:.58}),boardAll,
+    (d,s)=>linePose(d,LINE,s.i,s.side*(barrierOff-.48),1.75)));
+  stats.instances+=boardAll.length;stats.meshGroups++;
   boardSets.forEach((spots,k)=>{
     const b=brands[k], mat=new THREE.MeshBasicMaterial({map:adTex(b[0],b[1],b[2]),side:THREE.DoubleSide,toneMapped:false});
     root.add(instancedFromSpots(boardGeo,mat,spots,(d,s)=>linePose(d,LINE,s.i,s.side*(barrierOff-.43),1.75)));
     stats.instances+=spots.length; stats.boards+=spots.length; stats.meshGroups++;
   });
 
-  /* อัฒจันทร์ low-poly/billboard crowd รอบ main straight และโค้งหลัก */
+  /* อัฒจันทร์ modular 3D รอบ main straight และโค้งหลัก — ไม่มี billboard crowd */
   const standOffsets=[45,115,250,405,585,760,930].slice(0,cfg.stands);
   const standSpots=standOffsets.map((off,n)=>({i:(sfIdx+off)%LINE.n,side:n%3===1?-1:1}));
-  const standOff=barrierOff+18;
-  root.add(instancedFromSpots(new THREE.BoxGeometry(17,4.5,46),new THREE.MeshLambertMaterial({color:0x525c68}),standSpots,
-    (d,s)=>linePose(d,LINE,s.i,s.side*standOff,2.2)));
-  root.add(instancedFromSpots(new THREE.BoxGeometry(19,.65,49),new THREE.MeshLambertMaterial({color:0xd8dde3}),standSpots,
-    (d,s)=>linePose(d,LINE,s.i,s.side*standOff,11.8)));
-  const crowdGeo=new THREE.PlaneGeometry(43,7.2); crowdGeo.rotateY(Math.PI/2);
-  root.add(instancedFromSpots(crowdGeo,matLit('crowd',{side:THREE.DoubleSide}),standSpots,
-    (d,s)=>linePose(d,LINE,s.i,s.side*(standOff-8.7),7.5)));
-  stats.instances+=standSpots.length*3; stats.meshGroups+=3;
+  const standOff=barrierOff+18,arch=premiumMats(),standRows=[],standPosts=[],standRoofs=[],standRails=[];
+  const bodies=arch.crowd.map(()=>[]),heads=[];
+  for(const s of standSpots){
+    for(let r=0;r<7;r++){
+      standRows.push({i:s.i,side:s.side,r});
+      for(let q=-3;q<=3;q++) if(((q+3)*5+r*3+s.i)%6!==0){
+        const p={i:(s.i+q+LINE.n)%LINE.n,side:s.side,r,q}; bodies[(q+r+7)%bodies.length].push(p);heads.push(p);
+      }
+    }
+    for(const di of [-5,0,5]) standPosts.push({i:(s.i+di+LINE.n)%LINE.n,side:s.side});
+    standRoofs.push(s);standRails.push(s);
+  }
+  root.add(instancedFromSpots(new THREE.BoxGeometry(1,1,1),arch.seat,standRows,(d,s)=>{
+    linePose(d,LINE,s.i,s.side*(standOff-6.2+s.r*1.72),1.1+s.r*.68);d.scale.set(1.45,.48,44);
+  }));
+  root.add(instancedFromSpots(new THREE.BoxGeometry(1,1,1),arch.silver,standPosts,(d,s)=>{
+    linePose(d,LINE,s.i,s.side*(standOff+5.4),6.7);d.scale.set(.32,13.4,.32);
+  }));
+  root.add(instancedFromSpots(new THREE.BoxGeometry(1,1,1),arch.roof,standRoofs,(d,s)=>{
+    linePose(d,LINE,s.i,s.side*(standOff+.1),13.35);d.scale.set(16.8,.42,50);
+  }));
+  root.add(instancedFromSpots(new THREE.BoxGeometry(1,1,1),arch.glow,standRails,(d,s)=>{
+    linePose(d,LINE,s.i,s.side*(standOff-7.5),6.45);d.scale.set(.12,.12,45);
+  }));
+  bodies.forEach((spots,k)=>root.add(instancedFromSpots(new THREE.BoxGeometry(.55,1.05,.55),arch.crowd[k],spots,(d,s)=>
+    linePose(d,LINE,s.i,s.side*(standOff-6.2+s.r*1.72),1.75+s.r*.68))));
+  root.add(instancedFromSpots(new THREE.OctahedronGeometry(.34,0),new THREE.MeshLambertMaterial({color:0xd7aa82}),heads,(d,s)=>
+    linePose(d,LINE,s.i,s.side*(standOff-6.2+s.r*1.72),2.48+s.r*.68)));
+  stats.instances+=standRows.length+standPosts.length+standRoofs.length+standRails.length+heads.length*2;
+  stats.meshGroups+=4+bodies.length+1;
 
   /* pit wall + garages + overhead light strips + signage ที่อ่านได้จาก cockpit */
   if(PITL){
@@ -984,7 +1057,10 @@ function buildTrackScene(){
       new THREE.MeshBasicMaterial({map:ads[(i/36|0)%ads.length],side:THREE.DoubleSide}));
     bb.position.set(LINE.x[i]+LINE.nx[i]*off*side,1.1,LINE.z[i]+LINE.nz[i]*off*side);
     bb.rotation.y=Math.atan2(LINE.nx[i]*side,LINE.nz[i]*side)+Math.PI;
-    scene.add(bb);
+    const back=new THREE.Mesh(new THREE.BoxGeometry(14.5,2.25,.18),
+      new THREE.MeshStandardMaterial({color:0x111923,roughness:.42,metalness:.55}));
+    back.position.copy(bb.position);back.rotation.copy(bb.rotation);back.translateZ(-.12);
+    scene.add(back);scene.add(bb);
   }
   /* ป้ายหมายเลขโค้ง 1-15: จุดที่ curvature พีคเป็นช่วงๆ */
   const peaks=[];
@@ -1201,10 +1277,27 @@ const CSS=`
 /* Realistic uses one coherent helmet-eye plate. The legacy 1536x1024 wheel layers
    belong to Battery Saver and would otherwise create a second, misaligned photo. */
 #f1-wrap.realistic.fp #f1-wheel,#f1-wrap.realistic.fp #f1-leds{display:none!important}
+/* Quality cockpit ใช้พวงมาลัยแยกชั้นแบบ procedural — บังพวงมาลัยที่ติดตายใน plate และหมุนตามฟิสิกส์จริง */
+#f1-quality-wheel{position:absolute;left:40.1vw;bottom:-1.5vh;width:19.8vw;height:17.5vw;z-index:1;display:none;
+  transform-origin:50% 62%;will-change:transform;clip-path:polygon(15% 10%,85% 10%,100% 34%,92% 92%,68% 100%,32% 100%,8% 92%,0 34%);
+  background:linear-gradient(145deg,#657281 0 3%,#111923 4% 13%,#05080d 14% 82%,#25313d 83% 94%,#8794a0 95% 100%);
+  box-shadow:0 0 0 2px rgba(199,224,242,.52),0 0 20px rgba(0,0,0,.95),inset 0 0 0 8px #05070a}
+#f1-wrap.realistic.fp #f1-quality-wheel{display:block}
+#f1-quality-wheel:before{content:'';position:absolute;inset:13% 16% 17%;clip-path:polygon(8% 0,92% 0,100% 30%,88% 100%,12% 100%,0 30%);
+  background:linear-gradient(180deg,#1d2b37,#03070b 48%,#121b24);box-shadow:inset 0 0 0 2px rgba(103,216,255,.32)}
+#f1-quality-wheel:after{content:'VOCAB GP';position:absolute;left:28%;right:28%;top:11%;height:9%;border-radius:999px;
+  background:#cf161d;color:#fff;font:900 clamp(5px,.65vw,10px)/1.65 'Kanit',sans-serif;text-align:center;letter-spacing:.08em;
+  box-shadow:0 0 10px rgba(255,34,48,.58)}
+#f1-quality-wheel .qw-grip{position:absolute;top:27%;bottom:17%;width:18%;border-radius:42% 18% 24% 46%;
+  background:repeating-linear-gradient(112deg,#050607 0 5px,#25292d 6px 8px);box-shadow:inset 0 0 0 2px #505a63}
+#f1-quality-wheel .qw-grip.l{left:3%;transform:rotate(-5deg)}
+#f1-quality-wheel .qw-grip.r{right:3%;transform:scaleX(-1) rotate(-5deg)}
+#f1-quality-wheel .qw-led{position:absolute;left:31%;right:31%;top:19%;height:4%;border-radius:999px;
+  background:linear-gradient(90deg,#28ef7b 0 32%,#ffd12e 33% 65%,#ff3548 66%);box-shadow:0 0 8px rgba(103,216,255,.6)}
 /* Keep live gear/speed/RPM on the integrated wheel. Coordinates follow the new
    1672x941 landscape plate, independent of the legacy wheel-image layout. */
 #f1-wrap.realistic.fp #f1-dash{display:block!important;left:44vw!important;top:calc(101vh - 14vw)!important;
-  width:12vw!important;height:6.1vw!important;transform:none!important;transform-origin:center!important}
+  width:12vw!important;height:6.1vw!important;transform-origin:center!important}
 /* 🎡 รอบ 913: ชั้นพวงมาลัยแยก — ขนาด/ตำแหน่งคำนวณจาก JS ให้ทับ "กรอบภาพจริง" ของ background ด้านบนเป๊ะ
    (overflow:hidden ข้างบน = ตัดส่วนเกินเหมือน background cover ทำ) */
 #f1-cockpit img,#f1-cockpit canvas{position:absolute;left:0;top:0;display:block;will-change:transform}
@@ -1378,12 +1471,57 @@ const CSS=`
 #f1-legal .legal-copy b{display:block;color:#67d8ff;margin-bottom:2px}
 #f1-legal #f1-legalclose{display:block;margin:clamp(6px,1.5vh,10px) auto 0;background:#33405a;color:#fff;border:0;border-radius:10px;
   padding:clamp(5px,1.4vh,8px) 24px;font:800 clamp(11px,2.5vh,14px) inherit;cursor:pointer}
+/* ============================================================
+   ✨ PREMIUM RACE HUD — รอบ 1203 · brushed metal + glass + neon accent
+   ============================================================ */
+#f1-wrap{--f1-cyan:#67d8ff;--f1-red:#ff3145;--f1-gold:#ffd12e;--f1-glass:rgba(5,12,23,.78)}
+#f1-word,#f1-laps,#f1-topright>button,#f1-topright #f1-coins,#f1-board,#f1-lights .row{
+  background:linear-gradient(145deg,rgba(35,48,63,.92),rgba(4,9,18,.90) 58%,rgba(20,29,42,.92));
+  border:1px solid rgba(180,221,244,.46);box-shadow:inset 0 1px 0 rgba(255,255,255,.26),inset 0 -1px 0 rgba(0,0,0,.8),0 4px 16px rgba(0,0,0,.42)}
+#f1-word:before,#f1-laps:before{content:'';position:absolute;inset:2px;border:1px solid rgba(103,216,255,.16);border-radius:inherit;pointer-events:none}
+#f1-word{padding:6px 15px;border-radius:17px}
+#f1-word .f-chip{background:linear-gradient(180deg,#35445c,#111a2b);border:1px solid rgba(194,221,243,.18);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14);border-radius:8px}
+#f1-word .f-chip.got{background:linear-gradient(180deg,#ffe85e,#e4a900);color:#1a1200;box-shadow:0 0 10px rgba(255,209,46,.38)}
+#f1-exitbtn{background:linear-gradient(180deg,#e82d3d,#7e0711)!important;border-color:rgba(255,128,138,.72)!important}
+#f1-cambtn{background:linear-gradient(180deg,#26364a,#07101c)!important}
+#f1-topright #f1-coins{color:var(--f1-gold);border-color:rgba(255,209,46,.58)}
+#f1-steer{left:10px;bottom:9px;width:min(25vw,180px);height:min(25vw,180px);max-height:43vh;max-width:43vh;
+  border:1px solid rgba(160,216,244,.62);border-radius:50%;background:radial-gradient(circle,#0c1623 0 27%,#43505d 28% 31%,#07101a 32% 51%,#75818b 52% 54%,rgba(9,16,27,.66) 55% 70%,rgba(103,216,255,.12));
+  box-shadow:inset 0 0 0 4px rgba(2,7,13,.72),inset 0 0 18px #000,0 0 0 1px #05080c,0 8px 26px rgba(0,0,0,.52)}
+#f1-steer:before{content:'‹                                      ›';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  color:#c8e8fb;font:900 clamp(17px,3vw,29px)/1 monospace;letter-spacing:.05em;text-shadow:0 0 9px var(--f1-cyan)}
+#f1-knob{--ctl-turn:0deg;top:18%;left:18%!important;width:64%;height:64%;margin:0;border-radius:38%;font-size:clamp(19px,3.5vw,34px);
+  background:linear-gradient(145deg,#526170 0 5%,#101b27 6% 25%,#03070b 26% 72%,#293746 73% 94%,#8a98a3 95%);
+  box-shadow:inset 0 0 0 5px #06090d,inset 0 0 0 7px rgba(103,216,255,.22),0 0 14px rgba(0,0,0,.85);
+  transform:rotate(var(--ctl-turn));transition:transform .08s linear}
+#f1-knob:before{content:'';position:absolute;width:118%;height:24%;left:-9%;top:38%;border-radius:14px;background:#080d13;box-shadow:inset 0 0 0 3px #37434d;z-index:-1}
+#f1-pedals{right:12px;gap:8px;align-items:flex-end}
+.f1-pedal{position:relative;width:70px;height:96px;border-radius:18px;border:1px solid rgba(194,226,244,.65);
+  background:linear-gradient(145deg,#394957,#07101a 48%,#151f2a)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.26),inset 0 0 0 4px #060b11,0 7px 20px rgba(0,0,0,.55);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.f1-pedal b{font-size:24px;line-height:1}.f1-pedal small{font-size:8px;letter-spacing:.08em;color:#b8cad8}
+#f1-reverse{width:62px;height:82px;border-color:rgba(184,202,216,.58)}
+#f1-brake{border-color:rgba(255,70,88,.85);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),inset 0 0 0 4px #15070a,0 0 18px rgba(255,28,52,.3)}
+#f1-brake b{color:#ff5163;text-shadow:0 0 9px rgba(255,31,54,.9)}
+#f1-throttle{width:76px;height:104px;border-color:rgba(50,199,255,.92);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),inset 0 0 0 4px #03121a,0 0 20px rgba(0,170,255,.34)}
+#f1-throttle b{color:#67ddff;text-shadow:0 0 10px rgba(0,190,255,.95)}
+#f1-hud{background:linear-gradient(180deg,rgba(21,31,44,.78),rgba(2,6,11,.82));border:1px solid rgba(179,220,243,.28);
+  border-radius:16px;padding:4px 16px 6px;box-shadow:inset 0 1px rgba(255,255,255,.12),0 5px 20px rgba(0,0,0,.42)}
+#f1-gear{clip-path:polygon(12% 0,88% 0,100% 25%,100% 75%,88% 100%,12% 100%,0 75%,0 25%);
+  background:linear-gradient(180deg,#ff3145,#8d0712);border-radius:0;min-width:24px}
 @media (max-height:430px){
   #f1-speed{font-size:30px}
   /* 🧭 รอบ 914: จอเตี้ย — แถบเลี้ยวเตี้ยลงหน่อย แล้วยกมินิแมป/ปุ่มขวาบนให้พ้นกัน
      🎛️ รอบ 921: ความสูง/ตำแหน่งย้ายไปคุมด้วย --f1-sh/--f1-pedb แล้ว (เพดาน 44vh คุมจอเตี้ยให้เอง)
      เหลือแค่ "ความกว้าง" ที่ยังต่างจากจอใหญ่ */
   #f1-wrap{--f1-sh:min(200px,44vh);--f1-sw:min(40vw,250px)}
+  #f1-steer{width:min(24vw,156px);height:min(24vw,156px)}
+  #f1-word{gap:4px;padding:5px 9px}
+  #f1-word .f-chip{min-width:18px;padding:1px 3px;font-size:13px}
+  #f1-word .f-th{font-size:11px}
+  .f1-pedal{width:58px;height:78px}.f1-pedal b{font-size:19px}.f1-pedal small{font-size:7px}
+  #f1-reverse{width:50px;height:65px}#f1-throttle{width:63px;height:86px}
   #f1-cambtn,#f1-exitbtn{font-size:12px;padding:4px 8px;border-radius:10px}
   #f1-map{width:96px;height:96px}
   #f1-drs{font-size:15px;padding:3px 9px}
@@ -1394,7 +1532,9 @@ function buildDom(){
   wrapEl=document.createElement('div'); wrapEl.id='f1-wrap';
   wrapEl.innerHTML=`
     <canvas id="f1-cv"></canvas>
-    <div id="f1-cockpit"><img id="f1-wheel" alt=""><div id="f1-leds"></div><canvas id="f1-dash"></canvas></div>
+    <div id="f1-cockpit"><img id="f1-wheel" alt=""><div id="f1-leds"></div>
+      <div id="f1-quality-wheel" aria-hidden="true"><i class="qw-grip l"></i><i class="qw-grip r"></i><i class="qw-led"></i></div>
+      <canvas id="f1-dash"></canvas></div>
     <div id="f1-word"></div>
     <div id="f1-laps"></div>
     <div id="f1-topright">
@@ -1416,9 +1556,9 @@ function buildDom(){
     <div id="f1-chatbar"></div>
     <div id="f1-steer"><div id="f1-knob">🏎️</div></div>
     <div id="f1-pedals">
-      <button class="f1-pedal" id="f1-reverse">R</button>
-      <button class="f1-pedal" id="f1-brake">🛑</button>
-      <button class="f1-pedal" id="f1-throttle">⚡</button>
+      <button class="f1-pedal" id="f1-reverse"><b>R</b><small>REVERSE</small></button>
+      <button class="f1-pedal" id="f1-brake"><b>◉</b><small>BRAKE</small></button>
+      <button class="f1-pedal" id="f1-throttle"><b>ϟ</b><small>BOOST</small></button>
     </div>
     <div id="f1-intro"><div class="box">
       <h2>🏎️ Vocab World Racing · Vocab Grand Circuit</h2>
@@ -1491,6 +1631,7 @@ function buildDom(){
   wrapEl.querySelector('#f1-leave').addEventListener('click',exitWorld);
   /* 🪖 รอบ 901: ปุ่มสลับมุมมอง คนขับ ↔ เห็นรถทั้งคัน */
   cockpitEl=wrapEl.querySelector('#f1-cockpit');
+  qualityWheelEl=wrapEl.querySelector('#f1-quality-wheel');
   camBtnEl=wrapEl.querySelector('#f1-cambtn');
   /* 🎡 รอบ 913: ชั้นพวงมาลัย — โหลดไม่ได้ = ถอยไปใช้ภาพเดิมที่มีพวงมาลัยติดมาในตัว (ไม่ให้เหลือค็อกพิทไม่มีพวงมาลัย) */
   wheelEl=wrapEl.querySelector('#f1-wheel');
@@ -1574,6 +1715,18 @@ function build(){
     gr.addColorStop(1,'rgba(255,240,200,0)');
     g.fillStyle=gr; g.fillRect(0,0,w,h);
   },128,64);
+  /* รถผู้เล่นอื่นเป็น 2.5D sprite โปร่งใส: โหลดภาพที่สร้างเฉพาะเกม และมี fallback เรขาคณิตเบามาก */
+  TexLib.peerCar=texFromCanvas((g,w,h)=>{
+    g.clearRect(0,0,w,h);g.translate(w/2,h/2);g.fillStyle='#e10600';
+    g.beginPath();g.moveTo(-72,30);g.lineTo(-42,-18);g.lineTo(-17,-34);g.lineTo(18,-34);g.lineTo(74,25);g.closePath();g.fill();
+    g.fillStyle='#111a24';g.fillRect(-88,16,176,16);g.fillRect(-58,-5,116,15);
+    g.fillStyle='#07090d';for(const x of [-65,65]){g.beginPath();g.ellipse(x,24,20,28,0,0,Math.PI*2);g.fill();}
+  },256,160);
+  new THREE.TextureLoader().load('img/f1/peer_car_25d.png',t=>{
+    t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping;
+    if('colorSpace' in t&&THREE.SRGBColorSpace) t.colorSpace=THREE.SRGBColorSpace;
+    applyTex('peerCar',t);
+  },undefined,()=>console.warn('[F1] peer_car_25d.png unavailable; using procedural fallback'));
   /* texture หลัก — probe img/f1/*.jpg (ภาพผู้ใช้เจน) ก่อน · ไม่มี = canvas ที่วาดเอง */
   TexLib.asphalt=asphaltTex();
   texProbe('asphalt.jpg',TexLib.asphalt,t=>{ t.repeat.set(1,1); applyTex('asphalt',t);
@@ -1582,16 +1735,8 @@ function build(){
   TexLib.kerb=kerbTex();
   TexLib.sand=sandTex();
   texProbe('sand.jpg',TexLib.sand,t=>{ t.repeat.set(60,60); applyTex('sand',t); });
-  /* ⚠️ UV ของ ExtrudeGeometry (อัฒจันทร์/พิท/หลังคา) เป็น "หน่วยเมตร" — repeat ต้องเป็นเศษส่วน
-     ไม่งั้นภาพถ่ายจะถูกปูซ้ำทุก 1 เมตร กลายเป็นลายจุด (canvas fallback จงใจปูถี่ ไม่ต้องแก้) */
-  TexLib.crowd=crowdTex();
-  texProbe('crowd.jpg',TexLib.crowd,t=>{ t.repeat.set(1/35,1/8.5); applyTex('crowd',t); });
-  TexLib.garage=garageTex();
-  texProbe('pit.jpg',TexLib.garage,t=>{ t.repeat.set(1/22,1/11); applyTex('garage',t); });
-  TexLib.tower=towerTex();
-  texProbe('tower.jpg',TexLib.tower,t=>{ t.repeat.set(3,1); applyTex('tower',t); });
-  TexLib.tent=tentTex();
-  texProbe('tent.jpg',TexLib.tent,t=>{ t.repeat.set(1/18,1/18); applyTex('tent',t); });
+  /* อาคาร/อัฒจันทร์ห้าม probe ภาพ facade/crowd อีกต่อไป — buildBuildings ใช้ geometry + material ล้วน
+     (คง texture เฉพาะผิวธรรมชาติของแทร็ก/ทราย ซึ่งไม่ใช่สิ่งปลูกสร้าง) */
   TexLib.adGP=adTex('VOCAB WORLD RACING','#fff','#d81a1a');
   TexLib.adSakhir=adTex('VOCAB GRAND CIRCUIT','#fff','#0a3b8c');
   TexLib.adVocab=adTex('VOCAB MOTORS','#5c3500','#ffd12e');
@@ -1881,6 +2026,22 @@ function respawnOnTrack(){
     respawnOnTrack._tm=setTimeout(()=>{respEl.style.display='none';},1500);
   }
 }
+function barrierBounce(){
+  const s=surfAt(px,pz,myIdx),side=Math.sign(s.lat)||1;
+  if(Math.abs(s.lat)<=BARRIER_LAT||inPitLane(px,pz,s.lat)) return false;
+  const i=s.i,nx=LINE.nx[i],nz=LINE.nz[i],tx=LINE.tx[i],tz=LINE.tz[i];
+  px=LINE.x[i]+nx*side*BARRIER_LAT;
+  pz=LINE.z[i]+nz*side*BARRIER_LAT;
+  const outward=(vx*nx+vz*nz)*side;
+  if(outward>0){ vx-=nx*side*outward*(1+BARRIER_BOUNCE); vz-=nz*side*outward*(1+BARRIER_BOUNCE); }
+  const along=vx*tx+vz*tz;
+  const lateral=vx*nx+vz*nz;
+  vx=tx*along*.82+nx*lateral;
+  vz=tz*along*.82+nz*lateral;
+  myIdx=i; sandT=0;
+  if(state.haptic!==false&&navigator.vibrate) navigator.vibrate(35);
+  return true;
+}
 function physTick(dt){
   /* 🚦 รอบ 902: ก่อนไฟดับ คันเร่งไม่ทำงาน (เบรก/พวงมาลัยยังได้ — เร่งเครื่องรอได้ตามปกติ) */
   const thr=lightsLocked()?0:clamp(padThr+(kThr?1:0),0,1);
@@ -1953,6 +2114,7 @@ function physTick(dt){
   vx=fx2*vF+fz2*vL;
   vz=fz2*vF+(-fx2)*vL;
   px+=vx*dt; pz+=vz*dt;
+  barrierBounce();
   spd=Math.hypot(vx,vz);
   revNow=vF<-0.3;                                      // ⏪ รอบ 911 — ให้ HUD โชว์เกียร์ R
   /* วางรถ */
@@ -2012,6 +2174,7 @@ function progressTick(dt){
     banEl.innerHTML=msg; banEl.classList.add('show');
     setTimeout(()=>banEl.classList.remove('show'),2400);
     if(typeof sfx!=='undefined') sfx.levelup();
+    pickWord();                                     // หนึ่งคำต่อหนึ่งรอบ: เปลี่ยนคำเฉพาะตอนผ่านเส้น S/F
     renderBoard(); netSend(true);
   }else if(!lapStartAt&&prog<120&&spd>4){
     lapStartAt=performance.now(); cpFlags=[false,false,false];
@@ -2390,14 +2553,15 @@ function pickWord(){
 function spawnLetters(){
   letters.forEach(l=>scene.remove(l.spr));
   letters=[];
+  const gap=TOTAL/word.en.length;
   word.en.split('').forEach((ch,i)=>{
-    for(let c=0;c<LETTER_COPIES;c++){
-      const p=trackPointAhead(150+i*60+c*40,900+i*120);
-      const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:letterTexture(ch),transparent:true}));
-      spr.scale.set(5,5,1); spr.position.set(p.x,2.6,p.z);
-      scene.add(spr);
-      letters.push({ch,idx:i,spr});
-    }
+    /* วางกึ่งกลางแต่ละช่วง: ระยะรอบทั้งหมด / จำนวนตัวอักษร จึงห่างเท่ากันและมีเพียงชุดเดียวต่อรอบ */
+    const d=(i+.5)*gap,at=(sfIdx+Math.round(d/SAMPLE_M))%LINE.n;
+    const lat=activeGraphicsMode==='quality'?clamp(racingLineLat(at),-HALF_W+2.2,HALF_W-2.2):0;
+    const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:letterTexture(ch),transparent:true}));
+    spr.scale.set(5,5,1); spr.position.set(LINE.x[at]+LINE.nx[at]*lat,2.6,LINE.z[at]+LINE.nz[at]*lat);
+    scene.add(spr);
+    letters.push({ch,idx:i,spr,lapDistance:d});
   });
 }
 function renderWordHud(){
@@ -2407,10 +2571,13 @@ function renderWordHud(){
     +`<span class="f-th">${escapeHTML(word.th)}</span>`;
 }
 function collectTick(){
-  if(!word) return;
+  if(!word||word.complete) return;
+  /* multiplayer isolation: ตัวอักษร/word เป็น state ในเครื่องนี้ และตรวจชนกับรถเรา (px,pz) เท่านั้น
+     peers ส่งมาเพื่อวาดรถ/อันดับ ห้ามใช้ตำแหน่งเพื่อนเก็บหรือลบตัวอักษรของผู้เล่นคนนี้ */
+  const localX=px,localZ=pz;
   const hit=new Set();
   for(const l of letters)
-    if(!hit.has(l.idx)&&Math.hypot(l.spr.position.x-px,l.spr.position.z-pz)<COLLECT_R) hit.add(l.idx);
+    if(!hit.has(l.idx)&&Math.hypot(l.spr.position.x-localX,l.spr.position.z-localZ)<COLLECT_R) hit.add(l.idx);
   if(!hit.size) return;
   hit.forEach(idx=>{
     word.got.push(idx);
@@ -2426,6 +2593,8 @@ function collectTick(){
 }
 function completeWord(){
   const w=word;
+  if(!w||w.complete) return;
+  w.complete=true;
   state[DONE_KEY].push(w.en);
   addCoins(REWARD); sessionCoins+=REWARD; sessionWords++;
   coinsEl.textContent='🪙 +'+fmtNum(sessionCoins);
@@ -2438,19 +2607,9 @@ function completeWord(){
   banEl.classList.add('show');
   setTimeout(()=>banEl.classList.remove('show'),2200);
   saveState();
-  word=null;
-  setTimeout(()=>{ if(running) pickWord(); },1400);
 }
 function relocTick(){
-  /* ตัวอักษรหลุดหลังไกล → ย้ายมาข้างหน้า */
-  for(const l of letters){
-    const i=nearIdx(l.spr.position.x,l.spr.position.z,myIdx);
-    const back=((LINE.cum[myIdx]-LINE.cum[i])%TOTAL+TOTAL)%TOTAL;
-    if(back>60&&back<TOTAL-1100){
-      const p=trackPointAhead(180,900);
-      l.spr.position.set(p.x,2.6,p.z);
-    }
-  }
+  /* คงตำแหน่งตลอดรอบ ห้ามย้ายตัวที่พลาดกลับมาข้างหน้า เพราะจะกลายเป็นมากกว่าหนึ่งชุดต่อรอบ */
 }
 
 /* ============================================================
@@ -2500,17 +2659,18 @@ function buildPeer(uid,p){
   if(p.grp) scene.remove(p.grp);
   p.grp=new THREE.Group();
   const col=new THREE.Color(peerColor(uid)).getHex();
-  p.grp.add(buildF1Car(col));
-  attachDrsGlow(p.grp);   // 🪽 รอบ 907 — ติดกับกลุ่มรถเพื่อน (ไม่ใช่ตัวโมเดลที่อาจถูกสลับเป็น GLB ทีหลัง)
-  makeCar(col,g=>{
-    if(!p.grp||p.grp.children.length===0) return;
-    if(g&&g.userData&&g.userData.wheels&&glbSrc){
-      p.grp.remove(p.grp.children[0]); p.grp.add(g);
-    }
-  });
+  const mat=new THREE.SpriteMaterial({map:TexLib.peerCar,transparent:true,alphaTest:.025,depthWrite:false});
+  (TexUsers.peerCar||(TexUsers.peerCar=[])).push(mat);
+  const car=new THREE.Sprite(mat);car.scale.set(6.4,4.25,1);car.position.y=1.8;car.renderOrder=5;
+  car.userData.view='camera-facing-rear-three-quarter';p.grp.add(car);p.grp.userData.peerCar25d=car;
+  const shadow=new THREE.Mesh(new THREE.CircleGeometry(1.55,18),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.24,depthWrite:false}));
+  shadow.scale.set(1,1.85,1);shadow.rotation.x=-Math.PI/2;shadow.position.y=.025;p.grp.add(shadow);
+  const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:TexLib.glow,color:0x2dff8c,transparent:true,
+    opacity:0,depthWrite:false,blending:THREE.AdditiveBlending}));
+  gl.scale.set(.82,.38,1);gl.position.set(0,1.05,-.85);p.grp.add(gl);p.grp.userData.drsGlow=gl;
   const pg=(typeof gradeOf==='function')?gradeOf(uid,p.g):'';
   const nm=makeTextSprite(p.n,'rgba(16,26,44,.85)','#ffffff','🏎️',pg);
-  nm.scale.set(8,2,1); nm.position.y=3.1;
+  nm.scale.set(8,2,1); nm.position.y=4.05;
   p.grp.add(nm);
   p.grade=pg;
   p.grp.position.set(p.cur.x,0,p.cur.z);
@@ -2728,8 +2888,10 @@ function wheelTick(){
   const tr=Math.abs(wheelSy-1)<0.01?r
     :'scaleY('+wheelSy.toFixed(4)+') '+r+' scaleY('+(1/wheelSy).toFixed(4)+')';
   wheelEl.style.transform=tr;
+  if(qualityWheelEl) qualityWheelEl.style.transform=r;
+  if(knobEl) knobEl.style.setProperty('--ctl-turn',(deg*1.25).toFixed(2)+'deg');
   if(ledsEl) ledsEl.style.transform=wheelEl.style.transform;   // 🚥 รอบ 918 — ดวงไฟหมุนไปกับพวงมาลัย
-  if(dashEl) dashEl.style.transform=tr;   // 🔢 รอบ 916 — จอตัวเลขติดไปกับพวงมาลัย (หมุน/สั่นก้อนเดียวกัน แกนเดียวกัน)
+  if(dashEl) dashEl.style.transform=activeGraphicsMode==='quality'?r:tr; // Quality ไม่รับ scaleY ของภาพ legacy
 }
 /* ============================================================
    🔢 รอบ 916 — จอบนพวงมาลัยเป็น "ของจริง"
@@ -3105,11 +3267,13 @@ window.F1World={
     set input(v){ if('steer'in v)steerCtl=v.steer; if('thr'in v)padThr=v.thr; if('br'in v)padBr=!!v.br; },
     get line(){return LINE}, get total(){return TOTAL}, get sfIdx(){return sfIdx},
     get lap(){return {now:lapNow,best:lapBest,count:lapCount,cp:cpFlags.slice(),startAt:lapStartAt}},
-    get word(){return word}, get letters(){return letters},
+    get letters(){return letters},
     /* 👥 รอบ 939 — เทสต์ปุ่ม "ไปหาเพื่อน" บนกระดาน (ยัด room ปลอมได้โดยไม่ต้องต่อ Firebase จริง) */
     get room(){return room}, set room(v){room=v}, renderBoard,
     give(){ letters.slice().forEach(l=>{ word.got.push(l.idx); scene.remove(l.spr); }); letters=[]; completeWord(); },
-    surfAt, nearIdx, trackPointAhead, pickWord, collectTick, physTick,
+    surfAt, nearIdx, trackPointAhead, pickWord, collectTick, physTick, barrierBounce,
+    get word(){return word?{en:word.en,got:word.got.slice(),complete:!!word.complete,
+      letterCount:letters.length,distances:letters.map(l=>l.lapDistance)}:null;},
     /* 🪽 รอบ 904 */
     get drs(){return {on:drsOn,inZone:drsInZone,gap:drsGap,flapK:drsFlapK,
       zones:drsZones.map(z=>({a:z.a,b:z.b,len:z.len})),
@@ -3146,6 +3310,8 @@ window.F1World={
         left:parseFloat(wheelEl.style.left),top:parseFloat(wheelEl.style.top),
         box:{w:cockpitEl.clientWidth,h:cockpitEl.clientHeight},rect:{x:r.x,y:r.y,w:r.width,h:r.height},
         cock:{x:c.x,y:c.y,w:c.width,h:c.height},
+        quality:qualityWheelEl?{visible:getComputedStyle(qualityWheelEl).display!=='none',tf:qualityWheelEl.style.transform,
+          rect:(()=>{const q=qualityWheelEl.getBoundingClientRect();return{x:q.x,y:q.y,w:q.width,h:q.height};})()}:null,
         bg:getComputedStyle(cockpitEl).backgroundImage,
         bs:getComputedStyle(cockpitEl).backgroundSize,bp:getComputedStyle(cockpitEl).backgroundPosition}; },
     layoutWheel, wheelTick,
