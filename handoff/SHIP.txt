@@ -1,8 +1,4 @@
-รอบ 1204: บีบภาพรถผู้เล่นอื่นเป็น WebP โปร่งใส 58KB
-FILE: js/f1_3d.js
-FILE: tools/build_web.mjs
-FILE: tools/check_missing_assets.py
-FILE: tools/test_f1_realistic_circuit.js
-FILE: img/f1/peer_car_25d.png
-FILE: img/f1/peer_car_25d.webp
+รอบ 1205: ปรับผีโรงแรมโปร่งใส 20%
+FILE: js/hauntedhotelghost.js
+FILE: tools/test_hauntedhotel_rules.js
 FILE: handoff/TASKS.md
