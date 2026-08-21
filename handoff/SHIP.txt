@@ -1,1 +1,5 @@
-รอบ 1198: ส่ง source of truth มาตรฐานตัวละครผู้เล่นให้ครบ
+รอบ 1199: ปรับ Word Search เป็น Dreamy Pastel ตามภาพอ้างอิงโดยไม่มีภาพสัตว์
+FILE: css/lobby.css
+FILE: js/wordsearch.js
+FILE: index_classic.html
+FILE: handoff/TASKS.md

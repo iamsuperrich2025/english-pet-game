@@ -51,7 +51,6 @@
 - เก็บผิดลำดับไม่หาย/ไม่เข้า inventory/ไม่ได้เหรียญ; เก็บถูกได้ตัวละ 1 เหรียญ ครบคำได้โบนัส 50 เหรียญ (BUDGET รวม 56) แล้วเริ่มคำใหม่หนึ่งคำทันที; multiplayer sync ใช้กติกาเดียวกัน
 - รวม state/order guard ของ heli+drone เป็น `orderedLetterMode()` โดยไม่เปลี่ยนสตรีคนักบิน/ตำแหน่งดาดฟ้าเฮลิฯ; ปรับ Intro/HUD โดรนให้บอกกติกาใหม่ตรงระบบ
 - เพิ่ม `tools/test_drone_letter_round.js` และอัปเดต heli regression; syntax/diff + heli/drone + Haunted Hotel 3 ชุด + sky seam ผ่าน และ Browser runtime โดรนผ่าน 7/7
-- **รอบ 1187 · แก้ป้าย O-NET Classic ไม่ขึ้นจาก Auth guard:** ภาพผู้ใช้ 1320×619 ยืนยันอยู่ Dashboard จริง/ไม่มี modal บัง; พบ `auth.js` ประกาศ top-level `const Auth` แต่ promo ยังตรวจ `window.Auth` จึง return ทุก Login
 - เพิ่ม `authReady()`/uid ที่อ่าน identifier `Auth` โดยตรง และ regression ห้าม `window.Auth/window.state`; เปลี่ยน counter/save เป็น V4 เพื่อเริ่ม 3 Login ใหม่ ไม่รับค่าที่อาจนับผิดจากรอบก่อน
 - Browser จำลอง Production ตรงตัว `window.Auth=undefined`, `window.state=undefined` พร้อม hidden overlay ที่ 1320×619 แล้วป้ายขึ้น 1080×605px; ขนาด 812×375/opt-out/3 Login เดิมคงผ่าน
 - แก้ `js/onetpromo.js`, Preview และ test; Node syntax + promo/O-NET regression ผ่าน

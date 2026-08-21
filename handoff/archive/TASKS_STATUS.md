@@ -5003,3 +5003,8 @@
 ## ⏬ ย้ายเมื่อ 2026-08-21 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
 
 - **รอบ 1182 · ลดน้ำหนักภาพ Picture Dictionary/เกมทายคำ:** WebP 46 แผ่นเดิม 1024×1536 quality 80 รวม 11.54MB → 768×1152 quality 72 รวม 6.36MB (-44.9%); PNG ต้นฉบับ 91.14MB ไม่ถูกแก้
+
+
+## ⏬ ย้ายเมื่อ 2026-08-21 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1187 · แก้ป้าย O-NET Classic ไม่ขึ้นจาก Auth guard:** ภาพผู้ใช้ 1320×619 ยืนยันอยู่ Dashboard จริง/ไม่มี modal บัง; พบ `auth.js` ประกาศ top-level `const Auth` แต่ promo ยังตรวจ `window.Auth` จึง return ทุก Login
