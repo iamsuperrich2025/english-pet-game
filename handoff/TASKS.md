@@ -28,6 +28,9 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (22 ส.ค.) — อ่านก่อน
+- **รอบ 1246 · แก้ Shoot Word ให้สะสมเหรียญทันที:** รอบ 1244 ตีความผิดเป็นแต้มจบคำ; เปลี่ยนป้ายเป็น `🪙 สะสมรอบนี้ N เหรียญ` และยิงตัวอักษรถูกตัวแรกขึ้น 5 ทันที (`js/shootword.js`)
+- ทุกตัวถูกบวก +5 ในเหตุการณ์จ่ายเหรียญเดียวกัน; เป็ด +3 รวมด้วย; จบคำไม่บวกเหรียญซ้ำ และแต้มอันดับสะสมเดิมยังคำนวณแยกตามกติกา
+- syntax+immediate-first-hit regression+812×375 geometry+production build 8,394 ไฟล์/PWA validator+bundle inspection ผ่าน; ไม่แตะ `css/petshopping3d.css` (`tools/test_shootword_round_score.js`)
 - **รอบ 1245 · Vocab Sky Soft Cuboid Chibi v2:** เปลี่ยน generator ผู้เล่นจากทรงผอม/หน้าเป็นก้อนนูน เป็นหัว cuboid ใหญ่ หน้าตา atlas ตาโตมีประกาย+ยิ้ม แขนขาสั้นหนา หู ผมหลายชั้น คอเสื้อและรองเท้า (`js/skyplay3d.js`)
 - local player และ online peer ทุกตัว รวมโปรไฟล์ `blk1–blk88` ใช้ generator/rig เดียวกัน; ปรับ capsule เป็นรัศมี .46 สูง 2.02 ให้ตรงทรงใหม่ ไม่แตะ pet/NPC/โลกยกเว้น
 - runtime Three.js QA วัดหัว>ลำตัว 18%, หัว>36% ของความสูง, สูงรวม<2.1 และตรวจ face atlas/ผม/rig; syntax+Sky suite+diff+production build/PWA validator ผ่าน ไม่แตะ `css/petshopping3d.css`

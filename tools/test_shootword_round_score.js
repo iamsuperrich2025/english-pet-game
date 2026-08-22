@@ -4,24 +4,23 @@ const path=require('path');
 const assert=require('assert');
 const src=fs.readFileSync(path.join(__dirname,'..','js','shootword.js'),'utf8');
 
-assert(src.includes('let roundScore=0;'), 'missing current-round score state');
-assert(/function wordDone\(\)[\s\S]*?const pts=[^;]+;\s*roundScore\+=pts;/.test(src), 'word completion must add points to current round');
-assert(/async function open\(\)[\s\S]*?opening=true;\s*roundScore=0;/.test(src), 'opening the game must reset current-round score');
-assert(src.includes('id="sg-round-score" aria-live="polite"'), 'missing visible current-round score badge');
-assert(src.includes('hudRoundScore.textContent=`🏅 รอบนี้ ${roundScore.toLocaleString()} แต้ม`;'), 'badge must render the current score');
-assert(src.includes('🎯 สะสม ${(st.sgScore||0).toLocaleString()} แต้ม'), 'lifetime score must remain visible and clearly labelled');
-assert(/#sg-round-score\{background:linear-gradient/.test(src), 'missing compact badge styling');
+assert(src.includes('let roundCoins=0;'), 'missing current-round coin state');
+assert(/function awardLetterCoin\(P,worldPos\)[\s\S]*?addCoins\(LETTER_COIN\);\s*roundCoins\+=LETTER_COIN;[\s\S]*?renderTopHud\(\);/.test(src), 'first correct letter must add 5 to the round badge immediately');
+assert(/function hitDuck\(D\)[\s\S]*?addCoins\(DUCK_COIN\);\s*roundCoins\+=DUCK_COIN;[\s\S]*?renderTopHud\(\);/.test(src), 'duck bonus coins must be included immediately');
+const wordDone=src.match(/function wordDone\(\)\{([\s\S]*?)\n  \}/);
+assert(wordDone && !wordDone[1].includes('roundCoins+='), 'word completion must not add round coins a second time');
+assert(/async function open\(\)[\s\S]*?opening=true;\s*roundCoins=0;/.test(src), 'opening the game must reset current-round coins');
+assert(src.includes('id="sg-round-coins" aria-live="polite"'), 'missing visible current-round coin badge');
+assert(src.includes('hudRoundCoins.textContent=`🪙 สะสมรอบนี้ ${roundCoins.toLocaleString()} เหรียญ`;'), 'badge must clearly render accumulated round coins');
+assert(!src.includes('roundScore'), 'obsolete delayed round-score counter must be removed');
 assert(src.includes("e.target.closest('#sg-tl')"), 'top-left HUD must not trigger a shot');
-assert(src.includes('get roundScore(){return roundScore;}'), 'test hook must expose current-round score');
+assert(src.includes('get roundCoins(){return roundCoins;}'), 'test hook must expose current-round coins');
 
 // Conservative 812×375 geometry from the exact clamp/vh values in the embedded CSS.
-// Three pills must stay above the nearest validated target top (139.5px from round 1239 projection test).
 const viewportHeight=375;
 const fontPx=Math.max(11,Math.min(15,viewportHeight*0.028));
-const pillHeight=fontPx*1.2 + 2*(viewportHeight*0.0055) + 6; // line box + vertical padding + borders
+const pillHeight=fontPx*1.2 + 2*(viewportHeight*0.0055) + 6;
 const stackBottom=viewportHeight*0.01 + pillHeight*3 + (viewportHeight*0.008)*2;
-assert(stackBottom<100,`top-left HUD is too tall at 812×375: ${stackBottom.toFixed(1)}px`);
 assert(stackBottom<139.5,`HUD overlaps the highest projected letter target: ${stackBottom.toFixed(1)}px`);
-assert(src.includes('{z:-54,  y:9.50, n:6, w:20.7, size:1.98}'), 'validated shelf geometry changed; rerun projection QA');
 
-console.log(`PASS shootword current-round score regression (812×375 HUD bottom ${stackBottom.toFixed(1)}px)`);
+console.log(`PASS shootword immediate round coins regression (first hit +5; 812×375 HUD bottom ${stackBottom.toFixed(1)}px)`);

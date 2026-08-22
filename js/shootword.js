@@ -54,11 +54,11 @@
      กากบาท/ปุ่มยิง (ยิงกลางจอเสมอ) จึงพุ่งไปโดนฉากหลัง ไม่โดนแผ่นสักที · 0.04 = กลางกลุ่มเป้าทั้ง 3 แถว */
   let yaw=0, pitch=0.04, aimMode=false, lastShot=0, boardLock=0; // รอบ 1196: เหลือการยิงมุมปกติโหมดเดียว ไม่มีปุ่มเล็ง
   let word=null, pos=0, misses=0, streak=0;    // คำปัจจุบัน {w,th} · ตำแหน่งตัวถัดไป · ยิงพลาดในคำนี้
-  let roundScore=0;                           // 🏅 รอบ 1244: แต้มเฉพาะการเข้าเล่นครั้งปัจจุบัน (ไม่บันทึกถาวร)
+  let roundCoins=0;                           // 🪙 รอบ 1246: เหรียญที่ได้ระหว่างการเข้าเล่นครั้งปัจจุบัน
   let queue=[], qGrade=null;                   // คิวคำไม่ซ้ำจนหมดคลัง (สูตรเดียวกับ ws)
   let plates=[], ducks=[], balloons=[], clouds=[], bulbs=[], tickers=[];
   let wheelGrp=null, raycaster=null, texCache={};
-  let hudCoins=null, hudRoundScore=null, hudChip=null, wordBar=null, fxEl=null, hintEl=null, streakEl=null;
+  let hudCoins=null, hudRoundCoins=null, hudChip=null, wordBar=null, fxEl=null, hintEl=null, streakEl=null;
 
   const grade=()=> (typeof state!=='undefined'&&state.student)?state.student.grade:'ป.1';
   const shuffle=a=>{ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
@@ -568,6 +568,7 @@
   }
   function awardLetterCoin(P,worldPos){
     if(typeof addCoins==='function') addCoins(LETTER_COIN);
+    roundCoins+=LETTER_COIN;                  // ยิงถูกตัวแรกก็แสดง 5 เหรียญทันที ไม่รอครบคำ
     if(typeof saveState==='function') saveState();
     if(typeof sfx!=='undefined' && sfx.coinGet) sfx.coinGet();
     coinPop(P,worldPos,LETTER_COIN);
@@ -577,6 +578,7 @@
     D.st='down'; D.t=0;
     SND.plink(); SND.quack();
     if(typeof addCoins==='function') addCoins(DUCK_COIN);
+    roundCoins+=DUCK_COIN;                    // เหรียญโบนัสทุกชนิดที่ได้ในด่านต้องรวมในยอดรอบนี้
     popText(`🦆 +${DUCK_COIN} 🪙`, '#ffd54f');
     renderTopHud();
   }
@@ -584,7 +586,6 @@
   /* ครบคำ → บันทึกแต้มอันดับ; เหรียญจ่ายไปแล้วทันทีตัวละ LETTER_COIN */
   function wordDone(){
     const pts=word.w.length*PT_PER_LETTER + (misses===0?PERFECT_BONUS:0);
-    roundScore+=pts;
     if(typeof state!=='undefined'){
       state.sgScore=Math.round((state.sgScore||0)+pts);
       state.sgWords=(state.sgWords||0)+1;
@@ -696,11 +697,11 @@
 .sg-slot.now{background:#ffd54f;color:#7a5800;border-bottom-color:#f0a800;animation:sgNow 1s infinite}
 @keyframes sgNow{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 @keyframes sgPop{0%{transform:scale(.5)}60%{transform:scale(1.25)}100%{transform:scale(1)}}
-/* 🏅 รอบ 1244: คะแนนสะสมเฉพาะรอบนี้ แยกจากแต้มอันดับสะสมตลอดกาล */
+/* 🪙 รอบ 1246: เหรียญที่ได้ในรอบนี้ แยกจากยอดเหรียญรวมและแต้มอันดับตลอดกาล */
 #sg-tl{position:absolute;top:1vh;left:1vh;display:flex;flex-direction:column;gap:.8vh;align-items:flex-start;pointer-events:none}
-#sg-coins,#sg-round-score,#sg-chip{background:linear-gradient(180deg,#7851bd,#59398f);border-radius:999px;padding:.55vh 12px;color:#fff;
+#sg-coins,#sg-round-coins,#sg-chip{background:linear-gradient(180deg,#7851bd,#59398f);border-radius:999px;padding:.55vh 12px;color:#fff;
   font-size:clamp(11px,2.8vh,15px);font-weight:800;border:3px solid #ffe4a0;box-shadow:0 3px 0 #c56e51,0 5px 12px rgba(69,35,102,.25)}
-#sg-round-score{background:linear-gradient(180deg,#f7b733,#df7d18);color:#fffef0;border-color:#fff3b0;box-shadow:0 3px 0 #a85418,0 5px 12px rgba(112,59,21,.28)}
+#sg-round-coins{background:linear-gradient(180deg,#f7b733,#df7d18);color:#fffef0;border-color:#fff3b0;box-shadow:0 3px 0 #a85418,0 5px 12px rgba(112,59,21,.28)}
 #sg-chip{pointer-events:auto;cursor:pointer;color:#fff6c8}
 #sg-exit{position:absolute;top:1vh;right:1vh;background:linear-gradient(180deg,#ff849b,#ed4d72);color:#fff;border:3px solid #fff0c8;
   border-radius:999px;padding:.55vh 14px;font:800 clamp(11px,2.8vh,15px) Kanit,system-ui;cursor:pointer;box-shadow:0 3px 0 #b83259,0 5px 12px rgba(126,37,78,.25)}
@@ -786,7 +787,7 @@
       <div id="sg-cross"><i></i><i></i></div>
       <div id="sg-hud">
         <div id="sg-word"></div>
-        <div id="sg-tl"><b id="sg-coins"></b><b id="sg-round-score" aria-live="polite"></b><span id="sg-chip" class="sga-open" role="button" title="ดูอันดับ Top 10 / รางวัลรายเดือน"></span></div>
+        <div id="sg-tl"><b id="sg-coins"></b><b id="sg-round-coins" aria-live="polite"></b><span id="sg-chip" class="sga-open" role="button" title="ดูอันดับ Top 10 / รางวัลรายเดือน"></span></div>
         <button id="sg-exit" type="button">✕ ออก</button>
         <button id="sg-shoot-l" class="sg-shoot" type="button"><span class="ic">⭐</span>ยิง</button>
         <button id="sg-shoot-r" class="sg-shoot" type="button"><span class="ic">⭐</span>ยิง</button>
@@ -798,7 +799,7 @@
     document.body.appendChild(overlay);
     wordBar=overlay.querySelector('#sg-word');
     hudCoins=overlay.querySelector('#sg-coins');
-    hudRoundScore=overlay.querySelector('#sg-round-score');
+    hudRoundCoins=overlay.querySelector('#sg-round-coins');
     hudChip=overlay.querySelector('#sg-chip');
     fxEl=overlay.querySelector('#sg-fx');
     hintEl=overlay.querySelector('#sg-hint');
@@ -828,7 +829,7 @@
     if(!hudCoins) return;
     const st=(typeof state!=='undefined')?state:{};
     hudCoins.textContent=`🪙 ${(st.coins||0).toLocaleString()}`;
-    hudRoundScore.textContent=`🏅 รอบนี้ ${roundScore.toLocaleString()} แต้ม`;
+    hudRoundCoins.textContent=`🪙 สะสมรอบนี้ ${roundCoins.toLocaleString()} เหรียญ`;
     hudChip.textContent=`🎯 สะสม ${(st.sgScore||0).toLocaleString()} แต้ม · ${(st.sgWords||0).toLocaleString()} คำ`;
   }
   function showStreak(){
@@ -1049,7 +1050,7 @@
      ============================================================ */
   async function open(){
     if(opening) return; opening=true;
-    roundScore=0;                              // เปิดด่านใหม่ = เริ่มนับคะแนนรอบใหม่เสมอ
+    roundCoins=0;                              // เปิดด่านใหม่ = เริ่มนับเหรียญสะสมรอบใหม่เสมอ
     try{
       if(!window.THREE){
         if(typeof toast==='function') toast('🎯 กำลังเปิดสวนสนุก...');
@@ -1107,7 +1108,7 @@
     get plates(){return plates;}, get ducks(){return ducks;}, get queue(){return queue;},
     get camera(){return camera;}, get scene(){return scene;}, get renderer(){return renderer;},
     get aimMode(){return aimMode;}, get boardLock(){return boardLock;},
-    get shakeMag(){return shakeMag;}, get roundScore(){return roundScore;},
+    get shakeMag(){return shakeMag;}, get roundCoins(){return roundCoins;},
     set boardLock(v){boardLock=v;}, set lastShot(v){lastShot=v;},
     step(dt){ tick(dt||0.016); if(renderer)renderer.render(scene,camera); },
     shoot, hitPlate, hitDuck, nextWord, dealBoard, pool, takeWord,
