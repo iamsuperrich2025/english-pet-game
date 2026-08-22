@@ -25,8 +25,12 @@ ok(/kind:'bounce'/.test(sky)&&/rotators\.forEach\(r=>/.test(sky)&&/kind==='disap
 const collisionCode=sky.slice(sky.indexOf('function localXZ'),sky.indexOf('function blockedGate'));
 const collisionCtx={Math,solids:[{x:0,z:0,w:2,d:2,minY:.4,maxY:2,enabled:true}],player:{pos:{y:.45},vel:{x:3,z:4}}};vm.runInNewContext(collisionCode+';this.hit=resolveSolids;this.toLocal=localXZ;',collisionCtx);
 const boxHit=collisionCtx.hit(0,0),rotated=collisionCtx.toLocal(1,0,{x:0,z:0,yaw:Math.PI/2});
+collisionCtx.solids[0]={x:0,z:0,r:2,minY:.4,maxY:2,enabled:true};collisionCtx.player.vel={x:3,z:4};const circleHit=collisionCtx.hit(0,0);
 ok(Math.max(Math.abs(boxHit.x),Math.abs(boxHit.z))>=1.379&&collisionCtx.player.vel.x*collisionCtx.player.vel.z===0,'solid collider pushes the player capsule outside visible material');
-ok(Math.abs(rotated.x)<1e-9&&Math.abs(rotated.z+1)<1e-9&&/solids\.push\(s\)/.test(sky)&&/kind:'book'/.test(sky)&&/kind:'letter-block'/.test(sky)&&/kind:'fountain'/.test(sky),'platforms and rotated plaza props register matching solid colliders');
+ok(Math.hypot(circleHit.x,circleHit.z)>=2.379&&Math.abs(rotated.x)<1e-9&&Math.abs(rotated.z+1)<1e-9,'circle and rotated-box colliders cover round and angled material');
+const requiredSolids=['book','pencil','fountain','tree-trunk','tower-core','tower-crown','letter-block-','floating-island-'];
+ok(requiredSolids.every(name=>sky.includes("'"+name))&&/new THREE\.Box3\(\)\.setFromObject\(obj\)/.test(sky)&&/solids\.push\(s\)/.test(sky),'every solid scenery category registers from its real mesh bounds');
+ok(/\(!s\.w&&!s\.r\)/.test(sky)&&/get solids\(\)\{return solids\}/.test(sky),'round floating supports and collider inventory remain testable');
 ok(/data-activity="letter"/.test(sky)&&/data-activity="race"/.test(sky)&&/data-activity="obby"/.test(sky)&&/data-activity="tower"/.test(sky),'Phase 3 exposes all four Sky activities');
 ok(/PHASE 2 SHARED ACTIVITIES/.test(sky)&&/activityRows\(\)/.test(sky)&&/S3:\$\{activityCode\(\)\}/.test(sky),'all activities publish shared progress and live standings through NetRoom');
 ok(/function tickActivity/.test(sky)&&/function setupRaceQuestion/.test(sky)&&/completeActivity\('obby',false\)/.test(sky),'three activities have interactive gameplay and completion paths');
