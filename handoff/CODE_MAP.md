@@ -722,19 +722,19 @@ drawBudget:784
 
 ## js/onetpromo.js (152 บรรทัด · 0 รายการ)
 
-## js/online.js (2,165 บรรทัด · 115 รายการ)
+## js/online.js (2,177 บรรทัด · 116 รายการ)
 ### 🗂️ สารบัญโซน js/online.js (Read/Edit เฉพาะช่วง)
 - 2-235 ENGINE: ระบบออนไลน์จริงผ่าน Firebase Realtime Database
 - 236-331 ระบบเพื่อน (ข้อ 0.3): รหัสเพื่อน + ค้นหา + ส่ง/รับคำขอ
 - 332-521 ระบบแชทกับเพื่อน (ข้อ 0.4)
 - 522-693 ระบบส่งของขวัญ (ข้อ 0.5)
 - 694-907 🏪 ตลาดออนไลน์จริง (item 2 backlog): ซื้อ-ขายสินค้าที่เพื่อน "ผลิตเอง" ข้ามผู้เล่น
-- 908-972 คำเชิญเล่นโลก 3D ด้วยกัน — /tinv/<toUid>/<fromUid> = {map,n,ts}
-- 973-1169 📰 Follow + Feed กิจกรรม (รอบ 155) · 🌍 หน้า Feed ทุกคน + ไลก์/คอมเมนต์ (รอบ 639)
-- 1170-1177 🌍 หน้า Feed ทุกคน + ไลก์/คอมเมนต์ (รอบ 639)
-- 1178-1320 📰 รอบ 701 — ฟีดล็อบบี้ทีละโพสต์ + รีแอ็กชัน + แจ้งเตือน (ต่อยอดรอบ 639)
-- 1321-1553 🔔📥 รอบ 976 — เก็บแจ้งเตือนไลก์/คอมเมนต์ลง DB โซนใหม่ /gnotif/<uid>
-- 1554-2165 📞 โทรหาเพื่อน — Voice call / Video call แบบ LINE (รอบ 625 · กลุ่ม 3 คนรอบ 631)
+- 908-984 คำเชิญเล่นโลก 3D ด้วยกัน — /tinv/<toUid>/<fromUid> = {map,n,ts}
+- 985-1181 📰 Follow + Feed กิจกรรม (รอบ 155) · 🌍 หน้า Feed ทุกคน + ไลก์/คอมเมนต์ (รอบ 639)
+- 1182-1189 🌍 หน้า Feed ทุกคน + ไลก์/คอมเมนต์ (รอบ 639)
+- 1190-1332 📰 รอบ 701 — ฟีดล็อบบี้ทีละโพสต์ + รีแอ็กชัน + แจ้งเตือน (ต่อยอดรอบ 639)
+- 1333-1565 🔔📥 รอบ 976 — เก็บแจ้งเตือนไลก์/คอมเมนต์ลง DB โซนใหม่ /gnotif/<uid>
+- 1566-2177 📞 โทรหาเพื่อน — Voice call / Video call แบบ LINE (รอบ 625 · กลุ่ม 3 คนรอบ 631)
 ### รายการ js/online.js
 ONLINE_STALE_MS:75 · ONLINE_BEAT_MS:76 · LEADERBOARD_SIZE:77 · LEADERBOARD_QUERY_SIZE:78 · onlineDisplayName:82 · onlineActivity:90
 ensureOnlineId:110 · onlineKey:120 · onlinePushPresence:125 · onlinePushScore:135 · fetchPlayerStats:186 · onlineRerender:208
@@ -747,15 +747,15 @@ greetSend:554 · giftAccept:568 · giftDecline:572 · giftInWatch:578 · giftRec
 giftOutRebuild:674 · salesWatch:704 · salesRerender:712 · sellInc:716 · marketRequestId:727 · marketRememberTx:733
 marketTxHasRole:743 · marketResolveMissingListing:749 · marketVerifyOwnListings:783 · marketWatch:801 · marketList:836 · marketUnlist:844
 marketBuy:852 · marketSoldWatch:877 · tinvSend:913 · tinvClear:920 · tinvPartyTick:928 · TINV_WORLD_LABEL:950
-tinvWatch:954 · FEED_MAX:981 · feedEvent:984 · feedPrune:996 · feedPurgeCat:1007 · feedPushAssets:1018
-petDescriptor:1036 · feedPushPets:1042 · fetchPlayerPets:1056 · followSet:1072 · followUnset:1083 · feedRebuild:1090
-feedWatchSync:1102 · fetchPlayerFeed:1129 · fetchPlayerAssets:1142 · fetchFollowers:1161 · GFEED_READ:1187 · GFEED_KEEP_ME:1188
-gfeedPush:1191 · gfeedPrune:1205 · gfeedParse:1218 · gfeedWatchStart:1247 · gfeedWatchStop:1274 · gfeedNotifDiff:1282
-gfeedNotifPush:1317 · GNOTIF_KEEP:1345 · GNOTIF_QUIET:1347 · gnotifKeyOf:1350 · gnotifSend:1357 · gnotifAdd:1370
-gnotifRecount:1390 · gnotifMarkSeen:1395 · gnotifWatchStart:1406 · gnotifListen:1415 · gnotifWatchStop:1433 · gnotifPrune:1438
-uidDisplayName:1451 · gfeedRebuild:1462 · gfeedToggleLike:1479 · gfeedSetReaction:1484 · gfeedToggleCommentLike:1500 · gnotifTellComment:1518
-gfeedAddComment:1530 · CALL_RTC_CFG:1578 · CALL_RING_MS:1579 · CALL_MAX_MS:1580 · CALL_MAX_PEERS:1581 · onlineStart:1997
-onlineLoadSDK:2139
+tinvFingerprint:954 · tinvWatch:957 · FEED_MAX:993 · feedEvent:996 · feedPrune:1008 · feedPurgeCat:1019
+feedPushAssets:1030 · petDescriptor:1048 · feedPushPets:1054 · fetchPlayerPets:1068 · followSet:1084 · followUnset:1095
+feedRebuild:1102 · feedWatchSync:1114 · fetchPlayerFeed:1141 · fetchPlayerAssets:1154 · fetchFollowers:1173 · GFEED_READ:1199
+GFEED_KEEP_ME:1200 · gfeedPush:1203 · gfeedPrune:1217 · gfeedParse:1230 · gfeedWatchStart:1259 · gfeedWatchStop:1286
+gfeedNotifDiff:1294 · gfeedNotifPush:1329 · GNOTIF_KEEP:1357 · GNOTIF_QUIET:1359 · gnotifKeyOf:1362 · gnotifSend:1369
+gnotifAdd:1382 · gnotifRecount:1402 · gnotifMarkSeen:1407 · gnotifWatchStart:1418 · gnotifListen:1427 · gnotifWatchStop:1445
+gnotifPrune:1450 · uidDisplayName:1463 · gfeedRebuild:1474 · gfeedToggleLike:1491 · gfeedSetReaction:1496 · gfeedToggleCommentLike:1512
+gnotifTellComment:1530 · gfeedAddComment:1542 · CALL_RTC_CFG:1590 · CALL_RING_MS:1591 · CALL_MAX_MS:1592 · CALL_MAX_PEERS:1593
+onlineStart:2009 · onlineLoadSDK:2151
 
 ## js/onlinecoinaward.js (22 บรรทัด · 0 รายการ)
 
@@ -786,34 +786,34 @@ openPhotoCrop:224
 
 ## js/shootword.js (1,086 บรรทัด · 0 รายการ)
 
-## js/state.js (1,351 บรรทัด · 96 รายการ)
+## js/state.js (1,353 บรรทัด · 96 รายการ)
 ### 🗂️ สารบัญโซน js/state.js (Read/Edit เฉพาะช่วง)
-- 2-233 STATE + LocalStorage + กติกากลางของเกม
-- 234-290 🗄️🐾 ระบบชั้นอาหาร + เงินช่วยปรับตัว
-- 291-755 👍 รอบ 701: รีแอ็กชันฟีด (กดค้างปุ่มถูกใจแล้วเลือกได้เหมือน Facebook)
-- 756-811 Daily Quest (item 3 backlog): ภารกิจรายวัน 3 อย่าง สุ่มตามวันที่
-- 812-922 มูลค่าทรัพย์สินสุทธิ (net worth) — ฐานของระบบแรงค์
-- 923-972 🚫🍽️ สัตว์ป่วยเพราะหิว = ซื้อของกินไม่ได้ (รอบ 952)
-- 973-1066 เครื่องยนต์บิลรายเดือน (กลาง — ค่าบำรุงบ้านตอนนี้ / ค่าไฟ-น้ำ-เน็ต เสียบเพิ่มได้)
-- 1067-1191 🍖 เงินค่าอาหารสัตว์รายเดือน — ทุกวันที่ 1 ของเดือน จ่ายตามจำนวนสัตว์ที่เลี้ยงอยู่
-- 1192-1351 โรงงานผลิตสินค้า: จ่ายค่าผลิตด้วย "แต้มคำศัพท์"
+- 2-234 STATE + LocalStorage + กติกากลางของเกม
+- 235-291 🗄️🐾 ระบบชั้นอาหาร + เงินช่วยปรับตัว
+- 292-757 👍 รอบ 701: รีแอ็กชันฟีด (กดค้างปุ่มถูกใจแล้วเลือกได้เหมือน Facebook)
+- 758-813 Daily Quest (item 3 backlog): ภารกิจรายวัน 3 อย่าง สุ่มตามวันที่
+- 814-924 มูลค่าทรัพย์สินสุทธิ (net worth) — ฐานของระบบแรงค์
+- 925-974 🚫🍽️ สัตว์ป่วยเพราะหิว = ซื้อของกินไม่ได้ (รอบ 952)
+- 975-1068 เครื่องยนต์บิลรายเดือน (กลาง — ค่าบำรุงบ้านตอนนี้ / ค่าไฟ-น้ำ-เน็ต เสียบเพิ่มได้)
+- 1069-1193 🍖 เงินค่าอาหารสัตว์รายเดือน — ทุกวันที่ 1 ของเดือน จ่ายตามจำนวนสัตว์ที่เลี้ยงอยู่
+- 1194-1353 โรงงานผลิตสินค้า: จ่ายค่าผลิตด้วย "แต้มคำศัพท์"
 ### รายการ js/state.js
 STORAGE_KEY:6 · QUIZ_PASS_REWARD:11 · CURE_COST:13 · HUNGRY_SICK_MS:14 · MEAL_HOUR:16 · MEAL_FULL:17
 SLEEP_FROM_HOUR:18 · SLEEP_SICK_HOUR:19 · WAKE_HOUR:20 · DINNER_COST:21 · TOXIN_FULL:23 · DETOX_COST:24
 FOODQUIZ_Q:26 · FOODQUIZ_COIN:27 · FOODQUIZ_BONUS:28 · FOODQUIZ_MAX_PLAYS:29 · SHAPE_JUNK_MEALS:31 · SHAPE_CLEAN_MEALS:32
-SHAPE_MISS_MEALS:33 · SHAPE_EXP_BONUS:34 · HEAT_SICK_MS:35 · THIRST_SICK_MS:36 · DEFAULT_STATE:38 · migratePetShoppingState:239
-FEED_CATS:283 · FEED_REACTIONS:297 · feedRx:305 · FEED_QUICK_CM:307 · SLOT_MS:319 · currentSlotStart:320
-nextSlotStart:326 · mealDayKey:328 · nightKeyOf:330 · isNightNow:338 · newPet:343 · loadState:368
-saveState:713 · activePet:723 · petStage:724 · isAdult:729 · abilityOn:730 · hasPetType:731
-todayStr:734 · dailyTick:738 · addCoins:741 · QUEST_POOL:761 · QUEST_PER_DAY:770 · questsToday:771
-questTick:778 · questEvent:782 · assetValue:818 · netWorth:842 · assetCount:844 · grantRankPromotionRewards:862
-refreshRank:892 · heatProtected:910 · rainProtected:914 · petHungry:917 · petCanEat:921 · hungerSickLock:929
-hungerSickMsg:937 · petShapeOf:945 · updatePetShape:951 · shapeMealDone:958 · heatPct:968 · ymStr:977
-billOutstanding:981 · UTILITIES:988 · HOME_UTILITIES:994 · homeDecayed:996 · billTick:999 · PET_FOOD_PER_PET:1071
-petFoodTick:1072 · myCar:1098 · carLoanDue:1103 · carLoanOverdue:1108 · carLoanPayable:1113 · carLoanPay:1120
-compTick:1133 · ONLINE_RATE:1147 · onlineEarnActive:1148 · onlineEarnTick:1152 · onlineEarnFlush:1163 · marketTick:1173
-addCraft:1197 · ORDER_MAX:1216 · ORDER_LIFE_MS:1217 · ORDER_GAP_MIN_MS:1218 · ORDER_GAP_SPAN_MS:1219 · ORDER_TIER_WEIGHT:1220
-newOrder:1221 · orderTick:1234 · careTick:1242 · expNeed:1322 · addExp:1327 · addRP:1347
+SHAPE_MISS_MEALS:33 · SHAPE_EXP_BONUS:34 · HEAT_SICK_MS:35 · THIRST_SICK_MS:36 · DEFAULT_STATE:38 · migratePetShoppingState:240
+FEED_CATS:284 · FEED_REACTIONS:298 · feedRx:306 · FEED_QUICK_CM:308 · SLOT_MS:320 · currentSlotStart:321
+nextSlotStart:327 · mealDayKey:329 · nightKeyOf:331 · isNightNow:339 · newPet:344 · loadState:369
+saveState:715 · activePet:725 · petStage:726 · isAdult:731 · abilityOn:732 · hasPetType:733
+todayStr:736 · dailyTick:740 · addCoins:743 · QUEST_POOL:763 · QUEST_PER_DAY:772 · questsToday:773
+questTick:780 · questEvent:784 · assetValue:820 · netWorth:844 · assetCount:846 · grantRankPromotionRewards:864
+refreshRank:894 · heatProtected:912 · rainProtected:916 · petHungry:919 · petCanEat:923 · hungerSickLock:931
+hungerSickMsg:939 · petShapeOf:947 · updatePetShape:953 · shapeMealDone:960 · heatPct:970 · ymStr:979
+billOutstanding:983 · UTILITIES:990 · HOME_UTILITIES:996 · homeDecayed:998 · billTick:1001 · PET_FOOD_PER_PET:1073
+petFoodTick:1074 · myCar:1100 · carLoanDue:1105 · carLoanOverdue:1110 · carLoanPayable:1115 · carLoanPay:1122
+compTick:1135 · ONLINE_RATE:1149 · onlineEarnActive:1150 · onlineEarnTick:1154 · onlineEarnFlush:1165 · marketTick:1175
+addCraft:1199 · ORDER_MAX:1218 · ORDER_LIFE_MS:1219 · ORDER_GAP_MIN_MS:1220 · ORDER_GAP_SPAN_MS:1221 · ORDER_TIER_WEIGHT:1222
+newOrder:1223 · orderTick:1236 · careTick:1244 · expNeed:1324 · addExp:1329 · addRP:1349
 
 ## js/thaitime.js (52 บรรทัด · 13 รายการ)
 TH_TZ_MIN:22 · TH_DAY_MS:23 · thShift:28 · thMs:30 · thDate:31 · thHour:32
@@ -949,21 +949,21 @@ openListDialog:9115 · cancelListing:9172 · buyMarketItem:9196 · showCollectRe
 renderPetShop:9391 · showLevelUp:9452 · renderStats:9489 · showTeacherCard:9596 · CALL_REACT_EMOS:9640 · CALL_TALK_MIN:9643
 CALL_TALK_HOLD:9644 · CALL_ORDER_GAP:9646 · CALL_TONES:9652 · startCall:10026
 
-## js/util.js (1,326 บรรทัด · 53 รายการ)
+## js/util.js (1,332 บรรทัด · 53 รายการ)
 ### 🗂️ สารบัญโซน js/util.js (Read/Edit เฉพาะช่วง)
 - 2-23 UTIL: เสียง / เอฟเฟกต์ / เครื่องมือทั่วไป
-- 24-1295 🎖️ รอบ 643: สัญลักษณ์ระดับชั้น (ผู้ใช้สั่ง 28 ก.ค. 2026)
-- 1296-1326 🖱️🚫 รอบ 833: กันกล่องดำ "To show your cursor, switch apps, reload the page…"
+- 24-1301 🎖️ รอบ 643: สัญลักษณ์ระดับชั้น (ผู้ใช้สั่ง 28 ก.ค. 2026)
+- 1302-1332 🖱️🚫 รอบ 833: กันกล่องดำ "To show your cursor, switch apps, reload the page…"
 ### รายการ js/util.js
 shuffle:6 · fmtNum:15 · escapeHTML:19 · gradeSymbol:32 · gradeMark:47 · nameWithGrade:55
 gradeMarkCanvas:61 · gradeOf:77 · seededRand:92 · fmtThaiDT:104 · fmtThaiDate:108 · IPHONE_LOBBY_VIEWPORT:118
 fitIPhoneLobbyViewport:129 · showScreen:148 · TOAST_WARN_RE:165 · TOAST_FINANCIAL_RE:166 · TOAST_FINANCIAL_AMOUNT_RE:168 · restackToasts:175
-clearWarnToasts:201 · toast:205 · toastLink:244 · floatFx:262 · beep:273 · soundStatus:294
-PET_MOOD:410 · petVoiceSynth:417 · sirenSynth:494 · playCashier:518 · cashierSynth:532 · keyTapSynth:565
-bubblePopSynth:603 · bubbleTapSynth:622 · playSpark:633 · sparkSynth:647 · thunderFx:682 · wordAudioFile:750
-speakCutOff:759 · speakWord:763 · speakLetter:802 · pickSpeakVoice:825 · speakWordTTS:836 · askNameDialog:863
-askConfirm:909 · alertBox:927 · applyNoAnim:947 · BLK_VOCAB:954 · openSettings:1002 · openHelp:1234
-openTeacherGuide:1261 · TAPGLOW_SEL:1285 · TOUCH_INPUT_SEEN:1304 · mouseLockOK:1313 · lockMouse3D:1319
+clearWarnToasts:201 · toast:205 · toastLink:250 · floatFx:268 · beep:279 · soundStatus:300
+PET_MOOD:416 · petVoiceSynth:423 · sirenSynth:500 · playCashier:524 · cashierSynth:538 · keyTapSynth:571
+bubblePopSynth:609 · bubbleTapSynth:628 · playSpark:639 · sparkSynth:653 · thunderFx:688 · wordAudioFile:756
+speakCutOff:765 · speakWord:769 · speakLetter:808 · pickSpeakVoice:831 · speakWordTTS:842 · askNameDialog:869
+askConfirm:915 · alertBox:933 · applyNoAnim:953 · BLK_VOCAB:960 · openSettings:1008 · openHelp:1240
+openTeacherGuide:1267 · TAPGLOW_SEL:1291 · TOUCH_INPUT_SEEN:1310 · mouseLockOK:1319 · lockMouse3D:1325
 
 ## js/vocabbook.js (207 บรรทัด · 14 รายการ)
 VB_MAX:11 · VB_QUIZ_N:12 · VB_QUIZ_MIN:13 · vbGroup:16 · VB_GROUP_UI:21 · vbRecord:24

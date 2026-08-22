@@ -1,5 +1,5 @@
-รอบ 1219: แยกรถออกสตาร์ทห่างและกัน client เก่าซ้อน
-FILE: handoff/TASKS.md
-FILE: js/f1_3d.js
-FILE: tools/test_f1_start_grid.js
-FILE: tools/ship.sh
+รอบ 1220: จำการปิดคำเชิญและไม่เตือนคำเชิญเดิมซ้ำ
+FILE: js/online.js
+FILE: js/state.js
+FILE: js/util.js
+FILE: tools/test_tinv_dismiss.js

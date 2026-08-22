@@ -5308,3 +5308,9 @@
 - **รอบ 1210 · รถคู่แข่งใหม่ + contact ตามโมเดล:** ตัวถัง faceted loft ต่อเนื่อง/cockpit cowl สีเดียวกับรถ; collision เป็น 9 compound parts ตรงปีก/body/ล้อจริง—QA `5.90m=false, 5.80m=true, air-gap=false`; รถเพื่อนคง 8 calls/304 body triangles ไม่มี texture/PBR/dynamic shadow (`js/f1_3d.js`)
 - Mobile thermal governor 20 FPS idle/45 ขับ/30 เมื่อกดดัน, DPR 1.25→0.9, smoke 8→4, ปิด MSAA/ไฟรอง, ตัดเสาไฟราว 62 calls และ low-tier 4,006→2,131 instances; พื้นใหม่ square-tiled 4 ม. ใช้ color 256² + normal/roughness 128², racing line/skid/seam/runoff/sand และ contact shadow รวม 6 surface calls ไม่มี displacement/dynamic shadow
 - แก้กำแพง/โรงรถพิทยื่นเข้าถนน (clearance ต่ำสุด 9.32/9.54/13.60 ม.); runoff/ทรายเปิดประตูทันทีและใช้ plasma โปร่ง 3 ชั้น/18 streak; ท้องฟ้า PNG 1.53 MB ถูกทำเป็น WebP 1024×576 ขนาด 14 KiB โหลดเฉพาะ Realistic และปิด mipmaps (`img/f1/sky_racing_1024.webp`)
+
+
+## ⏬ ย้ายเมื่อ 2026-08-22 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1214 · Cockpit/ประตูมิติ:** ย่อจอสดเหลือ 82% รอบจุดกึ่งกลางเดิม จึงไม่ทับ bezel/ปุ่มและตาม center/left/right ครบ (Canvas upload ลดราว 33%); ประตูเก็บความเร็วก่อนวาร์ปและคืนตาม tangent พร้อมเคลื่อนต่อระหว่างประตูหุบ ไม่หยุดรถ; regression + Browser QA 1280×720 ผ่าน (`js/f1_3d.js`)
+- **รอบ 1212 · ปรับราคาหุ่นยนต์นักรบ:** ราคา `ROBOTS` ทั้ง 10 รุ่นไล่ระดับ 300,000–500,000 เหรียญ (เพิ่มรุ่นละ 20,000) ครอบคลุมป้ายโชว์รูม/ยืนยัน/หักเงินจากข้อมูลชุดเดียว; ตรวจช่วงราคาและ diff ผ่าน (`js/data/items.js`)
