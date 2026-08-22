@@ -95,7 +95,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/pmaward.js** (28 บรรทัด) — 🏆 pmaward.js — รางวัลรายเดือนของกระดานอันดับ 🖼️ จับคู่ภาพ (รอบ 979) · ผู้ใช้สั่ง 3 ส.ค. 2026: ทำแท็บ+รางวัลรายเดือน Top 10 ให้เกมจับคู่ภาพ · ใช้กติกา/โครงเดียวกับ 🔎 ค้นหาคำ (js/wsaward.js) ทุกประการ — ต่างแค่ field/ชื่อเกม
 - **js/rankgraph.js** (147 บรรทัด) — 📈 กราฟอันดับ Top 30 — โหลด snapshot เมื่อเปิดเท่านั้น · แต่ละหมวดใช้สีประจำตัวไม่ซ้ำ และชื่อผู้เล่นติดอยู่กับทุกจุด
 - **js/sgaward.js** (28 บรรทัด) — 🏆 sgaward.js — รางวัลรายเดือนของกระดานอันดับ 🎯 ยิงเป้าคำศัพท์ (รอบ 917) · ผู้ใช้สั่ง 2 ส.ค. 2026: "เก็บคะแนนให้หน้าอันดับ มีเงินรางวัล 10,000 - 1,000 · เหมือนกับเกมค้นหาคำ" → ใช้โรงงานกลาง makeMonthAward (js/award.js) ตัวเดียวกัน
-- **js/shootword.js** (1,086 บรรทัด) — 🎯 shootword.js — เกม "ยิงเป้าคำศัพท์" (Carnival Word Shooting) รอบ 917 · ผู้ใช้สั่ง 2 ส.ค. 2026 (อนุมัติทำเป็นโลก 3D เต็มรูปแบบ): · ① โลก 3D มุมมองบุคคลที่หนึ่ง — ยืนในซุ้มยิงปืนของสวนสนุก สีสันสดใสน่ารัก
+- **js/shootword.js** (1,110 บรรทัด) — 🎯 shootword.js — เกม "ยิงเป้าคำศัพท์" (Carnival Word Shooting) รอบ 917 · ผู้ใช้สั่ง 2 ส.ค. 2026 (อนุมัติทำเป็นโลก 3D เต็มรูปแบบ): · ① โลก 3D มุมมองบุคคลที่หนึ่ง — ยืนในซุ้มยิงปืนของสวนสนุก สีสันสดใสน่ารัก
 - **js/skyplay3d.js** (575 บรรทัด) — ☁️📚 รอบ 1235 — VOCAB SKY PLAYGROUND · PHASE 5 · Bright Fantasy Social World + Obby ของ Vocab World · - standalone Three.js engine: ไม่แตะ Adventure World / Invasion
 - **js/state.js** (1,353 บรรทัด) — STATE + LocalStorage + กติกากลางของเกม · (แยกจากไฟล์ data — อัปเกรดคำศัพท์/สัตว์/ไอเทมได้โดยไม่กระทบเซฟ)
 - **js/thaitime.js** (52 บรรทัด) — 🇹🇭 js/thaitime.js — "เวลาไทย" กลางของทั้งเกม (รอบ 988) · ปัญหาที่แก้: ทุกจุดในเกมอ่านเวลาจาก `new Date().getHours()` = **นาฬิกาของเครื่องผู้เล่น · เครื่องที่ตั้งไทม์โซนเป็นต่างประเทศ (หรือ tablet/PC ที่ตั้งเวลาไม่ตรง) จะได้ชั่วโมงผิด
@@ -122,6 +122,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/style.css** (2,430 บรรทัด) — Pet Vocab Adventure — สไตล์พื้นฐานรุ่นแรกทั้งเกม (โดน lobby.css โหลดทับบางส่วน — แก้หน้าตาโซนล็อบบี้/UI ใหม่ให้ไปที่ lobby.css ก่อน) · ครอบคลุม: screens/login/dashboard · เกมจับคู่ .word-card + แบบทดสอบ .quiz-* · shop/ที่พัก/หมวดคำศัพท์ · หิว-ป่วย/สภาพอากาศ · ตั้งค่า/วิธีเล่น/level-up overlay · คลังของฉัน/กล่องขาย · เอฟเฟกต์ลอย/เหรียญ/rotate-overlay
 - **sw.js** (218 บรรทัด) — Vocab World service worker · Delivery contract: · - HTML navigations are network-first with the last valid shell as fallback.
 <!-- AUTO-FILES:END -->
+
 
 
 
