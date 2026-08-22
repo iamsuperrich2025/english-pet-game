@@ -27,6 +27,10 @@ try {
   const engine = await fs.stat(path.join(DIST, 'sound/racing/engineSound.mp3'));
   if (engine.size < 100000) failures.push('F1 engine audio asset is unexpectedly small');
 } catch { failures.push('missing dist/sound/racing/engineSound.mp3'); }
+try {
+  const skyCharacter = await fs.stat(path.join(DIST, 'img/characters/sky_soft_cuboid_chibi_8dir.webp'));
+  if (skyCharacter.size < 350000) failures.push('Sky Soft Cuboid Chibi atlas is unexpectedly small');
+} catch { failures.push('missing dist/img/characters/sky_soft_cuboid_chibi_8dir.webp'); }
 if (!deletion.includes('freddommun@gmail.com') || !deletion.includes('Delete Account')) failures.push('delete-account.html is incomplete');
 if (!privacy.includes('delete-account.html') || !privacy.includes('Profile photos')) failures.push('privacy.html is incomplete');
 
@@ -44,6 +48,7 @@ try {
 try {
   const assets = JSON.parse(assetManifestText);
   if (!assets.build || !assets.files || Object.keys(assets.files).length < 10) failures.push('asset-manifest.json is incomplete');
+  if (!assets.files?.['/img/characters/sky_soft_cuboid_chibi_8dir.webp']) failures.push('asset-manifest.json omits the Sky character atlas');
 } catch { failures.push('asset-manifest.json is invalid JSON'); }
 
 for (const [name, text] of [['sw.js', sw], ['index.html', index], ['index_classic.html', classic]]) {

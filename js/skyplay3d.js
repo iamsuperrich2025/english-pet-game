@@ -14,14 +14,8 @@
   const CLASS_MIN_WORDS=3,CLASS_MAX_WORDS=5,CLASS_TIMES=[30,60,90];
   const CLASS_MODES={meaning:{code:'M',name:'🎯 เลือกความหมาย'},listen:{code:'L',name:'🔊 ฟังแล้วเลือก'},spell:{code:'S',name:'✏️ เลือกสะกดถูก'}};
   const TEACHER_STORE_KEY='vocabSkyTeacher_v1',REPORT_ALPH='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_';
+  const PLAYER_ATLAS_URL='img/characters/sky_soft_cuboid_chibi_8dir.webp';
   const COLORS={sky:0x8fd8ff,navy:0x16346b,cyan:0x46ddff,pink:0xff67ad,yellow:0xffd74d,mint:0x62e6b0,purple:0x8f70ff,white:0xfffbef};
-  const AV_BASE=[
-    [0xffcf9e,0xe53935,0x1e58c8,0x2b2320],[0xffd9ae,0x29b6f6,0x274a8f,0x6d4c2f],
-    [0xf2b98a,0x43a047,0x7a6a4f,0xef6c00],[0xffcf9e,0xfb8c00,0x5d4037,0x232323],
-    [0xffd9ae,0x8e24aa,0x4e5a63,0xffca28],[0xffe0bd,0xf06292,0xfafafa,0x8d5a3b],
-    [0xf2b98a,0xfdd835,0x33691e,0x232323],[0xffd9ae,0x4db6ac,0x37474f,0xf5f5f5]
-  ];
-
   let root,canvas,renderer,scene,camera,clock,raf=0,running=false,paused=false,lastFrame=0;
   let player,petComp,room=null,myUid='local',peers={},peerActors={},sessionCoins=0,sessionStars=0;
   let supports=[],solids=[],cameraMeshes=[],moving=[],rotators=[],checkpoints=[],stars=[],effects=[],portal=null,gate=null;
@@ -163,43 +157,21 @@
   function addSolidBox(name,x,z,w,d,minY,maxY,opt={}){const hit={name,x,z,w,d,minY,maxY,top:maxY,enabled:true,kind:opt.kind||name};solids.push(hit);if(opt.support)supports.push(hit);return hit;}
   function addSolidCircle(name,x,z,r,minY,maxY,opt={}){const hit={name,x,z,r,minY,maxY,top:maxY,enabled:true,kind:opt.kind||name};solids.push(hit);if(opt.support)supports.push(hit);return hit;}
   function addSolidObject(name,obj,opt={}){obj.updateWorldMatrix(true,true);const b=new THREE.Box3().setFromObject(obj);return addSolidBox(name,(b.min.x+b.max.x)*.5,(b.min.z+b.max.z)*.5,b.max.x-b.min.x,b.max.z-b.min.z,b.min.y,b.max.y,opt);}
-  function avatarColors(id){
-    const n=clamp((parseInt(String(id).replace('blk',''),10)||1)-1,0,87);if(n<8)return AV_BASE[n];
-    const h=(n*47)%360,c=new THREE.Color();c.setHSL(h/360,.68,.52);const c2=new THREE.Color();c2.setHSL(((h+45)%360)/360,.55,.32);return [0xffd4ad,c.getHex(),c2.getHex(),0x352a29];
+  /* ============================================================
+     🧸 รอบ 1247 — PLAYER RENDER ASSET
+     ภาพเรนเดอร์ 8 ทิศจากมาตรฐาน Soft Cuboid Chibi โดยตรง
+     local + online ใช้ renderer เดียวกัน; ไม่มี primitive-human fallback
+     ============================================================ */
+  function makePlayerSprite(id){
+    const texture=texLoader.load(PLAYER_ATLAS_URL);texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.set(.25,.5);texture.offset.set(0,.5);texture.magFilter=THREE.LinearFilter;if(THREE.SRGBColorSpace)texture.colorSpace=THREE.SRGBColorSpace;
+    const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,color:0xffffff,transparent:true,alphaTest:.04,depthWrite:false,fog:true}));sprite.center.set(.5,.02);sprite.scale.set(2.15,2.15,1);sprite.position.y=.015;sprite.name='player-soft-cuboid-chibi-sprite';sprite.userData.playerStyle='soft-cuboid-chibi-3d';sprite.userData.characterRenderer='sky-soft-cuboid-chibi-8dir-v1';sprite.userData.styleStandard='docs/PLAYER_CHARACTER_STYLE.md';sprite.userData.avatarId=/^blk(?:[1-9]|[1-7][0-9]|8[0-8])$/.test(String(id))?String(id):'blk1';sprite.userData.frame=-1;return sprite;
   }
-    function avatarSpec(id){
-    const n=clamp((parseInt(String(id).replace('blk',''),10)||1)-1,0,87),colors=avatarColors(id),styles=['flat','tall','cap','pony','flat','pony','cap','tall'];
-    return {id:'blk'+(n+1),skin:colors[0],shirt:colors[1],pants:colors[2],hair:colors[3],style:styles[n%styles.length],blush:n%4===3||n%4===1};
+  function playerDirectionFrame(yaw){const step=Math.PI/4,rel=Math.atan2(Math.sin(yaw-camYaw),Math.cos(yaw-camYaw));return ((Math.round((Math.PI-rel)/step)%8)+8)%8;}
+  function updatePlayerSprite(sprite,yaw,t,moving,waving){
+    if(!sprite||!sprite.material||!sprite.material.map)return;const frame=playerDirectionFrame(yaw);if(frame!==sprite.userData.frame){sprite.userData.frame=frame;sprite.material.map.offset.set((frame%4)*.25,frame<4?.5:0);}
+    sprite.position.y=.015+(moving?Math.abs(Math.sin(t*.014))*.055:0);sprite.material.rotation=waving?Math.sin(t*.02)*.055:0;
   }
-  function faceAtlasGeo(w,h,d,r){
-    const k=`face_${w}_${h}_${d}_${r}`;if(geoCache[k])return geoCache[k];const g=softGeo(w,h,d,r).clone(),uv=g.attributes.uv;
-    for(let i=0;i<uv.count;i++)uv.setX(i,uv.getX(i)*.5);const front=g.groups[5],seen=new Set();if(front)for(let i=front.start;i<front.start+front.count;i++){const vi=g.index?g.index.getX(i):i;if(!seen.has(vi)){uv.setX(vi,uv.getX(vi)+.5);seen.add(vi);}}
-    uv.needsUpdate=true;g.userData.shared=true;g.userData.faceAtlas=true;return geoCache[k]=g;
-  }
-  function faceAtlasMat(spec){
-    const k='face_'+spec.id;if(matCache[k])return matCache[k];const cv=document.createElement('canvas');cv.width=256;cv.height=128;const c=cv.getContext('2d'),skin='#'+spec.skin.toString(16).padStart(6,'0');
-    c.fillStyle=skin;c.fillRect(0,0,256,128);c.fillStyle=skin;c.fillRect(128,0,128,128);
-    [[168,57],[216,57]].forEach(([x,y])=>{c.fillStyle='#241b22';c.beginPath();c.ellipse(x,y,10.5,13,0,0,TAU);c.fill();c.fillStyle='#fff';c.beginPath();c.arc(x+3.5,y-4.5,3.8,0,TAU);c.fill();c.fillStyle='rgba(255,255,255,.72)';c.beginPath();c.arc(x-2,y+4,1.8,0,TAU);c.fill();});
-    if(spec.blush){c.fillStyle='rgba(255,112,130,.38)';[[148,82],[236,82]].forEach(([x,y])=>{c.beginPath();c.ellipse(x,y,11,6,0,0,TAU);c.fill();});}
-    c.strokeStyle='#9b493e';c.lineWidth=5;c.lineCap='round';c.beginPath();c.arc(192,72,18,.24*Math.PI,.76*Math.PI);c.stroke();
-    const tex=new THREE.CanvasTexture(cv);if(THREE.SRGBColorSpace)tex.colorSpace=THREE.SRGBColorSpace;return matCache[k]=new THREE.MeshLambertMaterial({map:tex});
-  }
-  function makeChibi(id){
-    const a=avatarSpec(id),g=new THREE.Group(),parts={legs:[],arms:[],hands:[]},skin=mat(a.skin),shirt=mat(a.shirt),pants=mat(a.pants),hair=mat(a.hair),shoe=mat(0x43325f);
-    g.userData.limbs=[];g.userData.parts=parts;g.userData.playerStyle='soft-cuboid-chibi-3d';g.userData.characterGenerator='sky-soft-cuboid-chibi-v2';g.userData.styleStandard='docs/PLAYER_CHARACTER_STYLE.md';
-    [-1,1].forEach((side,i)=>{const pivot=new THREE.Group(),leg=new THREE.Mesh(softGeo(.31,.4,.37,.12),pants),foot=new THREE.Mesh(softGeo(.32,.16,.42,.07),shoe);pivot.position.set(side*.18,.43,0);pivot.userData.swingSign=i?-1:1;leg.position.y=-.19;foot.position.set(0,-.36,-.035);leg.name=`player-leg-${i?'right':'left'}`;foot.name=`player-shoe-${i?'right':'left'}`;pivot.add(leg,foot);g.add(pivot);parts.legs.push(pivot);g.userData.limbs.push(pivot);});
-    const torso=new THREE.Mesh(softGeo(.72,.58,.48,.17),shirt);torso.position.y=.78;torso.name='player-torso';g.add(torso);
-    const collar=new THREE.Mesh(softGeo(.34,.08,.035,.025),mat(0xfff4dc));collar.position.set(0,1.04,-.252);collar.name='player-collar';g.add(collar);
-    [-1,1].forEach((side,i)=>{const pivot=new THREE.Group(),sleeve=new THREE.Mesh(softGeo(.25,.43,.3,.1),shirt),hand=new THREE.Mesh(softGeo(.22,.2,.24,.085),skin);pivot.position.set(side*.49,1.02,0);pivot.rotation.z=side*-.08;pivot.userData.swingSign=i?1:-1;pivot.userData.restZ=pivot.rotation.z;pivot.userData.kind='arm';sleeve.position.y=-.2;hand.position.y=-.46;sleeve.name=`player-arm-${i?'right':'left'}`;hand.name=`player-hand-${i?'right':'left'}`;pivot.add(sleeve,hand);g.add(pivot);parts.arms.push(pivot);parts.hands.push(hand);g.userData.limbs.push(pivot);});
-    const head=new THREE.Mesh(faceAtlasGeo(.88,.74,.72,.22),faceAtlasMat(a));head.position.y=1.43;head.name='player-head-face-atlas';g.add(head);
-    [-1,1].forEach((side,i)=>{const ear=new THREE.Mesh(softGeo(.13,.22,.14,.055),skin);ear.position.set(side*.46,1.43,0);ear.name=`player-ear-${i?'right':'left'}`;g.add(ear);});
-    const hh=a.style==='tall'?.31:.2,hairTop=new THREE.Mesh(softGeo(.9,hh,.74,.09),hair);hairTop.position.y=1.79+(a.style==='tall'?.055:0);hairTop.name='player-hair-top';g.add(hairTop);
-    [-1,0,1].forEach((slot,i)=>{const fringe=new THREE.Mesh(softGeo(i===1?.28:.24,i===1?.2:.16,.105,.05),hair);fringe.position.set(slot*.255,1.665-(i===1?.015:0),-.375);fringe.name=`player-hair-fringe-${i}`;g.add(fringe);});
-    [-1,1].forEach((side,i)=>{const sideHair=new THREE.Mesh(softGeo(.13,.3,.62,.055),hair);sideHair.position.set(side*.405,1.56,.035);sideHair.name=`player-hair-side-${i}`;g.add(sideHair);});
-    if(a.style==='cap'){const brim=new THREE.Mesh(softGeo(.72,.08,.28,.035),hair);brim.position.set(0,1.72,-.47);brim.name='player-cap-brim';g.add(brim);}
-    if(a.style==='pony'){const tail=new THREE.Mesh(softGeo(.24,.38,.2,.08),hair);tail.position.set(0,1.48,.43);tail.name='player-ponytail';g.add(tail);}
-    return g;
-  }function makePetChibi(type){
+  function makePetChibi(type){
     type=['dog','cat','dragon'].includes(type)?type:'cat';const palette=type==='dog'?[0xc98752,0xffe0b0,0x69402e]:type==='dragon'?[0x65d9b5,0xd9fff1,0x347f87]:[0xf3a15f,0xffe2bd,0x985333];
     const [fur,cream,dark]=palette,g=new THREE.Group(),legs=[],tail=[],wings=[];g.userData.petStyle='soft-cuboid-chibi-3d';g.userData.legs=legs;g.userData.tail=tail;g.userData.wings=wings;
     [[-.22,-.2],[.22,-.2],[-.22,.2],[.22,.2]].forEach(([x,z],i)=>{const p=new THREE.Group(),leg=meshSoft(.22,.37,.27,i<2?dark:fur,.09);p.position.set(x,.38,z);leg.position.y=-.18;p.add(leg);p.name=`pet-leg-${i}`;g.add(p);legs.push(p);});
@@ -297,8 +269,8 @@
   function hashText(s){let h=2166136261;for(const c of String(s)){h^=c.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}
   function wordPool(seed){const pool=baseWordPool().slice(),h=hashText(seed||Math.random());return pool.sort((a,b)=>(hashText(a[0]+h)-hashText(b[0]+h))).slice(0,8);}
   function buildPlayer(){
-    const g=new THREE.Group(),fig=makeChibi(profileAvatar()),sh=new THREE.Mesh(new THREE.CircleGeometry(.72,20),new THREE.MeshBasicMaterial({color:0x17326a,transparent:true,opacity:.18,depthWrite:false}));g.add(fig);sh.rotation.x=-Math.PI/2;sh.position.y=.02;sh.name='player-contact-shadow';g.add(sh);scene.add(g);
-    player={group:g,fig,limbs:fig.userData.limbs,pos:g.position,vel:new THREE.Vector3(),facing:new THREE.Vector3(0,0,-1),yaw:0};spawnAtCheckpoint(false);
+    const g=new THREE.Group(),fig=makePlayerSprite(profileAvatar()),sh=new THREE.Mesh(new THREE.CircleGeometry(.72,20),new THREE.MeshBasicMaterial({color:0x17326a,transparent:true,opacity:.18,depthWrite:false}));g.add(fig);sh.rotation.x=-Math.PI/2;sh.position.y=.02;sh.name='player-contact-shadow';g.add(sh);scene.add(g);
+    player={group:g,fig,pos:g.position,vel:new THREE.Vector3(),facing:new THREE.Vector3(0,0,-1),yaw:0};updatePlayerSprite(fig,0,0,false,false);spawnAtCheckpoint(false);
   }
   function buildPet(){const p=petInfo();if(!p)return;const g=new THREE.Group(),model=makePetChibi(p.type),stage=typeof petStage==='function'?petStage(p):(p.level>=3?'adult':p.level===2?'baby':'egg'),scale=stage==='adult'?1:stage==='baby'?.88:.76,sh=new THREE.Mesh(new THREE.CircleGeometry(.52,20),new THREE.MeshBasicMaterial({color:0x17326a,transparent:true,opacity:.15,depthWrite:false}));model.scale.setScalar(scale);g.add(model);sh.rotation.x=-Math.PI/2;sh.position.y=.015;sh.name='pet-contact-shadow';g.add(sh);scene.add(g);petComp={group:g,model,type:p.type,data:p,vel:new THREE.Vector3(),phase:Math.random()*TAU,yaw:0,legs:model.userData.legs,tail:model.userData.tail,wings:model.userData.wings};g.position.copy(player.pos).add(new THREE.Vector3(-2,0,2));}
   function bindInput(){
@@ -331,7 +303,7 @@
     if(hit){ny=hit.top;player.vel.y=0;grounded=true;lastSupport=hit.s;if(hit.s.kind==='bounce'){player.vel.y=14.2;grounded=false;lastSupport=null;tone(620,.13,.06);showToast('✨ Jump Pad!');}}else{grounded=false;lastSupport=null;}player.pos.y=ny;
     if(player.pos.y<FALL_Y)respawn();
     const movingNow=Math.hypot(player.vel.x,player.vel.z)>.4;if(movingNow){player.facing.set(player.vel.x,0,player.vel.z).normalize();player.yaw=Math.atan2(-player.facing.x,-player.facing.z);player.group.rotation.y+=(player.yaw-player.group.rotation.y)*Math.min(1,dt*11);}
-    const swing=movingNow?Math.sin(t*.014)*.72:0;player.limbs.forEach(l=>{const target=swing*(Number(l.userData.swingSign)||1);l.rotation.x+=(target-l.rotation.x)*Math.min(1,dt*14);});const rightArm=player.fig.userData.parts.arms[1];if(t<emoteUntil)rightArm.rotation.z=-1.7+Math.sin(t*.02)*.28;else rightArm.rotation.z+=(rightArm.userData.restZ-rightArm.rotation.z)*Math.min(1,dt*12);
+    updatePlayerSprite(player.fig,player.yaw,t,movingNow,t<emoteUntil);
   }
   function updateWorld(dt,t){
     for(const s of moving){s.dx=s.dz=0;if(s.kind==='moving'){const old=s.mesh.position.x,n=s.baseX+Math.sin(t*s.speed)*s.amp;s.mesh.position.x=n;s.x=n;s.dx=n-old;}else if(s.kind==='disappear'){const on=Math.sin(t*.0011)>-.25;s.enabled=on;s.mesh.visible=on;s.mesh.material.transparent=true;s.mesh.material.opacity=on?1:.16;}}
@@ -578,9 +550,9 @@
   function netSend(force){if(!room||!player)return;const elapsed=Math.min(99999,Math.round(activityElapsed()/100));let hp=`S3:${activityCode()}:${activityRound?activityRound.score:0}:${activity==='obby'?currentCheckpoint:(activityRound?activityRound.progress:0)}:${elapsed}:${activityRound?activityRound.seed:'plaza'}`,cw=classWire||'';if(activity==='classroom'&&activityRound){if(activityRound.version==='C5'){if(activityRound.role==='host')hp=`S5:H:${phaseNumber(activityRound.phase)}:${activityRound.step||0}:${elapsed}:${activityRound.eventId}`;else{const mode=activityRound.phase==='ready'?'R':activityRound.phase==='finished'?'F':'C',score=mode==='R'?(activityRound.ready?1:0):(activityRound.score||0);hp=`S5:${mode}:${score}:${activityRound.progress||0}:${elapsed}:${activityRound.eventId}`;cw=studentReportWire();}}else hp=`S4:${activityRound.role==='host'?'H':'C'}:${activityRound.score||0}:${activityRound.progress||0}:${elapsed}:${activityRound.eventId}`;}room.send({n:String(state.profileName||'นักสำรวจ').slice(0,40),x:+player.pos.x.toFixed(2),y:+player.pos.y.toFixed(2),z:+player.pos.z.toFixed(2),yaw:+player.group.rotation.y.toFixed(3),av:profileAvatar(),m:performance.now()<emoteUntil?1:0,w:sessionStars,cw,hp},!!force);}
   function onPeer(uid,d){peers[uid]=d||{};if(!peerActors[uid])buildPeer(uid,d||{});const a=peerActors[uid];if(a){a.target.set(Number(d.x)||0,Number(d.y)||0,Number(d.z)||0);a.yaw=Number(d.yaw)||0;a.data=d||{};}considerJoinOffer(uid,d||{});considerClassOffer(uid,d||{});rememberClassPeer(uid,d||{});updateOnline();updateActivityHud(performance.now(),true);if(activity==='classroom')renderClassroom(true);}
   function onPeerGone(uid){delete peers[uid];removePeer(uid);if(joinOffer&&joinOffer.uid===uid){joinOffer=null;for(const other in peers){considerJoinOffer(other,peers[other]);if(joinOffer)break;}renderDailyPanel();}if(classOffer&&classOffer.uid===uid){classOffer=null;for(const other in peers){considerClassOffer(other,peers[other]);if(classOffer)break;}updateClassButton();}updateOnline();updateActivityHud(performance.now(),true);if(activity==='classroom')renderClassroom(true);}
-  function buildPeer(uid,d){const g=new THREE.Group(),fig=makeChibi(/^blk/.test(d.av||'')?d.av:'blk1');g.add(fig);const name=textSprite(String(d.n||'เพื่อน').slice(0,18),0xffffff,420,100);name.scale.set(3.4,.82,1);name.position.y=2.35;g.add(name);scene.add(g);return peerActors[uid]={group:g,fig,limbs:fig.userData.limbs,target:new THREE.Vector3(Number(d.x)||0,Number(d.y)||0,Number(d.z)||0),yaw:Number(d.yaw)||0,data:d,phase:Math.random()*TAU};}
+  function buildPeer(uid,d){const g=new THREE.Group(),fig=makePlayerSprite(/^blk/.test(d.av||'')?d.av:'blk1');g.add(fig);const name=textSprite(String(d.n||'เพื่อน').slice(0,18),0xffffff,420,100);name.scale.set(3.4,.82,1);name.position.y=2.35;g.add(name);scene.add(g);return peerActors[uid]={group:g,fig,target:new THREE.Vector3(Number(d.x)||0,Number(d.y)||0,Number(d.z)||0),yaw:Number(d.yaw)||0,data:d,phase:Math.random()*TAU};}
   function removePeer(uid){const a=peerActors[uid];if(!a)return;scene.remove(a.group);disposeTree(a.group);delete peerActors[uid];}
-  function tickOnline(t,dt){if(room){room.tick(t);if(t-lastNetAt>190){lastNetAt=t;netSend(false);}}if(t-lastPeerBudget>500){lastPeerBudget=t;drawPeerBudget();}for(const uid in peerActors){const a=peerActors[uid],before=a.group.position.clone();a.group.position.lerp(a.target,1-Math.pow(.0004,dt));a.group.rotation.y+=(a.yaw-a.group.rotation.y)*Math.min(1,dt*8);const moving=before.distanceTo(a.group.position)>.012,swing=moving?Math.sin(t*.013+a.phase)*.65:0;a.limbs.forEach(l=>{const target=swing*(Number(l.userData.swingSign)||1);l.rotation.x+=(target-l.rotation.x)*Math.min(1,dt*12);});const rightArm=a.fig.userData.parts.arms[1];if(Number(a.data.m))rightArm.rotation.z=-1.6+Math.sin(t*.02)*.25;else rightArm.rotation.z+=(rightArm.userData.restZ-rightArm.rotation.z)*Math.min(1,dt*10);}}
+  function tickOnline(t,dt){if(room){room.tick(t);if(t-lastNetAt>190){lastNetAt=t;netSend(false);}}if(t-lastPeerBudget>500){lastPeerBudget=t;drawPeerBudget();}for(const uid in peerActors){const a=peerActors[uid],before=a.group.position.clone();a.group.position.lerp(a.target,1-Math.pow(.0004,dt));a.group.rotation.y+=(a.yaw-a.group.rotation.y)*Math.min(1,dt*8);const moving=before.distanceTo(a.group.position)>.012;updatePlayerSprite(a.fig,a.yaw,t+a.phase*80,moving,!!Number(a.data.m));}}
   function drawPeerBudget(){if(typeof NetRoom==='undefined')return;NetRoom.drawBudget({peers,max:ROOM_MAX-1,slack:0,margin:.8,dist:(u)=>peerActors[u]?player.pos.distanceTo(peerActors[u].group.position):999,isDrawn:p=>{const u=Object.keys(peers).find(k=>peers[k]===p);return !!peerActors[u];},show:(u,p)=>buildPeer(u,p),hide:u=>removePeer(u)});}
   function updateOnline(){if(!ui.online)return;updateClassButton();if(!room){ui.online.textContent='โหมดฝึกเดี่ยว · ล็อกอินเพื่อพบเพื่อน';return;}ui.online.textContent=room.online?`ออนไลน์ ${Math.min(ROOM_MAX,room.count)}/${ROOM_MAX} คน · ${room.roomLabel}`:'กำลังเชื่อมต่อสวนออนไลน์…';}
 
