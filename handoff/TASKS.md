@@ -40,8 +40,6 @@
 - **รอบ 1219 · แก้รถเกิดซ้อน/ภาพสั่นซ้ำ:** เพิ่มระยะกริด 8→18 ม. และกันพื้นที่รัศมี 15 ม. จากพิกัดรถ client เก่าที่ไม่ส่ง slot จึงข้ามจุดซ้อนอัตโนมัติ
 - เลิกส่ง slot ผ่าน `hp` ที่พ้องกับ friend-seat reservation; ย้าย marker ไป `c` เฉพาะตอนไม่มีแชท โดย client เก่าอ่านข้ามได้; regression + Browser QA legacy/no-marker ทับ slot 0 → ผู้เล่นย้าย slot 1 ระยะ 15.74 ม., desktop/mobile 844×390, portal=false, console 0 error (`js/f1_3d.js`, `tools/test_f1_start_grid.js`)
 - ซ่อม `COMMIT_DEPLOY.bat` ตีความ `y` เป็นยกเลิกบน Windows โดยตัด CR ท้ายคำตอบใน `tools/ship.sh`
-- **รอบ 1218 · กริดเกิด multiplayer ไม่ซ้อน:** ต้นเหตุคือสุ่ม `Math.random()` จึงได้ slot ซ้ำ; เปลี่ยนเป็น roster UID เรียงคงที่ วางเหลื่อมซ้าย/ขวาทุก 8 ม. และส่ง slot ผ่าน `hp→h` ที่ NetRoom/rules รับอยู่แล้ว
-- ระหว่างจัดกริดก่อนไฟดับ ปิด collision impulse และ portal ชั่วคราว จึงไม่ผลักกันออก runoff; จุดกริดหน้าฉากใช้ `gridPose()` เดียวกับจุดเกิด; Browser QA 1280×720: slot 1/0 ห่าง 9.04 ม., formation=true/portal=false (`js/f1_3d.js`, `tools/test_f1_start_grid.js`)
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`

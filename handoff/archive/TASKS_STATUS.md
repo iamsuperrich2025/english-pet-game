@@ -5327,3 +5327,9 @@
 - **ขอบถนนเทาอ่อนขับได้ทั้งแถบ:** เพิ่มกริป paved runoff `.62→.78`, ลด drag `1.6→.8`; ย้าย barrier ไปนอกขอบเทา และ portal ตรวจ `postMoveSurf==='sand'` เท่านั้น; QA 12 ม.=`runoff/portal=false`, 17 ม.=`sand/portal=true`, console 0 error (`tools/test_f1_runoff_portal.js`)
 - **รอบ 1217 · สีรถ multiplayer ตรงกัน:** ต้นเหตุ `cl` ถูก NetRoom ตัดและ legacy rules ปฏิเสธ; เปลี่ยนส่ง marker `cw=f1c:<สี>` ที่ผ่านทั้ง 2 โหมด พร้อม decode/repaint รถเพื่อนและอ่าน `cl` ย้อนหลัง (`js/f1_3d.js`)
 - regression ใหม่จำลองผู้เล่น 2 คนผ่าน `NetRoom.create/send` จริงครบ 5 สี: น้ำเงิน→index 1/#0090ff, ส้ม→index 4/#ff8700 และสีอื่นตรง index เดียวกับ cockpit (`tools/test_f1_multiplayer_color.js`)
+
+
+## ⏬ ย้ายเมื่อ 2026-08-22 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1218 · กริดเกิด multiplayer ไม่ซ้อน:** ต้นเหตุคือสุ่ม `Math.random()` จึงได้ slot ซ้ำ; เปลี่ยนเป็น roster UID เรียงคงที่ วางเหลื่อมซ้าย/ขวาทุก 8 ม. และส่ง slot ผ่าน `hp→h` ที่ NetRoom/rules รับอยู่แล้ว
+- ระหว่างจัดกริดก่อนไฟดับ ปิด collision impulse และ portal ชั่วคราว จึงไม่ผลักกันออก runoff; จุดกริดหน้าฉากใช้ `gridPose()` เดียวกับจุดเกิด; Browser QA 1280×720: slot 1/0 ห่าง 9.04 ม., formation=true/portal=false (`js/f1_3d.js`, `tools/test_f1_start_grid.js`)
