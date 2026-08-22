@@ -791,7 +791,7 @@ openPhotoCrop:224
 
 ## js/shootword.js (1,086 บรรทัด · 0 รายการ)
 
-## js/skyplay3d.js (572 บรรทัด · 0 รายการ)
+## js/skyplay3d.js (575 บรรทัด · 0 รายการ)
 
 ## js/state.js (1,353 บรรทัด · 96 รายการ)
 ### 🗂️ สารบัญโซน js/state.js (Read/Edit เฉพาะช่วง)
