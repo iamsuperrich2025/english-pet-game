@@ -1,7 +1,5 @@
-รอบ 1218: จัดกริดเกิด F1 ไม่ซ้อนและวาบเมื่อพ้นขอบ runoff
+รอบ 1219: แยกรถออกสตาร์ทห่างและกัน client เก่าซ้อน
 FILE: handoff/TASKS.md
 FILE: js/f1_3d.js
-FILE: tools/test_f1_fantasy_jumps.js
-FILE: tools/test_f1_realistic_circuit.js
-FILE: tools/test_f1_runoff_portal.js
 FILE: tools/test_f1_start_grid.js
+FILE: tools/ship.sh
