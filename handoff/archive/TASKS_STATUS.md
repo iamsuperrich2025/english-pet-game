@@ -5333,3 +5333,9 @@
 
 - **รอบ 1218 · กริดเกิด multiplayer ไม่ซ้อน:** ต้นเหตุคือสุ่ม `Math.random()` จึงได้ slot ซ้ำ; เปลี่ยนเป็น roster UID เรียงคงที่ วางเหลื่อมซ้าย/ขวาทุก 8 ม. และส่ง slot ผ่าน `hp→h` ที่ NetRoom/rules รับอยู่แล้ว
 - ระหว่างจัดกริดก่อนไฟดับ ปิด collision impulse และ portal ชั่วคราว จึงไม่ผลักกันออก runoff; จุดกริดหน้าฉากใช้ `gridPose()` เดียวกับจุดเกิด; Browser QA 1280×720: slot 1/0 ห่าง 9.04 ม., formation=true/portal=false (`js/f1_3d.js`, `tools/test_f1_start_grid.js`)
+
+
+## ⏬ ย้ายเมื่อ 2026-08-22 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- เลิกส่ง slot ผ่าน `hp` ที่พ้องกับ friend-seat reservation; ย้าย marker ไป `c` เฉพาะตอนไม่มีแชท โดย client เก่าอ่านข้ามได้; regression + Browser QA legacy/no-marker ทับ slot 0 → ผู้เล่นย้าย slot 1 ระยะ 15.74 ม., desktop/mobile 844×390, portal=false, console 0 error (`js/f1_3d.js`, `tools/test_f1_start_grid.js`)
+- ซ่อม `COMMIT_DEPLOY.bat` ตีความ `y` เป็นยกเลิกบน Windows โดยตัด CR ท้ายคำตอบใน `tools/ship.sh`

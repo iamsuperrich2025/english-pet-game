@@ -723,7 +723,7 @@ mergeBack:88 · metUids:100 · AIM_TTL_MS:119 · aimAt:121 · aimGet:125 · aimC
 MAPS3D:135 · whereFriends:136 · dbOf:160 · envReady:161 · isDenied:164 · create:176
 drawBudget:784
 
-## js/onetpromo.js (152 บรรทัด · 0 รายการ)
+## js/onetpromo.js (210 บรรทัด · 0 รายการ)
 
 ## js/online.js (2,177 บรรทัด · 116 รายการ)
 ### 🗂️ สารบัญโซน js/online.js (Read/Edit เฉพาะช่วง)
@@ -1163,10 +1163,10 @@ vbRender:148 · vbCardHTML:194
 .pm-category-btn:6007,6010 · .pm-sheet-card-img:6011 · .pm-card:6014,6019,6023,6025(+9) · .pm-grid:6017 · .pm-right:6047 · .pm-now:6048,6054
 #pm-now-en:6055 · .pm-now-th:6056 · .pm-lobby-btn:6064,6068 · .pm-mode-btn:6093,6096 · .pm-wordcard:6097,6098,6100
 
-## css/onetpromo.css (17 บรรทัด · 13 selector)
+## css/onetpromo.css (27 บรรทัด · 17 selector)
 .onet-promo-overlay:2 · .onet-promo-card:3 · .onet-promo-content:4 · .onet-promo-close:5 · .onet-promo-kicker:6 · .onet-promo-title:7
 .onet-promo-lead:8 · .onet-promo-grades:9 · .onet-promo-grid:10 · .onet-promo-stat:11 · .onet-promo-actions:12 · .onet-promo-go:13,15
-.onet-promo-optout:14
+.onet-promo-optout:14 · .racing-promo-overlay:20 · .racing-promo-card:21,22,23,25 · .racing-promo-flag:24 · .racing-promo-features:26
 
 ## css/petpantry.css (6 บรรทัด · 4 selector)
 .pantry-main-row:2 · .pantry-grant-overlay:3 · .petshop-entry-box:4 · .petpantry-overlay:5
