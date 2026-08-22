@@ -10,7 +10,7 @@
      ⑤ ยิงสะกดคำตามที่ระบบกำหนด (คำตามระดับชั้นเท่านั้น — กฎเหล็กเดียวกับค้นหาคำ/พิมพ์คำ)
      ⑥ เล่นคนเดียว · แต้มสะสมตลอดกาล state.sgScore → กระดานอันดับแท็บ 🎯 (field sg)
         + รางวัลรายเดือน Top 10 (10,000–1,000) ผ่าน js/sgaward.js — กติกาเดียวกับ 🔎 ค้นหาคำ
-   กติกาแต้ม (เรตเดียวกับ 🔎/⌨️): ครบ 1 คำ = ความยาว×2 แต้ม+เหรียญ · ไม่ยิงพลาดเลย +5
+   กติกา: ยิงตัวถูกตามลำดับ = +5 เหรียญทันที · ครบคำได้แต้มความยาว×2 · ไม่พลาด +5 แต้ม
    โบนัสเป็ด 🦆 วิ่งผ่านหิ้ง ยิงโดน +3 เหรียญ (ไม่นับแต้มอันดับ — อันดับวัดที่คำล้วน ๆ)
    เข้าเกม: ปุ่มราง #btn-rail-shootword (โหลด three.min.js ครั้งแรกตอนกดเท่านั้น — ไม่ถ่วงล็อบบี้)
    📐 กฎทองข้อ 7: HUD ทุกชิ้น clamp ตาม vh ทดสอบ 812×375 · ไม่มี scrollbar
@@ -29,15 +29,18 @@
   };                            //    ครึ่งหนึ่งของระยะห่างระหว่างแผ่น (~24px) → เล็งใกล้ใบไหนโดนใบนั้น ไม่ข้ามไปใบอื่น
   const MINLEN=3, MAXLEN=10;
   const PT_PER_LETTER=2, PERFECT_BONUS=5;      // เรตเดียวกับ 🔎 ค้นหาคำ / ⌨️ พิมพ์คำ
+  const LETTER_COIN=5;                         // ยิงตัวถูกตามลำดับ = 5 เหรียญทันที
   const DUCK_COIN=3;                           // 🦆 โบนัสเป็ด (เหรียญล้วน ไม่เข้าแต้มอันดับ)
+  const COIN_IMAGE='img/coins/coin_gold.png';
   const COOLDOWN=310;                          // ms ต่อนัด (ปืนอัดลมต้องปั๊มลม)
   const FOLD_ANGLE=1.78, FOLD_DUR=0.13;        // 🎯 รอบ 937: ยิงโดน → แผ่นพับแรง+ไวขึ้น (เดิม 1.5rad/0.2s) ให้รู้สึกหนักหน่วงชัดเจน
   const ROWS=[                                 // หิ้ง 3 ชั้นไล่ระดับแบบอัฒจันทร์ — ไกลขึ้น สูงขึ้น แผ่นใหญ่ขึ้น
     /* 🎯 รอบ 923: ผู้ใช้สั่งขยายระยะเป้าออกไปอีก 3 เท่า — คูณ z อย่างเดียว (สูง/กว้าง/ขนาดแผ่นเท่าเดิม)
        ยิงยากขึ้นตามระยะจริง (raycaster แม่นทุกระยะอยู่แล้ว) โหมดเล็งซูม FOV แคบลงช่วยชดเชยความไกล */
-    {z:-27,  y:1.05, n:6, w:12.9, size:1.43},
-    {z:-40.5,y:2.35, n:6, w:16.8, size:1.68},
-    {z:-54,  y:4.35, n:6, w:20.7, size:1.98},
+    /* 🎯 รอบ 1239: ยกชั้นหลังขึ้นตามมุมมองกล้อง ให้ขอบหิ้งชั้นหน้าไม่บังตัวอักษรชั้น 2–3 */
+    {z:-27,  y:1.15, n:6, w:12.9, size:1.43},
+    {z:-40.5,y:4.10, n:6, w:16.8, size:1.68},
+    {z:-54,  y:9.50, n:6, w:20.7, size:1.98},
   ];
   const AZ='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const PASTEL=['#ff8a80','#ffd180','#ffff8d','#ccff90','#80d8ff','#b388ff','#ff80ab','#a7ffeb'];
@@ -541,12 +544,15 @@
   function shakeCam(amt){ shakeMag=Math.max(shakeMag,amt); }
   function hitPlate(P){
     const v=new THREE.Vector3(); P.mesh.getWorldPosition(v); sparkBurst(v);
+    /* 🔠 อ่านชื่อตัวอักษรทุกแผ่นที่ยิงโดน ทั้งตัวถูกและตัวหลอก */
+    if(typeof speakLetter==='function') speakLetter(P.letter.toLowerCase());
     const need=word?word.w[pos]:null;
     if(need && P.letter===need){
       pos++; streak++; misses+=0;
       SND.plink(); setTimeout(()=>SND.fly(),90);
       shakeCam(0.032);                                   // โดนตัวถูก = สั่นแรงหน่อย ให้รู้สึกหนักหน่วงสมใจ
       flyLetter(P);
+      awardLetterCoin(P, v);
       flipPlate(P, AZ[Math.floor(Math.random()*26)]);   // เด้งกลับมาพร้อมตัวอักษรใหม่ (หมุนป้ายแบบงานวัด)
       showStreak();
       renderWordBar();
@@ -559,6 +565,13 @@
       showStreak();
     }
   }
+  function awardLetterCoin(P,worldPos){
+    if(typeof addCoins==='function') addCoins(LETTER_COIN);
+    if(typeof saveState==='function') saveState();
+    if(typeof sfx!=='undefined' && sfx.coinGet) sfx.coinGet();
+    coinPop(P,worldPos,LETTER_COIN);
+    renderTopHud();
+  }
   function hitDuck(D){
     D.st='down'; D.t=0;
     SND.plink(); SND.quack();
@@ -567,10 +580,9 @@
     renderTopHud();
   }
 
-  /* ครบคำ → แต้ม+เหรียญเรตเดียวกับค้นหาคำ · ฉลอง · ขึ้นคำใหม่ */
+  /* ครบคำ → บันทึกแต้มอันดับ; เหรียญจ่ายไปแล้วทันทีตัวละ LETTER_COIN */
   function wordDone(){
     const pts=word.w.length*PT_PER_LETTER + (misses===0?PERFECT_BONUS:0);
-    if(typeof addCoins==='function') addCoins(pts);
     if(typeof state!=='undefined'){
       state.sgScore=Math.round((state.sgScore||0)+pts);
       state.sgWords=(state.sgWords||0)+1;
@@ -578,12 +590,9 @@
     if(typeof vbRecord==='function') vbRecord(word.w, word.th, true);   // 📒 ลงสมุดคำศัพท์ถาวร
     if(typeof saveState==='function') saveState();
     if(typeof onlinePushScore==='function') onlinePushScore();          // ดันขึ้นกระดาน (มี sig กันเขียนซ้ำ)
-    if(typeof sfx!=='undefined'){
-      const tier=word.w.length>=8?2:word.w.length>=6?1:0;
-      if(sfx.coinGetTier) sfx.coinGetTier(tier); else if(sfx.coinGet) sfx.coinGet();
-    }
-    if(typeof speakWord==='function') speakWord(word.w.toLowerCase());
-    banner(word.w, word.th, pts, misses===0);
+    /* รอให้เสียงชื่อตัวสุดท้ายจบก่อน แล้วค่อยอ่านทั้งคำ ไม่ตัดเสียงกลางคัน */
+    if(typeof speakWord==='function') setTimeout(()=>{ if(running) speakWord(word.w.toLowerCase()); },700);
+    banner(word.w, word.th, pts, misses===0,word.w.length*LETTER_COIN);
     confetti();
     renderTopHud();
     boardLock=1.8;
@@ -731,6 +740,11 @@
   70%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;transform:translate(-50%,-14px)}}
 .sg-fly{position:absolute;z-index:7;pointer-events:none;font-weight:900;color:#ffd54f;
   font-size:clamp(18px,5vh,30px);text-shadow:0 2px 6px rgba(0,0,0,.6);transition:all .48s cubic-bezier(.5,-0.2,.6,1)}
+.sg-coinpop{position:absolute;z-index:9;pointer-events:none;display:flex;align-items:center;gap:7px;transform:translate(-50%,-50%);
+  color:#fff7a8;font-weight:900;font-size:clamp(15px,4.3vh,24px);white-space:nowrap;text-shadow:0 2px 3px #7b4300,0 0 8px #fff;
+  animation:sgCoinPop 1s ease-out forwards}
+.sg-coinpop img{width:clamp(28px,7vh,46px);height:clamp(28px,7vh,46px);object-fit:contain;filter:drop-shadow(0 2px 4px rgba(103,57,0,.55))}
+@keyframes sgCoinPop{0%{opacity:0;transform:translate(-50%,-35%) scale(.55)}18%{opacity:1;transform:translate(-50%,-65%) scale(1.16)}100%{opacity:0;transform:translate(-50%,-170%) scale(.9)}}
 .sg-poptx{position:absolute;z-index:7;pointer-events:none;font-weight:900;left:50%;top:38vh;transform:translateX(-50%);
   font-size:clamp(14px,4vh,22px);text-shadow:0 2px 6px rgba(0,0,0,.5);animation:sgPopUp 1.2s ease-out forwards}
 @keyframes sgPopUp{0%{opacity:0;transform:translate(-50%,14px)}20%{opacity:1}100%{opacity:0;transform:translate(-50%,-40px)}}
@@ -837,10 +851,20 @@
     });
     setTimeout(()=>el.remove(),520);
   }
-  function banner(w,th,pts,perfect){
+  function coinPop(P,worldPos,amount){
+    if(!fxEl||!camera) return;
+    const v=worldPos?worldPos.clone():new THREE.Vector3();
+    if(!worldPos) P.mesh.getWorldPosition(v);
+    v.project(camera);
+    const el=document.createElement('div'); el.className='sg-coinpop';
+    el.style.left=((v.x*.5+.5)*innerWidth)+'px'; el.style.top=((-v.y*.5+.5)*innerHeight)+'px';
+    el.innerHTML=`<img src="${COIN_IMAGE}" alt="เหรียญทอง"><b>+${amount} เหรียญ</b>`;
+    fxEl.appendChild(el); setTimeout(()=>el.remove(),1050);
+  }
+  function banner(w,th,pts,perfect,coins){
     const b=overlay.querySelector('#sg-banner');
     b.innerHTML=`<div class="w">${w}</div><div class="m">${(typeof escapeHTML==='function')?escapeHTML(th):th}</div>
-      <div class="p">+${pts} 🪙 +${pts} แต้ม${perfect?' ✨ ไม่พลาดเลย!':''}</div>`;
+      <div class="p">+รวม ${coins} 🪙 จากตัวอักษร · +${pts} แต้ม${perfect?' ✨ ไม่พลาดเลย!':''}</div>`;
     b.classList.remove('on'); void b.offsetWidth; b.classList.add('on');
   }
   /* ⭐ กระสุนเวทมนตร์เบา ๆ: DOM ชิ้นเดียว/นัด ไม่มีควันหรือปลอกกระสุน */
