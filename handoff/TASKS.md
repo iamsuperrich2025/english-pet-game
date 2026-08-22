@@ -28,6 +28,9 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (22 ส.ค.) — อ่านก่อน
+- **รอบ 1232 · Vocab Sky Playground Phase 4:** เพิ่ม Classroom Sky Events ให้ครูเลือกคำจาก vocab เดิม 3–5 คำ, 30/60/90 วินาที และโหมดความหมาย/ฟัง/สะกด พร้อมผลสรุปสด+ปิดรอบ (`js/skyplay3d.js`, `css/skyplay3d.css`)
+- ใช้ `cw`/`hp` และ NetRoom map `sky` เดิมเท่านั้น: ครู 1 + นักเรียน 5, คงผลคนที่หลุดก่อนสรุป, config ≤60 / progress ≤28; ไม่เพิ่ม Firebase path/rules/เงิน/ฐานศัพท์
+- Browser QA Phase 1–4 + teacher/student/summary/disconnect/teardown ผ่านทุกข้อ; 812×375 ทุก dialog อยู่ในจอและไม่ scroll, console 0, NetRoom 52/52, 6 คน 144 calls/8,660 tri/60 FPS, structural/diff/build 8,394 ไฟล์/PWA ผ่าน
 - **รอบ 1231 · Vocab Sky Playground Phase 3:** เพิ่ม Vocabulary Tower 6 ชั้น (ยากขึ้น/ผิดลองใหม่/checkpoint ทุก 2 ชั้น) + Daily Sky Missions หมุน 3/4 กิจกรรม, first/all bonus claim กัน reload/reconnect ซ้ำ และ badge speed/accuracy/co-op (`js/skyplay3d.js`, `css/skyplay3d.css`)
 - Plaza โชว์ mission/progress/badge/live join ชัดเจน; resume active run + join-in-progress ผ่าน `S3` hp payload เดิม, 6 คน, vocab/pronunciation/save/main coins เดิม ไม่เพิ่ม Firebase path/rules
 - Browser QA gameplay/reward/save-load/reconnect/6-player/teardown ผ่านทุกข้อ + NetRoom 52/52 + console 0; 812×375 ไม่มี scrollbar, Tower 48 calls/2,566 tri, สูงสุด 6 คน 144/8,660 · syntax/diff/structural/build 8,394 ไฟล์/PWA ผ่าน
@@ -37,9 +40,6 @@
 - **รอบ 1229 · Vocab Sky Playground Phase 1:** เพิ่มโลก standalone Bright Fantasy Social + Obby ผ่าน `WORLD3D` มี plaza/ทางลอยหลายระดับ, moving/disappearing/rotating obstacle + jump pad, checkpoint/respawn, Vocab Gate/Stars, +100 main coin และ Exit sync (`js/skyplay3d.js`, `css/skyplay3d.css`)
 - ใช้ Soft Cuboid Chibi 3D, pet/stage จริงจาก Lobby, vocab/pronunciation/save/quest เดิม และ `NetRoom` map `sky` จำกัด 6 คน; ไม่แตะ controller/character ของ Adventure World กับ Invasion
 - Rules source เพิ่ม `sky` เฉพาะ allowlist `/world` `/wroom` `/winfo` `/tinv`; artifact เต็มทั้งก้อนอยู่ `outputs/vocab-sky-playground-rules-round-1229.html` ฝั่ง Codex workspace และยังรอผู้ใช้ Publish
-- QA ผ่าน: browser gameplay 8/8 + WASD/จอย/กล้อง/812×375/console, NetRoom 52/52, ~69 calls/4.7k triangles/9 textures, syntax/diff, build 8,394 ไฟล์ และ PWA validator
-- **รอบ 1228 · F1 minimap/HUD:** ย้ายกล่องเวลาไปใต้เหรียญ, ยก minimap ขึ้นซ้ายและขยายเป็น 48vh; แสดงเฉพาะรถผู้เล่นจริงตามสีที่เลือก รถตัวเอง pulse และไม่วาด Best-Lap ghost (`js/f1_3d.js`)
-- เพิ่มความสมจริงพื้นถนนด้วยเม็ดแอสฟัลต์/normal/roughness/ร่องยางที่ contrast ชัดขึ้น โดยคง texture เล็กและ draw call เดิมสำหรับมือถือ; Browser QA 844×390 = 187px, 1328×621 = 298px
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`
