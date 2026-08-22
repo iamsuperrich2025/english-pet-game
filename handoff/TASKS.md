@@ -28,6 +28,9 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (22 ส.ค.) — อ่านก่อน
+- **รอบ 1244 · Shoot Word คะแนนรอบนี้:** เพิ่มป้าย `🏅 รอบนี้ N แต้ม` ใต้ยอดเหรียญ อัปเดตทันทีเมื่อสะกดครบคำ และแยกป้ายอันดับเดิมเป็น `🎯 สะสม` ให้ไม่สับสน (`js/shootword.js`)
+- คะแนนรอบนี้ใช้สูตรเดียวกับแต้มอันดับ (ความยาว×2 + ไม่พลาด 5) รีเซ็ตทุกครั้งที่เปิดด่าน; ไม่รวมเหรียญรายตัว/เป็ดและไม่เปลี่ยนข้อมูลถาวร
+- syntax+regression+812×375 HUD geometry (ขอบล่าง 79.7px < เป้าบน 139.5px)+production build 8,394 ไฟล์/PWA validator ผ่าน; browser QA ถูก Windows ACL ปิด ไม่แตะ `css/petshopping3d.css` (`tools/test_shootword_round_score.js`)
 - **รอบ 1243 · Word Search Combo Countdown:** เพิ่มแถบ 3.0→0.0 วินาทีหลังพบคำ แสดงเป้าหมาย ×2/×3 และสาเหตุหมดเวลา; ใช้ deadline เดียวกับสูตรรางวัล ไม่บังคับเรียงคำ (`js/wordsearch.js`, `css/lobby.css`)
 - รีเซ็ตเมื่อเปิด/สุ่ม/ล้าง/จบกระดาน; ไม่เปลี่ยนเหรียญ/อันดับ/คลังคำ; header กะทัดรัดและไม่บังกริด
 - syntax+Combo regression+diff+production build 8,394 ไฟล์/PWA validator ผ่าน; browser QA ถูก Windows ACL ปิด; ไม่แตะ `css/petshopping3d.css` ของ session อื่น (`tools/test_wordsearch_combo_help.js`)
