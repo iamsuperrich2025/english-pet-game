@@ -53,7 +53,7 @@ for (const pattern of [
   'function ghostReset()', 'function ghostRecord(dt,prog)', 'function ghostKeep(t)',
   'function ghostTick(dt)', 'ghostLoad(); ghostReset(); ghostHide();',
   'if(lapStartAt) ghostRecord(dt,prog);', 'ghostTick(dt);', 'id="f1-gap"',
-  'รถเงาของตัวเอง', 'if(ghostShown&&ghostGrp)'
+  'รถเงาของตัวเอง', 'gm.visible=true; ghostShown=true;'
 ]) ok(has(pattern), `kept player ghost: ${pattern}`);
 
 if (failures) {

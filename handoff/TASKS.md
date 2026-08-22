@@ -28,6 +28,10 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (22 ส.ค.) — อ่านก่อน
+- **รอบ 1228 · F1 minimap/HUD:** ย้ายกล่องเวลาไปใต้เหรียญ, ยก minimap ขึ้นซ้ายและขยายเป็น 48vh; แสดงเฉพาะรถผู้เล่นจริงตามสีที่เลือก รถตัวเอง pulse และไม่วาด Best-Lap ghost (`js/f1_3d.js`)
+- เพิ่มความสมจริงพื้นถนนด้วยเม็ดแอสฟัลต์/normal/roughness/ร่องยางที่ contrast ชัดขึ้น โดยคง texture เล็กและ draw call เดิมสำหรับมือถือ; Browser QA 844×390 = 187px, 1328×621 = 298px
+- แก้ toast “หมดเวลา” หลุดจากเกมจับคู่คำ/ภาพ: เก็บและยกเลิกทั้ง interval+delayed restart, เริ่มรอบใหม่เฉพาะจอที่ active และบล็อก toast stale นอกเกม (`js/game.js`, `js/picmatch.js`, `js/util.js`)
+- Syntax + F1/timeout regression + diff + web build 8,391 ไฟล์/462 MiB + PWA validator ผ่าน; เพิ่ม `tools/test_f1_hud_minimap.js` และ `tools/test_stale_match_timeout.js`
 - **รอบ 1227 · รางวัลเกมศัพท์ x2:** เกมจับคู่ให้ 20 เหรียญต่อคู่/40 เหรียญเมื่อเคลียร์รอบ และคูณโบนัสมือถือ+เล่นต่อ; Typing ให้ 10 เหรียญต่อคำ พร้อมคูณเหรียญสะสมกระดานเป็นความยาวคำ×4 + perfect 10 (`js/game.js`, `js/typing.js`, `js/tpaward.js`)
 - JavaScript syntax/diff และ web build ผ่าน; เปลี่ยนข้อความกติกา/เอฟเฟกต์ให้ตรงรางวัลใหม่แล้ว
 - **รอบ 1226 · F1 ไม่บังทาง/ไม่หน่วงรถ:** ลบป้ายกลางจอ `🏁 LAP N` ตอนครบรอบทั้งหมด แต่คงเวลา Best Lap รถเงา เหรียญ และ HUD; เพิ่ม regression ห้าม `progressTick()` เปิด `#f1-ban` (`js/f1_3d.js`, `tools/test_f1_solo_ghost.js`)

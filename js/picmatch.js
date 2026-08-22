@@ -41,7 +41,7 @@
   const pm = {
     mode:'pic',                    // 'pic' = ภาพเดียวกัน 2 ใบ · 'word' = ภาพกับคำอังกฤษ
     pairs:[], sel1:null, sel2:null, matched:0, checking:false,
-    timerId:0, timeLeft:0, total:60, roundAt:0, clean:true, hintUsed:false,
+    timerId:0, roundRestartId:0, timeLeft:0, total:60, roundAt:0, clean:true, hintUsed:false,
     choosing:true, group:0, sheetFile:'', sheetEn:'', sheetTh:'', pageStart:0,
   };
 
@@ -253,7 +253,7 @@
     }).join('');
   }
   function showChooser(){
-    clearInterval(pm.timerId); pm.choosing=true;
+    stopRoundClock(); pm.choosing=true;
     sec.classList.add('choosing');
     $('pm-back').hidden=true;
     renderChooser();
@@ -308,8 +308,17 @@
   }
 
   /* ---------- รอบใหม่ ---------- */
+  function roundActive(){ return !!(sec&&sec.classList.contains('active')&&!pm.choosing); }
+  function stopRoundClock(){
+    clearInterval(pm.timerId);pm.timerId=0;
+    if(pm.roundRestartId){clearTimeout(pm.roundRestartId);pm.roundRestartId=0;}
+  }
+  function scheduleRound(delay){
+    if(pm.roundRestartId)clearTimeout(pm.roundRestartId);
+    pm.roundRestartId=setTimeout(()=>{pm.roundRestartId=0;if(roundActive())newRound();},delay);
+  }
   function newRound(){
-    clearInterval(pm.timerId);
+    stopRoundClock();
     if(!pm.sheetFile){ showChooser(); return; }
     pm.pairs = take(pageSize());
     pm.sel1 = pm.sel2 = null;
@@ -354,15 +363,16 @@
     pm.timeLeft = pm.total;
     tickBar();
     pm.timerId = setInterval(()=>{
+      if(!roundActive()){stopRoundClock();return;}
       pm.timeLeft--;
       tickBar();
       if(pm.timeLeft <= 0){
-        clearInterval(pm.timerId);
+        clearInterval(pm.timerId);pm.timerId=0;
         if(typeof sfx !== 'undefined') sfx.wrong();
         if(typeof game !== 'undefined') game.combo = 0;
         setCombo();
         if(has('toast')) toast('⏰ หมดเวลา! ลองรอบใหม่ สู้ๆ นะ');
-        setTimeout(newRound, 900);
+        scheduleRound(900);
       }
     }, 1000);
     preload();   // โหลดภาพรอบถัดไปล่วงหน้า กันภาพขึ้นช้า
@@ -613,13 +623,15 @@
     showScreen('screen-dashboard');
   }
   function leaveLobby(){
-    clearInterval(pm.timerId);
+    stopRoundClock();
+    if(has('clearWarnToasts')) clearWarnToasts(/หมดเวลา! ลองรอบใหม่/);
     lobbyBack();
   }
 
   /* ---------- ออกจากเกม (API เดิมยังคงสรุปรางวัลก่อนกลับ Lobby) ---------- */
   function exit(){
-    clearInterval(pm.timerId);
+    stopRoundClock();
+    if(has('clearWarnToasts')) clearWarnToasts(/หมดเวลา! ลองรอบใหม่/);
     const earned = (typeof game !== 'undefined') ? game.sessionCoins : 0;
     const matches = (typeof game !== 'undefined') ? game.sessionMatches : 0;
     const back = lobbyBack;

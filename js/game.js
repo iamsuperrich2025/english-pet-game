@@ -7,7 +7,7 @@
 const game = {
   pairs:[], selEn:null, selTh:null, matched:0,
   combo:0, hintUsed:false,
-  timerId:null, timeLeft:0, totalTime:60, checking:false,
+  timerId:null, roundRestartId:null, timeLeft:0, totalTime:60, checking:false,
   pool:null,
   roundAt:0, roundClean:true,   // ⚡ จับเวลารอบ+ไม่พลาดเลย → เอฟเฟกต์สายฟ้า
   sessionCoins:0,               // 🪙 เหรียญที่เก็บได้ "ครั้งนี้" (เริ่มนับใหม่ทุกครั้งที่เข้าเกม) — โชว์เป็นกำลังใจ
@@ -101,7 +101,8 @@ function rolloverWeekBest(){   // ถ้าข้ามสัปดาห์แ�
 
 /* 🚪 ออกจากเกม (ปุ่ม ⬅ กลับ) — เก็บเหรียญได้เด้งการ์ดสรุปผลงานทุกครั้ง (ทำสถิติใหม่=ฉลองพิเศษ+โปรยเหรียญ) */
 function exitGame(){
-  clearInterval(game.timerId);
+  stopGameRoundClock();
+  if(typeof clearWarnToasts === 'function') clearWarnToasts(/หมดเวลา! ลองรอบใหม่/);
   const earned = game.sessionCoins;
   const doExit = ()=>{ renderDashboard(); showScreen('screen-dashboard'); };
   if(earned <= 0){ doExit(); return; }   // ยังไม่ได้เก็บเหรียญเลย (แค่แวะเข้ามา) → ออกเลย ไม่ต้องมีการ์ด
@@ -773,8 +774,23 @@ function startGame(cat){
     }});
 }
 
+function gameRoundActive(){
+  const sc=document.getElementById('screen-game');
+  return !!(sc&&sc.classList.contains('active'));
+}
+function stopGameRoundClock(){
+  clearInterval(game.timerId); game.timerId=null;
+  if(game.roundRestartId){ clearTimeout(game.roundRestartId); game.roundRestartId=null; }
+}
+function scheduleGameRound(delay){
+  if(game.roundRestartId) clearTimeout(game.roundRestartId);
+  game.roundRestartId=setTimeout(()=>{
+    game.roundRestartId=null;
+    if(gameRoundActive()) newRound();
+  },delay);
+}
 function newRound(){
-  clearInterval(game.timerId);
+  stopGameRoundClock();
   game.pairs = shuffle(game.pool || vocabForStudent()).slice(0,4).map(([en,th])=>({en,th}));
   game.selEn = null; game.selTh = null;
   game.matched = 0; game.hintUsed = false; game.checking = false;
@@ -800,14 +816,15 @@ function newRound(){
   game.timeLeft = game.totalTime;
   updateTimerBar();
   game.timerId = setInterval(()=>{
+    if(!gameRoundActive()){ stopGameRoundClock(); return; }
     game.timeLeft--;
     updateTimerBar();
     if(game.timeLeft <= 0){
-      clearInterval(game.timerId);
+      clearInterval(game.timerId); game.timerId=null;
       sfx.wrong();
       game.combo = 0; updateComboPill();
       toast('⏰ หมดเวลา! ลองรอบใหม่ สู้ๆ นะ');
-      setTimeout(newRound, 900);
+      scheduleGameRound(900);
     }
   }, 1000);
 }
@@ -889,7 +906,7 @@ function checkMatch(){
     game.checking = false;
 
     if(game.matched === 4){
-      clearInterval(game.timerId);
+      clearInterval(game.timerId); game.timerId=null;
       addCoins(MATCH_ROUND_COIN_BONUS);   // โบนัสเคลียร์รอบ
       addSessionCoins(MATCH_ROUND_COIN_BONUS);
       addRP(5);
@@ -907,7 +924,7 @@ function checkMatch(){
         sfx.levelup();
         floatFx(`🎉 เก่งมาก! โบนัส +${MATCH_ROUND_COIN_BONUS} 🪙 +5 RP`, '#5fc46a');
       }, thunder ? 900 : 400);
-      setTimeout(newRound, thunder ? 2100 : 1600);
+      scheduleGameRound(thunder ? 2100 : 1600);
     }
   }else{
     sfx.wrong();

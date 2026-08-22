@@ -1172,37 +1172,41 @@ function seededRand(seed){
 function realisticAsphaltMaps(){
   const rnd=seededRand(1125);
   const map=texFromCanvas((g,w,h)=>{
-    g.fillStyle='#30343a'; g.fillRect(0,0,w,h);
-    for(let i=0;i<4200;i++){
-      const v=34+(rnd()*48|0), a=.16+rnd()*.34, sz=rnd()>.83?2:1;
+    /* เม็ดหินหลายระดับ + คราบยางจาง ๆ ช่วยให้พื้นไม่เป็นแผ่นเทาเรียบจากมุมคนขับ
+       ทุกอย่างยังอยู่ใน texture 256² เดิม จึงไม่เพิ่ม draw call/ไฟล์ภาพ/RAM มือถือ */
+    g.fillStyle='#292d32'; g.fillRect(0,0,w,h);
+    for(let i=0;i<5200;i++){
+      const v=24+(rnd()*74|0), a=.20+rnd()*.42, sz=rnd()>.88?2:1;
       g.fillStyle='rgba('+v+','+(v+1)+','+(v+4)+','+a.toFixed(2)+')';
       g.fillRect(rnd()*w,rnd()*h,sz,sz);
     }
-    for(let i=0;i<34;i++){
-      const x=rnd()*w,y=rnd()*h,r=2+rnd()*5;
-      g.fillStyle=rnd()>.5?'rgba(116,121,128,.055)':'rgba(7,9,12,.07)';
+    for(let i=0;i<58;i++){
+      const x=rnd()*w,y=rnd()*h,r=2+rnd()*7;
+      g.fillStyle=rnd()>.5?'rgba(139,144,150,.075)':'rgba(3,5,8,.11)';
       g.beginPath();g.ellipse(x,y,r,r*(.45+rnd()*.55),rnd()*Math.PI,0,Math.PI*2);g.fill();
     }
     /* รอยซ่อม/รอยต่ออยู่ใน tile เดียว จึงไม่เพิ่ม geometry หรือ draw call */
     g.fillStyle='rgba(11,13,16,.18)';g.fillRect(0,h*.73,w,2);
     g.fillStyle='rgba(126,132,138,.08)';g.fillRect(0,h*.73+2,w,1);
-    for(let i=0;i<9;i++){
+    for(let i=0;i<15;i++){
       const x=rnd()*w,y=rnd()*h;
-      g.strokeStyle='rgba(7,8,10,'+(.07+rnd()*.06).toFixed(2)+')';g.lineWidth=1;
-      g.beginPath();g.moveTo(x,y);g.lineTo(x+15+rnd()*42,y+(rnd()-.5)*3);g.stroke();
+      g.strokeStyle='rgba(4,5,7,'+(.10+rnd()*.10).toFixed(2)+')';g.lineWidth=.65+rnd()*.7;
+      g.beginPath();g.moveTo(x,y);
+      g.bezierCurveTo(x+8+rnd()*10,y+(rnd()-.5)*5,x+18+rnd()*20,y+(rnd()-.5)*7,x+28+rnd()*48,y+(rnd()-.5)*5);
+      g.stroke();
     }
   },256,256,1,1);
   const normalMap=texFromCanvas((g,w,h)=>{
     g.fillStyle='rgb(128,128,255)';g.fillRect(0,0,w,h);
-    for(let i=0;i<1900;i++){
-      const nx=116+(rnd()*25|0),ny=116+(rnd()*25|0),b=241+(rnd()*14|0);
+    for(let i=0;i<2400;i++){
+      const nx=111+(rnd()*35|0),ny=111+(rnd()*35|0),b=236+(rnd()*19|0);
       g.fillStyle='rgb('+nx+','+ny+','+b+')';g.fillRect(rnd()*w,rnd()*h,rnd()>.88?2:1,rnd()>.88?2:1);
     }
   },128,128,1,1);
   const roughnessMap=texFromCanvas((g,w,h)=>{
-    g.fillStyle='rgb(218,218,218)';g.fillRect(0,0,w,h);
-    for(let i=0;i<1300;i++){
-      const v=184+(rnd()*62|0);g.fillStyle='rgb('+v+','+v+','+v+')';g.fillRect(rnd()*w,rnd()*h,1,1);
+    g.fillStyle='rgb(211,211,211)';g.fillRect(0,0,w,h);
+    for(let i=0;i<1700;i++){
+      const v=160+(rnd()*88|0);g.fillStyle='rgb('+v+','+v+','+v+')';g.fillRect(rnd()*w,rnd()*h,1,1);
     }
     g.fillStyle='rgb(196,196,196)';g.fillRect(0,h*.73,w,2);
   },128,128,1,1);
@@ -1287,15 +1291,15 @@ function buildRealisticCircuit(tier){
   /* ผิวคุณภาพสูง: square tiled UV จริง + map เล็ก 256² / normal+roughness 128² ที่แชร์ทั้งสนาม */
   const asphalt=realisticAsphaltMaps();
   const roadMat=new THREE.MeshStandardMaterial({map:asphalt.map,normalMap:asphalt.normalMap,roughnessMap:asphalt.roughnessMap,
-    color:0x92979f,roughness:.92,metalness:.015,normalScale:new THREE.Vector2(.14,.14)});
+    color:0xb8bcc1,roughness:.87,metalness:.012,normalScale:new THREE.Vector2(.22,.22)});
   root.add(new THREE.Mesh(ribbonGeo(HALF_W,0,.052,4,null,4),roadMat));stats.meshGroups++;
   root.add(new THREE.Mesh(ribbonGeo(HALF_W+RUNOFF_W,0,.012,5,null,5),
     new THREE.MeshLambertMaterial({map:realisticRunoffTex(),color:0xaeb2b7})));stats.meshGroups++;
   const qualitySand=new THREE.Mesh(new THREE.PlaneGeometry(4200,4200),new THREE.MeshLambertMaterial({map:realisticSandTex(),color:0xc4b184}));
   qualitySand.rotation.x=-Math.PI/2;qualitySand.position.y=-.24;root.add(qualitySand);stats.meshGroups++;
   /* racing groove follows the computed racing line instead of sitting as one straight center strip */
-  const grooveMat=new THREE.MeshBasicMaterial({color:0x080a0d,transparent:true,opacity:.16,depthWrite:false});
-  root.add(new THREE.Mesh(racingLineRibbonGeo(1.55,.058,12),grooveMat));stats.meshGroups++;
+  const grooveMat=new THREE.MeshBasicMaterial({color:0x050609,transparent:true,opacity:.24,depthWrite:false});
+  root.add(new THREE.Mesh(racingLineRibbonGeo(1.7,.058,12),grooveMat));stats.meshGroups++;
   /* รอยต่อ asphalt ตามระยะจริง: geometry เส้นชุดเดียว/หนึ่ง draw call ไม่มี polygon mesh เพิ่มเป็นร้อยชิ้น */
   const surfaceSeams=[];
   for(let i=10;i<LINE.n;i+=8){
@@ -2062,12 +2066,13 @@ const CSS=`
 }
 /* 🧭 รอบ 914: ย้ายปุ่ม "มุมกล้อง" + "ออก" ขึ้นแถวขวาบน เรียงก่อนถึงเหรียญ (เดิมอยู่ซ้ายล่าง ทับที่ของแถบเลี้ยว)
    เหรียญย้ายเข้ามาเป็นลูกของแถวนี้ด้วย จึงไม่ต้องเดาความกว้างเหรียญเวลาเลขยาว */
-#f1-topright{position:absolute;right:10px;top:8px;z-index:7;display:flex;align-items:center;gap:6px}
+#f1-topright{position:absolute;right:10px;top:8px;z-index:7;display:flex;align-items:flex-start;gap:6px}
 #f1-cambtn,#f1-exitbtn{position:static;background:rgba(8,12,24,.78);
   border:1px solid rgba(255,255,255,.25);color:#fff;font-weight:800;font-size:13.5px;font-family:inherit;
   border-radius:12px;padding:6px 11px;white-space:nowrap}
 #f1-exitbtn{background:rgba(216,26,26,.85);border-color:rgba(255,255,255,.25)}
-#f1-topright #f1-coins{position:static;right:auto;top:auto}
+#f1-statusright{display:flex;flex-direction:column;align-items:stretch;gap:6px}
+#f1-topright #f1-coins{position:static;right:auto;top:auto;text-align:center}
 #f1-word{position:absolute;top:8px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;
   background:rgba(8,12,24,.72);border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:5px 12px;white-space:nowrap;z-index:6}
 #f1-word .f-chip{display:inline-block;min-width:24px;padding:2px 5px;margin:0 1px;border-radius:7px;background:#26304a;
@@ -2080,12 +2085,13 @@ const CSS=`
 #f1-speed small{font-size:14px;color:#9fb2d8}
 #f1-gear{display:inline-block;margin-top:2px;background:#e10600;color:#fff;font-weight:900;font-size:20px;
   border-radius:8px;padding:1px 10px}
-#f1-laps{position:absolute;left:10px;top:8px;background:rgba(8,12,24,.72);border:1px solid rgba(255,255,255,.16);
+#f1-laps{position:relative;background:rgba(8,12,24,.72);border:1px solid rgba(255,255,255,.16);
   border-radius:12px;padding:6px 10px;color:#fff;font-size:13px;line-height:1.5;z-index:6;pointer-events:none}
 #f1-laps b{color:#ffd12e}
 #f1-coins{position:absolute;right:10px;top:8px;background:rgba(8,12,24,.72);border:1px solid rgba(255,209,46,.35);
   border-radius:12px;padding:6px 12px;color:#ffd12e;font-weight:800;font-size:15px;z-index:6}
-#f1-map{position:absolute;left:10px;bottom:calc(var(--f1-sh) + 16px);width:130px;height:130px;z-index:6;opacity:.92;pointer-events:none}  /* 🧭 รอบ 914 — ยกพ้นแถบเลี้ยวที่ย้ายมาชิดซ้าย · 🎛️ รอบ 921 — วัดจากความสูงแถบเลี้ยวเอง */
+#f1-map{position:absolute;left:8px;top:8px;width:min(48vh,32vw);height:min(48vh,32vw);z-index:6;opacity:.98;pointer-events:none;
+  filter:drop-shadow(0 5px 12px rgba(0,0,0,.62))}  /* 🧭 รอบ 1228 — ใหญ่ราวครึ่งจอมือถือแนวนอน + ขึ้นแทนขอบเดิมของกล่องเวลา */
 #f1-wrong{position:absolute;top:34%;left:50%;transform:translateX(-50%);background:rgba(216,26,26,.9);color:#fff;
   font-weight:900;font-size:20px;border-radius:12px;padding:8px 18px;display:none;z-index:7}
 /* 🌀 PORTAL DESTINATION VIEW — วง plasma 3D + ภาพโค้งจริงที่จุดกลับ (รอบ 1222) */
@@ -2382,7 +2388,7 @@ const CSS=`
   .f1-pedal{width:58px;height:78px}.f1-pedal b{font-size:19px}.f1-pedal small{font-size:7px}
   #f1-reverse{width:50px;height:65px}#f1-throttle{width:63px;height:86px}
   #f1-cambtn,#f1-exitbtn{font-size:12px;padding:4px 8px;border-radius:10px}
-  #f1-map{width:96px;height:96px}
+  #f1-map{width:min(48vh,32vw);height:min(48vh,32vw)}
   #f1-drs{font-size:15px;padding:3px 9px}
   #f1-drs small{font-size:10px}
 }`;
@@ -2398,11 +2404,10 @@ function buildDom(){
       <img id="f1-cockpit-turn" alt="" aria-hidden="true">
       <canvas id="f1-dash"></canvas></div>
     <div id="f1-word"></div>
-    <div id="f1-laps"></div>
     <div id="f1-topright">
       <button id="f1-cambtn">📷 มุมรถ</button>
       <button id="f1-exitbtn">🏁 ออก</button>
-      <div id="f1-coins">🪙 +0</div>
+      <div id="f1-statusright"><div id="f1-coins">🪙 +0</div><div id="f1-laps"></div></div>
     </div>
     <div id="f1-board"></div>
     <canvas id="f1-map" width="260" height="260"></canvas>
@@ -2731,14 +2736,15 @@ function drawMap(){
     const p=peers[uid];
     const [x,y]=mapXY(p.cur.x,p.cur.z,bb);
     mapCtx.fillStyle=peerColor(uid,p.colorIdx);
-    mapCtx.beginPath(); mapCtx.arc(x,y,5,0,Math.PI*2); mapCtx.fill();
-  }
-  if(ghostShown&&ghostGrp){                     // 👻 รอบ 902 — จุดรถเงาบนแผนที่
-    const [gx,gy]=mapXY(ghostGrp.position.x,ghostGrp.position.z,bb);
-    mapCtx.fillStyle='rgba(103,216,255,.85)';
-    mapCtx.beginPath(); mapCtx.arc(gx,gy,5,0,Math.PI*2); mapCtx.fill();
+    mapCtx.beginPath(); mapCtx.arc(x,y,6,0,Math.PI*2); mapCtx.fill();
   }
   const [x,y]=mapXY(px,pz,bb);
+  /* จุดรถเราใช้สีรถที่เลือกและ pulse ต่อเนื่อง; minimap แสดงเฉพาะ self + peer จริง ไม่วาด Best-Lap ghost */
+  const pulse=(Math.sin(performance.now()*.0105)+1)*.5;
+  mapCtx.globalAlpha=.22+pulse*.30;
+  mapCtx.fillStyle=playerCarStyle.hex;
+  mapCtx.beginPath(); mapCtx.arc(x,y,9+pulse*4,0,Math.PI*2); mapCtx.fill();
+  mapCtx.globalAlpha=1;
   mapCtx.fillStyle=playerCarStyle.hex; mapCtx.strokeStyle='#fff'; mapCtx.lineWidth=2;
   mapCtx.beginPath(); mapCtx.arc(x,y,6.5,0,Math.PI*2); mapCtx.fill(); mapCtx.stroke();
 }
@@ -4395,7 +4401,7 @@ function frame(dt,now){
   }
   if(room)room.tick(now);    // 🏟️ รอบ 1224: retry/verify/ตามหาเพื่อน/กวาดผี ต้องเดินเหมือนโลก 3D อื่น
   netSend(false);
-  if(visualDue&&now-mapAt>200){ mapAt=now; drawMap(); }
+  if(visualDue&&now-mapAt>100){ mapAt=now; drawMap(); }
   if(now-relocAt>3000){ relocAt=now; relocTick(); }
   if(visualDue) renderer.render(scene,camera);
 }

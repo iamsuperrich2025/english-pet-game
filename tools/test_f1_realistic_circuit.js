@@ -26,12 +26,12 @@ for(const feature of ['catch fencing','pit wall','marshal posts','skyline','raci
 assert.ok(/ribbonGeo\(HALF_W,0,\.052,4,null,4\)/.test(zone),
   'quality asphalt must tile in both directions every four metres instead of stretching across the road');
 assert.ok(/colorMap:256,normalMap:128,roughnessMap:128,tileMeters:4,dynamicShadows:0/.test(zone)&&
-  /normalScale:new THREE\.Vector2\(\.14,\.14\)/.test(zone),
+  /normalScale:new THREE\.Vector2\(\.22,\.22\)/.test(zone)&&/for\(let i=0;i<5200;i\+\+\)/.test(zone),
   'asphalt must use subtle small shared color/normal/roughness maps without dynamic shadows');
 assert.ok(/function realisticRunoffTex\([\s\S]*function realisticSandTex/.test(zone)&&
   /surfaceSeams[\s\S]*new THREE\.LineSegments\(surfaceSeamGeo/.test(zone),
   'runoff, sand and asphalt seams must gain lightweight surface detail');
-assert.ok(/racingLineRibbonGeo\(1\.55,\.058,12\)/.test(zone)&&/const skid=\[\]/.test(zone),
+assert.ok(/racingLineRibbonGeo\(1\.7,\.058,12\)/.test(zone)&&/const skid=\[\]/.test(zone),
   'rubber groove must follow the racing line while localized skid marks remain');
 assert.ok(!/4096|displacementMap|tessell/i.test(zone),
   'surface upgrade must not introduce 4K maps, displacement or tessellation');

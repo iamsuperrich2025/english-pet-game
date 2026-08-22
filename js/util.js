@@ -203,6 +203,14 @@ function clearWarnToasts(re){
   restackToasts();
 }
 function toast(msg, ms=1800, onDismiss){
+  /* 🧹 รอบ 1228: timer เกมจับคู่เก่าห้ามส่ง "หมดเวลา" หลังผู้เล่นออกจากเกมนั้นแล้ว
+     (ด่านสองชั้นจากการ stop interval/timeout ที่ต้นทาง กันโค้ดเก่าหรือ race ระหว่างเปลี่ยนจอ) */
+  if(/หมดเวลา! ลองรอบใหม่/.test(String(msg||''))){
+    const wordGame=document.getElementById('screen-game');
+    const picGame=document.getElementById('screen-picmatch');
+    const active=(wordGame&&wordGame.classList.contains('active'))||(picGame&&picGame.classList.contains('active'));
+    if(!active) return null;
+  }
   const t = document.createElement('div');
   // 💰 รอบ 859 (ผู้ใช้สั่ง): ms=0 = บังคับค้างจนผู้เล่นกดปิดเอง (ใช้กับแจ้งเรื่องเงินตอนบูต — เดิมหายก่อนอ่านทัน)
   const warn = TOAST_WARN_RE.test(msg);
