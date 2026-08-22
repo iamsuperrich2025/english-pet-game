@@ -33,7 +33,7 @@
   }
   function sizeForGrade(){ return [SIZE_LOW, SIZE_MID, SIZE_HIGH][gradeTier() - 1]; }
   const MODE_LABEL = {pic:'🖼️ ภาพ-ภาพ', word:'🔤 ภาพ-คำ'};
-  const CATEGORY_CYCLE_KEY = 'vocabworld_picmatch_category_cycles_v1';
+  const GROUP_CYCLE_KEY = 'vocabworld_picmatch_group_cycles_v1';
 
   let queue = [], qi = 0;          // เก็บไว้ใน test API เดิม; รอบ 1053 ใช้คลังชุดที่ผู้เล่นเลือกแทน
   let sec = null;                  // <section id="screen-picmatch">
@@ -41,7 +41,7 @@
     mode:'pic',                    // 'pic' = ภาพเดียวกัน 2 ใบ · 'word' = ภาพกับคำอังกฤษ
     pairs:[], sel1:null, sel2:null, matched:0, checking:false,
     timerId:0, roundRestartId:0, timeLeft:0, total:60, roundAt:0, clean:true, hintUsed:false,
-    choosing:true, group:0, sheetFile:'', sheetEn:'', sheetTh:'', pageStart:0,
+    choosing:true, group:0, sheetFile:'', sheetEn:'', sheetTh:'', pageStart:0, pageCycle:null,
   };
 
   const $  = id => document.getElementById(id);
@@ -51,49 +51,57 @@
   const book = () => typeof PICDICT_BOOK !== 'undefined' ? PICDICT_BOOK : [];
   const wordsFor = file => (typeof PICDICT_WORDS !== 'undefined' && PICDICT_WORDS[file]) || null;
   const gridFor = file => (typeof PICDICT_GRID !== 'undefined' && PICDICT_GRID[file]) || null;
-  const cycleKey = (file,budget=pageSize()) => `${file}::${Math.max(1,+budget || 1)}`;
-  function readCategoryCycles(){
+  const pageId = (file,start) => `${file}:${Math.max(0,+start || 0)}`;
+  function groupForFile(file){
+    return book().find(group=>group.sheets.some(sheet=>sheet[0]===file))
+      || {g:file,sheets:[[file,'','']]};
+  }
+  const cycleKey = (file,budget=pageSize()) => `${groupForFile(file).g}::${Math.max(1,+budget || 1)}`;
+  function readGroupCycles(){
     try{
-      const value=JSON.parse(localStorage.getItem(CATEGORY_CYCLE_KEY) || '{}');
+      const value=JSON.parse(localStorage.getItem(GROUP_CYCLE_KEY) || '{}');
       if(!value || Array.isArray(value) || typeof value!=='object') return {};
-      return Object.fromEntries(Object.entries(value).filter(([key,starts])=>
-        typeof key==='string' && Array.isArray(starts)).map(([key,starts])=>[
-          key,[...new Set(starts.filter(start=>Number.isInteger(start)&&start>=0))]
+      return Object.fromEntries(Object.entries(value).filter(([key,pages])=>
+        typeof key==='string' && Array.isArray(pages)).map(([key,pages])=>[
+          key,[...new Set(pages.filter(page=>typeof page==='string'))]
         ]));
     }catch(_){ return {}; }
   }
-  function writeCategoryCycles(cycles){
+  function writeGroupCycles(cycles){
     const clean={};
-    Object.entries(cycles||{}).forEach(([key,starts])=>{
-      if(typeof key!=='string'||!Array.isArray(starts)) return;
-      const valid=[...new Set(starts.filter(start=>Number.isInteger(start)&&start>=0))];
+    Object.entries(cycles||{}).forEach(([key,pages])=>{
+      if(typeof key!=='string'||!Array.isArray(pages)) return;
+      const valid=[...new Set(pages.filter(page=>typeof page==='string'))];
       if(valid.length) clean[key]=valid;
     });
-    try{ localStorage.setItem(CATEGORY_CYCLE_KEY,JSON.stringify(clean)); }catch(_){}
+    try{ localStorage.setItem(GROUP_CYCLE_KEY,JSON.stringify(clean)); }catch(_){}
     return clean;
   }
-  function categoryCycle(file,budget=pageSize()){
-    const size=Math.max(1,+budget||1), total=Math.ceil(sheetItems(file).length/size);
-    const validStarts=new Set(Array.from({length:total},(_,i)=>i*size));
-    const starts=(readCategoryCycles()[cycleKey(file,size)]||[]).filter(start=>validStarts.has(start));
-    return {size,total,starts};
+  function groupCycle(file,budget=pageSize()){
+    const size=Math.max(1,+budget||1), group=groupForFile(file);
+    const pages=group.sheets.flatMap(([sheetFile])=>
+      Array.from({length:Math.ceil(sheetItems(sheetFile).length/size)},(_,i)=>pageId(sheetFile,i*size)));
+    const validPages=new Set(pages);
+    const visited=(readGroupCycles()[cycleKey(file,size)]||[]).filter(page=>validPages.has(page));
+    return {size,total:pages.length,visited,groupName:group.g};
   }
   function pageLock(file,start,budget=pageSize()){
-    const cycle=categoryCycle(file,budget), locked=cycle.starts.includes(Math.max(0,+start||0));
-    return {locked,remaining:locked?Math.max(0,cycle.total-cycle.starts.length):0,total:cycle.total};
+    const cycle=groupCycle(file,budget), normalized=Math.floor(Math.max(0,+start||0)/cycle.size)*cycle.size;
+    const locked=cycle.visited.includes(pageId(file,normalized));
+    return {locked,remaining:locked?Math.max(0,cycle.total-cycle.visited.length):0,total:cycle.total,groupName:cycle.groupName};
   }
-  function completePage(file,start,budget=pageSize()){
-    const cycle=categoryCycle(file,budget), key=cycleKey(file,cycle.size), cycles=readCategoryCycles();
+  function visitPage(file,start,budget=pageSize()){
+    const cycle=groupCycle(file,budget), key=cycleKey(file,cycle.size), cycles=readGroupCycles();
     const normalized=Math.floor(Math.max(0,+start||0)/cycle.size)*cycle.size;
-    const starts=[...new Set(cycle.starts.concat(normalized))];
-    if(cycle.total<=1 || starts.length>=cycle.total){
+    const visited=[...new Set(cycle.visited.concat(pageId(file,normalized)))];
+    if(cycle.total<=1 || visited.length>=cycle.total){
       delete cycles[key];
-      writeCategoryCycles(cycles);
-      return {cycleComplete:true,remaining:0,total:cycle.total};
+      writeGroupCycles(cycles);
+      return {cycleComplete:true,remaining:0,total:cycle.total,groupName:cycle.groupName};
     }
-    cycles[key]=starts;
-    writeCategoryCycles(cycles);
-    return {cycleComplete:false,remaining:cycle.total-starts.length,total:cycle.total};
+    cycles[key]=visited;
+    writeGroupCycles(cycles);
+    return {cycleComplete:false,remaining:cycle.total-visited.length,total:cycle.total,groupName:cycle.groupName};
   }
   /* Bedroom มีเส้นตกแต่งกลางแถวแรกที่ตัวตรวจพิกเซลอ่านเป็นเส้นแบ่งแถวผิด
      จึงยึดกรอบแถวเดิมที่ตรวจด้วยตาแล้ว และใช้จุดตัดก่อนป้ายคำของแต่ละแถว */
@@ -226,7 +234,7 @@
       const b=e.target.closest('[data-file][data-start]'); if(!b) return;
       const lock=pageLock(b.dataset.file,+b.dataset.start);
       if(lock.locked){
-        showRuleNotice(`ชุดนี้เล่นจบรอบแล้ว กรุณาเล่นอีก ${lock.remaining} ชุดที่ยังไม่ผ่านในหมวดนี้ เมื่อครบแล้วทุกชุดจะปลดล็อกพร้อมกัน`);
+        showRuleNotice(`ชุดนี้เคยเปิดดูแล้ว กรุณาเข้าไปดูอีก ${lock.remaining} ชุดที่ยังไม่เปิดในหมวดใหญ่ ${lock.groupName} เมื่อครบแล้วทุกชุดจะปลดล็อกพร้อมกัน`);
         return;
       }
       chooseSheet(b.dataset.file,b.dataset.en,b.dataset.th,+b.dataset.start);
@@ -289,9 +297,10 @@
   function chooseSheet(file,en,th,start){
     const lock=pageLock(file,start);
     if(lock.locked){
-      showRuleNotice(`ชุดนี้เล่นจบรอบแล้ว กรุณาเล่นอีก ${lock.remaining} ชุดที่ยังไม่ผ่านในหมวดนี้ เมื่อครบแล้วทุกชุดจะปลดล็อกพร้อมกัน`);
+      showRuleNotice(`ชุดนี้เคยเปิดดูแล้ว กรุณาเข้าไปดูอีก ${lock.remaining} ชุดที่ยังไม่เปิดในหมวดใหญ่ ${lock.groupName} เมื่อครบแล้วทุกชุดจะปลดล็อกพร้อมกัน`);
       return false;
     }
+    pm.pageCycle=visitPage(file,start);
     pm.sheetFile=file; pm.sheetEn=en; pm.sheetTh=th; pm.pageStart=start; pm.choosing=false;
     sec.classList.remove('choosing');
     $('pm-back').hidden=false;
@@ -588,7 +597,7 @@
 
     if(pm.matched === pm.pairs.length){
       clearInterval(pm.timerId);
-      const cycle=completePage(pm.sheetFile,pm.pageStart);
+      const cycle=pm.pageCycle;
       // โบนัสเคลียร์รอบคิดตามขนาดกระดาน (4 คู่ = +20🪙 +5RP · 20 คู่ = +100🪙 +25RP)
       const bCoin = pm.pairs.length * 5, bRp = Math.round(pm.pairs.length * 1.25);
       if(has('addCoins')) addCoins(bCoin);
@@ -616,8 +625,8 @@
       setTimeout(()=>{
         showChooser();
         showRuleNotice(cycle.cycleComplete
-          ? `เล่นครบทุกชุดในหมวด ${pm.sheetTh} แล้ว ปลดล็อกทุกชุดให้เริ่มวนรอบใหม่ได้เลย`
-          : `เล่นชุดนี้จบรอบแล้ว ชุดนี้ถูกล็อกชั่วคราว กรุณาเล่นอีก ${cycle.remaining} ชุดในหมวด ${pm.sheetTh} ให้ครบ แล้วทุกชุดจะปลดล็อกพร้อมกัน`);
+          ? `เปิดดูครบทุกชุดในหมวดใหญ่ ${cycle.groupName} แล้ว ปลดล็อกทุกชุดให้เริ่มวนรอบใหม่ได้เลย`
+          : `ชุดนี้ถูกล็อกตั้งแต่เปิดเข้ามา กรุณาเข้าไปดูอีก ${cycle.remaining} ชุดในหมวดใหญ่ ${cycle.groupName} ให้ครบ แล้วทุกชุดจะปลดล็อกพร้อมกัน`);
       }, thunder ? 2100 : 1600);
     }
   }
@@ -678,5 +687,5 @@
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();
 
-  window.PicMatch = { open, exit, _t:{ pm, newRound, check, pick, take, showChooser, chooseSheet, sheetItems, pageSize, cleanRect, cycleKey, categoryCycle, pageLock, completePage, readCategoryCycles, writeCategoryCycles, get queue(){ return queue; }, bank } };
+  window.PicMatch = { open, exit, _t:{ pm, newRound, check, pick, take, showChooser, chooseSheet, sheetItems, pageSize, cleanRect, pageId, groupForFile, cycleKey, groupCycle, pageLock, visitPage, readGroupCycles, writeGroupCycles, get queue(){ return queue; }, bank } };
 })();
