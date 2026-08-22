@@ -175,24 +175,48 @@
   function addSolidCircle(name,x,z,r,minY,maxY,opt={}){const hit={name,x,z,r,minY,maxY,top:maxY,enabled:true,kind:opt.kind||name};solids.push(hit);if(opt.support)supports.push(hit);return hit;}
   function addSolidObject(name,obj,opt={}){obj.updateWorldMatrix(true,true);const b=new THREE.Box3().setFromObject(obj);return addSolidBox(name,(b.min.x+b.max.x)*.5,(b.min.z+b.max.z)*.5,b.max.x-b.min.x,b.max.z-b.min.z,b.min.y,b.max.y,opt);}
   /* ============================================================
-     🧸🎞️ รอบ 1255 — PLAYER IDLE/WALK RENDER ASSET
-     atlas animation แยกตัว: 8 ทิศ × (idle 4 + walk 4 เฟรม)
-     local + online ใช้ renderer เดียวกัน; ไม่มี primitive-human fallback
+     🧸🎞️ รอบ 1256 — PLAYER IDLE/WALK CANVAS RENDERER
+     ภาพนิ่ง 4×2 ขึ้นก่อนเสมอ; animation 8×8 crop ลง CanvasTexture 192px
+     local + online ใช้ renderer เดียวกัน; animation fail = คงภาพนิ่งที่มองเห็นได้
      ============================================================ */
+  function configurePlayerTexture(texture,repeatX,repeatY){
+    texture.wrapS=texture.wrapT=THREE.ClampToEdgeWrapping;texture.repeat.set(repeatX,repeatY);texture.offset.set(0,1-repeatY);texture.minFilter=texture.magFilter=THREE.LinearFilter;texture.generateMipmaps=false;if(THREE.SRGBColorSpace)texture.colorSpace=THREE.SRGBColorSpace;return texture;
+  }
+  function drawPlayerSpriteFrame(sprite,direction,animationFrame){
+    const c=sprite.userData.frameContext,img=sprite.userData.animationImage,texture=sprite.userData.frameTexture;if(!c||!img||!texture)return false;
+    c.clearRect(0,0,192,192);c.drawImage(img,animationFrame*192,direction*192,192,192,0,0,192,192);texture.needsUpdate=true;sprite.userData.drawnDirection=direction;sprite.userData.drawnFrame=animationFrame;return true;
+  }
+  function activatePlayerAnimation(sprite,img,token){
+    if(sprite.userData.loadToken!==token)return;if(img.naturalWidth!==1536||img.naturalHeight!==1536){sprite.userData.animationError=true;sprite.userData.renderMode='static-fallback';return;}
+    const cv=document.createElement('canvas');cv.width=cv.height=192;const c=cv.getContext('2d',{alpha:true});if(!c){sprite.userData.animationError=true;sprite.userData.renderMode='static-fallback';return;}
+    const texture=configurePlayerTexture(new THREE.CanvasTexture(cv),1,1),old=sprite.material.map;sprite.userData.animationImage=img;sprite.userData.frameContext=c;sprite.userData.frameTexture=texture;sprite.userData.animationReady=true;sprite.userData.renderMode='canvas-animation';sprite.material.map=texture;sprite.material.needsUpdate=true;drawPlayerSpriteFrame(sprite,Math.max(0,sprite.userData.direction),Math.max(0,sprite.userData.animationFrame));if(old&&old!==texture)old.dispose();
+  }
   function setPlayerSpriteCharacter(sprite,id){
-    const character=playerCharacter(id);if(sprite.userData.characterId===character.id)return sprite;const old=sprite.material.map,texture=texLoader.load(character.anim);texture.wrapS=texture.wrapT=THREE.ClampToEdgeWrapping;texture.repeat.set(.125,.125);texture.offset.set(0,.875);texture.minFilter=texture.magFilter=THREE.LinearFilter;texture.generateMipmaps=false;if(THREE.SRGBColorSpace)texture.colorSpace=THREE.SRGBColorSpace;sprite.material.map=texture;sprite.material.needsUpdate=true;sprite.userData.characterId=character.id;sprite.userData.characterAtlas=character.atlas;sprite.userData.characterAnim=character.anim;sprite.userData.direction=-1;sprite.userData.animationFrame=-1;if(old)old.dispose();return sprite;
+    const character=playerCharacter(id);if(sprite.userData.characterId===character.id)return sprite;const old=sprite.material.map,token=(sprite.userData.loadToken||0)+1,texture=configurePlayerTexture(texLoader.load(character.atlas),.25,.5);sprite.material.map=texture;sprite.material.needsUpdate=true;sprite.userData.characterId=character.id;sprite.userData.characterAtlas=character.atlas;sprite.userData.characterAnim=character.anim;sprite.userData.direction=-1;sprite.userData.animationFrame=-1;sprite.userData.loadToken=token;sprite.userData.animationImage=null;sprite.userData.frameContext=null;sprite.userData.frameTexture=null;sprite.userData.animationReady=false;sprite.userData.animationError=false;sprite.userData.renderMode='static-loading';if(old)old.dispose();
+    const img=new Image();img.decoding='async';img.onload=()=>activatePlayerAnimation(sprite,img,token);img.onerror=()=>{if(sprite.userData.loadToken===token){sprite.userData.animationError=true;sprite.userData.renderMode='static-fallback';}};img.src=character.anim;return sprite;
   }
   function makePlayerSprite(id){
-    const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:null,color:0xffffff,transparent:true,alphaTest:.04,depthWrite:false,fog:true}));sprite.center.set(.5,.02);sprite.scale.set(2.15,2.15,1);sprite.position.y=.015;sprite.name='player-soft-cuboid-chibi-sprite';sprite.userData.playerStyle='soft-cuboid-chibi-3d';sprite.userData.characterRenderer='sky-soft-cuboid-chibi-8dir-anim-v3';sprite.userData.styleStandard='docs/PLAYER_CHARACTER_STYLE.md';sprite.userData.direction=-1;sprite.userData.animationFrame=-1;return setPlayerSpriteCharacter(sprite,id);
+    const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:null,color:0xffffff,transparent:true,alphaTest:.04,depthWrite:false,fog:true}));sprite.center.set(.5,.02);sprite.scale.set(2.15,2.15,1);sprite.position.y=.015;sprite.name='player-soft-cuboid-chibi-sprite';sprite.userData.playerStyle='soft-cuboid-chibi-3d';sprite.userData.characterRenderer='sky-soft-cuboid-chibi-8dir-anim-canvas-v4';sprite.userData.styleStandard='docs/PLAYER_CHARACTER_STYLE.md';sprite.userData.direction=-1;sprite.userData.animationFrame=-1;return setPlayerSpriteCharacter(sprite,id);
   }
   function playerDirectionFrame(yaw){const step=Math.PI/4,rel=Math.atan2(Math.sin(yaw-camYaw),Math.cos(yaw-camYaw));return ((Math.round((Math.PI-rel)/step)%8)+8)%8;}
   function updatePlayerSprite(sprite,yaw,t,moving,waving){
     if(!sprite||!sprite.material||!sprite.material.map)return;const direction=playerDirectionFrame(yaw),animate=!(state&&state.noAnim),animationFrame=animate?(moving?4+Math.floor(t*.008)%4:Math.floor(t*.004)%4):0;
-    if(direction!==sprite.userData.direction||animationFrame!==sprite.userData.animationFrame){sprite.userData.direction=direction;sprite.userData.animationFrame=animationFrame;sprite.material.map.offset.set(animationFrame*.125,(7-direction)*.125);}
+    if(direction!==sprite.userData.direction||animationFrame!==sprite.userData.animationFrame){sprite.userData.direction=direction;sprite.userData.animationFrame=animationFrame;if(sprite.userData.animationReady)drawPlayerSpriteFrame(sprite,direction,animationFrame);else{sprite.material.map.offset.set((direction%4)*.25,direction<4?.5:0);sprite.userData.renderMode=sprite.userData.animationError?'static-fallback':'static-loading';}}
     sprite.position.y=.015;sprite.material.rotation=animate&&waving?Math.sin(t*.02)*.055:0;
   }
   function renderCharacterPicker(){
     const selected=selectedCharacter();ui.characterGrid.innerHTML=PLAYER_CHARACTERS.map(c=>`<button data-character="${c.id}" class="${c.id===selected?'selected':''}" aria-pressed="${c.id===selected}"><span style="--sp-character-atlas:url('${c.atlas}')"></span><b>${esc(c.name)}</b></button>`).join('');
+  }
+  function addCurvedTail(root,points,color,shape){
+    for(let i=1;i<points.length;i++){const a=points[i-1],b=points[i],dx=b[0]-a[0],dy=b[1]-a[1],dz=b[2]-a[2],flat=Math.hypot(dx,dz),length=Math.hypot(dx,dy,dz),thickness=Math.max(.085,.2-i*.022),segment=meshSoft(thickness,thickness,length,color,thickness*.42);segment.position.set((a[0]+b[0])*.5,(a[1]+b[1])*.5,(a[2]+b[2])*.5);segment.rotation.order='YXZ';segment.rotation.y=Math.atan2(dx,dz);segment.rotation.x=-Math.atan2(dy,flat);segment.name=`${shape}-tail-segment-${i}`;root.add(segment);}
+    root.name=`${shape}-tail-root`;root.userData.tailShape=shape;return root;
+  }
+  function makeSpeciesTail(type,fur,dark){
+    const root=new THREE.Group();root.position.set(0,.66,.36);
+    if(type==='dog'){addCurvedTail(root,[[0,0,0],[0,.18,.2],[.13,.35,.27],[.28,.43,.15],[.34,.31,.02]],dark,'dog-curled-fluffy');const puff=meshSoft(.24,.24,.24,dark,.105);puff.position.set(.34,.31,.02);puff.name='dog-tail-puff';root.add(puff);}
+    else if(type==='cat')addCurvedTail(root,[[0,0,0],[0,.1,.24],[.18,.32,.42],[.26,.58,.32],[.1,.78,.22],[-.08,.85,.34]],dark,'cat-upright-s-curve');
+    else{const points=[[0,0,0],[0,.05,.28],[.12,.17,.56],[.25,.35,.78],[.18,.55,1]];addCurvedTail(root,points,fur,'dragon-tapered-fin');points.slice(1).forEach((p,i)=>{const fin=new THREE.Mesh(new THREE.ConeGeometry(.1-i*.012,.22-i*.025,3),mat(0x9cefff));fin.position.set(p[0],p[1]+.14,p[2]);fin.name=`dragon-tail-fin-${i+1}`;root.add(fin);});}
+    return root;
   }
   function openCharacterPicker(){characterResumePaused=paused;paused=true;renderCharacterPicker();ui.characterPicker.classList.add('on');ui.characterPicker.setAttribute('aria-hidden','false');}
   function closeCharacterPicker(){if(!ui.characterPicker.classList.contains('on'))return;ui.characterPicker.classList.remove('on');ui.characterPicker.setAttribute('aria-hidden','true');paused=characterResumePaused;}
@@ -206,8 +230,7 @@
     const body=meshSoft(.67,.64,.71,fur,.21),head=meshSoft(.76,.62,.66,fur,.21);body.position.y=.65;head.position.y=1.09;g.add(body,head);[-1,1].forEach(s=>{const eye=meshSoft(.105,.14,.045,0x17324c,.04);eye.position.set(s*.15,1.16,-.335);g.add(eye);});
     if(type!=='dragon'){const muzzle=meshSoft(.35,.2,.12,cream,.06);muzzle.position.set(0,1.01,-.37);g.add(muzzle);[-1,1].forEach(s=>{const ear=meshSoft(type==='dog'?.22:.25,type==='dog'?.38:.31,.19,type==='dog'?dark:fur,.07);ear.position.set(s*(type==='dog'?.39:.24),type==='dog'?1.2:1.43,.01);ear.rotation.z=s*(type==='dog'?.13:-.24);g.add(ear);});}
     else [-1,1].forEach(s=>{const horn=meshSoft(.13,.31,.14,0xffd86f,.045);horn.position.set(s*.23,1.43,.04);horn.rotation.z=s*-.28;g.add(horn);const wing=new THREE.Group(),panel=meshSoft(.13,.52,.58,0x8ff0d9,.06);wing.position.set(s*.42,.76,.2);wing.rotation.z=s*-.52;panel.rotation.x=.24;wing.add(panel);g.add(wing);wings.push(wing);});
-    const tailRoot=new THREE.Group(),tailMesh=meshSoft(.18,.18,.6,type==='dragon'?fur:dark,.075);tailRoot.position.set(0,.66,.38);tailMesh.position.z=.27;tailRoot.add(tailMesh);
-    if(type==='dragon'){const fins=new THREE.InstancedMesh(new THREE.ConeGeometry(.11,.25,3),mat(0x9cefff),4),finMatrix=new THREE.Object3D();[.02,.18,.34,.5].forEach((z,i)=>{finMatrix.position.set(0,.19,z);finMatrix.rotation.y=Math.PI/2;finMatrix.scale.setScalar(1-i*.1);finMatrix.updateMatrix();fins.setMatrixAt(i,finMatrix.matrix);});fins.instanceMatrix.needsUpdate=true;fins.name='dragon-tail-fins';tailRoot.add(fins);}
+    const tailRoot=makeSpeciesTail(type,fur,dark);
     g.add(tailRoot);tail.push(tailRoot);return g;
   }
   function textSprite(text,color=0xffffff,w=512,h=128){

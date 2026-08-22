@@ -28,6 +28,10 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (22 ส.ค.) — อ่านก่อน
+- **รอบ 1256 · แก้คนหายบนอุปกรณ์จริง + ปรับหางสัตว์ Sky:** ผู้ใช้ยืนยันภาพคนกลับมาแล้ว; ต้นตอคือการ sample animation atlas 1536px โดยตรงไม่แสดงบน renderer บางเครื่อง (`js/skyplay3d.js`)
+- renderer v4 โหลด atlas นิ่งเดิมก่อนเสมอ แล้ว crop animation ลง CanvasTexture 192px; decode/ขนาดผิดยังเห็นคนแบบนิ่ง คง picker, `state.skyCharacter`, network `sc`, local/peer และ `state.noAnim`
+- หมาเปลี่ยนเป็นหางปุยงอน, แมวหางโค้งยกทรง S, มังกรหางโค้งเรียวมีครีบ; ทุกแบบ segmented+tapered ไม่มีแท่งตรงทรงเดียว
+- syntax+runtime success/failure fallback+8 ทิศ/idle/walk/local-peer+tail regression ผ่าน; production build 8,406 ไฟล์/PWA+source-dist hash ผ่าน และไม่แตะ `css/petshopping3d.css`; in-app browser ถูก Windows ACL บล็อก
 - **รอบ 1255 · Vocab Sky มี idle/walk animation ครบ 6 ตัว:** เพิ่ม lossless WebP แยกตัว 6 ไฟล์ ขนาด 1536×1536 = 8 ทิศ × idle 4 + walk 4 เฟรม; คงหน้าตา/ชุด/สี/สัดส่วน/alpha จริงและฐานเท้าเดิม
 - renderer v3 เล่น idle 4 fps / walk 8 fps, รองรับ WebGL1 NPOT + `state.noAnim`; character picker, `state.skyCharacter`, network `sc`, local/online peer และ fallback ฮู้ดแดงคง contract เดิม (`js/skyplay3d.js`)
 - visual QA แยกตัวที่ 812×375 ครบทั้ง 8 ทิศและวงรอบหน้า/ข้าง; pixel regression ตรวจ 64 เฟรมต่อตัว, silhouette ตรง source, motion จริง และ foot baseline 187/192

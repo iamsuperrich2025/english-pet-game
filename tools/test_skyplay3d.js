@@ -13,8 +13,9 @@ ok(/map:'sky',roomMax:ROOM_MAX/.test(sky)&&/const TAU=.*ROOM_MAX=6/.test(sky),'N
 const petBuild=sky.slice(sky.indexOf('function buildPet'),sky.indexOf('function bindInput'));
 ok(/activePet/.test(sky)&&/petStage/.test(sky)&&/model=makePetChibi\(p\.type\)/.test(petBuild),'pet reuses active Lobby pet identity and growth stage in the procedural model');
 ok(/function makePetChibi/.test(sky)&&/petStyle='soft-cuboid-chibi-3d'/.test(sky)&&!/new THREE\.Sprite/.test(petBuild),'dog, cat and dragon use procedural Soft Cuboid Chibi 3D instead of a billboard');
-ok(/type==='dragon'\?fur:dark/.test(sky)&&/new THREE\.InstancedMesh\(new THREE\.ConeGeometry\(\.11,\.25,3\),mat\(0x9cefff\),4\)/.test(sky)&&/dragon-tail-fins/.test(sky),'dragon tail is blue with four efficient triangular dorsal fins');
-const humanBuild=sky.slice(sky.indexOf('function setPlayerSpriteCharacter'),sky.indexOf('function makePetChibi'));
+ok(/dog-curled-fluffy/.test(sky)&&/dog-tail-puff/.test(sky)&&/cat-upright-s-curve/.test(sky)&&/dragon-tapered-fin/.test(sky),'dog, cat and dragon have visibly species-specific curved tail silhouettes instead of one straight rod');
+ok(/function addCurvedTail/.test(sky)&&/thickness=Math\.max\(\.085,\.2-i\*\.022\)/.test(sky)&&!/tailMesh=meshSoft\(\.18,\.18,\.6/.test(sky)&&/dragon-tail-fin-/.test(sky),'all tails are segmented, tapered and posed away from anatomy-like straight cylinders');
+const humanBuild=sky.slice(sky.indexOf('function configurePlayerTexture'),sky.indexOf('function makePetChibi'));
 const localPlayerBuild=sky.slice(sky.indexOf('function buildPlayer'),sky.indexOf('function buildPet')),peerPlayerBuild=sky.slice(sky.indexOf('function buildPeer'),sky.indexOf('function removePeer'));
 const characterIds=['hoodie-red','explorer','captain','schoolgirl','witch','pajamas'];
 const characterAssets=['sky_soft_cuboid_chibi_8dir.webp',...characterIds.slice(1).map(id=>`sky_soft_cuboid_chibi_${id}_8dir.webp`)];
@@ -24,10 +25,23 @@ const animations=animationAssets.map(file=>fs.readFileSync(path.join(root,'img/c
 ok(atlases.length===6&&atlases.every(atlas=>atlas.length>350000&&atlas.slice(0,4).toString()==='RIFF'&&atlas.slice(8,12).toString()==='WEBP'),'all six production 8-direction chibi atlases exist as substantial WebP assets');
 ok(animations.length===6&&animations.every(atlas=>atlas.length>1000000&&atlas.slice(0,4).toString()==='RIFF'&&atlas.slice(8,12).toString()==='WEBP'),'all six separate idle/walk 8-direction animation atlases exist as substantial WebP assets');
 ok(/const PLAYER_CHARACTERS=\[/.test(sky)&&characterIds.every(id=>sky.includes(`id:'${id}'`)),'Sky exposes the locked six-character catalog');
-ok(/new THREE\.Sprite\(new THREE\.SpriteMaterial/.test(humanBuild)&&/texture\.repeat\.set\(\.125,\.125\)/.test(humanBuild)&&/ClampToEdgeWrapping/.test(humanBuild)&&/generateMipmaps=false/.test(humanBuild)&&/alphaTest:\.04/.test(humanBuild),'player uses WebGL1-safe transparent 8-direction idle/walk render atlases rather than primitive boxes');
-ok(/sky-soft-cuboid-chibi-8dir-anim-v3/.test(humanBuild)&&/styleStandard='docs\/PLAYER_CHARACTER_STYLE\.md'/.test(humanBuild),'animated render assets declare the mandatory Soft Cuboid Chibi standard');
-ok(/moving\?4\+Math\.floor\(t\*\.008\)%4:Math\.floor\(t\*\.004\)%4/.test(humanBuild)&&/\(7-direction\)\*\.125/.test(humanBuild),'renderer selects 4-frame idle at 4 fps and 4-frame walk at 8 fps across all eight directions');
+ok(/new THREE\.Sprite\(new THREE\.SpriteMaterial/.test(humanBuild)&&/texLoader\.load\(character\.atlas\)/.test(humanBuild)&&/new THREE\.CanvasTexture\(cv\)/.test(humanBuild)&&/cv\.width=cv\.height=192/.test(humanBuild)&&/alphaTest:\.04/.test(humanBuild),'player shows the proven static atlas first, then uses a small transparent CanvasTexture for animation');
+ok(/img\.onerror=.*renderMode='static-fallback'/.test(humanBuild)&&/img\.naturalWidth!==1536\|\|img\.naturalHeight!==1536/.test(humanBuild),'decode and atlas-size failures keep a visible static-character fallback');
+ok(/sky-soft-cuboid-chibi-8dir-anim-canvas-v4/.test(humanBuild)&&/styleStandard='docs\/PLAYER_CHARACTER_STYLE\.md'/.test(humanBuild),'animated render assets declare the mandatory Soft Cuboid Chibi standard');
+ok(/moving\?4\+Math\.floor\(t\*\.008\)%4:Math\.floor\(t\*\.004\)%4/.test(humanBuild)&&/drawImage\(img,animationFrame\*192,direction\*192,192,192,0,0,192,192\)/.test(humanBuild),'renderer crops 4-frame idle at 4 fps and 4-frame walk at 8 fps across all eight directions');
 ok(/animate=!\(state&&state\.noAnim\)/.test(humanBuild)&&/animationFrame=animate\?/.test(humanBuild),'the existing no-animation setting freezes the baked atlas without a new preference');
+const madeTextures=[],drawCalls=[];
+function mockTexture(src){return {src,repeat:{set(x,y){this.x=x;this.y=y;}},offset:{set(x,y){this.x=x;this.y=y;}},dispose(){this.disposed=true;}};}
+class MockCanvasTexture{constructor(canvas){Object.assign(this,mockTexture('canvas'));this.canvas=canvas;madeTextures.push(this);}}
+class MockImage{set src(value){this.value=value;this.naturalWidth=MockImage.bad?100:1536;this.naturalHeight=MockImage.bad?100:1536;this.onload();}}
+const loadCtx={Math,Image:MockImage,THREE:{ClampToEdgeWrapping:1,LinearFilter:2,SRGBColorSpace:3,CanvasTexture:MockCanvasTexture},document:{createElement:()=>({getContext:()=>({clearRect(){},drawImage(...args){drawCalls.push(args);}})})},texLoader:{load:mockTexture},playerCharacter:id=>({id,atlas:`${id}-static`,anim:`${id}-anim`})};
+vm.runInNewContext(humanBuild+';this.setCharacter=setPlayerSpriteCharacter;',loadCtx);
+const loadedSprite={material:{map:null,needsUpdate:false},userData:{}};loadCtx.setCharacter(loadedSprite,'hoodie-red');
+ok(loadedSprite.userData.animationReady&&loadedSprite.userData.renderMode==='canvas-animation'&&loadedSprite.material.map.src==='canvas','valid animation decode replaces the visible static texture with a 192px CanvasTexture');
+ok(drawCalls.length===1&&drawCalls[0][1]===0&&drawCalls[0][2]===0&&drawCalls[0][3]===192&&drawCalls[0][4]===192,'first canvas frame is drawn from the expected atlas cell with true-alpha clearing');
+MockImage.bad=true;const fallbackSprite={material:{map:null,needsUpdate:false},userData:{}};loadCtx.setCharacter(fallbackSprite,'witch');
+ok(fallbackSprite.material.map.src==='witch-static'&&fallbackSprite.userData.animationError&&fallbackSprite.userData.renderMode==='static-fallback','invalid animation decode leaves the original eight-direction character visible');
+MockImage.bad=false;
 ok(/fig=makePlayerSprite\(selectedCharacter\(\)\)/.test(localPlayerBuild)&&/fig=makePlayerSprite\(d\.sc\)/.test(peerPlayerBuild),'local player and every spawned online peer use the selected character renderer');
 ok(/sc:selectedCharacter\(\)/.test(sky)&&/setPlayerSpriteCharacter\(a\.fig,d\.sc\)/.test(sky),'network payload sends the local choice and updates existing peers when their choice changes');
 ok(/state\.skyCharacter=selectedCharacter\(\)/.test(sky)&&/state\.skyCharacter=character\.id/.test(sky)&&/authPushSave\(false\)/.test(sky),'character choice is sanitized, saved and cloud-synced');
@@ -38,12 +52,14 @@ const directionCtx={Math,camYaw:0};vm.runInNewContext(directionSource+';this.fra
 const expected=[0,1,2,3,4,5,6,7],yaws=[Math.PI,3*Math.PI/4,Math.PI/2,Math.PI/4,0,-Math.PI/4,-Math.PI/2,-3*Math.PI/4];
 ok(yaws.map(y=>directionCtx.frame(y)).every((frame,index)=>frame===expected[index]),'camera-relative yaw selects all eight atlas directions in canonical order');
 const animationSource=sky.slice(sky.indexOf('function playerDirectionFrame'),sky.indexOf('function renderCharacterPicker'));
-const animationCtx={Math,camYaw:0,state:{noAnim:false}};vm.runInNewContext(animationSource+';this.update=updatePlayerSprite;',animationCtx);
-const spriteMock={material:{map:{offset:{set(x,y){this.x=x;this.y=y;}}},rotation:0},position:{y:0},userData:{direction:-1,animationFrame:-1}};
+const animationCtx={Math,camYaw:0,state:{noAnim:false}};animationCtx.drawPlayerSpriteFrame=(sprite,direction,frame)=>{sprite.userData.drawn=[direction,frame];return true;};vm.runInNewContext(animationSource+';this.update=updatePlayerSprite;',animationCtx);
+const spriteMock={material:{map:{offset:{set(x,y){this.x=x;this.y=y;}}},rotation:0},position:{y:0},userData:{direction:-1,animationFrame:-1,animationReady:false,animationError:false}};
 animationCtx.update(spriteMock,Math.PI,0,false,false);
-ok(spriteMock.userData.direction===0&&spriteMock.userData.animationFrame===0&&spriteMock.material.map.offset.x===0&&spriteMock.material.map.offset.y===.875,'runtime renderer selects front idle frame 0 with the locked foot-oriented UV row');
+ok(spriteMock.userData.direction===0&&spriteMock.userData.animationFrame===0&&spriteMock.material.map.offset.x===0&&spriteMock.material.map.offset.y===.5,'static fallback selects front idle frame 0 from the proven 4x2 source atlas');
 animationCtx.update(spriteMock,Math.PI/2,625,true,false);
-ok(spriteMock.userData.direction===2&&spriteMock.userData.animationFrame===5&&spriteMock.material.map.offset.x===.625&&spriteMock.material.map.offset.y===.625,'runtime renderer selects the expected left walk frame without changing character state');
+ok(spriteMock.userData.direction===2&&spriteMock.userData.animationFrame===5&&spriteMock.material.map.offset.x===.5&&spriteMock.material.map.offset.y===.5,'static fallback follows all eight directions while animation decoding is pending');
+spriteMock.userData.animationReady=true;animationCtx.update(spriteMock,Math.PI/4,750,true,false);
+ok(spriteMock.userData.direction===3&&spriteMock.userData.animationFrame===6&&spriteMock.userData.drawn[0]===3&&spriteMock.userData.drawn[1]===6,'decoded CanvasTexture receives the expected direction and walk frame');
 animationCtx.state.noAnim=true;animationCtx.update(spriteMock,0,9999,true,true);
 ok(spriteMock.userData.animationFrame===0&&spriteMock.material.rotation===0,'runtime renderer freezes on idle frame 0 when the existing no-animation setting is enabled');
 ok(/updatePlayerSprite\(player\.fig,player\.yaw/.test(sky)&&/updatePlayerSprite\(a\.fig,a\.yaw/.test(sky),'local and online players update atlas direction and lightweight movement motion every frame');
