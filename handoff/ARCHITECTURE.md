@@ -90,7 +90,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/petshopping3d.js** (581 บรรทัด) — 🚗🐾 PET SHOPPING 3D — รอบ 1169 · โลกสั้น first-person แยกจาก Adventure3D: ร้านใกล้, GPS ชัด, · ร้านสร้างเป็นองค์ประกอบสถาปัตย์จริง ไม่ใช่กล่องแปะภาพ
 - **js/photo.js** (361 บรรทัด) — 📷 photo.js — รูปโปรไฟล์ของผู้เล่นเอง (อัปโหลดรูปแบบ Facebook) — รอบ 709 · เก็บที่ไหน: localStorage แยกก้อน (`petVocabAdventure_photo`) + RTDB `/pphoto/<uid>` · ตั้งใจ **ไม่ยัดลง state** เพราะ state ถูกเซฟขึ้น cloud ทั้งก้อนทุกครั้ง (รูป ~20KB จะทำให้เซฟบวมทุกครั้ง)
 - **js/picdict.js** (412 บรรทัด) — 🖼️ Picture Dictionary — single-page card gallery (รอบ 1123) · ยกเลิกหนังสือกาง 2 หน้า/การพลิกกระดาษ แล้วแสดงการ์ด 18 คำต่อหน้า · (6 คอลัมน์ × 3 แถว) เพื่อให้ภาพและคำอ่านใหญ่ชัดบนจอเล็ก
-- **js/picmatch.js** (691 บรรทัด) — 🖼️ picmatch.js — เกม "จับคู่ภาพ" (รอบ 977 · เชื่อม Picture Dictionary รอบ 1053) · 2 โหมด สลับด้วยปุ่มบนกระดาน: · "pic"  = ภาพจาก Picture Dictionary ↔ ภาพเดียวกัน
+- **js/picmatch.js** (692 บรรทัด) — 🖼️ picmatch.js — เกม "จับคู่ภาพ" (รอบ 977 · เชื่อม Picture Dictionary รอบ 1053) · 2 โหมด สลับด้วยปุ่มบนกระดาน: · "pic"  = ภาพจาก Picture Dictionary ↔ ภาพเดียวกัน
 - **js/picquiz_online.js** (608 บรรทัด) — 🌐🎧 PICQUIZ ONLINE — แข่งครูถามศัพท์จากหนังสือ · ห้องส่วนตัวด้วยรหัส 6 ตัว · สูงสุด 50 คน · เจ้าของกดเริ่ม · 10 คำ/รอบ · ฟังเสียงแล้วแตะการ์ด · คะแนนตามความเร็ว
 - **js/pmaward.js** (28 บรรทัด) — 🏆 pmaward.js — รางวัลรายเดือนของกระดานอันดับ 🖼️ จับคู่ภาพ (รอบ 979) · ผู้ใช้สั่ง 3 ส.ค. 2026: ทำแท็บ+รางวัลรายเดือน Top 10 ให้เกมจับคู่ภาพ · ใช้กติกา/โครงเดียวกับ 🔎 ค้นหาคำ (js/wsaward.js) ทุกประการ — ต่างแค่ field/ชื่อเกม
 - **js/rankgraph.js** (147 บรรทัด) — 📈 กราฟอันดับ Top 30 — โหลด snapshot เมื่อเปิดเท่านั้น · แต่ละหมวดใช้สีประจำตัวไม่ซ้ำ และชื่อผู้เล่นติดอยู่กับทุกจุด
@@ -111,7 +111,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/bubble.css** (60 บรรทัด) — 🫧 เกมฟองคำศัพท์ — เต็มจอ ไม่มี scrollbar ทั้ง desktop/mobile landscape
 - **css/exam.css** (377 บรรทัด) — 📋 exam.css — จอข้อสอบจริงแบบมาตรฐาน IELTS/TOEIC/TOEFL (รอบ 812 · js/examstd.js) · กฎทองข้อ 7: กล่องทั้งใบต้องอยู่ในจอ หน้าไม่เลื่อน — บทอ่านยาวจึงเลื่อน "ในกรอบตัวเอง" · (ข้อสอบการอ่านเลี่ยงไม่ได้ที่จะมีบทความยาว แต่กรอบนอกไม่มี scrollbar)
 - **css/lettercannon.css** (48 บรรทัด) — 🔤💥 Letter Cannon — ป้อมพิทักษ์คำศัพท์ (รอบ 1158) · Full-screen, landscape-first HUD. The game canvas owns scenery; · this file keeps controls readable and dialogs inside 812×375.
-- **css/lobby.css** (6,144 บรรทัด) — THEME 2.0 "เมืองทันสมัยโทนฟ้า" — LOBBY แนวนอน + UI ยุคหลังทั้งหมด (โหลดทับ style.css · cascade ทีหลังชนะ · เปลี่ยนเฉพาะหน้าตา ไม่แตะ logic) · ครอบคลุม: แถบบน/ราง rail/แผง panel (ตลาด-โรงงาน-บ้าน-เพื่อน) · โชว์รูมหุ่น .rs-* รถ .cs-* · Word Search .ws-* · ข้อมูลน้อง .pi-* · แชท+ธีมแชท · กระดานอันดับ/เข็ม · สไปรต์น้อง .pet-anim/ฉาก .stage-hero · โทนสี: น้ำเงินเ…
+- **css/lobby.css** (6,148 บรรทัด) — THEME 2.0 "เมืองทันสมัยโทนฟ้า" — LOBBY แนวนอน + UI ยุคหลังทั้งหมด (โหลดทับ style.css · cascade ทีหลังชนะ · เปลี่ยนเฉพาะหน้าตา ไม่แตะ logic) · ครอบคลุม: แถบบน/ราง rail/แผง panel (ตลาด-โรงงาน-บ้าน-เพื่อน) · โชว์รูมหุ่น .rs-* รถ .cs-* · Word Search .ws-* · ข้อมูลน้อง .pi-* · แชท+ธีมแชท · กระดานอันดับ/เข็ม · สไปรต์น้อง .pet-anim/ฉาก .stage-hero · โทนสี: น้ำเงินเ…
 - **css/onetpromo.css** (27 บรรทัด) — 🇹🇭 รอบ 1186: ป้าย O-NET เกือบเต็มจอ · พอดีจอแนวนอน 812×375
 - **css/petpantry.css** (6 บรรทัด) — 🗄️🐾 Pet Pantry — รอบ 1158
 - **css/petshopping3d.css** (26 บรรทัด) — 🚗🐾 Pet Shopping 3D — รอบ 1168: collision bounce + responsive cockpit/equalizer mask; GPS คงเดิม
@@ -122,6 +122,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/style.css** (2,430 บรรทัด) — Pet Vocab Adventure — สไตล์พื้นฐานรุ่นแรกทั้งเกม (โดน lobby.css โหลดทับบางส่วน — แก้หน้าตาโซนล็อบบี้/UI ใหม่ให้ไปที่ lobby.css ก่อน) · ครอบคลุม: screens/login/dashboard · เกมจับคู่ .word-card + แบบทดสอบ .quiz-* · shop/ที่พัก/หมวดคำศัพท์ · หิว-ป่วย/สภาพอากาศ · ตั้งค่า/วิธีเล่น/level-up overlay · คลังของฉัน/กล่องขาย · เอฟเฟกต์ลอย/เหรียญ/rotate-overlay
 - **sw.js** (218 บรรทัด) — Vocab World service worker · Delivery contract: · - HTML navigations are network-first with the last valid shell as fallback.
 <!-- AUTO-FILES:END -->
+
 
 
 
