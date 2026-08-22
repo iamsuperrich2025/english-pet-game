@@ -158,6 +158,11 @@ const JUMP_RECOVER_M=70;      // เผื่อรถเร็วสุดล�
 const JUMP_HEIGHT  = 3.8;
 const JUMP_LAND_H  = 2.75;
 const JUMP_MAX_PITCH=.22;     // ล็อกท่ารถไม่ให้ตีลังกา/คว่ำจากตัวเลขเฟรมกระชาก
+const RAMP_ROLL_TRACK=1.68;    // ระยะซ้าย↔ขวาที่ใช้คำนวณความต่างระดับใต้ล้อ
+const RAMP_ROLL_MAX=.28;       // 16° — เห็นล้อยกชัด แต่ระบบช่วยไม่ยอมให้รถคว่ำ
+const RAMP_ROLL_EDGE=.34;      // ขอบเนินนุ่ม 34 ซม. ไม่กระชากเมื่อยางเพิ่งแตะ
+const RAMP_ROLL_RESPONSE=8.5;  // สปริงตัวถังตามเนิน
+const RAMP_ROLL_RETURN=6.5;    // คืนรถตั้งตรงเมื่อพ้นขอบ/ลอยกลางอากาศ
 const JUMP_PEER_Y_SEP=1.25;   // รถต่างระดับไม่สร้าง compound contact ล่องหน
 const JUMP_FRACTIONS=[.16,.47,.76];
 const JUMP_COLORS=[0x22e7ff,0xff42d0,0xffd84a];
@@ -220,12 +225,12 @@ let speedEl, gearEl, lapEl, bestEl, mapCv, mapCtx, mapBase=null, wrongEl, drsEl;
 let knobEl, padThr=0, padBr=false, steerCtl=0, kL=false, kR=false, kThr=false, kBack=false;
 let keydownFn, keyupFn, resizeFn;
 /* รถเรา */
-let px=0, py=0, pz=0, yaw=0, pitch=0, vx=0, vy=0, vz=0, spd=0, steer=0, slide=0, carGrp=null, wheels=[], steerParts=[];
+let px=0, py=0, pz=0, yaw=0, pitch=0, bodyRoll=0, vx=0, vy=0, vz=0, spd=0, steer=0, slide=0, carGrp=null, wheels=[], steerParts=[];
 let playerCarStyle=CAR_STYLES[0];
 let airborne=false,activeJump=null,jumpPrevD=-1,jumpImpact=0,jumpLandKickT=0,jumpMissed=false;
 let camPos=null, camInit=false, camYaw=0, shakeT=0;
 let camMode='cockpit', cockpitEl=null, cockpitTurnEl=null, cockpitTurnSrc='', camBtnEl=null;   // 🪖 รอบ 901 — มุมคนขับเป็นภาพหลัก
-let padRev=false, revNow=false, sandT=0, portalEl=null, portalActive=false, portalT=0, portalJumped=false, portalTargetIdx=0, portalResumeSpeed=0, fpWheels=null;   // ⏪🏜️🛞 รอบ 911
+let padRev=false, revNow=false, sandT=0, portalEl=null, portalViewCv=null, portalActive=false, portalT=0, portalJumped=false, portalTargetIdx=0, portalResumeSpeed=0, fpWheels=null;   // ⏪🏜️🛞 รอบ 911
 let wheelEl=null, qualityWheelEl=null, wheelDeg=null, wheelSy=1; // 🎡 ชั้นพวงมาลัยแยก: Battery image + Quality procedural wheel
 let ledsEl=null, ledEls=[], ledN=-1, ledRpm=0, ledFlashT=0, ledFlash=false;  // 🚥 รอบ 918 — ชั้นดวงไฟ LED รอบเครื่อง
 let dashEl=null, dashCtx=null, dashK=1, dashRpm=0, dashSig='';   // 🔢 รอบ 916 — จอตัวเลขจริงบนพวงมาลัย (K = พิกเซลภาพ→พิกเซล canvas)
@@ -303,7 +308,7 @@ function safeStartGridSlot(desired){
 }
 function placeAtGridSlot(slot){
   const p=gridPose(slot);gridSlot=p.slot;
-  px=p.x;py=0;pz=p.z;yaw=p.yaw;pitch=0;vx=vy=vz=spd=0;steer=0;slide=0;myIdx=p.i;camInit=false;
+  px=p.x;py=0;pz=p.z;yaw=p.yaw;pitch=bodyRoll=0;vx=vy=vz=spd=0;steer=0;slide=0;myIdx=p.i;camInit=false;
   airborne=false;activeJump=null;jumpPrevD=-1;jumpMissed=false;jumpImpact=0;jumpLandKickT=0;
   sandT=0;portalActive=false;portalT=0;portalJumped=false;portalResumeSpeed=0;
   if(portalEl)portalEl.className='';
@@ -757,6 +762,24 @@ function jumpProbe(x,z,hint){
   const p=jumpProbeAtSample(i,lat);
   if(p){p.i=i;p.lat=lat;}
   return p;
+}
+/* รถคร่อมขอบเนิน: วัดพื้นใต้ล้อซ้าย/ขวาแยกกัน แล้วจำกัด roll ด้วย anti-roll assist */
+function jumpWheelGround(i,lat){
+  for(const j of JUMPS){
+    const d=jumpDeltaD(i,j),half=jumpHalfAtD(j,d),height=jumpHeightAtD(j,d);
+    if(!half||height===null)continue;
+    const edge=half-Math.abs(lat-j.lat);
+    if(edge<=-RAMP_ROLL_EDGE)continue;
+    const t=clamp((edge+RAMP_ROLL_EDGE)/(RAMP_ROLL_EDGE*2),0,1),soft=t*t*(3-2*t);
+    return (height||0)*soft;
+  }
+  return 0;
+}
+function jumpTerrainRoll(x,z,hint){
+  if(!JUMPS.length)return 0;
+  const i=nearIdx(x,z,hint),dx=x-LINE.x[i],dz=z-LINE.z[i],lat=dx*LINE.nx[i]+dz*LINE.nz[i],halfTrack=RAMP_ROLL_TRACK*.5;
+  const leftH=jumpWheelGround(i,lat-halfTrack),rightH=jumpWheelGround(i,lat+halfTrack);
+  return clamp(Math.atan2(rightH-leftH,RAMP_ROLL_TRACK),-RAMP_ROLL_MAX,RAMP_ROLL_MAX);
 }
 function chooseJumpStart(frac){
   const desired=(sfIdx+Math.round(frac*LINE.n))%LINE.n;
@@ -2055,22 +2078,31 @@ const CSS=`
 #f1-map{position:absolute;left:10px;bottom:calc(var(--f1-sh) + 16px);width:130px;height:130px;z-index:6;opacity:.92;pointer-events:none}  /* 🧭 รอบ 914 — ยกพ้นแถบเลี้ยวที่ย้ายมาชิดซ้าย · 🎛️ รอบ 921 — วัดจากความสูงแถบเลี้ยวเอง */
 #f1-wrong{position:absolute;top:34%;left:50%;transform:translateX(-50%);background:rgba(216,26,26,.9);color:#fff;
   font-weight:900;font-size:20px;border-radius:12px;padding:8px 18px;display:none;z-index:7}
-/* 🌀 รอบ 1210: ประตู plasma ขาวร้อน–ชมพู–ม่วงหลายชั้น ศูนย์กลางโปร่งเห็นสนามปลายทาง */
+/* 🌀 PORTAL DESTINATION VIEW — วง plasma 3D + ภาพโค้งจริงที่จุดกลับ (รอบ 1222) */
 #f1-portal{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:hidden;opacity:0;
-  background:radial-gradient(ellipse at 50% 42%,transparent 0 23%,rgba(255,255,255,.08) 31%,rgba(255,36,221,.24) 45%,rgba(105,25,229,.30) 59%,transparent 77%);
-  filter:saturate(1.42) contrast(1.08);transition:opacity .1s}
-#f1-portal .nebula{position:absolute;inset:-18%;opacity:.92;mix-blend-mode:screen;
-  background:repeating-conic-gradient(from 5deg at 50% 42%,transparent 0 4deg,rgba(255,72,236,.22) 4.4deg 5deg,transparent 5.5deg 13deg),
-    radial-gradient(ellipse at 50% 42%,transparent 0 28%,rgba(255,31,218,.17) 43%,rgba(105,26,234,.25) 58%,transparent 76%);
-  -webkit-mask:radial-gradient(ellipse at 50% 42%,transparent 0 25%,#000 36% 72%,transparent 86%);
-  mask:radial-gradient(ellipse at 50% 42%,transparent 0 25%,#000 36% 72%,transparent 86%);
+  background:radial-gradient(ellipse at 50% 42%,transparent 0 30%,rgba(255,255,255,.07) 38%,rgba(255,36,221,.18) 48%,rgba(105,25,229,.16) 59%,transparent 76%);
+  filter:saturate(1.34) contrast(1.06);transition:opacity .1s}
+#f1-portal .nebula{position:absolute;inset:-18%;opacity:.82;mix-blend-mode:screen;
+  background:repeating-conic-gradient(from 5deg at 50% 42%,transparent 0 5deg,rgba(255,72,236,.24) 5.3deg 5.9deg,transparent 6.3deg 15deg),
+    radial-gradient(ellipse at 50% 42%,transparent 0 31%,rgba(255,31,218,.14) 44%,rgba(105,26,234,.20) 58%,transparent 74%);
+  -webkit-mask:radial-gradient(ellipse at 50% 42%,transparent 0 30%,#000 38% 67%,transparent 82%);
+  mask:radial-gradient(ellipse at 50% 42%,transparent 0 30%,#000 38% 67%,transparent 82%);
   animation:f1portalnebula 3.4s linear infinite;will-change:transform}
-#f1-portal .gate{position:absolute;left:50%;top:42%;width:min(78vw,1040px);height:min(62vh,560px);border-radius:50%;
-  transform:translate(-50%,-50%) scale(.12);opacity:0;mix-blend-mode:screen;
+#f1-portal .gate{position:absolute;left:50%;top:42%;width:min(72vw,960px);height:min(60vh,540px);border-radius:50%;isolation:isolate;
+  transform:translate(-50%,-50%) perspective(900px) rotateX(-2deg) scale(.12);opacity:0;
   background:radial-gradient(ellipse,transparent 0 45%,rgba(255,255,255,.18) 47%,#fff 49%,#ff8af2 51%,#ff22db 55%,#9f25ff 60%,rgba(61,13,151,.38) 65%,transparent 70%);
   filter:drop-shadow(0 0 8px #fff) drop-shadow(0 0 28px #ff2bdf) drop-shadow(0 0 70px #7b22ef);
   transition:transform .48s cubic-bezier(.18,.85,.25,1.18),opacity .08s;will-change:transform,opacity}
-/* plasma แตกแขนงสองวง: ใช้ mask เจาะกลางให้เห็นสนามจริง ไม่ใช้ภาพ raster */
+/* canvas วาดเส้นสนามจริงที่ target เพียงครั้งเดียวตอนเปิด portal — ไม่มี render target หรือ shader เพิ่ม */
+#f1-portal .destination{position:absolute;left:9%;top:10%;width:82%;height:80%;z-index:-2;border-radius:50%;
+  clip-path:ellipse(45% 43% at 50% 50%);object-fit:cover;opacity:.98;filter:saturate(1.28) contrast(1.12) brightness(.88);
+  box-shadow:inset 0 0 34px #08011d,inset 0 0 58px rgba(197,35,255,.72);transition:opacity .28s,transform .42s}
+#f1-portal .frame{position:absolute;inset:-4%;z-index:-1;border:clamp(2px,.42vw,6px) solid rgba(192,80,255,.72);
+  border-radius:36%;clip-path:polygon(14% 0,86% 0,100% 18%,100% 82%,86% 100%,14% 100%,0 82%,0 18%);
+  background:repeating-conic-gradient(from 11deg,rgba(30,5,62,.82) 0 7deg,rgba(234,60,255,.74) 8deg 10deg,rgba(19,3,48,.82) 11deg 21deg);
+  -webkit-mask:radial-gradient(ellipse,transparent 0 57%,#000 58% 65%,transparent 66%);mask:radial-gradient(ellipse,transparent 0 57%,#000 58% 65%,transparent 66%);
+  box-shadow:inset 0 0 0 2px rgba(255,184,255,.46),0 0 18px #a21eff,0 0 42px rgba(255,31,221,.55)}
+/* plasma แตกแขนงสองวง: ใช้ mask เจาะกลางให้เห็น canvas สนามปลายทาง */
 #f1-portal .gate:before,#f1-portal .gate:after,#f1-portal .filaments{content:'';position:absolute;border-radius:50%;mix-blend-mode:screen}
 #f1-portal .gate:before{inset:-5%;background:repeating-conic-gradient(from 13deg,#fff 0 1.2deg,#ff34df 1.8deg 4deg,transparent 5deg 9deg,#b82cff 10deg 12deg,transparent 13deg 18deg);
   -webkit-mask:radial-gradient(ellipse,transparent 0 51%,#000 53% 62%,transparent 65%);mask:radial-gradient(ellipse,transparent 0 51%,#000 53% 62%,transparent 65%);
@@ -2101,14 +2133,17 @@ const CSS=`
 #f1-portal .sparks i:nth-child(14){--a:260deg;animation-delay:-.16s}#f1-portal .sparks i:nth-child(15){--a:280deg;animation-delay:-.39s}
 #f1-portal .sparks i:nth-child(16){--a:300deg;animation-delay:-.67s}#f1-portal .sparks i:nth-child(17){--a:320deg;animation-delay:-.31s}
 #f1-portal .sparks i:nth-child(18){--a:340deg;animation-delay:-.5s}
-#f1-portal.on{opacity:1}#f1-portal.on .gate{opacity:1;transform:translate(-50%,-50%) scale(1)}
-#f1-portal.jump{opacity:1;background:radial-gradient(ellipse at 50% 42%,#fff 0,rgba(255,214,251,.96) 31%,rgba(171,66,255,.78) 56%,rgba(38,9,78,.28) 100%)}
-#f1-portal.jump .gate{opacity:0;transform:translate(-50%,-50%) scale(1.28)}
+#f1-portal.on{opacity:1}#f1-portal.on .gate{opacity:1;transform:translate(-50%,-50%) perspective(900px) rotateX(-2deg) scale(1)}
+/* หลังย้ายรถ ฉาก WebGL ด้านหลังกลายเป็นสนามปลายทางจริง แต่วง portal ยังอยู่และหุบผ่านภาพนั้น */
+#f1-portal.jump{opacity:1;background:radial-gradient(ellipse at 50% 42%,transparent 0 31%,rgba(255,226,253,.14) 42%,rgba(171,66,255,.20) 58%,transparent 78%)}
+#f1-portal.jump .gate{opacity:.82;transform:translate(-50%,-50%) perspective(900px) rotateX(-2deg) scale(1.14)}
+#f1-portal.jump .destination{opacity:.16;transform:scale(1.08)}
 @keyframes f1portalpulse{from{opacity:.38;transform:scale(.96)}to{opacity:1;transform:scale(1.035)}}
 @keyframes f1portalorbit{to{transform:rotate(360deg)}}
 @keyframes f1portalnebula{to{transform:rotate(360deg) scale(1.04)}}
 @keyframes f1portalspark{0%{opacity:0;scale:.18}32%{opacity:1}68%{opacity:.78}100%{opacity:0;scale:1.35}}
-@media(max-width:700px){#f1-portal .gate{width:58vw;height:52vh;top:42%}#f1-portal .sparks i{transform:rotate(var(--a)) translateY(-27vh)}}
+@media(max-width:700px){#f1-portal .gate{width:62vw;height:52vh;top:42%}#f1-portal .sparks i{transform:rotate(var(--a)) translateY(-27vh)}
+  #f1-portal .sparks i:nth-child(even){display:none}#f1-portal .nebula{animation-duration:5.2s;opacity:.68}#f1-portal .frame{box-shadow:0 0 14px #a21eff}}
 /* 🪽 ป้าย DRS (รอบ 898) — ซ่อนตอนไม่อยู่ในโซน · เทาตอนยังเปิดไม่ได้ · เขียวเรืองตอนเปิด */
 #f1-drs{position:absolute;right:10px;bottom:calc(var(--f1-pedb) + 150px);z-index:6;pointer-events:none;display:none;text-align:right;
   border-radius:12px;padding:4px 11px;font-weight:900;font-size:19px;line-height:1.15;letter-spacing:.5px}
@@ -2138,14 +2173,22 @@ const CSS=`
   text-align:center;opacity:0;pointer-events:none;transition:all .25s;z-index:8}
 #f1-ban.show{opacity:1;transform:translate(-50%,0) scale(1)}
 #f1-ban .m-coin{color:#ffd12e}
-#f1-board{position:absolute;left:10px;top:64px;background:rgba(8,12,24,.78);border:1px solid rgba(255,255,255,.14);
-  border-radius:12px;padding:7px 10px;min-width:150px;color:#dfe9ff;font-size:12.5px;display:none;z-index:6}
-#f1-board.on{display:block}
-#f1-board .m-bd-h{font-weight:800;color:#ffd12e;margin-bottom:3px}
-#f1-board .m-bd-r{display:flex;gap:5px;align-items:center;line-height:1.6;white-space:nowrap}
-#f1-board .m-bd-r.me .m-bd-n{color:#7dffb0}
-#f1-board .m-bd-n{overflow:hidden;text-overflow:ellipsis;max-width:130px}
-#f1-board .m-bd-w{margin-left:auto;font-weight:800}
+/* 🏆 รอบ 1222: scoreboard เหลือบรรทัดเดียว เลื่อนขวา→ซ้าย ไม่บังทางขับ */
+#f1-board{position:absolute;left:10px;top:64px;width:min(560px,calc(100% - 20px));height:38px;box-sizing:border-box;
+  background:rgba(8,12,24,.78);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:0 6px;
+  color:#dfe9ff;font-size:12.5px;display:none;align-items:center;gap:6px;overflow:hidden;z-index:6}
+#f1-board.on{display:flex}
+#f1-board .m-bd-icon{flex:none;color:#ffd12e;font-size:15px;line-height:1}
+#f1-board .m-bd-window{flex:1;min-width:0;height:100%;overflow:hidden;position:relative;white-space:nowrap}
+#f1-board .m-bd-track{display:inline-flex;align-items:center;height:100%;width:max-content;padding-left:100%;
+  animation:f1boardticker var(--f1-ticker-s,18s) linear infinite;will-change:transform}
+#f1-board .m-bd-text{display:inline-block;padding-right:42px;white-space:nowrap;font-weight:750;line-height:38px}
+#f1-board .m-bd-me{color:#7dffb0}
+#f1-board .nr-go{flex:none!important;margin:0!important;padding:2px 7px!important;font-size:11px;line-height:20px!important}
+@keyframes f1boardticker{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+@media(max-width:700px){#f1-board{height:34px;font-size:11.5px;border-radius:10px;padding:0 4px;gap:4px}
+  #f1-board .m-bd-text{line-height:34px;padding-right:30px}#f1-board .nr-go{font-size:0;padding:2px 6px!important}
+  #f1-board .nr-go:after{content:'👥';font-size:13px}}
 #f1-chatbar{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--f1-sh) + 16px);display:none;gap:6px;z-index:7;
   flex-wrap:wrap;justify-content:center;max-width:92vw}   /* 🎛️ รอบ 921 — ยกขึ้นเหนือแถบเลี้ยว/ปุ่มเร่งที่ใหญ่ขึ้น (เดิมโดนทับจนกดไม่ได้) */
 #f1-chatbar.on{display:flex}
@@ -2358,7 +2401,7 @@ function buildDom(){
     <div id="f1-lights"><div class="row"><i></i><i></i><i></i><i></i><i></i></div><b>🚦 รอไฟดับก่อนออกตัว</b></div>
     <div id="f1-gap"></div>
     <div id="f1-wrong">↩️ วิ่งผิดทาง! กลับรถ</div>
-    <div id="f1-portal" aria-hidden="true"><div class="nebula"></div><div class="gate"><div class="filaments"></div><div class="core"></div><div class="sparks"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+    <div id="f1-portal" aria-hidden="true"><div class="nebula"></div><div class="gate"><canvas class="destination" width="480" height="270"></canvas><div class="frame"></div><div class="filaments"></div><div class="core"></div><div class="sparks"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
     <div id="f1-ban"></div>
     <div id="f1-selfmsg"></div>
     <button id="f1-chatbtn">💬</button>
@@ -2437,6 +2480,7 @@ function buildDom(){
   lapEl=wrapEl.querySelector('#f1-laps');
   wrongEl=wrapEl.querySelector('#f1-wrong');
   portalEl=wrapEl.querySelector('#f1-portal');
+  portalViewCv=portalEl.querySelector('.destination');
   drsEl=wrapEl.querySelector('#f1-drs');
   knobEl=wrapEl.querySelector('#f1-knob');
   /* 🚦👻 รอบ 902 */
@@ -2873,16 +2917,44 @@ function respawnOnTrack(targetIdx,showMessage=true){
   const i=Number.isInteger(targetIdx)?targetIdx:nearIdx(px,pz,myIdx);
   px=LINE.x[i]; py=0; pz=LINE.z[i];
   yaw=Math.atan2(LINE.tx[i],LINE.tz[i]);
-  pitch=0;vx=vy=vz=0;spd=0;steer=0;slide=0;myIdx=i;camInit=false;
+  pitch=bodyRoll=0;vx=vy=vz=0;spd=0;steer=0;slide=0;myIdx=i;camInit=false;
   airborne=false;activeJump=null;jumpPrevD=-1;jumpMissed=false;jumpImpact=0;jumpLandKickT=0;
+}
+/* ============================================================
+   🌀 PORTAL DESTINATION PREVIEW — actual target curve / Canvas2D (รอบ 1222)
+   ============================================================ */
+function drawPortalDestination(targetIdx){
+  if(!portalViewCv||!LINE)return false;
+  const c=portalViewCv,x=c.getContext('2d'),w=c.width,h=c.height,idx=(targetIdx+LINE.n)%LINE.n;
+  const sky=x.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#080b2b');sky.addColorStop(.48,'#152b62');sky.addColorStop(.49,'#b75cf4');sky.addColorStop(.51,'#c6a367');sky.addColorStop(1,'#4b3c31');
+  x.fillStyle=sky;x.fillRect(0,0,w,h);
+  /* อัฒจันทร์ + ไฟสนามที่ขอบฟ้า */
+  x.fillStyle='#12182b';x.beginPath();x.moveTo(0,h*.54);x.lineTo(w*.18,h*.39);x.lineTo(w*.36,h*.47);x.lineTo(w*.68,h*.43);x.lineTo(w,h*.52);x.lineTo(w,h*.62);x.lineTo(0,h*.62);x.fill();
+  x.fillStyle='rgba(255,228,196,.72)';for(let n=0;n<44;n++){const px2=(n*83%w),py2=h*(.43+(n%5)*.017);x.fillRect(px2,py2,2,1);}
+  const tx=LINE.tx[idx],tz=LINE.tz[idx],nx=tz,nz=-tx,steps=28,left=[],right=[],center=[];
+  for(let s=0;s<steps;s++){
+    const j=(idx+s+LINE.n)%LINE.n,dx=LINE.x[j]-LINE.x[idx],dz=LINE.z[j]-LINE.z[idx],lat=dx*nx+dz*nz,q=s/(steps-1);
+    const cy=h*1.06-Math.pow(q,.58)*h*.62,cx=w*.5+lat*w*.0065*(1-q*.68),half=w*(.40*(1-q)+.045*q);
+    center.push({x:cx,y:cy,half});left.push({x:cx-half,y:cy});right.push({x:cx+half,y:cy});
+  }
+  x.fillStyle='#222936';x.beginPath();x.moveTo(left[0].x,left[0].y);for(const p of left)x.lineTo(p.x,p.y);for(let s=right.length-1;s>=0;s--)x.lineTo(right[s].x,right[s].y);x.closePath();x.fill();
+  x.strokeStyle='#667080';x.lineWidth=2;x.beginPath();left.forEach((p,n)=>n?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.stroke();x.beginPath();right.forEach((p,n)=>n?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.stroke();
+  /* kerb ม่วง/ขาวและ racing line ช่วยให้รู้ทันทีว่าเป็นสนามปลายทาง */
+  for(let s=2;s<steps-1;s+=3){x.strokeStyle=(s/3)%2?'#f7f4ff':'#d51f6f';x.lineWidth=Math.max(1,8*(1-s/steps));x.beginPath();x.moveTo(left[s-1].x,left[s-1].y);x.lineTo(left[s+1].x,left[s+1].y);x.stroke();x.beginPath();x.moveTo(right[s-1].x,right[s-1].y);x.lineTo(right[s+1].x,right[s+1].y);x.stroke();}
+  x.strokeStyle='rgba(85,239,216,.55)';x.lineWidth=2;x.beginPath();center.forEach((p,n)=>n?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.stroke();
+  for(let s=6;s<steps;s+=5){const p=center[s],pole=Math.max(7,p.half*.55);for(const side of [-1,1]){const px2=p.x+side*p.half*1.38;x.strokeStyle='#bac9df';x.lineWidth=1;x.beginPath();x.moveTo(px2,p.y);x.lineTo(px2,p.y-pole);x.stroke();x.fillStyle='#fff6db';x.shadowColor='#fff';x.shadowBlur=6;x.fillRect(px2-3,p.y-pole-1,6,2);x.shadowBlur=0;}}
+  /* vignette ภายในวงให้ภาพดูเป็นช่องลึก ไม่ใช่สี่เหลี่ยมแบน */
+  const v=x.createRadialGradient(w*.5,h*.53,w*.16,w*.5,h*.53,w*.55);v.addColorStop(.45,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(5,0,22,.86)');x.fillStyle=v;x.fillRect(0,0,w,h);
+  return true;
 }
 function beginPortalReturn(){
   if(portalActive) return;
   portalActive=true; portalT=0; portalJumped=false; sandT=0;
   portalTargetIdx=nearIdx(px,pz,myIdx);
+  drawPortalDestination(portalTargetIdx);
   portalResumeSpeed=Math.hypot(vx,vz); // รอบ 1214: เก็บความเร็วจริงก่อนเอฟเฟกต์หน่วงรถ
   vx*=.22; vz*=.22; spd=Math.hypot(vx,vz);
-  py=Math.max(0,py);vy=0;pitch=0;airborne=false;activeJump=null;jumpPrevD=-1;
+  py=Math.max(0,py);vy=0;pitch=bodyRoll=0;airborne=false;activeJump=null;jumpPrevD=-1;
   if(portalEl) portalEl.className='on';
   if(state.haptic!==false&&navigator.vibrate) navigator.vibrate([45,35,90]);
 }
@@ -3123,12 +3195,14 @@ function physTick(dt){
   const crossedRunoffOuter=!airborne&&postMoveSurf.surf==='sand';
   if(!crossedRunoffOuter)barrierBounce();
   const missedJump=jumpPhysicsTick(dt,vF,preJump);
+  const terrainRoll=airborne?0:jumpTerrainRoll(px,pz,myIdx);
+  bodyRoll=lerp(bodyRoll,terrainRoll,clamp(dt*(Math.abs(terrainRoll)>.001?RAMP_ROLL_RESPONSE:RAMP_ROLL_RETURN),0,1));
   spd=Math.hypot(vx,vz);
   revNow=vF<-0.3;                                      // ⏪ รอบ 911 — ให้ HUD โชว์เกียร์ R
   /* วางรถ */
   carGrp.position.set(px,py,pz);
   carGrp.rotation.y=yaw;
-  carGrp.rotation.z=lerp(carGrp.rotation.z,steer*spd*0.012,clamp(dt*6,0,1));   // เอียงเข้าโค้งนิดๆ (พลิกเครื่องหมายตามทิศเลี้ยวใหม่ รอบ 911)
+  carGrp.rotation.z=lerp(carGrp.rotation.z,bodyRoll+steer*spd*0.012,clamp(dt*7,0,1)); // เนินยกล้อ + body roll เข้าโค้ง; anti-roll จำกัดที่ 16°
   carGrp.rotation.x=lerp(carGrp.rotation.x,-pitch+(surf==='kerb'?(Math.random()-0.5)*0.03:0),airborne?clamp(dt*5,0,1):.4);
   /* ล้อหมุน+เลี้ยว */
   const roll=spd*dt/0.46;
@@ -3323,12 +3397,18 @@ function frMount(){
    · 👻 รถเงา: บันทึกตำแหน่ง GHOST_HZ จุด/วิ ตลอดรอบ · รอบไหนเร็วสุดเก็บเป็นรถเงา (localStorage)
      รอบถัดไปรถเงาโปร่งแสงวิ่งซ้ำเส้นทางนั้นตามเวลาจริง + ป้ายบอกช้า/เร็วกว่าสถิติกี่วินาที
    ============================================================ */
+function setStartLights(on){
+  if(lightsEl) lightsEl.classList.toggle('on',!!on);
+  /* ไฟสตาร์ทคือ HUD เร่งด่วน: ซ่อน ticker ชั่วคราว ป้องกันสองแผงซ้อนกันบนจอเตี้ย */
+  if(boardEl) boardEl.style.visibility=on?'hidden':'';
+}
 function resetLights(){
   lightPhase='wait'; lightT=0; lightsLit=-1; penaltyT=0; jumped=false;
   goAt=0; reactDone=false; thrPrev=false; heldAtGo=false;
   holdS=LIGHT_HOLD_MIN+Math.random()*(LIGHT_HOLD_MAX-LIGHT_HOLD_MIN);
   paintLights(0);
-  if(lightsEl){ lightsEl.classList.add('on'); lightNoteEl.textContent='🚦 รอไฟดับก่อนออกตัว'; }
+  setStartLights(true);
+  if(lightNoteEl) lightNoteEl.textContent='🚦 รอไฟดับก่อนออกตัว';
 }
 function beginLights(){ if(lightPhase==='wait'){ lightPhase='seq'; lightT=-LIGHT_LEAD_S; } }
 function lightsLocked(){ return lightPhase!=='go'||penaltyT>0; }
@@ -3360,7 +3440,7 @@ function lightsTick(dt){
       if(jumped){
         penaltyT=JUMP_PENALTY_S;
       }else{
-        lightsEl.classList.remove('on');
+        setStartLights(false);
         banEl.innerHTML='🟢 <b>ไฟดับ — ออกตัว!</b>';
         banEl.classList.add('show');
         setTimeout(()=>banEl.classList.remove('show'),1100);
@@ -3372,7 +3452,7 @@ function lightsTick(dt){
       lightNoteEl.textContent='⛔ จั๊มพ์สตาร์ท! รออีก '+Math.max(0,penaltyT).toFixed(1)+' วิ';
       if(penaltyT<=0){
         penaltyT=0; heldAtGo=thrNow; goAt=performance.now();
-        lightsEl.classList.remove('on'); Snd.blip(true);
+        setStartLights(false); Snd.blip(true);
       }
     }else if(!reactDone&&goAt){
       /* เวลาปฏิกิริยา: ต้องเป็นการ "กดใหม่" หลังไฟดับ (กดค้างข้ามมาไม่นับ) */
@@ -3654,7 +3734,7 @@ function netSend(force){
   lastNetSend=now;
   const payload={n:((typeof onlineDisplayName==='function'&&onlineDisplayName())||state.playerName||'ผู้เล่น'),
     x:Math.round(px*10)/10, y:Math.round(py*20)/20, z:Math.round(pz*10)/10,
-    yaw:Math.round(yaw*100)/100, p:Math.round(pitch*100)/100, a:airborne?1:0, w:sessionWords,
+    yaw:Math.round(yaw*100)/100, p:Math.round(pitch*100)/100, av:Math.round(bodyRoll*1000)/1000, a:airborne?1:0, w:sessionWords,
     cw:F1_COLOR_WIRE+playerCarStyle.key,
     vx:Math.round(vx*10)/10, vz:Math.round(vz*10)/10,
     vy:Math.round(vy*10)/10,
@@ -3719,6 +3799,7 @@ function buildPeer(uid,p){
   p.grp.position.set(p.cur.x,p.yCur||0,p.cur.z);
   p.grp.rotation.x=-(p.pitchCur||0);
   p.grp.rotation.y=p.yawCur;
+  p.grp.rotation.z=p.rollCur||0;
   scene.add(p.grp);
 }
 function onPeer(uid,d){
@@ -3730,7 +3811,7 @@ function onPeer(uid,d){
     p=peers[uid]={n:d.n||'เพื่อน',cur:{x:d.x,z:d.z},tgt:{x:d.x,z:d.z},
       yawCur:d.yaw||0,yawTgt:d.yaw||0,vxCur:d.vx||0,vzCur:d.vz||0,
       vxTgt:d.vx||0,vzTgt:d.vz||0,yCur:d.y||0,yTgt:d.y||0,vyCur:d.vy||0,vyTgt:d.vy||0,
-      pitchCur:d.p||0,pitchTgt:d.p||0,airborne:!!d.a,w:d.w||0,g:d.g,colorIdx:packetCarColorIndex(uid,d),gridSlot:packetGridSlot(d),lastCt:0,drsTgt:0,drsK:0,hitUntil:0};
+      pitchCur:d.p||0,pitchTgt:d.p||0,rollCur:d.av||0,rollTgt:d.av||0,airborne:!!d.a,w:d.w||0,g:d.g,colorIdx:packetCarColorIndex(uid,d),gridSlot:packetGridSlot(d),lastCt:0,drsTgt:0,drsK:0,hitUntil:0};
     buildPeer(uid,p);
     renderBoard();
   }
@@ -3742,6 +3823,7 @@ function onPeer(uid,d){
   if(typeof d.y==='number')p.yTgt=d.y;
   if(typeof d.vy==='number')p.vyTgt=d.vy;
   if(typeof d.p==='number')p.pitchTgt=d.p;
+  if(typeof d.av==='number')p.rollTgt=clamp(d.av,-RAMP_ROLL_MAX,RAMP_ROLL_MAX);
   p.airborne=!!d.a;
   if(typeof d.vx==='number') p.vxTgt=d.vx;
   if(typeof d.vz==='number') p.vzTgt=d.vz;
@@ -3797,6 +3879,7 @@ function peerTick(dt){
     p.yCur=lerp(p.yCur||0,p.yTgt||0,k);
     p.vyCur=lerp(p.vyCur||0,p.vyTgt||0,k);
     p.pitchCur=lerp(p.pitchCur||0,p.pitchTgt||0,k);
+    p.rollCur=lerp(p.rollCur||0,p.rollTgt||0,k);
     let dy=p.yawTgt-p.yawCur;
     while(dy>Math.PI) dy-=Math.PI*2;
     while(dy<-Math.PI) dy+=Math.PI*2;
@@ -3805,6 +3888,7 @@ function peerTick(dt){
       p.grp.position.set(p.cur.x,p.yCur,p.cur.z);
       p.grp.rotation.x=-p.pitchCur;
       p.grp.rotation.y=p.yawCur;
+      p.grp.rotation.z=p.rollCur;
     }
     /* 🪽 รอบ 907 — ไล่ระดับไฟท้ายรถเพื่อนแบบเดียวกับของเรา (ไม่ใช่ตัด/เปิดแบบกระตุก) */
     p.drsK=lerp(p.drsK||0,p.drsTgt||0,clamp(dt*9,0,1));
@@ -3848,15 +3932,26 @@ function renderBoard(){
   const me={n:myName,w:sessionWords,me:true,g:(state.student&&state.student.grade)||''};
   const rows=uids.map(u=>({n:peers[u].n,w:peers[u].w||0,me:false,
       g:peers[u].grade||((typeof gradeOf==='function')?gradeOf(u):'')}))
-    .concat([me]).sort((a,b)=>b.w-a.w).slice(0,5);
+    .concat([me]).sort((a,b)=>b.w-a.w); // แสดงทุกคนในรอบ ห้ามตัดเหลือ 5 คนแบบแผงเดิม
   const sig=note+'|'+rows.map(r=>r.n+':'+r.w+':'+r.g).join('|');
   if(sig===boardSig){ boardEl.classList.add('on'); layoutBoard(); return; }
   boardSig=sig;
-  boardEl.innerHTML='<div class="m-bd-h">🏆 คำที่เก็บได้รอบนี้</div>'+rows.map((r,i)=>
-    `<div class="m-bd-r${r.me?' me':''}"><span>${i===0?'🥇':i===1?'🥈':i===2?'🥉':'　'}</span>`+
-    `<span class="m-bd-n">🏎️ ${escapeHTML(r.n)}${(typeof gradeMark==='function')?gradeMark(r.g):''}</span>`+
-    `<span class="m-bd-w">${r.w}</span></div>`).join('')
-    +(note?`<div style="padding:4px 2px;font-size:.82em;line-height:1.35;opacity:.92">${note}</div>`:'');
+  /* statusText อาจมี <br> และปุ่มเพื่อน: แยกปุ่มตรึงท้ายแถบ ให้เฉพาะรายงานผู้เล่นเลื่อน */
+  const noteBox=document.createElement('div'); noteBox.innerHTML=note||'';
+  const go=noteBox.querySelector('.nr-go'),goHtml=go?go.outerHTML:'';
+  if(go) go.remove();
+  const status=noteBox.textContent.replace(/\s+/g,' ').trim();
+  const playerHtml=rows.map((r,i)=>{
+    const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'.';
+    const grade=(typeof gradeMark==='function')?gradeMark(r.g):'';
+    return `<span class="${r.me?'m-bd-me':''}">${medal} 🏎️ ${escapeHTML(r.n)}${grade} · ${r.w} คำ</span>`;
+  }).join('　•　');
+  const report=playerHtml+(status?`　•　<span>🏁 ${escapeHTML(status)}</span>`:'');
+  const plain=rows.map((r,i)=>(i+1)+'. '+r.n+' '+r.w+' คำ').join(', ')+(status?' '+status:'');
+  boardEl.style.setProperty('--f1-ticker-s',clamp(Math.round(plain.length/7),14,48)+'s');
+  boardEl.setAttribute('aria-label','ผู้เล่นในรอบนี้: '+plain);
+  boardEl.innerHTML='<span class="m-bd-icon" aria-hidden="true">🏆</span>'+
+    `<div class="m-bd-window"><div class="m-bd-track"><span class="m-bd-text">${report}</span></div></div>`+goHtml;
   boardEl.classList.add('on');
   layoutBoard();
 }
@@ -4215,6 +4310,7 @@ function camTick(dt){
     }
     camera.position.set(px+fx*fwd+ox,py+eyeH+oy+landingOy,pz+fz*fwd+oz);
     camera.lookAt(px+fx*(fwd+look)+ox,py+eyeH-dropH+Math.sin(pitch)*look+oy+landingOy,pz+fz*(fwd+look)+oz);
+    camera.rotateZ(bodyRoll*.52); // cockpit รับรู้ว่าล้อข้างหนึ่งขึ้นเนิน แต่ลดครึ่งหนึ่งกันเวียนหัว
     const fov=fovBase+clamp(spd/92,0,1)*(realistic?8:12);
     if(Math.abs(camera.fov-fov)>0.2){ camera.fov=fov; camera.updateProjectionMatrix(); }
     return;
@@ -4380,7 +4476,7 @@ function start(options){
   chatBarEl.classList.remove('on'); selfMsgEl.classList.remove('on');
   /* เกิดบนกริด F1 แบบเหลื่อม: slot 0 ก่อน แล้ว roster multiplayer จัดเรียง UID ให้ไม่ซ้ำ */
   gridSlot=0;gridRosterSig='';
-  pitch=0;vx=vy=vz=spd=0;steer=0;slide=0;steerCtl=0;padThr=0;padBr=false;
+  pitch=bodyRoll=0;vx=vy=vz=spd=0;steer=0;slide=0;steerCtl=0;padThr=0;padBr=false;
   airborne=false;activeJump=null;jumpPrevD=-1;jumpImpact=0;jumpLandKickT=0;jumpMissed=false;
   padRev=false; revNow=false; sandT=0; portalActive=false; portalT=0; portalJumped=false;portalResumeSpeed=0;
   if(portalEl) portalEl.className='';   // ⏪🏜️🌀
@@ -4439,12 +4535,12 @@ function exitWorld(){
   window.removeEventListener('resize',resizeFn);
   Snd.stop();
   portalActive=false; portalT=0; portalJumped=false;portalResumeSpeed=0;
-  py=0;vy=0;pitch=0;airborne=false;activeJump=null;jumpPrevD=-1;
+  py=0;vy=0;pitch=bodyRoll=0;airborne=false;activeJump=null;jumpPrevD=-1;
   if(portalEl) portalEl.className='';
   letters.forEach(l=>scene.remove(l.spr)); letters=[]; word=null;
   smokes.forEach(s=>scene.remove(s.m)); smokes=[];
   ghostHide(); paintLights(0);
-  if(lightsEl) lightsEl.classList.remove('on');
+  setStartLights(false);
   if(renderer) renderer.setSize(2,2,false);
   wrapEl.classList.remove('on');
   if(garageEl)garageEl.classList.remove('on');
@@ -4460,7 +4556,7 @@ window.F1World={
   start,
   _t:{
     get running(){return running}, set running(v){running=v},
-    get pos(){return {x:px,y:py,z:pz,yaw,pitch,spd,vx,vy,vz,airborne,slide,surf:surfNow}},
+    get pos(){return {x:px,y:py,z:pz,yaw,pitch,roll:bodyRoll,spd,vx,vy,vz,airborne,slide,surf:surfNow}},
     set pos(v){ if('x'in v)px=v.x; if('z'in v)pz=v.z; if('yaw'in v)yaw=v.yaw;
       if('y'in v)py=v.y;if('pitch'in v)pitch=v.pitch;if('vy'in v)vy=v.vy;
       if('airborne'in v)airborne=!!v.airborne;
@@ -4475,7 +4571,7 @@ window.F1World={
     get peers(){return peers}, onPeer, peerTick,
     carContact, resolvePeerCars,
     give(){ letters.slice().forEach(l=>{ word.got.push(l.idx); scene.remove(l.spr); }); letters=[]; completeWord(); },
-    surfAt, nearIdx, trackPointAhead, pickWord, collectTick, physTick, barrierBounce,
+    surfAt, nearIdx, trackPointAhead, pickWord, collectTick, physTick, barrierBounce,jumpWheelGround,jumpTerrainRoll,
     jumpProbe,jumpPhysicsTick,
     get jumps(){return JUMPS.map(j=>({id:j.id,label:j.label,color:j.color,side:j.side,lat:j.lat,startIdx:j.startIdx,
       maxCurvature:j.maxCurvature,entryM:j.entryM,riseM:j.riseM,gapM:j.gapM,landM:j.landM,
@@ -4483,11 +4579,12 @@ window.F1World={
       height:j.height,landH:j.landH,launchPitch:j.launchPitch,
       start:jumpPose(j,0,j.lat,0),takeoff:jumpPose(j,j.takeoffD,j.lat,j.height),
       landing:jumpPose(j,j.landStartD,j.lat,j.landH)}));},
-    placeOnJump(id,d,speed){const j=JUMPS.find(q=>q.id===id)||JUMPS[0];if(!j)return null;
-      d=clamp(Number(d)||0,0,j.recoverD);const h=jumpHeightAtD(j,d),p=jumpPose(j,d,j.lat,h||0);
-      px=p.x;py=h||0;pz=p.z;yaw=p.yaw;pitch=jumpPitchAtD(j,d);vy=0;airborne=false;activeJump=j;jumpPrevD=d;
+    placeOnJump(id,d,speed,latOffset=0){const j=JUMPS.find(q=>q.id===id)||JUMPS[0];if(!j)return null;
+      d=clamp(Number(d)||0,0,j.recoverD);const h=jumpHeightAtD(j,d),p=jumpPose(j,d,j.lat+(Number(latOffset)||0),h||0);
+      px=p.x;py=h||0;pz=p.z;yaw=p.yaw;pitch=jumpPitchAtD(j,d);vy=0;airborne=false;activeJump=j;jumpPrevD=d;myIdx=p.i;
+      bodyRoll=jumpTerrainRoll(px,pz,myIdx);if(carGrp){carGrp.position.set(px,py,pz);carGrp.rotation.set(-pitch,yaw,bodyRoll);}
       vx=Math.sin(yaw)*(Number(speed)||0);vz=Math.cos(yaw)*(Number(speed)||0);spd=Math.abs(Number(speed)||0);myIdx=p.i;camInit=false;
-      return {x:px,y:py,z:pz,yaw,pitch,spd};},
+      return {x:px,y:py,z:pz,yaw,pitch,roll:bodyRoll,spd};},
     beginPortalReturn, portalTick, respawnOnTrack,
     get word(){return word?{en:word.en,got:word.got.slice(),complete:!!word.complete,
       letterCount:letters.length,distances:letters.map(l=>l.lapDistance)}:null;},
