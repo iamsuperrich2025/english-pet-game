@@ -5320,3 +5320,10 @@
 
 - ย้ายเนินเหิน 3 จุดจาก runoff มา centerline ทางหลัก (`lat=0`) จึงไม่ถูก portal ก่อนขึ้นเนิน; ตัวเนินกว้าง 6.3–7.6 ม. และเหลือผิวราบริมถนนสองข้างให้รถเลือกหลบได้ (`tools/test_f1_fantasy_jumps.js`)
 - เพิ่ม floating steering pad: แตะ/ลากได้ทั่วครึ่งจอซ้าย, ย้ายศูนย์ตามจุดสัมผัส+capture นิ้วจนปล่อย, ไม่บัง click HUD; ย้ายแผงคะแนนไปข้างกล่องรอบตามขนาดจริงและหลบลงใต้ HUD เมื่อจอแคบ; Browser QA 1280×720/844×390 + HUD 1316×613/577×295 ไม่ทับกัน, เนิน `track/probe=true/portal=false`, สีรถตรง, console 0 error
+
+
+## ⏬ ย้ายเมื่อ 2026-08-22 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **ขอบถนนเทาอ่อนขับได้ทั้งแถบ:** เพิ่มกริป paved runoff `.62→.78`, ลด drag `1.6→.8`; ย้าย barrier ไปนอกขอบเทา และ portal ตรวจ `postMoveSurf==='sand'` เท่านั้น; QA 12 ม.=`runoff/portal=false`, 17 ม.=`sand/portal=true`, console 0 error (`tools/test_f1_runoff_portal.js`)
+- **รอบ 1217 · สีรถ multiplayer ตรงกัน:** ต้นเหตุ `cl` ถูก NetRoom ตัดและ legacy rules ปฏิเสธ; เปลี่ยนส่ง marker `cw=f1c:<สี>` ที่ผ่านทั้ง 2 โหมด พร้อม decode/repaint รถเพื่อนและอ่าน `cl` ย้อนหลัง (`js/f1_3d.js`)
+- regression ใหม่จำลองผู้เล่น 2 คนผ่าน `NetRoom.create/send` จริงครบ 5 สี: น้ำเงิน→index 1/#0090ff, ส้ม→index 4/#ff8700 และสีอื่นตรง index เดียวกับ cockpit (`tools/test_f1_multiplayer_color.js`)

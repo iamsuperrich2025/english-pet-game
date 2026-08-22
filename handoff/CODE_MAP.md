@@ -312,35 +312,36 @@ xrkSubmit:714 · xrkMerge:744 · xrkAllRows:764 · xrkFetch:782 · xrkNote:808 �
 xrkAllRowHTML:828 · xrkBodyHTML:832 · xrkMount:847 · openExamStdRank:886 · examStdCardsHTML:903 · openExamStdBoard:938
 openOnetBoard:972
 
-## js/f1_3d.js (4,583 บรรทัด · 323 รายการ)
+## js/f1_3d.js (4,680 บรรทัด · 332 รายการ)
 ### 🗂️ สารบัญโซน js/f1_3d.js (Read/Edit เฉพาะช่วง)
-- 19-209 ⚙️ ค่าคงที่ (TUNE ZONE)
-- 210-258 📦 สถานะโลก
-- 259-336 🏁 รอบ 1219 — MULTIPLAYER SAFE-DISTANCE START GRID
-- 337-510 🔊 F1 DYNAMIC ENGINE AUDIO — sample จริง + RPM/เกียร์เสมือน + synth fallback (รอบ 1106)
-- 511-588 🖼️ texture: probe img/f1/*.jpg ก่อน → ไม่มีใช้ canvas วาดเอง
-- 589-615 ✏️ sprite ตัวอักษร / ป้ายชื่อ (canvas → sprite)
-- 616-693 🛣️ เส้นแทร็ก: F1_MAP.track (จุดจริง OSM) → sample ทุก 5 ม.
-- 694-894 🌌🪽 รอบ 1217 — FANTASY MAIN-LINE AIR ROUTES (GPU COOL)
-- 895-1028 🏗️ สร้างฉาก: แทร็ก + kerb + runoff + อาคารจริง + ไฟ + ทะเลทราย
-- 1029-1106 🏟️ PREMIUM MODULAR CIRCUIT ARCHITECTURE — รอบ 1203
-- 1107-1656 ✨ F1 REALISTIC CIRCUIT — ฉากสนามมืออาชีพเฉพาะ Realistic Mode (รอบ 1125)
-- 1657-1754 🏎️ โมเดลรถ: GLB ผู้ใช้ (img/models/f1_car.glb) → ไม่มี = ประกอบเอง
-- 1755-1966 🏎️📱 รอบ 1210 — SEMI-REALISTIC LOW-POLY PEER F1 (GPU COOL)
-- 1967-2275 🖥️ DOM + CSS (เต็มจอ ไม่มีกรอบเครื่องเกม)
-- 2276-2542 ✨ PREMIUM RACE HUD — รอบ 1203 · brushed metal + glass + neon accent
-- 2543-2691 🌍 สร้างโลกครั้งเดียว
-- 2692-2866 🪽 รอบ 904: DRS — ปีกหลังเปิดบนทางตรง (ตามรถเพื่อนใกล้ 25 ม.)
-- 2867-3225 🏁 ฟิสิกส์ + จับเวลา
-- 3226-3316 🏆 รอบ 903: กระดานอันดับ Best Lap ออนไลน์ (/f1Rank)
-- 3317-3479 🚦👻 รอบ 902: ลำดับออกสตาร์ท (ไฟแดง 5 ดวง) + รถเงาวิ่งตาม Best Lap
-- 3480-3532 🚧 เลนพิท — ผิวทางเต็มกริป + ลิมิตเตอร์ 80 กม./ชม.
-- 3533-3628 🔤 คำศัพท์บนแทร็ก (แบบเดียวกับโลกมอเตอร์ไซค์ — REWARD สูงกว่า)
-- 3629-3863 🧑‍🤝‍🧑 เพื่อนร่วมสนาม (NetRoom map 'f1')
-- 3864-4011 📷 กล้องไล่หลัง + ลูปเกม
-- 4012-4144 🔢 รอบ 916 — จอบนพวงมาลัยเป็น "ของจริง"
-- 4145-4314 🚥 รอบ 918: แถบไฟ LED รอบเครื่องบนพวงมาลัย (เขียว → เหลือง → แดง ตอนใกล้เปลี่ยนเกียร์)
-- 4315-4583 🚪 เข้า/ออกโลก
+- 19-214 ⚙️ ค่าคงที่ (TUNE ZONE)
+- 215-263 📦 สถานะโลก
+- 264-341 🏁 รอบ 1219 — MULTIPLAYER SAFE-DISTANCE START GRID
+- 342-515 🔊 F1 DYNAMIC ENGINE AUDIO — sample จริง + RPM/เกียร์เสมือน + synth fallback (รอบ 1106)
+- 516-593 🖼️ texture: probe img/f1/*.jpg ก่อน → ไม่มีใช้ canvas วาดเอง
+- 594-620 ✏️ sprite ตัวอักษร / ป้ายชื่อ (canvas → sprite)
+- 621-698 🛣️ เส้นแทร็ก: F1_MAP.track (จุดจริง OSM) → sample ทุก 5 ม.
+- 699-917 🌌🪽 รอบ 1217 — FANTASY MAIN-LINE AIR ROUTES (GPU COOL)
+- 918-1051 🏗️ สร้างฉาก: แทร็ก + kerb + runoff + อาคารจริง + ไฟ + ทะเลทราย
+- 1052-1129 🏟️ PREMIUM MODULAR CIRCUIT ARCHITECTURE — รอบ 1203
+- 1130-1679 ✨ F1 REALISTIC CIRCUIT — ฉากสนามมืออาชีพเฉพาะ Realistic Mode (รอบ 1125)
+- 1680-1777 🏎️ โมเดลรถ: GLB ผู้ใช้ (img/models/f1_car.glb) → ไม่มี = ประกอบเอง
+- 1778-1989 🏎️📱 รอบ 1210 — SEMI-REALISTIC LOW-POLY PEER F1 (GPU COOL)
+- 1990-2318 🖥️ DOM + CSS (เต็มจอ ไม่มีกรอบเครื่องเกม)
+- 2319-2586 ✨ PREMIUM RACE HUD — รอบ 1203 · brushed metal + glass + neon accent
+- 2587-2735 🌍 สร้างโลกครั้งเดียว
+- 2736-2910 🪽 รอบ 904: DRS — ปีกหลังเปิดบนทางตรง (ตามรถเพื่อนใกล้ 25 ม.)
+- 2911-2922 🏁 ฟิสิกส์ + จับเวลา
+- 2923-3299 🌀 PORTAL DESTINATION PREVIEW — actual target curve / Canvas2D (รอบ 1222)
+- 3300-3390 🏆 รอบ 903: กระดานอันดับ Best Lap ออนไลน์ (/f1Rank)
+- 3391-3559 🚦👻 รอบ 902: ลำดับออกสตาร์ท (ไฟแดง 5 ดวง) + รถเงาวิ่งตาม Best Lap
+- 3560-3612 🚧 เลนพิท — ผิวทางเต็มกริป + ลิมิตเตอร์ 80 กม./ชม.
+- 3613-3708 🔤 คำศัพท์บนแทร็ก (แบบเดียวกับโลกมอเตอร์ไซค์ — REWARD สูงกว่า)
+- 3709-3958 🧑‍🤝‍🧑 เพื่อนร่วมสนาม (NetRoom map 'f1')
+- 3959-4106 📷 กล้องไล่หลัง + ลูปเกม
+- 4107-4239 🔢 รอบ 916 — จอบนพวงมาลัยเป็น "ของจริง"
+- 4240-4410 🚥 รอบ 918: แถบไฟ LED รอบเครื่องบนพวงมาลัย (เขียว → เหลือง → แดง ตอนใกล้เปลี่ยนเกียร์)
+- 4411-4680 🚪 เข้า/ออกโลก
 ### รายการ js/f1_3d.js
 REWARD:22 · LETTER_COIN:23 · COLLECT_R:24 · DONE_KEY:25 · RECENT_KEY:26 · HALF_W:27
 KERB_W:28 · RUNOFF_W:29 · BARRIER_LAT:30 · BARRIER_BOUNCE:31 · CAR_HIT_PARTS:35 · CAR_HIT_RADIUS:44
@@ -357,45 +358,47 @@ WHEEL_SHAKE_KERB_PX:128 · WHEEL_SHAKE_SAND_PX:129 · PWR_A:131 · ACC_CAP:132 �
 BRAKE_A:135 · BRAKE_DF:136 · COAST_A:139 · COAST_STOP:140 · GRIP_BASE:141 · GRIP_DF:142
 GRIP_CAP:143 · STEER_MAX:145 · STEER_HI:146 · SURF_RUNOFF:147 · SURF_SAND:148 · JUMP_GRAVITY:150
 JUMP_LANE_LAT:151 · JUMP_ENTRY_M:152 · JUMP_RISE_M:153 · JUMP_GAP_M:154 · JUMP_LAND_M:155 · JUMP_EXIT_M:156
-JUMP_RECOVER_M:157 · JUMP_HEIGHT:158 · JUMP_LAND_H:159 · JUMP_MAX_PITCH:160 · JUMP_PEER_Y_SEP:161 · JUMP_FRACTIONS:162
-JUMP_COLORS:163 · NET_SEND_MS:164 · ROOM_MAX:165 · CHAT_MS:166 · CHAT_PRESETS:167 · CAR_COLOR_KEY:170
-F1_COLOR_WIRE:173 · CAR_STYLES:174 · COCKPIT_ASSETS:181 · PEER_COLORS:188 · GRID_N:189 · GRID_FRONT_M:191
-GRID_GAP_M:192 · GRID_SIDE_M:193 · GRID_SAFE_M:194 · F1_GRID_WIRE:195 · LIGHT_LEAD_S:197 · LIGHT_STEP_S:198
-LIGHT_HOLD_MIN:199 · LIGHT_HOLD_MAX:200 · JUMP_PENALTY_S:201 · GHOST_HZ:203 · GHOST_MAX:204 · GHOST_KEY:205
-PIT_HALF_W:206 · SURF_PIT:207 · PIT_LIMIT:208 · LINE:234 · JUMPS:235 · PITL:249
-gridPose:262 · startGridUid:274 · startGridUids:278 · startGridSlotFor:281 · gridFormationActive:286 · gridSlotClear:287
-safeStartGridSlot:298 · placeAtGridSlot:304 · settleStartGrid:313 · packetGridSlot:320 · storedCarStyle:328 · saveCarStyle:331
-cockpitAsset:332 · GEARS:508 · gearOf:509 · matLam:518 · matLit:524 · applyTex:529
-texFromCanvas:533 · texProbe:541 · asphaltTex:552 · kerbTex:567 · sandTex:573 · adTex:582
-letterTexture:592 · makeTextSprite:602 · cr:620 · buildLine:624 · nearIdx:663 · jumpDeltaD:699
-jumpHalfAtD:702 · jumpPhaseAtD:710 · jumpHeightAtD:719 · jumpPitchAtD:732 · jumpProbeAtSample:744 · jumpProbe:754
-chooseJumpStart:761 · prepareFantasyJumps:781 · jumpPose:795 · fantasyRampGeometry:800 · buildFantasyCircuit:823 · surfAt:880
-ribbonGeo:898 · kerbStrips:919 · extrudeFootprint:954 · polyCentroid:965 · pointInFootprint:969 · footprintCrossesRoad:978
-footprintFrame:986 · premiumMats:1001 · instancedParts:1017 · localPart:1026 · buildBuildings:1033 · chooseRealisticTier:1112
-isThermalMobile:1119 · useRacingSky:1123 · seededRand:1135 · realisticAsphaltMaps:1139 · realisticRunoffTex:1181 · realisticSandTex:1197
-racingLineRibbonGeo:1215 · linePose:1226 · tracksideSpotClear:1234 · instancedFromSpots:1238 · buildRealisticCircuit:1244 · buildTrackScene:1515
-glbEnsure:1660 · buildF1Car:1674 · addPlayerContactShadow:1747 · peerF1MergedGeometry:1761 · peerF1LoftGeometry:1779 · peerF1CombineGeometry:1806
-peerF1KitGet:1819 · buildPeerF1Car:1882 · makeCar:1910 · replacePlayerCar:1933 · paintPlayerStyle:1948 · primePlayerCockpit:1963
-CSS:1970 · buildDom:2336 · build:2546 · mapBounds:2659 · mapXY:2667 · drawMap:2670
-DRS_ZONES_N:2700 · DRS_CURV:2701 · DRS_GAP_MAX:2702 · DRS_MIN_M:2703 · DRS_ENTRY_M:2704 · DRS_NEAR_M:2705
-DRS_DRAG_K:2706 · DRS_FLAP_SHUT:2708 · DRS_FLAP_OPEN:2709 · attachDrsGlow:2714 · findDrsZones:2724 · DRS_DET_M:2755
-DRS_SIGN_KIND:2756 · drsDetIdx:2763 · drsSignTex:2767 · buildDrsBoards:2779 · drsZoneAt:2821 · drsPeerGap:2830
-drsTick:2843 · drsHud:2858 · respawnOnTrack:2871 · beginPortalReturn:2879 · portalTick:2889 · barrierBounce:2911
-carPartContact:2928 · carContact:2950 · resolvePeerCars:2960 · landFromJump:2997 · jumpPhysicsTick:3007 · physTick:3045
-progressTick:3149 · fmtLap:3198 · puffSmoke:3204 · smokeTick:3215 · FR_READ:3234 · frSubmit:3236
-frMerge:3253 · frFetch:3265 · frRowHTML:3283 · frBodyHTML:3292 · frNote:3301 · frMount:3306
-resetLights:3326 · beginLights:3333 · lightsLocked:3334 · paintLights:3335 · lightsTick:3345 · ghostEnsure:3394
-ghostHide:3411 · ghostLoad:3416 · ghostSave:3425 · ghostReset:3428 · ghostRecord:3432 · ghostKeep:3441
-ghostGapAt:3448 · ghostTick:3456 · buildPitLine:3485 · pitAt:3516 · inPitLane:3527 · racingLineLat:3536
-trackPointAhead:3544 · pickWord:3552 · spawnLetters:3567 · renderWordHud:3581 · collectTick:3587 · completeWord:3608
-relocTick:3625 · netReady:3632 · netJoin:3637 · netSend:3650 · sendChat:3666 · peerColorIndex:3673
-packetCarColorIndex:3678 · peerColor:3688 · buildPeer:3691 · onPeer:3724 · showPeerBubble:3756 · removePeerBubble:3763
-dropPeer:3769 · peerTick:3789 · netLeave:3817 · layoutBoard:3823 · renderBoard:3842 · CAM_MODES:3869
-CAM_NEXT_LABEL:3870 · cycleCamMode:3871 · applyCamMode:3875 · buildFpWheels:3886 · fpWheelTick:3918 · cockpitBox:3934
-layoutWheel:3956 · wheelTick:3978 · DASH_FONT:4018 · positionQualityDash:4020 · layoutDash:4036 · dashRR:4061
-dashRpmTick:4068 · dashTick:4078 · drawDash:4093 · buildLeds:4150 · ledsOff:4158 · ledTick:4162
-camTick:4189 · hudTick:4239 · applyThermalPixelRatio:4249 · thermalGovernorTick:4255 · thermalRenderDue:4267 · frame:4277
-tick:4299 · fit:4306 · applyEnvironmentProfile:4318 · start:4363 · exitWorld:4433
+JUMP_RECOVER_M:157 · JUMP_HEIGHT:158 · JUMP_LAND_H:159 · JUMP_MAX_PITCH:160 · RAMP_ROLL_TRACK:161 · RAMP_ROLL_MAX:162
+RAMP_ROLL_EDGE:163 · RAMP_ROLL_RESPONSE:164 · RAMP_ROLL_RETURN:165 · JUMP_PEER_Y_SEP:166 · JUMP_FRACTIONS:167 · JUMP_COLORS:168
+NET_SEND_MS:169 · ROOM_MAX:170 · CHAT_MS:171 · CHAT_PRESETS:172 · CAR_COLOR_KEY:175 · F1_COLOR_WIRE:178
+CAR_STYLES:179 · COCKPIT_ASSETS:186 · PEER_COLORS:193 · GRID_N:194 · GRID_FRONT_M:196 · GRID_GAP_M:197
+GRID_SIDE_M:198 · GRID_SAFE_M:199 · F1_GRID_WIRE:200 · LIGHT_LEAD_S:202 · LIGHT_STEP_S:203 · LIGHT_HOLD_MIN:204
+LIGHT_HOLD_MAX:205 · JUMP_PENALTY_S:206 · GHOST_HZ:208 · GHOST_MAX:209 · GHOST_KEY:210 · PIT_HALF_W:211
+SURF_PIT:212 · PIT_LIMIT:213 · LINE:239 · JUMPS:240 · PITL:254 · gridPose:267
+startGridUid:279 · startGridUids:283 · startGridSlotFor:286 · gridFormationActive:291 · gridSlotClear:292 · safeStartGridSlot:303
+placeAtGridSlot:309 · settleStartGrid:318 · packetGridSlot:325 · storedCarStyle:333 · saveCarStyle:336 · cockpitAsset:337
+GEARS:513 · gearOf:514 · matLam:523 · matLit:529 · applyTex:534 · texFromCanvas:538
+texProbe:546 · asphaltTex:557 · kerbTex:572 · sandTex:578 · adTex:587 · letterTexture:597
+makeTextSprite:607 · cr:625 · buildLine:629 · nearIdx:668 · jumpDeltaD:704 · jumpHalfAtD:707
+jumpPhaseAtD:715 · jumpHeightAtD:724 · jumpPitchAtD:737 · jumpProbeAtSample:749 · jumpProbe:759 · jumpWheelGround:767
+jumpTerrainRoll:778 · chooseJumpStart:784 · prepareFantasyJumps:804 · jumpPose:818 · fantasyRampGeometry:823 · buildFantasyCircuit:846
+surfAt:903 · ribbonGeo:921 · kerbStrips:942 · extrudeFootprint:977 · polyCentroid:988 · pointInFootprint:992
+footprintCrossesRoad:1001 · footprintFrame:1009 · premiumMats:1024 · instancedParts:1040 · localPart:1049 · buildBuildings:1056
+chooseRealisticTier:1135 · isThermalMobile:1142 · useRacingSky:1146 · seededRand:1158 · realisticAsphaltMaps:1162 · realisticRunoffTex:1204
+realisticSandTex:1220 · racingLineRibbonGeo:1238 · linePose:1249 · tracksideSpotClear:1257 · instancedFromSpots:1261 · buildRealisticCircuit:1267
+buildTrackScene:1538 · glbEnsure:1683 · buildF1Car:1697 · addPlayerContactShadow:1770 · peerF1MergedGeometry:1784 · peerF1LoftGeometry:1802
+peerF1CombineGeometry:1829 · peerF1KitGet:1842 · buildPeerF1Car:1905 · makeCar:1933 · replacePlayerCar:1956 · paintPlayerStyle:1971
+primePlayerCockpit:1986 · CSS:1993 · buildDom:2379 · build:2590 · mapBounds:2703 · mapXY:2711
+drawMap:2714 · DRS_ZONES_N:2744 · DRS_CURV:2745 · DRS_GAP_MAX:2746 · DRS_MIN_M:2747 · DRS_ENTRY_M:2748
+DRS_NEAR_M:2749 · DRS_DRAG_K:2750 · DRS_FLAP_SHUT:2752 · DRS_FLAP_OPEN:2753 · attachDrsGlow:2758 · findDrsZones:2768
+DRS_DET_M:2799 · DRS_SIGN_KIND:2800 · drsDetIdx:2807 · drsSignTex:2811 · buildDrsBoards:2823 · drsZoneAt:2865
+drsPeerGap:2874 · drsTick:2887 · drsHud:2902 · respawnOnTrack:2915 · drawPortalDestination:2926 · beginPortalReturn:2950
+portalTick:2961 · barrierBounce:2983 · carPartContact:3000 · carContact:3022 · resolvePeerCars:3032 · landFromJump:3069
+jumpPhysicsTick:3079 · physTick:3117 · progressTick:3223 · fmtLap:3272 · puffSmoke:3278 · smokeTick:3289
+FR_READ:3308 · frSubmit:3310 · frMerge:3327 · frFetch:3339 · frRowHTML:3357 · frBodyHTML:3366
+frNote:3375 · frMount:3380 · setStartLights:3400 · resetLights:3405 · beginLights:3413 · lightsLocked:3414
+paintLights:3415 · lightsTick:3425 · ghostEnsure:3474 · ghostHide:3491 · ghostLoad:3496 · ghostSave:3505
+ghostReset:3508 · ghostRecord:3512 · ghostKeep:3521 · ghostGapAt:3528 · ghostTick:3536 · buildPitLine:3565
+pitAt:3596 · inPitLane:3607 · racingLineLat:3616 · trackPointAhead:3624 · pickWord:3632 · spawnLetters:3647
+renderWordHud:3661 · collectTick:3667 · completeWord:3688 · relocTick:3705 · netReady:3712 · netJoin:3717
+netSend:3730 · sendChat:3746 · peerColorIndex:3753 · packetCarColorIndex:3758 · peerColor:3768 · buildPeer:3771
+onPeer:3805 · showPeerBubble:3838 · removePeerBubble:3845 · dropPeer:3851 · peerTick:3871 · netLeave:3901
+layoutBoard:3907 · renderBoard:3926 · CAM_MODES:3964 · CAM_NEXT_LABEL:3965 · cycleCamMode:3966 · applyCamMode:3970
+buildFpWheels:3981 · fpWheelTick:4013 · cockpitBox:4029 · layoutWheel:4051 · wheelTick:4073 · DASH_FONT:4113
+positionQualityDash:4115 · layoutDash:4131 · dashRR:4156 · dashRpmTick:4163 · dashTick:4173 · drawDash:4188
+buildLeds:4245 · ledsOff:4253 · ledTick:4257 · camTick:4284 · hudTick:4335 · applyThermalPixelRatio:4345
+thermalGovernorTick:4351 · thermalRenderDue:4363 · frame:4373 · tick:4395 · fit:4402 · applyEnvironmentProfile:4414
+start:4459 · exitWorld:4529
 
 ## js/f1_modes.js (125 บรรทัด · 14 รายการ)
 STORAGE_KEY:7 · DEFAULT_MODE:8 · ENTRY_MODE:9 · SELECTOR_ENABLED:10 · CONTRACT:11 · freezeProfile:13
@@ -1020,7 +1023,7 @@ vbRender:148 · vbCardHTML:194
 .lc-shoot:29,30 · .lc-modal:31,32 · .lc-count-exit:33 · .lc-card:34,35 · .lc-btn:36 · .lc-count:37
 .lc-toast:39 · .lc-coinfx:41 · .lc-announce:43 · .lc-rotate:44
 
-## css/lobby.css (6,128 บรรทัด · 827 selector)
+## css/lobby.css (6,130 บรรทัด · 827 selector)
 :root:6,5847 · html:15 · body:21,5811,5853 · *:41,42,43,44 · #app:47 · h1:49
 .subtitle:50 · .shop-title:51 · #rotate-overlay:54 · .screen:76 · #screen-select:85,86,87,88(+5) · .egg-need:95
 .petshop-topright:97 · .petshop-play-link:98,103 · #screen-login:116,129,130,134(+12) · .login-lux:147 · .login-logo:148 · .login-tag:153
@@ -1156,9 +1159,9 @@ vbRender:148 · vbCardHTML:194
 .tp-snd-track:5683 · .tp-snd-thumb:5685 · .tp-prompt:5692 · .tp-word:5694,5708,5709 · .tp-ch:5696,5701,5702,5704 · .tp-thai:5712
 .tp-hint:5714 · .tp-empty:5716 · .tp-keys:5719 · .tp-row:5721 · .tp-row-fn:5723,5756 · .tp-key:5727,5739,5741,5747(+2)
 .tp-key-fn:5754 · .tp-fx:5760 · .tp-coinpop:5761 · .tp-pop-pt:5766 · #city-backdrop:5780,5786 · .city-arrive:5787,5788
-.night:5802,5822,5823,5825(+2) · #night-veil:5848 · .theme-emerald:5877,5889,5896,5899(+7) · .theme-plum:5882,5893,5897,5900(+3) · #theme-veil:5910 · #screen-picmatch:5963,5969,5970,5971(+38)
-.pm-category-btn:6005,6008 · .pm-sheet-card-img:6009 · .pm-card:6012,6017,6021,6023(+9) · .pm-grid:6015 · .pm-right:6045 · .pm-now:6046,6052
-#pm-now-en:6053 · .pm-now-th:6054 · .pm-lobby-btn:6062,6066 · .pm-mode-btn:6091,6094 · .pm-wordcard:6095,6096,6098
+.night:5802,5822,5823,5825(+2) · #night-veil:5848 · .theme-emerald:5877,5889,5896,5899(+7) · .theme-plum:5882,5893,5897,5900(+3) · #theme-veil:5910 · #screen-picmatch:5965,5971,5972,5973(+38)
+.pm-category-btn:6007,6010 · .pm-sheet-card-img:6011 · .pm-card:6014,6019,6023,6025(+9) · .pm-grid:6017 · .pm-right:6047 · .pm-now:6048,6054
+#pm-now-en:6055 · .pm-now-th:6056 · .pm-lobby-btn:6064,6068 · .pm-mode-btn:6093,6096 · .pm-wordcard:6097,6098,6100
 
 ## css/onetpromo.css (17 บรรทัด · 13 selector)
 .onet-promo-overlay:2 · .onet-promo-card:3 · .onet-promo-content:4 · .onet-promo-close:5 · .onet-promo-kicker:6 · .onet-promo-title:7
