@@ -5511,3 +5511,11 @@
 - syntax+Sky regression+alpha/atlas QA+production build 8,400 ไฟล์/PWA validator+manifest+source/dist hash ผ่าน; `css/petshopping3d.css` hash เดิม ไม่แตะงาน session อื่น
 - **รอบ 1250 · จับคู่ภาพล็อกเมื่อเข้าชุดและนับวงรอบตามหมวดใหญ่:** แก้รอบ 1249 ตามคำชี้แจง—กดเข้าดูชุดใดจะล็อกทันทีแม้ไม่เล่น/ออกกลางรอบ และปลดพร้อมกันเมื่อเข้าครบทุกชุดของแท็บใหญ่ (`js/picmatch.js`)
 - วงรอบรวมทุกหมวดย่อยใต้ 8 หมวดใหญ่ เช่น สัตว์โลกน่ารัก/อาหาร & เครื่องดื่ม/บ้านของฉัน; แต่ละหมวดใหญ่และขนาดชุด 4/10/20 แยกสถานะอิสระ
+
+
+## ⏬ ย้ายเมื่อ 2026-08-22 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- geometry ที่ 1316×620 และ 812×375 ยืนยันการ์ดกว้าง 99.4%/97.6%, ปุ่มครบ 5 ชุดใน 3 แถวและอยู่ในกรอบ
+- syntax+Picmatch regression+production build 8,400 ไฟล์/PWA validator+source/dist hash ผ่าน (`tools/test_picmatch_page_cooldown.js`)
+- **รอบ 1251 · Vocab Sky เลือก Soft Cuboid Chibi 3D ได้ 6 ตัว:** ฮู้ดแดง/นักสำรวจ/กัปตัน/นักเรียนหญิง/แม่มด/ชุดนอน มี picker และบันทึก `state.skyCharacter` (`js/skyplay3d.js`, `css/skyplay3d.css`)
+- เพิ่ม lossless WebP ใหม่ 5 atlas รวมของเดิมเป็น 6; ทุกไฟล์ 1536×768 alpha จริง 8 ทิศ สูง 360px/เท้า y=374 ตรงรอบ 1247; visual QA 812×375 หน้า–ซ้าย–หลัง–ขวาผ่าน

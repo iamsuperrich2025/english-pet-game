@@ -40,10 +40,6 @@
 - ทั้งสามคง alpha จริง อีก 7 ช่องไม่เปลี่ยน สูง 360px/เท้า y=374 และความกว้างตรงเฟรม up-right คู่กัน; visual QA แยกตัวที่ 812×375 ครบหน้า/ซ้าย/up-left/หลัง/ขวา
 - เพิ่ม regression ตรวจ left-face cue กัน up-left ซ้ำ back; Sky renderer+alpha/atlas+production build 8,401 ไฟล์/PWA+source-dist hash ผ่าน และ `css/petshopping3d.css` hash เดิม
 - **รอบ 1252 · สัตว์รวมมิตร ชุด 2 แสดงครบ 3 แถว:** ขยายเฉพาะการ์ด `animal2.png` เต็มแถว และจัดปุ่ม 5 ชุดเป็น 2 คอลัมน์ × 3 แถว; การ์ดอื่นคง layout เดิม (`js/picmatch.js`, `css/lobby.css`)
-- geometry ที่ 1316×620 และ 812×375 ยืนยันการ์ดกว้าง 99.4%/97.6%, ปุ่มครบ 5 ชุดใน 3 แถวและอยู่ในกรอบ
-- syntax+Picmatch regression+production build 8,400 ไฟล์/PWA validator+source/dist hash ผ่าน (`tools/test_picmatch_page_cooldown.js`)
-- **รอบ 1251 · Vocab Sky เลือก Soft Cuboid Chibi 3D ได้ 6 ตัว:** ฮู้ดแดง/นักสำรวจ/กัปตัน/นักเรียนหญิง/แม่มด/ชุดนอน มี picker และบันทึก `state.skyCharacter` (`js/skyplay3d.js`, `css/skyplay3d.css`)
-- เพิ่ม lossless WebP ใหม่ 5 atlas รวมของเดิมเป็น 6; ทุกไฟล์ 1536×768 alpha จริง 8 ทิศ สูง 360px/เท้า y=374 ตรงรอบ 1247; visual QA 812×375 หน้า–ซ้าย–หลัง–ขวาผ่าน
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`
