@@ -18,7 +18,7 @@ Snapshot verified 2026-08-09. Keep only durable facts here.
 - Hotel geometry/collision/visibility is separated into `hotel3d.js`; gameplay remains in Adventure3D.
 - Collision and navigation are custom lightweight systems. There is no external physics engine.
 - Visual effects use standard Three materials, sprites/meshes, additive blending, and generated canvas textures. No application-level custom shader/post-processing stack is present.
-- Vocab Sky Playground Phase 2 is a public standalone social world registered through `WORLD3D`: shared Letter Hunt, competitive Word Race, timed Sky Obby with live standings, procedural plaza/route, saved checkpoints, vocabulary gates/stars, active pet following, main-coin rewards, and `NetRoom` map `sky` capped at six players per instance.
+- Vocab Sky Playground Phase 3 is a public standalone social world registered through `WORLD3D`: shared Letter Hunt, competitive Word Race, timed Sky Obby, a six-floor Vocabulary Tower, rotating Daily Sky Missions, durable reward claims, speed/accuracy/co-op badges, reconnect/live join, vocabulary gates/stars, active pet following, main-coin rewards, and `NetRoom` map `sky` capped at six players per instance.
 
 ## Asset and animation strategy
 

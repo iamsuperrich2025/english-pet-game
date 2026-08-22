@@ -1,4 +1,4 @@
-/* รอบ 1230 — structural regression for Vocab Sky Playground Phase 2 (no browser dependency). */
+/* รอบ 1231 — structural regression for Vocab Sky Playground Phase 3 (no browser dependency). */
 "use strict";
 const fs=require('fs'),path=require('path'),root=path.resolve(__dirname,'..');
 const sky=fs.readFileSync(path.join(root,'js/skyplay3d.js'),'utf8');
@@ -16,15 +16,21 @@ ok(/playerStyle='soft-cuboid-chibi-3d'/.test(sky),'visible players use Soft Cubo
 ok(/speakWord/.test(sky)&&/vocabForStudent/.test(sky)&&/questEvent\('word3d'/.test(sky),'vocabulary reuses data, pronunciation and shared quest event');
 ok(/addCoins\(20\)/.test(sky)&&/first\?100:20/.test(sky),'stars and route completion use main coins');
 ok(/kind:'bounce'/.test(sky)&&/rotators\.forEach\(r=>/.test(sky)&&/kind==='disappear'/.test(sky),'sample Obby includes bounce, rotating, moving and disappearing obstacles');
-ok(/data-activity="letter"/.test(sky)&&/data-activity="race"/.test(sky)&&/data-activity="obby"/.test(sky),'Phase 2 exposes Letter Hunt, Word Race and Sky Obby');
-ok(/PHASE 2 SHARED ACTIVITIES/.test(sky)&&/activityRows\(\)/.test(sky)&&/S2:\$\{activityCode\(\)\}/.test(sky),'all activities publish shared progress and live standings through NetRoom');
+ok(/data-activity="letter"/.test(sky)&&/data-activity="race"/.test(sky)&&/data-activity="obby"/.test(sky)&&/data-activity="tower"/.test(sky),'Phase 3 exposes all four Sky activities');
+ok(/PHASE 2 SHARED ACTIVITIES/.test(sky)&&/activityRows\(\)/.test(sky)&&/S3:\$\{activityCode\(\)\}/.test(sky),'all activities publish shared progress and live standings through NetRoom');
 ok(/function tickActivity/.test(sky)&&/function setupRaceQuestion/.test(sky)&&/completeActivity\('obby',false\)/.test(sky),'three activities have interactive gameplay and completion paths');
-ok(/activityReward\(kind/.test(sky)&&/addCoins\(reward\)/.test(sky),'Phase 2 rewards use main coins and durable daily progress');
-ok(/\.sp-activity-grid\{display:grid;grid-template-columns:repeat\(3,1fr\)/.test(css)&&/@media \(max-height:460px\)/.test(css),'activity picker is landscape-first and covered by the small-mobile layout');
+ok(/TOWER_FLOORS=6/.test(sky)&&/activityRound\.progress%2===0/.test(sky)&&/function answerTower/.test(sky),'Vocabulary Tower has 6 rising-difficulty floors and checkpoints every 2 floors');
+ok(/ยังไม่ใช่ครับ — ลองใหม่ได้ทันที ไม่ลดชั้น ไม่หักเหรียญ/.test(sky),'wrong Tower answers allow immediate retry without coin or floor loss');
+ok(/makeDailyMissions/.test(sky)&&/ACTIVITY_KINDS\.slice\(shift\)/.test(sky)&&/slice\(0,3\)/.test(sky),'Daily Sky Missions rotate three of four activities by date');
+ok(/claimOnce\('daily_first',40\)/.test(sky)&&/run_\$\{activityRound\.runId\}/.test(sky)&&/state\.skyDaily\.claims/.test(sky),'daily and per-run reward claims prevent reconnect/reload duplicates');
+ok(/unlockBadge\('speed'\)/.test(sky)&&/unlockBadge\('accuracy'\)/.test(sky)&&/unlockBadge\('coop'\)/.test(sky),'speed, accuracy and co-op badges persist in the existing save');
+ok(/restoreActiveRun/.test(sky)&&/considerJoinOffer/.test(sky)&&/joinLiveActivity/.test(sky),'reconnect resume and join-in-progress paths are present');
+ok(/activityReward\(kind/.test(sky)&&/addCoins\(reward\)/.test(sky),'Phase 3 rewards use main coins and durable daily progress');
+ok(/\.sp-activity-grid\{display:grid;grid-template-columns:repeat\(4,1fr\)/.test(css)&&/\.sp-daily\{/.test(css)&&/\.sp-tower\{/.test(css)&&/@media \(max-height:460px\)/.test(css),'Tower, missions and four-activity picker are landscape-first');
 ok((sky.match(/authPushSave\(true\)/g)||[]).length>=2,'completion and exit request cloud sync');
 ok(/mode:'sky'.*enter:enterSkyPlayground3D/.test(ui),'WORLD3D registry owns the entrance');
 ok(/css\/skyplay3d\.css/.test(html),'classic shell loads isolated world CSS');
 ok(/\['adv','sky','haunt'/.test(net),'friend-location scan includes sky map');
 ok((rules.match(/\$map === 'sky'/g)||[]).length===3&&/newData\.val\(\) === 'sky'/.test(rules),'Rules allow sky only in world/wroom/winfo/tinv enums');
 ok(!/Adventure3D\.|InvasionWorld\./.test(sky),'new engine does not mutate protected worlds');
-console.log('Vocab Sky Playground structural regression passed');
+console.log('Vocab Sky Playground Phase 3 structural regression passed');

@@ -28,6 +28,9 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (22 ส.ค.) — อ่านก่อน
+- **รอบ 1231 · Vocab Sky Playground Phase 3:** เพิ่ม Vocabulary Tower 6 ชั้น (ยากขึ้น/ผิดลองใหม่/checkpoint ทุก 2 ชั้น) + Daily Sky Missions หมุน 3/4 กิจกรรม, first/all bonus claim กัน reload/reconnect ซ้ำ และ badge speed/accuracy/co-op (`js/skyplay3d.js`, `css/skyplay3d.css`)
+- Plaza โชว์ mission/progress/badge/live join ชัดเจน; resume active run + join-in-progress ผ่าน `S3` hp payload เดิม, 6 คน, vocab/pronunciation/save/main coins เดิม ไม่เพิ่ม Firebase path/rules
+- Browser QA gameplay/reward/save-load/reconnect/6-player/teardown ผ่านทุกข้อ + NetRoom 52/52 + console 0; 812×375 ไม่มี scrollbar, Tower 48 calls/2,566 tri, สูงสุด 6 คน 144/8,660 · syntax/diff/structural/build 8,394 ไฟล์/PWA ผ่าน
 - **รอบ 1230 · Vocab Sky Playground Phase 2:** เพิ่ม Letter Hunt co-op, Word Race 3 ด่าน และ Sky Obby จับเวลา/อันดับสด ผ่าน payload เดิมของ NetRoom ไม่เพิ่ม Firebase path; คง Chibi/pet/main coins/6 คน (`js/skyplay3d.js`, `css/skyplay3d.css`)
 - แก้ pet follow วาร์ปไกลใช้ absolute goal ถูกต้อง เลิก particle leak ทุกเฟรม; browser gameplay/reward/shared-standing/teardown ผ่านทั้งหมด + NetRoom 52/52 + console 0 error
 - Mobile 812×375 ไม่มี scrollbar: Letter 73 calls/4,630 tri, Race 83/5,264, Obby 69/4,730; 5 peers = 144/8,660; ทุกโหมด 60 FPS/worst 16.8ms · syntax/diff/structural/build/PWA ผ่าน

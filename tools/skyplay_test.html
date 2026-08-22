@@ -10,8 +10,8 @@
 <body style="margin:0;overflow:hidden;background:#8fd8ff">
 <script>
 window.state={coins:2500,sound:false,haptic:false,noAnim:false,profAv:'blk6',profileName:'Sky QA',playerAvatar:'female',pets:[{type:'cat',name:'ดาวใส',level:3,sick:false}],active:0};
-window.saveState=()=>{};window.authPushSave=()=>Promise.resolve();window.renderDashboard=()=>{};window.clearWarnToasts=()=>{};window.toast=msg=>{window.__lastToast=msg};
-window.addCoins=n=>{state.coins+=n};window.questEvent=()=>{};window.todayStr=()=> '2026-08-22';window.activePet=()=>state.pets[state.active]||null;window.petStage=p=>(p||activePet()).level>=3?'adult':'egg';
+window.saveState=()=>{window.__saved=JSON.parse(JSON.stringify(state));window.__saveCount=(window.__saveCount||0)+1};window.authPushSave=()=>{window.__pushCount=(window.__pushCount||0)+1;return Promise.resolve()};window.renderDashboard=()=>{};window.clearWarnToasts=()=>{};window.toast=msg=>{window.__lastToast=msg};
+window.addCoins=n=>{state.coins+=n;(window.__coinAwards||(window.__coinAwards=[])).push(n)};window.questEvent=()=>{};window.todayStr=()=> '2026-08-22';window.activePet=()=>state.pets[state.active]||null;window.petStage=p=>(p||activePet()).level>=3?'adult':'egg';
 window.currentPetImg=()=> 'img/cat_adult_normal.png';window.lobbyBlk=()=>state.profAv;window.fmtNum=n=>Math.round(n).toLocaleString();
 window.vocabForStudent=()=>[['apple','แอปเปิล'],['cat','แมว'],['cloud','เมฆ'],['book','หนังสือ'],['star','ดาว'],['jump','กระโดด'],['friend','เพื่อน'],['rainbow','สายรุ้ง']];
 window.speakWord=w=>{window.__lastSpoken=w};window.Music={suspendBg(){},resumeBg(){}};
@@ -22,27 +22,38 @@ window.speakWord=w=>{window.__lastSpoken=w};window.Music={suspendBg(){},resumeBg
 SkyPlayground3D.start();
 if(new URLSearchParams(location.search).has('gate'))setTimeout(()=>SkyPlayground3D._t.openGate(),120);
 if(new URLSearchParams(location.search).has('crowd'))setTimeout(()=>{for(let i=1;i<=5;i++)SkyPlayground3D._t.peer(`crowd-${i}`,{n:`Player ${i}`,x:(i-3)*2,y:.5,z:5+i,yaw:i*.3,av:`blk${i+1}`,m:i%2,w:i,hp:'S2:P:0:0:0:plaza'});},120);
-const qaButton=document.createElement('button');qaButton.id='qa-run';qaButton.textContent='RUN PHASE 2 QA';qaButton.style.cssText='position:fixed;right:8px;bottom:8px;z-index:4000;padding:7px 10px;border:2px solid #fff;border-radius:12px;background:#244a9a;color:#fff;font-weight:900';document.body.appendChild(qaButton);
+const qaButton=document.createElement('button');qaButton.id='qa-run';qaButton.textContent='RUN PHASE 3 QA';qaButton.style.cssText='position:fixed;right:8px;bottom:8px;z-index:4000;padding:7px 10px;border:2px solid #fff;border-radius:12px;background:#244a9a;color:#fff;font-weight:900';document.body.appendChild(qaButton);
 const qaReport=document.createElement('pre');qaReport.id='qa-report';qaReport.style.cssText='display:none;position:fixed;inset:8px;z-index:5000;margin:0;padding:14px;overflow:auto;background:#102451;color:#dfffff;border:2px solid #7ef1ff;border-radius:16px;font:700 13px/1.45 monospace;white-space:pre-wrap';document.body.appendChild(qaReport);
 const qaMetrics=document.createElement('output');qaMetrics.id='qa-metrics';qaMetrics.style.display='none';document.body.appendChild(qaMetrics);
 let qaFps=0,qaWorst=0,qaFrames=0,qaFrameAt=performance.now(),qaWindowAt=qaFrameAt;function qaFrame(t){const d=t-qaFrameAt;qaFrameAt=t;qaFrames++;qaWorst=Math.max(qaWorst,d);if(t-qaWindowAt>=1000){qaFps=qaFrames*1000/(t-qaWindowAt);qaFrames=0;qaWindowAt=t;}requestAnimationFrame(qaFrame)}requestAnimationFrame(qaFrame);
 setInterval(()=>{const t=window.SkyPlayground3D&&SkyPlayground3D._t;if(!t||!t.running)return;qaMetrics.textContent=JSON.stringify({p:{x:t.player.pos.x,y:t.player.pos.y,z:t.player.pos.z},c:{x:t.camera.position.x,y:t.camera.position.y,z:t.camera.position.z},perf:t.perf(),fps:+qaFps.toFixed(1),worstMs:+qaWorst.toFixed(1)});qaWorst=0;},80);
-qaButton.addEventListener('click',()=>{
-  const t=SkyPlayground3D._t,out={};
+qaButton.addEventListener('click',async()=>{
+  let t=SkyPlayground3D._t;const out={},wait=ms=>new Promise(r=>setTimeout(r,ms));
   try{
+    out.daily=Array.isArray(t.daily.missions)&&t.daily.missions.length===3&&new Set(t.daily.missions.map(m=>m.kind)).size===3&&document.querySelectorAll('#sp-missions span').length===3;
+    out.towerLandmark=t.towerFloors.length===6;
     const y=t.player.pos.y;document.querySelector('#sp-jump').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerId:91}));for(let i=0;i<5;i++)t.frame(16);out.jump=t.player.pos.y>y;
     t.checkpoint(1);t.fall();out.respawn=Math.abs(t.player.pos.x-t.checkpoints[1].pos.x)<.2&&Math.abs(t.player.pos.z-(t.checkpoints[1].pos.z+1.8))<.2;
     const before=state.coins;t.collect(0);out.star=state.coins===before+20&&!!window.__lastSpoken;
     t.openGate();for(const b of document.querySelectorAll('#sp-gate-options button')){if(t.gate.open)break;b.click();}out.gate=t.gate.open;
     t.peer('friend-qa',{n:'เพื่อน QA',x:2,y:.5,z:2,yaw:0,av:'blk3',m:1,w:2,hp:'S1:0:0'});out.peer=!!t.peers['friend-qa'];t.gone('friend-qa');out.peerGone=!t.peers['friend-qa'];
+    for(let i=1;i<=5;i++)t.peer(`crowd-${i}`,{n:`Player ${i}`,x:i,y:.5,z:i,yaw:0,av:`blk${i+1}`,hp:'S3:P:0:0:0:plaza'});out.sixPlayers=Object.keys(t.peers).length===5;for(let i=1;i<=5;i++)t.gone(`crowd-${i}`);
+    t.peer('live-qa',{n:'Live Tower',x:1,y:.5,z:1,yaw:0,av:'blk2',hp:'S3:T:2:2:150:tower-2026-08-22'});out.joinOffer=t.joinOffer&&t.joinOffer.kind==='tower'&&!document.querySelector('#sp-join-live').hidden;t.joinLive();out.joinedInProgress=t.activity==='tower'&&t.activityRound.seed==='tower-2026-08-22';t.gone('live-qa');
     t.startActivity('letter');out.letter=t.activity==='letter'&&t.letters.length>=t.activityRound.word[0].length;
-    const letterCoins=state.coins;for(let guard=0;guard<12&&t.activityRound.progress<t.activityRound.word[0].length;guard++){const ch=t.activityRound.word[0][t.activityRound.progress].toUpperCase(),token=t.letters.find(x=>x.active&&x.ch===ch);if(!token)break;t.player.pos.copy(token.g.position);t.frame(16);}out.letterProgress=`${t.activityRound.progress}/${t.activityRound.word[0].length}`;out.letterComplete=state.coins===letterCoins+60;
-    t.peer('team-qa',{n:'Team QA',x:1,y:.5,z:1,yaw:0,av:'blk2',hp:`S2:L:4:4:25:${t.activityRound.seed}`});out.sharedStanding=document.querySelector('#sp-score').textContent.includes('Team QA');t.gone('team-qa');
+    t.peer('team-qa',{n:'Team QA',x:1,y:.5,z:1,yaw:0,av:'blk2',hp:`S3:L:4:4:25:${t.activityRound.seed}`});out.sharedStanding=document.querySelector('#sp-score').textContent.includes('Team QA');
+    const letterCoins=state.coins;for(let guard=0;guard<12&&t.activityRound.progress<t.activityRound.word[0].length;guard++){const ch=t.activityRound.word[0][t.activityRound.progress].toUpperCase(),token=t.letters.find(x=>x.active&&x.ch===ch);if(!token)break;t.player.pos.copy(token.g.position);t.frame(16);}out.letterProgress=`${t.activityRound.progress}/${t.activityRound.word[0].length}`;out.letterComplete=state.coins>letterCoins&&!!state.skyDaily.claims.daily_first;out.coopBadge=!!state.skyProgress.badges.coop;t.gone('team-qa');
     t.startActivity('race');out.race=t.activity==='race'&&t.raceGates.length===3&&t.activityRound.current.options.length===3;
-    const raceCoins=state.coins;for(let q=0;q<3;q++){const answer=t.activityRound.current.answer[0],goal=t.raceGates.find(x=>x.word===answer);goal.hitAt=-9999;t.player.pos.set(goal.x,.45,goal.z);t.frame(16);}out.raceComplete=state.coins===raceCoins+80;
+    const raceCoins=state.coins;for(let q=0;q<3;q++){const answer=t.activityRound.current.answer[0],goal=t.raceGates.find(x=>x.word===answer);goal.hitAt=-9999;t.player.pos.set(goal.x,.45,goal.z);t.frame(16);}out.raceComplete=state.coins>=raceCoins+80&&state.skyProgress.activities.race===1;
+    out.accuracyBadge=!!state.skyProgress.badges.accuracy;
+    t.startActivity('tower');out.tower=t.activity==='tower'&&t.towerQuestion.options.length===3;
+    const floorBefore=t.activityRound.progress,coinsBeforeWrong=state.coins,wrong=t.towerQuestion.options.findIndex(x=>x!==t.towerQuestion.answer);t.answerTower(wrong);out.gentleRetry=t.activityRound.progress===floorBefore&&state.coins===coinsBeforeWrong&&document.querySelector('#sp-tower-feedback').textContent.includes('ไม่หักเหรียญ');
+    while(t.activity==='tower'&&!t.activityDone&&t.activityRound.progress<6){const q=t.towerQuestion,correct=q.options.indexOf(q.answer);t.answerTower(correct);await wait(310);}out.towerComplete=t.activityRound.progress===6&&state.skyProgress.towerCheckpoint===6&&state.skyProgress.activities.tower===1;
+    out.dailyClaims=Object.keys(state.skyDaily.claims).filter(k=>k==='daily_first').length===1&&window.__coinAwards.filter(n=>n===40).length===1&&Object.keys(state.skyDaily.claims).filter(k=>k.startsWith('run_')).length>=3;
+    out.badges=!!state.skyProgress.badges.speed&&!!state.skyProgress.badges.accuracy&&!!state.skyProgress.badges.coop;
+    t.startActivity('tower');for(let i=0;i<2;i++){const q=t.towerQuestion;t.answerTower(q.options.indexOf(q.answer));await wait(310);}const resume={runId:t.activityRound.runId,progress:t.activityRound.progress,coins:state.coins};SkyPlayground3D.stop();out.firstTeardown=!t.running&&!document.getElementById('sp-root');SkyPlayground3D.start();await wait(60);t=SkyPlayground3D._t;out.reconnect=t.activity==='tower'&&t.activityRound.runId===resume.runId&&t.activityRound.progress===resume.progress&&state.coins===resume.coins;
     t.startActivity('obby');out.obby=t.activity==='obby'&&t.activityRound.progress===0;
-    const beforeFinish=state.coins;t.finish();out.finish=state.coins===beforeFinish+100&&state.skyDone.includes('rainbow');
-    SkyPlayground3D.stop();out.teardown=!t.running&&!document.getElementById('sp-root');
+    const beforeFinish=state.coins;t.finish();out.finish=state.coins>=beforeFinish+100&&state.skyDone.includes('rainbow')&&state.skyProgress.activities.obby===1;
+    out.saveLoad=(window.__saveCount||0)>8&&(window.__pushCount||0)>2&&window.__saved.skyDaily.active===null;SkyPlayground3D.stop();out.teardown=!t.running&&!document.getElementById('sp-root');
   }catch(e){out.error=String(e&&e.stack||e);}
   qaReport.textContent=JSON.stringify(out,null,2);qaReport.style.display='block';qaButton.remove();
 });
