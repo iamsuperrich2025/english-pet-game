@@ -17,6 +17,12 @@ function has(pattern) {
   return typeof pattern === 'string' ? src.includes(pattern) : pattern.test(src);
 }
 
+function functionSection(name, nextName) {
+  const start = src.indexOf(`function ${name}(`);
+  const end = src.indexOf(`function ${nextName}(`, start + 1);
+  return start >= 0 ? src.slice(start, end >= 0 ? end : undefined) : '';
+}
+
 // Solo racing: no locally simulated competitors or bot-only DRS path remains.
 for (const pattern of [
   /\bBOT_N\b/, /\bbots\b/, /function\s+bot(?:Tick|Reset|Place|Ensure|Rel|ProfileBuild)\b/,
@@ -32,6 +38,14 @@ for (const pattern of [
 ]) ok(!has(pattern), `removed tyre degradation: ${pattern}`);
 ok(has('const gripMax=Math.min(GRIP_CAP,(GRIP_BASE+GRIP_DF*spd*spd))*sc.grip*(airborne?.08:1);'),
   'player grip depends only on surface/downforce and the grounded state, never tyre wear');
+
+// Lap completion may update persistent/HUD state but must never cover the road with a center banner.
+const progress = functionSection('progressTick', 'fmtLap');
+ok(progress.length > 0, 'lap progress function remains present');
+ok(!/banEl\.(?:innerHTML|classList)/.test(progress), 'lap completion never opens the center banner');
+ok(!/🏁\s*LAP/.test(progress), 'lap completion does not build a hidden LAP popup message');
+ok(has('if(!lapPitted)ghostKeep(t);') && has("coinsEl.textContent='🪙 +'"),
+  'removing the popup keeps ghost recording and lap rewards');
 
 // Player ghost contract must remain end-to-end: storage, recording, playback and UI.
 for (const pattern of [

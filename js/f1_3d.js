@@ -2962,15 +2962,15 @@ function beginPortalReturn(){
   portalActive=true; portalT=0; portalJumped=false; sandT=0;
   portalTargetIdx=nearIdx(px,pz,myIdx);
   drawPortalDestination(portalTargetIdx);
-  portalResumeSpeed=Math.hypot(vx,vz); // รอบ 1214: เก็บความเร็วจริงก่อนเอฟเฟกต์หน่วงรถ
-  vx*=.22; vz*=.22; spd=Math.hypot(vx,vz);
+  portalResumeSpeed=Math.hypot(vx,vz);
+  spd=portalResumeSpeed; // 🚫 รอบ 1226: ห้ามหน่วงความเร็วทั้งก่อน/ระหว่าง/หลังข้ามมิติ
   py=Math.max(0,py);vy=0;pitch=bodyRoll=0;airborne=false;activeJump=null;jumpPrevD=-1;
   if(portalEl) portalEl.className='on';
   if(state.haptic!==false&&navigator.vibrate) navigator.vibrate([45,35,90]);
 }
 function portalTick(dt){
   portalT+=dt;
-  if(!portalJumped){vx*=Math.pow(.025,dt);vz*=Math.pow(.025,dt);spd=Math.hypot(vx,vz);}
+  if(!portalJumped)spd=portalResumeSpeed;
   if(!portalJumped&&portalT>=.68){
     portalJumped=true;
     respawnOnTrack(portalTargetIdx,false);
@@ -3246,24 +3246,20 @@ function progressTick(dt){
     lapCount++;
     lapNow=0; lapStartAt=performance.now();
     cpFlags=[false,false,false];
-    let msg='🏁 LAP '+lapCount+' — '+fmtLap(t);
     /* 🛞 รอบ 905: รอบที่แวะเลนพิท = ไม่นับสถิติ (กติกาจริง) แต่ยังได้เหรียญครบรอบ */
-    if(lapPitted){
-      msg+='<br><span style="color:#9fb2d8;font-size:14px">🔧 รอบเข้าพิท — ไม่นับสถิติ</span>';
-    }else if(!lapBest||t<lapBest){
+    if(!lapPitted&&(!lapBest||t<lapBest)){
       lapBest=t;
       if(!state.f1Best||t<state.f1Best){ state.f1Best=t; saveState(); frSubmit(t); }
       /* รอบ 1216: สถิติยังบันทึก/อยู่ใน HUD แต่ไม่ขึ้น BEST LAP กลางจอ เพราะบังถนน */
     }
-    if(!lapPitted&&ghostKeep(t)) msg+='<br><span style="color:#67d8ff">👻 บันทึกรถเงาใหม่ — รอบหน้าไล่ตัวเองได้เลย</span>';
+    if(!lapPitted)ghostKeep(t);
     ghostReset();
     lapPitted=inPit;                                  // ยังอยู่ในเลนพิทตอนข้ามเส้น = รอบใหม่ก็ยังไม่นับ
     const bonus=25;
     addCoins(bonus); sessionCoins+=bonus;
     coinsEl.textContent='🪙 +'+fmtNum(sessionCoins);
-    msg+='<br><span class="m-coin">+'+bonus+' 🪙</span>';
-    banEl.innerHTML=msg; banEl.classList.add('show');
-    setTimeout(()=>banEl.classList.remove('show'),2400);
+    /* 🚫 รอบ 1226: ผู้ใช้สั่งไม่ให้มีป้าย LAP/เวลา/เหรียญเด้งกลางจอ เพราะบังเส้นทาง
+       ผลรอบทั้งหมดอยู่ใน HUD อยู่แล้ว — คงสถิติ รถเงา และรางวัล แต่ไม่แตะ #f1-ban */
     if(typeof sfx!=='undefined') sfx.levelup();
     pickWord();                                     // หนึ่งคำต่อหนึ่งรอบ: เปลี่ยนคำเฉพาะตอนผ่านเส้น S/F
     renderBoard(); netSend(true);
