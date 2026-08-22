@@ -66,7 +66,7 @@ async function sourceFiles() {
       'js/data/f1_vocab.js',
       'sound/racing/engineSound.mp3', ...F1_COCKPIT_ASSETS,
       'img/f1/peer_car_25d.webp', 'img/f1/sky_racing_1024.webp', 'js/fpsweapon.js', 'js/coinaward.js', 'js/assetaward.js', 'js/onlinecoinaward.js',
-      'js/lettercannon.js', 'css/lettercannon.css', 'js/data/wear_extra.js',
+      'js/lettercannon.js', 'css/lettercannon.css', 'js/skyplay3d.js', 'css/skyplay3d.css', 'js/data/wear_extra.js',
       'js/rankgraph.js', 'css/rankgraph.css',
       'js/data/petshopping.js', 'js/petpantry.js', 'js/petshopping3d.js',
       'css/petpantry.css', 'css/petshopping3d.css',

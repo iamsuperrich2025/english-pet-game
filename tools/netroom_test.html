@@ -1,0 +1,11 @@
+<!doctype html><meta charset="utf-8"><title>NetRoom regression</title>
+<pre id="report">running…</pre>
+<script>
+window.state={tinvSent:{}};window.Online={ready:true,tinv:{}};window.escapeHTML=s=>String(s);window.toast=()=>{};window.fmtNum=n=>String(n);window.profileAvatar=()=>'';
+</script>
+<script src="fakedb.js"></script>
+<script src="../js/netroom.js"></script>
+<script src="test_netroom.js"></script>
+<script>
+NRTest.all().then(r=>{document.getElementById('report').textContent=JSON.stringify(r,null,2);document.title=r&&r.pass===r.total?'NetRoom PASS':'NetRoom FAIL';}).catch(e=>{document.getElementById('report').textContent=String(e&&e.stack||e);document.title='NetRoom ERROR';});
+</script>

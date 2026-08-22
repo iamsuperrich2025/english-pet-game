@@ -948,7 +948,7 @@ function tinvPartyTick(map, uid){
 }
 /* 🤝 รอบ 822: ชื่อโลกไทยจาก map key — ใช้ร่วมทั้ง toast คำเชิญ + openTinvPicker + tinvNoticeHTML (เขียนที่เดียว) */
 const TINV_WORLD_LABEL = {
-  adv:'โลกผจญภัย 🌍', haunt:'โลกผีสิง 👻', heli:'โลกเฮลิคอปเตอร์ 🚁', drone:'โลกโดรน FPV 🛸',
+  adv:'โลกผจญภัย 🌍', sky:'Vocab Sky Playground ☁️', haunt:'โลกผีสิง 👻', heli:'โลกเฮลิคอปเตอร์ 🚁', drone:'โลกโดรน FPV 🛸',
   drive:'โลกขับรถกำแพงเพชร 🚗', soccer:'โลกสนามฟุตบอล ⚽', moto:'โลกมอเตอร์ไซค์ 🏍️', invasion:'โลกยานแม่บุกโลก 🛸',
 };
 function tinvFingerprint(uid, invite){

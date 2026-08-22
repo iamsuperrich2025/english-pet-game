@@ -18,6 +18,7 @@ This file records observed policy, not a mandate to implement speculative change
 - Lobby GLB scene: antialias/alpha on, high-performance preference, DPR capped at 2; render loop stops when the dashboard is inactive.
 - Adventure3D: antialias off, DPR capped at 1.6.
 - Vocab Arena: antialias off, high-performance preference, DPR capped at 1.45.
+- Vocab Sky Playground: antialias off, high-performance preference, DPR capped at 1.45; its Phase 1 procedural scene measured about 69 calls / 4.7k triangles / 9 textures at 812x375 in the local browser harness.
 - Invasion: antialias off, DPR capped at 1.6, ACES tone mapping.
 - Moto, F1, and ShootWord: antialias on, DPR capped at 2.
 - Frame deltas are clamped in the principal loops to avoid simulation explosions after tab stalls.
@@ -37,6 +38,7 @@ This file records observed policy, not a mandate to implement speculative change
 - Adventure drive mode instances repeated roadside buildings/roofs and combines large road/decal triangle sets into shared geometries.
 - Hotel groups geometry by material and hides floor-specific rooms, props, mission items, and lights outside the active/adjacent floors.
 - `NetRoom.drawBudget` ranks peers by distance and limits rendered online avatars; update/send cadence grows with crowd size.
+- Vocab Sky Playground uses shared rounded-cuboid geometry/material caches, primitive scenery, no shadow map or post-processing, a six-player room cap, and five-peer draw budget.
 - Fog, finite camera far planes, and default Three.js frustum culling reduce distant work. Objects set `frustumCulled=false` only when their overlay/large-mesh behavior requires it.
 - Alpha-cutout assets use `alphaTest` where possible instead of large numbers of sorted transparent surfaces.
 

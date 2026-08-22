@@ -2892,7 +2892,7 @@ function attentionSummaryData(){
   if(reqs + chats > 0) rows.push({ico:'👥', txt:`คำขอเพื่อน/ข้อความใหม่ ${reqs + chats}`, sub:'ไปดูที่แผงเพื่อน', panel:'panel-friends'});
   if(gifts > 0)       rows.push({ico:'🎁', txt:`ของขวัญรอเปิด ${gifts}`, sub:'ไปเปิดของขวัญ', panel:'panel-gifts'});
   if(invEntries.length > 0){
-    const TINV_LBL = {adv:'ผจญภัย 🌍', haunt:'ผีสิง 👻', heli:'เฮลิคอปเตอร์ 🚁', drone:'โดรน 🛸', drive:'ขับรถ 🚗'};
+    const TINV_LBL = {adv:'ผจญภัย 🌍', sky:'Sky Playground ☁️', haunt:'ผีสิง 👻', heli:'เฮลิคอปเตอร์ 🚁', drone:'โดรน 🛸', drive:'ขับรถ 🚗'};
     const [, firstInv] = invEntries[0];
     const w = TINV_LBL[firstInv.map] || 'โลก 3D';
     rows.push({ico:'📨', txt:`คำเชิญเล่นด้วยกัน ${invEntries.length} รายการ`,
@@ -7070,6 +7070,28 @@ async function loadAdv3d(){
 async function loadVocabArena3d(){
   await loadScriptOnce('js/arena3d.js');
 }
+/* ============================================================
+   ☁️📚 รอบ 1229 — Vocab Sky Playground
+   standalone social + obby world; ไม่โหลด/ไม่แก้ Adventure World หรือ Invasion
+   ============================================================ */
+async function loadSkyPlayground3d(){
+  await loadScriptOnce('js/skyplay3d.js');
+}
+async function enterSkyPlayground3D(){
+  if(!state.skyTicket) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
+  if(advLoading){ advBusyMsg(enterSkyPlayground3D); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
+  advLoading=Date.now();toast('☁️ กำลังเปิด Vocab Sky Playground...');
+  try{
+    await loadScriptOnce('js/vendor/three.min.js');
+    await loadSkyPlayground3d();
+  }catch(e){
+    advLoading=false;
+    return worldEntryStopped('โหลด Vocab Sky Playground ไม่สำเร็จ อาจเกิดจากเน็ตหรือหน่วยความจำเครื่อง',e);
+  }
+  advLoading=false;
+  SkyPlayground3D.start();
+  return worldEntryStarted();
+}
 let advLoading = false;
 async function enterAdventure3D(){
   if(!state.advTicket || state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
@@ -7513,6 +7535,7 @@ async function enterInvasion3D(){
    ไม่มีหุ่น/รถของตัวเอง = ระบบให้ยืมฟรีสำหรับรอบนั้น (ดู enterMecha3D / enterDrive3D) */
 const WORLD3D = [
   { mode:'adv',   ico:'🌍', label:'ผจญภัย', ticketKey:'advTicket',   doneKey:'advDone',   enter:enterAdventure3D },
+  { mode:'sky',   ico:'☁️', label:'Sky Playground', ticketKey:'skyTicket', doneKey:'skyDone', enter:enterSkyPlayground3D },
   { mode:'haunt', ico:'👻', label:'ผีสิง',  ticketKey:'hauntTicket', doneKey:'hauntDone', enter:enterHaunted3D },
   { mode:'heli',  ico:'🚁', label:'เฮลิ',   ticketKey:'heliTicket',  doneKey:'heliDone',  enter:enterHeli3D },
   { mode:'drone', ico:'🛸', label:'โดรน',   ticketKey:'droneTicket', doneKey:'droneDone', enter:enterDrone3D },

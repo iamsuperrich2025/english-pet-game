@@ -13,11 +13,12 @@ Snapshot verified 2026-08-09. Keep only durable facts here.
 
 ## Active 3D architecture
 
-- Vocab City, Adventure3D, Vocab Arena, Invasion, Moto, F1, ShootWord, and lobby character rendering are separate Three.js owners rather than one universal engine.
+- Vocab City, Adventure3D, Vocab Arena, Vocab Sky Playground, Invasion, Moto, F1, ShootWord, and lobby character rendering are separate Three.js owners rather than one universal engine.
 - Adventure3D is a multi-mode engine for adventure, haunted hotel, helicopter, drone, drive, soccer, and mecha. Scenes are cached per mode for reuse.
 - Hotel geometry/collision/visibility is separated into `hotel3d.js`; gameplay remains in Adventure3D.
 - Collision and navigation are custom lightweight systems. There is no external physics engine.
 - Visual effects use standard Three materials, sprites/meshes, additive blending, and generated canvas textures. No application-level custom shader/post-processing stack is present.
+- Vocab Sky Playground Phase 1 is a public standalone social + Obby world registered through `WORLD3D`: procedural plaza/route, saved checkpoints, one vocabulary gate, collectible vocabulary stars, active pet following, shared coin rewards, and `NetRoom` map `sky` capped at six players per instance.
 
 ## Asset and animation strategy
 

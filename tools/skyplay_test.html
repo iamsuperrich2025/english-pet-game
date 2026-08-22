@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <base href="../">
+  <title>Vocab Sky Playground QA</title>
+  <link rel="stylesheet" href="css/skyplay3d.css">
+</head>
+<body style="margin:0;overflow:hidden;background:#8fd8ff">
+<script>
+window.state={coins:2500,sound:false,haptic:false,noAnim:false,profAv:'blk6',profileName:'Sky QA',playerAvatar:'female',pets:[{type:'cat',name:'ดาวใส',level:3,sick:false}],active:0};
+window.saveState=()=>{};window.authPushSave=()=>Promise.resolve();window.renderDashboard=()=>{};window.clearWarnToasts=()=>{};window.toast=msg=>{window.__lastToast=msg};
+window.addCoins=n=>{state.coins+=n};window.questEvent=()=>{};window.todayStr=()=> '2026-08-22';window.activePet=()=>state.pets[state.active]||null;window.petStage=p=>(p||activePet()).level>=3?'adult':'egg';
+window.currentPetImg=()=> 'img/cat_adult_normal.png';window.lobbyBlk=()=>state.profAv;window.fmtNum=n=>Math.round(n).toLocaleString();
+window.vocabForStudent=()=>[['apple','แอปเปิล'],['cat','แมว'],['cloud','เมฆ'],['book','หนังสือ'],['star','ดาว'],['jump','กระโดด'],['friend','เพื่อน'],['rainbow','สายรุ้ง']];
+window.speakWord=w=>{window.__lastSpoken=w};window.Music={suspendBg(){},resumeBg(){}};
+</script>
+<script src="js/vendor/three.min.js"></script>
+<script src="js/skyplay3d.js"></script>
+<script>
+SkyPlayground3D.start();
+if(new URLSearchParams(location.search).has('gate'))setTimeout(()=>SkyPlayground3D._t.openGate(),120);
+const qaButton=document.createElement('button');qaButton.id='qa-run';qaButton.textContent='RUN PHASE 1 QA';qaButton.style.cssText='position:fixed;right:8px;top:72px;z-index:4000;padding:7px 10px;border:2px solid #fff;border-radius:12px;background:#244a9a;color:#fff;font-weight:900';document.body.appendChild(qaButton);
+const qaReport=document.createElement('pre');qaReport.id='qa-report';qaReport.style.cssText='display:none;position:fixed;inset:8px;z-index:5000;margin:0;padding:14px;overflow:auto;background:#102451;color:#dfffff;border:2px solid #7ef1ff;border-radius:16px;font:700 13px/1.45 monospace;white-space:pre-wrap';document.body.appendChild(qaReport);
+const qaMetrics=document.createElement('output');qaMetrics.id='qa-metrics';qaMetrics.style.display='none';document.body.appendChild(qaMetrics);setInterval(()=>{const t=window.SkyPlayground3D&&SkyPlayground3D._t;if(!t||!t.running)return;qaMetrics.textContent=JSON.stringify({p:{x:t.player.pos.x,y:t.player.pos.y,z:t.player.pos.z},c:{x:t.camera.position.x,y:t.camera.position.y,z:t.camera.position.z},perf:t.perf()});},80);
+qaButton.addEventListener('click',()=>{
+  const t=SkyPlayground3D._t,out={};
+  try{
+    const y=t.player.pos.y;document.querySelector('#sp-jump').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerId:91}));for(let i=0;i<5;i++)t.frame(16);out.jump=t.player.pos.y>y;
+    t.checkpoint(1);t.fall();out.respawn=Math.abs(t.player.pos.x-t.checkpoints[1].pos.x)<.2&&Math.abs(t.player.pos.z-(t.checkpoints[1].pos.z+1.8))<.2;
+    const before=state.coins;t.collect(0);out.star=state.coins===before+20&&!!window.__lastSpoken;
+    t.openGate();for(const b of document.querySelectorAll('#sp-gate-options button')){if(t.gate.open)break;b.click();}out.gate=t.gate.open;
+    t.peer('friend-qa',{n:'เพื่อน QA',x:2,y:.5,z:2,yaw:0,av:'blk3',m:1,w:2,hp:'S1:0:0'});out.peer=!!t.peers['friend-qa'];t.gone('friend-qa');out.peerGone=!t.peers['friend-qa'];
+    const beforeFinish=state.coins;t.finish();out.finish=state.coins===beforeFinish+100&&state.skyDone.includes('rainbow');
+    SkyPlayground3D.stop();out.teardown=!t.running&&!document.getElementById('sp-root');
+  }catch(e){out.error=String(e&&e.stack||e);}
+  qaReport.textContent=JSON.stringify(out,null,2);qaReport.style.display='block';qaButton.remove();
+});
+</script>
+</body>
+</html>

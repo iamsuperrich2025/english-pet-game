@@ -28,6 +28,10 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (22 ส.ค.) — อ่านก่อน
+- **รอบ 1229 · Vocab Sky Playground Phase 1:** เพิ่มโลก standalone Bright Fantasy Social + Obby ผ่าน `WORLD3D` มี plaza/ทางลอยหลายระดับ, moving/disappearing/rotating obstacle + jump pad, checkpoint/respawn, Vocab Gate/Stars, +100 main coin และ Exit sync (`js/skyplay3d.js`, `css/skyplay3d.css`)
+- ใช้ Soft Cuboid Chibi 3D, pet/stage จริงจาก Lobby, vocab/pronunciation/save/quest เดิม และ `NetRoom` map `sky` จำกัด 6 คน; ไม่แตะ controller/character ของ Adventure World กับ Invasion
+- Rules source เพิ่ม `sky` เฉพาะ allowlist `/world` `/wroom` `/winfo` `/tinv`; artifact เต็มทั้งก้อนอยู่ `outputs/vocab-sky-playground-rules-round-1229.html` ฝั่ง Codex workspace และยังรอผู้ใช้ Publish
+- QA ผ่าน: browser gameplay 8/8 + WASD/จอย/กล้อง/812×375/console, NetRoom 52/52, ~69 calls/4.7k triangles/9 textures, syntax/diff, build 8,394 ไฟล์ และ PWA validator
 - **รอบ 1228 · F1 minimap/HUD:** ย้ายกล่องเวลาไปใต้เหรียญ, ยก minimap ขึ้นซ้ายและขยายเป็น 48vh; แสดงเฉพาะรถผู้เล่นจริงตามสีที่เลือก รถตัวเอง pulse และไม่วาด Best-Lap ghost (`js/f1_3d.js`)
 - เพิ่มความสมจริงพื้นถนนด้วยเม็ดแอสฟัลต์/normal/roughness/ร่องยางที่ contrast ชัดขึ้น โดยคง texture เล็กและ draw call เดิมสำหรับมือถือ; Browser QA 844×390 = 187px, 1328×621 = 298px
 - แก้ toast “หมดเวลา” หลุดจากเกมจับคู่คำ/ภาพ: เก็บและยกเลิกทั้ง interval+delayed restart, เริ่มรอบใหม่เฉพาะจอที่ active และบล็อก toast stale นอกเกม (`js/game.js`, `js/picmatch.js`, `js/util.js`)
