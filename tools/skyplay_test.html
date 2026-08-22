@@ -21,9 +21,12 @@ window.speakWord=w=>{window.__lastSpoken=w};window.Music={suspendBg(){},resumeBg
 <script>
 SkyPlayground3D.start();
 if(new URLSearchParams(location.search).has('gate'))setTimeout(()=>SkyPlayground3D._t.openGate(),120);
-const qaButton=document.createElement('button');qaButton.id='qa-run';qaButton.textContent='RUN PHASE 1 QA';qaButton.style.cssText='position:fixed;right:8px;top:72px;z-index:4000;padding:7px 10px;border:2px solid #fff;border-radius:12px;background:#244a9a;color:#fff;font-weight:900';document.body.appendChild(qaButton);
+if(new URLSearchParams(location.search).has('crowd'))setTimeout(()=>{for(let i=1;i<=5;i++)SkyPlayground3D._t.peer(`crowd-${i}`,{n:`Player ${i}`,x:(i-3)*2,y:.5,z:5+i,yaw:i*.3,av:`blk${i+1}`,m:i%2,w:i,hp:'S2:P:0:0:0:plaza'});},120);
+const qaButton=document.createElement('button');qaButton.id='qa-run';qaButton.textContent='RUN PHASE 2 QA';qaButton.style.cssText='position:fixed;right:8px;bottom:8px;z-index:4000;padding:7px 10px;border:2px solid #fff;border-radius:12px;background:#244a9a;color:#fff;font-weight:900';document.body.appendChild(qaButton);
 const qaReport=document.createElement('pre');qaReport.id='qa-report';qaReport.style.cssText='display:none;position:fixed;inset:8px;z-index:5000;margin:0;padding:14px;overflow:auto;background:#102451;color:#dfffff;border:2px solid #7ef1ff;border-radius:16px;font:700 13px/1.45 monospace;white-space:pre-wrap';document.body.appendChild(qaReport);
-const qaMetrics=document.createElement('output');qaMetrics.id='qa-metrics';qaMetrics.style.display='none';document.body.appendChild(qaMetrics);setInterval(()=>{const t=window.SkyPlayground3D&&SkyPlayground3D._t;if(!t||!t.running)return;qaMetrics.textContent=JSON.stringify({p:{x:t.player.pos.x,y:t.player.pos.y,z:t.player.pos.z},c:{x:t.camera.position.x,y:t.camera.position.y,z:t.camera.position.z},perf:t.perf()});},80);
+const qaMetrics=document.createElement('output');qaMetrics.id='qa-metrics';qaMetrics.style.display='none';document.body.appendChild(qaMetrics);
+let qaFps=0,qaWorst=0,qaFrames=0,qaFrameAt=performance.now(),qaWindowAt=qaFrameAt;function qaFrame(t){const d=t-qaFrameAt;qaFrameAt=t;qaFrames++;qaWorst=Math.max(qaWorst,d);if(t-qaWindowAt>=1000){qaFps=qaFrames*1000/(t-qaWindowAt);qaFrames=0;qaWindowAt=t;}requestAnimationFrame(qaFrame)}requestAnimationFrame(qaFrame);
+setInterval(()=>{const t=window.SkyPlayground3D&&SkyPlayground3D._t;if(!t||!t.running)return;qaMetrics.textContent=JSON.stringify({p:{x:t.player.pos.x,y:t.player.pos.y,z:t.player.pos.z},c:{x:t.camera.position.x,y:t.camera.position.y,z:t.camera.position.z},perf:t.perf(),fps:+qaFps.toFixed(1),worstMs:+qaWorst.toFixed(1)});qaWorst=0;},80);
 qaButton.addEventListener('click',()=>{
   const t=SkyPlayground3D._t,out={};
   try{
@@ -32,6 +35,12 @@ qaButton.addEventListener('click',()=>{
     const before=state.coins;t.collect(0);out.star=state.coins===before+20&&!!window.__lastSpoken;
     t.openGate();for(const b of document.querySelectorAll('#sp-gate-options button')){if(t.gate.open)break;b.click();}out.gate=t.gate.open;
     t.peer('friend-qa',{n:'เพื่อน QA',x:2,y:.5,z:2,yaw:0,av:'blk3',m:1,w:2,hp:'S1:0:0'});out.peer=!!t.peers['friend-qa'];t.gone('friend-qa');out.peerGone=!t.peers['friend-qa'];
+    t.startActivity('letter');out.letter=t.activity==='letter'&&t.letters.length>=t.activityRound.word[0].length;
+    const letterCoins=state.coins;for(let guard=0;guard<12&&t.activityRound.progress<t.activityRound.word[0].length;guard++){const ch=t.activityRound.word[0][t.activityRound.progress].toUpperCase(),token=t.letters.find(x=>x.active&&x.ch===ch);if(!token)break;t.player.pos.copy(token.g.position);t.frame(16);}out.letterProgress=`${t.activityRound.progress}/${t.activityRound.word[0].length}`;out.letterComplete=state.coins===letterCoins+60;
+    t.peer('team-qa',{n:'Team QA',x:1,y:.5,z:1,yaw:0,av:'blk2',hp:`S2:L:4:4:25:${t.activityRound.seed}`});out.sharedStanding=document.querySelector('#sp-score').textContent.includes('Team QA');t.gone('team-qa');
+    t.startActivity('race');out.race=t.activity==='race'&&t.raceGates.length===3&&t.activityRound.current.options.length===3;
+    const raceCoins=state.coins;for(let q=0;q<3;q++){const answer=t.activityRound.current.answer[0],goal=t.raceGates.find(x=>x.word===answer);goal.hitAt=-9999;t.player.pos.set(goal.x,.45,goal.z);t.frame(16);}out.raceComplete=state.coins===raceCoins+80;
+    t.startActivity('obby');out.obby=t.activity==='obby'&&t.activityRound.progress===0;
     const beforeFinish=state.coins;t.finish();out.finish=state.coins===beforeFinish+100&&state.skyDone.includes('rainbow');
     SkyPlayground3D.stop();out.teardown=!t.running&&!document.getElementById('sp-root');
   }catch(e){out.error=String(e&&e.stack||e);}

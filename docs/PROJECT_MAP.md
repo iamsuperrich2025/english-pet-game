@@ -79,12 +79,12 @@ DEPENDENCIES: `THREE`, shared state/progression, optional online state.
 NOTES: Intentionally loads without the large Adventure3D engine for the normal adventure entry.
 
 SYSTEM: Vocab Sky Playground
-PURPOSE: Bright fantasy social plaza and floating Obby vertical slice with checkpoints, vocabulary gates/stars, rewards, pets, and up to six nearby players.
+PURPOSE: Bright fantasy social plaza with shared Letter Hunt, Word Race, timed Sky Obby, checkpoints, vocabulary rewards, pets, and up to six nearby players.
 PRIMARY FILE: `js/skyplay3d.js`
 RELATED FILES: `css/skyplay3d.css`, `js/ui.js`, `js/netroom.js`, `js/state.js`, `handoff/RULES.md`
 PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.SkyPlayground3D`, `start`, `stop`, `enterSkyPlayground3D`
 DEPENDENCIES: `THREE`, shared state/vocabulary/audio helpers, `NetRoom`, active Lobby pet.
-NOTES: Standalone lazy-loaded engine registered through `WORLD3D`; map key `sky`, room cap 6. It does not alter original Adventure or Invasion character/controller paths.
+NOTES: Standalone lazy-loaded engine registered through `WORLD3D`; map key `sky`, room cap 6. Phase 2 standings reuse the existing compact NetRoom `hp` payload and add no Firebase path. It does not alter original Adventure or Invasion character/controller paths.
 
 SYSTEM: Invasion world
 PURPOSE: Large FPS/vehicle world: terrain, town, NPC squads/fighters, weapons, mothership, aircraft, missions, networking, and LOD.

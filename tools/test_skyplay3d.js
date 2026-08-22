@@ -1,4 +1,4 @@
-/* รอบ 1229 — structural regression for Vocab Sky Playground (no browser dependency). */
+/* รอบ 1230 — structural regression for Vocab Sky Playground Phase 2 (no browser dependency). */
 "use strict";
 const fs=require('fs'),path=require('path'),root=path.resolve(__dirname,'..');
 const sky=fs.readFileSync(path.join(root,'js/skyplay3d.js'),'utf8');
@@ -6,14 +6,21 @@ const ui=fs.readFileSync(path.join(root,'js/ui.js'),'utf8');
 const net=fs.readFileSync(path.join(root,'js/netroom.js'),'utf8');
 const rules=fs.readFileSync(path.join(root,'handoff/RULES.md'),'utf8');
 const html=fs.readFileSync(path.join(root,'index_classic.html'),'utf8');
+const css=fs.readFileSync(path.join(root,'css/skyplay3d.css'),'utf8');
 function ok(cond,msg){if(!cond)throw new Error(msg);console.log('PASS',msg);}
 ok(/window\.SkyPlayground3D=\{start,stop,_t:/.test(sky),'engine exposes lifecycle and test hooks');
 ok(/map:'sky',roomMax:ROOM_MAX/.test(sky)&&/const TAU=.*ROOM_MAX=6/.test(sky),'NetRoom instance is isolated and capped at 6');
 ok(/activePet/.test(sky)&&/petStage/.test(sky)&&/currentPetImg/.test(sky),'pet reuses active Lobby pet and real stage image');
+ok(/goal\.clone\(\)\.sub\(petComp\.group\.position\)/.test(sky),'pet follow teleports to the absolute goal without per-frame particle leaks');
 ok(/playerStyle='soft-cuboid-chibi-3d'/.test(sky),'visible players use Soft Cuboid Chibi 3D');
 ok(/speakWord/.test(sky)&&/vocabForStudent/.test(sky)&&/questEvent\('word3d'/.test(sky),'vocabulary reuses data, pronunciation and shared quest event');
 ok(/addCoins\(20\)/.test(sky)&&/first\?100:20/.test(sky),'stars and route completion use main coins');
 ok(/kind:'bounce'/.test(sky)&&/rotators\.forEach\(r=>/.test(sky)&&/kind==='disappear'/.test(sky),'sample Obby includes bounce, rotating, moving and disappearing obstacles');
+ok(/data-activity="letter"/.test(sky)&&/data-activity="race"/.test(sky)&&/data-activity="obby"/.test(sky),'Phase 2 exposes Letter Hunt, Word Race and Sky Obby');
+ok(/PHASE 2 SHARED ACTIVITIES/.test(sky)&&/activityRows\(\)/.test(sky)&&/S2:\$\{activityCode\(\)\}/.test(sky),'all activities publish shared progress and live standings through NetRoom');
+ok(/function tickActivity/.test(sky)&&/function setupRaceQuestion/.test(sky)&&/completeActivity\('obby',false\)/.test(sky),'three activities have interactive gameplay and completion paths');
+ok(/activityReward\(kind/.test(sky)&&/addCoins\(reward\)/.test(sky),'Phase 2 rewards use main coins and durable daily progress');
+ok(/\.sp-activity-grid\{display:grid;grid-template-columns:repeat\(3,1fr\)/.test(css)&&/@media \(max-height:460px\)/.test(css),'activity picker is landscape-first and covered by the small-mobile layout');
 ok((sky.match(/authPushSave\(true\)/g)||[]).length>=2,'completion and exit request cloud sync');
 ok(/mode:'sky'.*enter:enterSkyPlayground3D/.test(ui),'WORLD3D registry owns the entrance');
 ok(/css\/skyplay3d\.css/.test(html),'classic shell loads isolated world CSS');
