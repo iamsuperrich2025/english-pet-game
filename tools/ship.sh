@@ -41,6 +41,7 @@ HAS_TTY=0; ( exec < /dev/tty ) >/dev/null 2>&1 && HAS_TTY=1
 prompt(){ # $1=ข้อความ → พิมพ์คำตอบออก stdout
   local a
   if [[ $HAS_TTY -eq 1 ]]; then printf '%s ' "$1" > /dev/tty; read -r a < /dev/tty; else return 1; fi
+  a="${a%$'\r'}" # Git Bash รับ Enter จากหน้าต่าง cmd เป็น CRLF; กัน "y\r" ถูกตีความเป็น n
   printf '%s' "$a"
 }
 ask(){ # y/n — ไม่มี tty ให้ถือว่า "ไม่" (ปลอดภัยไว้ก่อน)

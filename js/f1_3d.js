@@ -186,11 +186,12 @@ const COCKPIT_ASSETS=Object.freeze({
 });
 const PEER_COLORS=CAR_STYLES.map(s=>s.hex);
 const GRID_N       = 20;      // ช่องกริดสตาร์ท
-/* 🏁 รอบ 1218 — กริด F1 จริงวางเหลื่อมซ้าย/ขวาทีละ 8 ม. ไม่ใช่คู่รถในแถวเดียวกัน */
+/* 🏁 รอบ 1219 — เว้นรถให้เห็นช่องว่างชัด และกัน client เก่าที่ไม่รายงาน slot */
 const GRID_FRONT_M = 18;
-const GRID_GAP_M   = 8;
+const GRID_GAP_M   = 18;
 const GRID_SIDE_M  = 3.2;
-const F1_GRID_WIRE = 'F1G:'; // ส่งผ่าน hp→h ของ NetRoom; rules รับอยู่แล้ว ไม่เพิ่ม path
+const GRID_SAFE_M  = 15;
+const F1_GRID_WIRE = 'F1G:'; // ใช้ c เฉพาะตอนไม่มีแชท; client เก่าอ่านข้ามได้อย่างปลอดภัย
 /* 🚦 ลำดับออกสตาร์ท (รอบ 902) — ไฟแดง 5 ดวงบนซุ้ม ติดทีละดวง แล้วดับพร้อมกัน = ออกตัว */
 const LIGHT_LEAD_S = 1.4;     // หน่วงก่อนไฟดวงแรกติด (ให้ตั้งหลัก)
 const LIGHT_STEP_S = 1.0;     // เว้นระยะไฟแต่ละดวง
@@ -255,7 +256,7 @@ let thermalBasePR=1,thermalTargetFps=60,thermalRenderAt=0,thermalRendered=0,ther
 const V3=(x,y,z)=>new THREE.Vector3(x,y,z);
 const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
 /* ============================================================
-   🏁 รอบ 1218 — MULTIPLAYER STAGGERED START GRID
+   🏁 รอบ 1219 — MULTIPLAYER SAFE-DISTANCE START GRID
    ============================================================ */
 function gridPose(slot){
   slot=clamp(slot|0,0,GRID_N-1);
@@ -282,6 +283,23 @@ function startGridSlotFor(uid,uids){
   return clamp(at<0?0:at,0,GRID_N-1);
 }
 function gridFormationActive(){return lightPhase!=='go';}
+function gridSlotClear(slot){
+  const pose=gridPose(slot);
+  for(const uid in peers){
+    const peer=peers[uid];
+    if(peer.gridSlot===slot)return false;
+    if(peer.gridSlot!==null&&peer.gridSlot!==undefined)continue;
+    const at=peer.tgt||peer.cur;
+    if(at&&Math.hypot(pose.x-at.x,pose.z-at.z)<GRID_SAFE_M)return false;
+  }
+  return true;
+}
+function safeStartGridSlot(desired){
+  desired=clamp(desired|0,0,GRID_N-1);
+  for(let slot=desired;slot<GRID_N;slot++)if(gridSlotClear(slot))return slot;
+  for(let slot=0;slot<desired;slot++)if(gridSlotClear(slot))return slot;
+  return desired;
+}
 function placeAtGridSlot(slot){
   const p=gridPose(slot);gridSlot=p.slot;
   px=p.x;py=0;pz=p.z;yaw=p.yaw;pitch=0;vx=vy=vz=spd=0;steer=0;slide=0;myIdx=p.i;camInit=false;
@@ -293,12 +311,13 @@ function placeAtGridSlot(slot){
 }
 function settleStartGrid(force){
   if(!LINE||!gridFormationActive())return false;
-  const uids=startGridUids(),sig=uids.join('|'),next=startGridSlotFor(startGridUid(),uids);
+  const uids=startGridUids(),sig=uids.join('|');
+  const next=safeStartGridSlot(startGridSlotFor(startGridUid(),uids));
   if(!force&&sig===gridRosterSig&&next===gridSlot)return false;
   gridRosterSig=sig;placeAtGridSlot(next);netSend(true);return true;
 }
 function packetGridSlot(d){
-  const wire=d&&typeof d.hp==='string'?d.hp:'';
+  const wire=d&&typeof d.c==='string'?d.c:'';
   if(!wire.startsWith(F1_GRID_WIRE))return null;
   const n=Number(wire.slice(F1_GRID_WIRE.length));
   return Number.isInteger(n)&&n>=0&&n<GRID_N?n:null;
@@ -3613,7 +3632,6 @@ function netJoin(){
   if(!netReady()) return;
   room=NetRoom.create({
     map:'f1', sendMs:NET_SEND_MS, roomMax:ROOM_MAX,
-    legacyOptional:['hp'],
     roomNoun:'สนาม', roomIcon:'🏁',
     push(){ lastNetSend=0; netSend(true); },
     onPeer:onPeer, onPeerGone:dropPeer,
@@ -3632,11 +3650,11 @@ function netSend(force){
     x:Math.round(px*10)/10, y:Math.round(py*20)/20, z:Math.round(pz*10)/10,
     yaw:Math.round(yaw*100)/100, p:Math.round(pitch*100)/100, a:airborne?1:0, w:sessionWords,
     cw:F1_COLOR_WIRE+playerCarStyle.key,
-    hp:F1_GRID_WIRE+gridSlot,
     vx:Math.round(vx*10)/10, vz:Math.round(vz*10)/10,
     vy:Math.round(vy*10)/10,
     d:drsOn?1:0};   // 🪽 รอบ 907: สถานะ DRS — เพื่อนเห็นไฟเขียวท้ายรถตอนเราเปิดปีก
   if(myChat&&Date.now()-myChat.ts<CHAT_MS+1000){ payload.c=myChat.text; payload.ct=myChat.ts; }
+  else payload.c=F1_GRID_WIRE+gridSlot;
   room.send(payload,force);
 }
 function sendChat(text){
@@ -4501,7 +4519,7 @@ window.F1World={
     paintPlayerStyle, cockpitAsset, peerColor, packetCarColorIndex,
     get startGrid(){return {slot:gridSlot,pose:LINE?gridPose(gridSlot):null,uids:startGridUids(),formation:gridFormationActive(),
       peers:Object.fromEntries(Object.entries(peers).map(([uid,p])=>[uid,p.gridSlot]))};},
-    gridPose,startGridSlotFor,settleStartGrid,packetGridSlot,
+    gridPose,startGridSlotFor,gridSlotClear,safeStartGridSlot,settleStartGrid,packetGridSlot,
     /* 🎡 รอบ 913 — พวงมาลัยแยกชั้น */
     get wheel(){ if(!wheelEl) return {el:null};
       const r=wheelEl.getBoundingClientRect(), c=cockpitEl.getBoundingClientRect();
