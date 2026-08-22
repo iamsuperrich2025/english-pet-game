@@ -3,9 +3,9 @@
    DATA: สัตว์เลี้ยง + อาหาร  (แก้ไฟล์นี้เพื่อเพิ่มสัตว์/เมนูใหม่
    ได้เลย โดยไม่กระทบคะแนน/เซฟของผู้เล่นเดิม)
    ============================================================
-   วิธีเพิ่มสัตว์ใหม่: เพิ่ม key ใหม่ใน PETS ตามแบบด้านล่าง
-   แล้วเจนภาพชื่อ <key>_newborn.png (หรือ <key>_egg.png ถ้า startKey:'egg')
-   + <key>_baby_*.png + <key>_adult_*.png วางในโฟลเดอร์ img/            */
+   วิธีเพิ่มสัตว์ใหม่: เพิ่ม key ใหม่ใน PETS ตามแบบด้านล่าง แล้ววาง WebP มาตรฐาน
+   <key>_newborn.webp (หรือ <key>_egg.webp) + <key>_baby_*.webp +
+   <key>_adult_*.webp ใน img/animal/                                      */
 
 const PETS = {
   dog:{
@@ -29,6 +29,54 @@ const PETS = {
     eggDesc:'ไข่ลายเกล็ดมีออร่าไฟ', decals:[],
     baby:'🐲', adult:'🐉',    ability:'🔥 ลมหายใจไฟ: คอมโบ ×3 ขึ้นไป ได้เหรียญ ×2 · ไม่ป่วยจากอากาศร้อน',
     favFood:{emoji:'🌶️', en:'Chili', name:'พริกไฟลุกโชน', price:300, fill:45, exp:15},
+  },
+  elephant:{
+    name:'น้องช้าง', price:2000000,
+    startKey:'newborn', eggName:'ลูกช้างแรกเกิด', eggClass:'basket-elephant',
+    eggDesc:'ลูกช้างตัวน้อยหลับสบายอยู่ในตะกร้า', decals:[],
+    baby:'🐘', adult:'🐘',
+    ability:'🐾 เพื่อนร่วมทาง: เติบโต ฝึกคำศัพท์ และร่วมผจญภัยไปกับผู้เล่น',
+    favFood:{emoji:'🍌', en:'Banana', name:'กล้วยหอม', price:300, fill:45, exp:15},
+  },
+  meerkat:{
+    name:'น้องเมียร์แคต', price:70000,
+    startKey:'newborn', eggName:'ลูกเมียร์แคตแรกเกิด', eggClass:'basket-meerkat',
+    eggDesc:'ลูกเมียร์แคตจิ๋วขดตัวหลับในตะกร้า', decals:[],
+    baby:'🐾', adult:'🐾',
+    ability:'🐾 เพื่อนร่วมทาง: เติบโต ฝึกคำศัพท์ และร่วมผจญภัยไปกับผู้เล่น',
+    favFood:{emoji:'🪱', en:'Mealworm', name:'หนอนนก', price:300, fill:45, exp:15},
+  },
+  tyrannosaurusRex:{
+    name:'น้องไทแรนโนซอรัส เร็กซ์', price:80000,
+    startKey:'newborn', eggName:'ลูกทีเร็กซ์แรกเกิด', eggClass:'basket-tyrannosaurus',
+    eggDesc:'ลูกทีเร็กซ์เพิ่งฟักจากไข่และกำลังหลับปุ๋ย', decals:[],
+    baby:'🦖', adult:'🦖',
+    ability:'🐾 เพื่อนร่วมทาง: เติบโต ฝึกคำศัพท์ และร่วมผจญภัยไปกับผู้เล่น',
+    favFood:{emoji:'🍖', en:'Meat', name:'เนื้อชิ้นโต', price:300, fill:45, exp:15},
+  },
+  toucan:{
+    name:'น้องทูแคน', price:480000,
+    startKey:'newborn', eggName:'ลูกทูแคนแรกเกิด', eggClass:'basket-toucan',
+    eggDesc:'ลูกทูแคนปากสีรุ้งนอนอุ่นอยู่ในรัง', decals:[],
+    baby:'🐦', adult:'🐦',
+    ability:'🐾 เพื่อนร่วมทาง: เติบโต ฝึกคำศัพท์ และร่วมผจญภัยไปกับผู้เล่น',
+    favFood:{emoji:'🥭', en:'Mango', name:'มะม่วงสุก', price:300, fill:45, exp:15},
+  },
+  buffalo:{
+    name:'น้องควาย', price:100000,
+    startKey:'newborn', eggName:'ลูกควายแรกเกิด', eggClass:'basket-buffalo',
+    eggDesc:'ลูกควายตัวน้อยหลับปุ๋ยในตะกร้าสาน', decals:[],
+    baby:'🐃', adult:'🐃',
+    ability:'🐾 เพื่อนร่วมทาง: เติบโต ฝึกคำศัพท์ และร่วมผจญภัยไปกับผู้เล่น',
+    favFood:{emoji:'🌾', en:'Grass', name:'หญ้าอ่อน', price:300, fill:45, exp:15},
+  },
+  sikaDeer:{
+    name:'น้องกวางซีกา', price:70000,
+    startKey:'newborn', eggName:'ลูกกวางซีกาแรกเกิด', eggClass:'basket-sika-deer',
+    eggDesc:'ลูกกวางลายจุดนอนหลับอย่างอบอุ่นในตะกร้า', decals:[],
+    baby:'🦌', adult:'🦌',
+    ability:'🐾 เพื่อนร่วมทาง: เติบโต ฝึกคำศัพท์ และร่วมผจญภัยไปกับผู้เล่น',
+    favFood:{emoji:'🍃', en:'Leaves', name:'ใบไม้อ่อน', price:300, fill:45, exp:15},
   },
 };
 
@@ -63,7 +111,15 @@ const FOODS = [
    whyDragon:'มังกรเป็นสัตว์ไฟ ท้องรับนมวัวเย็นๆ ไม่ได้ กินแล้วท้องเสียเหมือนกัน'},
 ];
 
+/* สัตว์ป่า/สัตว์พิเศษควรกินอาหารเฉพาะชนิด ไม่สอนเด็กให้นำอาหารคนไปป้อนจริง */
+const SPECIAL_DIET_PETS = new Set(['elephant','meerkat','tyrannosaurusRex','toucan','buffalo','sikaDeer']);
 /* อาหารนี้เป็นโทษกับสัตว์ชนิดนี้ไหม (ข้อ 5.1) */
-function foodBadFor(food, type){ return Array.isArray(food.badFor) && food.badFor.includes(type); }
+function foodBadFor(food, type){
+  return (Array.isArray(food.badFor) && food.badFor.includes(type))
+    || (food.human && SPECIAL_DIET_PETS.has(type));
+}
 /* เหตุผลที่ใช้สอน — มังกรมีเหตุผลเฉพาะ (whyDragon) เพราะเหตุผลจริงของหมาแมวใช้กับสัตว์ในนิทานไม่ได้ */
-function foodWhy(food, type){ return (type === 'dragon' && food.whyDragon) ? food.whyDragon : (food.why || ''); }
+function foodWhy(food, type){
+  if(food.human && SPECIAL_DIET_PETS.has(type)) return 'สัตว์ป่าและสัตว์พิเศษต้องกินอาหารเฉพาะชนิด อาหารปรุงรสของคนอาจทำให้ป่วยได้';
+  return (type === 'dragon' && food.whyDragon) ? food.whyDragon : (food.why || '');
+}

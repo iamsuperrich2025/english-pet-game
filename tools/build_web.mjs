@@ -104,6 +104,10 @@ async function sourceFiles() {
     // Premium dress-up art is intentionally reusable runtime content. Include newly
     // generated pieces before their first commit, without opening the build to other WIP img files.
     await includeRuntime(path.join(ROOT, 'img/wear/premium'), 'img/wear/premium');
+    // Standardized pet art is a complete runtime catalog. Include new WebP files during
+    // pre-commit QA as well as after git archive starts tracking the directories.
+    await includeRuntime(path.join(ROOT, 'img/animal'), 'img/animal');
+    await includeRuntime(path.join(ROOT, 'img/AnimalWearItems'), 'img/AnimalWearItems');
     return tracked;
   } catch {
     const found = [];

@@ -4,7 +4,8 @@
    file:// และ http:// ต่างจาก fetch ที่ถูกบล็อกใน file://)
    ============================================================
    โฟลเดอร์ภาพ:
-     img/                ภาพสัตว์  <pet>_<วัย>_<อาการ|ไอเทม>.png
+     img/animal/         ภาพสัตว์  <pet>_<วัย>_<อาการ>.webp
+     img/AnimalWearItems ภาพใส่ชุด <pet>_<วัย>_<item.id>.webp
      img/rank/           เหรียญตราแรงค์  rank_<id>.png
      img/home/           ที่พัก  home_<id>.png                     */
 
@@ -15,6 +16,10 @@ const MOODS = ['normal','happy','hungry','sick'];
    ใช้ ?v= query string ป้องกันแคช 7 วัน ของ Firebase Hosting + cache-first ของ service worker (เช่นเดียวกับ badge) */
 const COLLECTIBLES_IMG_V = '954';
 const GIFTS_IMG_V = '954';
+/* ไฟล์สัตว์/ชุดถูกเปลี่ยนจาก PNG ต้นฉบับเป็น WebP มาตรฐาน 22 ส.ค. 2026
+   บัมพ์ค่านี้เมื่อแทน “เนื้อภาพ” ในชื่อไฟล์เดิม เพื่อข้าม cache ของเครื่องผู้เล่น */
+const PET_ASSET_V = '20260822-a';
+const PET_IMAGE_STATES = new Set(['newborn','egg','normal','happy','hungry','sick','normal_sleep','fat','thin','strong']);
 
 function startImgKey(pet){ return `${pet}_${PETS[pet].startKey}`; }
 
@@ -30,15 +35,35 @@ function petImageKeys(pet){
   return keys;
 }
 
+/* แยกภาพสถานะกับภาพใส่ชุดจาก key กลางของเกม โดยไม่ผูก prefix ย่อ/ตัวพิมพ์ใหญ่ของไฟล์ต้นฉบับ */
+function petAssetPath(key){
+  const pet = Object.keys(PETS).sort((a,b)=>b.length-a.length).find(p=>key.startsWith(p+'_'));
+  if(!pet) return null;
+  const suffix = key.slice(pet.length + 1);
+  if(suffix === 'newborn' || suffix === 'egg') return `img/animal/${key}.webp`;
+  const match = suffix.match(/^(baby|adult)_(.+)$/);
+  if(!match) return null;
+  const dir = PET_IMAGE_STATES.has(match[2]) ? 'animal' : 'AnimalWearItems';
+  return `img/${dir}/${key}.webp`;
+}
+
 function probeImages(keys, dir='img', version=''){
   return Promise.all(keys.map(k=>{
     if(IMG_FILES[k] !== undefined) return Promise.resolve();   // เคยตรวจแล้ว
     return new Promise(done=>{
-      const im = new Image();
-      const path = `${dir}/${k}.png` + (version ? `?v=${version}` : '');
-      im.onload  = ()=>{ IMG_FILES[k] = path; done(); };
-      im.onerror = ()=>{ IMG_FILES[k] = null; done(); };
-      im.src = path;
+      const modern = dir === 'img' ? petAssetPath(k) : null;
+      const paths = modern
+        ? [`${modern}?v=${PET_ASSET_V}`, `${dir}/${k}.png`]
+        : [`${dir}/${k}.png` + (version ? `?v=${version}` : '')];
+      let index = 0;
+      const next = ()=>{
+        if(index >= paths.length){ IMG_FILES[k] = null; done(); return; }
+        const path = paths[index++], im = new Image();
+        im.onload  = ()=>{ IMG_FILES[k] = path; done(); };
+        im.onerror = next;
+        im.src = path;
+      };
+      next();
     });
   }));
 }
@@ -161,7 +186,8 @@ function petWearOverlay(p, src){
   if(!worn) return null;
   src = src || currentPetImg(p);
   if(!src || src === IMG_FILES[`${p.type}_${stage}_${worn.id}`]) return null;   // ภาพนี้ใส่ชุดอยู่แล้ว
-  const a = WEAR_ANCHOR[src.replace(/^img\//, '').replace(/\.png$/, '')];
+  const anchorKey = src.split('/').pop().replace(/\.(?:png|webp)(?:\?.*)?$/i, '');
+  const a = WEAR_ANCHOR[anchorKey];
   // all_* ทำให้เครื่องประดับ/เสื้อผ้าชิ้นเดียวรองรับสัตว์สายพันธุ์ใหม่ได้ทันที
   // ส่วน key รายสายพันธุ์มีไว้จูนตำแหน่งละเอียดโดยไม่ต้องสร้างภาพใหม่
   const w = WEAR_PIECE[`${p.type}_${worn.id}`] || WEAR_PIECE[`all_${worn.id}`];
