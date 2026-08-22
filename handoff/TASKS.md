@@ -40,9 +40,6 @@
 - **รอบ 1247 · Vocab Sky ตัวละครตรงภาพมาตรฐาน:** ถอด procedural human กล่องเดิมออกจาก spawn path และเปลี่ยนเป็น render asset Soft Cuboid Chibi 3D โปร่งใส 8 ทิศ; local/online peer ทุกตัวใช้ renderer เดียวกัน (`js/skyplay3d.js`, `img/characters/sky_soft_cuboid_chibi_8dir.webp`)
 - Atlas 1536×768 lossless WebP 497KB มี alpha จริง/เฟรมครบ; visual QA จริงที่ 812×375 ยืนยันหน้า–ซ้าย–หลัง–ขวาถูกต้อง และไม่แตะ pet/NPC/collider (`tools/test_skyplay3d.js`, `tools/test_sky_chibi_asset.py`)
 - เพิ่ม asset เข้า production allowlist + validator; source/dist hash ตรงและ asset manifest มีรายการครบ; syntax+Sky regression+asset QA+production build/PWA validator ผ่าน ไม่แตะ `css/petshopping3d.css` (`tools/build_web.mjs`, `tools/validate_web_build.mjs`)
-- **รอบ 1246 · แก้ Shoot Word ให้สะสมเหรียญทันที:** รอบ 1244 ตีความผิดเป็นแต้มจบคำ; เปลี่ยนป้ายเป็น `🪙 สะสมรอบนี้ N เหรียญ` และยิงตัวอักษรถูกตัวแรกขึ้น 5 ทันที (`js/shootword.js`)
-- ทุกตัวถูกบวก +5 ในเหตุการณ์จ่ายเหรียญเดียวกัน; เป็ด +3 รวมด้วย; จบคำไม่บวกเหรียญซ้ำ และแต้มอันดับสะสมเดิมยังคำนวณแยกตามกติกา
-- syntax+immediate-first-hit regression+812×375 geometry+production build 8,394 ไฟล์/PWA validator+bundle inspection ผ่าน; ไม่แตะ `css/petshopping3d.css` (`tools/test_shootword_round_score.js`)
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`

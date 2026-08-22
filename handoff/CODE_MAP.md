@@ -779,7 +779,7 @@ openPhotoCrop:224
 
 ## js/picdict.js (412 บรรทัด · 0 รายการ)
 
-## js/picmatch.js (682 บรรทัด · 0 รายการ)
+## js/picmatch.js (691 บรรทัด · 0 รายการ)
 
 ## js/picquiz_online.js (608 บรรทัด · 0 รายการ)
 
@@ -791,7 +791,7 @@ openPhotoCrop:224
 
 ## js/shootword.js (1,118 บรรทัด · 0 รายการ)
 
-## js/skyplay3d.js (574 บรรทัด · 0 รายการ)
+## js/skyplay3d.js (582 บรรทัด · 0 รายการ)
 
 ## js/state.js (1,353 บรรทัด · 96 รายการ)
 ### 🗂️ สารบัญโซน js/state.js (Read/Edit เฉพาะช่วง)
