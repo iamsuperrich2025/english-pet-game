@@ -1,8 +1,7 @@
-รอบ 1217: แก้สีรถ multiplayer เนินทางหลัก floating steering และ HUD ไม่ทับกัน
+รอบ 1218: จัดกริดเกิด F1 ไม่ซ้อนและวาบเมื่อพ้นขอบ runoff
 FILE: handoff/TASKS.md
 FILE: js/f1_3d.js
-FILE: tools/test_f1_board_layout.js
-FILE: tools/test_f1_cockpit_visibility.js
 FILE: tools/test_f1_fantasy_jumps.js
-FILE: tools/test_f1_floating_steer.js
-FILE: tools/test_f1_multiplayer_color.js
+FILE: tools/test_f1_realistic_circuit.js
+FILE: tools/test_f1_runoff_portal.js
+FILE: tools/test_f1_start_grid.js
