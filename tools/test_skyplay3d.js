@@ -22,6 +22,11 @@ ok(/playerStyle='soft-cuboid-chibi-3d'/.test(sky),'visible players use Soft Cubo
 ok(/speakWord/.test(sky)&&/vocabForStudent/.test(sky)&&/questEvent\('word3d'/.test(sky),'vocabulary reuses data, pronunciation and shared quest event');
 ok(/addCoins\(20\)/.test(sky)&&/first\?100:20/.test(sky),'stars and route completion use main coins');
 ok(/kind:'bounce'/.test(sky)&&/rotators\.forEach\(r=>/.test(sky)&&/kind==='disappear'/.test(sky),'sample Obby includes bounce, rotating, moving and disappearing obstacles');
+const collisionCode=sky.slice(sky.indexOf('function localXZ'),sky.indexOf('function blockedGate'));
+const collisionCtx={Math,solids:[{x:0,z:0,w:2,d:2,minY:.4,maxY:2,enabled:true}],player:{pos:{y:.45},vel:{x:3,z:4}}};vm.runInNewContext(collisionCode+';this.hit=resolveSolids;this.toLocal=localXZ;',collisionCtx);
+const boxHit=collisionCtx.hit(0,0),rotated=collisionCtx.toLocal(1,0,{x:0,z:0,yaw:Math.PI/2});
+ok(Math.max(Math.abs(boxHit.x),Math.abs(boxHit.z))>=1.379&&collisionCtx.player.vel.x*collisionCtx.player.vel.z===0,'solid collider pushes the player capsule outside visible material');
+ok(Math.abs(rotated.x)<1e-9&&Math.abs(rotated.z+1)<1e-9&&/solids\.push\(s\)/.test(sky)&&/kind:'book'/.test(sky)&&/kind:'letter-block'/.test(sky)&&/kind:'fountain'/.test(sky),'platforms and rotated plaza props register matching solid colliders');
 ok(/data-activity="letter"/.test(sky)&&/data-activity="race"/.test(sky)&&/data-activity="obby"/.test(sky)&&/data-activity="tower"/.test(sky),'Phase 3 exposes all four Sky activities');
 ok(/PHASE 2 SHARED ACTIVITIES/.test(sky)&&/activityRows\(\)/.test(sky)&&/S3:\$\{activityCode\(\)\}/.test(sky),'all activities publish shared progress and live standings through NetRoom');
 ok(/function tickActivity/.test(sky)&&/function setupRaceQuestion/.test(sky)&&/completeActivity\('obby',false\)/.test(sky),'three activities have interactive gameplay and completion paths');
