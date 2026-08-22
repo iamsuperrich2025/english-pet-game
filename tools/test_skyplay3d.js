@@ -10,7 +10,11 @@ const css=fs.readFileSync(path.join(root,'css/skyplay3d.css'),'utf8');
 function ok(cond,msg){if(!cond)throw new Error(msg);console.log('PASS',msg);}
 ok(/window\.SkyPlayground3D=\{start,stop,_t:/.test(sky),'engine exposes lifecycle and test hooks');
 ok(/map:'sky',roomMax:ROOM_MAX/.test(sky)&&/const TAU=.*ROOM_MAX=6/.test(sky),'NetRoom instance is isolated and capped at 6');
-ok(/activePet/.test(sky)&&/petStage/.test(sky)&&/currentPetImg/.test(sky),'pet reuses active Lobby pet and real stage image');
+const petBuild=sky.slice(sky.indexOf('function buildPet'),sky.indexOf('function bindInput'));
+ok(/activePet/.test(sky)&&/petStage/.test(sky)&&/model=makePetChibi\(p\.type\)/.test(petBuild),'pet reuses active Lobby pet identity and growth stage in the procedural model');
+ok(/function makePetChibi/.test(sky)&&/petStyle='soft-cuboid-chibi-3d'/.test(sky)&&!/new THREE\.Sprite/.test(petBuild),'dog, cat and dragon use procedural Soft Cuboid Chibi 3D instead of a billboard');
+ok(/player-hand-\$\{i\?'right':'left'\}/.test(sky)&&/parts=\{legs:\[\],arms:\[\],hands:\[\]\}/.test(sky),'player model has two explicit complete arms and hands');
+ok(/swingSign/.test(sky)&&/rightArm\.userData\.restZ/.test(sky),'local and peer limb animation preserves opposite gait and restores the waving arm');
 ok(/goal\.clone\(\)\.sub\(petComp\.group\.position\)/.test(sky),'pet follow teleports to the absolute goal without per-frame particle leaks');
 ok(/playerStyle='soft-cuboid-chibi-3d'/.test(sky),'visible players use Soft Cuboid Chibi 3D');
 ok(/speakWord/.test(sky)&&/vocabForStudent/.test(sky)&&/questEvent\('word3d'/.test(sky),'vocabulary reuses data, pronunciation and shared quest event');
@@ -45,6 +49,7 @@ ok(/function saveHostResume/.test(sky)&&/function restoreHostLesson/.test(sky)&&
 ok(!/\.ref\(|authWriteCloud|Online\.db/.test(sky.slice(sky.indexOf('PHASE 5: LOCAL TEACHER DATA'),sky.indexOf('function createDom'))),'Phase 5 local teacher store adds no Firebase write path');
 ok(/activityReward\(kind/.test(sky)&&/addCoins\(reward\)/.test(sky),'Phase 3 rewards use main coins and durable daily progress');
 ok(/\.sp-activity-grid\{display:grid;grid-template-columns:repeat\(4,1fr\)/.test(css)&&/\.sp-daily\{/.test(css)&&/\.sp-tower\{/.test(css)&&/@media \(max-height:460px\)/.test(css),'Tower, missions and four-activity picker are landscape-first');
+ok(/\.sky-hint\{[^}]*top:65px/.test(css)&&/\.sky-exit/.test(css)&&/\.sky-word/.test(css)&&!/\.sp-(?:hint|exit|word)(?=[,{.:#\\s])/.test(css),'Sky hint, exit and word popup use a collision-free namespace');
 ok(/\.sp-classroom\{/.test(css)&&/\.sp-class-results\{/.test(css)&&/\.sp-class-options\{/.test(css)&&/grid-template-columns:auto minmax\(120px,1fr\) auto auto auto/.test(css),'Classroom setup, quiz and summary fit landscape mobile');
 ok(/\.sp-packbar\{/.test(css)&&/\.sp-class-playlist\{/.test(css)&&/\.sp-ready-grid\{/.test(css)&&/\.sp-report-cols\{/.test(css),'Phase 5 lesson packs, ready check and reports have isolated responsive styles');
 ok((sky.match(/authPushSave\(true\)/g)||[]).length>=2,'completion and exit request cloud sync');
