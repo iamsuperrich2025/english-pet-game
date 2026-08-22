@@ -26,7 +26,7 @@ const DONE_KEY     = 'f1Done';
 const HALF_W       = 7.5;     // ครึ่งความกว้างแทร็ก (เมตร) — F1 จริง 12-15ม.
 const KERB_W       = 1.6;     // ความกว้างขอบ kerb
 const RUNOFF_W     = 9;       // runoff ยางมะตอยข้างแทร็ก (สไตล์ Bahrain)
-const BARRIER_LAT  = HALF_W+RUNOFF_W-.55; // จุดชนจริงอยู่ด้านในกำแพงเล็กน้อย กันรถเร็วทะลุ mesh
+const BARRIER_LAT  = HALF_W+RUNOFF_W+.75; // รอบ 1218: เลย paved runoff ทั้งแถบ ประตูมิติทำงานก่อนถึงแนวชนนี้
 const BARRIER_BOUNCE=.48;     // คืนแรงด้านข้าง 48% ให้รู้สึกว่าเด้ง แต่ไม่ปิงปองรุนแรง
 /* 🏎️💥 รอบ 1208 — กล่องชนรถ F1 จริง (แกนตาม yaw) + impulse/แรงเสียดทานตอนเบียด */
 /* รอบ 1210: footprint ตามชิ้นโมเดลจริง ไม่ใช้กล่องใหญ่ครอบอากาศรอบรถ
@@ -143,7 +143,7 @@ const GRIP_CAP     = 46;      // เพดานกริป
 const WB           = 3.6;     // ระยะฐานล้อ
 const STEER_MAX    = 0.34;    // มุมเลี้ยวสูงสุด (rad) ตอนช้า
 const STEER_HI     = 0.052;   // มุมเลี้ยวตอนเร็วสุด (โค้งปลายตรง ~ขยับนิดเดียว)
-const SURF_RUNOFF  = {grip:0.62, drag:1.6};   // สัมประสิทธิ์บน runoff
+const SURF_RUNOFF  = {grip:0.78, drag:0.8};   // paved runoff สีเทาอ่อนยังขับกลับได้ แต่ช้า/กริปน้อยกว่าทางหลัก
 const SURF_SAND    = {grip:0.28, drag:7.0};   // บนทราย: ลื่น + หน่วงแรง
 /* 🪽🏎️ รอบ 1217 — ทางกระโดดอยู่กึ่งกลางทางหลัก; ยังมีช่องราบริมแทร็กให้เลือกหลบได้ */
 const JUMP_GRAVITY = 9.81;    // m/s² — แกนดิ่งใช้แรงโน้มถ่วงจริง แยกจากฟิสิกส์ยาง X/Z
@@ -186,6 +186,11 @@ const COCKPIT_ASSETS=Object.freeze({
 });
 const PEER_COLORS=CAR_STYLES.map(s=>s.hex);
 const GRID_N       = 20;      // ช่องกริดสตาร์ท
+/* 🏁 รอบ 1218 — กริด F1 จริงวางเหลื่อมซ้าย/ขวาทีละ 8 ม. ไม่ใช่คู่รถในแถวเดียวกัน */
+const GRID_FRONT_M = 18;
+const GRID_GAP_M   = 8;
+const GRID_SIDE_M  = 3.2;
+const F1_GRID_WIRE = 'F1G:'; // ส่งผ่าน hp→h ของ NetRoom; rules รับอยู่แล้ว ไม่เพิ่ม path
 /* 🚦 ลำดับออกสตาร์ท (รอบ 902) — ไฟแดง 5 ดวงบนซุ้ม ติดทีละดวง แล้วดับพร้อมกัน = ออกตัว */
 const LIGHT_LEAD_S = 1.4;     // หน่วงก่อนไฟดวงแรกติด (ให้ตั้งหลัก)
 const LIGHT_STEP_S = 1.0;     // เว้นระยะไฟแต่ละดวง
@@ -232,6 +237,7 @@ let lapStartAt=0, lapNow=0, lapBest=0, lapCount=0, cpFlags=[false,false,false], 
 let word=null, letters=[], sessionCoins=0, sessionWords=0;
 /* เพื่อน */
 let peers={}, room=null, lastNetSend=0, myChat=null, boardSig='';
+let gridSlot=0,gridRosterSig='';
 /* 🚦 ไฟสตาร์ท + 👻 รถเงา (รอบ 902) */
 let startLights=[], lightPhase='wait', lightT=0, lightsLit=-1, holdS=1.5, penaltyT=0, jumped=false;
 let goAt=0, reactDone=false, thrPrev=false, heldAtGo=false, lightsEl=null, lightDots=[], lightNoteEl=null;
@@ -248,6 +254,55 @@ let thermalBasePR=1,thermalTargetFps=60,thermalRenderAt=0,thermalRendered=0,ther
 
 const V3=(x,y,z)=>new THREE.Vector3(x,y,z);
 const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
+/* ============================================================
+   🏁 รอบ 1218 — MULTIPLAYER STAGGERED START GRID
+   ============================================================ */
+function gridPose(slot){
+  slot=clamp(slot|0,0,GRID_N-1);
+  const q=(GRID_FRONT_M+slot*GRID_GAP_M)/SAMPLE_M,whole=Math.floor(q),t=q-whole;
+  const i0=(sfIdx-whole+LINE.n)%LINE.n,i1=(i0-1+LINE.n)%LINE.n;
+  let tx=lerp(LINE.tx[i0],LINE.tx[i1],t),tz=lerp(LINE.tz[i0],LINE.tz[i1],t);
+  const tl=Math.hypot(tx,tz)||1;tx/=tl;tz/=tl;
+  const nx=tz,nz=-tx,side=(slot%2?1:-1)*GRID_SIDE_M;
+  return {slot,i:i0,back:GRID_FRONT_M+slot*GRID_GAP_M,side,
+    x:lerp(LINE.x[i0],LINE.x[i1],t)+nx*side,
+    z:lerp(LINE.z[i0],LINE.z[i1],t)+nz*side,
+    yaw:Math.atan2(tx,tz)};
+}
+function startGridUid(){
+  try{const u=typeof onlineKey==='function'&&onlineKey();if(u)return String(u);}catch(e){}
+  return 'offline';
+}
+function startGridUids(){
+  return Array.from(new Set([startGridUid()].concat(Object.keys(peers)))).sort();
+}
+function startGridSlotFor(uid,uids){
+  const ordered=(uids||startGridUids()).slice().sort();
+  const at=ordered.indexOf(String(uid));
+  return clamp(at<0?0:at,0,GRID_N-1);
+}
+function gridFormationActive(){return lightPhase!=='go';}
+function placeAtGridSlot(slot){
+  const p=gridPose(slot);gridSlot=p.slot;
+  px=p.x;py=0;pz=p.z;yaw=p.yaw;pitch=0;vx=vy=vz=spd=0;steer=0;slide=0;myIdx=p.i;camInit=false;
+  airborne=false;activeJump=null;jumpPrevD=-1;jumpMissed=false;jumpImpact=0;jumpLandKickT=0;
+  sandT=0;portalActive=false;portalT=0;portalJumped=false;portalResumeSpeed=0;
+  if(portalEl)portalEl.className='';
+  if(carGrp){carGrp.position.set(px,0,pz);carGrp.rotation.set(0,yaw,0);}
+  return p;
+}
+function settleStartGrid(force){
+  if(!LINE||!gridFormationActive())return false;
+  const uids=startGridUids(),sig=uids.join('|'),next=startGridSlotFor(startGridUid(),uids);
+  if(!force&&sig===gridRosterSig&&next===gridSlot)return false;
+  gridRosterSig=sig;placeAtGridSlot(next);netSend(true);return true;
+}
+function packetGridSlot(d){
+  const wire=d&&typeof d.hp==='string'?d.hp:'';
+  if(!wire.startsWith(F1_GRID_WIRE))return null;
+  const n=Number(wire.slice(F1_GRID_WIRE.length));
+  return Number.isInteger(n)&&n>=0&&n<GRID_N?n:null;
+}
 const lerp=(a,b,t)=>a+(b-a)*t;
 const carStyleByKey=key=>CAR_STYLES.find(s=>s.key===key)||CAR_STYLES[0];
 function storedCarStyle(){
@@ -1396,9 +1451,9 @@ function buildRealisticCircuit(tier){
 
   /* กริดสตาร์ท/ยางเบรกสะสม/สกิดมาร์ก — geometry รวม ลด draw call */
   const gridSpots=[];
-  for(let n=0;n<GRID_N;n++) gridSpots.push({i:(sfIdx-4-n*2+LINE.n)%LINE.n,side:n%2?1:-1});
+  for(let n=0;n<GRID_N;n++) gridSpots.push(gridPose(n));
   root.add(instancedFromSpots(new THREE.BoxGeometry(4.4,.025,.16),new THREE.MeshBasicMaterial({color:0xf2f4f7}),gridSpots,
-    (d,s)=>linePose(d,LINE,s.i,s.side*3.2,.074)));
+    (d,s)=>{d.position.set(s.x,.074,s.z);d.rotation.set(0,s.yaw,0);d.scale.set(1,1,1);}));
   stats.instances+=gridSpots.length; stats.meshGroups++;
   const skid=[];
   for(let i=4;i<LINE.n-18;i++){
@@ -2883,6 +2938,7 @@ function carContact(ax,az,ay,bx,bz,by){
   return hit;
 }
 function resolvePeerCars(dt){
+  if(gridFormationActive())return false; // รอ roster จัดกริดให้ครบก่อนไฟดับ ห้าม impulse ดันกันออกนอกสนาม
   let hit=false;
   for(const uid in peers){
     const p=peers[uid];
@@ -3042,7 +3098,10 @@ function physTick(dt){
   vz=fz2*vF+(-fx2)*vL;
   px+=vx*dt; pz+=vz*dt;
   resolvePeerCars(dt);
-  barrierBounce();
+  /* รอบ 1218: แถบเทา paved runoff ขับได้ถึงขอบนอก; ถ้าข้ามเข้าทรายให้ portal ชนะ barrier */
+  const postMoveSurf=surfAt(px,pz,myIdx);
+  const crossedRunoffOuter=!airborne&&postMoveSurf.surf==='sand';
+  if(!crossedRunoffOuter)barrierBounce();
   const missedJump=jumpPhysicsTick(dt,vF,preJump);
   spd=Math.hypot(vx,vz);
   revNow=vF<-0.3;                                      // ⏪ รอบ 911 — ให้ HUD โชว์เกียร์ R
@@ -3063,7 +3122,7 @@ function physTick(dt){
   const audioThr=clamp(padThr+(kThr?1:0),0,1);     // ให้เร่งเครื่องรอไฟสตาร์ทได้ โดยไม่ส่งแรงไปที่ล้อ
   Snd.tick(spd,audioThr,slide>0.4&&spd>12,dt,drsOn,braking,camMode);   // sample RPM + เกียร์ + cockpit/chase
   /* หลุดจากผิวถนนแข่งต่อเนื่อง: runoff/ทรายเปิดประตูมิติ แล้วกลับตรง track segment ใกล้จุดที่หลุด */
-  if(missedJump||(!airborne&&(surf==='sand'||surf==='runoff'))){sandT=OFFTRACK_S;beginPortalReturn();}else sandT=0;
+  if(!gridFormationActive()&&(missedJump||crossedRunoffOuter)){sandT=OFFTRACK_S;beginPortalReturn();}else sandT=0;
   /* จับเวลา + เช็คทิศ */
   progressTick(dt);
 }
@@ -3554,6 +3613,7 @@ function netJoin(){
   if(!netReady()) return;
   room=NetRoom.create({
     map:'f1', sendMs:NET_SEND_MS, roomMax:ROOM_MAX,
+    legacyOptional:['hp'],
     roomNoun:'สนาม', roomIcon:'🏁',
     push(){ lastNetSend=0; netSend(true); },
     onPeer:onPeer, onPeerGone:dropPeer,
@@ -3572,6 +3632,7 @@ function netSend(force){
     x:Math.round(px*10)/10, y:Math.round(py*20)/20, z:Math.round(pz*10)/10,
     yaw:Math.round(yaw*100)/100, p:Math.round(pitch*100)/100, a:airborne?1:0, w:sessionWords,
     cw:F1_COLOR_WIRE+playerCarStyle.key,
+    hp:F1_GRID_WIRE+gridSlot,
     vx:Math.round(vx*10)/10, vz:Math.round(vz*10)/10,
     vy:Math.round(vy*10)/10,
     d:drsOn?1:0};   // 🪽 รอบ 907: สถานะ DRS — เพื่อนเห็นไฟเขียวท้ายรถตอนเราเปิดปีก
@@ -3645,11 +3706,12 @@ function onPeer(uid,d){
     p=peers[uid]={n:d.n||'เพื่อน',cur:{x:d.x,z:d.z},tgt:{x:d.x,z:d.z},
       yawCur:d.yaw||0,yawTgt:d.yaw||0,vxCur:d.vx||0,vzCur:d.vz||0,
       vxTgt:d.vx||0,vzTgt:d.vz||0,yCur:d.y||0,yTgt:d.y||0,vyCur:d.vy||0,vyTgt:d.vy||0,
-      pitchCur:d.p||0,pitchTgt:d.p||0,airborne:!!d.a,w:d.w||0,g:d.g,colorIdx:packetCarColorIndex(uid,d),lastCt:0,drsTgt:0,drsK:0,hitUntil:0};
+      pitchCur:d.p||0,pitchTgt:d.p||0,airborne:!!d.a,w:d.w||0,g:d.g,colorIdx:packetCarColorIndex(uid,d),gridSlot:packetGridSlot(d),lastCt:0,drsTgt:0,drsK:0,hitUntil:0};
     buildPeer(uid,p);
     renderBoard();
   }
   p.n=d.n||p.n;
+  const reportedGrid=packetGridSlot(d);if(reportedGrid!==null)p.gridSlot=reportedGrid;
   const colorIdx=packetCarColorIndex(uid,d);
   if(colorIdx!==p.colorIdx){p.colorIdx=colorIdx;buildPeer(uid,p);}
   p.tgt.x=d.x; p.tgt.z=d.z; p.yawTgt=d.yaw||0;
@@ -3665,6 +3727,7 @@ function onPeer(uid,d){
     p.lastCt=d.ct;
     showPeerBubble(p,d.c);
   }
+  settleStartGrid(false);
 }
 function showPeerBubble(p,text){
   removePeerBubble(p);
@@ -3696,6 +3759,7 @@ function dropPeer(uid){
     scene.remove(p.grp);
   }
   delete peers[uid];
+  settleStartGrid(false);
   renderBoard();
 }
 function peerTick(dt){
@@ -4290,20 +4354,14 @@ function start(options){
   myChat=null; boardSig='';
   boardEl.classList.remove('on'); boardEl.innerHTML='';
   chatBarEl.classList.remove('on'); selfMsgEl.classList.remove('on');
-  /* เกิดบนกริดสตาร์ท: หลังเส้น S/F เยื้องซ้าย-ขวาแบบกริดจริง */
-  const slot=Math.floor(Math.random()*GRID_N);
-  const back=18+(slot>>1)*9, side=(slot%2?1:-1)*(HALF_W*0.45);
-  const gi=((sfIdx-Math.round(back/SAMPLE_M))%LINE.n+LINE.n)%LINE.n;
-  px=LINE.x[gi]+LINE.nx[gi]*side;
-  py=0;
-  pz=LINE.z[gi]+LINE.nz[gi]*side;
-  yaw=Math.atan2(LINE.tx[gi],LINE.tz[gi]);
+  /* เกิดบนกริด F1 แบบเหลื่อม: slot 0 ก่อน แล้ว roster multiplayer จัดเรียง UID ให้ไม่ซ้ำ */
+  gridSlot=0;gridRosterSig='';
   pitch=0;vx=vy=vz=spd=0;steer=0;slide=0;steerCtl=0;padThr=0;padBr=false;
   airborne=false;activeJump=null;jumpPrevD=-1;jumpImpact=0;jumpLandKickT=0;jumpMissed=false;
   padRev=false; revNow=false; sandT=0; portalActive=false; portalT=0; portalJumped=false;portalResumeSpeed=0;
   if(portalEl) portalEl.className='';   // ⏪🏜️🌀
   kL=kR=kThr=kBack=false;
-  myIdx=gi; surfNow='track';
+  placeAtGridSlot(0);surfNow='track';
   drsOn=false; drsInZone=false; drsGap=0; drsFlapK=0; drsBrake=false;                // 🪽 รอบ 904
   if(drsEl){ drsEl.className=''; drsEl.innerHTML=''; }
   lapStartAt=0; lapNow=0; lapBest=0; lapCount=0; cpFlags=[false,false,false]; lastProg=0;
@@ -4315,6 +4373,7 @@ function start(options){
   const steerBox=wrapEl.querySelector('#f1-steer');
   if(steerBox&&steerBox._f1Reset)steerBox._f1Reset();
   netJoin();
+  settleStartGrid(true);
   fit();
   pickWord();
   if(typeof Music!=='undefined'&&Music.suspendBg) Music.suspendBg();
@@ -4440,6 +4499,9 @@ window.F1World={
     get carStyle(){return {key:playerCarStyle.key,label:playerCarStyle.label,hex:playerCarStyle.hex,
       index:CAR_STYLES.indexOf(playerCarStyle),center:cockpitAsset('center'),left:cockpitAsset('left'),right:cockpitAsset('right')};},
     paintPlayerStyle, cockpitAsset, peerColor, packetCarColorIndex,
+    get startGrid(){return {slot:gridSlot,pose:LINE?gridPose(gridSlot):null,uids:startGridUids(),formation:gridFormationActive(),
+      peers:Object.fromEntries(Object.entries(peers).map(([uid,p])=>[uid,p.gridSlot]))};},
+    gridPose,startGridSlotFor,settleStartGrid,packetGridSlot,
     /* 🎡 รอบ 913 — พวงมาลัยแยกชั้น */
     get wheel(){ if(!wheelEl) return {el:null};
       const r=wheelEl.getBoundingClientRect(), c=cockpitEl.getBoundingClientRect();

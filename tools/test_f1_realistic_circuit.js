@@ -57,14 +57,15 @@ assert.ok(/legacyArchitectureRoot\.visible=!realistic/.test(f1),
   'Realistic Circuit must hide the entire legacy OSM architecture group to prevent stacked road boxes');
 assert.ok(/function tracksideSpotClear\([\s\S]*surfAt/.test(f1)&&/culledRoadCity/.test(f1),
   'procedural skyline buildings must be culled against every track segment, not only their source segment');
-assert.ok(/function barrierBounce\([\s\S]*BARRIER_BOUNCE/.test(f1)&&/px\+=vx\*dt; pz\+=vz\*dt;[\s\S]{0,80}barrierBounce\(\)/.test(f1),
-  'trackside barrier must clamp and reflect vehicle velocity after movement');
+assert.ok(/function barrierBounce\([\s\S]*BARRIER_BOUNCE/.test(f1)&&
+  /px\+=vx\*dt; pz\+=vz\*dt;[\s\S]*const postMoveSurf=surfAt\(px,pz,myIdx\)[\s\S]*if\(!crossedRunoffOuter\)barrierBounce\(\)/.test(f1),
+  'trackside barrier must clamp after movement but never block the portal beyond paved runoff');
 assert.ok(/function beginPortalReturn\([\s\S]*portalTargetIdx=nearIdx/.test(f1)&&
   /function portalTick\([\s\S]*respawnOnTrack\(portalTargetIdx,false\)/.test(f1),
   'off-road recovery must open a portal and return to the nearest local track segment');
 assert.ok(/const OFFTRACK_S\s*=\s*0/.test(f1)&&
-  /if\(missedJump\|\|\(!airborne&&\(surf==='sand'\|\|surf==='runoff'\)\)\)\{sandT=OFFTRACK_S;beginPortalReturn\(\);\}/.test(f1),
-  'portal recovery must open in the first grounded off-road/missed-jump frame without teleporting a valid airborne car');
+  /if\(!gridFormationActive\(\)&&\(missedJump\|\|crossedRunoffOuter\)\)\{sandT=OFFTRACK_S;beginPortalReturn\(\);\}/.test(f1),
+  'portal recovery must open in the first frame beyond paved runoff/missed jump without teleporting a valid airborne or grid car');
 assert.ok(/if\(portalActive\)\{portalTick\(dt\);return;\}/.test(f1),
   'portal recovery must lock physics during the jump');
 assert.ok(/portalResumeSpeed=Math\.hypot\(vx,vz\)/.test(f1)&&
@@ -179,8 +180,8 @@ assert.ok(!/CAR_HALF_W|CAR_HALF_L/.test(f1)&&/function carPartContact\([\s\S]*ax
   'car collision must use compound model parts and both oriented axes, never one air-filled bounding box');
 assert.ok(/function resolvePeerCars\([\s\S]*CAR_RESTITUTION[\s\S]*CAR_SIDE_FRICTION[\s\S]*CAR_RUB_DRAG/.test(f1),
   'peer collision must apply rebound impulse and side-rubbing resistance');
-assert.ok(/px\+=vx\*dt; pz\+=vz\*dt;\s*resolvePeerCars\(dt\);\s*barrierBounce\(\)/.test(f1),
-  'peer separation must run after movement and before the track barrier clamp');
+assert.ok(/px\+=vx\*dt; pz\+=vz\*dt;\s*resolvePeerCars\(dt\);[\s\S]*postMoveSurf[\s\S]*if\(!crossedRunoffOuter\)barrierBounce\(\)/.test(f1),
+  'peer separation must run after movement and before the conditional outer track barrier clamp');
 assert.ok(/vx:Math\.round\(vx\*10\)\/10, vz:Math\.round\(vz\*10\)\/10/.test(f1),
   'network payload must provide relative velocity for physical impacts');
 const hitPartsSrc=f1.match(/const CAR_HIT_PARTS=(\[[\s\S]*?\]);/)[1];

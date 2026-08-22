@@ -30,8 +30,8 @@ assert.match(src,/vy=Math\.max\(0,forwardSpeed\*Math\.sin\(j\.launchPitch\)\)/,
 assert.match(src,/JUMP_MAX_PITCH=\.22[\s\S]*pitch=clamp/,'vehicle pitch must be capped so it cannot flip numerically');
 assert.match(src,/landFromJump\([\s\S]*const keep=clamp\(1-impact\*\.006,\.90,1\)/,
   'landing must preserve most momentum while applying a bounded physical impact loss');
-assert.match(src,/if\(missedJump\|\|\(!airborne&&\(surf==='sand'\|\|surf==='runoff'\)\)\)/,
-  'failed jumps must use the existing portal without teleporting a valid airborne car');
+assert.match(src,/!gridFormationActive\(\)&&\(missedJump\|\|crossedRunoffOuter\)/,
+  'failed jumps must use the existing portal without teleporting a valid airborne car or a car still on paved runoff');
 assert.match(src,/const JUMP_LANE_LAT=\s*0[\s\S]*if\(a<=HALF_W\) s='track'/,
   'a car approaching the centered ramp must remain on track and must not trigger the runoff portal');
 
