@@ -5367,3 +5367,10 @@
 - เพิ่มป้ายรถแข่งต่อคิวหลัง O-NET; ถ้า O-NET ไม่แสดงจะขึ้นป้ายรถทันที และเมื่อกดปิด/เข้าเกมจะจำทั้ง local + cloud ไม่แสดงซ้ำ (`js/onetpromo.js`, `css/onetpromo.css`); syntax/diff/web build ผ่าน
 - **รอบ 1224 · แก้ F1 เข้าเวลาเดียวกันแต่ไม่เห็นรถเพื่อน:** ต้นเหตุ `bodyRoll` ส่งเป็นเลขผ่าน `av→a` แต่ Firebase Rules กำหนด `a` เป็น string ทำให้ `/wroom/f1` ถูกปฏิเสธทั้ง packet แม้ `/winfo/f1` ยังมีชื่อผู้เล่น (`js/f1_3d.js`)
 - ห่อ roll เป็น wire `F1R:` ที่ผ่าน Rules เดิมและถอดค่าพร้อม anti-roll cap; เติม `room.tick(now)` ให้ retry/verify/ตามเพื่อน/กวาดผีทำงานครบ โดยไม่แก้ Rules; F1 regression 16/16 + build/PWA validator ผ่าน (`tools/test_f1_ramp_roll.js`)
+
+
+## ⏬ ย้ายเมื่อ 2026-08-22 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- JavaScript syntax/diff และ web build ผ่าน; เปลี่ยนข้อความกติกา/เอฟเฟกต์ให้ตรงรางวัลใหม่แล้ว
+- **รอบ 1226 · F1 ไม่บังทาง/ไม่หน่วงรถ:** ลบป้ายกลางจอ `🏁 LAP N` ตอนครบรอบทั้งหมด แต่คงเวลา Best Lap รถเงา เหรียญ และ HUD; เพิ่ม regression ห้าม `progressTick()` เปิด `#f1-ban` (`js/f1_3d.js`, `tools/test_f1_solo_ghost.js`)
+- ตัดการคูณลด `vx/vz` ก่อนและระหว่างข้ามมิติ หน้าปัด/ความเร็วออกประตูจึงเท่าค่าก่อนเข้าเป๊ะ; อัปเดต portal regression + ซ่อมเทสต์ล็อบบี้เก่ารอบ 1225 ให้ยืนยัน F1 เปิดทุกคน; F1 16/16 + web build/PWA validator ผ่าน

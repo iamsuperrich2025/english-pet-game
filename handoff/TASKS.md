@@ -40,9 +40,6 @@
 - แก้ toast “หมดเวลา” หลุดจากเกมจับคู่คำ/ภาพ: เก็บและยกเลิกทั้ง interval+delayed restart, เริ่มรอบใหม่เฉพาะจอที่ active และบล็อก toast stale นอกเกม (`js/game.js`, `js/picmatch.js`, `js/util.js`)
 - Syntax + F1/timeout regression + diff + web build 8,391 ไฟล์/462 MiB + PWA validator ผ่าน; เพิ่ม `tools/test_f1_hud_minimap.js` และ `tools/test_stale_match_timeout.js`
 - **รอบ 1227 · รางวัลเกมศัพท์ x2:** เกมจับคู่ให้ 20 เหรียญต่อคู่/40 เหรียญเมื่อเคลียร์รอบ และคูณโบนัสมือถือ+เล่นต่อ; Typing ให้ 10 เหรียญต่อคำ พร้อมคูณเหรียญสะสมกระดานเป็นความยาวคำ×4 + perfect 10 (`js/game.js`, `js/typing.js`, `js/tpaward.js`)
-- JavaScript syntax/diff และ web build ผ่าน; เปลี่ยนข้อความกติกา/เอฟเฟกต์ให้ตรงรางวัลใหม่แล้ว
-- **รอบ 1226 · F1 ไม่บังทาง/ไม่หน่วงรถ:** ลบป้ายกลางจอ `🏁 LAP N` ตอนครบรอบทั้งหมด แต่คงเวลา Best Lap รถเงา เหรียญ และ HUD; เพิ่ม regression ห้าม `progressTick()` เปิด `#f1-ban` (`js/f1_3d.js`, `tools/test_f1_solo_ghost.js`)
-- ตัดการคูณลด `vx/vz` ก่อนและระหว่างข้ามมิติ หน้าปัด/ความเร็วออกประตูจึงเท่าค่าก่อนเข้าเป๊ะ; อัปเดต portal regression + ซ่อมเทสต์ล็อบบี้เก่ารอบ 1225 ให้ยืนยัน F1 เปิดทุกคน; F1 16/16 + web build/PWA validator ผ่าน
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`
