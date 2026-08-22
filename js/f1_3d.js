@@ -170,6 +170,9 @@ const NET_SEND_MS  = 160;
 const ROOM_MAX     = 10;      // 🚦 คุมคนต่อสนาม (รถเร็ว+ไฟเยอะ — เครื่องเด็กไหว)
 const CHAT_MS      = 5000;
 const CHAT_PRESETS = ['เร็วจัด! 🔥','แซงสวยมาก! 🏎️','ระวังโค้งหน้านะ','สู้ๆ! 💪','ตามมาเลย!','GG 🏁','555+','เก่งมาก! ⭐'];
+/* 🛡️ รอบ 1224: NetRoom แปลง av→a และ Rules กำหนด a เป็น string (avatar wire)
+   จึงห่อ body roll เป็น marker สั้นแทนตัวเลข เพื่อไม่ให้ hot position packet ถูกปฏิเสธทั้งก้อน */
+const F1_ROLL_WIRE='F1R:';
 /* 🎨 รอบ 1216: สีรถชุดเดียวกันทั้ง cockpit, รถเรา และรถที่เพื่อนเห็น
    จำกัดไว้เฉพาะสีที่มี cockpit ครบ 3 เฟรม เพื่อไม่ให้ภาพคนขับกับโมเดลสลับสี */
 const CAR_COLOR_KEY='vwF1CarColor';
@@ -327,6 +330,13 @@ function packetGridSlot(d){
   if(!wire.startsWith(F1_GRID_WIRE))return null;
   const n=Number(wire.slice(F1_GRID_WIRE.length));
   return Number.isInteger(n)&&n>=0&&n<GRID_N?n:null;
+}
+function packetBodyRoll(d){
+  const raw=d&&d.av;
+  if(typeof raw==='number')return clamp(raw,-RAMP_ROLL_MAX,RAMP_ROLL_MAX); // test/ช่วงเปลี่ยนผ่าน
+  if(typeof raw!=='string'||!raw.startsWith(F1_ROLL_WIRE))return 0;
+  const n=Number(raw.slice(F1_ROLL_WIRE.length));
+  return Number.isFinite(n)?clamp(n,-RAMP_ROLL_MAX,RAMP_ROLL_MAX):0;
 }
 const lerp=(a,b,t)=>a+(b-a)*t;
 const carStyleByKey=key=>CAR_STYLES.find(s=>s.key===key)||CAR_STYLES[0];
@@ -3734,7 +3744,7 @@ function netSend(force){
   lastNetSend=now;
   const payload={n:((typeof onlineDisplayName==='function'&&onlineDisplayName())||state.playerName||'ผู้เล่น'),
     x:Math.round(px*10)/10, y:Math.round(py*20)/20, z:Math.round(pz*10)/10,
-    yaw:Math.round(yaw*100)/100, p:Math.round(pitch*100)/100, av:Math.round(bodyRoll*1000)/1000, a:airborne?1:0, w:sessionWords,
+    yaw:Math.round(yaw*100)/100, p:Math.round(pitch*100)/100, av:F1_ROLL_WIRE+(Math.round(bodyRoll*1000)/1000), a:airborne?1:0, w:sessionWords,
     cw:F1_COLOR_WIRE+playerCarStyle.key,
     vx:Math.round(vx*10)/10, vz:Math.round(vz*10)/10,
     vy:Math.round(vy*10)/10,
@@ -3811,7 +3821,7 @@ function onPeer(uid,d){
     p=peers[uid]={n:d.n||'เพื่อน',cur:{x:d.x,z:d.z},tgt:{x:d.x,z:d.z},
       yawCur:d.yaw||0,yawTgt:d.yaw||0,vxCur:d.vx||0,vzCur:d.vz||0,
       vxTgt:d.vx||0,vzTgt:d.vz||0,yCur:d.y||0,yTgt:d.y||0,vyCur:d.vy||0,vyTgt:d.vy||0,
-      pitchCur:d.p||0,pitchTgt:d.p||0,rollCur:d.av||0,rollTgt:d.av||0,airborne:!!d.a,w:d.w||0,g:d.g,colorIdx:packetCarColorIndex(uid,d),gridSlot:packetGridSlot(d),lastCt:0,drsTgt:0,drsK:0,hitUntil:0};
+      pitchCur:d.p||0,pitchTgt:d.p||0,rollCur:packetBodyRoll(d),rollTgt:packetBodyRoll(d),airborne:!!d.a,w:d.w||0,g:d.g,colorIdx:packetCarColorIndex(uid,d),gridSlot:packetGridSlot(d),lastCt:0,drsTgt:0,drsK:0,hitUntil:0};
     buildPeer(uid,p);
     renderBoard();
   }
@@ -3823,7 +3833,7 @@ function onPeer(uid,d){
   if(typeof d.y==='number')p.yTgt=d.y;
   if(typeof d.vy==='number')p.vyTgt=d.vy;
   if(typeof d.p==='number')p.pitchTgt=d.p;
-  if(typeof d.av==='number')p.rollTgt=clamp(d.av,-RAMP_ROLL_MAX,RAMP_ROLL_MAX);
+  p.rollTgt=packetBodyRoll(d);
   p.airborne=!!d.a;
   if(typeof d.vx==='number') p.vxTgt=d.vx;
   if(typeof d.vz==='number') p.vzTgt=d.vz;
@@ -4387,6 +4397,7 @@ function frame(dt,now){
     ledTick(dt);
     hudTick();
   }
+  if(room)room.tick(now);    // 🏟️ รอบ 1224: retry/verify/ตามหาเพื่อน/กวาดผี ต้องเดินเหมือนโลก 3D อื่น
   netSend(false);
   if(visualDue&&now-mapAt>200){ mapAt=now; drawMap(); }
   if(now-relocAt>3000){ relocAt=now; relocTick(); }

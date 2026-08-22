@@ -3,6 +3,7 @@ const assert=require('assert');
 const fs=require('fs');
 const vm=require('vm');
 const src=fs.readFileSync('js/f1_3d.js','utf8');
+const netroom=fs.readFileSync('js/netroom.js','utf8');
 
 function fn(name){
   const start=src.indexOf(`function ${name}(`);assert.ok(start>=0,`${name} missing`);
@@ -14,9 +15,27 @@ function fn(name){
 assert.match(src,/const RAMP_ROLL_MAX\s*=\s*\.28/,'anti-roll cap must remain 16 degrees');
 assert.match(src,/bodyRoll=lerp\(bodyRoll,terrainRoll,[^\n]*RAMP_ROLL_RETURN/,'body must spring back upright instead of flipping');
 assert.match(src,/carGrp\.rotation\.z=lerp\([^\n]*bodyRoll\+steer/,'terrain roll must visibly tilt the player car');
-assert.match(src,/av:Math\.round\(bodyRoll\*1000\)\/1000/,'roll must use the NetRoom-supported av hot field');
+assert.match(src,/const F1_ROLL_WIRE\s*=\s*'F1R:'/,'roll packets need a dedicated string marker');
+assert.match(src,/av:F1_ROLL_WIRE\+\(Math\.round\(bodyRoll\*1000\)\/1000\)/,
+  'roll must be encoded as a Rules-compatible string instead of a rejected number');
 assert.match(src,/p\.grp\.rotation\.z=p\.rollCur/,'remote cars must reproduce the same ramp tilt');
 assert.match(src,/camera\.rotateZ\(bodyRoll\*\.52\)/,'cockpit must feel a restrained version of the suspension tilt');
+assert.match(fn('frame'),/if\(room\)room\.tick\(now\)/,
+  'F1 must advance NetRoom retry, seat verification, friend meeting and stale-peer cleanup');
+
+const rollCtx={F1_ROLL_WIRE:'F1R:',RAMP_ROLL_MAX:.28,clamp:(v,a,b)=>v<a?a:(v>b?b:v)};
+vm.createContext(rollCtx);
+vm.runInContext(`${fn('packetBodyRoll')};this.packetBodyRoll=packetBodyRoll`,rollCtx);
+assert.strictEqual(rollCtx.packetBodyRoll({av:'F1R:-0.123'}),-.123,'peer roll marker must decode exactly');
+assert.strictEqual(rollCtx.packetBodyRoll({av:'foot-r.'}),0,'avatar strings from other/legacy worlds must not tilt an F1 car');
+assert.strictEqual(rollCtx.packetBodyRoll({av:'F1R:99'}),.28,'decoded roll must retain the anti-flip cap');
+
+const netCtx={console,performance:{now:()=>0},setTimeout,clearTimeout,document:{getElementById:()=>null}};
+netCtx.window=netCtx;vm.runInNewContext(netroom,netCtx,{filename:'js/netroom.js'});
+const wire=netCtx.NetRoom._split({n:'driver',x:1,z:2,av:'F1R:-0.123'});
+assert.strictEqual(wire.hot.a,'F1R:-0.123','NetRoom must place encoded roll in the allowed hot a field');
+assert.ok(typeof wire.hot.a==='string'&&wire.hot.a.length<=12,'hot a must satisfy the live Firebase string rule');
+assert.strictEqual(netCtx.NetRoom._merge(wire.hot,wire.cold).av,'F1R:-0.123','encoded roll must survive a full split/merge');
 
 const LINE={n:100,x:[],z:[],nx:[],nz:[],cum:[]};
 for(let i=0;i<LINE.n;i++){LINE.x.push(0);LINE.z.push(i*5);LINE.nx.push(1);LINE.nz.push(0);LINE.cum.push(i*5);}
