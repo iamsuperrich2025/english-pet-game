@@ -28,7 +28,7 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (22 ส.ค.) — อ่านก่อน
-- **รอบ 1242 · Word Search Combo Countdown:** เพิ่มแถบ 3.0→0.0 วินาทีหลังพบคำ แสดงเป้าหมาย ×2/×3 และสาเหตุหมดเวลา; ใช้ deadline เดียวกับสูตรรางวัล ไม่บังคับเรียงคำ (`js/wordsearch.js`, `css/lobby.css`)
+- **รอบ 1243 · Word Search Combo Countdown:** เพิ่มแถบ 3.0→0.0 วินาทีหลังพบคำ แสดงเป้าหมาย ×2/×3 และสาเหตุหมดเวลา; ใช้ deadline เดียวกับสูตรรางวัล ไม่บังคับเรียงคำ (`js/wordsearch.js`, `css/lobby.css`)
 - รีเซ็ตเมื่อเปิด/สุ่ม/ล้าง/จบกระดาน; ไม่เปลี่ยนเหรียญ/อันดับ/คลังคำ; header กะทัดรัดและไม่บังกริด
 - syntax+Combo regression+diff+production build 8,394 ไฟล์/PWA validator ผ่าน; browser QA ถูก Windows ACL ปิด; ไม่แตะ `css/petshopping3d.css` ของ session อื่น (`tools/test_wordsearch_combo_help.js`)
 - **รอบ 1241 · Vocab Sky Collision Audit ทั้งหมวด:** แก้รอบ 1240 ที่ครอบคลุมไม่พอ โดยสร้าง collider จาก bounding box ของ mesh จริง จึงตรงวัตถุหมุน/เอียงอย่างดินสอ และตรวจทุก solid scenery (`js/skyplay3d.js`)

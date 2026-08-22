@@ -38,11 +38,11 @@
 
   let wsGame=null;                    // เกมปัจจุบัน (อยู่ในหน่วยความจำ · เก็บชั่วคราวลง state.wordSearch)
   let queue=[], qi=0, qGrade=null;    // คิวคำสุ่ม (ไม่ซ้ำข้ามเกมจนกว่าจะหมดคลัง)
-  let overlay=null, boardEl=null, gridEl=null, wordsEl=null, progEl=null, winEl=null;
+  let overlay=null, boardEl=null, gridEl=null, wordsEl=null, progEl=null, winEl=null, comboTimerEl=null;
   let sel=null;                       // สถานะลากเลือก {r0,c0,cells}
   /* 🔥 รอบ 601: คอมโบ — หาคำติดกันภายใน 3 วิ ตัวคูณเหรียญไต่ขึ้น (ตันที่ ×3) */
   const COMBO_MS=3000, COMBO_MAX=3, COMBO_SHOW_MS=1300;   // SHOW < MS: ป้ายฉลองแล้วหลบ ไม่บังตัวอักษรค้าง
-  let comboN=0, lastFoundAt=0;
+  let comboN=0, lastFoundAt=0, comboDeadline=0, comboTimerRaf=0, comboTimerHide=0;
 
   const shuffle=a=>{ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
   const grade=()=> (typeof state!=='undefined'&&state.student)?state.student.grade:'ป.1';
@@ -172,6 +172,7 @@
     overlay.innerHTML=`<div id="ws-board">
       <div class="ws-head"><span class="ws-title">ค้นหาคำศัพท์ · Word Search</span>
         <span class="ws-findbar"><span class="ws-find">🔤 หาคำเหล่านี้ให้เจอ</span><span id="ws-prog"></span>
+          <span id="ws-combo-clock" aria-label="เวลา Combo"><b></b><i><em></em></i></span>
           <span class="ws-tip">👆 กดที่คำ = ฟังเสียง + ใบ้ตำแหน่ง</span></span>
         <span class="ws-grade"></span></div>
       <div class="ws-body">
@@ -196,7 +197,7 @@
             <div><b>ภายใน 3 วิอีกครั้ง</b><strong>×3</strong><span>ตัวคูณสูงสุด</span></div>
           </div>
           <ul>
-            <li>⏱️ เวลา 3 วินาทีเริ่มนับใหม่ทุกครั้งที่หาคำถูก</li>
+            <li>⏱️ เวลา 3 วินาทีเริ่มนับใหม่ทุกครั้งที่หาคำถูก — ดูเวลาจริงจากแถบ Combo</li>
             <li>💛 ลากคำผิดไม่ทำให้ Combo หาย</li>
             <li>⌛ หากช้ากว่า 3 วินาที คำถัดไปจะกลับไปเริ่มที่ ×1</li>
             <li>🪙 เหรียญพื้นฐาน = จำนวนตัวอักษร ×2 แล้วคูณด้วย Combo</li>
@@ -212,6 +213,7 @@
     wordsEl=overlay.querySelector('#ws-words');
     progEl =overlay.querySelector('#ws-prog');
     winEl  =overlay.querySelector('#ws-win');
+    comboTimerEl=overlay.querySelector('#ws-combo-clock');
     overlay.querySelector('#ws-new').addEventListener('click', ()=>{ if(typeof sfx!=='undefined')sfx.select(); newGame(); });
     const comboDialog=overlay.querySelector('#ws-combo-dialog');
     const closeComboHelp=()=>{ comboDialog.hidden=true; };
@@ -360,7 +362,43 @@
     wsFlash();                                                      // ⚡ แฟลชฟ้าผ่าบนกระดาน
     wsCoinPop(reward, hit.cells, mult);                             // 🪙 ป๊อปเหรียญตื่นเต้น
     showCombo(mult);                                                // 🔥 แถบคอมโบบนกระดาน
+    showComboTimer(mult,tNow);                                      // ⏱️ รอบ 1243: เวลาจริงเหลือถึงคำถัดไป
     if(wsGame.words.every(w=>w.found)) win();
+  }
+  /* ⏱️ รอบ 1243: แถบเวลา Combo อ่านจาก deadline เดียวกับสูตรรางวัล จึงไม่มีคลาดเคลื่อน */
+  function stopComboTimer(){
+    if(comboTimerRaf){ cancelAnimationFrame(comboTimerRaf); comboTimerRaf=0; }
+    if(comboTimerHide){ clearTimeout(comboTimerHide); comboTimerHide=0; }
+    comboDeadline=0;
+    if(comboTimerEl){ comboTimerEl.classList.remove('on','expired'); const f=comboTimerEl.querySelector('em'); if(f)f.style.width='0%'; }
+  }
+  function showComboTimer(mult,foundAt){
+    if(!comboTimerEl) return;
+    if(comboTimerRaf) cancelAnimationFrame(comboTimerRaf);
+    if(comboTimerHide){ clearTimeout(comboTimerHide); comboTimerHide=0; }
+    comboDeadline=foundAt+COMBO_MS;
+    comboTimerEl.classList.remove('expired'); comboTimerEl.classList.add('on');
+    const label=comboTimerEl.querySelector('b'), fill=comboTimerEl.querySelector('em');
+    let shownTenth=-1;
+    const tick=()=>{
+      const left=Math.max(0,comboDeadline-Date.now()), tenth=Math.ceil(left/100)/10;
+      if(tenth!==shownTenth){
+        shownTenth=tenth;
+        const next=Math.min(COMBO_MAX,mult+1);
+        label.textContent=mult>=COMBO_MAX ? `🔥 Combo ×3 · รักษาไว้ ${tenth.toFixed(1)} วิ` :
+          mult>=2 ? `🔥 Combo ×${mult}! ต่อคำใน ${tenth.toFixed(1)} วิ → ×${next}` :
+                    `🔥 เริ่ม Combo · ต่อคำใน ${tenth.toFixed(1)} วิ → ×2`;
+        fill.style.width=(left/COMBO_MS*100).toFixed(1)+'%';
+      }
+      if(left<=0){
+        comboTimerRaf=0; comboDeadline=0; comboTimerEl.classList.add('expired');
+        label.textContent='⌛ หมดเวลา Combo · คำถัดไปเริ่ม ×1'; fill.style.width='0%';
+        comboTimerHide=setTimeout(()=>{ comboTimerEl.classList.remove('on','expired'); comboTimerHide=0; },900);
+        return;
+      }
+      comboTimerRaf=requestAnimationFrame(tick);
+    };
+    tick();
   }
   /* 🔥 รอบ 601: แถบคอมโบ ×2 ×3 บนกระดาน — โผล่ตอนคอมโบ ≥2 แล้วหายเองเมื่อหมดหน้าต่างเวลา */
   function showCombo(mult){
@@ -374,7 +412,7 @@
     showCombo._t=setTimeout(()=>{ c.classList.remove('on'); }, COMBO_SHOW_MS);
   }
   function resetCombo(){
-    comboN=0; lastFoundAt=0;
+    comboN=0; lastFoundAt=0; stopComboTimer();
     clearTimeout(showCombo._t);
     const c=boardEl&&boardEl.querySelector('.ws-combo'); if(c) c.classList.remove('on');
   }
@@ -419,6 +457,7 @@
   }
 
   function win(){
+    stopComboTimer();
     wsGame.done=true; saveTemp();
     addWsScore(WS_CLEAR_BONUS, 0, 1);                               // 🎁 โบนัสจบกระดาน
     winEl.innerHTML=`<div class="ws-win-in">🎉 เก่งมาก! เจอครบทุกคำแล้ว<br><small>+${WS_CLEAR_BONUS} แต้มโบนัสจบกระดาน · รวม ${(state.wsScore||0).toLocaleString()} แต้ม<br>กด 🎲 สุ่มเกมใหม่ เล่นต่อได้เลย</small></div>`;
@@ -480,6 +519,6 @@
   window.WordSearch={ open, _t:{ get game(){return wsGame;}, generate, pool, takeWords, commit, lineCells,
     newGame, hintWord, curSize, defaultSize, addWsScore, ROWS, COLS, WANT_BY_COLS, WS_CLEAR_BONUS,
     resetCombo, COMBO_MS, COMBO_MAX,
-    get combo(){ return {n:comboN, mult:Math.min(COMBO_MAX,comboN), lastAt:lastFoundAt}; },
+    get combo(){ return {n:comboN, mult:Math.min(COMBO_MAX,comboN), lastAt:lastFoundAt, deadline:comboDeadline}; },
     set comboLastAt(v){ lastFoundAt=v; } } };
 })();
