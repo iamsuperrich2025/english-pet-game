@@ -312,7 +312,7 @@ xrkSubmit:714 · xrkMerge:744 · xrkAllRows:764 · xrkFetch:782 · xrkNote:808 �
 xrkAllRowHTML:828 · xrkBodyHTML:832 · xrkMount:847 · openExamStdRank:886 · examStdCardsHTML:903 · openExamStdBoard:938
 openOnetBoard:972
 
-## js/f1_3d.js (4,691 บรรทัด · 334 รายการ)
+## js/f1_3d.js (4,687 บรรทัด · 334 รายการ)
 ### 🗂️ สารบัญโซน js/f1_3d.js (Read/Edit เฉพาะช่วง)
 - 19-217 ⚙️ ค่าคงที่ (TUNE ZONE)
 - 218-266 📦 สถานะโลก
@@ -332,16 +332,16 @@ openOnetBoard:972
 - 2597-2745 🌍 สร้างโลกครั้งเดียว
 - 2746-2920 🪽 รอบ 904: DRS — ปีกหลังเปิดบนทางตรง (ตามรถเพื่อนใกล้ 25 ม.)
 - 2921-2932 🏁 ฟิสิกส์ + จับเวลา
-- 2933-3309 🌀 PORTAL DESTINATION PREVIEW — actual target curve / Canvas2D (รอบ 1222)
-- 3310-3400 🏆 รอบ 903: กระดานอันดับ Best Lap ออนไลน์ (/f1Rank)
-- 3401-3569 🚦👻 รอบ 902: ลำดับออกสตาร์ท (ไฟแดง 5 ดวง) + รถเงาวิ่งตาม Best Lap
-- 3570-3622 🚧 เลนพิท — ผิวทางเต็มกริป + ลิมิตเตอร์ 80 กม./ชม.
-- 3623-3718 🔤 คำศัพท์บนแทร็ก (แบบเดียวกับโลกมอเตอร์ไซค์ — REWARD สูงกว่า)
-- 3719-3968 🧑‍🤝‍🧑 เพื่อนร่วมสนาม (NetRoom map 'f1')
-- 3969-4116 📷 กล้องไล่หลัง + ลูปเกม
-- 4117-4249 🔢 รอบ 916 — จอบนพวงมาลัยเป็น "ของจริง"
-- 4250-4421 🚥 รอบ 918: แถบไฟ LED รอบเครื่องบนพวงมาลัย (เขียว → เหลือง → แดง ตอนใกล้เปลี่ยนเกียร์)
-- 4422-4691 🚪 เข้า/ออกโลก
+- 2933-3305 🌀 PORTAL DESTINATION PREVIEW — actual target curve / Canvas2D (รอบ 1222)
+- 3306-3396 🏆 รอบ 903: กระดานอันดับ Best Lap ออนไลน์ (/f1Rank)
+- 3397-3565 🚦👻 รอบ 902: ลำดับออกสตาร์ท (ไฟแดง 5 ดวง) + รถเงาวิ่งตาม Best Lap
+- 3566-3618 🚧 เลนพิท — ผิวทางเต็มกริป + ลิมิตเตอร์ 80 กม./ชม.
+- 3619-3714 🔤 คำศัพท์บนแทร็ก (แบบเดียวกับโลกมอเตอร์ไซค์ — REWARD สูงกว่า)
+- 3715-3964 🧑‍🤝‍🧑 เพื่อนร่วมสนาม (NetRoom map 'f1')
+- 3965-4112 📷 กล้องไล่หลัง + ลูปเกม
+- 4113-4245 🔢 รอบ 916 — จอบนพวงมาลัยเป็น "ของจริง"
+- 4246-4417 🚥 รอบ 918: แถบไฟ LED รอบเครื่องบนพวงมาลัย (เขียว → เหลือง → แดง ตอนใกล้เปลี่ยนเกียร์)
+- 4418-4687 🚪 เข้า/ออกโลก
 ### รายการ js/f1_3d.js
 REWARD:22 · LETTER_COIN:23 · COLLECT_R:24 · DONE_KEY:25 · RECENT_KEY:26 · HALF_W:27
 KERB_W:28 · RUNOFF_W:29 · BARRIER_LAT:30 · BARRIER_BOUNCE:31 · CAR_HIT_PARTS:35 · CAR_HIT_RADIUS:44
@@ -384,21 +384,21 @@ DRS_MIN_M:2757 · DRS_ENTRY_M:2758 · DRS_NEAR_M:2759 · DRS_DRAG_K:2760 · DRS_
 attachDrsGlow:2768 · findDrsZones:2778 · DRS_DET_M:2809 · DRS_SIGN_KIND:2810 · drsDetIdx:2817 · drsSignTex:2821
 buildDrsBoards:2833 · drsZoneAt:2875 · drsPeerGap:2884 · drsTick:2897 · drsHud:2912 · respawnOnTrack:2925
 drawPortalDestination:2936 · beginPortalReturn:2960 · portalTick:2971 · barrierBounce:2993 · carPartContact:3010 · carContact:3032
-resolvePeerCars:3042 · landFromJump:3079 · jumpPhysicsTick:3089 · physTick:3127 · progressTick:3233 · fmtLap:3282
-puffSmoke:3288 · smokeTick:3299 · FR_READ:3318 · frSubmit:3320 · frMerge:3337 · frFetch:3349
-frRowHTML:3367 · frBodyHTML:3376 · frNote:3385 · frMount:3390 · setStartLights:3410 · resetLights:3415
-beginLights:3423 · lightsLocked:3424 · paintLights:3425 · lightsTick:3435 · ghostEnsure:3484 · ghostHide:3501
-ghostLoad:3506 · ghostSave:3515 · ghostReset:3518 · ghostRecord:3522 · ghostKeep:3531 · ghostGapAt:3538
-ghostTick:3546 · buildPitLine:3575 · pitAt:3606 · inPitLane:3617 · racingLineLat:3626 · trackPointAhead:3634
-pickWord:3642 · spawnLetters:3657 · renderWordHud:3671 · collectTick:3677 · completeWord:3698 · relocTick:3715
-netReady:3722 · netJoin:3727 · netSend:3740 · sendChat:3756 · peerColorIndex:3763 · packetCarColorIndex:3768
-peerColor:3778 · buildPeer:3781 · onPeer:3815 · showPeerBubble:3848 · removePeerBubble:3855 · dropPeer:3861
-peerTick:3881 · netLeave:3911 · layoutBoard:3917 · renderBoard:3936 · CAM_MODES:3974 · CAM_NEXT_LABEL:3975
-cycleCamMode:3976 · applyCamMode:3980 · buildFpWheels:3991 · fpWheelTick:4023 · cockpitBox:4039 · layoutWheel:4061
-wheelTick:4083 · DASH_FONT:4123 · positionQualityDash:4125 · layoutDash:4141 · dashRR:4166 · dashRpmTick:4173
-dashTick:4183 · drawDash:4198 · buildLeds:4255 · ledsOff:4263 · ledTick:4267 · camTick:4294
-hudTick:4345 · applyThermalPixelRatio:4355 · thermalGovernorTick:4361 · thermalRenderDue:4373 · frame:4383 · tick:4406
-fit:4413 · applyEnvironmentProfile:4425 · start:4470 · exitWorld:4540
+resolvePeerCars:3042 · landFromJump:3079 · jumpPhysicsTick:3089 · physTick:3127 · progressTick:3233 · fmtLap:3278
+puffSmoke:3284 · smokeTick:3295 · FR_READ:3314 · frSubmit:3316 · frMerge:3333 · frFetch:3345
+frRowHTML:3363 · frBodyHTML:3372 · frNote:3381 · frMount:3386 · setStartLights:3406 · resetLights:3411
+beginLights:3419 · lightsLocked:3420 · paintLights:3421 · lightsTick:3431 · ghostEnsure:3480 · ghostHide:3497
+ghostLoad:3502 · ghostSave:3511 · ghostReset:3514 · ghostRecord:3518 · ghostKeep:3527 · ghostGapAt:3534
+ghostTick:3542 · buildPitLine:3571 · pitAt:3602 · inPitLane:3613 · racingLineLat:3622 · trackPointAhead:3630
+pickWord:3638 · spawnLetters:3653 · renderWordHud:3667 · collectTick:3673 · completeWord:3694 · relocTick:3711
+netReady:3718 · netJoin:3723 · netSend:3736 · sendChat:3752 · peerColorIndex:3759 · packetCarColorIndex:3764
+peerColor:3774 · buildPeer:3777 · onPeer:3811 · showPeerBubble:3844 · removePeerBubble:3851 · dropPeer:3857
+peerTick:3877 · netLeave:3907 · layoutBoard:3913 · renderBoard:3932 · CAM_MODES:3970 · CAM_NEXT_LABEL:3971
+cycleCamMode:3972 · applyCamMode:3976 · buildFpWheels:3987 · fpWheelTick:4019 · cockpitBox:4035 · layoutWheel:4057
+wheelTick:4079 · DASH_FONT:4119 · positionQualityDash:4121 · layoutDash:4137 · dashRR:4162 · dashRpmTick:4169
+dashTick:4179 · drawDash:4194 · buildLeds:4251 · ledsOff:4259 · ledTick:4263 · camTick:4290
+hudTick:4341 · applyThermalPixelRatio:4351 · thermalGovernorTick:4357 · thermalRenderDue:4369 · frame:4379 · tick:4402
+fit:4409 · applyEnvironmentProfile:4421 · start:4466 · exitWorld:4536
 
 ## js/f1_modes.js (125 บรรทัด · 14 รายการ)
 STORAGE_KEY:7 · DEFAULT_MODE:8 · ENTRY_MODE:9 · SELECTOR_ENABLED:10 · CONTRACT:11 · freezeProfile:13
@@ -407,27 +407,27 @@ removeSelector:60 · openSelector:66
 
 ## js/fpsweapon.js (194 บรรทัด · 0 รายการ)
 
-## js/game.js (1,210 บรรทัด · 85 รายการ)
+## js/game.js (1,213 บรรทัด · 88 รายการ)
 ### 🗂️ สารบัญโซน js/game.js (Read/Edit เฉพาะช่วง)
-- 2-629 เกมจับคู่คำศัพท์ + หมวดคำศัพท์ & แบบทดสอบ
-- 630-944 🎊🪙 รอบ 985: ฉลอง "ได้เข็มใหม่" + รางวัลเงินก้อน (ผู้ใช้สั่ง 3 ส.ค. 2026)
-- 945-1210 หมวดคำศัพท์ & แบบทดสอบ 10 ข้อ (ผ่านที่ 8 ข้อขึ้นไป)
+- 2-632 เกมจับคู่คำศัพท์ + หมวดคำศัพท์ & แบบทดสอบ
+- 633-947 🎊🪙 รอบ 985: ฉลอง "ได้เข็มใหม่" + รางวัลเงินก้อน (ผู้ใช้สั่ง 3 ส.ค. 2026)
+- 948-1213 หมวดคำศัพท์ & แบบทดสอบ 10 ข้อ (ผ่านที่ 8 ข้อขึ้นไป)
 ### รายการ js/game.js
-REPLAY_BONUS_EVERY:23 · REPLAY_BONUS_TIERS:25 · replayBonusFor:26 · SESSION_MILESTONES:32 · addSessionCoins:35 · updateBestTarget:74
-weekKeyStr:87 · rolloverWeekBest:94 · exitGame:100 · showSessionSummary:136 · sprinkleConfetti:183 · VOCAB_PER_LEVEL:202
-VOCAB_RANK_NAMES:203 · vocabRankName:204 · showProgressReport:206 · THUNDER_MS:388 · THUNDER_TIERS:392 · THUNDER_TIER_UI:393
-thunderEmoji:394 · DAREDEVIL_TIERS:398 · DAREDEVIL_TIER_UI:399 · daredevilEmoji:400 · GLASS_TIERS:404 · GLASS_TIER_UI:405
-glassEmoji:406 · DILIGENT_TIERS:410 · DILIGENT_TIER_UI:411 · diligentEmoji:412 · SOFTLAND_TIERS:416 · SOFTLAND_TIER_UI:417
-softLandEmoji:418 · AIRL_TIERS:422 · AIRL_TIER_UI:423 · airLetterEmoji:424 · MECHABOSS_TIERS:428 · MECHABOSS_TIER_UI:429
-mechaBossEmoji:430 · TYPIST_TIERS:437 · TYPIST_TIER_UI:438 · typistEmoji:440 · checkTypistBadge:442 · BIGEXAM_TIERS:458
-BIGEXAM_TIER_UI:459 · bigExamEmoji:460 · bigExamCertCount:462 · checkBigExamBadge:467 · BFF_TIERS:482 · BFF_TIER_UI:483
-BFF_COIN:484 · bffEmoji:485 · badgeSuffix:490 · BADGE_META:509 · NAME_BADGE_RE:526 · splitNameBadges:527
-badgeEmojis:533 · badgeScore:538 · BADGE_CATS:545 · earnedBadgeEmojis:561 · bcatLevel:576 · checkCrown:583
-currentBadgeScore:599 · rolloverBadgeWeek:603 · addDiligent:616 · BADGE_COIN:635 · awardBadgeCoin:643 · BC_QUEUE:657
-celebrateBadge:658 · bcShow:672 · showBadgeInfo:701 · addThunder:719 · startGame:733 · newRound:773
-updateTimerBar:812 · updateComboPill:818 · pickCard:822 · checkMatch:834 · renderCats:948 · fmtMMSS:998
-quizTimerStop:1002 · quizTimerStart:1007 · quizElapsed:1017 · startQuiz:1021 · renderQuizQuestion:1039 · quizNext:1103
-finishQuiz:1116
+MATCH_COIN_MULTIPLIER:23 · MATCH_COIN_PER_PAIR:24 · MATCH_ROUND_COIN_BONUS:25 · REPLAY_BONUS_EVERY:26 · REPLAY_BONUS_TIERS:28 · replayBonusFor:29
+SESSION_MILESTONES:35 · addSessionCoins:38 · updateBestTarget:77 · weekKeyStr:90 · rolloverWeekBest:97 · exitGame:103
+showSessionSummary:139 · sprinkleConfetti:186 · VOCAB_PER_LEVEL:205 · VOCAB_RANK_NAMES:206 · vocabRankName:207 · showProgressReport:209
+THUNDER_MS:391 · THUNDER_TIERS:395 · THUNDER_TIER_UI:396 · thunderEmoji:397 · DAREDEVIL_TIERS:401 · DAREDEVIL_TIER_UI:402
+daredevilEmoji:403 · GLASS_TIERS:407 · GLASS_TIER_UI:408 · glassEmoji:409 · DILIGENT_TIERS:413 · DILIGENT_TIER_UI:414
+diligentEmoji:415 · SOFTLAND_TIERS:419 · SOFTLAND_TIER_UI:420 · softLandEmoji:421 · AIRL_TIERS:425 · AIRL_TIER_UI:426
+airLetterEmoji:427 · MECHABOSS_TIERS:431 · MECHABOSS_TIER_UI:432 · mechaBossEmoji:433 · TYPIST_TIERS:440 · TYPIST_TIER_UI:441
+typistEmoji:443 · checkTypistBadge:445 · BIGEXAM_TIERS:461 · BIGEXAM_TIER_UI:462 · bigExamEmoji:463 · bigExamCertCount:465
+checkBigExamBadge:470 · BFF_TIERS:485 · BFF_TIER_UI:486 · BFF_COIN:487 · bffEmoji:488 · badgeSuffix:493
+BADGE_META:512 · NAME_BADGE_RE:529 · splitNameBadges:530 · badgeEmojis:536 · badgeScore:541 · BADGE_CATS:548
+earnedBadgeEmojis:564 · bcatLevel:579 · checkCrown:586 · currentBadgeScore:602 · rolloverBadgeWeek:606 · addDiligent:619
+BADGE_COIN:638 · awardBadgeCoin:646 · BC_QUEUE:660 · celebrateBadge:661 · bcShow:675 · showBadgeInfo:704
+addThunder:722 · startGame:736 · newRound:776 · updateTimerBar:815 · updateComboPill:821 · pickCard:825
+checkMatch:837 · renderCats:951 · fmtMMSS:1001 · quizTimerStop:1005 · quizTimerStart:1010 · quizElapsed:1020
+startQuiz:1024 · renderQuizQuestion:1042 · quizNext:1106 · finishQuiz:1119
 
 ## js/gradelock.js (169 บรรทัด · 15 รายการ)
 GRADES:21 · GRADE_LOCK_DAYS:25 · GRADE_LOCK_MS:26 · gradeRank:29 · myGrade:30 · gradeTester:31

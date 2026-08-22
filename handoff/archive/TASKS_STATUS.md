@@ -5339,3 +5339,9 @@
 
 - เลิกส่ง slot ผ่าน `hp` ที่พ้องกับ friend-seat reservation; ย้าย marker ไป `c` เฉพาะตอนไม่มีแชท โดย client เก่าอ่านข้ามได้; regression + Browser QA legacy/no-marker ทับ slot 0 → ผู้เล่นย้าย slot 1 ระยะ 15.74 ม., desktop/mobile 844×390, portal=false, console 0 error (`js/f1_3d.js`, `tools/test_f1_start_grid.js`)
 - ซ่อม `COMMIT_DEPLOY.bat` ตีความ `y` เป็นยกเลิกบน Windows โดยตัด CR ท้ายคำตอบใน `tools/ship.sh`
+
+
+## ⏬ ย้ายเมื่อ 2026-08-22 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- regression จำลองปิด→reload และคำเชิญเวลาใหม่ผ่าน พร้อม syntax/diff/build ผ่าน (`tools/test_tinv_dismiss.js`)
+- **รอบ 1219 · แก้รถเกิดซ้อน/ภาพสั่นซ้ำ:** เพิ่มระยะกริด 8→18 ม. และกันพื้นที่รัศมี 15 ม. จากพิกัดรถ client เก่าที่ไม่ส่ง slot จึงข้ามจุดซ้อนอัตโนมัติ
