@@ -133,12 +133,15 @@ function aimClear(){ aim=null; }
    ไม่ใช่ไล่ทีละสนาม (จะกลายเป็น 9×สนาม) · ความถี่คุมอีกชั้นที่ js/ui.js
    คืน {found:{uid:{map,room,n,t}}, denied:true ถ้าอ่านไม่ได้ (rules ยังไม่ publish)} */
 const MAPS3D = ['adv','sky','haunt','heli','drone','drive','soccer','moto','invasion','mecha','f1','lettercannon'];
+function skyMapAllowed(map){
+  return map !== 'sky' || (typeof canAccessSkyBeta === 'function' && canAccessSkyBeta());
+}
 function whereFriends(uids){
   const db=dbOf(), ids=uids||{};
   if(!db || !Object.keys(ids).length) return Promise.resolve({found:{}, denied:false});
   const now=Date.now(), found={};
   let denied=0;
-  return Promise.all(MAPS3D.map(function(map){
+  return Promise.all(MAPS3D.filter(skyMapAllowed).map(function(map){
     return db.ref('winfo/'+map).once('value').then(function(snap){
       const rooms=snap.val()||{};
       for(const rkey in rooms){
@@ -371,7 +374,7 @@ function create(opt){
 
   /* ── หาสนาม + เข้า (ใช้ทั้งตอนเริ่มและตอนลองใหม่) ───────────── */
   function joinNow(first, from){
-    if(busy || joined || !envReady()) return;
+    if(!skyMapAllowed(map) || busy || joined || !envReady()) return;
     busy=true; retryAt=performance.now(); myUid=onlineKey();
     /* 🤝 นัดกันไว้ = พาไปสนามเดียวกับเพื่อนเลย ไม่ต้องให้เด็กกด "ไปหาเพื่อน" เอง
        (หาไม่เจอ/เต็ม → เข้าสนามปกติ แล้วค่อยตามอีกไม่กี่วินาที เผื่อเพื่อนกดเข้าช้ากว่า) */
@@ -461,7 +464,7 @@ function create(opt){
     return sendMs * Math.min(CFG.NET_GAP_MAX, 1 + Math.floor(Object.keys(peers).length / CFG.CROWD_PER));
   }
   function send(payload, force){
-    if(!joined || !myHot || !netOk) return;
+    if(!skyMapAllowed(map) || !joined || !myHot || !netOk) return;
     const now=performance.now();
     if(legacy){                                       // โหมดเดิม: ส่งทั้งก้อนเหมือนเดิมเป๊ะ
       if(!force && now-lastHotAt<gap()) return;
@@ -604,6 +607,7 @@ function create(opt){
   /* ── 🏃 ไปหาเพื่อน: ย้ายเข้าสนามที่เพื่อนอยู่ ────────────────
      เต็ม = คืน {ok:false,reason:'full'} ให้โลกขึ้นป้ายบอกเหตุผล (ห้ามเงียบ) */
   function goToRoom(i){
+    if(!skyMapAllowed(map)) return Promise.resolve({ok:false, reason:'private-beta'});
     if(legacy) return Promise.resolve({ok:false, reason:'legacy'});
     if(i===idx && joined) return Promise.resolve({ok:true, same:true});
     if(busy) return Promise.resolve({ok:false, reason:'busy'});
@@ -743,9 +747,15 @@ function create(opt){
   }
 
   function join(){
+    if(!skyMapAllowed(map)){
+      toast('🔒 <b>Vocab Sky Playground เป็น Private Beta</b><br><span class="ib-sub">บัญชีนี้ยังไม่ได้รับสิทธิ์เข้าทดสอบ ขอบคุณที่สนใจนะครับ</span>', 3200);
+      onStat();
+      return false;
+    }
     if(!envReady()) return;
     myUid=onlineKey(); legacy=false; full=false;
     joinNow(true);
+    return true;
   }
   function leave(){
     closeFriends();

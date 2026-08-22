@@ -1,5 +1,7 @@
 # RULES.md — Firebase Security Rules
 
+> ⏳ **รอบ 1236 — รอผู้ใช้ Publish:** ล็อก map `sky` แบบ Private Beta ที่ `/world`, `/wroom`, `/winfo` และการสร้างคำเชิญ `/tinv` ให้เฉพาะอีเมลตัวพิมพ์เล็ก `freddommun@gmail.com`, `sumpajitshami@gmail.com`, `parkerhulk2020@gmail.com`; เงื่อนไขใช้ `$map !== 'sky' || ...` จึงไม่เปลี่ยนสิทธิ์ของโลกอื่น
+>
 > ⏳ **รอบ 1229 — รอผู้ใช้ Publish:** เพิ่ม map key `sky` ใน allowlist เดิมของ `/world`, `/wroom`, `/winfo` และคำเชิญ `/tinv` เท่านั้น เพื่อเปิด multiplayer ของ Vocab Sky Playground สูงสุด 6 คนต่อ instance; ไม่เปลี่ยนสิทธิ์อ่าน/เขียนหรือ field validation อื่น
 >
 > ✅ **รอบ 1142 — ผู้ใช้ยืนยันว่า Publish แล้ว 13 ส.ค. 2026:** ล็อก `/users/<uid>/profile/name` ชื่อ `Admin` ทุกตัวพิมพ์และ `แอดมิน` ให้เขียนได้เฉพาะ `freddommun@gmail.com`, `sumpajitshami@gmail.com`, `parkerhulk2020@gmail.com`; ฝั่งเกมตรวจเข้มกว่านี้โดยตัดช่องว่างและอักขระซ่อนด้วย · ยังไม่ได้เทียบ Rules สดทั้งก้อน เพราะ sandbox อ่าน Firebase CLI token ใน `.config` ไม่ได้
@@ -230,10 +232,10 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
     },
     "world": {
       "$map": {
-        ".read": "auth != null",
+        ".read": "auth != null && ($map !== 'sky' || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com')",
         ".validate": "$map === 'adv' || $map === 'sky' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive' || $map === 'moto' || $map === 'invasion' || $map === 'lettercannon'",
         "$uid": {
-          ".write": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && auth.uid === $uid && ($map !== 'sky' || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com')",
           ".validate": "newData.hasChildren(['n','x','z','yaw','ts'])",
           "n":   { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
           "av":  { ".validate": "newData.isString() && newData.val().length <= 8" },
@@ -255,12 +257,12 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
     },
     "wroom": {
       "$map": {
-        ".read": "auth != null",
+        ".read": "auth != null && ($map !== 'sky' || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com')",
         ".validate": "$map === 'adv' || $map === 'sky' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive' || $map === 'moto' || $map === 'invasion' || $map === 'soccer' || $map === 'mecha' || $map === 'f1' || $map === 'lettercannon'",
         "$room": {
           ".validate": "$room.matches(/^r([0-9]|[1-2][0-9]|3[0-5])$/)",
           "$uid": {
-            ".write": "auth != null && auth.uid === $uid",
+            ".write": "auth != null && auth.uid === $uid && ($map !== 'sky' || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com')",
             ".validate": "newData.hasChildren(['x','z'])",
             "x":  { ".validate": "newData.isNumber()" },
             "z":  { ".validate": "newData.isNumber()" },
@@ -277,12 +279,12 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
     },
     "winfo": {
       "$map": {
-        ".read": "auth != null",
+        ".read": "auth != null && ($map !== 'sky' || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com')",
         ".validate": "$map === 'adv' || $map === 'sky' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive' || $map === 'moto' || $map === 'invasion' || $map === 'soccer' || $map === 'mecha' || $map === 'f1' || $map === 'lettercannon'",
         "$room": {
           ".validate": "$room.matches(/^r([0-9]|[1-2][0-9]|3[0-5])$/)",
           "$uid": {
-            ".write": "auth != null && auth.uid === $uid",
+            ".write": "auth != null && auth.uid === $uid && ($map !== 'sky' || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com')",
             ".validate": "newData.hasChildren(['t'])",
             "n":  { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
             "w":  { ".validate": "newData.isNumber() && newData.val() >= 0" },
@@ -335,8 +337,8 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
       "$toUid": {
         ".read": "auth != null && auth.uid === $toUid",
         "$fromUid": {
-          ".write": "auth != null && (auth.uid === $fromUid || auth.uid === $toUid)",
-          ".validate": "newData.hasChildren(['map','n','ts'])",
+          ".write": "auth != null && (auth.uid === $fromUid || auth.uid === $toUid) && (!newData.exists() || ((data.child('map').val() !== 'sky' && newData.child('map').val() !== 'sky') || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com'))",
+          ".validate": "newData.hasChildren(['map','n','ts']) && (newData.child('map').val() !== 'sky' || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com')",
           "map": { ".validate": "newData.isString() && (newData.val() === 'adv' || newData.val() === 'sky' || newData.val() === 'haunt' || newData.val() === 'heli' || newData.val() === 'drone' || newData.val() === 'drive')" },
           "n":   { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
           "ts":  { ".validate": "newData.isNumber()" },

@@ -25,6 +25,22 @@ const AUTH_SDK_TIMEOUT_MS = 20*1000;   // รอ SDK นานสุดก่อ
 const AUTH_CLOUD_SLOW_MS  = 6*1000;    // นานกว่านี้ต้องมีทางออกให้ผู้เล่น ไม่ปล่อยหน้าค้างเงียบ
 const AUTH_CLOUD_TIMEOUT_MS = 12*1000; // RTDB get() อาจค้างไม่ resolve/reject เมื่อการเชื่อมต่อครึ่งหลุด
 
+/* ☁️🔒 Vocab Sky Playground — Private Beta
+   แยกจากสิทธิ์ผู้ทดสอบ/ครู/ชื่อ Admin โดยตั้งใจ: รายชื่อนี้ให้สิทธิ์เข้า Sky เท่านั้น
+   เปิดสาธารณะภายหลังได้ด้วยการเปลี่ยน SKY_BETA_OPEN เป็น true จุดเดียว */
+const SKY_BETA_OPEN = false;
+const SKY_BETA_EMAILS = new Set([
+  'freddommun@gmail.com',
+  'sumpajitshami@gmail.com',
+  'parkerhulk2020@gmail.com',
+]);
+function skyBetaEmail(raw){
+  return String(raw || '').trim().toLowerCase();
+}
+function canAccessSkyBeta(user=Auth.user){
+  return SKY_BETA_OPEN || !!(user && SKY_BETA_EMAILS.has(skyBetaEmail(user.email)));
+}
+
 /* 🛡️ รอบ 1142: ชื่อผู้ดูแลระบบสงวนไว้ให้ 3 บัญชีนี้เท่านั้น
    normalize + ตัดช่องว่าง/zero-width เพื่อกันชื่อเลียนแบบ เช่น "A d m i n" */
 const ADMIN_NAME_EMAILS = new Set([

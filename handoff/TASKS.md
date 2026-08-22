@@ -28,6 +28,10 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (22 ส.ค.) — อ่านก่อน
+- **รอบ 1236 · Vocab Sky Playground Private Beta:** เพิ่ม `SKY_BETA_OPEN=false` + `SKY_BETA_EMAILS` 3 อีเมลตัวพิมพ์เล็ก แยกจาก tester/teacher/Admin; เฉพาะ Beta เห็นการ์ด Lobby พร้อมป้าย `PRIVATE BETA` และไม่มีสิทธิ์/เหรียญเพิ่ม (`js/auth.js`, `js/ui.js`, `css/lobby.css`)
+- Guard ซ้ำครบ Lobby entry/direct call/invitation/reconnect/Sky start/`NetRoom.join()`; Rules จำกัดเฉพาะ map `sky` ใน `/world` `/wroom` `/winfo` `/tinv` ด้วยเงื่อนไขที่ไม่กระทบโลกอื่น (`js/online.js`, `js/netroom.js`, `js/skyplay3d.js`, `handoff/RULES.md`)
+- QA 3 Beta + `student@example.com`, 812×375 Lobby/Sky no-scroll, invite/reconnect/NetRoom, console 0, syntax+Sky regression+build+PWA/TWA ผ่าน; Rules 41 roots/833 บรรทัด/payload ตรง source/SHA-256 `51B16290C96E59E052E773D0FC36D38C7E4DFFFB471BBBE2276CC72C96A0466D`
+- ค้างผู้ใช้กด Copy whole block จาก Rules HTML → วางทับ Firebase Rules → Publish; ไม่แตะ `css/petshopping3d.css`/ไฟล์ session อื่น
 - **รอบ 1235 · Vocab Sky Playground Phase 5:** เพิ่ม Teacher Lesson Packs บันทึกในเครื่อง, playlist ความหมาย→ฟัง→สะกด, Ready Check และ host/student reconnect+late join โดยคง Phase 1–4/C4-S4 เดิม (`js/skyplay3d.js`, `css/skyplay3d.css`)
 - เพิ่มรายงานรายคน+รายคำ, CSV/พิมพ์/รายงานย้อนหลัง; ผู้ใช้อนุญาต `R5` answer telemetry แบบย่อผ่าน `cw` เดิม ≤60; ไม่เพิ่ม Firebase path/rules/เงิน และคง NetRoom sky 6 คน
 - 812×375 pack/ready/live/summary ไม่ scroll; browser QA ทุกค่าผ่านรวม save/load/host+student reconnect/disconnect/late join/teardown/Phase 4 compatibility/reportWordStats, console 0; structural+R5 split/merge+NetRoom 52/52+diff ผ่าน

@@ -7077,7 +7077,17 @@ async function loadVocabArena3d(){
 async function loadSkyPlayground3d(){
   await loadScriptOnce('js/skyplay3d.js');
 }
+const SKY_BETA_DENIED_MSG = 'Vocab Sky Playground กำลังเปิดแบบ Private Beta เฉพาะบัญชีที่ได้รับเชิญ ขอบคุณที่สนใจนะครับ';
+function ensureSkyBetaAccess(){
+  const allowed = typeof canAccessSkyBeta === 'function' && canAccessSkyBeta();
+  if(!allowed){
+    if(typeof sfx !== 'undefined' && sfx.wrong) sfx.wrong();
+    toast(`🔒 ${SKY_BETA_DENIED_MSG}`);
+  }
+  return allowed;
+}
 async function enterSkyPlayground3D(){
+  if(!ensureSkyBetaAccess()) return worldEntryStopped(SKY_BETA_DENIED_MSG);
   if(!state.skyTicket) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
   if(advLoading){ advBusyMsg(enterSkyPlayground3D); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
   advLoading=Date.now();toast('☁️ กำลังเปิด Vocab Sky Playground...');
@@ -7682,6 +7692,7 @@ function showGameEntryRefundNotice(next){
 }
 
 async function startWorldEntry(w, info, unlocked, overlay, button){
+  if(w && w.mode === 'sky' && !ensureSkyBetaAccess()) return;
   if(button) button.disabled = true;
   let tx = null;
   if(!info.free){
@@ -7726,6 +7737,7 @@ async function startWorldEntry(w, info, unlocked, overlay, button){
 }
 
 function railWorldClick(w){
+  if(w && w.mode === 'sky' && !ensureSkyBetaAccess()) return;
   if(world3DComingSoon(w)){
     sfx.wrong(); toast('🔒 Coming soon'); return;
   }
@@ -7752,6 +7764,7 @@ function railWorldClick(w){
 /* 🎫→💰 รอบ 823: หน้าจ่ายค่าเข้าโลก 3D กลาง — แทนที่การ์ดตั๋วแยก 8 ใบเดิม
    ราคาวันนี้ (worldEntryInfo) + ปุ่มชวนเพื่อนเล่นด้วยกัน (openTinvPicker) รวมอยู่ในหน้าเดียว */
 function openWorldEntryDialog(w){
+  if(w && w.mode === 'sky' && !ensureSkyBetaAccess()) return;
   const info = worldEntryInfo(w.mode);
   const unlocked = !!state[w.ticketKey];
   // 🤖🚗 รอบ 945: ส่วนลดเจ้าของหุ่น/รถทบกับส่วนลดวันหยุดได้ — โชว์ทุกเหตุผลที่ลด ห้ามลดเงียบๆ
@@ -7837,6 +7850,7 @@ function renderRailWorlds(){
       b.className = 'rail-btn rail-world';
       b.id = 'btn-world-' + w.mode;
       b.innerHTML = `<span class="rail-ico">${w.ico}</span>${w.label}`
+        + (w.mode === 'sky' ? '<span class="rail-beta">PRIVATE BETA</span>' : '')
         + `<span class="rail-lock" style="display:none">🔒</span>`          // มุมขวาบน: ล็อกอยู่
         + `<span class="rail-count" style="display:none">0</span>`          // มุมขวาบน: จำนวนคำที่พิชิตแล้ว (ปลดล็อกแล้ว)
         + `<span class="rail-price" style="display:none"></span>`;          // ใต้ชื่อ: ราคาตั๋ว (ยังไม่มีตั๋ว)
@@ -7850,6 +7864,9 @@ function renderRailWorlds(){
     const info = worldEntryInfo(w.mode);
     const b = document.getElementById('btn-world-' + w.mode);
     if(!b) return;
+    const betaVisible = w.mode !== 'sky' || (typeof canAccessSkyBeta === 'function' && canAccessSkyBeta());
+    b.hidden = !betaVisible;
+    if(!betaVisible) return;
     const done = Array.isArray(state[w.doneKey]) ? state[w.doneKey].length : 0;
     const lk = b.querySelector('.rail-lock');
     const cnt = b.querySelector('.rail-count');
@@ -7903,6 +7920,7 @@ function renderRailWorlds(){
 
 /* ---------- คำเชิญเล่นด้วยกัน (เงินคืนคนละ TINV_CASHBACK เมื่อเจอกันใน map) ---------- */
 function tinvNoticeHTML(map){
+  if(map === 'sky' && !ensureSkyBetaAccess()) return '';
   if(state.tinvClaimed && state.tinvClaimed[map]) return '';
   if(!(window.Online && Online.tinv)) return '';
   const from = Object.values(Online.tinv).filter(v=>v.map===map);
@@ -7911,6 +7929,7 @@ function tinvNoticeHTML(map){
     เข้าโลกไปเจอกัน แล้วเล่นจบด้วยกัน (อยู่ด้วยกันต่อเนื่อง) รับเงินคืนคนละ <b>🪙${fmtNum(TINV_CASHBACK)}</b></div>`;
 }
 function openTinvPicker(map){
+  if(map === 'sky' && !ensureSkyBetaAccess()) return;
   if(!(window.Online && Online.ready)){ sfx.wrong(); toast('⚠️ ยังไม่ได้เชื่อมต่อออนไลน์ — ลองใหม่อีกครั้งนะ'); return; }
   const friends = (Online.myFriends || []);
   if(!friends.length){ sfx.wrong(); toast('ยังไม่มีเพื่อนเลย — ไปเพิ่มเพื่อนที่เมนู 🧑‍🤝‍🧑 ก่อนนะ'); return; }

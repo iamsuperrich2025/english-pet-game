@@ -912,6 +912,11 @@ function marketSoldWatch(){
    ============================================================ */
 function tinvSend(toUid, map){
   if(!Online.ready || !Online.db) return Promise.reject();
+  if(map === 'sky' && !(typeof canAccessSkyBeta === 'function' && canAccessSkyBeta())){
+    const msg='Vocab Sky Playground กำลังเปิดแบบ Private Beta เฉพาะบัญชีที่ได้รับเชิญครับ';
+    if(typeof toast === 'function') toast(`🔒 ${msg}`);
+    return Promise.reject(new Error(msg));
+  }
   const me = onlineKey();
   return Online.db.ref('tinv/' + toUid + '/' + me).set({
     map, n: onlineDisplayName(), ts: firebase.database.ServerValue.TIMESTAMP,
@@ -959,7 +964,9 @@ function tinvWatch(){
     const out = {};
     snap.forEach(ch=>{
       const v = ch.val();
-      if(v && TINV_WORLD_LABEL[v.map]) out[ch.key] = {map: v.map, n: v.n || 'เพื่อน', ts: v.ts || 0};
+      if(v && TINV_WORLD_LABEL[v.map]
+        && (v.map !== 'sky' || (typeof canAccessSkyBeta === 'function' && canAccessSkyBeta())))
+        out[ch.key] = {map: v.map, n: v.n || 'เพื่อน', ts: v.ts || 0};
     });
     Online.tinv = out;
     Object.keys(out).forEach(uid=>{
