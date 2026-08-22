@@ -5396,3 +5396,11 @@
 - **รอบ 1229 · Vocab Sky Playground Phase 1:** เพิ่มโลก standalone Bright Fantasy Social + Obby ผ่าน `WORLD3D` มี plaza/ทางลอยหลายระดับ, moving/disappearing/rotating obstacle + jump pad, checkpoint/respawn, Vocab Gate/Stars, +100 main coin และ Exit sync (`js/skyplay3d.js`, `css/skyplay3d.css`)
 - ใช้ Soft Cuboid Chibi 3D, pet/stage จริงจาก Lobby, vocab/pronunciation/save/quest เดิม และ `NetRoom` map `sky` จำกัด 6 คน; ไม่แตะ controller/character ของ Adventure World กับ Invasion
 - Rules source เพิ่ม `sky` เฉพาะ allowlist `/world` `/wroom` `/winfo` `/tinv`; artifact เต็มทั้งก้อนอยู่ `outputs/vocab-sky-playground-rules-round-1229.html` ฝั่ง Codex workspace และยังรอผู้ใช้ Publish
+
+
+## ⏬ ย้ายเมื่อ 2026-08-22 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- Plaza โชว์ mission/progress/badge/live join ชัดเจน; resume active run + join-in-progress ผ่าน `S3` hp payload เดิม, 6 คน, vocab/pronunciation/save/main coins เดิม ไม่เพิ่ม Firebase path/rules
+- Browser QA gameplay/reward/save-load/reconnect/6-player/teardown ผ่านทุกข้อ + NetRoom 52/52 + console 0; 812×375 ไม่มี scrollbar, Tower 48 calls/2,566 tri, สูงสุด 6 คน 144/8,660 · syntax/diff/structural/build 8,394 ไฟล์/PWA ผ่าน
+- **รอบ 1230 · Vocab Sky Playground Phase 2:** เพิ่ม Letter Hunt co-op, Word Race 3 ด่าน และ Sky Obby จับเวลา/อันดับสด ผ่าน payload เดิมของ NetRoom ไม่เพิ่ม Firebase path; คง Chibi/pet/main coins/6 คน (`js/skyplay3d.js`, `css/skyplay3d.css`)
+- แก้ pet follow วาร์ปไกลใช้ absolute goal ถูกต้อง เลิก particle leak ทุกเฟรม; browser gameplay/reward/shared-standing/teardown ผ่านทั้งหมด + NetRoom 52/52 + console 0 error
