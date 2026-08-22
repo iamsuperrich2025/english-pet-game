@@ -63,10 +63,10 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/coinaward.js** (21 บรรทัด) — 🪙🏆 รางวัลรายเดือน Top 10 กระดานเหรียญคงเหลือ
 - **js/dictband.js** (410 บรรทัด) — DICT BAND — คลังศัพท์ใหญ่ตามระดับ (band 1-5) จาก js/data/dict_band/ · manifest.js โหลดตอนบูต (เบา) → ชิ้นข้อมูล db<band>_*.js โหลดขี้เกียจ · ตอนผู้เล่นกดเล่น แล้วต่อเข้าเครื่องยนต์เดิมทั้งคู่:
 - **js/examstd.js** (983 บรรทัด) — 📋 EXAM STD — ข้อสอบจริงแบบมาตรฐาน IELTS / TOEIC / TOEFL / O-NET (รอบ 812 · O-NET รอบ 1183) · คนละระบบกับ js/bandadv.js (คลังศัพท์ IELTS/TOEIC/TOEFL รอบ 807) ซึ่งเป็นการจับคู่ en↔th · ที่นี่ = โจทย์เลือกตอบแบบข้อสอบจริง 30 ข้อ/ชุด: ไวยากรณ์ + การอ่านจับใจความ (ไม่มีเรียงความ)
-- **js/f1_3d.js** (4,687 บรรทัด) — 🏎️ f1_3d.js — โลกแข่งรถ F1 "สนามซาเคียร์" Bahrain International Circuit (รอบ 896) · ───────────────────────────────────────────────────────────────────── · แทร็กจริงจาก OpenStreetMap (js/data/f1_bahrain.js — GP Circuit 5,400 ม. ครบ 15 โค้ง)
+- **js/f1_3d.js** (4,693 บรรทัด) — 🏎️ f1_3d.js — โลกแข่งรถ F1 "สนามซาเคียร์" Bahrain International Circuit (รอบ 896) · ───────────────────────────────────────────────────────────────────── · แทร็กจริงจาก OpenStreetMap (js/data/f1_bahrain.js — GP Circuit 5,400 ม. ครบ 15 โค้ง)
 - **js/f1_modes.js** (125 บรรทัด) — 🏁 F1 Racing Mode Select — local graphics preference + environment profile contract (Phase 1) · UI/preference live here; physics, gameplay, rewards and multiplayer remain owned by js/f1_3d.js. · Both profiles mutate one shared F1 scene. A second renderer/scene is never created for mode switching.
 - **js/fpsweapon.js** (194 บรรทัด) — 🔫 FPS WEAPON STATE MACHINE — local adapter for invasion3d · Owns only weapon presentation state. Gameplay, aiming, damage, · controls and world lifecycle remain in js/invasion3d.js.
-- **js/game.js** (1,213 บรรทัด) — เกมจับคู่คำศัพท์ + หมวดคำศัพท์ & แบบทดสอบ · รางวัล: จับคู่ถูก +20🪙 +2RP +5EXP · เคลียร์รอบ +40🪙 +5RP · สอบผ่านครั้งแรก +รางวัลหมวด +100RP · ผ่านซ้ำ +20🪙 +30RP · ไม่ผ่าน +5RP
+- **js/game.js** (1,230 บรรทัด) — เกมจับคู่คำศัพท์ + หมวดคำศัพท์ & แบบทดสอบ · รางวัล: จับคู่ถูก +20🪙 +2RP +5EXP · เคลียร์รอบ +40🪙 +5RP · สอบผ่านครั้งแรก +รางวัลหมวด +100RP · ผ่านซ้ำ +20🪙 +30RP · ไม่ผ่าน +5RP
 - **js/gradelock.js** (169 บรรทัด) — 🔒 GRADE LOCK — ล็อกการเปลี่ยนระดับชั้น (รอบ 647 · ผู้ใช้สั่ง 28 ก.ค. 2026) · เหตุผล: ระดับชั้นคุมความยากคำศัพท์ (vocabForStudent/gradeBand) → เด็กที่ "ลดชั้น" · จะได้คำง่าย ๆ แล้วปั๊มเหรียญได้เร็วผิดปกติ · ต่อยอดจากรอบ 643 (สัญลักษณ์ดาว/เพชรใต้ชื่อ)
 - **js/hauntedhotel.js** (621 บรรทัด) — hauntedhotel.js — Haunted Hotel mission runtime (Phase 2+3+4) · Owns lifecycle, explicit mission phases, canonical run reconciliation, · deterministic mission configuration and cancellable local effects.
 - **js/hauntedhoteldirector.js** (321 บรรทัด) — hauntedhoteldirector.js — Haunted Hotel Horror Director (Phase 3) · Lightweight local pacing + compact, transaction-claimed shared scare intent. · Mission authority, movement, rewards and scene rendering stay outside this module.
@@ -90,7 +90,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/petshopping3d.js** (581 บรรทัด) — 🚗🐾 PET SHOPPING 3D — รอบ 1169 · โลกสั้น first-person แยกจาก Adventure3D: ร้านใกล้, GPS ชัด, · ร้านสร้างเป็นองค์ประกอบสถาปัตย์จริง ไม่ใช่กล่องแปะภาพ
 - **js/photo.js** (361 บรรทัด) — 📷 photo.js — รูปโปรไฟล์ของผู้เล่นเอง (อัปโหลดรูปแบบ Facebook) — รอบ 709 · เก็บที่ไหน: localStorage แยกก้อน (`petVocabAdventure_photo`) + RTDB `/pphoto/<uid>` · ตั้งใจ **ไม่ยัดลง state** เพราะ state ถูกเซฟขึ้น cloud ทั้งก้อนทุกครั้ง (รูป ~20KB จะทำให้เซฟบวมทุกครั้ง)
 - **js/picdict.js** (412 บรรทัด) — 🖼️ Picture Dictionary — single-page card gallery (รอบ 1123) · ยกเลิกหนังสือกาง 2 หน้า/การพลิกกระดาษ แล้วแสดงการ์ด 18 คำต่อหน้า · (6 คอลัมน์ × 3 แถว) เพื่อให้ภาพและคำอ่านใหญ่ชัดบนจอเล็ก
-- **js/picmatch.js** (646 บรรทัด) — 🖼️ picmatch.js — เกม "จับคู่ภาพ" (รอบ 977 · เชื่อม Picture Dictionary รอบ 1053) · 2 โหมด สลับด้วยปุ่มบนกระดาน: · "pic"  = ภาพจาก Picture Dictionary ↔ ภาพเดียวกัน
+- **js/picmatch.js** (658 บรรทัด) — 🖼️ picmatch.js — เกม "จับคู่ภาพ" (รอบ 977 · เชื่อม Picture Dictionary รอบ 1053) · 2 โหมด สลับด้วยปุ่มบนกระดาน: · "pic"  = ภาพจาก Picture Dictionary ↔ ภาพเดียวกัน
 - **js/picquiz_online.js** (608 บรรทัด) — 🌐🎧 PICQUIZ ONLINE — แข่งครูถามศัพท์จากหนังสือ · ห้องส่วนตัวด้วยรหัส 6 ตัว · สูงสุด 50 คน · เจ้าของกดเริ่ม · 10 คำ/รอบ · ฟังเสียงแล้วแตะการ์ด · คะแนนตามความเร็ว
 - **js/pmaward.js** (28 บรรทัด) — 🏆 pmaward.js — รางวัลรายเดือนของกระดานอันดับ 🖼️ จับคู่ภาพ (รอบ 979) · ผู้ใช้สั่ง 3 ส.ค. 2026: ทำแท็บ+รางวัลรายเดือน Top 10 ให้เกมจับคู่ภาพ · ใช้กติกา/โครงเดียวกับ 🔎 ค้นหาคำ (js/wsaward.js) ทุกประการ — ต่างแค่ field/ชื่อเกม
 - **js/rankgraph.js** (147 บรรทัด) — 📈 กราฟอันดับ Top 30 — โหลด snapshot เมื่อเปิดเท่านั้น · แต่ละหมวดใช้สีประจำตัวไม่ซ้ำ และชื่อผู้เล่นติดอยู่กับทุกจุด
@@ -101,7 +101,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/tpaward.js** (42 บรรทัด) — 🏆 tpaward.js — รางวัลรายเดือนของกระดานอันดับ ⌨️ พิมพ์คำ (รอบ 649 · แก้กติกาอันดับรอบ 654) · ผู้ใช้สั่ง 28 ก.ค. 2026: "ทำแบบเดียวกับแท็บ 🔎 ค้นหาคำ" · ① Top 10 ได้เหรียญรางวัลทุกวันที่ 1 ของเดือน (10,000 ลดหลั่นถึง 1,000)
 - **js/typing.js** (370 บรรทัด) — ⌨️ typing.js — เกม "พิมพ์คำศัพท์" (Keyboard Typing) รอบ 648 · ผู้ใช้สั่ง 28 ก.ค. 2026 · ปุ่มรางซ้ายล็อบบี้ → กระดานเต็มจอ (มีปุ่มปิดชัดเจน) · - แป้นวางตามตำแหน่งคีย์บอร์ดจริง (QWERTY เหลื่อมแถว) · ปุ่มนูน 3 มิติ กดแล้วยุบ-เด้งขึ้นทันที
 - **js/ui.js** (10,030 บรรทัด) — UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
-- **js/util.js** (1,332 บรรทัด) — UTIL: เสียง / เอฟเฟกต์ / เครื่องมือทั่วไป
+- **js/util.js** (1,340 บรรทัด) — UTIL: เสียง / เอฟเฟกต์ / เครื่องมือทั่วไป
 - **js/vocabbook.js** (207 บรรทัด) — 📒 สมุดคำศัพท์ของฉัน + ข้อสอบทบทวนส่วนตัว (รอบ 288) · เก็บทุกคำที่เด็กเจอในเกมจับคู่/ข้อสอบทุกแบบ (รวม band) ลง state.vocabBook · ถาวรข้ามเซสชัน: {en: {th, c:ถูกกี่ครั้ง, w:ผิดกี่ครั้ง, t:เจอล่าสุด, lw:ครั้งล่าสุดผิด?}}
 - **js/wordsearch.js** (485 บรรทัด) — 🔎 wordsearch.js — เกมค้นหาคำศัพท์ (Word Search) รอบ 194 · แผงฟ้าล้ำยุคเลื่อนออกจากซ้าย · สุ่มคำไม่ซ้ำในแต่ละเกม · 🆕 รอบ 588: กระดานเกือบเต็มจอ · แถบ "หาคำเหล่านี้ให้เจอ" ย้ายขึ้นบนสุด จัดกึ่งกลาง
 - **js/wsaward.js** (32 บรรทัด) — 🏆 wsaward.js — รางวัลรายเดือนของกระดานอันดับ 🔎 ค้นหาคำ (รอบ 592) · ผู้ใช้สั่ง 26 ก.ค. 2026: · ① Top 10 ได้เหรียญรางวัลทุกวันที่ 1 ของเดือน (10,000 ลดหลั่นถึง 1,000)
@@ -120,6 +120,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/style.css** (2,430 บรรทัด) — Pet Vocab Adventure — สไตล์พื้นฐานรุ่นแรกทั้งเกม (โดน lobby.css โหลดทับบางส่วน — แก้หน้าตาโซนล็อบบี้/UI ใหม่ให้ไปที่ lobby.css ก่อน) · ครอบคลุม: screens/login/dashboard · เกมจับคู่ .word-card + แบบทดสอบ .quiz-* · shop/ที่พัก/หมวดคำศัพท์ · หิว-ป่วย/สภาพอากาศ · ตั้งค่า/วิธีเล่น/level-up overlay · คลังของฉัน/กล่องขาย · เอฟเฟกต์ลอย/เหรียญ/rotate-overlay
 - **sw.js** (218 บรรทัด) — Vocab World service worker · Delivery contract: · - HTML navigations are network-first with the last valid shell as fallback.
 <!-- AUTO-FILES:END -->
+
 
 
 
