@@ -38,7 +38,7 @@ const Online = {
   giftOutDone:{},   // key ของขวัญที่ประมวลผลผลลัพธ์แล้วในเซสชันนี้ (กันคืนของซ้ำจาก snapshot รัว)
   /* ---- คำเชิญเล่นโลก 3D ด้วยกัน (ส่วนลดคนละ 2,000 เมื่อเจอกันใน map) ---- */
   tinv:{},          // คำเชิญที่ส่งมาหาเรา: {fromUid:{map:'adv'|'haunt', n:ชื่อผู้ชวน, ts}}
-  tinvSeen:{},      // fromUid ที่เด้ง toast ไปแล้วในเซสชันนี้ (กันเด้งซ้ำ)
+  tinvSeen:{},      // fromUid → fingerprint คำเชิญที่เด้ง toast แล้วในเซสชันนี้ (คำเชิญใหม่จากคนเดิมยังเด้งได้)
   /* ---- ตลาดออนไลน์จริง (item 2) ---- */
   market:[],        // ประกาศขายทั้งเซิร์ฟเวอร์ (รวมของเรา): [{key,sid,sn,id,p,ts}]
   marketOk:false,   // true = อ่าน /market ได้ (rules โซน market publish แล้ว) → เปิดตลาดจริง
@@ -951,6 +951,9 @@ const TINV_WORLD_LABEL = {
   adv:'โลกผจญภัย 🌍', haunt:'โลกผีสิง 👻', heli:'โลกเฮลิคอปเตอร์ 🚁', drone:'โลกโดรน FPV 🛸',
   drive:'โลกขับรถกำแพงเพชร 🚗', soccer:'โลกสนามฟุตบอล ⚽', moto:'โลกมอเตอร์ไซค์ 🏍️', invasion:'โลกยานแม่บุกโลก 🛸',
 };
+function tinvFingerprint(uid, invite){
+  return `${uid}|${invite.map}|${Number(invite.ts) || 0}`;
+}
 function tinvWatch(){
   Online.db.ref('tinv/' + onlineKey()).on('value', (snap)=>{
     const out = {};
@@ -960,9 +963,18 @@ function tinvWatch(){
     });
     Online.tinv = out;
     Object.keys(out).forEach(uid=>{
-      if(Online.tinvSeen[uid]) return;
-      Online.tinvSeen[uid] = true;
-      toast(`📨 ${out[uid].n} ชวนหนูไปเล่น${TINV_WORLD_LABEL[out[uid].map]}ด้วยกัน! เล่นจบด้วยกันรับเงินคืน 🪙${fmtNum(TINV_CASHBACK)}`);
+      const fp = tinvFingerprint(uid, out[uid]);
+      if(state.tinvDismissed && state.tinvDismissed[uid] === fp){
+        Online.tinvSeen[uid] = fp;
+        return;
+      }
+      if(Online.tinvSeen[uid] === fp) return;
+      Online.tinvSeen[uid] = fp;
+      toast(`📨 ${out[uid].n} ชวนหนูไปเล่น${TINV_WORLD_LABEL[out[uid].map]}ด้วยกัน! เล่นจบด้วยกันรับเงินคืน 🪙${fmtNum(TINV_CASHBACK)}`, 0, ()=>{
+        if(!state.tinvDismissed || typeof state.tinvDismissed !== 'object') state.tinvDismissed = {};
+        state.tinvDismissed[uid] = fp;
+        saveState();
+      });
       window.__invFlashPend = uid;    // รอบ 154: การ์ดคำชวนในกล่องเพื่อน แฟลช+เด้งไปโชว์ (renderOnlineCard จัดการ)
     });
     if(typeof renderRailWorlds === 'function') renderRailWorlds();   // 🎫→💰 รอบ 822: การ์ดตั๋วเดิมถูกถอดออก — ป้ายคำเชิญอยู่ในหน้าจ่ายค่าเข้าแทน

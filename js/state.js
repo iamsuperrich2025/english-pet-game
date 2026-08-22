@@ -138,6 +138,7 @@ const DEFAULT_STATE = {
   tinvClaimed:{},                     // ส่วนลดชวนเพื่อน: {adv:true, haunt:true} = รับเงินคืน 🪙TINV_CASHBACK ของ map นั้นไปแล้ว (ครั้งเดียว/map)
   tinvSent:{},                        // คำเชิญที่เราส่งออก: {toUid:{map,ts}} (ฝั่งรับดูจาก DB /tinv — ฝั่งส่งจำในเซฟ)
   tinvTogether:{},                    // 🤝 รอบ 822: {map:{uid,since}} — จับเวลาอยู่ด้วยกันต่อเนื่อง ครบ TINV_TOGETHER_MS ถึงจ่ายเงินคืน (กันเทเลพอร์ตเข้า-ออก)
+  tinvDismissed:{},                   // 📨 รอบ 1220: {fromUid:'uid|map|ts'} — กดปิดคำเชิญเดิมแล้วไม่เตือนซ้ำ แต่คำเชิญใหม่ยังแจ้งได้
   attentionSeen:{},                   // 🔔 รายการที่เห็นในหน้าสรุปแล้ว {fingerprint:ts} — ค้างงานได้แต่ไม่ขึ้นเลขแดงซ้ำจนมีของใหม่
   ticketsReset:false,                 // 🎫→💰 รอบ 822: เคยผ่าน migration คืนเงินตั๋วเก่า+รีเซ็ตเป็นจ่าย 500/ครั้งแล้วหรือยัง (กันคืนซ้ำ)
   gameEntryTx:null,                   // ↩️ รอบ 1143: ธุรกรรมค่าเข้าโลก 3D ที่หักแล้วแต่ยังเปิดเกมไม่สำเร็จ; reload แล้วคืนได้
@@ -637,6 +638,7 @@ function loadState(){
       if(!s.tinvClaimed || typeof s.tinvClaimed !== 'object') s.tinvClaimed = {};
       if(!s.tinvSent || typeof s.tinvSent !== 'object') s.tinvSent = {};
       if(!s.tinvTogether || typeof s.tinvTogether !== 'object') s.tinvTogether = {};   // 🤝 รอบ 822
+      if(!s.tinvDismissed || typeof s.tinvDismissed !== 'object' || Array.isArray(s.tinvDismissed)) s.tinvDismissed = {};
       if(!s.attentionSeen || typeof s.attentionSeen !== 'object' || Array.isArray(s.attentionSeen)) s.attentionSeen = {};
       if(typeof s.voiceSpk !== 'boolean') s.voiceSpk = true;
       if(s.voiceMode !== 'all' && s.voiceMode !== 'friends') s.voiceMode = 'all';

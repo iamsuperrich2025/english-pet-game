@@ -202,7 +202,7 @@ function clearWarnToasts(re){
   document.querySelectorAll('.toast-warn').forEach(t=>{ if(!re || re.test(t.textContent)) t.remove(); });
   restackToasts();
 }
-function toast(msg, ms=1800){
+function toast(msg, ms=1800, onDismiss){
   const t = document.createElement('div');
   // 💰 รอบ 859 (ผู้ใช้สั่ง): ms=0 = บังคับค้างจนผู้เล่นกดปิดเอง (ใช้กับแจ้งเรื่องเงินตอนบูต — เดิมหายก่อนอ่านทัน)
   const warn = TOAST_WARN_RE.test(msg);
@@ -212,7 +212,13 @@ function toast(msg, ms=1800){
     t.className = financial ? 'toast toast-financial' : 'toast toast-warn';
     const span = document.createElement('span');
     span.className = 'toast-msg'; span.textContent = msg;
-    const close = ()=>{ t.remove(); restackToasts(); };
+    let dismissed = false;
+    const close = ()=>{
+      if(dismissed) return;
+      dismissed = true;
+      t.remove(); restackToasts();
+      if(typeof onDismiss === 'function') onDismiss();
+    };
     const x = document.createElement('button');
     x.className = 'toast-x'; x.textContent = '✕'; x.setAttribute('aria-label','ปิด');
     x.onclick = close;
