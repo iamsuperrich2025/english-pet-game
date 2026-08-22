@@ -40,10 +40,6 @@
 - syntax+Picmatch regression+production build 8,400 ไฟล์/PWA validator+source/dist hash ผ่าน (`tools/test_picmatch_page_cooldown.js`)
 - **รอบ 1251 · Vocab Sky เลือก Soft Cuboid Chibi 3D ได้ 6 ตัว:** ฮู้ดแดง/นักสำรวจ/กัปตัน/นักเรียนหญิง/แม่มด/ชุดนอน มี picker และบันทึก `state.skyCharacter` (`js/skyplay3d.js`, `css/skyplay3d.css`)
 - เพิ่ม lossless WebP ใหม่ 5 atlas รวมของเดิมเป็น 6; ทุกไฟล์ 1536×768 alpha จริง 8 ทิศ สูง 360px/เท้า y=374 ตรงรอบ 1247; visual QA 812×375 หน้า–ซ้าย–หลัง–ขวาผ่าน
-- local และ online peer ใช้ renderer เดียวกัน ส่ง ID ผ่าน `sc`, สลับ peer ที่มีอยู่ทันที และ fallback client เก่าเป็นฮู้ดแดง; อัปเดตมาตรฐาน/allowlist/validator/test ครบ
-- syntax+Sky regression+alpha/atlas QA+production build 8,400 ไฟล์/PWA validator+manifest+source/dist hash ผ่าน; `css/petshopping3d.css` hash เดิม ไม่แตะงาน session อื่น
-- **รอบ 1250 · จับคู่ภาพล็อกเมื่อเข้าชุดและนับวงรอบตามหมวดใหญ่:** แก้รอบ 1249 ตามคำชี้แจง—กดเข้าดูชุดใดจะล็อกทันทีแม้ไม่เล่น/ออกกลางรอบ และปลดพร้อมกันเมื่อเข้าครบทุกชุดของแท็บใหญ่ (`js/picmatch.js`)
-- วงรอบรวมทุกหมวดย่อยใต้ 8 หมวดใหญ่ เช่น สัตว์โลกน่ารัก/อาหาร & เครื่องดื่ม/บ้านของฉัน; แต่ละหมวดใหญ่และขนาดชุด 4/10/20 แยกสถานะอิสระ
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`
