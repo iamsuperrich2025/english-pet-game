@@ -16,12 +16,35 @@ COLS, ROWS = 4, 2
 ATLAS_SIZE = (1536, 768)
 EXPECTED_TOP = 14
 EXPECTED_BOTTOM = 374
+UP_LEFT_FACE_CUE = {"schoolgirl", "witch", "pajamas"}
 
 
 def check(condition: bool, message: str) -> None:
     if not condition:
         raise AssertionError(message)
     print("PASS", message)
+
+
+def left_head_skin_pixels(image: Image.Image, frame_index: int) -> int:
+    cell_width, cell_height = image.width // COLS, image.height // ROWS
+    col, row = frame_index % COLS, frame_index // COLS
+    frame = image.crop(
+        (col * cell_width, row * cell_height, (col + 1) * cell_width, (row + 1) * cell_height)
+    )
+    count = 0
+    for y in range(min(245, cell_height)):
+        for x in range(cell_width // 2):
+            red, green, blue, alpha = frame.getpixel((x, y))
+            if (
+                alpha > 128
+                and red > 145
+                and 70 < green < 220
+                and blue < 190
+                and red > green * 1.08
+                and green > blue * 1.03
+            ):
+                count += 1
+    return count
 
 
 all_boxes: dict[str, list[tuple[int, int, int, int]]] = {}
@@ -52,6 +75,13 @@ for character_id, filename in ASSETS.items():
     check(max(box[1] for box in boxes) - min(box[1] for box in boxes) <= 2, f"{character_id} head/top alignment is stable")
     check(max(box[3] for box in boxes) - min(box[3] for box in boxes) <= 1, f"{character_id} foot baseline is stable")
     check(all(abs(box[1] - EXPECTED_TOP) <= 2 and abs(box[3] - EXPECTED_BOTTOM) <= 1 for box in boxes), f"{character_id} matches the round-1247 scale and foot anchor")
+    if character_id in UP_LEFT_FACE_CUE:
+        up_left_skin = left_head_skin_pixels(image, 3)
+        back_skin = left_head_skin_pixels(image, 4)
+        check(
+            up_left_skin >= back_skin + 500,
+            f"{character_id} up-left frame has a left face cue and is not a duplicate straight-back pose",
+        )
     all_boxes[character_id] = boxes
 
 check(len(all_boxes) == 6 and all(len(boxes) == 8 for boxes in all_boxes.values()), "all six selectable characters contain eight directions")

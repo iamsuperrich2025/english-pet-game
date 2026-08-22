@@ -28,6 +28,9 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (22 ส.ค.) — อ่านก่อน
+- **รอบ 1254 · แก้ up-left ของนักเรียนหญิง/แม่มด/ชุดนอน:** ช่อง frame 3 เดิมเป็นภาพหลังตรงซ้ำ frame 4; เปลี่ยนเฉพาะช่องนั้นเป็น rear-left สามส่วนสี่ (`img/characters/sky_soft_cuboid_chibi_{schoolgirl,witch,pajamas}_8dir.webp`)
+- ทั้งสามคง alpha จริง อีก 7 ช่องไม่เปลี่ยน สูง 360px/เท้า y=374 และความกว้างตรงเฟรม up-right คู่กัน; visual QA แยกตัวที่ 812×375 ครบหน้า/ซ้าย/up-left/หลัง/ขวา
+- เพิ่ม regression ตรวจ left-face cue กัน up-left ซ้ำ back; Sky renderer+alpha/atlas+production build 8,401 ไฟล์/PWA+source-dist hash ผ่าน และ `css/petshopping3d.css` hash เดิม
 - **รอบ 1252 · สัตว์รวมมิตร ชุด 2 แสดงครบ 3 แถว:** ขยายเฉพาะการ์ด `animal2.png` เต็มแถว และจัดปุ่ม 5 ชุดเป็น 2 คอลัมน์ × 3 แถว; การ์ดอื่นคง layout เดิม (`js/picmatch.js`, `css/lobby.css`)
 - geometry ที่ 1316×620 และ 812×375 ยืนยันการ์ดกว้าง 99.4%/97.6%, ปุ่มครบ 5 ชุดใน 3 แถวและอยู่ในกรอบ
 - syntax+Picmatch regression+production build 8,400 ไฟล์/PWA validator+source/dist hash ผ่าน (`tools/test_picmatch_page_cooldown.js`)
