@@ -28,6 +28,10 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (22 ส.ค.) — อ่านก่อน
+- **รอบ 1255 · Vocab Sky มี idle/walk animation ครบ 6 ตัว:** เพิ่ม lossless WebP แยกตัว 6 ไฟล์ ขนาด 1536×1536 = 8 ทิศ × idle 4 + walk 4 เฟรม; คงหน้าตา/ชุด/สี/สัดส่วน/alpha จริงและฐานเท้าเดิม
+- renderer v3 เล่น idle 4 fps / walk 8 fps, รองรับ WebGL1 NPOT + `state.noAnim`; character picker, `state.skyCharacter`, network `sc`, local/online peer และ fallback ฮู้ดแดงคง contract เดิม (`js/skyplay3d.js`)
+- visual QA แยกตัวที่ 812×375 ครบทั้ง 8 ทิศและวงรอบหน้า/ข้าง; pixel regression ตรวจ 64 เฟรมต่อตัว, silhouette ตรง source, motion จริง และ foot baseline 187/192
+- syntax+runtime UV/local-peer+source/animation atlas QA+production build 8,406 ไฟล์/PWA+source-dist hash ผ่าน; `css/petshopping3d.css` hash ก่อน–หลังตรงกัน ไม่ได้แตะ
 - **รอบ 1254 · แก้ up-left ของนักเรียนหญิง/แม่มด/ชุดนอน:** ช่อง frame 3 เดิมเป็นภาพหลังตรงซ้ำ frame 4; เปลี่ยนเฉพาะช่องนั้นเป็น rear-left สามส่วนสี่ (`img/characters/sky_soft_cuboid_chibi_{schoolgirl,witch,pajamas}_8dir.webp`)
 - ทั้งสามคง alpha จริง อีก 7 ช่องไม่เปลี่ยน สูง 360px/เท้า y=374 และความกว้างตรงเฟรม up-right คู่กัน; visual QA แยกตัวที่ 812×375 ครบหน้า/ซ้าย/up-left/หลัง/ขวา
 - เพิ่ม regression ตรวจ left-face cue กัน up-left ซ้ำ back; Sky renderer+alpha/atlas+production build 8,401 ไฟล์/PWA+source-dist hash ผ่าน และ `css/petshopping3d.css` hash เดิม

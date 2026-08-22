@@ -15,12 +15,12 @@
   const CLASS_MODES={meaning:{code:'M',name:'🎯 เลือกความหมาย'},listen:{code:'L',name:'🔊 ฟังแล้วเลือก'},spell:{code:'S',name:'✏️ เลือกสะกดถูก'}};
   const TEACHER_STORE_KEY='vocabSkyTeacher_v1',REPORT_ALPH='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_';
   const PLAYER_CHARACTERS=[
-    {id:'hoodie-red',name:'ฮู้ดแดง',atlas:'img/characters/sky_soft_cuboid_chibi_8dir.webp'},
-    {id:'explorer',name:'นักสำรวจ',atlas:'img/characters/sky_soft_cuboid_chibi_explorer_8dir.webp'},
-    {id:'captain',name:'กัปตัน',atlas:'img/characters/sky_soft_cuboid_chibi_captain_8dir.webp'},
-    {id:'schoolgirl',name:'นักเรียนหญิง',atlas:'img/characters/sky_soft_cuboid_chibi_schoolgirl_8dir.webp'},
-    {id:'witch',name:'แม่มด',atlas:'img/characters/sky_soft_cuboid_chibi_witch_8dir.webp'},
-    {id:'pajamas',name:'ชุดนอน',atlas:'img/characters/sky_soft_cuboid_chibi_pajamas_8dir.webp'}
+    {id:'hoodie-red',name:'ฮู้ดแดง',atlas:'img/characters/sky_soft_cuboid_chibi_8dir.webp',anim:'img/characters/sky_soft_cuboid_chibi_anim.webp'},
+    {id:'explorer',name:'นักสำรวจ',atlas:'img/characters/sky_soft_cuboid_chibi_explorer_8dir.webp',anim:'img/characters/sky_soft_cuboid_chibi_explorer_anim.webp'},
+    {id:'captain',name:'กัปตัน',atlas:'img/characters/sky_soft_cuboid_chibi_captain_8dir.webp',anim:'img/characters/sky_soft_cuboid_chibi_captain_anim.webp'},
+    {id:'schoolgirl',name:'นักเรียนหญิง',atlas:'img/characters/sky_soft_cuboid_chibi_schoolgirl_8dir.webp',anim:'img/characters/sky_soft_cuboid_chibi_schoolgirl_anim.webp'},
+    {id:'witch',name:'แม่มด',atlas:'img/characters/sky_soft_cuboid_chibi_witch_8dir.webp',anim:'img/characters/sky_soft_cuboid_chibi_witch_anim.webp'},
+    {id:'pajamas',name:'ชุดนอน',atlas:'img/characters/sky_soft_cuboid_chibi_pajamas_8dir.webp',anim:'img/characters/sky_soft_cuboid_chibi_pajamas_anim.webp'}
   ];
   const DEFAULT_CHARACTER_ID='hoodie-red';
   const COLORS={sky:0x8fd8ff,navy:0x16346b,cyan:0x46ddff,pink:0xff67ad,yellow:0xffd74d,mint:0x62e6b0,purple:0x8f70ff,white:0xfffbef};
@@ -175,20 +175,21 @@
   function addSolidCircle(name,x,z,r,minY,maxY,opt={}){const hit={name,x,z,r,minY,maxY,top:maxY,enabled:true,kind:opt.kind||name};solids.push(hit);if(opt.support)supports.push(hit);return hit;}
   function addSolidObject(name,obj,opt={}){obj.updateWorldMatrix(true,true);const b=new THREE.Box3().setFromObject(obj);return addSolidBox(name,(b.min.x+b.max.x)*.5,(b.min.z+b.max.z)*.5,b.max.x-b.min.x,b.max.z-b.min.z,b.min.y,b.max.y,opt);}
   /* ============================================================
-     🧸 รอบ 1247 — PLAYER RENDER ASSET
-     ภาพเรนเดอร์ 8 ทิศจากมาตรฐาน Soft Cuboid Chibi โดยตรง
+     🧸🎞️ รอบ 1255 — PLAYER IDLE/WALK RENDER ASSET
+     atlas animation แยกตัว: 8 ทิศ × (idle 4 + walk 4 เฟรม)
      local + online ใช้ renderer เดียวกัน; ไม่มี primitive-human fallback
      ============================================================ */
   function setPlayerSpriteCharacter(sprite,id){
-    const character=playerCharacter(id);if(sprite.userData.characterId===character.id)return sprite;const old=sprite.material.map,texture=texLoader.load(character.atlas);texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.set(.25,.5);texture.offset.set(0,.5);texture.magFilter=THREE.LinearFilter;if(THREE.SRGBColorSpace)texture.colorSpace=THREE.SRGBColorSpace;sprite.material.map=texture;sprite.material.needsUpdate=true;sprite.userData.characterId=character.id;sprite.userData.characterAtlas=character.atlas;sprite.userData.frame=-1;if(old)old.dispose();return sprite;
+    const character=playerCharacter(id);if(sprite.userData.characterId===character.id)return sprite;const old=sprite.material.map,texture=texLoader.load(character.anim);texture.wrapS=texture.wrapT=THREE.ClampToEdgeWrapping;texture.repeat.set(.125,.125);texture.offset.set(0,.875);texture.minFilter=texture.magFilter=THREE.LinearFilter;texture.generateMipmaps=false;if(THREE.SRGBColorSpace)texture.colorSpace=THREE.SRGBColorSpace;sprite.material.map=texture;sprite.material.needsUpdate=true;sprite.userData.characterId=character.id;sprite.userData.characterAtlas=character.atlas;sprite.userData.characterAnim=character.anim;sprite.userData.direction=-1;sprite.userData.animationFrame=-1;if(old)old.dispose();return sprite;
   }
   function makePlayerSprite(id){
-    const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:null,color:0xffffff,transparent:true,alphaTest:.04,depthWrite:false,fog:true}));sprite.center.set(.5,.02);sprite.scale.set(2.15,2.15,1);sprite.position.y=.015;sprite.name='player-soft-cuboid-chibi-sprite';sprite.userData.playerStyle='soft-cuboid-chibi-3d';sprite.userData.characterRenderer='sky-soft-cuboid-chibi-8dir-v2';sprite.userData.styleStandard='docs/PLAYER_CHARACTER_STYLE.md';sprite.userData.frame=-1;return setPlayerSpriteCharacter(sprite,id);
+    const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:null,color:0xffffff,transparent:true,alphaTest:.04,depthWrite:false,fog:true}));sprite.center.set(.5,.02);sprite.scale.set(2.15,2.15,1);sprite.position.y=.015;sprite.name='player-soft-cuboid-chibi-sprite';sprite.userData.playerStyle='soft-cuboid-chibi-3d';sprite.userData.characterRenderer='sky-soft-cuboid-chibi-8dir-anim-v3';sprite.userData.styleStandard='docs/PLAYER_CHARACTER_STYLE.md';sprite.userData.direction=-1;sprite.userData.animationFrame=-1;return setPlayerSpriteCharacter(sprite,id);
   }
   function playerDirectionFrame(yaw){const step=Math.PI/4,rel=Math.atan2(Math.sin(yaw-camYaw),Math.cos(yaw-camYaw));return ((Math.round((Math.PI-rel)/step)%8)+8)%8;}
   function updatePlayerSprite(sprite,yaw,t,moving,waving){
-    if(!sprite||!sprite.material||!sprite.material.map)return;const frame=playerDirectionFrame(yaw);if(frame!==sprite.userData.frame){sprite.userData.frame=frame;sprite.material.map.offset.set((frame%4)*.25,frame<4?.5:0);}
-    sprite.position.y=.015+(moving?Math.abs(Math.sin(t*.014))*.055:0);sprite.material.rotation=waving?Math.sin(t*.02)*.055:0;
+    if(!sprite||!sprite.material||!sprite.material.map)return;const direction=playerDirectionFrame(yaw),animate=!(state&&state.noAnim),animationFrame=animate?(moving?4+Math.floor(t*.008)%4:Math.floor(t*.004)%4):0;
+    if(direction!==sprite.userData.direction||animationFrame!==sprite.userData.animationFrame){sprite.userData.direction=direction;sprite.userData.animationFrame=animationFrame;sprite.material.map.offset.set(animationFrame*.125,(7-direction)*.125);}
+    sprite.position.y=.015;sprite.material.rotation=animate&&waving?Math.sin(t*.02)*.055:0;
   }
   function renderCharacterPicker(){
     const selected=selectedCharacter();ui.characterGrid.innerHTML=PLAYER_CHARACTERS.map(c=>`<button data-character="${c.id}" class="${c.id===selected?'selected':''}" aria-pressed="${c.id===selected}"><span style="--sp-character-atlas:url('${c.atlas}')"></span><b>${esc(c.name)}</b></button>`).join('');

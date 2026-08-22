@@ -17,6 +17,14 @@ const SKY_CHARACTER_ASSETS = [
   'img/characters/sky_soft_cuboid_chibi_witch_8dir.webp',
   'img/characters/sky_soft_cuboid_chibi_pajamas_8dir.webp',
 ];
+const SKY_CHARACTER_ANIM_ASSETS = [
+  'img/characters/sky_soft_cuboid_chibi_anim.webp',
+  'img/characters/sky_soft_cuboid_chibi_explorer_anim.webp',
+  'img/characters/sky_soft_cuboid_chibi_captain_anim.webp',
+  'img/characters/sky_soft_cuboid_chibi_schoolgirl_anim.webp',
+  'img/characters/sky_soft_cuboid_chibi_witch_anim.webp',
+  'img/characters/sky_soft_cuboid_chibi_pajamas_anim.webp',
+];
 const requireFile = async (rel) => {
   try { return await fs.readFile(path.join(DIST, rel), 'utf8'); }
   catch { failures.push(`missing dist/${rel}`); return ''; }
@@ -35,10 +43,11 @@ try {
   const engine = await fs.stat(path.join(DIST, 'sound/racing/engineSound.mp3'));
   if (engine.size < 100000) failures.push('F1 engine audio asset is unexpectedly small');
 } catch { failures.push('missing dist/sound/racing/engineSound.mp3'); }
-for (const asset of SKY_CHARACTER_ASSETS) {
+for (const asset of [...SKY_CHARACTER_ASSETS, ...SKY_CHARACTER_ANIM_ASSETS]) {
   try {
     const skyCharacter = await fs.stat(path.join(DIST, asset));
-    if (skyCharacter.size < 350000) failures.push(`Sky Soft Cuboid Chibi atlas is unexpectedly small: ${asset}`);
+    const minimum = SKY_CHARACTER_ANIM_ASSETS.includes(asset) ? 1000000 : 350000;
+    if (skyCharacter.size < minimum) failures.push(`Sky Soft Cuboid Chibi atlas is unexpectedly small: ${asset}`);
   } catch { failures.push(`missing dist/${asset}`); }
 }
 if (!deletion.includes('freddommun@gmail.com') || !deletion.includes('Delete Account')) failures.push('delete-account.html is incomplete');
@@ -58,7 +67,7 @@ try {
 try {
   const assets = JSON.parse(assetManifestText);
   if (!assets.build || !assets.files || Object.keys(assets.files).length < 10) failures.push('asset-manifest.json is incomplete');
-  for (const asset of SKY_CHARACTER_ASSETS) if (!assets.files?.[`/${asset}`]) failures.push(`asset-manifest.json omits ${asset}`);
+  for (const asset of [...SKY_CHARACTER_ASSETS, ...SKY_CHARACTER_ANIM_ASSETS]) if (!assets.files?.[`/${asset}`]) failures.push(`asset-manifest.json omits ${asset}`);
 } catch { failures.push('asset-manifest.json is invalid JSON'); }
 
 for (const [name, text] of [['sw.js', sw], ['index.html', index], ['index_classic.html', classic]]) {
