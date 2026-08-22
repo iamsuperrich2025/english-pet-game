@@ -1,6 +1,6 @@
-/* รอบ 1233 — structural regression for Vocab Sky Playground Phase 4 (no browser dependency). */
+/* รอบ 1235 — structural regression for additive Vocab Sky Playground Phase 5. */
 "use strict";
-const fs=require('fs'),path=require('path'),root=path.resolve(__dirname,'..');
+const fs=require('fs'),path=require('path'),vm=require('vm'),root=path.resolve(__dirname,'..');
 const sky=fs.readFileSync(path.join(root,'js/skyplay3d.js'),'utf8');
 const ui=fs.readFileSync(path.join(root,'js/ui.js'),'utf8');
 const net=fs.readFileSync(path.join(root,'js/netroom.js'),'utf8');
@@ -28,18 +28,29 @@ ok(/restoreActiveRun/.test(sky)&&/considerJoinOffer/.test(sky)&&/joinLiveActivit
 ok(/PHASE 4: CLASSROOM SKY EVENTS/.test(sky)&&/CLASS_MIN_WORDS=3,CLASS_MAX_WORDS=5/.test(sky),'Phase 4 adds bounded Classroom Sky Events');
 ok(/classroomPool\(\).*baseWordPool\(\)/s.test(sky)&&!/const CLASS_WORD/.test(sky),'teacher word picker reuses the existing vocabulary pool without a duplicate database');
 ok(/CLASS_TIMES=\[30,60,90\]/.test(sky)&&/meaning:\{code:'M'/.test(sky)&&/listen:\{code:'L'/.test(sky)&&/spell:\{code:'S'/.test(sky),'teacher can choose time and all three classroom modes');
-ok(/makeClassWire/.test(sky)&&/parseClassWire/.test(sky)&&/cw:classWire\|\|''/.test(sky)&&/S4:\$\{activityRound\.role===/.test(sky),'class config and progress reuse NetRoom cw/hp fields');
+ok(/makeClassWire/.test(sky)&&/parseClassWire/.test(sky)&&/\['C4','C5'\]/.test(sky)&&/S4:\$\{activityRound\.role===/.test(sky),'Phase 4 C4/S4 compatibility remains while the parser accepts Phase 5');
 ok(/classWire\.length>60/.test(sky)&&/Math\.min\(99999/.test(sky),'classroom wire data stays inside existing Firebase field limits');
 ok(/function classRows/.test(sky)&&/function classResultHtml/.test(sky)&&/ผลสรุปชั้นเรียน/.test(sky),'teacher gets a live and final class summary');
 ok(/function rememberClassPeer/.test(sky)&&/classRoster\[uid\]/.test(sky)&&/id="sp-class-finish"/.test(sky),'summary keeps disconnected results and teacher can finish early');
 ok(!/addCoins\([^)]*\)/.test(sky.slice(sky.indexOf('PHASE 4: CLASSROOM'),sky.indexOf('PHASE 2 SHARED'))),'classroom events add no currency path or reward');
+ok(/PHASE 5: LOCAL TEACHER DATA/.test(sky)&&/vocabSkyTeacher_v1/.test(sky)&&/localStorage\.setItem\(TEACHER_STORE_KEY/.test(sky),'lesson packs, reconnect state and reports persist locally on the device');
+ok(/data-class-mode/.test(sky)&&/Lesson playlist/.test(sky)&&/list\.map\(k=>CLASS_MODES\[k\]\.code\)/.test(sky),'teacher can save a sequential multi-activity lesson playlist');
+ok(/phase:'ready'/.test(sky)&&/function markClassReady/.test(sky)&&/function startLessonRun/.test(sky)&&/sp-student-ready/.test(sky),'ready check gates the playlist before the teacher starts');
+ok(/S5:H:\$\{phaseNumber/.test(sky)&&/S5:\$\{mode\}/.test(sky)&&/function syncClassHost/.test(sky),'S5 reuses NetRoom hp for host phase, reconnect and late-join synchronization');
+ok(/function reportCsv/.test(sky)&&/function downloadClassReport/.test(sky)&&/function printClassReport/.test(sky)&&/Classroom Reports/.test(sky),'teacher reports support per-person/per-word views, CSV and print');
+ok(/R5\|\$\{activityRound\.eventId\}/.test(sky)&&/slice\(-48\)/.test(sky)&&/cw=studentReportWire\(\)/.test(sky)&&/parseStudentReport/.test(sky),'authorized compact per-word telemetry stays inside the existing cw field and reaches the teacher roster');
+const netCtx={console,performance:{now:()=>Date.now()},setTimeout,clearTimeout,document:{getElementById:()=>null}};netCtx.window=netCtx;vm.runInNewContext(net,netCtx,{filename:'js/netroom.js'});const reportWire='R5|abcde|'+'1'.repeat(48),split=netCtx.NetRoom._split({n:'student',x:0,z:0,cw:reportWire}),merged=netCtx.NetRoom._merge(split.hot,split.cold);ok(reportWire.length<=60&&split.cold.q===reportWire&&merged.cw===reportWire,'maximum R5 answer telemetry survives the real NetRoom split/merge within cw limit');
+ok(/function saveStudentResume/.test(sky)&&/teacherData\.active/.test(sky)&&/o\.phase==='run'/.test(sky),'student progress can resume locally and late join starts at the current activity');
+ok(/function saveHostResume/.test(sky)&&/function restoreHostLesson/.test(sky)&&/restoreHostLesson\(\)&&!restoreActiveRun/.test(sky),'teacher ready/run roster resumes locally after reload');
+ok(!/\.ref\(|authWriteCloud|Online\.db/.test(sky.slice(sky.indexOf('PHASE 5: LOCAL TEACHER DATA'),sky.indexOf('function createDom'))),'Phase 5 local teacher store adds no Firebase write path');
 ok(/activityReward\(kind/.test(sky)&&/addCoins\(reward\)/.test(sky),'Phase 3 rewards use main coins and durable daily progress');
 ok(/\.sp-activity-grid\{display:grid;grid-template-columns:repeat\(4,1fr\)/.test(css)&&/\.sp-daily\{/.test(css)&&/\.sp-tower\{/.test(css)&&/@media \(max-height:460px\)/.test(css),'Tower, missions and four-activity picker are landscape-first');
 ok(/\.sp-classroom\{/.test(css)&&/\.sp-class-results\{/.test(css)&&/\.sp-class-options\{/.test(css)&&/grid-template-columns:auto minmax\(120px,1fr\) auto auto auto/.test(css),'Classroom setup, quiz and summary fit landscape mobile');
+ok(/\.sp-packbar\{/.test(css)&&/\.sp-class-playlist\{/.test(css)&&/\.sp-ready-grid\{/.test(css)&&/\.sp-report-cols\{/.test(css),'Phase 5 lesson packs, ready check and reports have isolated responsive styles');
 ok((sky.match(/authPushSave\(true\)/g)||[]).length>=2,'completion and exit request cloud sync');
 ok(/mode:'sky'.*enter:enterSkyPlayground3D/.test(ui),'WORLD3D registry owns the entrance');
 ok(/css\/skyplay3d\.css/.test(html),'classic shell loads isolated world CSS');
 ok(/\['adv','sky','haunt'/.test(net),'friend-location scan includes sky map');
 ok((rules.match(/\$map === 'sky'/g)||[]).length===3&&/newData\.val\(\) === 'sky'/.test(rules),'Rules allow sky only in world/wroom/winfo/tinv enums');
 ok(!/Adventure3D\.|InvasionWorld\./.test(sky),'new engine does not mutate protected worlds');
-console.log('Vocab Sky Playground Phase 4 structural regression passed');
+console.log('Vocab Sky Playground Phase 5 additive structural regression passed');
