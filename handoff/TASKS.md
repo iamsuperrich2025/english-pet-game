@@ -40,9 +40,6 @@
 - **รอบ 1246 · แก้ Shoot Word ให้สะสมเหรียญทันที:** รอบ 1244 ตีความผิดเป็นแต้มจบคำ; เปลี่ยนป้ายเป็น `🪙 สะสมรอบนี้ N เหรียญ` และยิงตัวอักษรถูกตัวแรกขึ้น 5 ทันที (`js/shootword.js`)
 - ทุกตัวถูกบวก +5 ในเหตุการณ์จ่ายเหรียญเดียวกัน; เป็ด +3 รวมด้วย; จบคำไม่บวกเหรียญซ้ำ และแต้มอันดับสะสมเดิมยังคำนวณแยกตามกติกา
 - syntax+immediate-first-hit regression+812×375 geometry+production build 8,394 ไฟล์/PWA validator+bundle inspection ผ่าน; ไม่แตะ `css/petshopping3d.css` (`tools/test_shootword_round_score.js`)
-- **รอบ 1245 · Vocab Sky Soft Cuboid Chibi v2:** เปลี่ยน generator ผู้เล่นจากทรงผอม/หน้าเป็นก้อนนูน เป็นหัว cuboid ใหญ่ หน้าตา atlas ตาโตมีประกาย+ยิ้ม แขนขาสั้นหนา หู ผมหลายชั้น คอเสื้อและรองเท้า (`js/skyplay3d.js`)
-- local player และ online peer ทุกตัว รวมโปรไฟล์ `blk1–blk88` ใช้ generator/rig เดียวกัน; ปรับ capsule เป็นรัศมี .46 สูง 2.02 ให้ตรงทรงใหม่ ไม่แตะ pet/NPC/โลกยกเว้น
-- runtime Three.js QA วัดหัว>ลำตัว 18%, หัว>36% ของความสูง, สูงรวม<2.1 และตรวจ face atlas/ผม/rig; syntax+Sky suite+diff+production build/PWA validator ผ่าน ไม่แตะ `css/petshopping3d.css`
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`
