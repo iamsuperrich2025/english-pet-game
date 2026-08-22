@@ -1,5 +1,7 @@
-รอบ 1220: จำการปิดคำเชิญและไม่เตือนคำเชิญเดิมซ้ำ
-FILE: js/online.js
-FILE: js/state.js
-FILE: js/util.js
-FILE: tools/test_tinv_dismiss.js
+รอบ 1221: ขยายคลังคำศัพท์ F1 ครบ 500 คำทุกระดับและกันคำวนซ้ำ
+FILE: handoff/TASKS.md
+FILE: index_classic.html
+FILE: js/data/f1_vocab.js
+FILE: js/f1_3d.js
+FILE: tools/build_web.mjs
+FILE: tools/test_f1_vocab.js
