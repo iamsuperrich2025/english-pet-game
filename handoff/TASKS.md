@@ -28,7 +28,7 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (22 ส.ค.) — อ่านก่อน
-- **รอบ 1232 · Vocab Sky Playground Phase 4:** เพิ่ม Classroom Sky Events ให้ครูเลือกคำจาก vocab เดิม 3–5 คำ, 30/60/90 วินาที และโหมดความหมาย/ฟัง/สะกด พร้อมผลสรุปสด+ปิดรอบ (`js/skyplay3d.js`, `css/skyplay3d.css`)
+- **รอบ 1233 · Vocab Sky Playground Phase 4:** เพิ่ม Classroom Sky Events ให้ครูเลือกคำจาก vocab เดิม 3–5 คำ, 30/60/90 วินาที และโหมดความหมาย/ฟัง/สะกด พร้อมผลสรุปสด+ปิดรอบ (`js/skyplay3d.js`, `css/skyplay3d.css`)
 - ใช้ `cw`/`hp` และ NetRoom map `sky` เดิมเท่านั้น: ครู 1 + นักเรียน 5, คงผลคนที่หลุดก่อนสรุป, config ≤60 / progress ≤28; ไม่เพิ่ม Firebase path/rules/เงิน/ฐานศัพท์
 - Browser QA Phase 1–4 + teacher/student/summary/disconnect/teardown ผ่านทุกข้อ; 812×375 ทุก dialog อยู่ในจอและไม่ scroll, console 0, NetRoom 52/52, 6 คน 144 calls/8,660 tri/60 FPS, structural/diff/build 8,394 ไฟล์/PWA ผ่าน
 - **รอบ 1231 · Vocab Sky Playground Phase 3:** เพิ่ม Vocabulary Tower 6 ชั้น (ยากขึ้น/ผิดลองใหม่/checkpoint ทุก 2 ชั้น) + Daily Sky Missions หมุน 3/4 กิจกรรม, first/all bonus claim กัน reload/reconnect ซ้ำ และ badge speed/accuracy/co-op (`js/skyplay3d.js`, `css/skyplay3d.css`)

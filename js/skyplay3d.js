@@ -1,6 +1,6 @@
 "use strict";
 /* ============================================================
-   ☁️📚 รอบ 1232 — VOCAB SKY PLAYGROUND · PHASE 4
+   ☁️📚 รอบ 1233 — VOCAB SKY PLAYGROUND · PHASE 4
    Bright Fantasy Social World + Obby ของ Vocab World
    - standalone Three.js engine: ไม่แตะ Adventure World / Invasion
    - Soft Cuboid Chibi 3D + pet จริง + NetRoom สูงสุด 6 คน
@@ -348,7 +348,7 @@
   function joinLiveActivity(){if(!joinOffer)return;const offer=joinOffer;joinOffer=null;startActivity(offer.kind,{seed:offer.seed,joined:true});showToast(`🤝 Join-in-progress: ${ACTIVITY_META[offer.kind].name}`);}
 
   /* ============================================================
-     🏫☁️ รอบ 1232 — PHASE 4: CLASSROOM SKY EVENTS
+     🏫☁️ รอบ 1233 — PHASE 4: CLASSROOM SKY EVENTS
      ครูเลือกคำจาก vocab เดิม + เวลา + โหมด; config ส่งทาง cw เดิม (<=60)
      คะแนน/ความคืบหน้าส่งทาง hp เดิม (<=28) · ไม่เพิ่ม path/เงิน/ฐานศัพท์
      ============================================================ */

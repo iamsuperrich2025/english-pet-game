@@ -1,4 +1,4 @@
-/* รอบ 1231 — structural regression for Vocab Sky Playground Phase 3 (no browser dependency). */
+/* รอบ 1233 — structural regression for Vocab Sky Playground Phase 4 (no browser dependency). */
 "use strict";
 const fs=require('fs'),path=require('path'),root=path.resolve(__dirname,'..');
 const sky=fs.readFileSync(path.join(root,'js/skyplay3d.js'),'utf8');
@@ -25,12 +25,21 @@ ok(/makeDailyMissions/.test(sky)&&/ACTIVITY_KINDS\.slice\(shift\)/.test(sky)&&/s
 ok(/claimOnce\('daily_first',40\)/.test(sky)&&/run_\$\{activityRound\.runId\}/.test(sky)&&/state\.skyDaily\.claims/.test(sky),'daily and per-run reward claims prevent reconnect/reload duplicates');
 ok(/unlockBadge\('speed'\)/.test(sky)&&/unlockBadge\('accuracy'\)/.test(sky)&&/unlockBadge\('coop'\)/.test(sky),'speed, accuracy and co-op badges persist in the existing save');
 ok(/restoreActiveRun/.test(sky)&&/considerJoinOffer/.test(sky)&&/joinLiveActivity/.test(sky),'reconnect resume and join-in-progress paths are present');
+ok(/PHASE 4: CLASSROOM SKY EVENTS/.test(sky)&&/CLASS_MIN_WORDS=3,CLASS_MAX_WORDS=5/.test(sky),'Phase 4 adds bounded Classroom Sky Events');
+ok(/classroomPool\(\).*baseWordPool\(\)/s.test(sky)&&!/const CLASS_WORD/.test(sky),'teacher word picker reuses the existing vocabulary pool without a duplicate database');
+ok(/CLASS_TIMES=\[30,60,90\]/.test(sky)&&/meaning:\{code:'M'/.test(sky)&&/listen:\{code:'L'/.test(sky)&&/spell:\{code:'S'/.test(sky),'teacher can choose time and all three classroom modes');
+ok(/makeClassWire/.test(sky)&&/parseClassWire/.test(sky)&&/cw:classWire\|\|''/.test(sky)&&/S4:\$\{activityRound\.role===/.test(sky),'class config and progress reuse NetRoom cw/hp fields');
+ok(/classWire\.length>60/.test(sky)&&/Math\.min\(99999/.test(sky),'classroom wire data stays inside existing Firebase field limits');
+ok(/function classRows/.test(sky)&&/function classResultHtml/.test(sky)&&/ผลสรุปชั้นเรียน/.test(sky),'teacher gets a live and final class summary');
+ok(/function rememberClassPeer/.test(sky)&&/classRoster\[uid\]/.test(sky)&&/id="sp-class-finish"/.test(sky),'summary keeps disconnected results and teacher can finish early');
+ok(!/addCoins\([^)]*\)/.test(sky.slice(sky.indexOf('PHASE 4: CLASSROOM'),sky.indexOf('PHASE 2 SHARED'))),'classroom events add no currency path or reward');
 ok(/activityReward\(kind/.test(sky)&&/addCoins\(reward\)/.test(sky),'Phase 3 rewards use main coins and durable daily progress');
 ok(/\.sp-activity-grid\{display:grid;grid-template-columns:repeat\(4,1fr\)/.test(css)&&/\.sp-daily\{/.test(css)&&/\.sp-tower\{/.test(css)&&/@media \(max-height:460px\)/.test(css),'Tower, missions and four-activity picker are landscape-first');
+ok(/\.sp-classroom\{/.test(css)&&/\.sp-class-results\{/.test(css)&&/\.sp-class-options\{/.test(css)&&/grid-template-columns:auto minmax\(120px,1fr\) auto auto auto/.test(css),'Classroom setup, quiz and summary fit landscape mobile');
 ok((sky.match(/authPushSave\(true\)/g)||[]).length>=2,'completion and exit request cloud sync');
 ok(/mode:'sky'.*enter:enterSkyPlayground3D/.test(ui),'WORLD3D registry owns the entrance');
 ok(/css\/skyplay3d\.css/.test(html),'classic shell loads isolated world CSS');
 ok(/\['adv','sky','haunt'/.test(net),'friend-location scan includes sky map');
 ok((rules.match(/\$map === 'sky'/g)||[]).length===3&&/newData\.val\(\) === 'sky'/.test(rules),'Rules allow sky only in world/wroom/winfo/tinv enums');
 ok(!/Adventure3D\.|InvasionWorld\./.test(sky),'new engine does not mutate protected worlds');
-console.log('Vocab Sky Playground Phase 3 structural regression passed');
+console.log('Vocab Sky Playground Phase 4 structural regression passed');
