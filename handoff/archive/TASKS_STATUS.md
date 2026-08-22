@@ -5446,3 +5446,10 @@
 - **รอบ 1240 · Vocab Sky Solid Colliders:** แก้ตัวละครเดินทะลุหนังสือ ดินสอ บล็อก ABC น้ำพุ ต้นไม้ และด้านข้างแท่น ด้วย capsule-vs-circle/rotated-box collider; หนังสือ/บล็อกยืนบนด้านบนได้ (`js/skyplay3d.js`)
 - ต้นตอคือระบบเดิมมีเฉพาะ top support กับประตู จึงไม่กันด้านข้าง/พร็อพ; collider เคลื่อนตาม moving/disappearing platform และเคารพระดับความสูง ไม่เปลี่ยนเส้นทางหรือรางวัล
 - syntax+Sky regression (รวมจำลอง push-out/rotated collider)+diff+production build/PWA validator ผ่าน; browser QA ถูก Windows ACL ปิด ไม่แตะ Rules/เงิน/`css/petshopping3d.css`/งาน session อื่น (`tools/test_skyplay3d.js`)
+
+
+## ⏬ ย้ายเมื่อ 2026-08-22 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1241 · Vocab Sky Collision Audit ทั้งหมวด:** แก้รอบ 1240 ที่ครอบคลุมไม่พอ โดยสร้าง collider จาก bounding box ของ mesh จริง จึงตรงวัตถุหมุน/เอียงอย่างดินสอ และตรวจทุก solid scenery (`js/skyplay3d.js`)
+- ครบหนังสือ/ดินสอ/ABC/น้ำพุ/ลำต้นไม้/แท่น Obby+Tower/แกน+ยอด Tower/เกาะลอย; portal/ดาว/crystal/ประตูคำตอบคงเดินผ่านตามหน้าที่ ไม่เปลี่ยนกิจกรรมหรือรางวัล
+- regression เพิ่ม box/circle/rotated push-out + required-solid inventory/test hook; syntax+Sky suite+diff+production build/PWA validator ผ่าน ไม่แตะ Rules/เงิน/งาน Word Search และ `css/petshopping3d.css`

@@ -789,7 +789,7 @@ openPhotoCrop:224
 
 ## js/sgaward.js (28 บรรทัด · 0 รายการ)
 
-## js/shootword.js (1,117 บรรทัด · 0 รายการ)
+## js/shootword.js (1,118 บรรทัด · 0 รายการ)
 
 ## js/skyplay3d.js (602 บรรทัด · 0 รายการ)
 
