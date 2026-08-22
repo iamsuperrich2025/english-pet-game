@@ -1560,19 +1560,23 @@ function openFriendQuickMenu(uid, name, grade){
 /* ============================================================
    การ์ด Leaderboard — สลับแท็บในการ์ดเดียว (ประหยัดพื้นที่):
    🪙 เหรียญ (นักสะสมเหรียญ Top 50) · 🏅 เข็ม (แต้มรวมเข็มสะสม)
-   🤖 ล้มบอส (รอบ 228) · 🔎 ค้นหาคำ (รอบ 590 — แต้มสะสมตลอดกาล Top 10)
+   🤖 ล้มบอส (รอบ 228) · 🔎 ค้นหาคำ (คะแนนสะสม Top 100 · รางวัล Top 10)
    ⌨️ พิมพ์คำ (รอบ 649 — แต้มสะสมตลอดกาล Top 10 · กติกา/รางวัลเหมือน 🔎 เป๊ะ)
    ข้อมูลจริงจาก Firebase — ออฟไลน์โชว์ข้อความเชิญชวนแทน
    ============================================================ */
 const LB_TABS = ['coins','assets','online','badges','boss','ws','pm','tp','bb','sg','bx','xr'];
 const LB_ASSET_TOP = 100;                              // 🏆 ทรัพย์สินรวมโชว์ Top 100 · รางวัลรายเดือนยังเฉพาะ Top 10
 const LB_ONLINE_TOP = 100;                             // 🌐 เหรียญออนไลน์สะสมตลอดกาล Top 100 · รางวัลเฉพาะ Top 10
-const LB_WS_TOP = 10;                                  // 🔎 แท็บค้นหาคำโชว์ Top 10 all time (ตามที่ผู้ใช้สั่ง)
-const LB_PM_TOP = 10;                                  // 🖼️ แท็บจับคู่ภาพโชว์ Top 10 all time (เรตเดียวกัน)
+const LB_WS_TOP = 10;                                  // 🔎 Top 10 ที่ได้รับรางวัลรายเดือน
+const LB_WS_DISPLAY = 100;                             // 🔎 กระดานเต็มจอโชว์อันดับที่เหลือทั้งหมดเหมือนหมวดเหรียญ
+const LB_PM_TOP = 10;                                  // 🖼️ Top 10 ที่ได้รับรางวัลรายเดือน
+const LB_PM_DISPLAY = 100;                             // 🖼️ กระดานเต็มจอโชว์อันดับที่เหลือทั้งหมดเหมือนหมวดเหรียญ
 const LB_TP_TOP = 10;                                  // ⌨️ Top 10 ที่ได้รับรางวัลรายเดือน
 const LB_TP_DISPLAY = 100;                             // ⌨️ กระดานเต็มจอโชว์อันดับที่เหลือทั้งหมดเหมือนหมวดเหรียญ
-const LB_BB_TOP = 10;                                  // 🫧 แท็บฟองโชว์ Top 10 all time
-const LB_SG_TOP = 10;                                  // 🎯 แท็บยิงเป้าคำโชว์ Top 10 all time (เรตเดียวกัน)
+const LB_BB_TOP = 10;                                  // 🫧 Top 10 ที่ได้รับรางวัลรายเดือน
+const LB_BB_DISPLAY = 100;                             // 🫧 กระดานเต็มจอโชว์อันดับที่เหลือทั้งหมดเหมือนหมวดเหรียญ
+const LB_SG_TOP = 10;                                  // 🎯 Top 10 ที่ได้รับรางวัลรายเดือน
+const LB_SG_DISPLAY = 100;                             // 🎯 กระดานเต็มจอโชว์อันดับที่เหลือทั้งหมดเหมือนหมวดเหรียญ
 let lbTab = 'coins';                                   // แท็บกระดานที่เปิดอยู่
 function bindLbTabs(){
   if(window.__lbTabBound) return;                      // ผูก listener ครั้งเดียว (การ์ด re-render บ่อย)
@@ -1777,10 +1781,10 @@ function lbRankRows(tab){
     const rows = Object.values(map).filter(r=>r.bk > 0).sort((a,b)=> b.bk - a.bk);
     return rows.map(r=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`👾 ${fmtNum(r.bk)}`, val:r.bk, me:r.id===myId}));
   }
-  if(tab === 'ws'){   // 🔎 รอบ 590: แต้มสะสมตลอดกาลเกมค้นหาคำ (field ws) — โชว์แค่ Top 10
+  if(tab === 'ws'){   // 🔎 แต้มสะสมตลอดกาลเกมค้นหาคำ (field ws) — แสดงครบ Top 100; รางวัลยังเฉพาะ Top 10
     const map = {}; (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g, ws:r.ws||0}; });
     if(includeMe) map[myId] = {id:myId, n:meName, g:meG, ws:Math.round(state.wsScore||0)};
-    const rows = Object.values(map).filter(r=>r.ws > 0).sort((a,b)=> b.ws - a.ws).slice(0, LB_WS_TOP);
+    const rows = Object.values(map).filter(r=>r.ws > 0).sort((a,b)=> b.ws - a.ws).slice(0, LB_WS_DISPLAY);
     // 🏆 รอบ 592: pz = เงินรางวัลรายเดือนของอันดับนั้น (โชว์ต่อท้ายชื่อ)
     return rows.map((r,i)=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🔎 ${fmtNum(r.ws)}`, val:r.ws,
       pz:(typeof WsAward !== 'undefined') ? WsAward.prizeFor(i+1) : 0, me:r.id===myId}));
@@ -1796,21 +1800,21 @@ function lbRankRows(tab){
   if(tab === 'bb'){
     const map={}; (Online.bbBoard||[]).forEach(r=>{map[r.id]={id:r.id,n:r.n,g:r.g,bb:r.bb||0};});
     if(includeMe) map[myId]={id:myId,n:meName,g:meG,bb:Math.round(state.bbScore||0)};
-    const rows=Object.values(map).filter(r=>r.bb>0).sort((a,b)=>b.bb-a.bb).slice(0,LB_BB_TOP);
+    const rows=Object.values(map).filter(r=>r.bb>0).sort((a,b)=>b.bb-a.bb).slice(0,LB_BB_DISPLAY);
     return rows.map((r,i)=>({uid:r.id,name:splitNameBadges(r.n).name,g:r.g,dataN:r.n,sc:`🫧 ${fmtNum(r.bb)}`,val:r.bb,
       pz:(typeof BbAward!=='undefined')?BbAward.prizeFor(i+1):0,me:r.id===myId}));
   }
-  if(tab === 'sg'){   // 🎯 รอบ 917: แต้มสะสมตลอดกาลเกมยิงเป้าคำศัพท์ (field sg) — โชว์แค่ Top 10
+  if(tab === 'sg'){   // 🎯 แต้มสะสมตลอดกาลเกมยิงเป้าคำศัพท์ (field sg) — แสดงครบ Top 100; รางวัลยังเฉพาะ Top 10
     const map = {}; (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g, sg:r.sg||0}; });
     if(includeMe) map[myId] = {id:myId, n:meName, g:meG, sg:Math.round(state.sgScore||0)};
-    const rows = Object.values(map).filter(r=>r.sg > 0).sort((a,b)=> b.sg - a.sg).slice(0, LB_SG_TOP);
+    const rows = Object.values(map).filter(r=>r.sg > 0).sort((a,b)=> b.sg - a.sg).slice(0, LB_SG_DISPLAY);
     return rows.map((r,i)=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🎯 ${fmtNum(r.sg)}`, val:r.sg,
       pz:(typeof SgAward !== 'undefined') ? SgAward.prizeFor(i+1) : 0, me:r.id===myId}));
   }
-  if(tab === 'pm'){   // 🖼️ รอบ 979: แต้มสะสมตลอดกาลเกมจับคู่ภาพ (field pm) — โชว์แค่ Top 10
+  if(tab === 'pm'){   // 🖼️ แต้มสะสมตลอดกาลเกมจับคู่ภาพ (field pm) — แสดงครบ Top 100; รางวัลยังเฉพาะ Top 10
     const map = {}; (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g, pm:r.pm||0}; });
     if(includeMe) map[myId] = {id:myId, n:meName, g:meG, pm:Math.round(state.pmScore||0)};
-    const rows = Object.values(map).filter(r=>r.pm > 0).sort((a,b)=> b.pm - a.pm).slice(0, LB_PM_TOP);
+    const rows = Object.values(map).filter(r=>r.pm > 0).sort((a,b)=> b.pm - a.pm).slice(0, LB_PM_DISPLAY);
     return rows.map((r,i)=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🖼️ ${fmtNum(r.pm)}`, val:r.pm,
       pz:(typeof PmAward !== 'undefined') ? PmAward.prizeFor(i+1) : 0, me:r.id===myId}));
   }
@@ -2118,7 +2122,7 @@ function openLeaderboardFull(){
       return;
     }
 
-    const cap = __lbfTab === 'assets' ? LB_ASSET_TOP : __lbfTab === 'online' ? LB_ONLINE_TOP : __lbfTab === 'ws' ? LB_WS_TOP : __lbfTab === 'pm' ? LB_PM_TOP : __lbfTab === 'tp' ? LB_TP_DISPLAY : __lbfTab === 'bb' ? LB_BB_TOP : __lbfTab === 'sg' ? LB_SG_TOP : 100;
+    const cap = __lbfTab === 'assets' ? LB_ASSET_TOP : __lbfTab === 'online' ? LB_ONLINE_TOP : __lbfTab === 'ws' ? LB_WS_DISPLAY : __lbfTab === 'pm' ? LB_PM_DISPLAY : __lbfTab === 'tp' ? LB_TP_DISPLAY : __lbfTab === 'bb' ? LB_BB_DISPLAY : __lbfTab === 'sg' ? LB_SG_DISPLAY : 100;
     const all = lbRankRows(__lbfTab).slice(0, cap);
     const top = all.slice(0, 5);          // 🏆 โพเดียม (ตัวละครยืนลดหลั่น)
     const rest = all.slice(5);            // ที่เหลือ → กริด 5 คอลัมน์เหมือนเดิม

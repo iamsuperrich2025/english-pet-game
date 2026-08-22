@@ -5,7 +5,7 @@ const assert = require('assert');
 const fs = require('fs');
 const vm = require('vm');
 
-const source = fs.readFileSync('js/ui.js', 'utf8');
+const source = fs.readFileSync('js/ui.js', 'utf8').replace(/\r\n/g, '\n');
 const start = source.indexOf('const RANK_MOVE_TOPICS =');
 const end = source.indexOf('const LB_BCAT_TOP =', start);
 assert(start >= 0 && end > start, 'rank movement zone not found');
