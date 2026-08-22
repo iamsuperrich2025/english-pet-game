@@ -5425,3 +5425,10 @@
 - syntax+Sky structural/Beta/seam+diff+production build/PWA validator ผ่าน; ไม่แตะ Rules/สิทธิ์/รางวัล/`css/petshopping3d.css`/งาน session อื่น (`tools/test_skyplay3d.js`)
 - **รอบ 1235 · Vocab Sky Playground Phase 5:** เพิ่ม Teacher Lesson Packs บันทึกในเครื่อง, playlist ความหมาย→ฟัง→สะกด, Ready Check และ host/student reconnect+late join โดยคง Phase 1–4/C4-S4 เดิม (`js/skyplay3d.js`, `css/skyplay3d.css`)
 - เพิ่มรายงานรายคน+รายคำ, CSV/พิมพ์/รายงานย้อนหลัง; ผู้ใช้อนุญาต `R5` answer telemetry แบบย่อผ่าน `cw` เดิม ≤60; ไม่เพิ่ม Firebase path/rules/เงิน และคง NetRoom sky 6 คน
+
+
+## ⏬ ย้ายเมื่อ 2026-08-22 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1238 · Vocab Sky Dragon Tail + Floating Joystick:** เปลี่ยนหางมังกรจากเหลืองเป็นฟ้าและเพิ่มครีบสามเหลี่ยม 4 ชิ้นเรียงตลอดสันหางด้วย `InstancedMesh` 1 draw call (`js/skyplay3d.js`)
+- เปลี่ยน joystick มือถือเป็นแบบ floating: แตะพื้นที่ว่างตรงไหนก็ได้ในครึ่งจอซ้ายแล้ววงย้ายศูนย์ไปใต้ปลายนิ้ว; ไม่แย่งปุ่ม/HUD/กล้องขวา, รองรับปล่อยนิ้ว/สลับแอปโดยไม่ค้าง
+- Chromium touch QA 812×375 ย้ายศูนย์ `(50,327)` → `(250,260)`, ตัวละครเคลื่อนจริงและ knob คืนศูนย์; ครีบจริง 4 instance สี `#9cefff`, 6 คน 145 calls/8,640 triangles, console 0
