@@ -33,8 +33,7 @@
   }
   function sizeForGrade(){ return [SIZE_LOW, SIZE_MID, SIZE_HIGH][gradeTier() - 1]; }
   const MODE_LABEL = {pic:'🖼️ ภาพ-ภาพ', word:'🔤 ภาพ-คำ'};
-  const RECENT_PAGE_LIMIT = 10;
-  const RECENT_PAGE_KEY = 'vocabworld_picmatch_recent_pages_v1';
+  const CATEGORY_CYCLE_KEY = 'vocabworld_picmatch_category_cycles_v1';
 
   let queue = [], qi = 0;          // เก็บไว้ใน test API เดิม; รอบ 1053 ใช้คลังชุดที่ผู้เล่นเลือกแทน
   let sec = null;                  // <section id="screen-picmatch">
@@ -52,26 +51,49 @@
   const book = () => typeof PICDICT_BOOK !== 'undefined' ? PICDICT_BOOK : [];
   const wordsFor = file => (typeof PICDICT_WORDS !== 'undefined' && PICDICT_WORDS[file]) || null;
   const gridFor = file => (typeof PICDICT_GRID !== 'undefined' && PICDICT_GRID[file]) || null;
-  const pageKey = (file,start) => `${file}:${Math.max(0,+start || 0)}`;
-  function readRecentPages(){
+  const cycleKey = (file,budget=pageSize()) => `${file}::${Math.max(1,+budget || 1)}`;
+  function readCategoryCycles(){
     try{
-      const value=JSON.parse(localStorage.getItem(RECENT_PAGE_KEY) || '[]');
-      return Array.isArray(value) ? value.filter(x=>typeof x==='string').slice(-RECENT_PAGE_LIMIT) : [];
-    }catch(_){ return []; }
+      const value=JSON.parse(localStorage.getItem(CATEGORY_CYCLE_KEY) || '{}');
+      if(!value || Array.isArray(value) || typeof value!=='object') return {};
+      return Object.fromEntries(Object.entries(value).filter(([key,starts])=>
+        typeof key==='string' && Array.isArray(starts)).map(([key,starts])=>[
+          key,[...new Set(starts.filter(start=>Number.isInteger(start)&&start>=0))]
+        ]));
+    }catch(_){ return {}; }
   }
-  function writeRecentPages(pages){
-    const clean=pages.filter(x=>typeof x==='string').slice(-RECENT_PAGE_LIMIT);
-    try{ localStorage.setItem(RECENT_PAGE_KEY,JSON.stringify(clean)); }catch(_){}
+  function writeCategoryCycles(cycles){
+    const clean={};
+    Object.entries(cycles||{}).forEach(([key,starts])=>{
+      if(typeof key!=='string'||!Array.isArray(starts)) return;
+      const valid=[...new Set(starts.filter(start=>Number.isInteger(start)&&start>=0))];
+      if(valid.length) clean[key]=valid;
+    });
+    try{ localStorage.setItem(CATEGORY_CYCLE_KEY,JSON.stringify(clean)); }catch(_){}
     return clean;
   }
-  function pageLock(file,start){
-    const pages=readRecentPages(), index=pages.indexOf(pageKey(file,start));
-    if(index<0) return {locked:false,remaining:0};
-    return {locked:true,remaining:RECENT_PAGE_LIMIT-(pages.length-1-index)};
+  function categoryCycle(file,budget=pageSize()){
+    const size=Math.max(1,+budget||1), total=Math.ceil(sheetItems(file).length/size);
+    const validStarts=new Set(Array.from({length:total},(_,i)=>i*size));
+    const starts=(readCategoryCycles()[cycleKey(file,size)]||[]).filter(start=>validStarts.has(start));
+    return {size,total,starts};
   }
-  function rememberPage(file,start){
-    const key=pageKey(file,start), pages=readRecentPages().filter(x=>x!==key);
-    pages.push(key); writeRecentPages(pages);
+  function pageLock(file,start,budget=pageSize()){
+    const cycle=categoryCycle(file,budget), locked=cycle.starts.includes(Math.max(0,+start||0));
+    return {locked,remaining:locked?Math.max(0,cycle.total-cycle.starts.length):0,total:cycle.total};
+  }
+  function completePage(file,start,budget=pageSize()){
+    const cycle=categoryCycle(file,budget), key=cycleKey(file,cycle.size), cycles=readCategoryCycles();
+    const normalized=Math.floor(Math.max(0,+start||0)/cycle.size)*cycle.size;
+    const starts=[...new Set(cycle.starts.concat(normalized))];
+    if(cycle.total<=1 || starts.length>=cycle.total){
+      delete cycles[key];
+      writeCategoryCycles(cycles);
+      return {cycleComplete:true,remaining:0,total:cycle.total};
+    }
+    cycles[key]=starts;
+    writeCategoryCycles(cycles);
+    return {cycleComplete:false,remaining:cycle.total-starts.length,total:cycle.total};
   }
   /* Bedroom มีเส้นตกแต่งกลางแถวแรกที่ตัวตรวจพิกเซลอ่านเป็นเส้นแบ่งแถวผิด
      จึงยึดกรอบแถวเดิมที่ตรวจด้วยตาแล้ว และใช้จุดตัดก่อนป้ายคำของแต่ละแถว */
@@ -204,7 +226,7 @@
       const b=e.target.closest('[data-file][data-start]'); if(!b) return;
       const lock=pageLock(b.dataset.file,+b.dataset.start);
       if(lock.locked){
-        showRuleNotice(`หน้านี้เพิ่งเล่นไปแล้ว กรุณาเล่นหน้าอื่นอีก ${lock.remaining} หน้า จึงจะกลับมาเล่นหน้านี้ได้`);
+        showRuleNotice(`ชุดนี้เล่นจบรอบแล้ว กรุณาเล่นอีก ${lock.remaining} ชุดที่ยังไม่ผ่านในหมวดนี้ เมื่อครบแล้วทุกชุดจะปลดล็อกพร้อมกัน`);
         return;
       }
       chooseSheet(b.dataset.file,b.dataset.en,b.dataset.th,+b.dataset.start);
@@ -247,7 +269,7 @@
       const links=Array.from({length:pages},(_,i)=>{
         const start=i*budget, end=Math.min(count,start+budget);
         const lock=pageLock(file,start);
-        return `<button class="pm-set-link${lock.locked?' locked':''}" aria-disabled="${lock.locked?'true':'false'}" data-file="${esc(file)}" data-en="${esc(en)}" data-th="${esc(th)}" data-start="${start}">ชุด ${i+1} <small>${start+1}–${end}${lock.locked?` · 🔒 อีก ${lock.remaining} หน้า`:''}</small></button>`;
+        return `<button class="pm-set-link${lock.locked?' locked':''}" aria-disabled="${lock.locked?'true':'false'}" data-file="${esc(file)}" data-en="${esc(en)}" data-th="${esc(th)}" data-start="${start}">ชุด ${i+1} <small>${start+1}–${end}${lock.locked?` · 🔒 เหลืออีก ${lock.remaining} ชุด`:''}</small></button>`;
       }).join('');
       return `<article class="pm-sheet-card"><div class="pm-sheet-title"><span>${gr.icon}</span><b>${esc(th)}</b><small>${esc(en)} · ${count} ภาพ</small></div><div class="pm-set-links">${links}</div></article>`;
     }).join('');
@@ -267,10 +289,9 @@
   function chooseSheet(file,en,th,start){
     const lock=pageLock(file,start);
     if(lock.locked){
-      showRuleNotice(`หน้านี้เพิ่งเล่นไปแล้ว กรุณาเล่นหน้าอื่นอีก ${lock.remaining} หน้า จึงจะกลับมาเล่นหน้านี้ได้`);
+      showRuleNotice(`ชุดนี้เล่นจบรอบแล้ว กรุณาเล่นอีก ${lock.remaining} ชุดที่ยังไม่ผ่านในหมวดนี้ เมื่อครบแล้วทุกชุดจะปลดล็อกพร้อมกัน`);
       return false;
     }
-    rememberPage(file,start);
     pm.sheetFile=file; pm.sheetEn=en; pm.sheetTh=th; pm.pageStart=start; pm.choosing=false;
     sec.classList.remove('choosing');
     $('pm-back').hidden=false;
@@ -567,6 +588,7 @@
 
     if(pm.matched === pm.pairs.length){
       clearInterval(pm.timerId);
+      const cycle=completePage(pm.sheetFile,pm.pageStart);
       // โบนัสเคลียร์รอบคิดตามขนาดกระดาน (4 คู่ = +20🪙 +5RP · 20 คู่ = +100🪙 +25RP)
       const bCoin = pm.pairs.length * 5, bRp = Math.round(pm.pairs.length * 1.25);
       if(has('addCoins')) addCoins(bCoin);
@@ -593,7 +615,9 @@
       }, thunder ? 900 : 400);
       setTimeout(()=>{
         showChooser();
-        showRuleNotice('เล่นหน้านี้เสร็จแล้ว กรุณาเลือกเล่นหน้าอื่นให้ครบ 10 หน้า ก่อนกลับมาเล่นหน้านี้อีกครั้ง');
+        showRuleNotice(cycle.cycleComplete
+          ? `เล่นครบทุกชุดในหมวด ${pm.sheetTh} แล้ว ปลดล็อกทุกชุดให้เริ่มวนรอบใหม่ได้เลย`
+          : `เล่นชุดนี้จบรอบแล้ว ชุดนี้ถูกล็อกชั่วคราว กรุณาเล่นอีก ${cycle.remaining} ชุดในหมวด ${pm.sheetTh} ให้ครบ แล้วทุกชุดจะปลดล็อกพร้อมกัน`);
       }, thunder ? 2100 : 1600);
     }
   }
@@ -654,5 +678,5 @@
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();
 
-  window.PicMatch = { open, exit, _t:{ pm, newRound, check, pick, take, showChooser, chooseSheet, sheetItems, pageSize, cleanRect, pageKey, pageLock, rememberPage, readRecentPages, writeRecentPages, get queue(){ return queue; }, bank } };
+  window.PicMatch = { open, exit, _t:{ pm, newRound, check, pick, take, showChooser, chooseSheet, sheetItems, pageSize, cleanRect, cycleKey, categoryCycle, pageLock, completePage, readCategoryCycles, writeCategoryCycles, get queue(){ return queue; }, bank } };
 })();
