@@ -5439,3 +5439,10 @@
 - **รอบ 1239 · Shoot Word ชั้น/รางวัล/เสียง:** จัดหิ้ง 3 ชั้นให้ตัวอักษรชั้น 2–3 ไม่ถูกบัง; ยิงถูกตามลำดับได้ 5 เหรียญ/ตัวทันทีพร้อมภาพ+เสียงเหรียญ และอ่าน A–Z ทุกแผ่นที่ยิงโดน (`js/shootword.js`)
 - ไม่จ่ายเหรียญซ้ำตอนครบคำ; คงแต้มอันดับ/สมุดคำ/เป็ดโบนัสเดิม; เสียงทั้งคำรอ 700ms ไม่ตัดเสียงตัวสุดท้าย
 - syntax+diff-check+ชุดตรวจโครงสร้าง/ฉายกล้อง 812×375 ผ่าน: ชั้น 1 `188.8–206.7`, ชั้น 2 `166.2–180.2`, ชั้น 3 `139.5–151.8px`; ไม่แตะ `css/petshopping3d.css` ของ session อื่น
+
+
+## ⏬ ย้ายเมื่อ 2026-08-22 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1240 · Vocab Sky Solid Colliders:** แก้ตัวละครเดินทะลุหนังสือ ดินสอ บล็อก ABC น้ำพุ ต้นไม้ และด้านข้างแท่น ด้วย capsule-vs-circle/rotated-box collider; หนังสือ/บล็อกยืนบนด้านบนได้ (`js/skyplay3d.js`)
+- ต้นตอคือระบบเดิมมีเฉพาะ top support กับประตู จึงไม่กันด้านข้าง/พร็อพ; collider เคลื่อนตาม moving/disappearing platform และเคารพระดับความสูง ไม่เปลี่ยนเส้นทางหรือรางวัล
+- syntax+Sky regression (รวมจำลอง push-out/rotated collider)+diff+production build/PWA validator ผ่าน; browser QA ถูก Windows ACL ปิด ไม่แตะ Rules/เงิน/`css/petshopping3d.css`/งาน session อื่น (`tools/test_skyplay3d.js`)
