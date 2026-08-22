@@ -471,12 +471,12 @@ validateLetterPlacementPool:1305 · updateFloorVisibility:1321 · setLightLevel:
 BLINK_DUR:1389 · BLINK_MIN:1390 · tick:1392 · nearWardrobe:1490 · nearFuneral:1501 · inLift:1506
 atLiftDoor:1510 · randomHaunt:1514
 
-## js/images.js (229 บรรทัด · 25 รายการ)
-IMG_FILES:11 · MOODS:12 · COLLECTIBLES_IMG_V:16 · GIFTS_IMG_V:17 · startImgKey:19 · petImageKeys:21
-probeImages:33 · probeRankImages:45 · probeCollectImages:46 · probeGiftImages:47 · probeHomeImages:48 · CLIP_FILES:57
-CLIP_SM:63 · clipCanWebm:79 · CLIP_ASSET_V:90 · clipFileFor:92 · petClipKey:101 · petClipUrl:110
-equippedItem:123 · petStateImg:134 · petWearOverlay:155 · wearLayerHTML:186 · happyNow:193 · makeHappy:194
-currentPetImg:207
+## js/images.js (255 บรรทัด · 28 รายการ)
+IMG_FILES:12 · MOODS:13 · COLLECTIBLES_IMG_V:17 · GIFTS_IMG_V:18 · PET_ASSET_V:21 · PET_IMAGE_STATES:22
+startImgKey:24 · petImageKeys:26 · petAssetPath:39 · probeImages:50 · probeRankImages:70 · probeCollectImages:71
+probeGiftImages:72 · probeHomeImages:73 · CLIP_FILES:82 · CLIP_SM:88 · clipCanWebm:104 · CLIP_ASSET_V:115
+clipFileFor:117 · petClipKey:126 · petClipUrl:135 · equippedItem:148 · petStateImg:159 · petWearOverlay:180
+wearLayerHTML:212 · happyNow:219 · makeHappy:220 · currentPetImg:233
 
 ## js/invasion3d.js (10,581 บรรทัด · 653 รายการ)
 ### 🗂️ สารบัญโซน js/invasion3d.js (Read/Edit เฉพาะช่วง)
