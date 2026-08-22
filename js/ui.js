@@ -7527,7 +7527,7 @@ const WORLD3D = [
    🔒 รอบ 1070/1132: โลกที่ยังไม่เปิดสาธารณะ — เปิดให้บัญชีทดสอบ 2 ชื่อเท่านั้น
    เทียบชื่อแบบ NFC + ตัดช่องว่าง กันชื่อไทยจากคนละคีย์บอร์ด/มีช่องว่างหลุดแล้วสิทธิ์ไม่ตรง
    ============================================================ */
-const WORLD3D_COMING_SOON = new Set(['adv','drive','moto','invasion','mecha','f1']);
+const WORLD3D_COMING_SOON = new Set(['adv','drive','moto','invasion','mecha']);
 function world3DComingSoon(w){
   return !!(w && WORLD3D_COMING_SOON.has(w.mode) && !(typeof isTester === 'function' && isTester()));
 }

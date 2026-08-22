@@ -64,6 +64,60 @@
     if(el && el.querySelector('#onet-promo-never')?.checked) rememberNever();
     if(el) el.remove();
     pending = false;
+    setTimeout(()=>racingPromoMaybeShow(),180);
+  }
+
+  /* 🏁 ป้ายเปิดสนาม Vocab World Racing — แสดงต่อจาก O-NET และปิดแล้วไม่แสดงซ้ำ */
+  const racingKey = ()=> `vwRacingPromoDismissed:v1:${uid()}`;
+  const racingDismissed = ()=> storeGet(localStorage,racingKey()) === '1'
+    || (classicReady() && state.racingPromoDismissedV1 === true);
+  function rememberRacingDismissed(){
+    storeSet(localStorage,racingKey(),'1');
+    if(classicReady()){
+      state.racingPromoDismissedV1=true;
+      saveClassicPrefs();
+    }
+  }
+  function finishRacingPromo(){
+    const el=document.getElementById('racing-promo-overlay');
+    if(el) el.remove();
+    rememberRacingDismissed();
+  }
+  function openRacingPromo(){
+    if(racingDismissed() || document.getElementById('racing-promo-overlay') || document.getElementById('onet-promo-overlay')) return;
+    const el=document.createElement('div');
+    el.id='racing-promo-overlay';
+    el.className='racing-promo-overlay';
+    el.setAttribute('role','dialog');
+    el.setAttribute('aria-modal','true');
+    el.setAttribute('aria-labelledby','racing-promo-title');
+    el.innerHTML=`<section class="racing-promo-card">
+      <button class="racing-promo-close" type="button" aria-label="ปิดป้าย Vocab World Racing">✕ ปิด</button>
+      <div class="racing-promo-flag">🏁 สนามใหม่เปิดให้ทุกคนแล้ว!</div>
+      <div class="racing-promo-car" aria-hidden="true">🏎️<span>💨</span></div>
+      <h2 id="racing-promo-title">Vocab World Racing</h2>
+      <p class="racing-promo-lead">ซิ่งรถ F1 บนสนามจริง ฝึกคำศัพท์ระหว่างแข่ง<br><b>สนุกกับเพื่อนได้ทั้งห้อง!</b></p>
+      <div class="racing-promo-features"><span>🌍 สนาม 3D</span><span>👥 Multiplayer</span><span>📚 คำศัพท์ 5 ระดับ</span></div>
+      <p class="racing-promo-price">ค่าเข้าเพียง <b>🪙 500</b> ต่อรอบ</p>
+      <button class="racing-promo-go" type="button">🏎️ ไปสนามแข่งเลย!</button>
+      <small>ปิดป้ายนี้แล้วจะไม่แสดงอีก</small>
+    </section>`;
+    document.body.appendChild(el);
+    el.querySelector('.racing-promo-close').addEventListener('click',finishRacingPromo);
+    el.querySelector('.racing-promo-go').addEventListener('click',()=>{
+      finishRacingPromo();
+      const btn=document.getElementById('btn-world-f1');
+      if(btn){btn.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>btn.click(),300);}
+      else if(typeof showScreen==='function') showScreen('dashboard');
+    });
+    el.addEventListener('keydown',e=>{if(e.key==='Escape') finishRacingPromo();});
+    el.querySelector('.racing-promo-go').focus();
+  }
+  function racingPromoMaybeShow(){
+    if(racingDismissed() || document.getElementById('racing-promo-overlay') || document.getElementById('onet-promo-overlay')) return;
+    const dash=document.getElementById('screen-dashboard');
+    if(!dash || !dash.classList.contains('active') || visibleBlocker()) return;
+    openRacingPromo();
   }
 
   function openPromo(force){
@@ -119,7 +173,8 @@
   }
   function maybeShow(){
     if(pending || document.getElementById('onet-promo-overlay')) return;
-    if(!authReady() || !classicReady() || !allowed()) return;
+    if(!authReady() || !classicReady()) return;
+    if(!allowed()){setTimeout(()=>racingPromoMaybeShow(),850);return;}
     pending = true;
     clearTimeout(retryTimer);
     const attempt = ()=>{
@@ -138,7 +193,8 @@
   }
   function cityMaybeShow(cityUid){
     promoUid = String(cityUid || '');
-    if(!promoUid || pending || document.getElementById('onet-promo-overlay') || !allowed()) return;
+    if(!promoUid || pending || document.getElementById('onet-promo-overlay')) return;
+    if(!allowed()){setTimeout(()=>racingPromoMaybeShow(),1100);return;}
     pending = true;
     clearTimeout(retryTimer);
     retryTimer = setTimeout(()=>{pending=false;openPromo(false);},1100);
@@ -149,4 +205,6 @@
   window.onetPromoReset = reset;
   window.onetPromoPreview = ()=>openPromo(true);
   window.onetPromoCityMaybeShow = cityMaybeShow;
+  window.racingPromoMaybeShow = racingPromoMaybeShow;
+  window.racingPromoPreview = openRacingPromo;
 }());
