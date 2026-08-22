@@ -1,15 +1,18 @@
 "use strict";
 /* ============================================================
-   ☁️📚 รอบ 1231 — VOCAB SKY PLAYGROUND · PHASE 3
+   ☁️📚 รอบ 1232 — VOCAB SKY PLAYGROUND · PHASE 4
    Bright Fantasy Social World + Obby ของ Vocab World
    - standalone Three.js engine: ไม่แตะ Adventure World / Invasion
    - Soft Cuboid Chibi 3D + pet จริง + NetRoom สูงสุด 6 คน
-   - Letter Hunt co-op, Word Race, Sky Obby, Vocabulary Tower + Daily Missions
+   - Letter Hunt, Word Race, Sky Obby, Vocabulary Tower, Daily Missions
+   - Classroom Sky Events: ครูเลือกคำ/เวลา/โหมด + สรุปชั้นเรียนผ่าน NetRoom เดิม
    ============================================================ */
 (function(){
   const TAU=Math.PI*2, ROOM_MAX=6, FALL_Y=-14, GRAVITY=29, MOVE_SPEED=8.2, JUMP_SPEED=11.2, TOWER_FLOORS=6;
   const ACTIVITY_KINDS=['letter','race','obby','tower'];
   const ACTIVITY_META={letter:{icon:'🔤',name:'Letter Hunt'},race:{icon:'🏁',name:'Word Race'},obby:{icon:'☁️',name:'Sky Obby'},tower:{icon:'🏰',name:'Vocabulary Tower'}};
+  const CLASS_MIN_WORDS=3,CLASS_MAX_WORDS=5,CLASS_TIMES=[30,60,90];
+  const CLASS_MODES={meaning:{code:'M',name:'🎯 เลือกความหมาย'},listen:{code:'L',name:'🔊 ฟังแล้วเลือก'},spell:{code:'S',name:'✏️ เลือกสะกดถูก'}};
   const COLORS={sky:0x8fd8ff,navy:0x16346b,cyan:0x46ddff,pink:0xff67ad,yellow:0xffd74d,mint:0x62e6b0,purple:0x8f70ff,white:0xfffbef};
   const AV_BASE=[
     [0xffcf9e,0xe53935,0x1e58c8,0x2b2320],[0xffd9ae,0x29b6f6,0x274a8f,0x6d4c2f],
@@ -22,6 +25,7 @@
   let player,petComp,room=null,myUid='local',peers={},peerActors={},sessionCoins=0,sessionStars=0;
   let supports=[],cameraMeshes=[],moving=[],rotators=[],checkpoints=[],stars=[],effects=[],portal=null,gate=null;
   let letterTokens=[],raceGates=[],towerFloors=[],towerQuestion=null,joinOffer=null,activity='plaza',activityRound=null,activityStartedAt=0,activityDone=false;
+  let classOffer=null,classWire='',classFinished=false,classView='setup',classRoster={};
   let keys=new Set(),joy={id:null,x:0,z:0},look={id:null,x:0,y:0},listeners=[];
   let camYaw=0,camPitch=.36,camDist=8.8,grounded=false,jumpQueued=false,emoteUntil=0;
   let currentCheckpoint=0,lastSupport=null,lastNetAt=0,lastPeerBudget=0,routeFinished=false,gateQuestion=null;
@@ -71,6 +75,7 @@
         <div class="sp-pill sp-title"><b>☁️ Vocab Sky Playground</b><small id="sp-online">กำลังเตรียมสนาม…</small></div>
         <div class="sp-pill sp-challenge"><small>CHALLENGE</small><b id="sp-challenge">Rainbow Route</b><span id="sp-progress">⭐ 0/5 · 💎 CP ${currentCheckpoint+1}/3</span></div>
         <button class="sp-pill sp-play" id="sp-play">🎮 PLAY</button>
+        <button class="sp-pill sp-class-btn" id="sp-class">🏫 CLASS</button>
         <div class="sp-pill sp-coins">🪙 <b id="sp-coins">${fmt(state.coins||0)}</b></div>
       </div>
       <section class="sp-daily" id="sp-daily" aria-label="Daily Sky Missions">
@@ -102,9 +107,14 @@
         <small>🏰 VOCABULARY TOWER · <span id="sp-tower-level">ชั้น 1/6</span></small><h2 id="sp-tower-q"></h2>
         <button class="sp-hear" id="sp-tower-hear">🔊 ฟังคำศัพท์</button><div id="sp-tower-options"></div>
         <p id="sp-tower-feedback">ตอบผิดลองใหม่ได้ · ไม่เสียเหรียญ</p>
+      </div></div>
+      <div class="sp-classroom" id="sp-classroom" aria-hidden="true"><div class="sp-class-card">
+        <button class="sp-close" id="sp-class-close" aria-label="Close">×</button>
+        <small>🏫 CLASSROOM SKY EVENT · ห้องเดิมสูงสุด 6 คน</small><h2 id="sp-class-title">สร้างกิจกรรมห้องเรียน</h2>
+        <div id="sp-class-body"></div>
       </div></div>`;
     document.body.appendChild(root);canvas=root.querySelector('#sp-canvas');
-    Object.assign(ui,{online:root.querySelector('#sp-online'),challenge:root.querySelector('#sp-challenge'),progress:root.querySelector('#sp-progress'),coins:root.querySelector('#sp-coins'),hint:root.querySelector('#sp-hint'),word:root.querySelector('#sp-word'),pop:root.querySelector('#sp-pop'),toast:root.querySelector('#sp-toast'),joy:root.querySelector('#sp-joy'),joyKnob:root.querySelector('#sp-joy i'),gate:root.querySelector('#sp-gate'),gateQ:root.querySelector('#sp-gate-q'),gateOptions:root.querySelector('#sp-gate-options'),gateFeedback:root.querySelector('#sp-gate-feedback'),activity:root.querySelector('#sp-activity'),score:root.querySelector('#sp-score'),daily:root.querySelector('#sp-daily'),missions:root.querySelector('#sp-missions'),dailyCount:root.querySelector('#sp-daily-count'),dailySummary:root.querySelector('#sp-daily-summary'),badges:root.querySelector('#sp-badges'),joinLive:root.querySelector('#sp-join-live'),tower:root.querySelector('#sp-tower'),towerLevel:root.querySelector('#sp-tower-level'),towerQ:root.querySelector('#sp-tower-q'),towerOptions:root.querySelector('#sp-tower-options'),towerFeedback:root.querySelector('#sp-tower-feedback')});
+    Object.assign(ui,{online:root.querySelector('#sp-online'),challenge:root.querySelector('#sp-challenge'),progress:root.querySelector('#sp-progress'),coins:root.querySelector('#sp-coins'),hint:root.querySelector('#sp-hint'),word:root.querySelector('#sp-word'),pop:root.querySelector('#sp-pop'),toast:root.querySelector('#sp-toast'),joy:root.querySelector('#sp-joy'),joyKnob:root.querySelector('#sp-joy i'),gate:root.querySelector('#sp-gate'),gateQ:root.querySelector('#sp-gate-q'),gateOptions:root.querySelector('#sp-gate-options'),gateFeedback:root.querySelector('#sp-gate-feedback'),activity:root.querySelector('#sp-activity'),score:root.querySelector('#sp-score'),daily:root.querySelector('#sp-daily'),missions:root.querySelector('#sp-missions'),dailyCount:root.querySelector('#sp-daily-count'),dailySummary:root.querySelector('#sp-daily-summary'),badges:root.querySelector('#sp-badges'),joinLive:root.querySelector('#sp-join-live'),tower:root.querySelector('#sp-tower'),towerLevel:root.querySelector('#sp-tower-level'),towerQ:root.querySelector('#sp-tower-q'),towerOptions:root.querySelector('#sp-tower-options'),towerFeedback:root.querySelector('#sp-tower-feedback'),classBtn:root.querySelector('#sp-class'),classroom:root.querySelector('#sp-classroom'),classTitle:root.querySelector('#sp-class-title'),classBody:root.querySelector('#sp-class-body'),classClose:root.querySelector('#sp-class-close')});
   }
 
   function mat(color,kind='lambert'){
@@ -233,6 +243,7 @@
   function bindInput(){
     addListener(root.querySelector('#sp-exit'),'click',stop);addListener(root.querySelector('#sp-jump'),'pointerdown',e=>{e.preventDefault();jumpQueued=true;});addListener(root.querySelector('#sp-emote'),'pointerdown',e=>{e.preventDefault();emoteUntil=performance.now()+1800;netSend(true);showToast('👋 โบกมือให้เพื่อนแล้ว');});
     addListener(root.querySelector('#sp-play'),'click',openActivityMenu);addListener(root.querySelector('#sp-activity-close'),'click',closeActivityMenu);ui.activity.querySelectorAll('[data-activity]').forEach(b=>addListener(b,'click',()=>startActivity(b.dataset.activity)));
+    addListener(ui.classBtn,'click',()=>classOffer&&activity==='plaza'?joinClassroom():openClassroom());addListener(ui.classClose,'click',closeClassroom);
     addListener(ui.joinLive,'click',joinLiveActivity);addListener(root.querySelector('#sp-tower-hear'),'click',()=>{if(towerQuestion&&typeof speakWord==='function')speakWord(towerQuestion.en);});
     addListener(window,'keydown',e=>{if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))keys.add(e.code);if(e.code==='Space'){e.preventDefault();jumpQueued=true;}if(e.code==='KeyE')emoteUntil=performance.now()+1800;});
     addListener(window,'keyup',e=>keys.delete(e.code));addListener(window,'resize',resize);addListener(document,'visibilitychange',()=>{if(document.hidden){keys.clear();joy.x=joy.z=0;}});
@@ -306,7 +317,7 @@
     if(newBadge.length)setTimeout(()=>showToast(`🏅 ได้ Badge: ${newBadge.join(' · ')}`),250);return bonus;
   }
   function saveActiveRun(push=false){
-    if(!activityRound||activityDone||activity==='plaza')return;
+    if(!activityRound||activityDone||!ACTIVITY_KINDS.includes(activity))return;
     state.skyDaily.active={kind:activity,seed:activityRound.seed,runId:activityRound.runId,score:activityRound.score,progress:activityRound.progress,question:activityRound.question||0,checkpoint:activityRound.checkpoint||0,mistakes:activityRound.mistakes||0,elapsed:Math.round(activityElapsed())};
     saveState();if(push&&typeof authPushSave==='function')authPushSave(false);
   }
@@ -337,15 +348,87 @@
   function joinLiveActivity(){if(!joinOffer)return;const offer=joinOffer;joinOffer=null;startActivity(offer.kind,{seed:offer.seed,joined:true});showToast(`🤝 Join-in-progress: ${ACTIVITY_META[offer.kind].name}`);}
 
   /* ============================================================
+     🏫☁️ รอบ 1232 — PHASE 4: CLASSROOM SKY EVENTS
+     ครูเลือกคำจาก vocab เดิม + เวลา + โหมด; config ส่งทาง cw เดิม (<=60)
+     คะแนน/ความคืบหน้าส่งทาง hp เดิม (<=28) · ไม่เพิ่ม path/เงิน/ฐานศัพท์
+     ============================================================ */
+  function classroomPool(){
+    const seen=new Set();return baseWordPool().filter(w=>w&&/^[a-z]{3,8}$/i.test(w[0])&&!seen.has(w[0].toLowerCase())&&seen.add(w[0].toLowerCase())).sort((a,b)=>a[0].localeCompare(b[0])).slice(0,8);
+  }
+  function classModeByCode(code){return Object.keys(CLASS_MODES).find(k=>CLASS_MODES[k].code===code)||'meaning';}
+  function classPair(word){return baseWordPool().find(w=>w[0].toLowerCase()===String(word).toLowerCase())||[word,word];}
+  function makeClassWire(round){return `C4|${round.eventId}|${CLASS_MODES[round.mode].code}|${round.seconds}|${round.words.join(',')}`;}
+  function parseClassWire(value){
+    const p=String(value||'').split('|');if(p.length!==5||p[0]!=='C4'||!/^[a-z0-9]{3,6}$/i.test(p[1])||!/^[MLS]$/.test(p[2])||!CLASS_TIMES.includes(Number(p[3])))return null;
+    const words=p[4].split(',').map(w=>w.toLowerCase()).filter(w=>/^[a-z]{3,8}$/.test(w));if(words.length<CLASS_MIN_WORDS||words.length>CLASS_MAX_WORDS||new Set(words).size!==words.length)return null;
+    return {eventId:p[1],mode:classModeByCode(p[2]),seconds:Number(p[3]),words};
+  }
+  function openClassroom(){if(!ui.classroom||paused&&activity!=='classroom')return;paused=true;ui.classroom.classList.add('on');ui.classroom.setAttribute('aria-hidden','false');if(activity==='classroom'&&activityRound)renderClassroom(true);else renderClassroomSetup();}
+  function closeClassroom(){
+    if(activity==='classroom'&&activityRound&&!classFinished&&activityRound.role==='student'){showToast('🏫 ทำกิจกรรมให้จบก่อนครับ');return;}
+    if(classFinished){endClassroom();return;}ui.classroom.classList.remove('on');ui.classroom.setAttribute('aria-hidden','true');paused=false;
+  }
+  function renderClassroomSetup(){
+    classView='setup';ui.classTitle.textContent='ครูสร้างกิจกรรมห้องเรียน';ui.classClose.hidden=false;const pool=classroomPool();
+    ui.classBody.innerHTML=`<div class="sp-class-setup"><section><b>① เลือกคำ ${CLASS_MIN_WORDS}–${CLASS_MAX_WORDS} คำ</b><div class="sp-class-words">${pool.map((w,i)=>`<label><input type="checkbox" data-class-word value="${esc(w[0])}" ${i<4?'checked':''}><span>${esc(w[0].toUpperCase())}<small>${esc(w[1])}</small></span></label>`).join('')}</div></section><section class="sp-class-controls"><label><b>② โหมด</b><select id="sp-class-mode">${Object.keys(CLASS_MODES).map(k=>`<option value="${k}">${CLASS_MODES[k].name}</option>`).join('')}</select></label><label><b>③ เวลา</b><select id="sp-class-time">${CLASS_TIMES.map(n=>`<option value="${n}" ${n===60?'selected':''}>${n} วินาที</option>`).join('')}</select></label><button class="sp-class-start" id="sp-class-start">🚀 เริ่มห้องกิจกรรม</button><small>${coopReady()?'🟢 เพื่อนในสวนนี้จะเห็นปุ่ม JOIN CLASS':'🟡 กำลังใช้โหมดทดลองเดี่ยว · ล็อกอินเพื่อเชิญนักเรียน'}</small></section></div>`;
+    ui.classBody.querySelector('#sp-class-start').onclick=startClassroomHost;
+  }
+  function startClassroomHost(){
+    const words=Array.from(ui.classBody.querySelectorAll('[data-class-word]:checked')).map(x=>x.value);if(words.length<CLASS_MIN_WORDS||words.length>CLASS_MAX_WORDS){showToast(`เลือก ${CLASS_MIN_WORDS}–${CLASS_MAX_WORDS} คำครับ`);return;}
+    const mode=ui.classBody.querySelector('#sp-class-mode').value,seconds=Number(ui.classBody.querySelector('#sp-class-time').value),eventId=Date.now().toString(36).slice(-5);activity='classroom';activityDone=false;classFinished=false;classRoster={};activityStartedAt=performance.now();activityRound={role:'host',eventId,mode,seconds,words,score:0,progress:0,mistakes:0};classWire=makeClassWire(activityRound);if(classWire.length>60){showToast('คำที่เลือกยาวเกินไป ลดจำนวนคำลงครับ');activity='plaza';activityRound=null;return;}ui.classroom.classList.add('on');paused=true;netSend(true);renderClassroom(true);updateHud();showToast('🏫 เปิดห้องแล้ว · รอนักเรียนกด JOIN CLASS');
+  }
+  function considerClassOffer(uid,d){
+    const config=parseClassWire(d&&d.cw),p=parseActivity(d);if(!config||!p||p.mode!=='H'||p.seed!==config.eventId||activity!=='plaza')return;classOffer={uid,config,elapsed:p.time};updateClassButton();
+  }
+  function joinClassroom(){
+    if(!classOffer)return;const o=classOffer;classOffer=null;activity='classroom';activityDone=false;classFinished=false;classRoster={};activityRound={role:'student',eventId:o.config.eventId,mode:o.config.mode,seconds:o.config.seconds,words:o.config.words,score:0,progress:0,mistakes:0,question:0,lastFeedback:''};activityStartedAt=performance.now()-Math.max(0,o.elapsed*100);classWire='';paused=true;ui.classroom.classList.add('on');ui.classroom.setAttribute('aria-hidden','false');makeClassQuestion();netSend(true);renderClassroom(true);updateHud();showToast('🏫 เข้าห้องแล้ว · ตอบได้จนหมดเวลา');
+  }
+  function classTimeLeft(){return activityRound?Math.max(0,activityRound.seconds*1000-activityElapsed()):0;}
+  function misspell(word,step){
+    const a=word.split(''),i=(hashText(word+step)%(a.length-1));[a[i],a[i+1]]=[a[i+1],a[i]];let out=a.join('');if(out===word){a[i]=String.fromCharCode(97+(a[i].charCodeAt(0)-96)%26);out=a.join('');}return out;
+  }
+  function makeClassQuestion(){
+    if(!activityRound||activityRound.role!=='student')return;const i=activityRound.question||0,word=activityRound.words[i%activityRound.words.length],pair=classPair(word),mode=activityRound.mode;let prompt,options;
+    if(mode==='meaning'){prompt=`คำไหนแปลว่า “${pair[1]}”?`;options=activityRound.words.slice();}
+    else if(mode==='listen'){prompt='🔊 ฟังแล้วเลือกคำที่ได้ยิน';options=activityRound.words.slice();setTimeout(()=>{if(running&&activity==='classroom'&&!classFinished&&typeof speakWord==='function')speakWord(word);},80);}
+    else{prompt=`เลือกคำที่สะกดถูก: ${pair[1]}`;options=[word,misspell(word,1),misspell(word,2)];}
+    options=Array.from(new Set(options)).sort((a,b)=>hashText(activityRound.eventId+i+a)-hashText(activityRound.eventId+i+b));activityRound.current={word,pair,prompt,options};
+  }
+  function answerClassroom(word){
+    if(activity!=='classroom'||classFinished||!activityRound||activityRound.role!=='student'||!activityRound.current)return;const correct=String(word).toLowerCase()===activityRound.current.word.toLowerCase();activityRound.progress++;if(correct){activityRound.score++;activityRound.lastFeedback=`✅ ${activityRound.current.word.toUpperCase()} = ${activityRound.current.pair[1]}`;tone(760,.12,.06);}else{activityRound.mistakes++;activityRound.lastFeedback=`💡 คำตอบคือ ${activityRound.current.word.toUpperCase()}`;tone(150,.1,.05);}activityRound.question++;makeClassQuestion();netSend(true);renderClassroom(true);
+  }
+  function classRows(){
+    if(!activityRound)return [];const rows=Object.values(classRoster);if(activityRound.role==='student')rows.push({uid:myUid,n:String(state.profileName||'ฉัน'),score:activityRound.score,progress:activityRound.progress,time:Math.round(activityElapsed()/100),mine:true});
+    return rows.sort((a,b)=>b.score-a.score||b.progress-a.progress||a.time-b.time).slice(0,ROOM_MAX-1);
+  }
+  function rememberClassPeer(uid,d){const p=parseActivity(d);if(activity==='classroom'&&activityRound&&p&&p.mode==='C'&&p.seed===activityRound.eventId)classRoster[uid]={uid,n:String(d.n||'นักเรียน'),score:p.score,progress:p.progress,time:p.time};}
+  function classResultHtml(rows){
+    if(!rows.length)return '<p class="sp-class-wait">🟢 รอนักเรียนกด JOIN CLASS…</p>';return `<div class="sp-class-results"><header><b>ชื่อ</b><b>ถูก/ตอบ</b><b>แม่นยำ</b><b>เวลา</b></header>${rows.map((r,i)=>{const acc=r.progress?Math.round(r.score/r.progress*100):0;return `<div class="${r.mine?'me':''}"><b>${i+1}. ${esc(r.n)}</b><span>${r.score}/${r.progress}</span><span>${acc}%</span><span>${fmtTime(r.time*100)}</span></div>`;}).join('')}</div>`;
+  }
+  function renderClassroom(force=false){
+    if(!ui.classBody||activity!=='classroom'||!activityRound)return;const now=performance.now();if(!force&&now-(ui.classBody._at||0)<180)return;ui.classBody._at=now;const left=Math.ceil(classTimeLeft()/1000),mode=CLASS_MODES[activityRound.mode],rows=classRows();ui.classClose.hidden=!classFinished&&activityRound.role==='student';
+    if(classFinished){classView='summary';ui.classTitle.textContent='📊 ผลสรุปชั้นเรียน';ui.classBody.innerHTML=`<div class="sp-class-summary"><div class="sp-class-kpis"><b>${mode.name}</b><span>⏱ ${activityRound.seconds} วินาที</span><span>👥 ${rows.length} นักเรียน</span></div>${classResultHtml(rows)}<button class="sp-class-done" id="sp-class-done">✓ ปิดผลสรุป</button></div>`;ui.classBody.querySelector('#sp-class-done').onclick=endClassroom;return;}
+    classView='live';ui.classTitle.textContent=activityRound.role==='host'?`🟢 กิจกรรมกำลังเล่น · ${left}s}`:`${mode.name} · ${left}s`;
+    if(activityRound.role==='host'){ui.classBody.innerHTML=`<div class="sp-class-live"><div class="sp-class-kpis"><b>${mode.name}</b><span>📚 ${activityRound.words.map(w=>esc(w.toUpperCase())).join(' · ')}</span><span>⏱ ${left}s</span></div>${classResultHtml(rows)}<button class="sp-class-finish" id="sp-class-finish">📊 จบและดูผลสรุปตอนนี้</button><p>ผลจะอัปเดตสดจากนักเรียนสูงสุด 5 คน</p></div>`;ui.classBody.querySelector('#sp-class-finish').onclick=finishClassroom;}
+    else{const q=activityRound.current;ui.classBody.innerHTML=`<div class="sp-class-question"><div class="sp-class-kpis"><b>⏱ ${left}s</b><span>✅ ${activityRound.score}/${activityRound.progress}</span><span>🎯 ${activityRound.progress?Math.round(activityRound.score/activityRound.progress*100):0}%</span></div><h3>${esc(q.prompt)}</h3>${activityRound.mode==='listen'?'<button class="sp-class-hear" id="sp-class-hear">🔊 ฟังอีกครั้ง</button>':''}<div class="sp-class-options">${q.options.map(w=>`<button data-class-answer="${esc(w)}">${esc(w.toUpperCase())}</button>`).join('')}</div><p>${esc(activityRound.lastFeedback||'ตอบได้เรื่อยๆ จนหมดเวลา · ไม่หักเหรียญ')}</p></div>`;ui.classBody.querySelectorAll('[data-class-answer]').forEach(b=>b.onclick=()=>answerClassroom(b.dataset.classAnswer));const hear=ui.classBody.querySelector('#sp-class-hear');if(hear)hear.onclick=()=>typeof speakWord==='function'&&speakWord(q.word);}
+  }
+  function finishClassroom(){if(classFinished||activity!=='classroom')return;classFinished=true;activityDone=true;paused=true;netSend(true);renderClassroom(true);updateHud();tone(784,.25,.07);showToast('📊 หมดเวลา · เปิดผลสรุปชั้นเรียนแล้ว');}
+  function tickClassroom(){if(activity!=='classroom'||!activityRound)return false;if(!classFinished&&classTimeLeft()<=0)finishClassroom();renderClassroom();return true;}
+  function endClassroom(){
+    const wasHost=activityRound&&activityRound.role==='host';activity='plaza';activityRound=null;activityStartedAt=0;activityDone=false;classFinished=false;classWire='';classRoster={};classView='setup';paused=false;ui.classroom.classList.remove('on');ui.classroom.setAttribute('aria-hidden','true');if(wasHost)netSend(true);updateClassButton();updateHud();
+  }
+  function updateClassButton(){if(!ui.classBtn)return;const join=classOffer&&activity==='plaza';ui.classBtn.textContent=join?'🟢 JOIN CLASS':'🏫 CLASS';ui.classBtn.classList.toggle('live',!!join);}
+
+  /* ============================================================
      🎮☁️ รอบ 1230 — PHASE 2 SHARED ACTIVITIES
      Letter Hunt co-op · Word Race · timed multiplayer Sky Obby
      ใช้ hp payload เดิมของ NetRoom — ไม่เพิ่ม Firebase path
      ============================================================ */
-  function openActivityMenu(){if(!ui.activity||paused)return;paused=true;ui.activity.classList.add('on');ui.activity.setAttribute('aria-hidden','false');}
+  function openActivityMenu(){if(activity==='classroom'){openClassroom();return;}if(!ui.activity||paused)return;paused=true;ui.activity.classList.add('on');ui.activity.setAttribute('aria-hidden','false');}
   function closeActivityMenu(){if(!ui.activity)return;ui.activity.classList.remove('on');ui.activity.setAttribute('aria-hidden','true');paused=false;}
   function activitySeed(kind){return `${kind}-${state.skyDaily.date}`;}
   function startActivity(kind,opt={}){
-    if(!ACTIVITY_KINDS.includes(kind))return;clearLetterTokens();clearRaceGates();if(ui.tower){ui.tower.classList.remove('on');ui.tower.setAttribute('aria-hidden','true');}towerQuestion=null;paused=false;const resume=opt.resume||null;activity=kind;activityStartedAt=performance.now()-Math.max(0,Number(resume&&resume.elapsed)||0);activityDone=false;routeFinished=false;
+    if(!ACTIVITY_KINDS.includes(kind))return;classWire='';classFinished=false;clearLetterTokens();clearRaceGates();if(ui.tower){ui.tower.classList.remove('on');ui.tower.setAttribute('aria-hidden','true');}towerQuestion=null;paused=false;const resume=opt.resume||null;activity=kind;activityStartedAt=performance.now()-Math.max(0,Number(resume&&resume.elapsed)||0);activityDone=false;routeFinished=false;
     const seed=String(resume&&resume.seed||opt.seed||activitySeed(kind)),words=wordPool(seed);activityRound={seed,runId:String(resume&&resume.runId||`${kind}:${state.skyDaily.date}:${Date.now()}:${Math.random().toString(36).slice(2,7)}`),score:Number(resume&&resume.score)||0,progress:Number(resume&&resume.progress)||0,penalty:0,words,word:words[0],question:Number(resume&&resume.question)||0,checkpoint:Number(resume&&resume.checkpoint)||0,mistakes:Number(resume&&resume.mistakes)||0,joined:!!opt.joined};
     if(kind==='letter'){
       const chars=words[0][0].toUpperCase().split(''),decoys='AEIOULRSTN'.split('').filter(c=>!chars.includes(c)).slice(0,Math.max(3,10-chars.length)),tokens=chars.concat(decoys).sort((a,b)=>hashText(seed+a)-hashText(seed+b));tokens.forEach((ch,i)=>addLetterToken(ch,i,tokens.length));player.pos.set(0,.55,8);player.vel.set(0,0,0);showToast(`🔤 ช่วยกันหาตัวอักษรคำว่า ${words[0][0].toUpperCase()}`);
@@ -364,7 +447,7 @@
   function activityElapsed(){return activityStartedAt?Math.max(0,performance.now()-activityStartedAt+(activityRound?activityRound.penalty||0:0)):0;}
   function fmtTime(ms){return `${(ms/1000).toFixed(1)}s`;}
   function activityCode(){return activity==='letter'?'L':activity==='race'?'R':activity==='obby'?'O':activity==='tower'?'T':'P';}
-  function parseActivity(d){const p=String(d&&d.hp||'').split(':');if(p[0]!=='S2'&&p[0]!=='S3')return null;return {mode:p[1],score:Number(p[2])||0,progress:Number(p[3])||0,time:Number(p[4])||0,seed:p.slice(5).join(':')};}
+  function parseActivity(d){const p=String(d&&d.hp||'').split(':');if(!['S2','S3','S4'].includes(p[0]))return null;return {version:p[0],mode:p[1],score:Number(p[2])||0,progress:Number(p[3])||0,time:Number(p[4])||0,seed:p.slice(5).join(':')};}
   function activityRows(){
     const mode=activityCode(),rows=[{uid:myUid,n:String(state.profileName||'ฉัน'),score:activityRound?activityRound.score:0,progress:activityRound?activityRound.progress:0,time:Math.round(activityElapsed()/100),mine:true}];
     for(const uid in peers){const p=parseActivity(peers[uid]);if(p&&p.mode===mode&&activityRound&&p.seed===activityRound.seed)rows.push({uid,n:String(peers[uid].n||'เพื่อน'),score:p.score,progress:p.progress,time:p.time});}
@@ -373,6 +456,7 @@
   function updateActivityHud(t,force=false){
     if(!ui.score||(!force&&t-(ui.score._at||0)<180))return;ui.score._at=t;
     if(activity==='plaza'||!activityRound){ui.challenge.textContent='Daily Sky Missions';ui.progress.textContent=`${state.skyDaily.missions.filter(m=>m.done).length}/3 · ${badgeText()}`;ui.score.classList.remove('on');return;}
+    if(activity==='classroom'){const rows=classRows(),left=Math.ceil(classTimeLeft()/1000);ui.challenge.textContent=`Classroom · ${CLASS_MODES[activityRound.mode].name}`;ui.progress.textContent=classFinished?`📊 สรุป ${rows.length} นักเรียน`:`⏱ ${left}s · 👥 ${rows.length}/${ROOM_MAX-1}`;ui.score.innerHTML=rows.map((r,i)=>`<span class="${r.mine?'me':''}"><b>${i+1}</b> ${esc(r.n)} <i>${r.score}/${r.progress}</i></span>`).join('');ui.score.classList.toggle('on',rows.length>0);return;}
     const rows=activityRows(),mine=rows.findIndex(r=>r.mine)+1;ui.score.innerHTML=rows.slice(0,6).map((r,i)=>`<span class="${r.mine?'me':''}"><b>${i+1}</b> ${esc(r.n)} <i>${activity==='letter'?r.progress+'/'+activityRound.word[0].length:activity==='race'?r.score+'/3':activity==='tower'?r.progress+'/'+TOWER_FLOORS:fmtTime(r.time*100)}</i></span>`).join('');ui.score.classList.add('on');
     if(activity==='letter'){
       const team=rows.reduce((n,r)=>n+Math.min(activityRound.word[0].length,r.progress),0),goal=activityRound.word[0].length*rows.length;ui.challenge.textContent=`Letter Hunt · ${activityRound.word[0].toUpperCase()}`;ui.progress.textContent=`TEAM ${team}/${goal} · ${activityRound.word[1]}`;
@@ -387,6 +471,7 @@
     let coins=0;if(reward)coins=activityReward(kind,kind==='letter'?60:kind==='race'?80:120,kind==='letter'?10:kind==='race'?15:20);else state.skyProgress.activities[kind]=(state.skyProgress.activities[kind]||0)+1;clearActiveRun();const dailyBonus=recordDailyActivity(kind,time,peerCount),meta=ACTIVITY_META[kind];if(kind!=='obby')showPop(`+${coins+dailyBonus} Coins`,`${meta.name} complete · ${fmtTime(time)}`);else showPop(`Sky Obby ${fmtTime(time)}`,dailyBonus?`Daily bonus +${dailyBonus} 🪙`:'Finish! เช็กอันดับด้านขวา');tone(784,.3,.09);setTimeout(()=>tone(1047,.25,.07),90);burst(player.pos.clone().add(new THREE.Vector3(0,1,0)),COLORS.yellow,20);updateHud();updateActivityHud(performance.now(),true);netSend(true);
   }
   function tickActivity(dt,t){
+    if(tickClassroom()){updateActivityHud(t);return;}
     if(activity==='plaza'||!activityRound||activityDone){updateActivityHud(t);return;}
     if(activity==='letter'){
       const expected=activityRound.word[0][activityRound.progress].toUpperCase();for(const o of letterTokens){if(!o.active)continue;o.g.rotation.y+=dt*1.5;o.g.position.y=1.2+Math.sin(t*.003+o.phase)*.22;if(player.pos.distanceTo(o.g.position)<1.5){if(o.ch===expected){o.active=false;o.g.visible=false;activityRound.progress++;activityRound.score++;showWord(o.ch,activityRound.word[1]);tone(880,.12,.07);saveActiveRun();if(activityRound.progress>=activityRound.word[0].length)completeActivity('letter');else showToast(`เก่งมาก! ตัวต่อไป: ${activityRound.word[0][activityRound.progress].toUpperCase()}`);netSend(true);}else{activityRound.mistakes++;saveActiveRun();showToast(`ตอนนี้ต้องหาตัว ${expected}`);tone(150,.1,.05);o.g.position.x*=-.98;o.g.position.z*=-.98;}break;}}
@@ -398,14 +483,14 @@
 
   function coopReady(){return typeof Online!=='undefined'&&Online.ready&&Online.db&&typeof NetRoom!=='undefined'&&typeof onlineKey==='function';}
   function setupOnline(){myUid=coopReady()?onlineKey():'local';if(!coopReady()){ui.online.textContent='โหมดฝึกเดี่ยว · ล็อกอินเพื่อพบเพื่อน';return;}room=NetRoom.create({map:'sky',roomMax:ROOM_MAX,sendMs:190,push:()=>netSend(true),onPeer,onPeerGone,onStatus:updateOnline,toast:html=>{const d=document.createElement('div');d.innerHTML=html;showToast(d.textContent||'อัปเดตสนาม');},roomNoun:'สวนลอยฟ้า',roomIcon:'☁️',roomFmt:i=>'สวนลอยฟ้า '+i});room.join();updateOnline();}
-  function netSend(force){if(!room||!player)return;const elapsed=Math.min(99999,Math.round(activityElapsed()/100));room.send({n:String(state.profileName||'นักสำรวจ').slice(0,40),x:+player.pos.x.toFixed(2),y:+player.pos.y.toFixed(2),z:+player.pos.z.toFixed(2),yaw:+player.group.rotation.y.toFixed(3),av:profileAvatar(),m:performance.now()<emoteUntil?1:0,w:sessionStars,hp:`S3:${activityCode()}:${activityRound?activityRound.score:0}:${activity==='obby'?currentCheckpoint:(activityRound?activityRound.progress:0)}:${elapsed}:${activityRound?activityRound.seed:'plaza'}`},!!force);}
-  function onPeer(uid,d){peers[uid]=d||{};if(!peerActors[uid])buildPeer(uid,d||{});const a=peerActors[uid];if(a){a.target.set(Number(d.x)||0,Number(d.y)||0,Number(d.z)||0);a.yaw=Number(d.yaw)||0;a.data=d||{};}considerJoinOffer(uid,d||{});updateOnline();updateActivityHud(performance.now(),true);}
-  function onPeerGone(uid){delete peers[uid];removePeer(uid);if(joinOffer&&joinOffer.uid===uid){joinOffer=null;for(const other in peers){considerJoinOffer(other,peers[other]);if(joinOffer)break;}renderDailyPanel();}updateOnline();updateActivityHud(performance.now(),true);}
+  function netSend(force){if(!room||!player)return;const elapsed=Math.min(99999,Math.round(activityElapsed()/100));let hp=`S3:${activityCode()}:${activityRound?activityRound.score:0}:${activity==='obby'?currentCheckpoint:(activityRound?activityRound.progress:0)}:${elapsed}:${activityRound?activityRound.seed:'plaza'}`;if(activity==='classroom'&&activityRound)hp=`S4:${activityRound.role==='host'?'H':'C'}:${activityRound.score||0}:${activityRound.progress||0}:${elapsed}:${activityRound.eventId}`;room.send({n:String(state.profileName||'นักสำรวจ').slice(0,40),x:+player.pos.x.toFixed(2),y:+player.pos.y.toFixed(2),z:+player.pos.z.toFixed(2),yaw:+player.group.rotation.y.toFixed(3),av:profileAvatar(),m:performance.now()<emoteUntil?1:0,w:sessionStars,cw:classWire||'',hp},!!force);}
+  function onPeer(uid,d){peers[uid]=d||{};if(!peerActors[uid])buildPeer(uid,d||{});const a=peerActors[uid];if(a){a.target.set(Number(d.x)||0,Number(d.y)||0,Number(d.z)||0);a.yaw=Number(d.yaw)||0;a.data=d||{};}considerJoinOffer(uid,d||{});considerClassOffer(uid,d||{});rememberClassPeer(uid,d||{});updateOnline();updateActivityHud(performance.now(),true);if(activity==='classroom')renderClassroom(true);}
+  function onPeerGone(uid){delete peers[uid];removePeer(uid);if(joinOffer&&joinOffer.uid===uid){joinOffer=null;for(const other in peers){considerJoinOffer(other,peers[other]);if(joinOffer)break;}renderDailyPanel();}if(classOffer&&classOffer.uid===uid){classOffer=null;for(const other in peers){considerClassOffer(other,peers[other]);if(classOffer)break;}updateClassButton();}updateOnline();updateActivityHud(performance.now(),true);if(activity==='classroom')renderClassroom(true);}
   function buildPeer(uid,d){const g=new THREE.Group(),fig=makeChibi(/^blk/.test(d.av||'')?d.av:'blk1');g.add(fig);const name=textSprite(String(d.n||'เพื่อน').slice(0,18),0xffffff,420,100);name.scale.set(3.4,.82,1);name.position.y=2.35;g.add(name);scene.add(g);return peerActors[uid]={group:g,fig,limbs:fig.userData.limbs,target:new THREE.Vector3(Number(d.x)||0,Number(d.y)||0,Number(d.z)||0),yaw:Number(d.yaw)||0,data:d,phase:Math.random()*TAU};}
   function removePeer(uid){const a=peerActors[uid];if(!a)return;scene.remove(a.group);disposeTree(a.group);delete peerActors[uid];}
   function tickOnline(t,dt){if(room){room.tick(t);if(t-lastNetAt>190){lastNetAt=t;netSend(false);}}if(t-lastPeerBudget>500){lastPeerBudget=t;drawPeerBudget();}for(const uid in peerActors){const a=peerActors[uid],before=a.group.position.clone();a.group.position.lerp(a.target,1-Math.pow(.0004,dt));a.group.rotation.y+=(a.yaw-a.group.rotation.y)*Math.min(1,dt*8);const moving=before.distanceTo(a.group.position)>.012,swing=moving?Math.sin(t*.013+a.phase)*.65:0;a.limbs.forEach((l,i)=>l.rotation.x+=(swing*(i%2?-1:1)-l.rotation.x)*Math.min(1,dt*12));if(Number(a.data.m)&&a.limbs[3])a.limbs[3].rotation.z=-1.6+Math.sin(t*.02)*.25;}}
   function drawPeerBudget(){if(typeof NetRoom==='undefined')return;NetRoom.drawBudget({peers,max:ROOM_MAX-1,slack:0,margin:.8,dist:(u)=>peerActors[u]?player.pos.distanceTo(peerActors[u].group.position):999,isDrawn:p=>{const u=Object.keys(peers).find(k=>peers[k]===p);return !!peerActors[u];},show:(u,p)=>buildPeer(u,p),hide:u=>removePeer(u)});}
-  function updateOnline(){if(!ui.online)return;if(!room){ui.online.textContent='โหมดฝึกเดี่ยว · ล็อกอินเพื่อพบเพื่อน';return;}ui.online.textContent=room.online?`ออนไลน์ ${Math.min(ROOM_MAX,room.count)}/${ROOM_MAX} คน · ${room.roomLabel}`:'กำลังเชื่อมต่อสวนออนไลน์…';}
+  function updateOnline(){if(!ui.online)return;updateClassButton();if(!room){ui.online.textContent='โหมดฝึกเดี่ยว · ล็อกอินเพื่อพบเพื่อน';return;}ui.online.textContent=room.online?`ออนไลน์ ${Math.min(ROOM_MAX,room.count)}/${ROOM_MAX} คน · ${room.roomLabel}`:'กำลังเชื่อมต่อสวนออนไลน์…';}
 
   function updateHud(){if(!root)return;ui.coins.textContent=fmt(state.coins||0);renderDailyPanel();if(activity==='plaza')ui.progress.textContent=`Daily ${state.skyDaily.missions.filter(m=>m.done).length}/3 · ⭐ ${sessionStars}/5`;else updateActivityHud(performance.now(),true);}
   function showWord(en,th){ui.word.querySelector('b').textContent=String(en).toUpperCase();ui.word.querySelector('span').textContent=`${th} · +20 Coins`;ui.word.classList.add('on');clearTimeout(ui.word._t);ui.word._t=setTimeout(()=>ui.word.classList.remove('on'),1700);}
@@ -418,8 +503,8 @@
   function disposeTree(obj){if(!obj)return;obj.traverse&&obj.traverse(o=>{if(o.userData&&o.userData.ownTexture)o.userData.ownTexture.dispose();if(o.geometry&&!o.geometry.userData.shared)o.geometry.dispose();if(o.material&&!Object.values(matCache).includes(o.material)){const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{if(m.map&&m.map!==scene.background)m.map.dispose();m.dispose();});}});}
 
   function loop(t){if(!running)return;raf=requestAnimationFrame(loop);const dt=Math.min(.034,lastFrame?(t-lastFrame)/1000:.016);lastFrame=t;updateWorld(dt,t);updatePlayer(dt,t);updatePet(dt,t);tickOnline(t,dt);cameraTick(dt);renderer.render(scene,camera);}
-  function start(){if(running)return;ensureState();fxLow=!!state.noAnim||(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4);if(typeof clearWarnToasts==='function')clearWarnToasts();if(typeof Music!=='undefined')Music.suspendBg();createDom();initThree();running=true;paused=false;activity='plaza';activityRound=null;activityStartedAt=0;activityDone=false;routeFinished=false;sessionCoins=0;sessionStars=0;joinOffer=null;setupOnline();updateHud();if(!restoreActiveRun())showToast('🎮 Daily Sky วันนี้: กด PLAY เลือก 4 กิจกรรม');lastFrame=0;raf=requestAnimationFrame(loop);}
-  function stop(){if(!running)return;if(activityRound&&!activityDone)saveActiveRun();running=false;paused=false;cancelAnimationFrame(raf);raf=0;listeners.splice(0).forEach(fn=>{try{fn();}catch(e){}});keys.clear();if(room){room.leave();room=null;}Object.keys(peerActors).forEach(removePeer);peers={};peerActors={};if(typeof speechSynthesis!=='undefined')try{speechSynthesis.cancel();}catch(e){};saveState();if(typeof authPushSave==='function')authPushSave(true);if(scene)disposeTree(scene);if(scene&&scene.background)scene.background.dispose();if(renderer){renderer.dispose();renderer.forceContextLoss&&renderer.forceContextLoss();renderer.setSize(2,2,false);}if(root)root.remove();root=canvas=renderer=scene=camera=clock=null;player=petComp=portal=gate=null;supports=[];moving=[];rotators=[];checkpoints=[];stars=[];effects=[];letterTokens=[];raceGates=[];towerFloors=[];towerQuestion=null;joinOffer=null;activity='plaza';activityRound=null;if(audioCtx){try{audioCtx.close();}catch(e){}audioCtx=null;}if(typeof Music!=='undefined')Music.resumeBg();if(typeof renderDashboard==='function')renderDashboard();if(typeof toast==='function')toast(`☁️ กลับจาก Vocab Sky Playground · เก็บ ${sessionStars} คำ · +${fmt(sessionCoins)} 🪙`);}
+  function start(){if(running)return;ensureState();fxLow=!!state.noAnim||(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4);if(typeof clearWarnToasts==='function')clearWarnToasts();if(typeof Music!=='undefined')Music.suspendBg();createDom();initThree();running=true;paused=false;activity='plaza';activityRound=null;activityStartedAt=0;activityDone=false;routeFinished=false;sessionCoins=0;sessionStars=0;joinOffer=null;classOffer=null;classWire='';classFinished=false;classRoster={};setupOnline();updateHud();if(!restoreActiveRun())showToast('🎮 PLAY 4 กิจกรรม · 🏫 CLASS สร้างกิจกรรมห้องเรียน');lastFrame=0;raf=requestAnimationFrame(loop);}
+  function stop(){if(!running)return;if(activityRound&&!activityDone)saveActiveRun();running=false;paused=false;cancelAnimationFrame(raf);raf=0;listeners.splice(0).forEach(fn=>{try{fn();}catch(e){}});keys.clear();if(room){room.leave();room=null;}Object.keys(peerActors).forEach(removePeer);peers={};peerActors={};if(typeof speechSynthesis!=='undefined')try{speechSynthesis.cancel();}catch(e){};saveState();if(typeof authPushSave==='function')authPushSave(true);if(scene)disposeTree(scene);if(scene&&scene.background)scene.background.dispose();if(renderer){renderer.dispose();renderer.forceContextLoss&&renderer.forceContextLoss();renderer.setSize(2,2,false);}if(root)root.remove();root=canvas=renderer=scene=camera=clock=null;player=petComp=portal=gate=null;supports=[];moving=[];rotators=[];checkpoints=[];stars=[];effects=[];letterTokens=[];raceGates=[];towerFloors=[];towerQuestion=null;joinOffer=null;classOffer=null;classWire='';classFinished=false;classRoster={};activity='plaza';activityRound=null;if(audioCtx){try{audioCtx.close();}catch(e){}audioCtx=null;}if(typeof Music!=='undefined')Music.resumeBg();if(typeof renderDashboard==='function')renderDashboard();if(typeof toast==='function')toast(`☁️ กลับจาก Vocab Sky Playground · เก็บ ${sessionStars} คำ · +${fmt(sessionCoins)} 🪙`);}
 
-  window.SkyPlayground3D={start,stop,_t:{get running(){return running},get player(){return player},get pet(){return petComp},get stars(){return stars},get checkpoints(){return checkpoints},get towerFloors(){return towerFloors},get towerQuestion(){return towerQuestion},get gate(){return gate},get room(){return room},get peers(){return peers},get camera(){return camera},get activity(){return activity},get activityRound(){return activityRound},get letters(){return letterTokens},get raceGates(){return raceGates},get joinOffer(){return joinOffer},get daily(){return state.skyDaily},perf:perfStats,resize,frame:(ms=16)=>{const t=performance.now();updateWorld(ms/1000,t);updatePlayer(ms/1000,t);updatePet(ms/1000,t);cameraTick(ms/1000);renderer.render(scene,camera);},fall:()=>{player.pos.y=FALL_Y-1;updatePlayer(.016,performance.now());},checkpoint:i=>activateCheckpoint(checkpoints[clamp(i,0,2)]),openGate:showGate,answer:w=>answerGate(w),answerTower,joinLive:joinLiveActivity,finish:finishRoute,collect:i=>stars[i]&&collectStar(stars[i]),startActivity,peer:onPeer,gone:onPeerGone}};
+  window.SkyPlayground3D={start,stop,_t:{get running(){return running},get player(){return player},get pet(){return petComp},get stars(){return stars},get checkpoints(){return checkpoints},get towerFloors(){return towerFloors},get towerQuestion(){return towerQuestion},get gate(){return gate},get room(){return room},get peers(){return peers},get camera(){return camera},get activity(){return activity},get activityRound(){return activityRound},get letters(){return letterTokens},get raceGates(){return raceGates},get joinOffer(){return joinOffer},get classOffer(){return classOffer},get classWire(){return classWire},get classFinished(){return classFinished},get daily(){return state.skyDaily},perf:perfStats,resize,frame:(ms=16)=>{const t=performance.now();updateWorld(ms/1000,t);updatePlayer(ms/1000,t);updatePet(ms/1000,t);cameraTick(ms/1000);renderer.render(scene,camera);},fall:()=>{player.pos.y=FALL_Y-1;updatePlayer(.016,performance.now());},checkpoint:i=>activateCheckpoint(checkpoints[clamp(i,0,2)]),openGate:showGate,answer:w=>answerGate(w),answerTower,openClass:openClassroom,startClass:startClassroomHost,joinClass:joinClassroom,answerClass:answerClassroom,finishClass:finishClassroom,endClass:endClassroom,joinLive:joinLiveActivity,finish:finishRoute,collect:i=>stars[i]&&collectStar(stars[i]),startActivity,peer:onPeer,gone:onPeerGone}};
 })();
