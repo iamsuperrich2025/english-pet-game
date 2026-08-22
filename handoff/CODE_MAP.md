@@ -791,7 +791,7 @@ openPhotoCrop:224
 
 ## js/shootword.js (1,086 บรรทัด · 0 รายการ)
 
-## js/skyplay3d.js (566 บรรทัด · 0 รายการ)
+## js/skyplay3d.js (572 บรรทัด · 0 รายการ)
 
 ## js/state.js (1,353 บรรทัด · 96 รายการ)
 ### 🗂️ สารบัญโซน js/state.js (Read/Edit เฉพาะช่วง)
@@ -1201,7 +1201,7 @@ vbRender:148 · vbCardHTML:194
 
 ## css/skyplay3d.css (26 บรรทัด · 18 selector)
 #sp-root:2,3 · #sp-canvas:4 · .sp-sky-glow:5 · .sp-top:6 · .sp-pill:7,8 · .sp-play:9
-.sp-daily:10 · .sp-hint:11 · .sp-word:12 · .sp-toast:13 · .sp-joy:14 · .sp-actions:15
+.sp-daily:10 · .sky-hint:11 · .sky-word:12 · .sp-toast:13 · .sp-joy:14 · .sp-actions:15
 .sp-activity:16 · .sp-gate:17 · .sp-tower:18 · .sp-classroom:19 · .sp-class-finish:20 · .sp-packbar:21
 
 ## css/style.css (2,430 บรรทัด · 581 selector)
