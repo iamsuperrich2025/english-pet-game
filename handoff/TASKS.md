@@ -40,9 +40,6 @@
 - syntax+Sky structural/Beta/seam+diff+production build/PWA validator ผ่าน; ไม่แตะ Rules/สิทธิ์/รางวัล/`css/petshopping3d.css`/งาน session อื่น (`tools/test_skyplay3d.js`)
 - **รอบ 1235 · Vocab Sky Playground Phase 5:** เพิ่ม Teacher Lesson Packs บันทึกในเครื่อง, playlist ความหมาย→ฟัง→สะกด, Ready Check และ host/student reconnect+late join โดยคง Phase 1–4/C4-S4 เดิม (`js/skyplay3d.js`, `css/skyplay3d.css`)
 - เพิ่มรายงานรายคน+รายคำ, CSV/พิมพ์/รายงานย้อนหลัง; ผู้ใช้อนุญาต `R5` answer telemetry แบบย่อผ่าน `cw` เดิม ≤60; ไม่เพิ่ม Firebase path/rules/เงิน และคง NetRoom sky 6 คน
-- 812×375 pack/ready/live/summary ไม่ scroll; browser QA ทุกค่าผ่านรวม save/load/host+student reconnect/disconnect/late join/teardown/Phase 4 compatibility/reportWordStats, console 0; structural+R5 split/merge+NetRoom 52/52+diff ผ่าน
-- Production build 8,395 ไฟล์ + PWA/cache/TWA validator ผ่าน; ไม่แตะ `css/petshopping3d.css`/งาน session อื่น · ค้างแค่ลิงก์เข้า Lobby ซึ่งผู้ใช้กำหนดให้ทำภายหลัง
-- **รอบ 1233 · Vocab Sky Playground Phase 4:** เพิ่ม Classroom Sky Events ให้ครูเลือกคำจาก vocab เดิม 3–5 คำ, 30/60/90 วินาที และโหมดความหมาย/ฟัง/สะกด พร้อมผลสรุปสด+ปิดรอบ (`js/skyplay3d.js`, `css/skyplay3d.css`)
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`
