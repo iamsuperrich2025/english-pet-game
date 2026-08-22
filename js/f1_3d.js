@@ -23,6 +23,7 @@ const REWARD       = 60;      // 🪙 ประกอบคำสำเร็จ
 const LETTER_COIN  = 2;       // 🪙 เก็บตัวอักษร 1 ตัว
 const COLLECT_R    = 8;       // รัศมีเก็บ (รถเร็ว ต้องกว้าง)
 const DONE_KEY     = 'f1Done';
+const RECENT_KEY   = 'f1Recent';
 const HALF_W       = 7.5;     // ครึ่งความกว้างแทร็ก (เมตร) — F1 จริง 12-15ม.
 const KERB_W       = 1.6;     // ความกว้างขอบ kerb
 const RUNOFF_W     = 9;       // runoff ยางมะตอยข้างแทร็ก (สไตล์ Bahrain)
@@ -3550,10 +3551,15 @@ function trackPointAhead(minM,maxM){
 }
 function pickWord(){
   if(!Array.isArray(state[DONE_KEY])) state[DONE_KEY]=[];
-  let pool=vocabForStudent().filter(([en])=>/^[a-z]{2,9}$/i.test(en))
-    .filter(([en])=>!state[DONE_KEY].includes(en.toLowerCase()));
-  if(!pool.length){ state[DONE_KEY]=[]; saveState(); pool=vocabForStudent().filter(([en])=>/^[a-z]{2,9}$/i.test(en)); }
-  const [en,th]=pool[Math.floor(Math.random()*pool.length)];
+  if(!Array.isArray(state[RECENT_KEY])) state[RECENT_KEY]=[];
+  const pool=f1VocabForStudent().filter(([en])=>/^[a-z]{2,9}$/i.test(en));
+  const picked=f1ChooseVocabWord(pool,state[DONE_KEY],state[RECENT_KEY],Math.random);
+  if(picked.resetDone) state[DONE_KEY]=[];
+  if(!picked.entry) return;
+  const [en,th]=picked.entry;
+  state[RECENT_KEY].push(en.toLowerCase());
+  state[RECENT_KEY]=state[RECENT_KEY].slice(-F1_RECENT_LIMIT);
+  saveState();
   word={en:en.toLowerCase(),th,got:[]};
   spawnLetters();
   renderWordHud();

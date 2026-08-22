@@ -63,6 +63,7 @@ async function sourceFiles() {
     // Required delivery files may be newly created in the current migration before the first commit.
     // Arbitrary untracked game assets remain excluded so local WIP cannot leak into a deploy.
     for (const rel of [...PUBLIC_ROOT_FILES, 'js/app-update.js', 'js/account-deletion.js', 'css/account-deletion.css',
+      'js/data/f1_vocab.js',
       'sound/racing/engineSound.mp3', ...F1_COCKPIT_ASSETS,
       'img/f1/peer_car_25d.webp', 'img/f1/sky_racing_1024.webp', 'js/fpsweapon.js', 'js/coinaward.js', 'js/assetaward.js', 'js/onlinecoinaward.js',
       'js/lettercannon.js', 'css/lettercannon.css', 'js/data/wear_extra.js',
