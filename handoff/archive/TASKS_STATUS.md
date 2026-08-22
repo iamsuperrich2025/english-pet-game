@@ -5359,3 +5359,11 @@
 - ล้อซ้าย/ขวาสุ่มความสูงเนินแยกกัน รถจึงเอียงตามด้านที่คร่อมขอบ; anti-roll จำกัด 16° และ spring return กันคว่ำ/ติดฉาก พร้อมส่ง roll ให้ multiplayer เห็นตรงกัน (`tools/test_f1_ramp_roll.js`)
 - **Scoreboard ไม่บังถนน:** เหลือแถบเดียวสูง 38px/34px บนมือถือ รายชื่อผู้เล่นทุกคนในรอบเลื่อนขวา→ซ้าย และคงปุ่มไปหาเพื่อน; Browser QA 1280×720/844×390 + console 0 error (`tools/test_f1_board_ticker.js`, `tools/test_f1_portal_visual.js`)
 - **รอบ 1221 · F1 มีคำศัพท์ครบ 500 คำทุกระดับ:** แยกคลังเฉพาะ F1 เป็น 5 band รวม 2,500 คำอังกฤษไม่ซ้ำ คง schema `[en,th]` และไม่แตะคลัง vocab หลัก; เปลี่ยนแหล่งจริงใน `f1_3d.js` จาก `vocabForStudent()` มาใช้ pool ตามระดับ (`js/data/f1_vocab.js`, `js/f1_3d.js`)
+
+
+## ⏬ ย้ายเมื่อ 2026-08-22 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1225 · เปิด Vocab World Racing ให้ทุกคน + ป้ายเชิญชวน:** ตัด `f1` ออกจาก Coming soon จึงไม่จำกัดเฉพาะบัญชีทดสอบ และยังใช้ค่าเข้า 500 เหรียญตามระบบเดิม (`js/ui.js`)
+- เพิ่มป้ายรถแข่งต่อคิวหลัง O-NET; ถ้า O-NET ไม่แสดงจะขึ้นป้ายรถทันที และเมื่อกดปิด/เข้าเกมจะจำทั้ง local + cloud ไม่แสดงซ้ำ (`js/onetpromo.js`, `css/onetpromo.css`); syntax/diff/web build ผ่าน
+- **รอบ 1224 · แก้ F1 เข้าเวลาเดียวกันแต่ไม่เห็นรถเพื่อน:** ต้นเหตุ `bodyRoll` ส่งเป็นเลขผ่าน `av→a` แต่ Firebase Rules กำหนด `a` เป็น string ทำให้ `/wroom/f1` ถูกปฏิเสธทั้ง packet แม้ `/winfo/f1` ยังมีชื่อผู้เล่น (`js/f1_3d.js`)
+- ห่อ roll เป็น wire `F1R:` ที่ผ่าน Rules เดิมและถอดค่าพร้อม anti-roll cap; เติม `room.tick(now)` ให้ retry/verify/ตามเพื่อน/กวาดผีทำงานครบ โดยไม่แก้ Rules; F1 regression 16/16 + build/PWA validator ผ่าน (`tools/test_f1_ramp_roll.js`)
