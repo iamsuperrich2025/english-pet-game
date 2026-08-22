@@ -8,6 +8,7 @@ const assert=require('assert');
 
 const root=path.resolve(__dirname,'..');
 const source=fs.readFileSync(path.join(root,'js','picmatch.js'),'utf8');
+const css=fs.readFileSync(path.join(root,'css','lobby.css'),'utf8');
 const data=new Map();
 const localStorage={
   getItem:key=>data.has(key)?data.get(key):null,
@@ -67,5 +68,8 @@ assert.match(source,/เปิดดูครบทุกชุดในหม�
 assert.doesNotMatch(source,/picmatch_category_cycles_v1|categoryCycle/,'ห้ามใช้วงรอบรายหมวดย่อยเดิม');
 assert.match(source,/id="pm-rule-ok">รับทราบ ✅<\/button>/);
 assert.doesNotMatch(source,/setTimeout\(newRound,\s*thunder/,'ห้ามวนเล่นหน้าเดิมอัตโนมัติ');
+assert.match(source,/file==='animal2\.png'\?' pm-sheet-card-three-rows'/,'สัตว์รวมมิตร ชุด 2 ต้องได้คลาสขยายเต็มแถว');
+assert.match(css,/\.pm-sheet-card-three-rows\{[^}]*grid-column:1\/-1/,'การ์ดต้องใช้พื้นที่เต็มแถว');
+assert.match(css,/\.pm-sheet-card-three-rows \.pm-set-links\{[^}]*grid-template-columns:repeat\(2,minmax\(0,220px\)\)/,'ปุ่ม 5 ชุดต้องเรียง 2 คอลัมน์เป็น 3 แถว');
 
 console.log('PASS picmatch major-group cycle: entering locks immediately, all subcategories count, groups stay independent');

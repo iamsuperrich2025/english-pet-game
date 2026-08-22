@@ -279,7 +279,8 @@
         const lock=pageLock(file,start);
         return `<button class="pm-set-link${lock.locked?' locked':''}" aria-disabled="${lock.locked?'true':'false'}" data-file="${esc(file)}" data-en="${esc(en)}" data-th="${esc(th)}" data-start="${start}">ชุด ${i+1} <small>${start+1}–${end}${lock.locked?` · 🔒 เหลืออีก ${lock.remaining} ชุด`:''}</small></button>`;
       }).join('');
-      return `<article class="pm-sheet-card"><div class="pm-sheet-title"><span>${gr.icon}</span><b>${esc(th)}</b><small>${esc(en)} · ${count} ภาพ</small></div><div class="pm-set-links">${links}</div></article>`;
+      const wideClass=file==='animal2.png'?' pm-sheet-card-three-rows':'';
+      return `<article class="pm-sheet-card${wideClass}"><div class="pm-sheet-title"><span>${gr.icon}</span><b>${esc(th)}</b><small>${esc(en)} · ${count} ภาพ</small></div><div class="pm-set-links">${links}</div></article>`;
     }).join('');
   }
   function showChooser(){

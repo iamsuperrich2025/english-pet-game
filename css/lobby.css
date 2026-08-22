@@ -6005,6 +6005,10 @@ html.theme-emerald .mkt-group-head,html.theme-plum .mkt-group-head{
 #screen-picmatch .pm-sheet-title b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 #screen-picmatch .pm-sheet-title small{font-size:10px;color:#8a789a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 #screen-picmatch .pm-set-links{display:flex;flex-wrap:wrap;gap:4px;align-content:start;}
+/* สัตว์รวมมิตร ชุด 2 มี 5 ชุดใน ป.6: ใช้พื้นที่ว่างทั้งแถวแล้วเรียง 2 คอลัมน์ × 3 แถว */
+#screen-picmatch .pm-sheet-card-three-rows{grid-column:1/-1;grid-template-columns:minmax(165px,.45fr) minmax(0,2.55fr);}
+#screen-picmatch .pm-sheet-card-three-rows .pm-set-links{display:grid;grid-template-columns:repeat(2,minmax(0,220px));gap:4px;}
+#screen-picmatch .pm-sheet-card-three-rows .pm-set-link{width:100%;min-width:0;}
 #screen-picmatch .pm-set-link{border:0;background:#eaf5ff;color:#2267a7;border-radius:8px;padding:4px 7px;
   font:700 11px/1.15 inherit;text-decoration:underline;text-underline-offset:2px;cursor:pointer;}
 #screen-picmatch .pm-set-link small{font-size:9px;color:#6e84a0;text-decoration:none;}
