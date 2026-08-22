@@ -1,7 +1,7 @@
 "use strict";
 /* ============================================================
    เกมจับคู่คำศัพท์ + หมวดคำศัพท์ & แบบทดสอบ
-   รางวัล: จับคู่ถูก +10🪙 +2RP +5EXP · เคลียร์รอบ +20🪙 +5RP
+   รางวัล: จับคู่ถูก +20🪙 +2RP +5EXP · เคลียร์รอบ +40🪙 +5RP
    สอบผ่านครั้งแรก +รางวัลหมวด +100RP · ผ่านซ้ำ +20🪙 +30RP · ไม่ผ่าน +5RP
    ============================================================ */
 const game = {
@@ -20,15 +20,18 @@ const game = {
   replayStreak:0,               // 🔥 กด "เล่นต่ออีกรอบ" ติดกันกี่รอบ (ครบ 3 รอบติด = โบนัส) · รีเซ็ตเมื่อเข้าเกมใหม่จากเมนู
   _viaReplay:false,             // ธง: startGame รอบนี้มาจากปุ่มเล่นต่อ (ไม่รีเซ็ตสตรีค)
 };
+const MATCH_COIN_MULTIPLIER = 2;  // ผู้ใช้สั่ง: เหรียญทุกทางของเกมจับคู่ x2
+const MATCH_COIN_PER_PAIR = 10 * MATCH_COIN_MULTIPLIER;
+const MATCH_ROUND_COIN_BONUS = 20 * MATCH_COIN_MULTIPLIER;
 const REPLAY_BONUS_EVERY = 3;   // เล่นต่อครบทุกกี่รอบติด = จ่ายโบนัส (3,6,9,...)
 // 🔥 สตรีคยิ่งยาว โบนัสยิ่งเยอะ (ไล่ระดับ): 3 รอบ +50 · 6 รอบ +100 · 9 รอบ +200 · 15 รอบขึ้นไป +300 (คงที่)
-const REPLAY_BONUS_TIERS = [[15,300],[9,200],[6,100],[3,50]];   // [ครบกี่รอบติด, โบนัส] — เลือกจากมากไปน้อย
+const REPLAY_BONUS_TIERS = [[15,300],[9,200],[6,100],[3,50]].map(([n, coins])=>[n, coins * MATCH_COIN_MULTIPLIER]);   // [ครบกี่รอบติด, โบนัส] — เลือกจากมากไปน้อย
 function replayBonusFor(streak){                        // โบนัสที่จะได้เมื่อสตรีคถึงค่านี้ (0=ยังไม่ถึงเกณฑ์)
   const t = REPLAY_BONUS_TIERS.find(x => streak >= x[0]);
   return t ? t[1] : 0;
 }
 
-/* 🎉 หลักเหรียญที่จะเด้งฉลอง "ว้าว! ครั้งนี้ X 🪙 แล้ว!" (ฐาน 10🪙/คู่ · 60/รอบ) */
+/* 🎉 หลักเหรียญที่จะเด้งฉลอง "ว้าว! ครั้งนี้ X 🪙 แล้ว!" (ฐาน 20🪙/คู่ · 120/รอบ) */
 const SESSION_MILESTONES = [100, 250, 500, 1000, 2000, 3000, 5000, 8000, 10000];
 
 /* 🪙 อัปเดตตัวเลข "เล่นครั้งนี้เก็บไปแล้ว X" ในป้ายล่าง + เด้ง + ฉลองหลักเหรียญ/ทำลายสถิติ */
@@ -846,9 +849,9 @@ function checkMatch(){
 
     // ---- คำนวณรางวัล + ความสามารถพิเศษ ----
     const p = activePet();
-    let coins = 10, exp = 5, rp = 2, notes = [];
+    let coins = MATCH_COIN_PER_PAIR, exp = 5, rp = 2, notes = [];
     if(p && p.type==='dragon' && abilityOn(p) && game.combo >= 3){ coins *= 2; notes.push('🔥ไฟลุก x2'); }
-    if(state.phone && !state.netCut){ coins += PHONE_BONUS; notes.push(`📱 มือถือ +${PHONE_BONUS}`); }   // โบนัสมือถือ (ระงับตอนถูกตัดเน็ต)
+    if(state.phone && !state.netCut){ const phoneCoins = PHONE_BONUS * MATCH_COIN_MULTIPLIER; coins += phoneCoins; notes.push(`📱 มือถือ +${phoneCoins}`); }   // โบนัสมือถือ (ระงับตอนถูกตัดเน็ต)
     if(!p) exp = 0;                                   // ยังไม่มีสัตว์ → ไม่มี EXP แต่ได้เหรียญ+RP เต็มๆ
     else if(p.sick){ exp = 0; notes.push('🤒 ป่วยอยู่ ไม่ได้ EXP'); }
     else if(p.shape === 'strong'){ exp += SHAPE_EXP_BONUS; notes.push(`💪 ล่ำกำยำ +${SHAPE_EXP_BONUS} EXP`); }   // ข้อ 5.2: กินดีร่างล่ำ = โตไวขึ้น
@@ -887,8 +890,8 @@ function checkMatch(){
 
     if(game.matched === 4){
       clearInterval(game.timerId);
-      addCoins(20);   // โบนัสเคลียร์รอบ
-      addSessionCoins(20);
+      addCoins(MATCH_ROUND_COIN_BONUS);   // โบนัสเคลียร์รอบ
+      addSessionCoins(MATCH_ROUND_COIN_BONUS);
       addRP(5);
       saveState();
       document.getElementById('game-coin-count').textContent = fmtNum(state.coins);
@@ -902,7 +905,7 @@ function checkMatch(){
       }
       setTimeout(()=>{
         sfx.levelup();
-        floatFx('🎉 เก่งมาก! โบนัส +20 🪙 +5 RP', '#5fc46a');
+        floatFx(`🎉 เก่งมาก! โบนัส +${MATCH_ROUND_COIN_BONUS} 🪙 +5 RP`, '#5fc46a');
       }, thunder ? 900 : 400);
       setTimeout(newRound, thunder ? 2100 : 1600);
     }
