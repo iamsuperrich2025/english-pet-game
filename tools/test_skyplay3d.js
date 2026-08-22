@@ -13,8 +13,10 @@ ok(/map:'sky',roomMax:ROOM_MAX/.test(sky)&&/const TAU=.*ROOM_MAX=6/.test(sky),'N
 const petBuild=sky.slice(sky.indexOf('function buildPet'),sky.indexOf('function bindInput'));
 ok(/activePet/.test(sky)&&/petStage/.test(sky)&&/model=makePetChibi\(p\.type\)/.test(petBuild),'pet reuses active Lobby pet identity and growth stage in the procedural model');
 ok(/function makePetChibi/.test(sky)&&/petStyle='soft-cuboid-chibi-3d'/.test(sky)&&!/new THREE\.Sprite/.test(petBuild),'dog, cat and dragon use procedural Soft Cuboid Chibi 3D instead of a billboard');
+ok(/type==='dragon'\?fur:dark/.test(sky)&&/new THREE\.InstancedMesh\(new THREE\.ConeGeometry\(\.11,\.25,3\),mat\(0x9cefff\),4\)/.test(sky)&&/dragon-tail-fins/.test(sky),'dragon tail is blue with four efficient triangular dorsal fins');
 ok(/player-hand-\$\{i\?'right':'left'\}/.test(sky)&&/parts=\{legs:\[\],arms:\[\],hands:\[\]\}/.test(sky),'player model has two explicit complete arms and hands');
 ok(/swingSign/.test(sky)&&/rightArm\.userData\.restZ/.test(sky),'local and peer limb animation preserves opposite gait and restores the waving arm');
+ok(/function bindInput/.test(sky)&&/const j=ui\.joy,placeJoy=/.test(sky)&&/e\.pointerType!=='mouse'&&e\.clientX<=rr\.left\+rr\.width\*\.5/.test(sky)&&/addListener\(root,'pointerdown'.*true\)/.test(sky)&&/document\.hidden.*joy\.id=null/.test(sky),'touching free space anywhere in the left half starts a floating joystick and visibility loss releases it');
 ok(/goal\.clone\(\)\.sub\(petComp\.group\.position\)/.test(sky),'pet follow teleports to the absolute goal without per-frame particle leaks');
 ok(/playerStyle='soft-cuboid-chibi-3d'/.test(sky),'visible players use Soft Cuboid Chibi 3D');
 ok(/speakWord/.test(sky)&&/vocabForStudent/.test(sky)&&/questEvent\('word3d'/.test(sky),'vocabulary reuses data, pronunciation and shared quest event');

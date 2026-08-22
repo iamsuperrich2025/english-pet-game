@@ -28,10 +28,10 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (22 ส.ค.) — อ่านก่อน
-- **รอบ 1237 · Vocab Sky Soft Cuboid Chibi 3D:** ต้นเหตุวงรีกลางจอคือ selector `.sp-hint` ชน `css/lobby.css` จนได้ทั้ง top+bottom; แยก namespace เป็น `.sky-hint`/`.sky-exit`/`.sky-word` แล้ว hint จริงสูง 18px ไม่มี capsule (`css/skyplay3d.css`)
-- เปลี่ยนคนเป็น Soft Cuboid Chibi 3D ที่มีแขน/มือครบและท่าเดิน/โบกกลับท่าพัก; เปลี่ยน cat/dog/dragon จาก Sprite เป็น procedural 3D ทุกมุมพร้อมขา/หาง/ปีกและเงาสัมผัสพื้น โดยคง control/reward/NetRoom เดิม (`js/skyplay3d.js`)
-- QA หน้า/ข้าง/หลัง + 812×375 ผ่าน, no-scroll, console 0, build/PWA ผ่าน; 6 คน = 150 calls/8,754 triangles; structural+Sky Beta+seam+NetRoom 52/52 ผ่าน (`tools/test_skyplay3d.js`)
-- Rules Private Beta รอบ 1236 publish แล้ว 833 บรรทัด; รอบนี้ไม่แตะ Firebase Rules/สิทธิ์/เหรียญ/`css/petshopping3d.css`/งาน session อื่น และ ship เฉพาะ 4 ไฟล์ใน `handoff/SHIP.txt`
+- **รอบ 1238 · Vocab Sky Dragon Tail + Floating Joystick:** เปลี่ยนหางมังกรจากเหลืองเป็นฟ้าและเพิ่มครีบสามเหลี่ยม 4 ชิ้นเรียงตลอดสันหางด้วย `InstancedMesh` 1 draw call (`js/skyplay3d.js`)
+- เปลี่ยน joystick มือถือเป็นแบบ floating: แตะพื้นที่ว่างตรงไหนก็ได้ในครึ่งจอซ้ายแล้ววงย้ายศูนย์ไปใต้ปลายนิ้ว; ไม่แย่งปุ่ม/HUD/กล้องขวา, รองรับปล่อยนิ้ว/สลับแอปโดยไม่ค้าง
+- Chromium touch QA 812×375 ย้ายศูนย์ `(50,327)` → `(250,260)`, ตัวละครเคลื่อนจริงและ knob คืนศูนย์; ครีบจริง 4 instance สี `#9cefff`, 6 คน 145 calls/8,640 triangles, console 0
+- syntax+Sky structural/Beta/seam+diff+production build/PWA validator ผ่าน; ไม่แตะ Rules/สิทธิ์/รางวัล/`css/petshopping3d.css`/งาน session อื่น (`tools/test_skyplay3d.js`)
 - **รอบ 1235 · Vocab Sky Playground Phase 5:** เพิ่ม Teacher Lesson Packs บันทึกในเครื่อง, playlist ความหมาย→ฟัง→สะกด, Ready Check และ host/student reconnect+late join โดยคง Phase 1–4/C4-S4 เดิม (`js/skyplay3d.js`, `css/skyplay3d.css`)
 - เพิ่มรายงานรายคน+รายคำ, CSV/พิมพ์/รายงานย้อนหลัง; ผู้ใช้อนุญาต `R5` answer telemetry แบบย่อผ่าน `cw` เดิม ≤60; ไม่เพิ่ม Firebase path/rules/เงิน และคง NetRoom sky 6 คน
 - 812×375 pack/ready/live/summary ไม่ scroll; browser QA ทุกค่าผ่านรวม save/load/host+student reconnect/disconnect/late join/teardown/Phase 4 compatibility/reportWordStats, console 0; structural+R5 split/merge+NetRoom 52/52+diff ผ่าน
