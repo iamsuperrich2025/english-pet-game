@@ -40,9 +40,6 @@
 - syntax+catalog/price+dress/integration+decode alpha+visual QA+production build 9,092 ไฟล์+source/dist SHA-256 ผ่าน; `test_petshopping3d.js` baseline เดิมยัง fail GPS route (ไม่ได้แตะไฟล์ระบบนั้น); PNG ต้นฉบับสำรองนอก repo
 - **รอบ 1256 · แก้คนหายบนอุปกรณ์จริง + ปรับหางสัตว์ Sky:** ผู้ใช้ยืนยันภาพคนกลับมาแล้ว; ต้นตอคือการ sample animation atlas 1536px โดยตรงไม่แสดงบน renderer บางเครื่อง (`js/skyplay3d.js`)
 - renderer v4 โหลด atlas นิ่งเดิมก่อนเสมอ แล้ว crop animation ลง CanvasTexture 192px; decode/ขนาดผิดยังเห็นคนแบบนิ่ง คง picker, `state.skyCharacter`, network `sc`, local/peer และ `state.noAnim`
-- หมาเปลี่ยนเป็นหางปุยงอน, แมวหางโค้งยกทรง S, มังกรหางโค้งเรียวมีครีบ; ทุกแบบ segmented+tapered ไม่มีแท่งตรงทรงเดียว
-- syntax+runtime success/failure fallback+8 ทิศ/idle/walk/local-peer+tail regression ผ่าน; production build 8,406 ไฟล์/PWA+source-dist hash ผ่าน และไม่แตะ `css/petshopping3d.css`; in-app browser ถูก Windows ACL บล็อก
-- **รอบ 1255 · Vocab Sky มี idle/walk animation ครบ 6 ตัว:** เพิ่ม lossless WebP แยกตัว 6 ไฟล์ ขนาด 1536×1536 = 8 ทิศ × idle 4 + walk 4 เฟรม; คงหน้าตา/ชุด/สี/สัดส่วน/alpha จริงและฐานเท้าเดิม
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`
