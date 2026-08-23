@@ -5541,3 +5541,11 @@
 - หมาเปลี่ยนเป็นหางปุยงอน, แมวหางโค้งยกทรง S, มังกรหางโค้งเรียวมีครีบ; ทุกแบบ segmented+tapered ไม่มีแท่งตรงทรงเดียว
 - syntax+runtime success/failure fallback+8 ทิศ/idle/walk/local-peer+tail regression ผ่าน; production build 8,406 ไฟล์/PWA+source-dist hash ผ่าน และไม่แตะ `css/petshopping3d.css`; in-app browser ถูก Windows ACL บล็อก
 - **รอบ 1255 · Vocab Sky มี idle/walk animation ครบ 6 ตัว:** เพิ่ม lossless WebP แยกตัว 6 ไฟล์ ขนาด 1536×1536 = 8 ทิศ × idle 4 + walk 4 เฟรม; คงหน้าตา/ชุด/สี/สัดส่วน/alpha จริงและฐานเท้าเดิม
+
+
+## ⏬ ย้ายเมื่อ 2026-08-23 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- `js/images.js` เลือก `img/animal/*.webp`/`img/AnimalWearItems/*.webp` พร้อม fallback PNG และ cache version; build รวม runtime catalog ใหม่ก่อน commit (`tools/build_web.mjs`)
+- syntax+catalog/price+dress/integration+decode alpha+visual QA+production build 9,092 ไฟล์+source/dist SHA-256 ผ่าน; `test_petshopping3d.js` baseline เดิมยัง fail GPS route (ไม่ได้แตะไฟล์ระบบนั้น); PNG ต้นฉบับสำรองนอก repo
+- **รอบ 1256 · แก้คนหายบนอุปกรณ์จริง + ปรับหางสัตว์ Sky:** ผู้ใช้ยืนยันภาพคนกลับมาแล้ว; ต้นตอคือการ sample animation atlas 1536px โดยตรงไม่แสดงบน renderer บางเครื่อง (`js/skyplay3d.js`)
+- renderer v4 โหลด atlas นิ่งเดิมก่อนเสมอ แล้ว crop animation ลง CanvasTexture 192px; decode/ขนาดผิดยังเห็นคนแบบนิ่ง คง picker, `state.skyCharacter`, network `sc`, local/peer และ `state.noAnim`

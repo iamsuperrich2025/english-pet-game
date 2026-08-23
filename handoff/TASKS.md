@@ -40,10 +40,6 @@
 - syntax+Sky/Beta regression+production build 9,092 ไฟล์+PWA manifest/invariants ผ่าน; browser visual QA ถูก Windows ACL บล็อกตามข้อจำกัดเดิม
 - **รอบ 1257 · เพิ่มสัตว์ใหม่ 6 ชนิดและใช้ราคาตามภาพแนบ:** ช้าง 2,000,000 · เมียร์แคต 70,000 · T. rex 80,000 · ทูแคน 480,000 · ควาย 100,000 · กวางซีกา 70,000 (`js/data/pets.js`)
 - ตรวจชื่อ–ภาพ 691 PNG เดิมครบ; แก้ชื่อชั่วคราว/UUID เป็น contract กลาง แล้วแปลงเป็น WebP 686 ใบ (สัตว์ 153 + ชุดเต็มตัว 504 + catalog/reference 29), 937.8→100.3MB เหลือ 10.7%; alpha ครบและด้านยาว ≤768px
-- `js/images.js` เลือก `img/animal/*.webp`/`img/AnimalWearItems/*.webp` พร้อม fallback PNG และ cache version; build รวม runtime catalog ใหม่ก่อน commit (`tools/build_web.mjs`)
-- syntax+catalog/price+dress/integration+decode alpha+visual QA+production build 9,092 ไฟล์+source/dist SHA-256 ผ่าน; `test_petshopping3d.js` baseline เดิมยัง fail GPS route (ไม่ได้แตะไฟล์ระบบนั้น); PNG ต้นฉบับสำรองนอก repo
-- **รอบ 1256 · แก้คนหายบนอุปกรณ์จริง + ปรับหางสัตว์ Sky:** ผู้ใช้ยืนยันภาพคนกลับมาแล้ว; ต้นตอคือการ sample animation atlas 1536px โดยตรงไม่แสดงบน renderer บางเครื่อง (`js/skyplay3d.js`)
-- renderer v4 โหลด atlas นิ่งเดิมก่อนเสมอ แล้ว crop animation ลง CanvasTexture 192px; decode/ขนาดผิดยังเห็นคนแบบนิ่ง คง picker, `state.skyCharacter`, network `sc`, local/peer และ `state.noAnim`
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`
