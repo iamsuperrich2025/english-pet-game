@@ -5527,3 +5527,10 @@
 - ทั้งสามคง alpha จริง อีก 7 ช่องไม่เปลี่ยน สูง 360px/เท้า y=374 และความกว้างตรงเฟรม up-right คู่กัน; visual QA แยกตัวที่ 812×375 ครบหน้า/ซ้าย/up-left/หลัง/ขวา
 - เพิ่ม regression ตรวจ left-face cue กัน up-left ซ้ำ back; Sky renderer+alpha/atlas+production build 8,401 ไฟล์/PWA+source-dist hash ผ่าน และ `css/petshopping3d.css` hash เดิม
 - **รอบ 1252 · สัตว์รวมมิตร ชุด 2 แสดงครบ 3 แถว:** ขยายเฉพาะการ์ด `animal2.png` เต็มแถว และจัดปุ่ม 5 ชุดเป็น 2 คอลัมน์ × 3 แถว; การ์ดอื่นคง layout เดิม (`js/picmatch.js`, `css/lobby.css`)
+
+
+## ⏬ ย้ายเมื่อ 2026-08-23 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- renderer v3 เล่น idle 4 fps / walk 8 fps, รองรับ WebGL1 NPOT + `state.noAnim`; character picker, `state.skyCharacter`, network `sc`, local/online peer และ fallback ฮู้ดแดงคง contract เดิม (`js/skyplay3d.js`)
+- visual QA แยกตัวที่ 812×375 ครบทั้ง 8 ทิศและวงรอบหน้า/ข้าง; pixel regression ตรวจ 64 เฟรมต่อตัว, silhouette ตรง source, motion จริง และ foot baseline 187/192
+- syntax+runtime UV/local-peer+source/animation atlas QA+production build 8,406 ไฟล์/PWA+source-dist hash ผ่าน; `css/petshopping3d.css` hash ก่อน–หลังตรงกัน ไม่ได้แตะ
