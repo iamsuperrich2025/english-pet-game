@@ -27,7 +27,11 @@
 #### 🏍️ งานโลกใหม่: ขับมอเตอร์ไซค์/รถยนต์ (30 ก.ค.)
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
-### 📌 สรุปสถานะล่าสุด (22 ส.ค.) — อ่านก่อน
+### 📌 สรุปสถานะล่าสุด (23 ส.ค.) — อ่านก่อน
+- **รอบ 1260 · แปลงภาพ baby normal 9 ชนิดเป็น Soft Cuboid Chibi 3D:** ควาย แมว หมา มังกร ช้าง เมียร์แคต กวางซีกา ทูแคน และ T. rex ใช้ชื่อเดิมใน `img/animal/*_baby_normal.webp`
+- คง canvas 768×768/lossless WebP RGBA/anchor+ฐานเท้าเดิม; Alpha จริง 0–255, silhouette เดียว, มุมโปร่งใส และไม่มีพื้น เงา ข้อความ หรือขอบสี; ไม่แตะ `css/petshopping3d.css`
+- visual QA ทีละสัตว์บน 812×375 พื้นสว่าง/มืด + source↔dist SHA-256 ทั้ง 9 ผ่าน; runtime browser ถูก Windows ACL บล็อกตามข้อจำกัดเดิม
+- pet asset catalog+integration ผ่าน; `test_petshopping3d.js` ยัง fail baseline GPS route เดิม; production build 9,098 ไฟล์และ PWA/cache/TWA validator ผ่าน
 - **รอบ 1259 · แก้ภาพตัวละคร Sky ไม่ขึ้นด้วย thumbnail เบา:** ต้นตอหน้าเลือกดึง atlas 6 ใบรวม 3.29MB; สร้าง WebP 174×348 q80 โปร่งใส 6 ใบรวม 80,302B เบาลง 41.9× แต่คมถึง 3× ของขนาดแสดงจริง (img/characters/*_thumb.webp)
 - picker ก่อนเข้าและ picker ในโลกใช้ thumb แบบ contain รักษาสัดส่วน; atlas นิ่ง/animation ตัวเต็มและ renderer/network เดิมไม่เปลี่ยน (js/skyplay3d.js, js/ui.js, css/skyplay3d.css)
 - syntax+Sky/Beta regression+asset dimension/alpha/silhouette/budget QA+production build 9,098 ไฟล์+PWA manifest+source/dist thumb SHA-256 ผ่าน; browser visual QA ยังถูก Windows ACL บล็อก
