@@ -7765,10 +7765,42 @@ function railWorldClick(w){
   openWorldEntryDialog(w);
 }
 
+/* ============================================================
+   ☁️🧸 รอบ 1258 — เลือกตัวละคร Sky ก่อนเข้าโลก
+   ============================================================ */
+let skyEntryDialogLoading = false;
+function skyEntryCatalog(){
+  const api = window.SkyPlayground3D;
+  return api && api._t && Array.isArray(api._t.characters) ? api._t.characters : [];
+}
+function skyEntryPickerHTML(w, characters){
+  if(!w || w.mode !== 'sky' || !characters.length) return '';
+  const selected = characters.find(c=>c.id === state.skyCharacter) || characters[0];
+  return `<section class="sky-entry-character-picker" aria-label="Choose a character before entering Vocab Sky Playground">
+    <div class="sky-entry-character-head"><b>🧸 เลือกตัวละครก่อนเข้า</b><span id="we-sky-character-name">${escapeHTML(selected.name)}</span></div>
+    <div class="sky-entry-character-grid">${characters.map(c=>`<button type="button" data-sky-entry-character="${escapeHTML(c.id)}" class="${c.id===selected.id?'selected':''}" aria-pressed="${c.id===selected.id}"><span style="--sky-entry-atlas:url('${escapeHTML(c.atlas)}')"></span><b>${escapeHTML(c.name)}</b></button>`).join('')}</div>
+  </section>`;
+}
+
 /* 🎫→💰 รอบ 823: หน้าจ่ายค่าเข้าโลก 3D กลาง — แทนที่การ์ดตั๋วแยก 8 ใบเดิม
    ราคาวันนี้ (worldEntryInfo) + ปุ่มชวนเพื่อนเล่นด้วยกัน (openTinvPicker) รวมอยู่ในหน้าเดียว */
 function openWorldEntryDialog(w){
   if(w && w.mode === 'sky' && !ensureSkyBetaAccess()) return;
+  const isSky = !!(w && w.mode === 'sky');
+  const skyCharacters = isSky ? skyEntryCatalog() : [];
+  if(isSky && !skyCharacters.length){
+    if(skyEntryDialogLoading) return;
+    skyEntryDialogLoading = true;
+    toast('☁️ กำลังเตรียมตัวเลือกตัวละคร...');
+    loadSkyPlayground3d().then(()=>{
+      skyEntryDialogLoading = false;
+      openWorldEntryDialog(w);
+    }).catch(err=>{
+      skyEntryDialogLoading = false;
+      world3DFail('ตัวเลือกตัวละคร Sky Playground',err);
+    });
+    return;
+  }
   const info = worldEntryInfo(w.mode);
   const unlocked = !!state[w.ticketKey];
   // 🤖🚗 รอบ 945: ส่วนลดเจ้าของหุ่น/รถทบกับส่วนลดวันหยุดได้ — โชว์ทุกเหตุผลที่ลด ห้ามลดเงียบๆ
@@ -7783,22 +7815,46 @@ function openWorldEntryDialog(w){
     : (w.mode === 'mecha' && !(state.robots && state.robots.length))
       ? `<p style="font-size:12px;color:#8a7a9a;margin:4px 0">🤖 ยังไม่มีหุ่นของตัวเอง — รอบนี้ระบบให้ยืมหุ่น ${escapeHTML(ROBOTS[0].name)} ฟรี 1 ตัว (ซื้อหุ่นของตัวเองได้ที่ตลาด)</p>`
       : '';
+  const skyPicker = skyEntryPickerHTML(w, skyCharacters);
+  const selectedSky = isSky ? (skyCharacters.find(c=>c.id === state.skyCharacter) || skyCharacters[0]) : null;
+  const enterLabel = selectedSky
+    ? `${info.free?'🚪 เข้าเป็น':'🪙 จ่ายแล้วเข้าเป็น'} ${escapeHTML(selectedSky.name)}`
+    : (info.free?'🚪 เข้าเลย!':'🪙 จ่ายแล้วเข้าเลย!');
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay';
-  overlay.innerHTML = `<div class="levelup-box" style="max-width:340px;padding:20px 24px">
+  overlay.innerHTML = `<div class="levelup-box${isSky?' sky-entry-box':''}" style="${isSky?'max-width:780px;padding:12px 14px':'max-width:340px;padding:20px 24px'}">
     <h2 style="font-size:18px">${w.ico} เข้าโลก${w.label}</h2>
     ${feeHTML}
     ${loanNote}
     ${tinvNoticeHTML(w.mode)}
-    <button class="big-btn green home-btn" id="we-enter" style="width:100%;margin:4px 0">${info.free?'🚪 เข้าเลย!':'🪙 จ่ายแล้วเข้าเลย!'}</button>
-    <button class="big-btn blue home-btn" id="we-invite" style="width:100%;margin:4px 0">📨 ชวนเพื่อนเล่นด้วยกัน (เงินคืนคนละ 🪙${fmtNum(TINV_CASHBACK)})</button>
-    <button class="big-btn" id="we-cancel" style="width:100%;font-size:14px;padding:8px;margin:4px 0 0">ยกเลิก</button>
+    ${skyPicker}
+    <div class="${isSky?'sky-entry-actions':''}">
+      <button class="big-btn green home-btn" id="we-enter" style="width:100%;margin:4px 0">${enterLabel}</button>
+      <button class="big-btn blue home-btn" id="we-invite" style="width:100%;margin:4px 0">📨 ชวนเพื่อนเล่นด้วยกัน (เงินคืนคนละ 🪙${fmtNum(TINV_CASHBACK)})</button>
+      <button class="big-btn" id="we-cancel" style="width:100%;font-size:14px;padding:8px;margin:4px 0 0">ยกเลิก</button>
+    </div>
   </div>`;
   document.body.appendChild(overlay);
   overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.remove(); });
   overlay.querySelector('#we-cancel').addEventListener('click', ()=>overlay.remove());
   overlay.querySelector('#we-invite').addEventListener('click', ()=>openTinvPicker(w.mode));
   const enterBtn = overlay.querySelector('#we-enter');
+  if(isSky){
+    const nameEl = overlay.querySelector('#we-sky-character-name');
+    overlay.querySelectorAll('[data-sky-entry-character]').forEach(button=>button.addEventListener('click',()=>{
+      const character = skyCharacters.find(c=>c.id === button.dataset.skyEntryCharacter) || skyCharacters[0];
+      state.skyCharacter = character.id;
+      saveState();
+      if(typeof authPushSave === 'function') authPushSave(false);
+      overlay.querySelectorAll('[data-sky-entry-character]').forEach(item=>{
+        const active = item.dataset.skyEntryCharacter === character.id;
+        item.classList.toggle('selected',active);
+        item.setAttribute('aria-pressed',String(active));
+      });
+      if(nameEl) nameEl.textContent = character.name;
+      enterBtn.textContent = `${info.free?'🚪 เข้าเป็น':'🪙 จ่ายแล้วเข้าเป็น'} ${character.name}`;
+    }));
+  }
   enterBtn.addEventListener('click', ()=>startWorldEntry(w, info, unlocked, overlay, enterBtn));
 }
 

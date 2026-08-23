@@ -28,6 +28,9 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (22 ส.ค.) — อ่านก่อน
+- **รอบ 1258 · Sky Playground เลือกตัวละครก่อนเข้าได้แล้ว:** dialog จ่าย/เข้าโลกแสดงตัวละคร 6 แบบจาก catalog เดิม เลือกแล้วไฮไลต์ เปลี่ยนข้อความปุ่มเข้า และบันทึก local/cloud ก่อนจ่าย (js/ui.js, css/skyplay3d.css)
+- คง picker ในโลกและ renderer/network contract เดิม; layout 6 คอลัมน์สำหรับ 812×375 + 3 คอลัมน์แนวตั้ง ไม่มี scrollbar และมี regression ครบ (tools/test_skyplay3d.js)
+- syntax+Sky/Beta regression+production build 9,092 ไฟล์+PWA manifest/invariants ผ่าน; browser visual QA ถูก Windows ACL บล็อกตามข้อจำกัดเดิม
 - **รอบ 1257 · เพิ่มสัตว์ใหม่ 6 ชนิดและใช้ราคาตามภาพแนบ:** ช้าง 2,000,000 · เมียร์แคต 70,000 · T. rex 80,000 · ทูแคน 480,000 · ควาย 100,000 · กวางซีกา 70,000 (`js/data/pets.js`)
 - ตรวจชื่อ–ภาพ 691 PNG เดิมครบ; แก้ชื่อชั่วคราว/UUID เป็น contract กลาง แล้วแปลงเป็น WebP 686 ใบ (สัตว์ 153 + ชุดเต็มตัว 504 + catalog/reference 29), 937.8→100.3MB เหลือ 10.7%; alpha ครบและด้านยาว ≤768px
 - `js/images.js` เลือก `img/animal/*.webp`/`img/AnimalWearItems/*.webp` พร้อม fallback PNG และ cache version; build รวม runtime catalog ใหม่ก่อน commit (`tools/build_web.mjs`)
