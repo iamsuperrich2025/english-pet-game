@@ -28,6 +28,9 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (22 ส.ค.) — อ่านก่อน
+- **รอบ 1259 · แก้ภาพตัวละคร Sky ไม่ขึ้นด้วย thumbnail เบา:** ต้นตอหน้าเลือกดึง atlas 6 ใบรวม 3.29MB; สร้าง WebP 174×348 q80 โปร่งใส 6 ใบรวม 80,302B เบาลง 41.9× แต่คมถึง 3× ของขนาดแสดงจริง (img/characters/*_thumb.webp)
+- picker ก่อนเข้าและ picker ในโลกใช้ thumb แบบ contain รักษาสัดส่วน; atlas นิ่ง/animation ตัวเต็มและ renderer/network เดิมไม่เปลี่ยน (js/skyplay3d.js, js/ui.js, css/skyplay3d.css)
+- syntax+Sky/Beta regression+asset dimension/alpha/silhouette/budget QA+production build 9,098 ไฟล์+PWA manifest+source/dist thumb SHA-256 ผ่าน; browser visual QA ยังถูก Windows ACL บล็อก
 - **รอบ 1258 · Sky Playground เลือกตัวละครก่อนเข้าได้แล้ว:** dialog จ่าย/เข้าโลกแสดงตัวละคร 6 แบบจาก catalog เดิม เลือกแล้วไฮไลต์ เปลี่ยนข้อความปุ่มเข้า และบันทึก local/cloud ก่อนจ่าย (js/ui.js, css/skyplay3d.css)
 - คง picker ในโลกและ renderer/network contract เดิม; layout 6 คอลัมน์สำหรับ 812×375 + 3 คอลัมน์แนวตั้ง ไม่มี scrollbar และมี regression ครบ (tools/test_skyplay3d.js)
 - syntax+Sky/Beta regression+production build 9,092 ไฟล์+PWA manifest/invariants ผ่าน; browser visual QA ถูก Windows ACL บล็อกตามข้อจำกัดเดิม

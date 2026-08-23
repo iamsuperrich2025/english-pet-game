@@ -15,12 +15,12 @@
   const CLASS_MODES={meaning:{code:'M',name:'🎯 เลือกความหมาย'},listen:{code:'L',name:'🔊 ฟังแล้วเลือก'},spell:{code:'S',name:'✏️ เลือกสะกดถูก'}};
   const TEACHER_STORE_KEY='vocabSkyTeacher_v1',REPORT_ALPH='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_';
   const PLAYER_CHARACTERS=[
-    {id:'hoodie-red',name:'ฮู้ดแดง',atlas:'img/characters/sky_soft_cuboid_chibi_8dir.webp',anim:'img/characters/sky_soft_cuboid_chibi_anim.webp'},
-    {id:'explorer',name:'นักสำรวจ',atlas:'img/characters/sky_soft_cuboid_chibi_explorer_8dir.webp',anim:'img/characters/sky_soft_cuboid_chibi_explorer_anim.webp'},
-    {id:'captain',name:'กัปตัน',atlas:'img/characters/sky_soft_cuboid_chibi_captain_8dir.webp',anim:'img/characters/sky_soft_cuboid_chibi_captain_anim.webp'},
-    {id:'schoolgirl',name:'นักเรียนหญิง',atlas:'img/characters/sky_soft_cuboid_chibi_schoolgirl_8dir.webp',anim:'img/characters/sky_soft_cuboid_chibi_schoolgirl_anim.webp'},
-    {id:'witch',name:'แม่มด',atlas:'img/characters/sky_soft_cuboid_chibi_witch_8dir.webp',anim:'img/characters/sky_soft_cuboid_chibi_witch_anim.webp'},
-    {id:'pajamas',name:'ชุดนอน',atlas:'img/characters/sky_soft_cuboid_chibi_pajamas_8dir.webp',anim:'img/characters/sky_soft_cuboid_chibi_pajamas_anim.webp'}
+    {id:'hoodie-red',name:'ฮู้ดแดง',thumb:'img/characters/sky_soft_cuboid_chibi_thumb.webp',atlas:'img/characters/sky_soft_cuboid_chibi_8dir.webp',anim:'img/characters/sky_soft_cuboid_chibi_anim.webp'},
+    {id:'explorer',name:'นักสำรวจ',thumb:'img/characters/sky_soft_cuboid_chibi_explorer_thumb.webp',atlas:'img/characters/sky_soft_cuboid_chibi_explorer_8dir.webp',anim:'img/characters/sky_soft_cuboid_chibi_explorer_anim.webp'},
+    {id:'captain',name:'กัปตัน',thumb:'img/characters/sky_soft_cuboid_chibi_captain_thumb.webp',atlas:'img/characters/sky_soft_cuboid_chibi_captain_8dir.webp',anim:'img/characters/sky_soft_cuboid_chibi_captain_anim.webp'},
+    {id:'schoolgirl',name:'นักเรียนหญิง',thumb:'img/characters/sky_soft_cuboid_chibi_schoolgirl_thumb.webp',atlas:'img/characters/sky_soft_cuboid_chibi_schoolgirl_8dir.webp',anim:'img/characters/sky_soft_cuboid_chibi_schoolgirl_anim.webp'},
+    {id:'witch',name:'แม่มด',thumb:'img/characters/sky_soft_cuboid_chibi_witch_thumb.webp',atlas:'img/characters/sky_soft_cuboid_chibi_witch_8dir.webp',anim:'img/characters/sky_soft_cuboid_chibi_witch_anim.webp'},
+    {id:'pajamas',name:'ชุดนอน',thumb:'img/characters/sky_soft_cuboid_chibi_pajamas_thumb.webp',atlas:'img/characters/sky_soft_cuboid_chibi_pajamas_8dir.webp',anim:'img/characters/sky_soft_cuboid_chibi_pajamas_anim.webp'}
   ];
   const DEFAULT_CHARACTER_ID='hoodie-red';
   const COLORS={sky:0x8fd8ff,navy:0x16346b,cyan:0x46ddff,pink:0xff67ad,yellow:0xffd74d,mint:0x62e6b0,purple:0x8f70ff,white:0xfffbef};
@@ -205,7 +205,7 @@
     sprite.position.y=.015;sprite.material.rotation=animate&&waving?Math.sin(t*.02)*.055:0;
   }
   function renderCharacterPicker(){
-    const selected=selectedCharacter();ui.characterGrid.innerHTML=PLAYER_CHARACTERS.map(c=>`<button data-character="${c.id}" class="${c.id===selected?'selected':''}" aria-pressed="${c.id===selected}"><span style="--sp-character-atlas:url('${c.atlas}')"></span><b>${esc(c.name)}</b></button>`).join('');
+    const selected=selectedCharacter();ui.characterGrid.innerHTML=PLAYER_CHARACTERS.map(c=>`<button data-character="${c.id}" class="${c.id===selected?'selected':''}" aria-pressed="${c.id===selected}"><span style="--sp-character-thumb:url('${c.thumb}')"></span><b>${esc(c.name)}</b></button>`).join('');
   }
   function addCurvedTail(root,points,color,shape){
     for(let i=1;i<points.length;i++){const a=points[i-1],b=points[i],dx=b[0]-a[0],dy=b[1]-a[1],dz=b[2]-a[2],flat=Math.hypot(dx,dz),length=Math.hypot(dx,dy,dz),thickness=Math.max(.085,.2-i*.022),segment=meshSoft(thickness,thickness,length,color,thickness*.42);segment.position.set((a[0]+b[0])*.5,(a[1]+b[1])*.5,(a[2]+b[2])*.5);segment.rotation.order='YXZ';segment.rotation.y=Math.atan2(dx,dz);segment.rotation.x=-Math.atan2(dy,flat);segment.name=`${shape}-tail-segment-${i}`;root.add(segment);}

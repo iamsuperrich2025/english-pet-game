@@ -7778,7 +7778,7 @@ function skyEntryPickerHTML(w, characters){
   const selected = characters.find(c=>c.id === state.skyCharacter) || characters[0];
   return `<section class="sky-entry-character-picker" aria-label="Choose a character before entering Vocab Sky Playground">
     <div class="sky-entry-character-head"><b>🧸 เลือกตัวละครก่อนเข้า</b><span id="we-sky-character-name">${escapeHTML(selected.name)}</span></div>
-    <div class="sky-entry-character-grid">${characters.map(c=>`<button type="button" data-sky-entry-character="${escapeHTML(c.id)}" class="${c.id===selected.id?'selected':''}" aria-pressed="${c.id===selected.id}"><span style="--sky-entry-atlas:url('${escapeHTML(c.atlas)}')"></span><b>${escapeHTML(c.name)}</b></button>`).join('')}</div>
+    <div class="sky-entry-character-grid">${characters.map(c=>`<button type="button" data-sky-entry-character="${escapeHTML(c.id)}" class="${c.id===selected.id?'selected':''}" aria-pressed="${c.id===selected.id}"><span style="--sky-entry-thumb:url('${escapeHTML(c.thumb||c.atlas)}')"></span><b>${escapeHTML(c.name)}</b></button>`).join('')}</div>
   </section>`;
 }
 

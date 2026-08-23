@@ -48,6 +48,7 @@ def left_head_skin_pixels(image: Image.Image, frame_index: int) -> int:
 
 
 all_boxes: dict[str, list[tuple[int, int, int, int]]] = {}
+thumbnail_bytes = 0
 for character_id, filename in ASSETS.items():
     asset = ROOT / "img" / "characters" / filename
     check(asset.stat().st_size > 350_000, f"{character_id} is a substantial lossless WebP")
@@ -58,6 +59,19 @@ for character_id, filename in ASSETS.items():
     check(
         all(alpha.getpixel(point) == 0 for point in ((0, 0), (1535, 0), (0, 767), (1535, 767))),
         f"{character_id} outer corners are transparent, not a baked checkerboard",
+    )
+
+    thumbnail_asset = asset.with_name(filename.replace("_8dir.webp", "_thumb.webp"))
+    thumbnail_bytes += thumbnail_asset.stat().st_size
+    check(5_000 <= thumbnail_asset.stat().st_size <= 20_000, f"{character_id} thumbnail stays inside the 5-20KB budget")
+    thumbnail = Image.open(thumbnail_asset).convert("RGBA")
+    check(thumbnail.size == (174, 348), f"{character_id} thumbnail is 3x the maximum 58x116 CSS display size")
+    thumbnail_alpha = thumbnail.getchannel("A")
+    check(thumbnail_alpha.getextrema() == (0, 255), f"{character_id} thumbnail preserves real transparency")
+    thumbnail_box = thumbnail_alpha.getbbox()
+    check(
+        thumbnail_box is not None and thumbnail_box[2] - thumbnail_box[0] >= 150 and thumbnail_box[3] - thumbnail_box[1] >= 220,
+        f"{character_id} thumbnail keeps a complete sharp silhouette without distortion",
     )
 
     cell_width, cell_height = image.width // COLS, image.height // ROWS
@@ -85,4 +99,5 @@ for character_id, filename in ASSETS.items():
     all_boxes[character_id] = boxes
 
 check(len(all_boxes) == 6 and all(len(boxes) == 8 for boxes in all_boxes.values()), "all six selectable characters contain eight directions")
+check(thumbnail_bytes < 100_000, "all six picker thumbnails stay below 100KB total")
 print("Sky Soft Cuboid Chibi six-character atlas QA passed")

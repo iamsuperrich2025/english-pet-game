@@ -25,6 +25,14 @@ const SKY_CHARACTER_ANIM_ASSETS = [
   'img/characters/sky_soft_cuboid_chibi_witch_anim.webp',
   'img/characters/sky_soft_cuboid_chibi_pajamas_anim.webp',
 ];
+const SKY_CHARACTER_THUMB_ASSETS = [
+  'img/characters/sky_soft_cuboid_chibi_thumb.webp',
+  'img/characters/sky_soft_cuboid_chibi_explorer_thumb.webp',
+  'img/characters/sky_soft_cuboid_chibi_captain_thumb.webp',
+  'img/characters/sky_soft_cuboid_chibi_schoolgirl_thumb.webp',
+  'img/characters/sky_soft_cuboid_chibi_witch_thumb.webp',
+  'img/characters/sky_soft_cuboid_chibi_pajamas_thumb.webp',
+];
 const requireFile = async (rel) => {
   try { return await fs.readFile(path.join(DIST, rel), 'utf8'); }
   catch { failures.push(`missing dist/${rel}`); return ''; }
@@ -50,6 +58,12 @@ for (const asset of [...SKY_CHARACTER_ASSETS, ...SKY_CHARACTER_ANIM_ASSETS]) {
     if (skyCharacter.size < minimum) failures.push(`Sky Soft Cuboid Chibi atlas is unexpectedly small: ${asset}`);
   } catch { failures.push(`missing dist/${asset}`); }
 }
+for (const asset of SKY_CHARACTER_THUMB_ASSETS) {
+  try {
+    const thumb = await fs.stat(path.join(DIST, asset));
+    if (thumb.size < 5000 || thumb.size > 20000) failures.push(`Sky character thumbnail is outside the 5-20KB budget: ${asset}`);
+  } catch { failures.push(`missing dist/${asset}`); }
+}
 if (!deletion.includes('freddommun@gmail.com') || !deletion.includes('Delete Account')) failures.push('delete-account.html is incomplete');
 if (!privacy.includes('delete-account.html') || !privacy.includes('Profile photos')) failures.push('privacy.html is incomplete');
 
@@ -67,7 +81,7 @@ try {
 try {
   const assets = JSON.parse(assetManifestText);
   if (!assets.build || !assets.files || Object.keys(assets.files).length < 10) failures.push('asset-manifest.json is incomplete');
-  for (const asset of [...SKY_CHARACTER_ASSETS, ...SKY_CHARACTER_ANIM_ASSETS]) if (!assets.files?.[`/${asset}`]) failures.push(`asset-manifest.json omits ${asset}`);
+  for (const asset of [...SKY_CHARACTER_ASSETS, ...SKY_CHARACTER_ANIM_ASSETS, ...SKY_CHARACTER_THUMB_ASSETS]) if (!assets.files?.[`/${asset}`]) failures.push(`asset-manifest.json omits ${asset}`);
 } catch { failures.push('asset-manifest.json is invalid JSON'); }
 
 for (const [name, text] of [['sw.js', sw], ['index.html', index], ['index_classic.html', classic]]) {
