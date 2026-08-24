@@ -88,10 +88,59 @@ if ! python "$REPO/tools/check_template_backtick.py" --path "$STAGE/source"; the
   exit 2
 fi
 
-echo "🏗️ npm run build → dist/ (hashed startup assets + content manifest)"
-cd "$STAGE/source"
-npm run build
-npm run validate:build
+# 🧪 Safe Pipeline: deploy "exact artifact" ที่ผ่าน Build/Browser Test แล้ว
+# VW Dev Studio สร้าง/ทดสอบ $REPO/dist ก่อนถึงขั้น Deploy Production.
+# เดิมสคริปต์ build ซ้ำจาก git HEAD ใน staging ตรงนี้ ทำให้ไฟล์ generated
+# (โดยเฉพาะ index.html / sw.js) อาจได้ hash คนละชุดกับ build ที่ทดสอบ แม้ source เดียวกัน
+# ขณะที่ไฟล์ pass-through เช่น js/skyplay3d.js ยัง MATCH — อาการตรงกับ Verify Live ที่พบจริง
+#
+# หลักใหม่:
+#   1) ถ้ามี dist ที่ผ่านการทดสอบอยู่แล้ว ให้ copy byte-for-byte เข้า staging และ validate ซ้ำ
+#   2) ถ้า dist ใช้ไม่ได้/ไม่มีจริง จึง fallback ไป build จาก staged git HEAD แบบเดิม
+#   3) ห้ามแก้ verifier หรือทำให้ mismatch ผ่านปลอม ๆ
+TESTED_DIST="${VW_TESTED_DIST:-$REPO/dist}"
+USE_TESTED_DIST=0
+
+if [[ "${VW_DEPLOY_FORCE_REBUILD:-0}" != "1" ]] \
+   && [[ -f "$TESTED_DIST/index.html" ]] \
+   && [[ -f "$TESTED_DIST/sw.js" ]]; then
+  echo "🧪 พบ prebuilt dist ที่ผ่าน Safe Pipeline: $TESTED_DIST"
+  rm -rf "$STAGE/source/dist"
+  mkdir -p "$STAGE/source/dist"
+  cp -R "$TESTED_DIST"/. "$STAGE/source/dist"/
+
+  echo "🔎 validate exact tested artifact เทียบกับ staged git HEAD..."
+  cd "$STAGE/source"
+  if npm run validate:build; then
+    USE_TESTED_DIST=1
+    echo "✅ Exact tested artifact valid — จะ deploy ไบต์ชุดเดียวกับที่ Local/Browser Test ใช้"
+  else
+    echo "⚠️ prebuilt dist ไม่ผ่าน validate กับ git HEAD — ไม่ deploy artifact ที่น่าสงสัย"
+    echo "   fallback: build ใหม่จาก staged git HEAD ตามวิธีเดิม"
+    rm -rf "$STAGE/source/dist"
+  fi
+fi
+
+if [[ "$USE_TESTED_DIST" -ne 1 ]]; then
+  echo "🏗️ npm run build → dist/ (fallback: ไม่มี exact tested artifact ที่ใช้ได้)"
+  cd "$STAGE/source"
+  npm run build
+  npm run validate:build
+fi
+
+# พิมพ์ SHA-256 ของ artifact ที่กำลังจะ deploy จริง เพื่อให้ VW Dev Studio/ผู้ใช้
+# เทียบกับ Verify Live ได้ตรงไฟล์ โดยไม่แตะความเข้มงวดของ verifier
+echo "🔐 Deployment artifact hashes:"
+for REL in index.html sw.js js/skyplay3d.js; do
+  if [[ ! -f "$STAGE/source/dist/$REL" ]]; then
+    echo "   $REL  MISSING"
+  elif command -v sha256sum >/dev/null 2>&1; then
+    HASH="$(sha256sum "$STAGE/source/dist/$REL" | awk '{print $1}')"
+    echo "   $REL  $HASH"
+  else
+    echo "   $REL  SHA256-TOOL-UNAVAILABLE"
+  fi
+done
 
 echo "🚀 deploy → https://$SITE.web.app"
 cd "$STAGE/source"
