@@ -73,6 +73,8 @@ ok(/playerStyle='soft-cuboid-chibi-3d'/.test(sky),'visible players use Soft Cubo
 ok(/speakWord/.test(sky)&&/vocabForStudent/.test(sky)&&/questEvent\('word3d'/.test(sky),'vocabulary reuses data, pronunciation and shared quest event');
 ok(/addCoins\(20\)/.test(sky)&&/first\?100:20/.test(sky),'stars and route completion use main coins');
 ok(/kind:'bounce'/.test(sky)&&/rotators\.forEach\(r=>/.test(sky)&&/kind==='disappear'/.test(sky),'sample Obby includes bounce, rotating, moving and disappearing obstacles');
+ok(/function addTrampoline\(x,z\)/.test(sky)&&/addTrampoline\(18,10\)/.test(sky)&&/kind:'trampoline'/.test(sky)&&/trampoline\?16\.4:14\.2/.test(sky),'plaza includes a walk-on trampoline with stronger automatic bounce than the Obby jump pad');
+ok(/VW_SKY_DEPLOY_SENTINEL: sky-trampoline-r1235-20260824/.test(sky),'Sky source carries the deploy-integrity sentinel for the trampoline revision');
 const collisionCode=sky.slice(sky.indexOf('function localXZ'),sky.indexOf('function blockedGate'));
 const collisionCtx={Math,PLAYER_RADIUS:.46,PLAYER_HEIGHT:2.02,solids:[{x:0,z:0,w:2,d:2,minY:.4,maxY:2,enabled:true}],player:{pos:{y:.45},vel:{x:3,z:4}}};vm.runInNewContext(collisionCode+';this.hit=resolveSolids;this.toLocal=localXZ;',collisionCtx);
 const boxHit=collisionCtx.hit(0,0),rotated=collisionCtx.toLocal(1,0,{x:0,z:0,yaw:Math.PI/2});

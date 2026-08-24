@@ -6,6 +6,7 @@
    - Soft Cuboid Chibi 3D + pet จริง + NetRoom สูงสุด 6 คน
    - Letter Hunt, Word Race, Sky Obby, Vocabulary Tower, Daily Missions
    - Classroom Sky Events เดิม + Teacher Lesson Packs, playlists, ready check, reports
+   - VW_SKY_DEPLOY_SENTINEL: sky-trampoline-r1235-20260824 (deploy-integrity marker; no gameplay effect)
    ============================================================ */
 (function(){
   const TAU=Math.PI*2, ROOM_MAX=6, FALL_Y=-14, GRAVITY=29, MOVE_SPEED=8.2, JUMP_SPEED=11.2, TOWER_FLOORS=6, PLAYER_RADIUS=.46, PLAYER_HEIGHT=2.02;
@@ -251,6 +252,17 @@
     const h=opt.h||.72,m=meshSoft(w,h,d,color,Math.min(.25,h*.3));m.position.set(x,y,z);scene.add(m);cameraMeshes.push(m);
     const s={mesh:m,name:opt.name||opt.kind||'platform',x,z,w,d,h,top:y+h*.5,enabled:true,kind:opt.kind||'platform',dx:0,dz:0};supports.push(s);solids.push(s);return s;
   }
+  function addTrampoline(x,z){
+    // Low-cost playground toy: static geometry + one circular support. No texture or animation loop.
+    const g=new THREE.Group(),top=.82,bed=new THREE.Mesh(new THREE.CylinderGeometry(2.55,2.55,.18,28),new THREE.MeshStandardMaterial({color:0x294b9b,roughness:.5,metalness:.03}));
+    bed.position.y=top-.09;g.add(bed);
+    const rim=new THREE.Mesh(new THREE.TorusGeometry(2.72,.16,8,28),new THREE.MeshStandardMaterial({color:0xff6eae,roughness:.38,metalness:.08}));rim.rotation.x=Math.PI/2;rim.position.y=top-.03;g.add(rim);
+    for(let i=0;i<6;i++){const a=i/6*TAU,leg=meshSoft(.28,.62,.28,i%2?COLORS.cyan:COLORS.yellow,.08);leg.position.set(Math.cos(a)*2.42,.53,Math.sin(a)*2.42);g.add(leg);}
+    g.position.set(x,0,z);g.name='playground-trampoline';scene.add(g);cameraMeshes.push(bed);
+    const label=textSprite('TRAMPOLINE',0xffffff,360,95);label.scale.set(4.2,1.1,1);label.position.set(x,3.15,z);scene.add(label);
+    // Support-only collider deliberately allows walking onto the low mat from the plaza.
+    const support={name:'playground-trampoline',kind:'trampoline',x,z,r:2.45,top,enabled:true};supports.push(support);return support;
+  }
   function addCloud(x,y,z,s=1){const g=new THREE.Group();[[0,0,0,2.5],[2,0,.1,1.8],[-2,.05,.2,1.7],[.7,.45,0,1.7]].forEach(([px,py,pz,r])=>{const m=new THREE.Mesh(new THREE.SphereGeometry(r*s,10,7),mat(0xfffaff));m.position.set(px*s,py*s,pz*s);g.add(m);});g.position.set(x,y,z);scene.add(g);return g;}
   function addTree(x,z,c=0x5bd48a,s=1){const g=new THREE.Group(),tr=meshSoft(.8,3,.8,0xa97955,.2);tr.position.y=2;g.add(tr);const crown=meshSoft(3.2,3.5,3.2,c,.85);crown.position.y=4.4;g.add(crown);g.position.set(x,.45,z);g.scale.setScalar(s);scene.add(g);addSolidObject('tree-trunk',tr);}
   function addCrystal(x,y,z,id){const g=new THREE.Group(),gem=new THREE.Mesh(new THREE.OctahedronGeometry(.8,0),new THREE.MeshStandardMaterial({color:0x74f5ff,emissive:0x248dff,emissiveIntensity:1.1,roughness:.25}));gem.scale.y=1.55;gem.position.y=1.25;g.add(gem);const ring=new THREE.Mesh(new THREE.TorusGeometry(1.05,.09,8,28),new THREE.MeshBasicMaterial({color:0xc9fbff,transparent:true,opacity:.75}));ring.rotation.x=Math.PI/2;ring.position.y=.35;g.add(ring);g.position.set(x,y,z);scene.add(g);checkpoints.push({id,g,gem,ring,pos:new THREE.Vector3(x,y,z),hit:false});}
@@ -288,6 +300,8 @@
     const book=new THREE.Group(),cover=meshSoft(7,.75,5.2,0x8d6cff,.3);cover.position.y=1.2;book.add(cover);const pages=meshSoft(6.4,.55,4.7,0xfff9e8,.22);pages.position.y=1.68;book.add(pages);book.position.set(-23,0,-5);book.rotation.y=.35;scene.add(book);addSolidObject('book',book,{support:true});
     const pencil=meshSoft(1.1,1.1,9,0xffcf52,.3);pencil.position.set(24,2,-3);pencil.rotation.set(0,.5,Math.PI/5);scene.add(pencil);addSolidObject('pencil',pencil);
     ['A','B','C'].forEach((ch,i)=>{const x=-6+i*6,b=meshSoft(3.2,3.2,3.2,[COLORS.pink,COLORS.cyan,COLORS.yellow][i],.5);b.position.set(x,2.05,18);scene.add(b);addSolidObject('letter-block-'+ch,b,{support:true});const s=textSprite(ch,0xffffff,150,150);s.scale.set(1.8,1.8,1);s.position.set(x,2.1,16.3);scene.add(s);});
+    // Free-play trampoline sits on open lawn, away from the Obby route and learning toys.
+    addTrampoline(18,10);
 
     // Route: low -> medium -> high, with one moving, one rotating and one disappearing obstacle.
     addPlatform(0,1.2,-20,7,5,COLORS.pink,{kind:'start'});
@@ -352,7 +366,7 @@
     if(lastSupport&&lastSupport.kind==='moving'){player.pos.x+=lastSupport.dx||0;player.pos.z+=lastSupport.dz||0;}
     let nx=player.pos.x+player.vel.x*dt,nz=player.pos.z+player.vel.z*dt;if(blockedGate(nx,nz)){nx=player.pos.x;nz=player.pos.z;player.vel.x=player.vel.z=0;showGate();}const solidHit=resolveSolids(nx,nz);nx=solidHit.x;nz=solidHit.z;
     player.pos.x=nx;player.pos.z=nz;const oldY=player.pos.y;player.vel.y-=GRAVITY*dt;let ny=oldY+player.vel.y*dt,hit=player.vel.y<=0?supportAt(nx,nz,oldY,ny):null;
-    if(hit){ny=hit.top;player.vel.y=0;grounded=true;lastSupport=hit.s;if(hit.s.kind==='bounce'){player.vel.y=14.2;grounded=false;lastSupport=null;tone(620,.13,.06);showToast('✨ Jump Pad!');}}else{grounded=false;lastSupport=null;}player.pos.y=ny;
+    if(hit){ny=hit.top;player.vel.y=0;grounded=true;lastSupport=hit.s;if(hit.s.kind==='bounce'||hit.s.kind==='trampoline'){const trampoline=hit.s.kind==='trampoline';player.vel.y=trampoline?16.4:14.2;grounded=false;lastSupport=null;tone(trampoline?760:620,.13,.06);if(trampoline){if(t-(hit.s.hitAt||0)>1200)showToast('🤸 Trampoline! เด้งเล่นได้เลย');hit.s.hitAt=t;}else showToast('✨ Jump Pad!');}}else{grounded=false;lastSupport=null;}player.pos.y=ny;
     if(player.pos.y<FALL_Y)respawn();
     const movingNow=Math.hypot(player.vel.x,player.vel.z)>.4;if(movingNow){player.facing.set(player.vel.x,0,player.vel.z).normalize();player.yaw=Math.atan2(-player.facing.x,-player.facing.z);player.group.rotation.y+=(player.yaw-player.group.rotation.y)*Math.min(1,dt*11);}
     updatePlayerSprite(player.fig,player.yaw,t,movingNow,t<emoteUntil);
