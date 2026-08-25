@@ -14,7 +14,6 @@
   let classicToggle = null;
   let syncTimer = 0;
   let clockTimer = 0;
-  let observersBound = false;
 
   function adminAllowed(){
     try{ return typeof isAdmin === 'function' && isAdmin() === true; }
@@ -246,7 +245,6 @@
   function questHTML(){
     if(typeof state === 'undefined' || !state) return {html:'<div class="vw2-empty">ยังไม่มีข้อมูลภารกิจ</div>',done:0,total:0};
     try{
-      if(typeof questTick === 'function') questTick();
       const qs = typeof questsToday === 'function' ? questsToday() : [];
       const qstate = state.quests || {prog:{},done:[]};
       const doneIds = Array.isArray(qstate.done) ? qstate.done : [];
@@ -277,7 +275,7 @@
     let worth = coins;
     try{ if(typeof netWorth === 'function') worth = netWorth(); }catch(_){ }
 
-    const setText=(idName,value)=>{ const el=document.getElementById(idName); if(el) el.textContent=value; };
+    const setText=(idName,value)=>{ const el=document.getElementById(idName); if(el){ const next=String(value == null ? '' : value); if(el.textContent !== next) el.textContent=next; } };
     setText('vw2-name', cleanText(name,28));
     setText('vw2-id', id || 'ID —');
     setText('vw2-coins', fmt(coins));
@@ -305,7 +303,7 @@
 
     const q = questHTML();
     const qs = document.getElementById('vw2-quests');
-    if(qs) qs.innerHTML = q.html;
+    if(qs && qs.dataset.vw2Html !== q.html){ qs.innerHTML = q.html; qs.dataset.vw2Html = q.html; }
     setText('vw2-quest-count', `${Math.min(q.done,q.total)}/${q.total}`);
     const qb = document.getElementById('vw2-quest-bar');
     if(qb) qb.style.width = (q.total ? Math.min(100,(q.done/q.total)*100) : 0) + '%';
@@ -335,56 +333,50 @@
 
   function scheduleSync(){
     clearTimeout(syncTimer);
-    syncTimer = setTimeout(sync, 50);
-  }
-
-  function bindObservers(){
-    if(observersBound) return;
-    observersBound = true;
-    const ids = ['coin-count','coin-today','student-chip','clock-chip','rank-tab','newword-banner','pet-card','quest-card','online-card','online-sub','feed-list','pass-photo'];
-    const mo = new MutationObserver(scheduleSync);
-    ids.forEach(id=>{
-      const el=document.getElementById(id);
-      if(el) mo.observe(el,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['src','style','class']});
-    });
-    const dash=dashboard();
-    if(dash){
-      const screenObserver=new MutationObserver(syncVisibility);
-      screenObserver.observe(dash,{attributes:true,attributeFilter:['class']});
-    }
+    syncTimer = setTimeout(()=>{
+      if(adminAllowed() && dashboardActive() && previewWanted()) sync();
+    }, 120);
   }
 
   function syncVisibility(){
     const dash = dashboard();
+    if(!dash) return;
     const allowed = adminAllowed();
     const active = dashboardActive();
-    if(!dash) return;
     if(!allowed){
       dash.classList.remove(CLASS_ON);
       if(root) root.hidden = true;
       if(classicToggle) classicToggle.hidden = true;
       return;
     }
+
     ensureClassicToggle();
     const showV2 = active && previewWanted();
+
+    // Runtime-safety: build Home V2 lazily only after the real dashboard is
+    // active and admin authorization is already known. This keeps all Home
+    // V2 work off the startup/loading path.
+    if(showV2 && !root) build();
+
     dash.classList.toggle(CLASS_ON, showV2);
     if(root) root.hidden = !showV2;
-    classicToggle.hidden = !active || showV2;
-    if(showV2) scheduleSync();
+    if(classicToggle) classicToggle.hidden = !active || showV2;
   }
 
   function tick(){
     syncVisibility();
-    if(adminAllowed() && dashboardActive() && previewWanted()) sync();
+    if(root && adminAllowed() && dashboardActive() && previewWanted()) sync();
   }
 
   function init(){
-    build();
-    bindObservers();
-    syncVisibility();
+    // No MutationObserver on the classic Lobby. The existing Lobby has
+    // animated/ticker DOM that changes frequently; observing its subtree can
+    // create a feedback-heavy main-thread workload. A slow, bounded poll is
+    // sufficient for this admin-only preview.
     clearInterval(clockTimer);
-    clockTimer = setInterval(tick, 1000);
+    clockTimer = setInterval(tick, 2000);
     window.addEventListener('focus', tick);
+    setTimeout(tick, 250);
   }
 
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, {once:true});
