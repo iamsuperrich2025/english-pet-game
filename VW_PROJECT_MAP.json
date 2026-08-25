@@ -1,8 +1,10 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "project": "english-pet-game",
+  "structure_signature": "049811bb9e68f27e3d4a452a6f2bf1cab9a00a9277b4cef969c4595a903270e5",
+  "structure_entry_count": 2782,
   "generated_by": "VW Dev Studio Local Token Saver",
-  "generated_at": "2026-08-24T17:58:02",
+  "generated_at": "2026-08-25T19:21:58",
   "generation_mode": "local_no_ai_no_api",
   "areas": {
     "main_world": [
@@ -11,9 +13,11 @@
       "VOCAB_WORLD_RULES.md",
       "index.html",
       "index_classic.html",
+      "css/home-v2.css",
       "css/lobby.css",
       "functions/index.js",
       "handoff/LOBBY3D_WIP.md",
+      "js/home-v2.js",
       "js/lobby.js",
       "js/lobby3d.js",
       "js/main.js",
@@ -23,9 +27,7 @@
       "tools/test_lobby_settings_responsive.js",
       "tools/test_lobby_topbar_buttons.js",
       "tools/test_worlds3d.js",
-      "img/home/README.txt",
-      "js/data/homes.js",
-      "work/archive-fallback-1145/index.html"
+      "img/home/README.txt"
     ],
     "adventure_world": [
       "js/adventure3d.js",
@@ -280,7 +282,7 @@
   "commands": {
     "build": "npm run build",
     "preview": "npm run preview -- --host 127.0.0.1 --port 4173",
-    "deploy": "bash tools/deploy_firebase.sh"
+    "deploy": "\"C:\\Program Files\\Git\\bin\\bash.exe\" tools/deploy_firebase.sh"
   },
   "package_scripts": {
     "build": "node tools/build_web.mjs",
