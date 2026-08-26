@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VW Mobile Device Preview</title>
+<style>
+:root{color-scheme:dark;font-family:"Segoe UI","Noto Sans Thai",system-ui,sans-serif;background:#0b1020;color:#eaf0ff}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:radial-gradient(circle at 50% -20%,#26345b 0,#111831 38%,#080c18 100%)}
+body{height:100vh;overflow:hidden}.app{height:100%;display:grid;grid-template-rows:auto minmax(0,1fr);gap:10px;padding:10px}
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;border:1px solid #33426d;border-radius:14px;background:rgba(18,27,52,.94);box-shadow:0 8px 24px rgba(0,0,0,.28)}
+.brand{font-weight:800;white-space:nowrap}.brand small{display:block;font-size:10px;font-weight:600;color:#95a5d1;margin-top:1px}.sizes{display:flex;gap:5px;flex-wrap:wrap}.sizes button,.toolbtn{border:1px solid #4b5f92;border-radius:10px;background:#1a2648;color:#dbe5ff;padding:7px 10px;font-weight:700;cursor:pointer}.sizes button:hover,.toolbtn:hover{background:#23335f}.sizes button.active{background:#4f70d8;border-color:#87a4ff;color:#fff;box-shadow:0 0 0 2px rgba(121,153,255,.18)}
+.url{display:flex;align-items:center;gap:5px;min-width:260px;flex:1}.url input{min-width:160px;flex:1;border:1px solid #40527f;border-radius:10px;background:#0d1530;color:#e9efff;padding:7px 9px}.readout{font-size:11px;color:#a9b8df;white-space:nowrap}.readout b{color:#fff}
+.stage{position:relative;min-height:0;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:10px}.viewer{position:relative;min-width:0;min-height:0;display:grid;place-items:center;overflow:hidden;border:1px solid #27365d;border-radius:16px;background:linear-gradient(180deg,#0b1122,#070a12)}
+.device-wrap{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);transform-origin:center center}.device{position:relative;padding:13px 18px;border-radius:31px;background:linear-gradient(145deg,#323b51,#0c1019 38%,#242c3d);box-shadow:0 22px 48px rgba(0,0,0,.55),inset 0 0 0 2px rgba(255,255,255,.08)}
+.device:before{content:"";position:absolute;left:50%;top:5px;transform:translateX(-50%);width:58px;height:4px;border-radius:4px;background:#0a0d13;box-shadow:0 1px rgba(255,255,255,.08)}
+.screen{position:relative;background:#000;border-radius:16px;overflow:hidden;box-shadow:0 0 0 1px #000}.screen iframe{display:block;border:0;background:#fff;width:844px;height:390px}
+.badge{position:absolute;left:50%;bottom:-28px;transform:translateX(-50%);padding:4px 10px;border-radius:999px;background:#17233f;border:1px solid #334d7d;color:#c8d5f6;font-size:11px;white-space:nowrap}.badge b{color:#fff}
+.panel{min-height:0;overflow:auto;border:1px solid #2b3a61;border-radius:16px;background:rgba(15,23,44,.95);padding:10px}.panel h2{font-size:13px;margin:0 0 8px}.note{font-size:11px;line-height:1.45;color:#9eb0d8;margin:0 0 10px}.checks{display:grid;gap:6px}.check{display:grid;grid-template-columns:18px 1fr;gap:7px;align-items:start;padding:7px;border-radius:10px;background:#101a34;border:1px solid #26375e}.dot{width:11px;height:11px;margin-top:2px;border-radius:50%;background:#68738c;box-shadow:0 0 0 3px rgba(104,115,140,.12)}.check.pass .dot{background:#42d38c;box-shadow:0 0 0 3px rgba(66,211,140,.13)}.check.fail .dot{background:#ff6f7f;box-shadow:0 0 0 3px rgba(255,111,127,.13)}.check.warn .dot{background:#ffc857;box-shadow:0 0 0 3px rgba(255,200,87,.13)}.check b{font-size:11px;display:block}.check span{font-size:10px;color:#9bafd6;line-height:1.35}.statusline{margin-top:9px;padding-top:8px;border-top:1px solid #26375e;font-size:10px;color:#8296c2}
+@media(max-width:900px){.stage{grid-template-columns:1fr}.panel{display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="toolbar">
+    <div class="brand">VW Mobile Device Preview<small>Local-only · logical CSS viewport จริง</small></div>
+    <div class="sizes" id="sizes"></div>
+    <div class="url"><input id="url" value="http://127.0.0.1:4173/" aria-label="Local Preview URL"><button class="toolbtn" id="open">Load</button><button class="toolbtn" id="reload">↻</button></div>
+    <div class="readout">Logical <b id="logical">844×390</b> · Frame scale <b id="scale">1.00×</b></div>
+  </header>
+  <main class="stage">
+    <section class="viewer" id="viewer" aria-label="Simulated landscape mobile device">
+      <div class="device-wrap" id="wrap"><div class="device" id="device"><div class="screen"><iframe id="game" title="Vocab World Local Preview"></iframe></div><div class="badge">Viewport <b id="badge">844×390</b></div></div></div>
+    </section>
+    <aside class="panel">
+      <h2>Home V2 Mobile Smoke</h2>
+      <p class="note">ผลด้านล่างมาจากหน้าเกมใน iframe เมื่อรันบน localhost ไม่ใช่การเดาจากขนาดกรอบ</p>
+      <div class="checks" id="checks"></div>
+      <div class="statusline" id="status">กำลังรอ Local Preview…</div>
+    </aside>
+  </main>
+</div>
+<script>
+'use strict';
+const PRESETS=[[667,375],[800,360],[844,390],[915,412]];
+let selected=2,lastMetrics=null;
+const $=id=>document.getElementById(id), iframe=$('game'), viewer=$('viewer'), wrap=$('wrap'), device=$('device');
+function normalizeUrl(v){try{const u=new URL(v||'http://127.0.0.1:4173/');if(!['http:','https:'].includes(u.protocol)) throw 0;return u.href}catch(_){return 'http://127.0.0.1:4173/'}}
+function load(){iframe.src=normalizeUrl($('url').value);$('url').value=iframe.src;$('status').textContent='โหลด Local Preview แล้ว · รอ Home V2 ส่งผล smoke test';lastMetrics=null;renderChecks()}
+function setPreset(i){selected=i;const [w,h]=PRESETS[i];iframe.style.width=w+'px';iframe.style.height=h+'px';$('logical').textContent=`${w}×${h}`;$('badge').textContent=`${w}×${h}`;document.querySelectorAll('#sizes button').forEach((b,n)=>b.classList.toggle('active',n===i));fit();setTimeout(renderChecks,120)}
+function fit(){const [w,h]=PRESETS[selected];const vw=Math.max(120,viewer.clientWidth-34),vh=Math.max(120,viewer.clientHeight-52);const dw=w+36,dh=h+26;const scale=Math.max(.25,Math.min(1.55,vw/dw,vh/dh));wrap.style.transform=`translate(-50%,-50%) scale(${scale})`;$('scale').textContent=scale.toFixed(2)+'×'}
+function checkClass(state){return state===true?'pass':state===false?'fail':'warn'}
+function add(label,state,detail){const el=document.createElement('div');el.className='check '+checkClass(state);el.innerHTML=`<i class="dot"></i><div><b>${label}</b><span>${detail}</span></div>`;$('checks').appendChild(el)}
+function renderChecks(){const c=$('checks');c.innerHTML='';const [w,h]=PRESETS[selected],m=lastMetrics;if(!m){add('Logical viewport',null,`${w}×${h} ถูกกำหนดที่ iframe โดยตรง — ไม่ใช้ browser zoom`);add('Runtime metrics',null,'รอหน้าเกม localhost ส่งข้อมูลกลับ');return}
+ const exact=m.viewport&&m.viewport.width===w&&m.viewport.height===h;add('Viewport dimensions',exact,`จริง ${m.viewport.width}×${m.viewport.height} · ต้องตรง ${w}×${h}`);
+ const hv=m.homeV2||{};add('No horizontal overflow',hv.horizontalOverflow===false,hv.horizontalOverflow===false?'Home V2 ไม่ล้นแนวนอน':'พบ Home V2 horizontal overflow หรือยังไม่มี Home V2');
+ add('Locked game layout',hv.locked===true,hv.locked?'root/shell ถูกล็อค ไม่กลายเป็น long page':'root/shell ยังไม่ผ่าน locked-layout check');
+ add('Panel/category overlap',Array.isArray(hv.panelOverlaps)&&hv.panelOverlaps.length===0,hv.panelOverlaps&&hv.panelOverlaps.length?`ซ้อนกัน: ${hv.panelOverlaps.join(', ')}`:'ไม่พบ panel overlap ที่มองเห็น');
+ const rail=m.rails||{};add('Icon rail navigation',rail.leftScrollable===true,'left rail เลื่อนภายในได้เมื่อรายการยาว');add('Shortcut rail navigation',rail.bottomScrollable===true,'bottom shortcuts เลื่อนแนวนอนภายใน viewport');
+ const a=hv.actionSources||{};add('Authoritative action sources',Array.isArray(a.missing)&&a.missing.length===0,Array.isArray(a.missing)&&a.missing.length?`source หาย: ${a.missing.join(', ')}`:`ตรวจ ${a.total||0} data-vw2-source · ไม่พบ source หาย`);
+ add('Admin / access gate',hv.present?hv.adminAllowed===true:null,hv.present?(hv.adminAllowed?'Home V2 อยู่หลัง admin gate เดิม':'Home V2 present แต่ admin gate ไม่ผ่าน'):'ยังไม่พบ Home V2 (อาจยังไม่ login/admin)');
+ $('status').textContent=`Last metrics: ${new Date().toLocaleTimeString()} · Home V2 ${hv.visible?'VISIBLE':'not visible'}`}
+PRESETS.forEach(([w,h],i)=>{const b=document.createElement('button');b.textContent=`${w}×${h}`;b.onclick=()=>setPreset(i);$('sizes').appendChild(b)});
+$('open').onclick=load;$('reload').onclick=()=>{try{iframe.contentWindow.location.reload()}catch(_){iframe.src=iframe.src}};$('url').addEventListener('keydown',e=>{if(e.key==='Enter')load()});
+window.addEventListener('resize',fit);window.addEventListener('message',e=>{if(!e.data||e.data.type!=='vw-mobile-device-preview-metrics')return;lastMetrics=e.data;renderChecks()});
+setPreset(2);load();
+</script>
+</body>
+</html>
