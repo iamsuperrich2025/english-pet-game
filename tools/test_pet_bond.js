@@ -23,6 +23,23 @@ ok(images.includes('Object.values(p.equipped || {})'), 'future outfit slots are 
   vm.runInNewContext(source, ctx);
   ok(ctx.equippedItem({equipped:{body:'future_coat'}}).id === 'future_coat', 'future body clothing slot resolves at runtime');
 }
+{
+  const source = images.match(/function petWearOverlay\(p, src\)\{[\s\S]*?\n\}/)[0];
+  const ctx = {
+    activePet:()=>null,
+    petStage:()=> 'baby',
+    equippedItem:()=>({id:'rainbow_hoodie'}),
+    currentPetImg:()=> 'img/animal/dog_baby_normal.webp',
+    IMG_FILES:{dog_baby_rainbow_hoodie:'img/AnimalWearItems/dog_baby_rainbow_hoodie.webp'},
+    WEAR_PIECE:{dog_rainbow_hoodie:{f:'img/wear/premium/rainbow_hoodie.png',mode:'center',anchor:'eye',size:3.55,x:0,y:-1.05,k:1}},
+    WEAR_ANCHOR:{dog_baby_normal:{ex:.5,ey:.4,ed:.2,ht:.1}},
+  };
+  vm.runInNewContext(source, ctx);
+  ok(ctx.petWearOverlay({type:'dog',sick:true}, 'img/animal/dog_baby_normal.webp') === null,
+    'sick pet keeps the medical pose unobstructed by an outfit');
+  ok(!!ctx.petWearOverlay({type:'dog',sick:false}, 'img/animal/dog_baby_normal.webp'),
+    'healthy pet still renders its equipped outfit');
+}
 ok(ui.includes("bondCf.bg || cf.bg || ''"), 'future pet species support optional PETS[type].bond metadata');
 ok(ui.includes("|| {lead:`${n}รักบ้านของเรา`"), 'future pet species have generic bonding copy');
 ok(ui.includes('homeVisualHTML(h, \'bond-home-img\''), 'current home image/state is used in bond scene');

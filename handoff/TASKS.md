@@ -28,6 +28,9 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (23 ส.ค.) — อ่านก่อน
+- **รอบ 1261 · แก้ชุดทับภาพสัตว์ตอนป่วย:** `petWearOverlay()` พักการวาด layer ชุดเฉพาะ `p.sick` เพื่อให้เห็นอาการ/อุปกรณ์รักษาชัด แต่คง `equipped` และป้าย “ยังใส่อยู่”; หายแล้วชุดกลับมาเอง (`js/images.js`)
+- เพิ่ม regression ยืนยันป่วย=ไม่มี overlay และสุขภาพปกติ=ยังมี overlay; `node --check js/images.js` + `tools/test_pet_bond.js` ผ่านครบ (`tools/test_pet_bond.js`)
+- visual QA ใน in-app browser ถูก Windows ACL บล็อก (`apply deny-read ACLs`) ตามข้อจำกัดเดิม; ไม่มีไฟล์/ธีม/asset อื่นถูกแตะ
 - **รอบ 1260 · แปลงภาพ baby normal 9 ชนิดเป็น Soft Cuboid Chibi 3D:** ควาย แมว หมา มังกร ช้าง เมียร์แคต กวางซีกา ทูแคน และ T. rex ใช้ชื่อเดิมใน `img/animal/*_baby_normal.webp`
 - คง canvas 768×768/lossless WebP RGBA/anchor+ฐานเท้าเดิม; Alpha จริง 0–255, silhouette เดียว, มุมโปร่งใส และไม่มีพื้น เงา ข้อความ หรือขอบสี; ไม่แตะ `css/petshopping3d.css`
 - visual QA ทีละสัตว์บน 812×375 พื้นสว่าง/มืด + source↔dist SHA-256 ทั้ง 9 ผ่าน; runtime browser ถูก Windows ACL บล็อกตามข้อจำกัดเดิม

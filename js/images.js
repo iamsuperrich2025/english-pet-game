@@ -180,6 +180,9 @@ function petStateImg(p){
 function petWearOverlay(p, src){
   p = p || activePet();
   if(!p || typeof WEAR_PIECE === 'undefined' || typeof WEAR_ANCHOR === 'undefined') return null;
+  /* ภาพป่วยต้องเห็นอาการ/อุปกรณ์รักษาชัดเจน ชุดเต็มตัวซ้อนทับแล้วบังสัญญาณสุขภาพ
+     จึงพักเฉพาะการวาดชุดไว้ชั่วคราว (ข้อมูล equipped ยังอยู่และชุดกลับมาเองเมื่อหาย) */
+  if(p.sick) return null;
   const stage = petStage(p);
   if(stage === 'egg') return null;
   const worn = equippedItem(p);
