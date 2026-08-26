@@ -7103,6 +7103,110 @@ html.night #vw-home-v2-root{filter:saturate(.9) brightness(.82)}html.no-anim #vw
 
 
 
+
+/* === Home V2 Premium Cute Lightweight Visual Fidelity Pass R4 ===
+   Feedback integration only. Bottom horizontal rail, action/source markers,
+   authoritative handlers, routing, house ownership/state, economy and access rules stay untouched. */
+
+/* 1) Coin card: give the real gold coin comfortable inner breathing room. */
+#vw-home-v2-root .vw2-wallet-pill.coin{
+  grid-template-columns:44px minmax(0,1fr) 18px!important;
+  column-gap:6px!important;padding-left:10px!important;padding-right:8px!important
+}
+#vw-home-v2-root .vw2-stat-art-coin{width:38px;height:38px;justify-self:center;margin-left:1px}
+#vw-home-v2-root .vw2-stat-coin-img{width:38px;height:38px;object-position:center}
+
+/* 2) Profile identity card: wider visual authority and a substantially larger avatar. */
+#vw-home-v2-root .vw2-top{grid-template-columns:minmax(340px,400px) minmax(430px,1fr) auto}
+#vw-home-v2-root .vw2-profile{padding-left:14px;padding-right:16px;gap:14px}
+#vw-home-v2-root .vw2-profile .vw2-avatar{width:92px;height:92px;flex:0 0 92px;border-radius:30px}
+#vw-home-v2-root .vw2-profile-main{padding-right:2px}
+
+/* 3) Left cloud rail: one shared center axis for art, cloud pedestal and label. */
+#vw-home-v2-root .vw2-left{padding-left:7px!important;padding-right:7px!important;gap:6px!important}
+#vw-home-v2-root .vw2-left .vw2-rail-btn{flex-basis:76px!important;height:76px!important;min-height:76px!important}
+#vw-home-v2-root .vw2-left .vw2-rail-btn:before{left:4px!important;right:4px!important;bottom:3px!important;height:38px!important}
+#vw-home-v2-root .vw2-left .vw2-rail-btn:after{
+  left:50%!important;right:auto!important;bottom:28px!important;width:52%!important;height:21px!important;
+  transform:translateX(-50%)!important;
+  box-shadow:-20px 4px 0 -7px var(--vw2-cloud-b),20px 4px 0 -7px var(--vw2-cloud-b)!important
+}
+#vw-home-v2-root .vw2-left .vw2-rail-art{left:50%!important;top:1px!important;width:47px!important;height:47px!important;transform:translateX(-50%)!important}
+#vw-home-v2-root .vw2-left .vw2-rail-art .vw2-icon{width:44px!important;height:44px!important}
+#vw-home-v2-root .vw2-left .vw2-rail-label{
+  left:7px!important;right:7px!important;bottom:6px!important;height:18px!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  font-size:9.6px!important;line-height:1.05!important
+}
+#vw-home-v2-root .vw2-left .vw2-rail-btn.vw2-current .vw2-rail-art{transform:translateX(-50%) translateY(-2px) scale(1.05)!important}
+
+/* 4) Center pet/hero scene: keep the pet as the focal point and move copy to the edges. */
+#vw-home-v2-root .vw2-player-mini{display:none!important}
+#vw-home-v2-root .vw2-speech{left:4%!important;top:7%!important;width:min(29%,176px)!important;padding:8px 10px!important}
+#vw-home-v2-root .vw2-reward-card{right:4%!important;top:7%!important;bottom:auto!important;width:132px!important;padding:6px!important}
+#vw-home-v2-root .vw2-stage-copy{
+  left:50%!important;right:auto!important;bottom:2.5%!important;width:min(48%,300px)!important;max-width:300px!important;
+  transform:translateX(-50%)!important;padding:5px 9px 6px!important;border-radius:15px!important
+}
+#vw-home-v2-root .vw2-stage-copy b{font-size:10.5px!important;line-height:1.12!important}
+#vw-home-v2-root .vw2-stage-copy span{font-size:8.2px!important;line-height:1.16!important;margin-top:2px!important}
+#vw-home-v2-root .vw2-stage-cloud.c1{opacity:.52}
+#vw-home-v2-root .vw2-stage-cloud.c2{opacity:.28}
+#vw-home-v2-root .vw2-feature-stage .vw2-rainbow{opacity:.22}
+#vw-home-v2-root .vw2-feature-stage .vw2-mid-hills{opacity:.3}
+#vw-home-v2-root .vw2-pet-sparkles i:nth-child(4){display:none}
+
+/* 5) Accepted top utilities: preserve shape/logic, only optically center their existing SVG art. */
+#vw-home-v2-root .vw2-top-actions .vw2-tool-btn>span,#vw-home-v2-root .vw2-top-actions .vw2-classic>span{
+  width:100%;display:grid;place-items:center;line-height:1
+}
+#vw-home-v2-root .vw2-top-actions .vw2-tool-btn .vw2-icon,#vw-home-v2-root .vw2-top-actions .vw2-classic .vw2-icon{
+  transform:translateY(-1px);transform-origin:center
+}
+
+/* Primary fixed-layout mobile validation sizes: 667x375, 800x360, 844x390, 915x412. */
+@media (max-width:1100px) and (orientation:landscape) and (max-height:650px){
+  #vw-home-v2-root .vw2-top{grid-template-columns:clamp(220px,31vw,270px) minmax(0,1fr) clamp(145px,22vw,190px)!important}
+  #vw-home-v2-root .vw2-profile{padding:5px 9px!important;gap:8px!important}
+  #vw-home-v2-root .vw2-profile .vw2-avatar{width:72px!important;height:72px!important;flex:0 0 72px!important;border-radius:21px!important}
+  #vw-home-v2-root .vw2-profile .vw2-name-row{padding-right:43px!important}
+  #vw-home-v2-root .vw2-profile .vw2-name-row strong{font-size:16.8px!important}
+
+  #vw-home-v2-root .vw2-wallet-pill.coin{flex-basis:110px!important;width:110px!important;min-width:110px!important;grid-template-columns:29px minmax(0,1fr) 13px!important;column-gap:4px!important;padding-left:7px!important;padding-right:5px!important}
+  #vw-home-v2-root .vw2-stat-art-coin,#vw-home-v2-root .vw2-stat-coin-img{width:28px!important;height:28px!important}
+
+  #vw-home-v2-root .vw2-top-actions .vw2-tool-btn .vw2-icon,#vw-home-v2-root .vw2-top-actions .vw2-classic .vw2-icon{transform:translateY(-1px)!important}
+
+  #vw-home-v2-root .vw2-left{padding-left:5px!important;padding-right:5px!important;gap:5px!important}
+  #vw-home-v2-root .vw2-left .vw2-rail-btn{flex-basis:66px!important;height:66px!important;min-height:66px!important}
+  #vw-home-v2-root .vw2-left .vw2-rail-btn:before{left:2px!important;right:2px!important;bottom:2px!important;height:33px!important;border-radius:17px!important}
+  #vw-home-v2-root .vw2-left .vw2-rail-btn:after{bottom:24px!important;width:50%!important;height:18px!important;box-shadow:-16px 3px 0 -6px var(--vw2-cloud-b),16px 3px 0 -6px var(--vw2-cloud-b)!important}
+  #vw-home-v2-root .vw2-left .vw2-rail-art{top:0!important;width:42px!important;height:42px!important}
+  #vw-home-v2-root .vw2-left .vw2-rail-art .vw2-icon{width:39px!important;height:39px!important}
+  #vw-home-v2-root .vw2-left .vw2-rail-label{left:4px!important;right:4px!important;bottom:5px!important;height:15px!important;font-size:8.8px!important}
+
+  #vw-home-v2-root .vw2-speech{left:2%!important;top:4%!important;width:min(31%,112px)!important;padding:4px 6px 5px!important;font-size:7.7px!important;line-height:1.14!important}
+  #vw-home-v2-root .vw2-speech small{font-size:6.1px!important;line-height:1.12!important}
+  #vw-home-v2-root .vw2-reward-card{right:2%!important;top:4%!important;bottom:auto!important;width:78px!important;padding:3px!important;grid-template-columns:21px minmax(0,1fr)!important}
+  #vw-home-v2-root .vw2-reward-card .vw2-icon{width:21px!important;height:21px!important}
+  #vw-home-v2-root .vw2-reward-card b{font-size:6.2px!important}#vw-home-v2-root .vw2-reward-card small{font-size:5.3px!important}
+  #vw-home-v2-root .vw2-pet,#vw-home-v2-root .vw2-pet-halo{top:46%!important}
+  #vw-home-v2-root .vw2-stage-copy{bottom:2px!important;width:min(48%,190px)!important;max-width:190px!important;padding:3px 6px 4px!important;border-radius:10px!important}
+  #vw-home-v2-root .vw2-stage-copy b{font-size:7.8px!important;line-height:1.05!important}
+  #vw-home-v2-root .vw2-stage-copy span{display:none!important}
+  #vw-home-v2-root .vw2-stage-cloud.c2{display:none!important}
+  #vw-home-v2-root .vw2-pet-sparkles i:nth-child(3),#vw-home-v2-root .vw2-pet-sparkles i:nth-child(4){display:none!important}
+}
+
+@media (max-width:1100px) and (orientation:landscape) and (max-height:370px){
+  #vw-home-v2-root .vw2-profile .vw2-avatar{width:68px!important;height:68px!important;flex:0 0 68px!important}
+  #vw-home-v2-root .vw2-profile .vw2-name-row strong{font-size:16px!important}
+  #vw-home-v2-root .vw2-left .vw2-rail-btn{flex-basis:63px!important;height:63px!important;min-height:63px!important}
+  #vw-home-v2-root .vw2-left .vw2-rail-art{width:40px!important;height:40px!important}
+  #vw-home-v2-root .vw2-left .vw2-rail-art .vw2-icon{width:37px!important;height:37px!important}
+  #vw-home-v2-root .vw2-left .vw2-rail-label{font-size:8.5px!important}
+}
+
 `;
 
 
@@ -8822,7 +8926,7 @@ html.night #vw-home-v2-root{filter:saturate(.9) brightness(.82)}html.no-anim #vw
 
 
 
-              <div class="vw2-player-mini" id="vw2-player-mini">${knightFallback()}</div>
+
 
 
 
@@ -10868,7 +10972,7 @@ html.night #vw-home-v2-root{filter:saturate(.9) brightness(.82)}html.no-anim #vw
 
 
 
-    copyImage('#pass-photo img','vw2-player-mini',knightFallback());
+
 
 
 
