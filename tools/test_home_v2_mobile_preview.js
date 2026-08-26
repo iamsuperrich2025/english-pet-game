@@ -11,6 +11,17 @@ must(!home.includes("Home V2 Mobile Responsiveness + Usability Recovery Pass"), 
 must(!home.includes("Home V2 Mobile Landscape Emergency Correction Pass"), "old emergency long-scroll pass still present");
 must(home.includes("Home V2 Locked Mobile Landscape Recovery R2"), "locked mobile R2 CSS missing");
 must(home.includes("Home V2 Premium Cute Lightweight Visual Fidelity Pass R2"), "premium cute lightweight R2 CSS missing");
+must(home.includes("Home V2 Premium Cute Lightweight Visual Fidelity Pass R3"), "premium cute lightweight R3 CSS missing");
+must(home.includes("class=\"vw2-rail-art\""), "R3 cloud rail art wrapper missing");
+must(home.includes("class=\"vw2-rail-label\""), "R3 cloud rail label wrapper missing");
+must(home.includes("function currentHouseVisual()"), "authoritative house visual resolver missing");
+must(home.includes("function syncHouseVisual()"), "house backdrop sync helper missing");
+must(home.includes("id=\"vw2-house-visual\""), "owned/current house backdrop DOM missing");
+must(home.includes("img/coins/coin_gold.png"), "real gold coin asset is not used by Home V2 statistics");
+must(home.includes("id=\"vw2-date\""), "profile DATE field missing");
+must(home.includes("textOf('#clock-chip .ck-date'"), "profile DATE is not sourced from the authoritative clock chip");
+must(home.includes("grid-template-rows:80px minmax(0,1fr) 50px!important"), "R3 primary mobile profile allocation missing");
+
 must(home.includes("vw2-left-scroll-cue"), "left rail down-arrow cue missing");
 must(home.includes("scrollbar-width:none!important"), "left rail hidden-scrollbar rule missing");
 must(home.includes("function updateLeftRailCue()"), "left rail cue state helper missing");
@@ -41,4 +52,4 @@ must(preview.includes("Down-arrow scroll cue"), "preview scroll-cue check missin
 must(!preview.includes("zoom:"), "preview must not use CSS/browser zoom");
 
 if(fail.length){ console.error("FAIL\n- " + fail.join("\n- ")); process.exit(1); }
-console.log("PASS Home V2 mobile locked layout + Premium Cute Lightweight R2 + local device preview static checks");
+console.log("PASS Home V2 mobile locked layout + Premium Cute Lightweight R3 + authoritative house/stat visuals + local device preview static checks");

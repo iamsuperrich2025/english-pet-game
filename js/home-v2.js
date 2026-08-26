@@ -2231,7 +2231,7 @@
 
 
 
-    return `<button class="vw2-rail-btn" data-vw2-action="${htmlEscape(actionName)}"${sourceAttrs(sourceSelector)}><span>${icon(iconName)}</span><b>${htmlEscape(label)}</b><i class="vw2-source-badge" hidden></i></button>`;
+    return `<button class="vw2-rail-btn" data-vw2-action="${htmlEscape(actionName)}"${sourceAttrs(sourceSelector)}><span class="vw2-rail-art">${icon(iconName)}</span><b class="vw2-rail-label">${htmlEscape(label)}</b><i class="vw2-source-badge" hidden></i></button>`;
 
 
 
@@ -2329,6 +2329,104 @@
 
 
 
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+  function walletArtwork(kind){
+    if(kind === 'coin'){
+      return `<span class="vw2-stat-art vw2-stat-art-coin"><img class="vw2-stat-coin-img" src="img/coins/coin_gold.png" alt="" decoding="async"></span>`;
+    }
+    const iconName = kind === 'today' ? 'star'
+      : kind === 'online' ? 'globe'
+      : kind === 'computer' ? 'computer'
+      : kind === 'worth' ? 'stats'
+      : 'sparkle';
+    return `<span class="vw2-stat-art">${icon(iconName)}</span>`;
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+  function currentHouseVisual(){
+    try{
+      if(typeof state === 'undefined' || !state || !state.home || typeof homeInfo !== 'function'){
+        return {id:'', name:'ยังไม่มีที่พัก', variant:'none', url:''};
+      }
+      const h = homeInfo(state.home);
+      if(!h) return {id:'', name:'ยังไม่มีที่พัก', variant:'none', url:''};
+
+      /* Mirror the authoritative Classic renderer for the variants that exist
+         in the current repository: power cut -> _dark, then maintenance decay
+         -> _decayed, otherwise normal. img/home was dependency-verified by the
+         R3 task exporter before this patch was authored. */
+      let variant = 'normal';
+      if(state.powerCut) variant = 'dark';
+      else if(typeof homeDecayed === 'function' && homeDecayed()) variant = 'decayed';
+
+      const suffix = variant === 'normal' ? '' : `_${variant}`;
+      const key = `home_${h.id}${suffix}`;
+      let url = `img/home/${key}.png`;
+      try{
+        if(typeof IMG_FILES !== 'undefined' && IMG_FILES && IMG_FILES[key]) url = IMG_FILES[key];
+      }catch(_){ }
+      return {id:h.id, name:h.name || h.id, variant, url};
+    }catch(_){
+      return {id:'', name:'ยังไม่มีที่พัก', variant:'none', url:''};
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+  function syncHouseVisual(){
+    const box = document.getElementById('vw2-house-visual');
+    if(!box) return;
+    const h = currentHouseVisual();
+    box.dataset.home = h.id || '';
+    box.dataset.variant = h.variant || 'none';
+    box.classList.toggle('is-empty', !h.url);
+    const label = document.getElementById('vw2-house-label');
+    if(label) label.textContent = h.url ? h.name : 'ยังไม่มีบ้าน';
+
+    if(!h.url){
+      if(box.dataset.src){
+        box.dataset.src = '';
+        box.replaceChildren();
+      }
+      return;
+    }
+    if(box.dataset.src === h.url) return;
+    box.dataset.src = h.url;
+    box.innerHTML = `<img src="${htmlEscape(h.url)}" alt="" decoding="async">`;
   }
 
 
@@ -6825,6 +6923,174 @@ html.night #vw-home-v2-root{filter:saturate(.9) brightness(.82)}html.no-anim #vw
 
 @media (prefers-reduced-motion:reduce){#vw-home-v2-root .vw2-atmosphere i,#vw-home-v2-root .vw2-stage-cloud,#vw-home-v2-root .vw2-castle,#vw-home-v2-root .vw2-rainbow,#vw-home-v2-root .vw2-pet img,#vw-home-v2-root .vw2-pet .vw2-dragon-art,#vw-home-v2-root .vw2-pet-sparkles i{animation:none!important}}
 
+/* === Home V2 Premium Cute Lightweight Visual Fidelity Pass R3 ===
+   Visual-only R3: Premium Hero Identity Card + true puffy cloud rail +
+   authoritative owned/current house backdrop + contextual top-stat artwork.
+   Bottom horizontal rail is intentionally not restyled here. */
+
+/* Premium Hero Identity Card */
+#vw-home-v2-root .vw2-profile{
+  position:relative;overflow:hidden;isolation:isolate;padding:10px 13px 9px 11px;
+  gap:12px;border-radius:28px;
+  background:
+    radial-gradient(circle at 10% 8%,rgba(255,255,255,.98) 0 9%,transparent 24%),
+    radial-gradient(circle at 88% 15%,rgba(255,196,230,.62),transparent 30%),
+    linear-gradient(145deg,#fffefd 0%,#eaf8ff 48%,#ede1ff 100%);
+  box-shadow:0 6px 0 rgba(91,73,169,.22),0 12px 22px rgba(61,66,145,.17),inset 0 2px 0 #fff,inset 0 0 0 2px rgba(166,143,235,.22)
+}
+#vw-home-v2-root .vw2-profile:after{content:"";position:absolute;z-index:-1;right:-24px;bottom:-43px;width:145px;height:145px;border-radius:50%;background:radial-gradient(circle at 38% 35%,rgba(255,240,133,.42) 0 8%,transparent 9%),radial-gradient(circle,rgba(166,132,244,.18),transparent 67%);pointer-events:none}
+#vw-home-v2-root .vw2-profile-kicker{position:absolute;right:12px;top:7px;display:flex;align-items:center;gap:4px;font-size:7px;font-weight:950;letter-spacing:.09em;color:#8467ba;text-transform:uppercase}
+#vw-home-v2-root .vw2-profile-kicker i{font-style:normal;color:#ffc83f;font-size:11px;text-shadow:0 1px 0 #fff}
+#vw-home-v2-root .vw2-profile .vw2-avatar{width:82px;height:82px;flex:0 0 82px;border-radius:27px;border:4px solid #fff;box-shadow:0 0 0 3px #c7b0ff,0 7px 13px rgba(78,69,142,.22),inset 0 2px 0 #fff}
+#vw-home-v2-root .vw2-profile-main{display:flex;flex-direction:column;justify-content:center;min-width:0}
+#vw-home-v2-root .vw2-profile .vw2-name-row{padding-right:70px;gap:5px}
+#vw-home-v2-root .vw2-profile .vw2-name-row strong{font-size:20px;line-height:1.08;font-weight:950;color:#263567;text-shadow:0 1px 0 #fff}
+#vw-home-v2-root .vw2-profile-meta{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.95fr) minmax(0,.88fr) minmax(0,.72fr);gap:4px;margin-top:5px}
+#vw-home-v2-root .vw2-profile-meta-chip{min-width:0;padding:3px 6px 4px;border:2px solid rgba(255,255,255,.94);border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(229,239,255,.88));box-shadow:0 2px 0 rgba(102,88,173,.11),inset 0 1px 0 #fff;overflow:hidden}
+#vw-home-v2-root .vw2-profile-meta-chip:nth-child(2){background:linear-gradient(180deg,#f7efff,#e2d3ff)}
+#vw-home-v2-root .vw2-profile-meta-chip:nth-child(3){background:linear-gradient(180deg,#fff9dc,#ffe7a1)}
+#vw-home-v2-root .vw2-profile-meta-chip:nth-child(4){background:linear-gradient(180deg,#edfbff,#ccefff)}
+#vw-home-v2-root .vw2-profile-meta-chip small{display:block;font-size:6.4px;line-height:1;color:#756c9b;font-weight:950;letter-spacing:.025em;white-space:nowrap}
+#vw-home-v2-root .vw2-profile-meta-chip b{display:block;margin-top:2px;font-size:8.4px;line-height:1.05;color:#394877;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#vw-home-v2-root .vw2-profile .vw2-id{display:block;margin:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none;color:inherit;font-size:inherit}
+#vw-home-v2-root .vw2-profile-chips{display:flex;align-items:center;gap:5px;margin-top:5px;min-width:0}
+#vw-home-v2-root .vw2-profile .vw2-rank{margin:0;min-width:0;max-width:100%;padding:3px 8px;border-radius:999px;font-size:8.5px;line-height:1.1}
+#vw-home-v2-root .vw2-profile .vw2-sync-chip{margin:0;max-width:110px}
+
+/* Top statistics: contextual art, with the real project coin PNG for My Coins. */
+#vw-home-v2-root .vw2-wallet-pill{display:grid!important;grid-template-columns:36px minmax(0,1fr);grid-template-rows:1fr;align-items:center!important;justify-content:stretch!important;column-gap:5px!important;text-align:left!important;padding:5px 8px!important}
+#vw-home-v2-root .vw2-wallet-pill.coin{grid-template-columns:42px minmax(0,1fr) 18px!important}
+#vw-home-v2-root .vw2-stat-art{width:34px;height:34px;display:grid;place-items:center;align-self:center;filter:drop-shadow(0 3px 3px rgba(72,64,130,.16))}
+#vw-home-v2-root .vw2-stat-art .vw2-icon{width:34px!important;height:34px!important}
+#vw-home-v2-root .vw2-stat-art-coin{width:40px;height:40px}
+#vw-home-v2-root .vw2-stat-coin-img{display:block;width:40px;height:40px;object-fit:contain;filter:drop-shadow(0 4px 3px rgba(142,96,16,.25))}
+#vw-home-v2-root .vw2-stat-copy{min-width:0;display:flex;flex-direction:column;justify-content:center;line-height:1.02}
+#vw-home-v2-root .vw2-stat-copy small{display:block;font-size:8px!important;line-height:1.05}
+#vw-home-v2-root .vw2-stat-copy b{display:block;font-size:13px!important;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#vw-home-v2-root .vw2-stat-copy .vw2-pill-status{font-size:6.6px!important;line-height:1.05;margin-top:2px!important}
+#vw-home-v2-root .vw2-wallet-pill.coin em{grid-column:3!important;grid-row:1!important;align-self:center;justify-self:end}
+
+/* Left Vertical Rail R3: icon floats above a cloud pedestal; label sits inside cloud. */
+#vw-home-v2-root .vw2-left{position:relative;display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;overflow-y:auto!important;overflow-x:hidden!important;padding:8px 6px 28px!important;gap:7px!important;scrollbar-width:none!important;-ms-overflow-style:none;scroll-padding-bottom:28px;-webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior:contain}
+#vw-home-v2-root .vw2-left::-webkit-scrollbar{display:none!important;width:0!important;height:0!important}
+#vw-home-v2-root .vw2-left .vw2-rail-btn{
+  --vw2-cloud-a:#f9f6ff;--vw2-cloud-b:#cdbdff;--vw2-cloud-ink:#56417e;
+  position:relative!important;isolation:isolate;flex:0 0 78px!important;width:100%!important;height:78px!important;min-height:78px!important;
+  display:block!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;
+  box-shadow:none!important;overflow:visible!important;color:var(--vw2-cloud-ink)!important
+}
+#vw-home-v2-root .vw2-left .vw2-rail-btn:nth-child(4n+2){--vw2-cloud-a:#fff5fb;--vw2-cloud-b:#ffb8d7;--vw2-cloud-ink:#7b3f69}
+#vw-home-v2-root .vw2-left .vw2-rail-btn:nth-child(4n+3){--vw2-cloud-a:#f4fdff;--vw2-cloud-b:#9fe4ff;--vw2-cloud-ink:#356783}
+#vw-home-v2-root .vw2-left .vw2-rail-btn:nth-child(4n+4){--vw2-cloud-a:#f8fff5;--vw2-cloud-b:#aee7c5;--vw2-cloud-ink:#3d7358}
+#vw-home-v2-root .vw2-left .vw2-rail-btn:before{
+  content:"";position:absolute;z-index:1;left:3px;right:3px;bottom:3px;height:39px;
+  border:3px solid rgba(255,255,255,.98);border-radius:21px 21px 18px 18px;
+  background:radial-gradient(circle at 24% 10%,rgba(255,255,255,.98),transparent 27%),linear-gradient(180deg,var(--vw2-cloud-a),var(--vw2-cloud-b));
+  box-shadow:0 5px 0 rgba(89,70,156,.2),0 9px 13px rgba(65,60,130,.13),inset 0 2px 0 #fff
+}
+#vw-home-v2-root .vw2-left .vw2-rail-btn:after{
+  content:"";position:absolute;z-index:0;left:15px;bottom:29px;width:30px;height:22px;border:3px solid #fff;border-bottom:0;border-radius:50% 50% 0 0;
+  background:linear-gradient(180deg,var(--vw2-cloud-a),var(--vw2-cloud-b));
+  box-shadow:24px -5px 0 -2px var(--vw2-cloud-a),44px 2px 0 -5px var(--vw2-cloud-b);
+  pointer-events:none
+}
+#vw-home-v2-root .vw2-left .vw2-rail-art{position:absolute!important;z-index:4!important;left:50%;top:0!important;transform:translateX(-50%);width:48px!important;height:48px!important;display:grid!important;place-items:center!important}
+#vw-home-v2-root .vw2-left .vw2-rail-art:before{content:"";position:absolute;inset:4px;border-radius:50%;background:radial-gradient(circle at 30% 20%,#fff 0 12%,transparent 14%),linear-gradient(180deg,rgba(255,255,255,.96),rgba(243,236,255,.74));border:2px solid rgba(255,255,255,.94);box-shadow:0 4px 8px rgba(74,64,137,.14);z-index:-1}
+#vw-home-v2-root .vw2-left .vw2-rail-art .vw2-icon{width:45px!important;height:45px!important;filter:drop-shadow(0 4px 3px rgba(62,52,116,.18))}
+#vw-home-v2-root .vw2-left .vw2-rail-label{position:absolute!important;z-index:4!important;left:5px;right:5px;bottom:9px;margin:0!important;font-size:10px!important;line-height:1.08!important;font-weight:950!important;color:var(--vw2-cloud-ink)!important;text-align:center!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;text-shadow:0 1px 0 #fff!important}
+#vw-home-v2-root .vw2-left .vw2-rail-btn.vw2-current:before,#vw-home-v2-root .vw2-left .vw2-rail-btn[aria-current="page"]:before{
+  border-color:#fff8b0;box-shadow:0 5px 0 #cb8c31,0 0 0 3px rgba(255,224,89,.48),0 10px 15px rgba(118,73,35,.15),inset 0 2px 0 #fff;
+  background:radial-gradient(circle at 28% 9%,#fff 0 12%,transparent 28%),linear-gradient(180deg,#fff6aa,#ffcf55)
+}
+#vw-home-v2-root .vw2-left .vw2-rail-btn.vw2-current .vw2-rail-art{transform:translateX(-50%) translateY(-2px) scale(1.06)}
+#vw-home-v2-root .vw2-left .vw2-rail-btn:disabled{opacity:.72!important;filter:grayscale(.35) saturate(.72)!important}
+#vw-home-v2-root .vw2-left .vw2-rail-btn:disabled .vw2-rail-label{color:#6e6a82!important}
+#vw-home-v2-root .vw2-left-scroll-cue{z-index:10!important}
+
+/* Center hero: actual selected/owned house from state.home, never decorative fake castle. */
+#vw-home-v2-root .vw2-house-backdrop{position:absolute;z-index:2;left:4%;right:4%;top:9%;bottom:12%;display:flex;align-items:flex-end;justify-content:center;pointer-events:none;opacity:.96}
+#vw-home-v2-root .vw2-house-backdrop img{display:block;width:100%;height:100%;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 8px 8px rgba(27,33,74,.25))}
+#vw-home-v2-root .vw2-house-backdrop[data-variant="dark"] img{filter:drop-shadow(0 8px 8px rgba(18,23,58,.3)) saturate(.96)}
+#vw-home-v2-root .vw2-house-backdrop[data-variant="decayed"] img{filter:drop-shadow(0 8px 8px rgba(30,33,57,.26)) saturate(.9)}
+#vw-home-v2-root .vw2-house-backdrop.is-empty{display:none}
+#vw-home-v2-root .vw2-house-chip{position:absolute;z-index:6;right:4%;top:5%;max-width:36%;height:28px;padding:2px 8px 2px 4px;border:2px solid rgba(255,255,255,.94);border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(232,222,255,.92));box-shadow:0 3px 0 rgba(91,72,155,.15);display:flex;align-items:center;gap:4px;color:#5c4b85;font-size:8px;font-weight:950;white-space:nowrap;overflow:hidden}
+#vw-home-v2-root .vw2-house-chip .vw2-icon{width:22px!important;height:22px!important;flex:0 0 22px}
+#vw-home-v2-root .vw2-house-chip span{overflow:hidden;text-overflow:ellipsis}
+#vw-home-v2-root .vw2-feature-stage .vw2-rainbow{opacity:.34}
+#vw-home-v2-root .vw2-feature-stage .vw2-mid-hills{opacity:.43}
+#vw-home-v2-root .vw2-feature-stage .vw2-stage-foreground{opacity:.5}
+#vw-home-v2-root .vw2-pet-halo{z-index:3}
+#vw-home-v2-root .vw2-pet{z-index:5}
+#vw-home-v2-root .vw2-player-mini,#vw-home-v2-root .vw2-speech,#vw-home-v2-root .vw2-reward-card,#vw-home-v2-root .vw2-stage-copy{z-index:7}
+
+/* Primary mobile target 844x390, also covering 667x375 / 800x360 / 915x412. */
+@media (max-width:1100px) and (orientation:landscape) and (max-height:650px){
+  #vw-home-v2-root .vw2-shell{grid-template-rows:80px minmax(0,1fr) 50px!important}
+  #vw-home-v2-root .vw2-top{grid-template-columns:minmax(190px,28%) minmax(0,1fr) minmax(145px,22%)!important;grid-template-rows:80px!important;height:80px!important}
+  #vw-home-v2-root .vw2-profile{height:80px!important;padding:5px 7px!important;gap:7px!important;border-radius:21px!important}
+  #vw-home-v2-root .vw2-profile-kicker{right:7px;top:4px;font-size:5.4px}
+  #vw-home-v2-root .vw2-profile-kicker i{font-size:8px}
+  #vw-home-v2-root .vw2-profile .vw2-avatar{width:64px!important;height:64px!important;flex:0 0 64px!important;border-radius:19px!important;border-width:3px!important}
+  #vw-home-v2-root .vw2-profile .vw2-name-row{padding-right:48px!important}
+  #vw-home-v2-root .vw2-profile .vw2-name-row strong{font-size:16.5px!important}
+  #vw-home-v2-root .vw2-profile .vw2-pencil .vw2-icon{width:17px!important;height:17px!important}
+  #vw-home-v2-root .vw2-profile-meta{grid-template-columns:1fr 1fr;gap:2px;margin-top:3px}
+  #vw-home-v2-root .vw2-profile-meta-chip{padding:2px 4px 3px;border-width:1px;border-radius:7px}
+  #vw-home-v2-root .vw2-profile-meta-chip small{font-size:4.9px}
+  #vw-home-v2-root .vw2-profile-meta-chip b{font-size:6.8px;margin-top:1px}
+  #vw-home-v2-root .vw2-profile-chips{margin-top:2px!important;gap:3px!important}
+  #vw-home-v2-root .vw2-profile .vw2-rank{font-size:6.7px!important;padding:2px 5px!important}
+  #vw-home-v2-root .vw2-profile .vw2-sync-chip{font-size:5.8px!important;padding:2px 4px!important;max-width:72px!important}
+
+  #vw-home-v2-root .vw2-wallet,#vw-home-v2-root .vw2-top-actions{height:80px!important}
+  #vw-home-v2-root .vw2-wallet-pill{flex:0 0 82px!important;width:82px!important;min-width:82px!important;height:62px!important;min-height:62px!important;grid-template-columns:27px minmax(0,1fr)!important;column-gap:3px!important;padding:3px 4px!important}
+  #vw-home-v2-root .vw2-wallet-pill.coin{flex-basis:102px!important;width:102px!important;min-width:102px!important;grid-template-columns:31px minmax(0,1fr) 13px!important}
+  #vw-home-v2-root .vw2-stat-art{width:26px;height:26px}.vw2-stat-art .vw2-icon{width:26px!important;height:26px!important}
+  #vw-home-v2-root .vw2-stat-art-coin,#vw-home-v2-root .vw2-stat-coin-img{width:30px;height:30px}
+  #vw-home-v2-root .vw2-stat-copy small{font-size:6.5px!important}
+  #vw-home-v2-root .vw2-stat-copy b{font-size:10.3px!important}
+  #vw-home-v2-root .vw2-stat-copy .vw2-pill-status{font-size:5.6px!important}
+  #vw-home-v2-root .vw2-top-actions .vw2-tool-btn,#vw-home-v2-root .vw2-top-actions .vw2-classic{height:62px!important;min-height:62px!important}
+
+  #vw-home-v2-root .vw2-main-grid{grid-template-columns:clamp(82px,13vw,104px) clamp(88px,14vw,112px) minmax(0,1fr) clamp(128px,20vw,166px)!important}
+  #vw-home-v2-root .vw2-left{padding:5px 4px 23px!important;gap:5px!important}
+  #vw-home-v2-root .vw2-left .vw2-rail-btn{flex-basis:68px!important;height:68px!important;min-height:68px!important}
+  #vw-home-v2-root .vw2-left .vw2-rail-btn:before{left:2px;right:2px;bottom:2px;height:34px;border-width:2px;border-radius:18px}
+  #vw-home-v2-root .vw2-left .vw2-rail-btn:after{left:12px;bottom:25px;width:26px;height:18px;border-width:2px;box-shadow:20px -4px 0 -2px var(--vw2-cloud-a),36px 1px 0 -5px var(--vw2-cloud-b)}
+  #vw-home-v2-root .vw2-left .vw2-rail-art{width:43px!important;height:43px!important;top:0!important}
+  #vw-home-v2-root .vw2-left .vw2-rail-art .vw2-icon{width:41px!important;height:41px!important}
+  #vw-home-v2-root .vw2-left .vw2-rail-label{bottom:7px;font-size:9px!important}
+  #vw-home-v2-root .vw2-left-scroll-cue{width:32px;height:18px;bottom:1px;font-size:15px}
+
+  #vw-home-v2-root .vw2-feature-stage{top:61px!important;bottom:43px!important}
+  #vw-home-v2-root .vw2-house-backdrop{left:2%;right:2%;top:8%;bottom:10%}
+  #vw-home-v2-root .vw2-house-chip{right:2%;top:3%;height:20px;max-width:39%;padding:1px 5px 1px 2px;border-width:1px;font-size:6px}
+  #vw-home-v2-root .vw2-house-chip .vw2-icon{width:16px!important;height:16px!important;flex-basis:16px}
+  #vw-home-v2-root .vw2-rainbow{opacity:.2!important}
+  #vw-home-v2-root .vw2-mid-hills{opacity:.28!important}
+  #vw-home-v2-root .vw2-pet-halo{width:126px!important;height:126px!important}
+  #vw-home-v2-root .vw2-pet{width:112px!important;height:112px!important}
+}
+
+/* Extra-short 800x360 class: keep enlarged identity card without stealing the hero. */
+@media (max-width:1100px) and (orientation:landscape) and (max-height:370px){
+  #vw-home-v2-root .vw2-shell{grid-template-rows:76px minmax(0,1fr) 50px!important}
+  #vw-home-v2-root .vw2-top{grid-template-rows:76px!important;height:76px!important}
+  #vw-home-v2-root .vw2-profile,#vw-home-v2-root .vw2-wallet,#vw-home-v2-root .vw2-top-actions{height:76px!important}
+  #vw-home-v2-root .vw2-profile .vw2-avatar{width:60px!important;height:60px!important;flex-basis:60px!important}
+  #vw-home-v2-root .vw2-profile .vw2-name-row strong{font-size:15.5px!important}
+  #vw-home-v2-root .vw2-wallet-pill,#vw-home-v2-root .vw2-top-actions .vw2-tool-btn,#vw-home-v2-root .vw2-top-actions .vw2-classic{height:60px!important;min-height:60px!important}
+  #vw-home-v2-root .vw2-left .vw2-rail-btn{flex-basis:64px!important;height:64px!important;min-height:64px!important}
+  #vw-home-v2-root .vw2-left .vw2-rail-art{width:40px!important;height:40px!important}
+  #vw-home-v2-root .vw2-left .vw2-rail-art .vw2-icon{width:38px!important;height:38px!important}
+  #vw-home-v2-root .vw2-left .vw2-rail-label{font-size:8.6px!important}
+}
+
+@media (prefers-reduced-motion:reduce){
+  #vw-home-v2-root .vw2-left .vw2-rail-btn,#vw-home-v2-root .vw2-left .vw2-rail-art{transition:none!important}
+}
+
+
 
 
 
@@ -7772,6 +8038,20 @@ html.night #vw-home-v2-root{filter:saturate(.9) brightness(.82)}html.no-anim #vw
 
 
 
+            <div class="vw2-profile-kicker"><span>MY PROFILE</span><i aria-hidden="true">✦</i></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
             <div class="vw2-avatar" id="vw2-avatar">${knightFallback()}</div>
 
 
@@ -7814,7 +8094,7 @@ html.night #vw-home-v2-root{filter:saturate(.9) brightness(.82)}html.no-anim #vw
 
 
 
-              <div class="vw2-id" id="vw2-id">ID —</div>
+              <div class="vw2-profile-meta">
 
 
 
@@ -7828,7 +8108,63 @@ html.night #vw-home-v2-root{filter:saturate(.9) brightness(.82)}html.no-anim #vw
 
 
 
-              <div class="vw2-minirow"><span id="vw2-grade">ระดับชั้น —</span><span aria-hidden="true"> · </span><span id="vw2-clock">—</span></div>
+                <span class="vw2-profile-meta-chip class"><small>ระดับ / ชั้น</small><b id="vw2-grade">—</b></span>
+
+
+
+
+
+
+
+
+
+
+
+
+
+                <span class="vw2-profile-meta-chip id"><small>PLAYER ID</small><b id="vw2-id">ID —</b></span>
+
+
+
+
+
+
+
+
+
+
+
+
+
+                <span class="vw2-profile-meta-chip date"><small>DATE</small><b id="vw2-date">—</b></span>
+
+
+
+
+
+
+
+
+
+
+
+
+
+                <span class="vw2-profile-meta-chip time"><small>TIME</small><b id="vw2-clock">—</b></span>
+
+
+
+
+
+
+
+
+
+
+
+
+
+              </div>
 
 
 
@@ -7898,7 +8234,7 @@ html.night #vw-home-v2-root{filter:saturate(.9) brightness(.82)}html.no-anim #vw
 
 
 
-            <button class="vw2-wallet-pill coin" data-vw2-action="rank" data-vw2-source="#btn-rail-rank" title="เหรียญที่มีอยู่"><small>เหรียญของฉัน</small>${icon('coin')}<b id="vw2-coins">0</b><em>+</em></button>
+            <button class="vw2-wallet-pill coin" data-vw2-action="rank" data-vw2-source="#btn-rail-rank" title="เหรียญที่มีอยู่">${walletArtwork('coin')}<span class="vw2-stat-copy"><small>เหรียญของฉัน</small><b id="vw2-coins">0</b><span class="vw2-pill-status">ยอดคงเหลือ</span></span><em>+</em></button>
 
 
 
@@ -7912,7 +8248,7 @@ html.night #vw-home-v2-root{filter:saturate(.9) brightness(.82)}html.no-anim #vw
 
 
 
-            <div class="vw2-wallet-pill today" title="เหรียญที่หาได้วันนี้"><small>รายได้วันนี้</small><b>+<span id="vw2-today">0</span></b><span class="vw2-pill-status">สะสมวันนี้</span></div>
+            <div class="vw2-wallet-pill today" title="เหรียญที่หาได้วันนี้">${walletArtwork('today')}<span class="vw2-stat-copy"><small>รายได้วันนี้</small><b>+<span id="vw2-today">0</span></b><span class="vw2-pill-status">สะสมวันนี้</span></span></div>
 
 
 
@@ -7926,7 +8262,7 @@ html.night #vw-home-v2-root{filter:saturate(.9) brightness(.82)}html.no-anim #vw
 
 
 
-            <div class="vw2-wallet-pill online" title="รายได้ที่ได้รับขณะออนไลน์"><small>รายได้ออนไลน์</small><b>+<span id="vw2-online-earn">0</span></b><span class="vw2-pill-status" id="vw2-online-status">กำลังตรวจสอบ</span></div>
+            <div class="vw2-wallet-pill online" title="รายได้ที่ได้รับขณะออนไลน์">${walletArtwork('online')}<span class="vw2-stat-copy"><small>รายได้ออนไลน์</small><b>+<span id="vw2-online-earn">0</span></b><span class="vw2-pill-status" id="vw2-online-status">กำลังตรวจสอบ</span></span></div>
 
 
 
@@ -7940,7 +8276,7 @@ html.night #vw-home-v2-root{filter:saturate(.9) brightness(.82)}html.no-anim #vw
 
 
 
-            <div class="vw2-wallet-pill computer" title="รายได้สะสมจากคอมพิวเตอร์"><small>รายได้จากคอม</small><b>+<span id="vw2-comp-earn">0</span></b><span class="vw2-pill-status" id="vw2-comp-status">กำลังตรวจสอบ</span></div>
+            <div class="vw2-wallet-pill computer" title="รายได้สะสมจากคอมพิวเตอร์">${walletArtwork('computer')}<span class="vw2-stat-copy"><small>รายได้จากคอม</small><b>+<span id="vw2-comp-earn">0</span></b><span class="vw2-pill-status" id="vw2-comp-status">กำลังตรวจสอบ</span></span></div>
 
 
 
@@ -7954,7 +8290,7 @@ html.night #vw-home-v2-root{filter:saturate(.9) brightness(.82)}html.no-anim #vw
 
 
 
-            <div class="vw2-wallet-pill worth"><small>มูลค่ารวม</small><b id="vw2-worth">0</b><span class="vw2-pill-status">ทรัพย์สินทั้งหมด</span></div>
+            <div class="vw2-wallet-pill worth">${walletArtwork('worth')}<span class="vw2-stat-copy"><small>มูลค่ารวม</small><b id="vw2-worth">0</b><span class="vw2-pill-status">ทรัพย์สินทั้งหมด</span></span></div>
 
 
 
@@ -8374,7 +8710,21 @@ html.night #vw-home-v2-root{filter:saturate(.9) brightness(.82)}html.no-anim #vw
 
 
 
-              <div class="vw2-castle">${castleArtwork()}</div>
+              <div class="vw2-house-backdrop is-empty" id="vw2-house-visual" aria-hidden="true"></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+              <div class="vw2-house-chip" aria-hidden="true">${icon('home')}<span id="vw2-house-label">ยังไม่มีบ้าน</span></div>
 
 
 
@@ -9489,6 +9839,34 @@ html.night #vw-home-v2-root{filter:saturate(.9) brightness(.82)}html.no-anim #vw
 
 
 
+      if(btn.classList.contains('vw2-rail-btn')){
+
+
+
+
+
+
+        const current = !!(source && (source.classList.contains('active') || source.classList.contains('on') || source.getAttribute('aria-current') === 'page' || source.getAttribute('aria-selected') === 'true' || source.getAttribute('aria-pressed') === 'true'));
+
+
+
+
+
+
+        btn.classList.toggle('vw2-current', current);
+
+
+
+
+
+
+      }
+
+
+
+
+
+
 
 
 
@@ -10364,7 +10742,21 @@ html.night #vw-home-v2-root{filter:saturate(.9) brightness(.82)}html.no-anim #vw
 
 
 
-    setText('vw2-clock', textOf('#clock-chip','วันนี้'));
+    setText('vw2-date', textOf('#clock-chip .ck-date','—'));
+
+
+
+
+
+
+
+
+
+
+
+
+
+    setText('vw2-clock', textOf('#clock-chip .ck-time', textOf('#clock-chip','วันนี้')));
 
 
 
@@ -10491,6 +10883,20 @@ html.night #vw-home-v2-root{filter:saturate(.9) brightness(.82)}html.no-anim #vw
 
 
     syncPetVisual();
+
+
+
+
+
+
+
+
+
+
+
+
+
+    syncHouseVisual();
 
 
 
