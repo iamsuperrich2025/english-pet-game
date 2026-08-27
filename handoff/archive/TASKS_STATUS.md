@@ -5605,3 +5605,10 @@
 - **รอบ 1264 · แก้ผ้าคลุมมังกรกางอยู่นอกตัว:** profile `dragon.cape` ใหญ่เกินจริง (`3.00×`, y `-0.20`) จึงทับปีก/ขา; ปรับเป็น `1.75×`, y `-0.08` ให้ชุดแนบช่วงคอ–อก (`js/data/wear_extra.js`)
 - เพิ่ม regression ล็อกพิกัดผ้าคลุม; visual composite ท่าหิววัยเด็ก+วัยโตยืนยันชุดไม่กางลงพื้น และ `node --check`, `test_dress_luxury.js`, `test_pet_bond.js` ผ่าน (`tools/test_dress_luxury.js`)
 - in-app browser ยังถูก Windows ACL บล็อกตอนเริ่ม runtime; ไม่เปลี่ยนหน้าตาน้อง, asset, หรือชุดชนิดอื่น
+
+
+## ⏬ ย้ายเมื่อ 2026-08-27 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1266 · กัน Safe Pipeline deploy `dist` คนละ version กับ Git HEAD:** รอบ 1263 บัมพ์ HEAD เป็น `.1136` แต่หยิบ prebuilt `.1134` ขึ้น Hosting ทำให้ live verify หยุดก่อน push
+- `tools/deploy_firebase.sh` อ่าน version ของ staged HEAD และ prebuilt dist ก่อนใช้ exact artifact; ถ้าไม่ตรงกันจะแจ้งเหตุผลและ fallback build จาก HEAD อัตโนมัติ
+- เพิ่ม `tools/test_safe_deploy_version.js`; `bash -n tools/deploy_firebase.sh` และ regression version gate ผ่าน
