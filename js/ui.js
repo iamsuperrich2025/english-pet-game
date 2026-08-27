@@ -8262,7 +8262,7 @@ function renderMarketCard(){
     ${renderMarketBrowse()}
     ${renderVehicleShop()}`;
 
-  el.querySelectorAll('.strip-wrap').forEach(bindStripArrows);   // รอบ 292: ลูกศรแถบปัดแนวนอน (ชั้นเพื่อน+คลังของฉัน)
+  el.querySelectorAll('.strip-wrap').forEach(bindStripArrows);   // รอบ 292: ลูกศรแถบปัดแนวนอน (ตลาดรวม+คลังของฉัน)
   const soldOk = document.getElementById('mkt-sold-ok');
   if(soldOk) soldOk.addEventListener('click', ()=>{ state.tradeSold = []; saveState(); renderMarketCard(); });
   el.querySelectorAll('.order-deliver').forEach(b=>b.addEventListener('click', ()=>deliverOrder(+b.dataset.i)));
@@ -8320,7 +8320,7 @@ function openWishlistDialog(){
       <h2>💖 ของที่หนูเล็งไว้</h2>
       <button class="cf-ok wl-done">เสร็จแล้ว ✅</button>
     </div>
-    <p class="ld-note">แตะเลือกของที่อยากได้ — พอมีเพื่อนลงขายในตลาด เกมจะแจ้งเตือนหนูทันที! · ปัดซ้ายขวาดูของทั้งหมด</p>
+    <p class="ld-note">แตะเลือกของที่อยากได้ — พอมีผู้เล่นอื่นลงขายในตลาด เกมจะแจ้งเตือนหนูทันที! · ปัดซ้ายขวาดูของทั้งหมด</p>
     <div class="strip-wrap">
       <button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button>
       <div class="wl-grid strip-x">${grid()}</div>
@@ -8360,28 +8360,31 @@ function bindStripArrows(wrap, opts){
   setTimeout(()=> wrap.classList.toggle('no-x', strip.scrollWidth <= strip.clientWidth + 4), 0);
 }
 
-/* 🏪 item 2: ชั้นวางของจากเพื่อนทั้งเซิร์ฟเวอร์ — โชว์เมื่อตลาดจริงเปิดแล้ว (rules /market publish) */
+/* 🏪 item 2: ตลาดรวมทั้งเซิร์ฟเวอร์ — ผู้เล่นทุกคนเห็นทุกประกาศ รวมประกาศของตัวเอง */
 function renderMarketBrowse(){
   if(typeof Online === 'undefined' || !Online.marketOk) return '';
   const me = (typeof onlineKey === 'function') ? onlineKey() : '';
-  const items = (Online.market || []).filter(m=>m.sid !== me);
+  const items = Online.market || [];
   const inner = items.length
     ? `<div class="strip-wrap mb-strip"><button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button><div class="strip-x grid2x8">` + items.map(m=>{
         const c = collectInfo(m.id), tier = COLLECT_TIERS[c.tier], img = collectImg(m.id);
-        const afford = state.coins >= m.p;
+        const own = m.sid === me;
+        const afford = !own && state.coins >= m.p;
         const wished = (state.wishlist || []).includes(m.id);   // 💖 ของที่เล็งไว้ — ขับให้เด่น
         return `<div class="hq-card ${wished ? 'mb-wish' : ''}" style="border-color:${wished ? '#e0447a' : tier.color}">
-          <div class="hq-head">${wished ? '💖 ' : ''}${c.name}</div>
+          <div class="hq-head">${own ? '🏪 ' : (wished ? '💖 ' : '')}${c.name}</div>
           <div class="hq-pic">
             ${img?`<img src="${img}" alt="">`:`<span class="hq-emoji">${c.emoji}</span>`}
             <span class="hq-stars" style="color:${tier.color}">${tier.stars}</span>
           </div>
-          <div class="mb-seller">🧑‍🤝‍🧑 ร้านของ ${escapeHTML(m.sn)}</div>
-          <button class="hq-price mb-buy ${afford?'':'cant-afford'}" data-key="${m.key}">🪙${fmtNum(m.p)} · ซื้อเลย</button>
+          <div class="mb-seller">${own ? '🏪 ร้านของฉัน' : `🧑 ร้านของ ${escapeHTML(m.sn)}`}</div>
+          ${own
+            ? `<button class="hq-price" disabled title="ถอนขายได้ที่คลังสินค้าของฉัน">🪙${fmtNum(m.p)} · โพสต์ขายแล้ว</button>`
+            : `<button class="hq-price mb-buy ${afford?'':'cant-afford'}" data-key="${m.key}">🪙${fmtNum(m.p)} · ซื้อเลย</button>`}
         </div>`;
       }).join('') + `</div><button class="strip-arrow sa-r" aria-label="เลื่อนขวา">❯</button></div>`
-    : `<div class="mkt-empty">ยังไม่มีเพื่อนลงขายตอนนี้ — ผลิตของแล้วมาเปิดร้านคนแรกกันเถอะ! 🏪</div>`;
-  return `<div class="mkt-listhead">🌏 ตลาดเพื่อนออนไลน์ — ของที่เพื่อนผลิตเอง${items.length?` (${items.length} ชิ้น)`:''}</div>` + inner;
+    : `<div class="mkt-empty">ยังไม่มีผู้เล่นลงขายตอนนี้ — ผลิตของแล้วมาเปิดร้านคนแรกกันเถอะ! 🏪</div>`;
+  return `<div class="mkt-listhead">🌏 ตลาดผู้เล่นทั้งหมด — ทุกคนเห็นทุกประกาศ${items.length?` (${items.length} ชิ้น)`:''}</div>` + inner;
 }
 
 /* 🛒 รอบ 1235: ยืนยันการซื้อต้องผ่านรหัส 6 หลักก่อน — ไม่หักเงินตอนแตะการ์ด */
@@ -9196,7 +9199,7 @@ function renderCollectMine(){
           ? Online.marketListingStatus[l.netKey] : '';
         const st = !l.netKey ? listingStatus(l.price / c.price)
           : netState === 'online'
-            ? {t:'🌏 แขวนอยู่ในตลาดเพื่อนออนไลน์ — เพื่อนซื้อเมื่อไหร่เงินเข้าทันที', c:'#1f6fbf'}
+            ? {t:'🌏 แขวนอยู่ในตลาดผู้เล่นทั้งหมด — ผู้เล่นอื่นซื้อเมื่อไหร่เงินเข้าทันที', c:'#1f6fbf'}
             : netState === 'sold'
               ? {t:'⏳ ขายสำเร็จแล้ว — กำลังนำเงินเข้ากระเป๋า', c:'#8a6d1a'}
               : (typeof Online !== 'undefined' && Online.marketOk)
@@ -9259,7 +9262,7 @@ function openListDialog(id){
       }
       state.listings.push(l);
       sfx.buy();
-      toast(netKey ? `🌏 ลงขาย${c.name} 🪙${fmtNum(price)} ในตลาดเพื่อนออนไลน์แล้ว!`
+      toast(netKey ? `🌏 ลงขาย${c.name} 🪙${fmtNum(price)} ในตลาดผู้เล่นทั้งหมดแล้ว!`
                    : `🏷️ ลงขาย${c.name} 🪙${fmtNum(price)} แล้ว! รอลูกค้ามาซื้อได้เลย`);
       saveState();
       if(netKey && typeof authPushSave === 'function') authPushSave(true); // ให้เซิร์ฟเวอร์เห็นหลักฐานเจ้าของทันที
@@ -9344,7 +9347,7 @@ function buyMarketItem(key){
       saveState();
       if(typeof authPushSave === 'function') authPushSave(true);
     }
-    if(typeof feedEvent === 'function') feedEvent('goods', `ซื้อ ${c.emoji} ${c.name} จากตลาดเพื่อน 🏪`);
+    if(typeof feedEvent === 'function') feedEvent('goods', `ซื้อ ${c.emoji} ${c.name} จากตลาดผู้เล่น 🏪`);
     showCollectReveal(b.id, finalPrice);
     sfx.buy();
     if(out.warning === 'receipt_error') toast('⚠️ ซื้อเสร็จแล้ว — บางข้อมูลอัปเดตช้าค่ะ ลองเปิดตลาดอีกครั้ง');
@@ -9362,7 +9365,7 @@ function buyMarketItem(key){
    produced=true → ฉาก "ผลิตสำเร็จ" (เรียกจาก game.js ตอนแต้มผลิตครบ) */
 function showCollectReveal(id, price, produced){
   const c = collectInfo(id), tier = COLLECT_TIERS[c.tier];
-  // ซื้อของ (จ่ายเหรียญ — โรงงาน/ตลาดเพื่อน) = เสียงแคชเชียร์ชิ้ง! · ผลิตเอง = แฟนแฟร์เดิม
+  // ซื้อของ (จ่ายเหรียญ — โรงงาน/ตลาดผู้เล่น) = เสียงแคชเชียร์ชิ้ง! · ผลิตเอง = แฟนแฟร์เดิม
   if(!produced && price != null && sfx.cashier) sfx.cashier();
   else sfx.rankup();
   const img = collectImg(id);

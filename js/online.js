@@ -813,7 +813,7 @@ function marketWatch(){
     Online.market = out;
     Online.marketOk = true;
     marketVerifyOwnListings();
-    // 💖 รอบ 126: ประกาศใหม่ (ไม่ใช่ของเรา) ตรงกับของที่เล็งไว้ → แจ้งเตือน (เด้งตัวแรกพอ กันรัว)
+    // 💖 รอบ 126: ประกาศใหม่จากผู้เล่นอื่นตรงกับของที่เล็งไว้ → แจ้งเตือน (เด้งตัวแรกพอ กันรัว)
     const me = (typeof onlineKey === 'function') ? onlineKey() : '';
     let alerted = false;
     out.forEach(m=>{
@@ -825,7 +825,7 @@ function marketWatch(){
       alerted = true;
       if(typeof sfx !== 'undefined' && sfx.select) sfx.select();
       if(typeof toast === 'function')
-        toast(`💖 ของที่หนูเล็งไว้มีคนลงขายแล้ว! ${c.emoji} ${c.name} 🪙${fmtNum(m.p)} จากร้าน ${m.sn} — รีบไปดูที่ 🏪 ตลาด`);
+        toast(`💖 ของที่หนูเล็งไว้มีผู้เล่นลงขายแล้ว! ${c.emoji} ${c.name} 🪙${fmtNum(m.p)} จากร้าน ${m.sn} — รีบไปดูที่ 🏪 ตลาดผู้เล่นทั้งหมด`);
     });
     marketPrimed = true;
     if(typeof renderMarketCard === 'function') renderMarketCard();
