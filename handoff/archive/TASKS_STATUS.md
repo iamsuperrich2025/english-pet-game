@@ -5549,3 +5549,31 @@
 - syntax+catalog/price+dress/integration+decode alpha+visual QA+production build 9,092 ไฟล์+source/dist SHA-256 ผ่าน; `test_petshopping3d.js` baseline เดิมยัง fail GPS route (ไม่ได้แตะไฟล์ระบบนั้น); PNG ต้นฉบับสำรองนอก repo
 - **รอบ 1256 · แก้คนหายบนอุปกรณ์จริง + ปรับหางสัตว์ Sky:** ผู้ใช้ยืนยันภาพคนกลับมาแล้ว; ต้นตอคือการ sample animation atlas 1536px โดยตรงไม่แสดงบน renderer บางเครื่อง (`js/skyplay3d.js`)
 - renderer v4 โหลด atlas นิ่งเดิมก่อนเสมอ แล้ว crop animation ลง CanvasTexture 192px; decode/ขนาดผิดยังเห็นคนแบบนิ่ง คง picker, `state.skyCharacter`, network `sc`, local/peer และ `state.noAnim`
+
+
+## ⏬ ย้ายเมื่อ 2026-08-26 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- syntax+Sky/Beta regression+production build 9,092 ไฟล์+PWA manifest/invariants ผ่าน; browser visual QA ถูก Windows ACL บล็อกตามข้อจำกัดเดิม
+- **รอบ 1257 · เพิ่มสัตว์ใหม่ 6 ชนิดและใช้ราคาตามภาพแนบ:** ช้าง 2,000,000 · เมียร์แคต 70,000 · T. rex 80,000 · ทูแคน 480,000 · ควาย 100,000 · กวางซีกา 70,000 (`js/data/pets.js`)
+- ตรวจชื่อ–ภาพ 691 PNG เดิมครบ; แก้ชื่อชั่วคราว/UUID เป็น contract กลาง แล้วแปลงเป็น WebP 686 ใบ (สัตว์ 153 + ชุดเต็มตัว 504 + catalog/reference 29), 937.8→100.3MB เหลือ 10.7%; alpha ครบและด้านยาว ≤768px
+
+
+## ⏬ ย้ายเมื่อ 2026-08-27 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- syntax+Sky/Beta regression+asset dimension/alpha/silhouette/budget QA+production build 9,098 ไฟล์+PWA manifest+source/dist thumb SHA-256 ผ่าน; browser visual QA ยังถูก Windows ACL บล็อก
+- **รอบ 1258 · Sky Playground เลือกตัวละครก่อนเข้าได้แล้ว:** dialog จ่าย/เข้าโลกแสดงตัวละคร 6 แบบจาก catalog เดิม เลือกแล้วไฮไลต์ เปลี่ยนข้อความปุ่มเข้า และบันทึก local/cloud ก่อนจ่าย (js/ui.js, css/skyplay3d.css)
+- คง picker ในโลกและ renderer/network contract เดิม; layout 6 คอลัมน์สำหรับ 812×375 + 3 คอลัมน์แนวตั้ง ไม่มี scrollbar และมี regression ครบ (tools/test_skyplay3d.js)
+
+
+## ⏬ ย้ายเมื่อ 2026-08-27 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- pet asset catalog+integration ผ่าน; `test_petshopping3d.js` ยัง fail baseline GPS route เดิม; production build 9,098 ไฟล์และ PWA/cache/TWA validator ผ่าน
+- **รอบ 1259 · แก้ภาพตัวละคร Sky ไม่ขึ้นด้วย thumbnail เบา:** ต้นตอหน้าเลือกดึง atlas 6 ใบรวม 3.29MB; สร้าง WebP 174×348 q80 โปร่งใส 6 ใบรวม 80,302B เบาลง 41.9× แต่คมถึง 3× ของขนาดแสดงจริง (img/characters/*_thumb.webp)
+- picker ก่อนเข้าและ picker ในโลกใช้ thumb แบบ contain รักษาสัดส่วน; atlas นิ่ง/animation ตัวเต็มและ renderer/network เดิมไม่เปลี่ยน (js/skyplay3d.js, js/ui.js, css/skyplay3d.css)
+
+
+## ⏬ ย้ายเมื่อ 2026-08-27 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1260 · แปลงภาพ baby normal 9 ชนิดเป็น Soft Cuboid Chibi 3D:** ควาย แมว หมา มังกร ช้าง เมียร์แคต กวางซีกา ทูแคน และ T. rex ใช้ชื่อเดิมใน `img/animal/*_baby_normal.webp`
+- คง canvas 768×768/lossless WebP RGBA/anchor+ฐานเท้าเดิม; Alpha จริง 0–255, silhouette เดียว, มุมโปร่งใส และไม่มีพื้น เงา ข้อความ หรือขอบสี; ไม่แตะ `css/petshopping3d.css`
+- visual QA ทีละสัตว์บน 812×375 พื้นสว่าง/มืด + source↔dist SHA-256 ทั้ง 9 ผ่าน; runtime browser ถูก Windows ACL บล็อกตามข้อจำกัดเดิม

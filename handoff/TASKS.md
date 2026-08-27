@@ -28,6 +28,9 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (23 ส.ค.) — อ่านก่อน
+- **รอบ 1265 · กัน Safe Pipeline deploy `dist` คนละ version กับ Git HEAD:** รอบ 1263 บัมพ์ HEAD เป็น `.1136` แต่หยิบ prebuilt `.1134` ขึ้น Hosting ทำให้ live verify หยุดก่อน push
+- `tools/deploy_firebase.sh` อ่าน version ของ staged HEAD และ prebuilt dist ก่อนใช้ exact artifact; ถ้าไม่ตรงกันจะแจ้งเหตุผลและ fallback build จาก HEAD อัตโนมัติ
+- เพิ่ม `tools/test_safe_deploy_version.js`; `bash -n tools/deploy_firebase.sh` และ regression version gate ผ่าน
 - **รอบ 1264 · แก้ผ้าคลุมมังกรกางอยู่นอกตัว:** profile `dragon.cape` ใหญ่เกินจริง (`3.00×`, y `-0.20`) จึงทับปีก/ขา; ปรับเป็น `1.75×`, y `-0.08` ให้ชุดแนบช่วงคอ–อก (`js/data/wear_extra.js`)
 - เพิ่ม regression ล็อกพิกัดผ้าคลุม; visual composite ท่าหิววัยเด็ก+วัยโตยืนยันชุดไม่กางลงพื้น และ `node --check`, `test_dress_luxury.js`, `test_pet_bond.js` ผ่าน (`tools/test_dress_luxury.js`)
 - in-app browser ยังถูก Windows ACL บล็อกตอนเริ่ม runtime; ไม่เปลี่ยนหน้าตาน้อง, asset, หรือชุดชนิดอื่น
@@ -40,9 +43,6 @@
 - **รอบ 1261 · แก้ชุดทับภาพสัตว์ตอนป่วย:** `petWearOverlay()` พักการวาด layer ชุดเฉพาะ `p.sick` เพื่อให้เห็นอาการ/อุปกรณ์รักษาชัด แต่คง `equipped` และป้าย “ยังใส่อยู่”; หายแล้วชุดกลับมาเอง (`js/images.js`)
 - เพิ่ม regression ยืนยันป่วย=ไม่มี overlay และสุขภาพปกติ=ยังมี overlay; `node --check js/images.js` + `tools/test_pet_bond.js` ผ่านครบ (`tools/test_pet_bond.js`)
 - visual QA ใน in-app browser ถูก Windows ACL บล็อก (`apply deny-read ACLs`) ตามข้อจำกัดเดิม; ไม่มีไฟล์/ธีม/asset อื่นถูกแตะ
-- **รอบ 1260 · แปลงภาพ baby normal 9 ชนิดเป็น Soft Cuboid Chibi 3D:** ควาย แมว หมา มังกร ช้าง เมียร์แคต กวางซีกา ทูแคน และ T. rex ใช้ชื่อเดิมใน `img/animal/*_baby_normal.webp`
-- คง canvas 768×768/lossless WebP RGBA/anchor+ฐานเท้าเดิม; Alpha จริง 0–255, silhouette เดียว, มุมโปร่งใส และไม่มีพื้น เงา ข้อความ หรือขอบสี; ไม่แตะ `css/petshopping3d.css`
-- visual QA ทีละสัตว์บน 812×375 พื้นสว่าง/มืด + source↔dist SHA-256 ทั้ง 9 ผ่าน; runtime browser ถูก Windows ACL บล็อกตามข้อจำกัดเดิม
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`

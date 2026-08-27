@@ -2,7 +2,7 @@
 
 > วิธีใช้: หาชื่อฟังก์ชัน/ค่าคงที่/selector ในไฟล์นี้ (Grep หรือกวาดตา) → `Read` ไฟล์จริง `offset=<บรรทัด>` `limit=40`
 > 🗂️ ไฟล์อ้วนมี **สารบัญโซน** (`st-end ชื่อโซน`) — งานทั้งระบบ/โลก 3D: Grep ชื่อโซน → Read/Edit เฉพาะช่วงนั้น **ห้ามอ่านทั้งไฟล์** · เพิ่มระบบใหม่ในไฟล์อ้วนต้องครอบ banner `/* ==== */`+ชื่อโซน (สารบัญเจนเอง)
-> css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: 2026-08-23
+> css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: 2026-08-27
 
 ## js/account-deletion.js (235 บรรทัด · 0 รายการ)
 
@@ -229,7 +229,7 @@ certStripHTML:633 · certBindStrip:647
 
 ## js/city3d.js (3,354 บรรทัด · 211 รายการ)
 ### 🗂️ สารบัญโซน js/city3d.js (Read/Edit เฉพาะช่วง)
-- 2-18 city3d.js — 🏙️ VOCAB CITY: ล็อบบี้ 3D แบบเมืองลอยฟ้า (index.html = หน้าหลัก · รอบ 861 · สลับเป็นหน้าหลักรอบ 86
+- 2-18 city3d.js — 🏙️ VOCAB CITY: ล็อบบี้ 3D แบบเมืองลอยฟ้า (หน้ารอง index.html?lobby=3d; หน้าเริ่มต้น = Lobby Classi
 - 19-51 ⚙️ CONFIG + เครื่องมือกลาง (รอบ 861)
 - 52-126 🔒 รอบ 1070: ประตูโลกที่ยัง Coming soon — สิทธิ์ทดสอบมาจาก Auth ที่ฝังในเซฟ Lobby เดิม
 - 127-229 📷 CAMERA RIG — 1 นิ้วเลื่อน · 2 นิ้วหมุน/เอียง/ซูม (รอบ 861)
@@ -444,6 +444,8 @@ gradeChangeTo:64 · gradeLockNote:91 · openGradeChange:100
 
 ## js/hauntedhotelsession.js (255 บรรทัด · 0 รายการ)
 
+## js/home-v2.js (16,104 บรรทัด · 0 รายการ)
+
 ## js/hotel3d.js (1,526 บรรทัด · 62 รายการ)
 ### 🗂️ สารบัญโซน js/hotel3d.js (Read/Edit เฉพาะช่วง)
 - 1-65 hotel3d.js — 🏨 โรงแรมผีสิง 5 ชั้น (รอบ 684 · ยกบรรยากาศ/ภารกิจงานศพไทยรอบ 1060)
@@ -471,12 +473,12 @@ validateLetterPlacementPool:1305 · updateFloorVisibility:1321 · setLightLevel:
 BLINK_DUR:1389 · BLINK_MIN:1390 · tick:1392 · nearWardrobe:1490 · nearFuneral:1501 · inLift:1506
 atLiftDoor:1510 · randomHaunt:1514
 
-## js/images.js (255 บรรทัด · 28 รายการ)
+## js/images.js (258 บรรทัด · 28 รายการ)
 IMG_FILES:12 · MOODS:13 · COLLECTIBLES_IMG_V:17 · GIFTS_IMG_V:18 · PET_ASSET_V:21 · PET_IMAGE_STATES:22
 startImgKey:24 · petImageKeys:26 · petAssetPath:39 · probeImages:50 · probeRankImages:70 · probeCollectImages:71
 probeGiftImages:72 · probeHomeImages:73 · CLIP_FILES:82 · CLIP_SM:88 · clipCanWebm:104 · CLIP_ASSET_V:115
 clipFileFor:117 · petClipKey:126 · petClipUrl:135 · equippedItem:148 · petStateImg:159 · petWearOverlay:180
-wearLayerHTML:212 · happyNow:219 · makeHappy:220 · currentPetImg:233
+wearLayerHTML:215 · happyNow:222 · makeHappy:223 · currentPetImg:236
 
 ## js/invasion3d.js (10,581 บรรทัด · 653 รายการ)
 ### 🗂️ สารบัญโซน js/invasion3d.js (Read/Edit เฉพาะช่วง)
@@ -791,7 +793,7 @@ openPhotoCrop:224
 
 ## js/shootword.js (1,118 บรรทัด · 0 รายการ)
 
-## js/skyplay3d.js (626 บรรทัด · 0 รายการ)
+## js/skyplay3d.js (640 บรรทัด · 0 รายการ)
 
 ## js/state.js (1,353 บรรทัด · 96 รายการ)
 ### 🗂️ สารบัญโซน js/state.js (Read/Edit เฉพาะช่วง)
@@ -1023,6 +1025,9 @@ vbRender:148 · vbCardHTML:194
 .xsp-best-row:218 · .xsp-best:219 · .xsp-hist:221,222 · .xsp-hist-svg:223 · .xsp-btns:224 · .xsp-go:225,229,230,233(+1)
 .xsp-foot:235 · .xsb-box:250,277 · .xsb-head:255,256 · .xsb-grid:257 · .xsb-card:258,262 · .xsb-emoji:263
 .xsb-name:264 · .xsb-info:265 · .xsb-done:266 · .onet-picker:270,271,272,273(+3) · .onet-board:278,279,280
+
+## css/home-v2.css (710 บรรทัด · 5 selector)
+#screen-dashboard:7,15 · #vw-home-v2-root:17,19,51,53(+202) · #vw2-preview-switch:509,511 · .night:513 · .no-anim:515
 
 ## css/lettercannon.css (48 บรรทัด · 28 selector)
 #lc-game:6,7 · .lc-hud:8 · .lc-glass:9 · .lc-stats:10 · .lc-stat:11 · .lc-coin-stat:12
