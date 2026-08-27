@@ -1,8 +1,13 @@
 'use strict';
 
 const assert = require('assert');
+const fs = require('fs');
 const {applyBuyer, applySeller, refundBuyer} = require('./market-settlement');
-const {claimMarketListing} = require('./index')._test;
+const {acquireSettlementLease, claimMarketListing} = require('./index')._test;
+
+const functionSource = fs.readFileSync('./index.js', 'utf8');
+assert.equal((functionSource.match(/\.transaction\(/g) || []).length, 1,
+  'all secure market transactions must use the null-guess-safe wrapper');
 
 function wrapper(state) { return {data: JSON.stringify(state), at: 1}; }
 function read(result) { return JSON.parse(result.wrapper.data); }
@@ -76,5 +81,19 @@ assert.throws(()=>applySeller(wrapper({coins: 0, collection: [], listings: [], t
   assert.equal(gone.reason, 'sold_out');
   assert.equal(deletedCallbacks, 2);
 
-  console.log('PASS secure market settlement: idempotent settlement + RTDB null-guess claim retry');
+  const ledger = {tx: claim.tx, key: claim.key, status: 'claimed'};
+  const leaseRef = {
+    get(){ return Promise.resolve({val: ()=>ledger}); },
+    transaction(update){
+      const proposal = update(null);
+      assert.equal(proposal.status, 'claimed', 'lease must survive the first null guess');
+      return Promise.resolve({committed: true, snapshot: {val: ()=>proposal}});
+    },
+  };
+  const lease = await acquireSettlementLease(leaseRef, 'worker-1');
+  assert.equal(lease.acquired, true, 'claimed purchase must acquire a settlement lease');
+  assert.equal(lease.ledger.leaseBy, 'worker-1');
+  assert.ok(lease.ledger.leaseUntil > Date.now());
+
+  console.log('PASS secure market settlement: idempotent settlement + RTDB null-guess-safe claim/lease/save/release');
 })().catch(error=>{ console.error(error); process.exit(1); });

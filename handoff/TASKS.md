@@ -28,6 +28,9 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (23 ส.ค.) — อ่านก่อน
+- **รอบ 1270 · แก้ตลาดค้าง “ระบบกำลังยืนยันรายการ”:** หลังรอบ 1262 claim listing ผ่านแล้ว แต่ transaction ขอ settlement lease ยัง abort จาก RTDB null guess ทำให้ ledger ค้าง `claimed/processing`; รวมทุก transaction ฝั่ง Functions ผ่าน server-seeded wrapper เดียว (`functions/index.js`)
+- production ยืนยัน 3 รายการล่าสุดมี `status=claimed` แต่ไม่มี `leaseBy/leaseUntil`; wrapper ใหม่ครอบ lease, save ผู้ซื้อ/ผู้ขาย, คืน listing และ claim โดย server hash/retry ยังป้องกัน race/ขายซ้ำ
+- syntax + Functions regression + client transaction + listing reconcile ผ่าน; test ล็อกให้ secure market มี `.transaction()` ตรงเพียง wrapper จุดเดียว และยืนยัน null-guess lease ได้จริง (`functions/test_market_settlement.js`)
 - **รอบ 1269 · พักการแสดงชุดเมื่อสัตว์หิว:** `petWearOverlay()` คืน `null` เมื่อ `petHungry(p)` เพื่อไม่ให้ชุดบังสีหน้า/ท่าหิว แต่คงข้อมูล equipped และชุดกลับมาเองเมื่อกินอิ่ม (`js/images.js`)
 - ใช้กติกาเดียวกับสถานะป่วย; ภาพ/asset และตำแหน่งชุดตอนสุขภาพปกติไม่เปลี่ยน
 - regression ยืนยันป่วย=ไม่มีชุด, หิว=ไม่มีชุด, ปกติและอิ่ม=ยังเห็นชุด; syntax + pet bond + dress luxury ผ่าน (`tools/test_pet_bond.js`)

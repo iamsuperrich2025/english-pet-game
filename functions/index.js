@@ -44,10 +44,28 @@ function cleanListing(value) {
   return {sid, id, p, sn: String(listing.sn || 'เพื่อน').slice(0, 40)};
 }
 
+/* The RTDB SDK can optimistically invoke a transaction with null before it has
+   loaded an existing server value. Seed that first null attempt from a fresh
+   read; the server hash still rejects stale data and retries with the real value. */
+async function transactionWithSeed(ref, initialValue, update) {
+  let attempt = 0;
+  return ref.transaction(current => {
+    if (attempt++ === 0 && current === null && initialValue !== null && initialValue !== undefined) {
+      current = initialValue;
+    }
+    return update(current);
+  }, undefined, false);
+}
+
+async function transactionFromServer(ref, update) {
+  const initialValue = (await ref.get()).val();
+  return transactionWithSeed(ref, initialValue, update);
+}
+
 async function transactSave(uid, transform) {
   let stateError = null;
   const ref = getDatabase().ref(`users/${uid}/save`);
-  const result = await ref.transaction(current => {
+  const result = await transactionFromServer(ref, current => {
     try {
       const out = transform(current);
       stateError = null;
@@ -56,19 +74,20 @@ async function transactSave(uid, transform) {
       stateError = error instanceof MarketStateError ? error.code : 'save_invalid';
       return;
     }
-  }, undefined, false);
+  });
   if (!result.committed) throw new MarketStateError(stateError || 'save_conflict');
   return JSON.parse(result.snapshot.val().data);
 }
 
 async function releaseListing(claim) {
-  await getDatabase().ref(`market/${claim.key}`).transaction(current => {
+  const ref = getDatabase().ref(`market/${claim.key}`);
+  await transactionFromServer(ref, current => {
     if (!current || current.tx !== claim.tx || current.st !== 'processing') return;
     const restored = {...current};
     delete restored.st; delete restored.tx; delete restored.bid;
     delete restored.bn; delete restored.startedAt;
     return restored;
-  }, undefined, false);
+  });
 }
 
 async function failAndCompensate(claim, reason) {
@@ -88,12 +107,12 @@ async function failAndCompensate(claim, reason) {
 async function acquireSettlementLease(ledgerRef, leaseBy) {
   const now = Date.now();
   let acquired = false;
-  const result = await ledgerRef.transaction(current => {
+  const result = await transactionFromServer(ledgerRef, current => {
     if (!current || current.status === 'completed' || current.status === 'failed') return;
     if (Number(current.leaseUntil) > now && current.leaseBy !== leaseBy) return;
     acquired = true;
     return {...current, leaseBy, leaseUntil: now + LEASE_MS, lastAttemptAt: now};
-  }, undefined, false);
+  });
   return {acquired: result.committed && acquired, ledger: result.snapshot.val()};
 }
 
@@ -168,18 +187,9 @@ async function settleClaim(claim) {
   return publicResult({...claim, status: 'completed'});
 }
 
-/* RTDB transactions may call the update function once with a local null guess
-   even when the server path exists. Returning undefined on that first guess
-   aborts before the SDK can retry with the authoritative value. Seed only the
-   first null attempt from a just-read snapshot; the server-side hash check still
-   rejects it if another buyer or the seller changed the listing meanwhile. */
 async function claimMarketListing(marketRef, initialValue, tx, uid, buyerName) {
   let reason = 'sold_out';
-  let attempt = 0;
-  const result = await marketRef.transaction(current => {
-    if (attempt++ === 0 && current === null && initialValue && typeof initialValue === 'object') {
-      current = initialValue;
-    }
+  const result = await transactionWithSeed(marketRef, initialValue, current => {
     if (!current || typeof current !== 'object') { reason = 'sold_out'; return; }
     if (current.st === 'processing') {
       if (current.tx === tx && current.bid === uid) { reason = ''; return current; }
@@ -190,7 +200,7 @@ async function claimMarketListing(marketRef, initialValue, tx, uid, buyerName) {
     if (listing.sid === uid) { reason = 'own_item'; return; }
     reason = '';
     return {...current, st: 'processing', tx, bid: uid, bn: buyerName, startedAt: Date.now()};
-  }, undefined, false);
+  });
   return {result, reason};
 }
 
@@ -260,4 +270,7 @@ exports.resumeMarketSettlement = onValueUpdated({
   }
 });
 
-exports._test = {cleanListing, claimMarketListing, beginPurchase, settleClaim};
+exports._test = {
+  cleanListing, transactionWithSeed, transactionFromServer,
+  acquireSettlementLease, claimMarketListing, beginPurchase, settleClaim,
+};
