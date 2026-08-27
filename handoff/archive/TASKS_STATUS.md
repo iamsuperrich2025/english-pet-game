@@ -5591,3 +5591,10 @@
 - **รอบ 1262 · แก้ตลาดขึ้น “มีคนซื้อตัดหน้า” ทุกครั้ง:** RTDB transaction ฝั่ง `marketBuySecure` เคย abort เมื่อ callback รอบแรกเดา `null` ทั้งที่ listing จริงยังอยู่; pre-read snapshot แล้ว seed เฉพาะ null attempt แรก โดย server hash/retry ยังกัน race และไม่ชุบรายการที่ถูกลบจริง (`functions/index.js`)
 - production ledger พบ `sold_out` 14 รายการและยืนยันหลาย key ยังอยู่ใน `/market`; เพิ่ม regression ครบ live listing/null guess + deleted-after-read และคง buyer/seller/refund idempotency (`functions/test_market_settlement.js`)
 - `npm test --prefix functions`, syntax, client transaction และ listing reconcile ผ่านครบ; แก้ `tools/ship.sh` ให้ไฟล์ `functions/` ถูกจัดเป็นงาน deploy ไม่ใช่เอกสาร
+
+
+## ⏬ ย้ายเมื่อ 2026-08-27 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1263 · ตั้ง Lobby Classic เป็นหน้าเริ่มต้น:** `/` และ `index.html` ที่ไม่มี `?lobby=3d` ใช้ `location.replace` ไป `index_classic.html` พร้อมรักษา query/hash; Lobby 3D เป็นหน้ารอง `index.html?lobby=3d` ผ่านปุ่มแนวตั้งซ้ายชื่อ “Lobby 3D”
+- อัปเดตคำอธิบายสถาปัตยกรรมใน `index.html`, `index_classic.html`, `css/lobby.css`, `js/city3d.js`, `js/main.js` และเพิ่ม regression `tools/test_lobby_entry_route.js`
+- regression + local HTTP ทั้ง 2 route + production build 9,102 ไฟล์ + PWA/cache/TWA validator ผ่าน; visual QA ถูก Windows ACL บล็อกตั้งแต่ browser runtime ตามข้อจำกัดเดิม

@@ -40,9 +40,6 @@
 - **รอบ 1264 · แก้ผ้าคลุมมังกรกางอยู่นอกตัว:** profile `dragon.cape` ใหญ่เกินจริง (`3.00×`, y `-0.20`) จึงทับปีก/ขา; ปรับเป็น `1.75×`, y `-0.08` ให้ชุดแนบช่วงคอ–อก (`js/data/wear_extra.js`)
 - เพิ่ม regression ล็อกพิกัดผ้าคลุม; visual composite ท่าหิววัยเด็ก+วัยโตยืนยันชุดไม่กางลงพื้น และ `node --check`, `test_dress_luxury.js`, `test_pet_bond.js` ผ่าน (`tools/test_dress_luxury.js`)
 - in-app browser ยังถูก Windows ACL บล็อกตอนเริ่ม runtime; ไม่เปลี่ยนหน้าตาน้อง, asset, หรือชุดชนิดอื่น
-- **รอบ 1263 · ตั้ง Lobby Classic เป็นหน้าเริ่มต้น:** `/` และ `index.html` ที่ไม่มี `?lobby=3d` ใช้ `location.replace` ไป `index_classic.html` พร้อมรักษา query/hash; Lobby 3D เป็นหน้ารอง `index.html?lobby=3d` ผ่านปุ่มแนวตั้งซ้ายชื่อ “Lobby 3D”
-- อัปเดตคำอธิบายสถาปัตยกรรมใน `index.html`, `index_classic.html`, `css/lobby.css`, `js/city3d.js`, `js/main.js` และเพิ่ม regression `tools/test_lobby_entry_route.js`
-- regression + local HTTP ทั้ง 2 route + production build 9,102 ไฟล์ + PWA/cache/TWA validator ผ่าน; visual QA ถูก Windows ACL บล็อกตั้งแต่ browser runtime ตามข้อจำกัดเดิม
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`
