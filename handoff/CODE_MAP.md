@@ -833,7 +833,7 @@ thLocaleOpt:46
 
 ## js/typing.js (370 บรรทัด · 0 รายการ)
 
-## js/ui.js (10,132 บรรทัด · 428 รายการ)
+## js/ui.js (10,135 บรรทัด · 428 รายการ)
 ### 🗂️ สารบัญโซน js/ui.js (Read/Edit เฉพาะช่วง)
 - 2-77 UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
 - 78-144 🎬 เวทีน้องน่ารัก (Cute Pet Show) — รอบ 604 (ผู้ใช้สั่ง 26 ก.ค. 2026)
@@ -881,13 +881,13 @@ thLocaleOpt:46
 - 8031-8200 การ์ดสวนผลไม้ (ข้อ 12): ซื้อต้นไม้ปลูกได้ไม่จำกัด แต่ละต้นออกผล
 - 8201-8210 โรงงานผลิตสินค้า 🏭 + ตลาดขายต่อ (แนวคิดใหม่ 5 ก.ค. 2026)
 - 8211-8233 โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
-- 8234-8501 ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
-- 8502-9489 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
-- 9490-9550 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
-- 9551-9587 เลเวลอัพ (รายตัว)
-- 9588-9693 สถิติผลการเรียนรู้
-- 9694-9731 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
-- 9732-10132 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
+- 8234-8504 ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
+- 8505-9492 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
+- 9493-9553 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
+- 9554-9590 เลเวลอัพ (รายตัว)
+- 9591-9696 สถิติผลการเรียนรู้
+- 9697-9734 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
+- 9735-10135 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
 ### รายการ js/ui.js
 startHTML:10 · PET_ANIM:30 · petAnimHTML:35 · petVisualHTML:50 · PET_SHOW:91 · PET_SHOW_STAGE:96
 PET_SHOW_H:99 · petShowBgHTML:102 · petBondLine:153 · PET_HEALTH_TIPS:177 · nextPetHealthTip:215 · petBondActionLine:223
@@ -951,16 +951,16 @@ GAME_ENTRY_STABLE_MS:7636 · gameEntryCommit:7638 · gameEntryRefund:7646 · rec
 railWorldClick:7743 · skyEntryCatalog:7772 · skyEntryPickerHTML:7776 · openWorldEntryDialog:7787 · railScrollHint:7866 · railScrollTop:7874
 initRailScroll:7879 · renderRailWorlds:7899 · tinvNoticeHTML:7982 · openTinvPicker:7991 · fruitCountdown:8036 · renderFarmCard:8048
 renderFarmClock:8123 · buyFruit:8139 · sellFruit:8159 · sellAllFruit:8180 · collectImg:8209 · renderFactoryCard:8215
-renderMarketCard:8238 · updateWishBadge:8294 · openWishlistDialog:8305 · bindStripArrows:8350 · renderMarketBrowse:8364 · openMarketBuyDialog:8388
-carImg:8508 · renderVehicleShop:8509 · CS_CYCLE_MS:8560 · carInteriorImg:8561 · carStatHtml:8563 · renderCarShowroom:8570
-csShowBig:8597 · csInit:8624 · RS_CYCLE_MS:8647 · robotImg:8648 · renderRobotShop:8649 · rsShowBig:8671
-rsInit:8692 · buyRobot:8711 · enterMecha3D:8736 · pickMechaRobot:8764 · pickDriveCar:8796 · openCarBuyDialog:8839
-buyCarInsurance:8900 · payCarLoanMonthly:8919 · payCarLoanFull:8931 · carDriveBlock:8950 · gotoVehicleShop:8955 · gotoMyStock:8960
-showNeedCarDialog:8966 · craftDiscount:8978 · renderFactory:8981 · renderOrdersUI:9050 · startProduce:9069 · buyCollectible:9097
-cancelProduce:9127 · deliverOrder:9141 · renderOrderClock:9158 · renderCollectMine:9168 · openListDialog:9217 · cancelListing:9274
-buyMarketItem:9298 · showCollectReveal:9363 · buyAC:9401 · openHomeShop:9420 · renderPetShop:9493 · showLevelUp:9554
-renderStats:9591 · showTeacherCard:9698 · CALL_REACT_EMOS:9742 · CALL_TALK_MIN:9745 · CALL_TALK_HOLD:9746 · CALL_ORDER_GAP:9748
-CALL_TONES:9754 · startCall:10128
+renderMarketCard:8238 · updateWishBadge:8294 · openWishlistDialog:8305 · bindStripArrows:8350 · renderMarketBrowse:8364 · openMarketBuyDialog:8391
+carImg:8511 · renderVehicleShop:8512 · CS_CYCLE_MS:8563 · carInteriorImg:8564 · carStatHtml:8566 · renderCarShowroom:8573
+csShowBig:8600 · csInit:8627 · RS_CYCLE_MS:8650 · robotImg:8651 · renderRobotShop:8652 · rsShowBig:8674
+rsInit:8695 · buyRobot:8714 · enterMecha3D:8739 · pickMechaRobot:8767 · pickDriveCar:8799 · openCarBuyDialog:8842
+buyCarInsurance:8903 · payCarLoanMonthly:8922 · payCarLoanFull:8934 · carDriveBlock:8953 · gotoVehicleShop:8958 · gotoMyStock:8963
+showNeedCarDialog:8969 · craftDiscount:8981 · renderFactory:8984 · renderOrdersUI:9053 · startProduce:9072 · buyCollectible:9100
+cancelProduce:9130 · deliverOrder:9144 · renderOrderClock:9161 · renderCollectMine:9171 · openListDialog:9220 · cancelListing:9277
+buyMarketItem:9301 · showCollectReveal:9366 · buyAC:9404 · openHomeShop:9423 · renderPetShop:9496 · showLevelUp:9557
+renderStats:9594 · showTeacherCard:9701 · CALL_REACT_EMOS:9745 · CALL_TALK_MIN:9748 · CALL_TALK_HOLD:9749 · CALL_ORDER_GAP:9751
+CALL_TONES:9757 · startCall:10131
 
 ## js/util.js (1,386 บรรทัด · 57 รายการ)
 ### 🗂️ สารบัญโซน js/util.js (Read/Edit เฉพาะช่วง)
