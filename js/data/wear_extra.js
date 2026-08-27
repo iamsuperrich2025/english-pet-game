@@ -29,12 +29,12 @@
     cat: {
       beret:[2.00,-1.00,'head'], tiara:[1.75,-0.95,'head'], hat:[2.00,-1.41,'head'],
       face:[1.95,-0.97,'eye'], neck:[2.15,-0.10,'eye'],
-      hoodie:[3.25,-1.05,'eye'], vest:[3.00,0.10,'eye'], pajamas:[3.20,0.05,'eye'], cape:[3.20,-0.25,'eye'],
+      hoodie:[3.25,-1.05,'eye'], vest:[3.00,0.10,'eye'], pajamas:[3.20,0.05,'eye'], cape:[1.75,-0.08,'eye'],
     },
     dog: {
       beret:[2.40,-1.20,'head'], tiara:[2.20,-1.19,'head'], hat:[2.50,-1.83,'head'],
       face:[2.30,-1.15,'eye'], neck:[2.40,-0.16,'eye'],
-      hoodie:[3.55,-1.05,'eye'], vest:[3.30,0.10,'eye'], pajamas:[3.50,0.05,'eye'], cape:[3.50,-0.25,'eye'],
+      hoodie:[3.55,-1.05,'eye'], vest:[3.30,0.10,'eye'], pajamas:[3.50,0.05,'eye'], cape:[1.75,-0.08,'eye'],
     },
     dragon: {
       beret:[1.80,-0.90,'head'], tiara:[1.55,-0.81,'head'], hat:[2.10,-1.49,'head'],

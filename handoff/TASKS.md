@@ -28,6 +28,9 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (23 ส.ค.) — อ่านก่อน
+- **รอบ 1267 · แก้ผ้าคลุมสุนัข/แมวกางอยู่นอกตัว:** profile เดิมใหญ่ `3.50×`/`3.20×`, y `-0.25`; ปรับทั้งคู่เป็น `1.75×`, y `-0.08` ให้ชุดแนบคอ–อกเหมือนมังกร (`js/data/wear_extra.js`)
+- visual composite ท่าหิววัยเด็ก+วัยโตของสุนัข/แมวยืนยันไม่ทับขา/หางและไม่กางลงพื้น; ไม่เปลี่ยน asset หรือชุดชนิดอื่น
+- regression ล็อกค่า royal cape ครบ cat/dog/dragon; `node --check`, `test_dress_luxury.js`, `test_pet_bond.js` ผ่าน (`tools/test_dress_luxury.js`)
 - **รอบ 1266 · กัน Safe Pipeline deploy `dist` คนละ version กับ Git HEAD:** รอบ 1263 บัมพ์ HEAD เป็น `.1136` แต่หยิบ prebuilt `.1134` ขึ้น Hosting ทำให้ live verify หยุดก่อน push
 - `tools/deploy_firebase.sh` อ่าน version ของ staged HEAD และ prebuilt dist ก่อนใช้ exact artifact; ถ้าไม่ตรงกันจะแจ้งเหตุผลและ fallback build จาก HEAD อัตโนมัติ
 - เพิ่ม `tools/test_safe_deploy_version.js`; `bash -n tools/deploy_firebase.sh` และ regression version gate ผ่าน
