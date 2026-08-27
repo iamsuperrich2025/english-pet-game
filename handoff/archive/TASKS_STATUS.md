@@ -5584,3 +5584,10 @@
 - **รอบ 1261 · แก้ชุดทับภาพสัตว์ตอนป่วย:** `petWearOverlay()` พักการวาด layer ชุดเฉพาะ `p.sick` เพื่อให้เห็นอาการ/อุปกรณ์รักษาชัด แต่คง `equipped` และป้าย “ยังใส่อยู่”; หายแล้วชุดกลับมาเอง (`js/images.js`)
 - เพิ่ม regression ยืนยันป่วย=ไม่มี overlay และสุขภาพปกติ=ยังมี overlay; `node --check js/images.js` + `tools/test_pet_bond.js` ผ่านครบ (`tools/test_pet_bond.js`)
 - visual QA ใน in-app browser ถูก Windows ACL บล็อก (`apply deny-read ACLs`) ตามข้อจำกัดเดิม; ไม่มีไฟล์/ธีม/asset อื่นถูกแตะ
+
+
+## ⏬ ย้ายเมื่อ 2026-08-27 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1262 · แก้ตลาดขึ้น “มีคนซื้อตัดหน้า” ทุกครั้ง:** RTDB transaction ฝั่ง `marketBuySecure` เคย abort เมื่อ callback รอบแรกเดา `null` ทั้งที่ listing จริงยังอยู่; pre-read snapshot แล้ว seed เฉพาะ null attempt แรก โดย server hash/retry ยังกัน race และไม่ชุบรายการที่ถูกลบจริง (`functions/index.js`)
+- production ledger พบ `sold_out` 14 รายการและยืนยันหลาย key ยังอยู่ใน `/market`; เพิ่ม regression ครบ live listing/null guess + deleted-after-read และคง buyer/seller/refund idempotency (`functions/test_market_settlement.js`)
+- `npm test --prefix functions`, syntax, client transaction และ listing reconcile ผ่านครบ; แก้ `tools/ship.sh` ให้ไฟล์ `functions/` ถูกจัดเป็นงาน deploy ไม่ใช่เอกสาร
