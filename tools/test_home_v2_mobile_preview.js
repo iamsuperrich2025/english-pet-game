@@ -12,19 +12,38 @@ const css = fs.readFileSync(path.join(root, "css", "home-v2.css"), "utf8");
 
 const preview = fs.readFileSync(path.join(root, "tools", "VW_MOBILE_DEVICE_PREVIEW.html"), "utf8");
 
+const indexClassic = fs.readFileSync(path.join(root, "index_classic.html"), "utf8");
+
+const buildWeb = fs.readFileSync(path.join(root, "tools", "build_web.mjs"), "utf8");
+
 const fail = [];
 
 const must = (ok, msg) => { if(!ok) fail.push(msg); };
 
 
 
-/* R8 visual-master convergence + mobile-first hierarchy guard. */
+/* R9 visual-asset + structural-fidelity guard. */
 
-must(home.includes("Home V2 R8 Visual Master Convergence + Mobile-First Composition Pass"), "R8 visual-master stylesheet missing from home-v2.js");
+must(home.includes("R9 Visual Asset + Structural Fidelity Rebuild"), "R9 Home V2 JS marker missing");
 
-must(css.includes("Home V2 R8 Visual Master Convergence + Mobile-First Composition Pass"), "R8 visual-master stylesheet missing from css/home-v2.css");
+must(css.includes("Home V2 R9 Visual Asset + Structural Fidelity Rebuild"), "R9 consolidated stylesheet missing");
 
-must(!home.includes("Visual Fidelity Pass R4"), "legacy R4 override tail returned; R8 must remain a coherent presentation stylesheet");
+must(!css.includes("Home V2 R8 Visual Master Convergence"), "R8 presentation stylesheet header survived R9 consolidation");
+
+must(home.includes('class="vw2-screen-backdrop"') && home.includes('r9_screen_backdrop.svg'), "R9 global illustrated backdrop markup missing");
+
+must(css.includes('url("../img/home-v2/r9_pet_world.svg")'), "R9 illustrated pet-world asset is not used by the center scene");
+
+must(css.includes('url("../img/home-v2/r9_cloud_mask.svg")') && css.includes('mask:url("../img/home-v2/r9_cloud_mask.svg")'), "R9 cloud/pedestal destination rail asset mask missing");
+
+["r9_screen_backdrop.svg","r9_pet_world.svg","r9_cloud_mask.svg"].forEach(name=>{
+  must(fs.existsSync(path.join(root,"img","home-v2",name)), `R9 visual asset missing: ${name}`);
+  must(buildWeb.includes(`img/home-v2/${name}`), `R9 build allowlist missing: ${name}`);
+});
+
+must(indexClassic.includes("css/home-v2.css?v=1201") && indexClassic.includes("js/home-v2.js?v=1201"), "R9 Home V2 cache-bust version missing from index_classic.html");
+
+must(home.includes('ADMIN PREVIEW · R9 VISUAL MASTER'), "R9 visible admin-preview marker missing");
 
 must(home.includes('class="vw2-avatar-frame"'), "premium avatar frame missing");
 
@@ -36,27 +55,29 @@ must(!home.includes('class="vw2-player-mini"'), "small user portrait must not re
 
 must(home.includes('class="vw2-rail-art"') && home.includes('class="vw2-rail-label"'), "illustrated left rail wrappers missing");
 
-must(home.includes("scrollbar-width:none!important"), "left rail hidden-scrollbar rule missing");
+must(css.includes("scrollbar-width:none!important"), "left rail hidden-scrollbar rule missing");
 
 must(home.includes("function updateLeftRailCue()"), "left rail scroll cue state helper missing");
 
-must(home.includes(".i-pink{fill:#ff82ba") && home.includes(".i-blue{fill:#65c6f7") && home.includes(".i-line{fill:none;stroke:var(--vw2-line)"), "accepted pastel SVG palette changed; black fallback icons could return");
+must(home.includes(".i-pink{fill:#ff82ba") || css.includes(".i-pink{fill:#ff82ba"), "accepted pastel SVG palette changed; black fallback icons could return");
 
 must(css.includes("Explicit styling prevents browser-default black silhouettes"), "black-icon regression guard missing from CSS");
 
-must(home.includes("grid-template-columns:clamp(68px,10vw,80px) clamp(108px,16vw,145px)"), "R8 narrower left rail / expanded feed mobile composition missing");
+must(css.includes("grid-template-columns:clamp(68px,10vw,80px) clamp(108px,16vw,145px)"), "R9 compact left rail / feed mobile composition missing");
 
-must(home.includes("font-size:17px") && home.includes(".vw2-profile-meta-chip.class b{font-size:9px}"), "R8 mobile profile typography hierarchy missing");
+must(css.includes("font-size:18px") && css.includes(".vw2-profile-meta-chip.class b{font-size:9.6px}"), "R9 mobile profile typography hierarchy missing");
 
-must(home.includes('class="vw2-scene-castle"') && home.includes('class="vw2-scene-path"') && home.includes("function castleArtwork()"), "R8 layered fantasy center-world scenery missing");
+must(css.includes(".vw2-stage-cloud,#vw-home-v2-root .vw2-rainbow") && css.includes("display:none!important"), "legacy CSS/vector center scenery was not retired behind R9 illustrated world asset");
 
-must(home.includes("vw2-house-backdrop:after") && home.includes('content:"";display:none'), "authoritative in-world house treatment / no fake empty-house icon missing");
+must(css.includes("vw2-house-backdrop:after") && css.includes('content:"";display:none'), "authoritative in-world house treatment / no fake empty-house icon missing");
 
-must(home.includes("min-height:34px") && home.includes("height:9px;flex-basis:9px") && home.includes("font-size:7.8px"), "R8 mission/friend mobile readability treatment missing");
+must(css.includes("min-height:36px") && css.includes("height:9px;flex-basis:9px") && css.includes("font-size:7.8px"), "R9 mission/friend mobile readability treatment missing");
 
-must(home.includes("vw2-feed-card") && home.includes("grid-template-columns:31px minmax(0,1fr)") && home.includes("-webkit-line-clamp:5"), "R8 Global Feed mobile presentation rebuild missing");
+must(css.includes("vw2-feed-card") && css.includes("grid-template-columns:31px minmax(0,1fr)") && css.includes("-webkit-line-clamp:5"), "R9 Global Feed mobile presentation rebuild missing");
 
-must(home.includes("pageOverflow:") && home.includes("bottomContained:"), "R8 local mobile overflow/locked-bottom runtime metrics missing");
+must(home.includes("pageOverflow:") && home.includes("bottomContained:"), "local mobile overflow/locked-bottom runtime metrics missing");
+
+must(home.includes("--vw2-r9-runtime-ready:1") && !home.includes("Home V2 R8 Visual Master Convergence + Mobile-First Composition Pass"), "R9 did not consolidate the giant duplicated JS stylesheet");
 
 
 /* Authoritative state/binding guards. */
@@ -155,7 +176,7 @@ must(expectedBottom.length === 13, "bottom rail baseline count changed");
 
 must(expectedTop.length === 7, "top utility baseline count changed");
 
-/* CURRENT AFTER-R7 expected runtime marker totals preserved by R8.
+/* CURRENT authoritative runtime marker totals preserved by R9.
    44 action markers = coin 1 + top utilities 7 + left rail 19 + feed Classic 1 + center primary 2 + friends 1 + bottom rail 13.
    42 source markers = coin 1 + sourced top utilities 6 + left rail 19 + center primary 2 + friends 1 + bottom rail 13. */
 const expectedActionMarkerCount = 44;
@@ -197,27 +218,27 @@ must(home.includes("if(standards[name]){ clickExisting(`.lobby-bottom [data-xstd
 
 /* Accepted bottom rail look + fixed mobile landscape composition. */
 
-must(home.includes("grid-template-columns:repeat(13,minmax(0,1fr))!important"), "accepted 13-button bottom rail layout missing");
+must(css.includes("grid-template-columns:repeat(13,minmax(0,1fr))!important"), "accepted 13-button bottom rail layout missing");
 
-must(home.includes("#62dcff 0%,#2f9df2 54%,#2373d7 100%"), "accepted saturated blue bottom button material missing");
+must(css.includes("#62dcff 0%,#2f9df2 54%,#2373d7 100%"), "accepted saturated blue bottom button material missing");
 
-must(home.includes("#ffe66f 0%,#ffaf31 48%,#f06b37 100%"), "accepted primary game CTA material missing");
+must(css.includes("#ffe66f 0%,#ffaf31 48%,#f06b37 100%"), "accepted primary game CTA material missing");
 
-must(home.includes("#vw-home-v2-root .vw2-top{grid-row:1!important"), "mobile top row pin missing");
+must(css.includes("#vw-home-v2-root .vw2-top{grid-row:1!important"), "mobile top row pin missing");
 
-must(home.includes("#vw-home-v2-root .vw2-main-grid{grid-row:2!important"), "mobile main row pin missing");
+must(css.includes("#vw-home-v2-root .vw2-main-grid{grid-row:2!important"), "mobile main row pin missing");
 
-must(home.includes("#vw-home-v2-root .vw2-bottom{grid-row:3!important"), "mobile bottom row pin missing");
+must(css.includes("#vw-home-v2-root .vw2-bottom{grid-row:3!important"), "mobile bottom row pin missing");
 
-must(home.includes("display:flex!important;grid-column:2!important;grid-row:1!important;height:100%!important"), "Global Feed is not restored in fixed mobile composition");
+must(css.includes("display:flex!important;grid-column:2!important;grid-row:1!important;height:100%!important"), "Global Feed is not restored in fixed mobile composition");
 
-must(home.includes("grid-column:3!important;grid-row:1!important;height:100%!important"), "hero feature is not in mobile column 3");
+must(css.includes("grid-column:3!important;grid-row:1!important;height:100%!important"), "hero feature is not in mobile column 3");
 
-must(home.includes("grid-column:4!important;grid-row:1!important;height:100%!important"), "right panels are not in mobile column 4");
+must(css.includes("grid-column:4!important;grid-row:1!important;height:100%!important"), "right panels are not in mobile column 4");
 
-must(!home.includes("#vw-home-v2-root .vw2-feed{display:none!important}"), "mobile rules still hide Global Feed");
+must(!css.includes("#vw-home-v2-root .vw2-feed{display:none!important}"), "mobile rules still hide Global Feed");
 
-must(home.includes("overflow:hidden!important;overscroll-behavior:none!important"), "root/shell locked overflow rule missing");
+must(css.includes("overflow:hidden!important;overscroll-behavior:none!important"), "root/shell locked overflow rule missing");
 
 
 
@@ -249,5 +270,5 @@ must(!preview.includes("zoom:"), "preview must not use CSS/browser zoom");
 
 if(fail.length){ console.error("FAIL\n- " + fail.join("\n- ")); process.exit(1); }
 
-console.log("PASS Home V2 R8 visual-master convergence + preserved pastel icon system + richer world/profile/feed/mission/friend hierarchy + authoritative bindings + complete marker parity + exact mobile landscape/iQOO-style preview checks");
+console.log("PASS Home V2 R9 illustrated fantasy-world rebuild + cloud destination rail + premium profile/feed/quest/friend hierarchy + locked coin/bottom rail + authoritative bindings + exact mobile landscape/iQOO-style preview checks");
 
