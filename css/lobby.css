@@ -50,25 +50,6 @@ h1{color:var(--sky-d);text-shadow:none;}
 .subtitle{color:#5b7ea6;}
 .shop-title{color:var(--sky-d);}
 
-/* ---------- จอตั้ง → บังคับหมุนจอ ---------- */
-#rotate-overlay{display:none;}
-@media (orientation:portrait){
-  #rotate-overlay{
-    position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;
-    background-color:var(--navy);
-    background-image:linear-gradient(180deg,rgba(5,22,48,.88),rgba(5,22,48,.94)),url('../img/theme/theme_bg.png');
-    background-size:100% 100%,cover;background-position:center;background-repeat:no-repeat;
-  }
-  .rotate-box{text-align:center;color:#eaf4ff;padding:24px;}
-  .rotate-phone{font-size:64px;display:inline-block;animation:rotateHint 1.6s ease-in-out infinite;}
-  @keyframes rotateHint{0%,20%{transform:rotate(0deg);}60%,100%{transform:rotate(90deg);}}
-  .rotate-box p{font-size:19px;margin:14px 0 0;line-height:1.6;color:#cfe4fa;}
-  .rotate-box b{color:var(--gold);}
-  .rotate-hint{font-size:15px !important;margin-top:18px !important;color:#a9c7e6 !important;
-    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
-    border-radius:12px;padding:10px 14px;display:inline-block;}
-}
-
 /* ============================================================
    หน้าอื่นๆ (login/ลงทะเบียน/ร้านสัตว์/เกม/สอบ/สถิติ)
    = แผงลอยสีขาวกึ่งกลางจอ เหนือฉากเมือง (scroll ภายในแผง)
@@ -179,9 +160,8 @@ body:has(#screen-login.active) #app{
 #screen-login .install-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #b98a12;}
 #screen-login .install-btn span{font-size:clamp(10px,2dvh,12px);}
 
-/* หน้า login ต้องใช้ได้แนวตั้ง แม้ตัวเกมด้านในยังคงบังคับหมุนแนวนอน */
+/* หน้า login ยังต้องจัดวางได้ดีระหว่างที่เบราว์เซอร์กำลังสลับเป็น landscape */
 @media (orientation:portrait){
-  body:has(#screen-login.active) #rotate-overlay{display:none;}
   #screen-login.screen.active{width:min(720px,calc(100vw - 24px));padding:clamp(14px,2.6dvh,22px) 16px;}
   .login-logo{width:min(84vw,430px);}
 }

@@ -110,6 +110,52 @@ function fmtThaiDate(ts){
 }
 
 /* ---------- screen navigation ---------- */
+/* 📱 รอบ 1268: ให้ระบบเข้า landscape เองแทนภาพสั่งผู้เล่นหมุนโทรศัพท์
+   - PWA/TWA ล็อกตั้งแต่เปิดด้วย manifest; เรียก API ซ้ำกัน browser คืน orientation หลัง resume
+   - แท็บ Android ต้องมี user gesture + fullscreen ก่อน Screen Orientation API จึงอนุญาต
+   - browser ที่ไม่รองรับจะเล่นต่อได้โดยไม่ถูก overlay บัง */
+function gameIsPortrait(){
+  return window.matchMedia
+    ? window.matchMedia('(orientation:portrait)').matches
+    : window.innerHeight > window.innerWidth;
+}
+function gameCanLockLandscape(){
+  return !!(window.screen && screen.orientation && typeof screen.orientation.lock === 'function');
+}
+function gameIsStandalone(){
+  return navigator.standalone === true
+    || ['fullscreen','standalone','minimal-ui'].some(mode =>
+      window.matchMedia && window.matchMedia(`(display-mode:${mode})`).matches);
+}
+function lockGameLandscape(allowFullscreen){
+  if(!gameCanLockLandscape()) return Promise.resolve(false);
+  const lock = ()=>{
+    try{
+      return Promise.resolve(screen.orientation.lock('landscape')).then(()=>true, ()=>false);
+    }catch(_err){
+      return Promise.resolve(false);
+    }
+  };
+  if(!gameIsPortrait() || gameIsStandalone() || document.fullscreenElement || !allowFullscreen){
+    return lock();
+  }
+  const root = document.documentElement;
+  if(!root || typeof root.requestFullscreen !== 'function') return lock();
+  try{
+    return Promise.resolve(root.requestFullscreen()).then(lock, ()=>false);
+  }catch(_err){
+    return Promise.resolve(false);
+  }
+}
+lockGameLandscape(false);
+window.addEventListener('pageshow', ()=>lockGameLandscape(false));
+document.addEventListener('visibilitychange', ()=>{
+  if(!document.hidden) lockGameLandscape(false);
+});
+window.addEventListener('pointerdown', ()=>lockGameLandscape(true), {
+  capture:true, passive:true, once:true
+});
+
 /* 📱 รอบ 1076: iPhone landscape มี viewport จริงแค่ ~844×390 CSS px ขณะที่ Android ภาพอ้างอิง
    มีพื้นที่ ~1280px → แม้ responsive จอเตี้ยจะไม่ล้น แต่การ์ด/ข้อความใหญ่จน Lobby แสดงไม่ครบ
    ให้เฉพาะหน้า Lobby บน iPhone ใช้ผืนออกแบบ 1280px แล้ว Safari ย่อพอดีความกว้างเครื่อง

@@ -28,6 +28,9 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (23 ส.ค.) — อ่านก่อน
+- **รอบ 1268 · หน้าแรกเข้า landscape อัตโนมัติแทนภาพสั่งหมุนจอ:** ลบ `#rotate-overlay` จาก HTML/CSS; PWA/TWA คง `orientation: landscape` และ runtime เรียก Screen Orientation API ตอนเปิด/กลับเข้าแอป (`index_classic.html`, `css/lobby.css`, `js/util.js`)
+- แท็บ Android แนวตั้งใช้การแตะครั้งแรกเข้า fullscreen แล้วล็อก landscape; browser ที่ไม่รองรับจะไม่ถูก overlay บัง; เพิ่ม regression `tools/test_landscape_entry.js`
+- `node --check`, landscape/lobby regression, production build และ PWA/cache/TWA validator ผ่าน; dist ไม่มี overlay และมี landscape lock; visual QA ถูก Windows ACL บล็อกที่ browser runtime
 - **รอบ 1267 · แก้ผ้าคลุมสุนัข/แมวกางอยู่นอกตัว:** profile เดิมใหญ่ `3.50×`/`3.20×`, y `-0.25`; ปรับทั้งคู่เป็น `1.75×`, y `-0.08` ให้ชุดแนบคอ–อกเหมือนมังกร (`js/data/wear_extra.js`)
 - visual composite ท่าหิววัยเด็ก+วัยโตของสุนัข/แมวยืนยันไม่ทับขา/หางและไม่กางลงพื้น; ไม่เปลี่ยน asset หรือชุดชนิดอื่น
 - regression ล็อกค่า royal cape ครบ cat/dog/dragon; `node --check`, `test_dress_luxury.js`, `test_pet_bond.js` ผ่าน (`tools/test_dress_luxury.js`)
