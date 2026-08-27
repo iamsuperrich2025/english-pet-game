@@ -30,15 +30,18 @@ ok(images.includes('Object.values(p.equipped || {})'), 'future outfit slots are 
     petStage:()=> 'baby',
     equippedItem:()=>({id:'rainbow_hoodie'}),
     currentPetImg:()=> 'img/animal/dog_baby_normal.webp',
+    petHungry:p=>!!p.hungry,
     IMG_FILES:{dog_baby_rainbow_hoodie:'img/AnimalWearItems/dog_baby_rainbow_hoodie.webp'},
     WEAR_PIECE:{dog_rainbow_hoodie:{f:'img/wear/premium/rainbow_hoodie.png',mode:'center',anchor:'eye',size:3.55,x:0,y:-1.05,k:1}},
     WEAR_ANCHOR:{dog_baby_normal:{ex:.5,ey:.4,ed:.2,ht:.1}},
   };
   vm.runInNewContext(source, ctx);
-  ok(ctx.petWearOverlay({type:'dog',sick:true}, 'img/animal/dog_baby_normal.webp') === null,
+  ok(ctx.petWearOverlay({type:'dog',sick:true,hungry:false}, 'img/animal/dog_baby_normal.webp') === null,
     'sick pet keeps the medical pose unobstructed by an outfit');
-  ok(!!ctx.petWearOverlay({type:'dog',sick:false}, 'img/animal/dog_baby_normal.webp'),
-    'healthy pet still renders its equipped outfit');
+  ok(ctx.petWearOverlay({type:'dog',sick:false,hungry:true}, 'img/animal/dog_baby_normal.webp') === null,
+    'hungry pet keeps the hunger pose unobstructed by an outfit');
+  ok(!!ctx.petWearOverlay({type:'dog',sick:false,hungry:false}, 'img/animal/dog_baby_normal.webp'),
+    'healthy and fed pet still renders its equipped outfit');
 }
 ok(ui.includes("bondCf.bg || cf.bg || ''"), 'future pet species support optional PETS[type].bond metadata');
 ok(ui.includes("|| {lead:`${n}รักบ้านของเรา`"), 'future pet species have generic bonding copy');
