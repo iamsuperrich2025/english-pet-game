@@ -28,6 +28,9 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (23 ส.ค.) — อ่านก่อน
+- **รอบ 1263 · ตั้ง Lobby Classic เป็นหน้าเริ่มต้น:** `/` และ `index.html` ที่ไม่มี `?lobby=3d` ใช้ `location.replace` ไป `index_classic.html` พร้อมรักษา query/hash; Lobby 3D เป็นหน้ารอง `index.html?lobby=3d` ผ่านปุ่มแนวตั้งซ้ายชื่อ “Lobby 3D”
+- อัปเดตคำอธิบายสถาปัตยกรรมใน `index.html`, `index_classic.html`, `css/lobby.css`, `js/city3d.js`, `js/main.js` และเพิ่ม regression `tools/test_lobby_entry_route.js`
+- regression + local HTTP ทั้ง 2 route + production build 9,102 ไฟล์ + PWA/cache/TWA validator ผ่าน; visual QA ถูก Windows ACL บล็อกตั้งแต่ browser runtime ตามข้อจำกัดเดิม
 - **รอบ 1262 · แก้ตลาดขึ้น “มีคนซื้อตัดหน้า” ทุกครั้ง:** RTDB transaction ฝั่ง `marketBuySecure` เคย abort เมื่อ callback รอบแรกเดา `null` ทั้งที่ listing จริงยังอยู่; pre-read snapshot แล้ว seed เฉพาะ null attempt แรก โดย server hash/retry ยังกัน race และไม่ชุบรายการที่ถูกลบจริง (`functions/index.js`)
 - production ledger พบ `sold_out` 14 รายการและยืนยันหลาย key ยังอยู่ใน `/market`; เพิ่ม regression ครบ live listing/null guess + deleted-after-read และคง buyer/seller/refund idempotency (`functions/test_market_settlement.js`)
 - `npm test --prefix functions`, syntax, client transaction และ listing reconcile ผ่านครบ; แก้ `tools/ship.sh` ให้ไฟล์ `functions/` ถูกจัดเป็นงาน deploy ไม่ใช่เอกสาร
@@ -40,9 +43,6 @@
 - pet asset catalog+integration ผ่าน; `test_petshopping3d.js` ยัง fail baseline GPS route เดิม; production build 9,098 ไฟล์และ PWA/cache/TWA validator ผ่าน
 - **รอบ 1259 · แก้ภาพตัวละคร Sky ไม่ขึ้นด้วย thumbnail เบา:** ต้นตอหน้าเลือกดึง atlas 6 ใบรวม 3.29MB; สร้าง WebP 174×348 q80 โปร่งใส 6 ใบรวม 80,302B เบาลง 41.9× แต่คมถึง 3× ของขนาดแสดงจริง (img/characters/*_thumb.webp)
 - picker ก่อนเข้าและ picker ในโลกใช้ thumb แบบ contain รักษาสัดส่วน; atlas นิ่ง/animation ตัวเต็มและ renderer/network เดิมไม่เปลี่ยน (js/skyplay3d.js, js/ui.js, css/skyplay3d.css)
-- syntax+Sky/Beta regression+asset dimension/alpha/silhouette/budget QA+production build 9,098 ไฟล์+PWA manifest+source/dist thumb SHA-256 ผ่าน; browser visual QA ยังถูก Windows ACL บล็อก
-- **รอบ 1258 · Sky Playground เลือกตัวละครก่อนเข้าได้แล้ว:** dialog จ่าย/เข้าโลกแสดงตัวละคร 6 แบบจาก catalog เดิม เลือกแล้วไฮไลต์ เปลี่ยนข้อความปุ่มเข้า และบันทึก local/cloud ก่อนจ่าย (js/ui.js, css/skyplay3d.css)
-- คง picker ในโลกและ renderer/network contract เดิม; layout 6 คอลัมน์สำหรับ 812×375 + 3 คอลัมน์แนวตั้ง ไม่มี scrollbar และมี regression ครบ (tools/test_skyplay3d.js)
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`

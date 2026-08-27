@@ -4,11 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Vocab World 🏙️ เมืองคำศัพท์ 3D — เลี้ยงสัตว์ สร้างตัว ผจญภัย</title>
-<!-- 🏙️ รอบ 863: หน้านี้ = "หน้าหลัก" ของเกม (ล็อบบี้เมือง 3D · เดิมชื่อ index2.html)
-     ล็อบบี้แบบเดิม (แผง/ราง/หน้าจอเกมทั้งหมด) ย้ายไป index_classic.html — สลับไปมาได้ 2 ทาง:
-       · ที่นี่ → ปุ่ม "🚪 ล็อบบี้แบบเดิม" มุมล่างซ้าย
-       · index_classic.html → ปุ่ม "🏙️ เมือง 3D" บนสุดของรางเมนูซ้าย
-     เอนจินทั้งหมดอยู่ js/city3d.js · แตะตึก → เด้งไป index_classic.html?go=<key> (ตัวรับท้าย js/main.js) -->
+<!-- 🏠 หน้าเริ่มต้นของเกมคือ Lobby Classic; หน้านี้เปิดเมือง 3D เฉพาะเมื่อมาจาก
+     ปุ่ม "🏙️ Lobby 3D" บนรางเมนูซ้ายพร้อม ?lobby=3d เท่านั้น -->
+<script>
+(function(){
+  var params = new URLSearchParams(location.search);
+  if(params.get('lobby') === '3d') return;
+  location.replace('index_classic.html' + location.search + location.hash);
+}());
+</script>
+<!-- เอนจินเมืองอยู่ js/city3d.js · แตะตึก → เด้งไป index_classic.html?go=<key>
+     (ตัวรับท้าย js/main.js) -->
 <link rel="icon" href="img/icons/icon-192-flat.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="css/onetpromo.css"> <!-- 🇹🇭 รอบ 1185: ป้าย O-NET สำหรับผู้เล่นที่ login ค้างใน Lobby 3D -->
