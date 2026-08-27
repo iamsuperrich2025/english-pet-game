@@ -6629,8 +6629,7 @@
     style.id = STYLE_ID;
 
     style.textContent = `
-
-/* === Home V2 R7 Final Premium Composition & Hierarchy Pass ===
+/* === Home V2 R8 Visual Master Convergence + Mobile-First Composition Pass ===
    Presentation-only rebuild. Authoritative handlers, source delegation, state bindings,
    house ownership/rendering, access control, Classic fallback and bottom rail mappings stay intact. */
 #screen-dashboard.vw2-active{
@@ -6648,19 +6647,23 @@
   color:var(--vw2-ink); font-family:"Noto Sans Thai","Kanit","Trebuchet MS",system-ui,sans-serif;
   border:3px solid rgba(255,255,255,.96); border-radius:22px;
   background:
-    radial-gradient(circle at 13% 8%,rgba(255,255,255,.84) 0 2px,transparent 3px),
-    radial-gradient(circle at 72% 5%,rgba(255,245,180,.88) 0 2px,transparent 3px),
-    radial-gradient(circle at 93% 18%,rgba(255,255,255,.88) 0 1.5px,transparent 2.5px),
-    radial-gradient(ellipse at 50% 110%,rgba(255,214,242,.54),transparent 48%),
-    linear-gradient(180deg,#55b9f8 0%,#8fd7ff 30%,#c5c9ff 64%,#e6c2f6 100%);
-  box-shadow:inset 0 0 0 2px rgba(102,103,184,.16),inset 0 1px 0 rgba(255,255,255,.75),0 12px 28px rgba(55,61,145,.24)
+    radial-gradient(circle at 6% 9%,rgba(255,255,255,.96) 0 2px,transparent 3px),
+    radial-gradient(circle at 24% 5%,rgba(255,241,159,.78) 0 1.7px,transparent 2.7px),
+    radial-gradient(circle at 58% 9%,rgba(255,255,255,.92) 0 1.5px,transparent 2.5px),
+    radial-gradient(circle at 82% 4%,rgba(255,239,160,.84) 0 2px,transparent 3px),
+    radial-gradient(circle at 95% 19%,rgba(255,255,255,.9) 0 1.6px,transparent 2.6px),
+    radial-gradient(ellipse at 16% 42%,rgba(255,224,246,.42),transparent 36%),
+    radial-gradient(ellipse at 80% 46%,rgba(195,205,255,.48),transparent 38%),
+    radial-gradient(ellipse at 50% 111%,rgba(255,202,237,.68),transparent 52%),
+    linear-gradient(180deg,#4ca9ee 0%,#73c9ff 22%,#a9d7ff 43%,#c8c5ff 67%,#e8bfee 100%);
+  box-shadow:inset 0 0 0 2px rgba(102,103,184,.16),inset 0 1px 0 rgba(255,255,255,.82),0 12px 28px rgba(55,61,145,.24)
 }
 #vw-home-v2-root *{box-sizing:border-box}
 #vw-home-v2-root button{font:inherit;-webkit-tap-highlight-color:transparent}
 #vw-home-v2-root button:focus-visible{outline:3px solid #ffe46f;outline-offset:2px}
 #vw-home-v2-root .vw2-sky{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
-#vw-home-v2-root .vw2-sky:before{content:"";position:absolute;left:-8%;right:-8%;bottom:-19%;height:39%;border-radius:50% 50% 0 0;background:linear-gradient(180deg,rgba(255,255,255,.38),rgba(185,145,236,.36));box-shadow:0 -16px 38px rgba(255,255,255,.2)}
-#vw-home-v2-root .vw2-sky:after{content:"";position:absolute;left:-4%;top:23%;width:160px;height:40px;border-radius:999px;background:rgba(255,255,255,.24);box-shadow:310px -85px 0 rgba(255,255,255,.2),670px 18px 0 rgba(255,255,255,.22),1040px -65px 0 rgba(255,255,255,.18)}
+#vw-home-v2-root .vw2-sky:before{content:"";position:absolute;left:-9%;right:-9%;bottom:-18%;height:46%;border-radius:50% 50% 0 0;background:radial-gradient(ellipse at 16% 5%,rgba(255,255,255,.52) 0 15%,transparent 17%),radial-gradient(ellipse at 49% 2%,rgba(255,240,250,.44) 0 19%,transparent 21%),radial-gradient(ellipse at 82% 8%,rgba(236,239,255,.49) 0 17%,transparent 19%),linear-gradient(180deg,rgba(255,223,246,.28),rgba(169,132,230,.44));box-shadow:0 -18px 42px rgba(255,255,255,.22)}
+#vw-home-v2-root .vw2-sky:after{content:"";position:absolute;left:-3%;top:18%;width:180px;height:44px;border-radius:999px;background:rgba(255,255,255,.46);box-shadow:-38px 9px 0 -9px rgba(255,255,255,.44),115px 4px 0 -11px rgba(255,255,255,.4),318px -72px 0 4px rgba(255,255,255,.35),650px 22px 0 8px rgba(255,255,255,.37),985px -58px 0 2px rgba(255,255,255,.34),1230px 30px 0 5px rgba(255,255,255,.3);opacity:.78}
 #vw-home-v2-root .vw2-sky i{position:absolute;width:4px;height:4px;border-radius:50%;background:#fff;box-shadow:0 0 7px rgba(255,255,255,.9)}
 #vw-home-v2-root .vw2-sky i:nth-child(1){left:26%;top:7%}#vw-home-v2-root .vw2-sky i:nth-child(2){left:59%;top:13%}#vw-home-v2-root .vw2-sky i:nth-child(3){right:6%;top:8%}#vw-home-v2-root .vw2-sky i:nth-child(4){left:5%;bottom:18%}
 #vw-home-v2-root .vw2-shell{
@@ -6668,8 +6671,8 @@
   grid-template-rows:96px minmax(0,1fr) 60px;gap:9px;padding:9px 10px 8px;
   overflow:hidden!important;overscroll-behavior:none!important
 }
-#vw-home-v2-root .vw2-glass{background:radial-gradient(circle at 15% 0%,rgba(255,255,255,.96),transparent 30%),linear-gradient(155deg,rgba(255,253,255,.94),rgba(236,248,255,.91) 52%,rgba(242,230,255,.91));border:2px solid rgba(255,255,255,.96);box-shadow:0 4px 0 rgba(85,77,165,.11),0 9px 18px rgba(59,69,146,.1),inset 0 2px 0 rgba(255,255,255,.9),inset 0 0 0 1px rgba(143,130,215,.1)}
-/* R7 preserves the R6 unified pastel SVG icon palette. Explicit styling prevents browser-default black silhouettes. */
+#vw-home-v2-root .vw2-glass{background:radial-gradient(circle at 16% 0%,rgba(255,255,255,.87),transparent 31%),linear-gradient(155deg,rgba(255,252,255,.86),rgba(232,246,255,.79) 52%,rgba(239,226,255,.82));border:2px solid rgba(255,255,255,.94);box-shadow:0 4px 0 rgba(85,77,165,.09),0 9px 18px rgba(59,69,146,.08),inset 0 2px 0 rgba(255,255,255,.82)}
+/* R8 preserves the accepted R6/R7 unified pastel SVG icon palette. Explicit styling prevents browser-default black silhouettes. */
 #vw-home-v2-root .vw2-icon{width:100%;height:100%;display:block;overflow:visible;filter:drop-shadow(0 2px 1px rgba(74,61,124,.13))}
 #vw-home-v2-root .vw2-icon .i-sticker{fill:rgba(255,255,255,.97);stroke:rgba(255,255,255,.99);stroke-width:2.2}
 #vw-home-v2-root .vw2-icon .i-gloss{fill:rgba(255,255,255,.58)}
@@ -6689,10 +6692,10 @@
 #vw-home-v2-root .vw2-icon .i-mint-line{fill:none;stroke:#58cda5;stroke-width:3.7;stroke-linecap:round;stroke-linejoin:round}
 /* ----- TOP: premium identity + real bound statistics + locked utilities ----- */
 #vw-home-v2-root .vw2-top{grid-row:1;display:grid;grid-template-columns:minmax(360px,430px) minmax(410px,1fr) auto;gap:9px;align-items:stretch;min-width:0;min-height:0}
-#vw-home-v2-root .vw2-profile{position:relative;min-width:0;height:96px;border-radius:30px;padding:6px 14px 6px 8px;display:grid;grid-template-columns:92px minmax(0,1fr);align-items:center;gap:12px;overflow:hidden;background:radial-gradient(circle at 8% 4%,#fff 0 8%,transparent 9%),radial-gradient(circle at 92% 14%,rgba(255,217,239,.7),transparent 31%),radial-gradient(circle at 66% 112%,rgba(194,225,255,.46),transparent 43%),linear-gradient(145deg,#fffafd 0%,#eaf8ff 47%,#eee2ff 100%)}
+#vw-home-v2-root .vw2-profile{position:relative;min-width:0;height:96px;border-radius:30px;padding:6px 14px 6px 8px;display:grid;grid-template-columns:92px minmax(0,1fr);align-items:center;gap:12px;overflow:hidden;background:radial-gradient(circle at 8% 4%,#fff 0 8%,transparent 9%),radial-gradient(circle at 90% 10%,rgba(255,205,236,.72),transparent 31%),radial-gradient(circle at 66% 112%,rgba(179,220,255,.58),transparent 43%),linear-gradient(145deg,rgba(255,250,253,.96) 0%,rgba(233,248,255,.94) 47%,rgba(237,224,255,.94) 100%)}
 #vw-home-v2-root .vw2-profile:before{content:"";position:absolute;left:-20px;top:-28px;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,#ffeef9 0 36%,rgba(255,238,249,0) 68%);pointer-events:none}
 #vw-home-v2-root .vw2-profile:after{content:"";position:absolute;right:-12px;bottom:-31px;width:138px;height:90px;border-radius:50%;background:radial-gradient(ellipse at 50% 0%,rgba(255,255,255,.54),rgba(189,220,255,.32) 43%,rgba(195,171,239,.18) 68%,transparent 70%);pointer-events:none}
-#vw-home-v2-root .vw2-profile-kicker{position:absolute;z-index:3;right:10px;top:5px;display:flex;align-items:center;gap:4px;color:#8164b6;font-size:7.3px;font-weight:950;letter-spacing:.09em;text-transform:uppercase}
+#vw-home-v2-root .vw2-profile-kicker{position:absolute;z-index:3;right:10px;top:5px;display:flex;align-items:center;gap:4px;color:#7658ae;font-size:7.1px;font-weight:950;letter-spacing:.08em;text-transform:uppercase}
 #vw-home-v2-root .vw2-profile-kicker i{font-style:normal;color:#ffc957;font-size:11px}
 #vw-home-v2-root .vw2-avatar-frame{position:relative;z-index:2;width:92px;height:92px;display:grid;place-items:center}
 #vw-home-v2-root .vw2-avatar-frame:before{content:"";position:absolute;inset:0;border-radius:29px;background:linear-gradient(135deg,#fff 0%,#ffc8e8 29%,#b9deff 64%,#d4bcff 100%);box-shadow:0 5px 0 rgba(104,82,167,.17),0 7px 14px rgba(73,72,142,.13)}
@@ -6701,15 +6704,15 @@
 #vw-home-v2-root .vw2-avatar img,#vw-home-v2-root .vw2-avatar svg{width:100%;height:100%;object-fit:contain;object-position:center bottom}
 #vw-home-v2-root .vw2-profile-main{position:relative;z-index:2;min-width:0;padding-top:4px}
 #vw-home-v2-root .vw2-name-row{display:flex;align-items:center;gap:5px;min-width:0;padding-right:50px}
-#vw-home-v2-root .vw2-name-row strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:22px;line-height:1.02;font-weight:950;color:#40305e;text-shadow:0 1px 0 #fff,0 2px 8px rgba(115,79,165,.08)}
+#vw-home-v2-root .vw2-name-row strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:23px;line-height:1.02;font-weight:950;color:#3e2d61;text-shadow:0 1px 0 #fff,0 2px 8px rgba(115,79,165,.1)}
 #vw-home-v2-root .vw2-pencil{width:18px;height:18px;flex:0 0 18px;opacity:.72}
-#vw-home-v2-root .vw2-profile-meta{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr);gap:3px 5px;margin-top:4px}
-#vw-home-v2-root .vw2-profile-meta-chip{min-width:0;padding:3px 6px 4px;border:0;border-radius:10px;background:transparent;box-shadow:none}
-#vw-home-v2-root .vw2-profile-meta-chip:nth-child(2){background:linear-gradient(180deg,rgba(255,250,229,.88),rgba(255,237,189,.72));box-shadow:inset 0 0 0 1px rgba(255,255,255,.75)}
-#vw-home-v2-root .vw2-profile-meta-chip:nth-child(3){background:linear-gradient(180deg,rgba(255,246,252,.75),rgba(255,226,241,.52))}
-#vw-home-v2-root .vw2-profile-meta-chip:nth-child(4){background:linear-gradient(180deg,rgba(247,242,255,.75),rgba(233,220,255,.55))}
-#vw-home-v2-root .vw2-profile-meta-chip small{display:block;color:#85799f;font-size:6.8px;font-weight:900;letter-spacing:.055em;line-height:1}
-#vw-home-v2-root .vw2-profile-meta-chip b{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;font-size:10.4px;line-height:1.05;color:#4d3d6c;font-weight:950}
+#vw-home-v2-root .vw2-profile-meta{display:grid;grid-template-columns:minmax(0,1.18fr) minmax(0,.82fr);gap:2px 7px;margin-top:4px}
+#vw-home-v2-root .vw2-profile-meta-chip{position:relative;min-width:0;padding:1px 4px 2px;border:0;border-radius:0;background:transparent;box-shadow:none}
+#vw-home-v2-root .vw2-profile-meta-chip:nth-child(even){border-left:1px solid rgba(123,99,165,.16);padding-left:8px}
+#vw-home-v2-root .vw2-profile-meta-chip small{display:block;color:#817493;font-size:6.2px;font-weight:900;letter-spacing:.045em;line-height:1}
+#vw-home-v2-root .vw2-profile-meta-chip b{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px;font-size:9.2px;line-height:1.05;color:#55446f;font-weight:900}
+#vw-home-v2-root .vw2-profile-meta-chip.class b{font-size:11.2px;color:#493467;font-weight:950}
+#vw-home-v2-root .vw2-profile-meta-chip.id b{font-size:9.6px;color:#6c557d}
 #vw-home-v2-root .vw2-profile-chips{display:flex;align-items:center;gap:4px;margin-top:3px;min-width:0}
 #vw-home-v2-root .vw2-rank,#vw-home-v2-root .vw2-sync-chip{min-width:0;border-radius:999px;padding:3px 8px;font-size:8.4px;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px solid rgba(255,255,255,.92);box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 2px 4px rgba(90,71,151,.05)}
 #vw-home-v2-root .vw2-rank{flex:1;color:#765723;background:linear-gradient(180deg,#fff8d9,#ffe59a)}
@@ -6742,36 +6745,36 @@
 #vw-home-v2-root .vw2-top-actions .vw2-tool-btn b{max-width:100%;font-size:7.9px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:950}
 #vw-home-v2-root .vw2-top-actions .vw2-tool-btn:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(75,78,158,.17)}
 /* ----- MAIN COMPOSITION: four desktop-like zones at every landscape phone size ----- */
-#vw-home-v2-root .vw2-main-grid{grid-row:2;min-width:0;min-height:0;display:grid;grid-template-columns:172px 244px minmax(430px,1fr) 286px;gap:9px;overflow:hidden}
+#vw-home-v2-root .vw2-main-grid{grid-row:2;min-width:0;min-height:0;display:grid;grid-template-columns:136px 270px minmax(430px,1fr) 286px;gap:9px;overflow:hidden}
 #vw-home-v2-root .vw2-main-grid>*{min-width:0;min-height:0;max-width:100%}
 /* Left illustrated rail */
-#vw-home-v2-root .vw2-left{position:relative;border-radius:27px;padding:8px 7px 24px;display:flex;flex-direction:column;align-items:stretch;gap:7px;overflow-y:auto!important;overflow-x:hidden!important;scrollbar-width:none!important;overscroll-behavior:contain;scroll-snap-type:y proximity;background:radial-gradient(circle at 50% 0%,rgba(255,255,255,.98),transparent 23%),linear-gradient(180deg,rgba(255,250,255,.98),rgba(231,230,255,.96))}
+#vw-home-v2-root .vw2-left{position:relative;border-radius:26px;padding:8px 5px 24px;display:flex;flex-direction:column;align-items:stretch;gap:6px;overflow-y:auto!important;overflow-x:hidden!important;scrollbar-width:none!important;overscroll-behavior:contain;scroll-snap-type:y proximity;background:radial-gradient(circle at 50% 0%,rgba(255,255,255,.88),transparent 24%),linear-gradient(180deg,rgba(255,248,254,.8),rgba(224,224,255,.76))}
 #vw-home-v2-root .vw2-left::-webkit-scrollbar{display:none!important;width:0!important;height:0!important}
-#vw-home-v2-root .vw2-left .vw2-rail-btn{--rail-a:#b9e9ff;--rail-b:#80c8f8;position:relative;isolation:isolate;flex:0 0 72px;height:72px;min-height:72px;border:0;background:transparent;padding:0;cursor:pointer;color:#584775;scroll-snap-align:start}
+#vw-home-v2-root .vw2-left .vw2-rail-btn{--rail-a:#b9e9ff;--rail-b:#80c8f8;position:relative;isolation:isolate;flex:0 0 68px;height:68px;min-height:68px;border:0;background:transparent;padding:0;cursor:pointer;color:#584775;scroll-snap-align:start}
 #vw-home-v2-root .vw2-left .vw2-rail-btn:nth-child(4n+2){--rail-a:#ffd7e8;--rail-b:#f4a5c7}
 #vw-home-v2-root .vw2-left .vw2-rail-btn:nth-child(4n+3){--rail-a:#d9f5db;--rail-b:#9ed8aa}
 #vw-home-v2-root .vw2-left .vw2-rail-btn:nth-child(4n+4){--rail-a:#e4d9ff;--rail-b:#b69eea}
-#vw-home-v2-root .vw2-left .vw2-rail-btn:before{content:"";position:absolute;z-index:0;left:3px;right:3px;bottom:2px;height:49px;border:3px solid rgba(255,255,255,.99);border-radius:26px 26px 20px 20px;background:radial-gradient(circle at 22% 7%,rgba(255,255,255,.9),transparent 30%),linear-gradient(180deg,var(--rail-a),var(--rail-b));box-shadow:0 5px 0 rgba(83,72,149,.17),0 9px 13px rgba(64,69,136,.12),inset 0 2px 0 rgba(255,255,255,.72)}
-#vw-home-v2-root .vw2-left .vw2-rail-btn:after{content:"";position:absolute;z-index:0;left:50%;bottom:36px;width:49px;height:23px;transform:translateX(-50%);border-radius:50%;background:rgba(255,255,255,.93);box-shadow:-22px 5px 0 -8px rgba(255,255,255,.93),22px 5px 0 -8px rgba(255,255,255,.93)}
-#vw-home-v2-root .vw2-left .vw2-rail-art{position:absolute;z-index:2;left:50%;top:-2px;width:52px;height:52px;transform:translateX(-50%);display:grid;place-items:center;filter:drop-shadow(0 4px 2px rgba(71,65,122,.16))}
+#vw-home-v2-root .vw2-left .vw2-rail-btn:before{content:"";position:absolute;z-index:0;left:2px;right:2px;bottom:2px;height:45px;border:3px solid rgba(255,255,255,.98);border-radius:24px 24px 18px 18px;background:radial-gradient(circle at 22% 7%,rgba(255,255,255,.92),transparent 30%),linear-gradient(180deg,var(--rail-a),var(--rail-b));box-shadow:0 5px 0 rgba(83,72,149,.16),0 8px 12px rgba(64,69,136,.1),inset 0 2px 0 rgba(255,255,255,.76)}
+#vw-home-v2-root .vw2-left .vw2-rail-btn:after{content:"";position:absolute;z-index:0;left:50%;bottom:33px;width:45px;height:22px;transform:translateX(-50%);border-radius:50%;background:rgba(255,255,255,.94);box-shadow:-19px 5px 0 -8px rgba(255,255,255,.94),19px 5px 0 -8px rgba(255,255,255,.94)}
+#vw-home-v2-root .vw2-left .vw2-rail-art{position:absolute;z-index:2;left:50%;top:-2px;width:49px;height:49px;transform:translateX(-50%);display:grid;place-items:center;filter:drop-shadow(0 4px 2px rgba(71,65,122,.16))}
 #vw-home-v2-root .vw2-left .vw2-rail-art .vw2-icon{width:41px!important;height:41px!important}
-#vw-home-v2-root .vw2-left .vw2-rail-label{position:absolute;z-index:2;left:6px;right:6px;bottom:6px;height:19px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:10.4px;line-height:1.02;font-weight:950;color:#46395f;text-shadow:0 1px 0 rgba(255,255,255,.95);border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.54),rgba(255,255,255,.16))}
+#vw-home-v2-root .vw2-left .vw2-rail-label{position:absolute;z-index:2;left:4px;right:4px;bottom:5px;min-height:18px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:9.7px;line-height:1.02;font-weight:950;color:#46395f;text-shadow:0 1px 0 rgba(255,255,255,.96);border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.58),rgba(255,255,255,.18));padding:1px 3px}
 #vw-home-v2-root .vw2-left .vw2-rail-btn.vw2-current:before{box-shadow:0 5px 0 rgba(134,91,180,.23),0 8px 15px rgba(111,83,172,.17),0 0 0 2px rgba(255,221,110,.5),inset 0 1px 0 #fff}
 #vw-home-v2-root .vw2-left .vw2-rail-btn.vw2-current .vw2-rail-art{transform:translateX(-50%) translateY(-2px) scale(1.04)}
 #vw-home-v2-root .vw2-left-scroll-cue{position:sticky;z-index:8;left:50%;bottom:0;align-self:center;margin-top:-19px;width:38px;height:20px;border:2px solid #fff;border-radius:999px;display:none;place-items:center;background:linear-gradient(180deg,#fff,#d9d1ff);box-shadow:0 3px 0 rgba(89,70,153,.15);color:#7256b8;font-size:16px;font-weight:950;pointer-events:none}
 #vw-home-v2-root .vw2-left-scroll-cue.is-visible{display:grid}
 /* Global Feed becomes a single social/game card instead of a dashboard column */
-#vw-home-v2-root .vw2-feed{position:relative;border-radius:27px;padding:10px 9px 9px;display:flex!important;flex-direction:column;overflow:hidden;background:radial-gradient(circle at 88% 4%,rgba(199,239,255,.94),transparent 29%),radial-gradient(circle at 12% 94%,rgba(255,204,235,.62),transparent 33%),linear-gradient(180deg,#f9fdff,#e6f6ff 51%,#efe7ff)}
+#vw-home-v2-root .vw2-feed{position:relative;border-radius:27px;padding:10px 9px 9px;display:flex!important;flex-direction:column;overflow:hidden;background:radial-gradient(circle at 88% 4%,rgba(185,235,255,.82),transparent 31%),radial-gradient(circle at 12% 94%,rgba(255,194,230,.56),transparent 35%),linear-gradient(180deg,rgba(249,253,255,.84),rgba(224,243,255,.76) 51%,rgba(235,224,255,.8))}
 #vw-home-v2-root .vw2-feed:before{content:"";position:absolute;right:-28px;bottom:-24px;width:126px;height:98px;border-radius:50%;background:radial-gradient(circle,#ffe985 0 12%,#ffbeda 13% 26%,#b9ddff 27% 41%,transparent 42%);opacity:.66;pointer-events:none}
 #vw-home-v2-root .vw2-section-head{position:relative;z-index:2;display:grid;grid-template-columns:32px minmax(0,1fr) auto;align-items:center;gap:6px;min-height:34px}
 #vw-home-v2-root .vw2-section-head>.vw2-head-icon{width:32px;height:32px;border-radius:13px;padding:3px;border:2px solid #fff;background:linear-gradient(180deg,#fff,#e3eeff);box-shadow:0 3px 0 rgba(89,91,168,.12)}
 #vw-home-v2-root .vw2-section-head strong{min-width:0;font-size:14px;line-height:1;font-weight:950;color:#473a68;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #vw-home-v2-root .vw2-section-head button,#vw-home-v2-root .vw2-section-head>b{border:0;border-radius:999px;padding:4px 7px;background:linear-gradient(180deg,#fff6d2,#ffe087);color:#765421;font-size:7.5px;font-weight:950;white-space:nowrap}
-#vw-home-v2-root .vw2-feed-card{position:relative;z-index:2;flex:1;min-height:0;margin-top:6px;border:0;border-radius:23px;padding:12px 10px 10px;display:grid;grid-template-rows:auto minmax(0,1fr);align-items:start;text-align:left;background:radial-gradient(circle at 74% 9%,rgba(255,255,255,.9) 0 3%,transparent 4%),radial-gradient(circle at 16% 90%,rgba(255,227,242,.67),transparent 35%),linear-gradient(160deg,rgba(255,255,255,.83),rgba(218,241,255,.79) 58%,rgba(234,222,255,.8));box-shadow:inset 0 1px 0 rgba(255,255,255,.88),0 5px 12px rgba(81,79,150,.08);overflow:hidden}
-#vw-home-v2-root .vw2-feed-avatar{width:60px;height:60px;flex:0 0 60px;border-radius:22px;padding:7px;border:2px solid rgba(255,255,255,.96);background:radial-gradient(circle at 30% 15%,#fff 0 11%,transparent 12%),linear-gradient(180deg,#ffd8ed,#cceaff);box-shadow:0 4px 0 rgba(101,88,166,.1),0 7px 12px rgba(72,76,142,.07)}
-#vw-home-v2-root .vw2-feed-card>div:last-child{position:relative;z-index:2;min-width:0;width:100%;align-self:center;margin-top:7px;padding:7px 2px 2px}
+#vw-home-v2-root .vw2-feed-card{position:relative;z-index:2;flex:1;min-height:0;margin-top:6px;border:0;border-radius:21px;padding:10px 9px;display:grid;grid-template-columns:54px minmax(0,1fr);align-items:start;gap:9px;text-align:left;background:radial-gradient(circle at 74% 9%,rgba(255,255,255,.78) 0 3%,transparent 4%),radial-gradient(circle at 16% 90%,rgba(255,222,241,.55),transparent 35%),linear-gradient(160deg,rgba(255,255,255,.68),rgba(213,239,255,.62) 58%,rgba(231,217,255,.64));box-shadow:inset 0 1px 0 rgba(255,255,255,.76),0 5px 12px rgba(81,79,150,.06);overflow:hidden}
+#vw-home-v2-root .vw2-feed-avatar{width:54px;height:54px;flex:0 0 54px;border-radius:20px;padding:6px;border:2px solid rgba(255,255,255,.96);background:radial-gradient(circle at 30% 15%,#fff 0 11%,transparent 12%),linear-gradient(180deg,#ffd8ed,#cceaff);box-shadow:0 4px 0 rgba(101,88,166,.1),0 7px 12px rgba(72,76,142,.07)}
+#vw-home-v2-root .vw2-feed-card>div:last-child{position:relative;z-index:2;min-width:0;width:100%;align-self:start;margin-top:1px;padding:3px 1px 2px}
 #vw-home-v2-root .vw2-feed-card b{display:block;font-size:12.8px;font-weight:950;color:#493762}
-#vw-home-v2-root .vw2-feed-card p{margin:5px 0 0;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden;font-size:10.4px;line-height:1.38;color:#625575;font-weight:720}
+#vw-home-v2-root .vw2-feed-card p{margin:5px 0 0;display:-webkit-box;-webkit-line-clamp:7;-webkit-box-orient:vertical;overflow:hidden;font-size:10.6px;line-height:1.4;color:#5f5174;font-weight:730}
 #vw-home-v2-root .vw2-feed-stats{position:relative;z-index:2;display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
 #vw-home-v2-root .vw2-feed-stats span{min-width:0;height:29px;border:0;border-radius:12px;background:rgba(255,255,255,.48);display:flex;align-items:center;justify-content:center;gap:3px;font-size:8px;font-weight:900;color:#6b5d88;white-space:nowrap;overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.76)}
 #vw-home-v2-root .vw2-feed-stats .vw2-icon{width:15px;height:15px}
@@ -6788,8 +6791,8 @@
 #vw-home-v2-root .vw2-feature-title strong{font-size:18px;line-height:1;font-weight:950;color:#fff7a4;white-space:nowrap}
 #vw-home-v2-root .vw2-word-ribbon{position:relative;z-index:5;justify-self:center;width:min(72%,360px);height:24px;border:2px solid #fff;border-radius:999px;display:flex;align-items:center;justify-content:center;padding:0 13px;background:linear-gradient(180deg,#fffdf8,#ffe9c7);box-shadow:0 3px 0 rgba(112,82,164,.12),inset 0 1px 0 #fff;color:#6d4f78;font-size:9px;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #vw-home-v2-root .vw2-word-ribbon:before{content:"NEW WORD";margin-right:7px;color:#d56a9f;font-size:6.3px;letter-spacing:.08em}
-#vw-home-v2-root .vw2-feature-stage{position:relative;min-width:0;min-height:0;overflow:hidden;border:0;border-radius:24px;background:linear-gradient(180deg,#57c3fb 0%,#9fdfff 29%,#d9c9ff 56%,#ffd9eb 72%,#b8e6c6 100%);box-shadow:inset 0 2px 0 rgba(255,255,255,.7),inset 0 -15px 25px rgba(76,97,142,.12),0 3px 0 rgba(77,68,142,.06)}
-#vw-home-v2-root .vw2-feature-stage:before{content:"";position:absolute;z-index:0;inset:0;background:radial-gradient(circle at 50% 42%,rgba(255,248,188,.6) 0 7%,rgba(255,255,255,.28) 15%,transparent 35%),radial-gradient(circle at 12% 17%,rgba(255,255,255,.72) 0 1.5px,transparent 2.5px),radial-gradient(circle at 83% 18%,rgba(255,247,174,.8) 0 2px,transparent 3px),radial-gradient(circle at 69% 7%,rgba(255,255,255,.8) 0 1.3px,transparent 2.3px)}
+#vw-home-v2-root .vw2-feature-stage{position:relative;min-width:0;min-height:0;overflow:hidden;border:0;border-radius:24px;background:linear-gradient(180deg,#55baf7 0%,#91d8ff 26%,#c3cdfd 47%,#f1c9ec 65%,#c6e6bf 81%,#82bf96 100%);box-shadow:inset 0 2px 0 rgba(255,255,255,.74),inset 0 -15px 25px rgba(76,97,142,.12),0 3px 0 rgba(77,68,142,.06)}
+#vw-home-v2-root .vw2-feature-stage:before{content:"";position:absolute;z-index:0;inset:0;background:radial-gradient(circle at 50% 42%,rgba(255,248,188,.66) 0 7%,rgba(255,255,255,.3) 15%,transparent 35%),radial-gradient(circle at 12% 17%,rgba(255,255,255,.8) 0 1.5px,transparent 2.5px),radial-gradient(circle at 83% 18%,rgba(255,247,174,.9) 0 2px,transparent 3px),radial-gradient(circle at 69% 7%,rgba(255,255,255,.86) 0 1.3px,transparent 2.3px),linear-gradient(112deg,rgba(255,255,255,.14),transparent 31% 69%,rgba(255,225,244,.12))}
 #vw-home-v2-root .vw2-feature-stage:after{content:"";position:absolute;z-index:1;left:-12%;right:-12%;bottom:-23%;height:46%;border-radius:50% 50% 0 0;background:radial-gradient(ellipse at 50% 2%,#b8edc7 0 35%,#83c5a3 36% 62%,#61a087 63% 100%);box-shadow:0 -10px 24px rgba(255,255,255,.2)}
 #vw-home-v2-root .vw2-atmosphere{position:absolute;z-index:1;inset:0;pointer-events:none}
 #vw-home-v2-root .vw2-atmosphere i{position:absolute;width:5px;height:5px;border-radius:50%;background:#fff7a3;box-shadow:0 0 7px rgba(255,247,163,.8)}
@@ -6797,8 +6800,11 @@
 #vw-home-v2-root .vw2-stage-cloud{position:absolute;z-index:1;width:96px;height:26px;border-radius:999px;background:rgba(255,255,255,.69);box-shadow:-22px 5px 0 -8px rgba(255,255,255,.69),23px 3px 0 -8px rgba(255,255,255,.69),0 7px 18px rgba(115,127,178,.05)}
 #vw-home-v2-root .vw2-stage-cloud.c1{left:-17px;top:18%}#vw-home-v2-root .vw2-stage-cloud.c2{right:-20px;top:36%;opacity:.72}
 #vw-home-v2-root .vw2-rainbow{position:absolute;z-index:1;left:7%;top:28%;width:32%;height:39%;border-radius:50% 50% 0 0;border:10px solid rgba(255,159,210,.36);border-bottom:0;box-shadow:inset 0 8px 0 rgba(255,220,116,.28),inset 0 16px 0 rgba(133,220,255,.26);opacity:.7}
-#vw-home-v2-root .vw2-mid-hills{position:absolute;z-index:1;left:-8%;right:-8%;bottom:4%;height:44%;background:radial-gradient(ellipse at 21% 100%,#b4e1c1 0 34%,#96d1ae 35% 40%,transparent 41%),radial-gradient(ellipse at 73% 100%,#a9d9bc 0 37%,#8bc8a9 38% 43%,transparent 44%);opacity:.96}
-#vw-home-v2-root .vw2-stage-foreground{position:absolute;z-index:3;left:-4%;right:-4%;bottom:-8%;height:29%;background:radial-gradient(circle at 12% 48%,#ffb7d3 0 4.5%,transparent 5.5%),radial-gradient(circle at 18% 57%,#fff0a4 0 3.8%,transparent 4.8%),radial-gradient(circle at 78% 47%,#d4b7ff 0 4.5%,transparent 5.5%),radial-gradient(circle at 87% 61%,#fff4b2 0 3.8%,transparent 4.8%),radial-gradient(circle at 92% 40%,rgba(255,255,255,.75) 0 2%,transparent 2.8%),linear-gradient(180deg,#89d0a0,#61aa84);border-radius:50% 50% 0 0;opacity:.9}
+#vw-home-v2-root .vw2-mid-hills{position:absolute;z-index:1;left:-8%;right:-8%;bottom:4%;height:46%;background:radial-gradient(ellipse at 13% 100%,#d4e7d2 0 23%,#afd6b9 24% 31%,transparent 32%),radial-gradient(ellipse at 38% 100%,#b7e3c2 0 34%,#92cfae 35% 41%,transparent 42%),radial-gradient(ellipse at 77% 100%,#a9d9bc 0 38%,#86c4a6 39% 45%,transparent 46%),radial-gradient(ellipse at 96% 100%,#c4dfc3 0 26%,#9ec9aa 27% 33%,transparent 34%);opacity:.97}
+#vw-home-v2-root .vw2-scene-castle{position:absolute;z-index:2;right:6%;top:15%;width:26%;max-width:170px;opacity:.82;filter:drop-shadow(0 6px 5px rgba(84,76,141,.12));pointer-events:none}
+#vw-home-v2-root .vw2-scene-castle .vw2-castle-art{display:block;width:100%;height:auto}
+#vw-home-v2-root .vw2-scene-path{position:absolute;z-index:2;left:50%;bottom:-8%;width:31%;height:57%;transform:translateX(-50%);border-radius:55% 55% 0 0;background:linear-gradient(180deg,rgba(255,244,205,.86),rgba(226,194,161,.86));clip-path:polygon(45% 0,57% 0,100% 100%,0 100%);opacity:.9;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2);pointer-events:none}
+#vw-home-v2-root .vw2-stage-foreground{position:absolute;z-index:3;left:-4%;right:-4%;bottom:-8%;height:31%;background:radial-gradient(circle at 8% 44%,#ff9fc8 0 4.5%,transparent 5.5%),radial-gradient(circle at 15% 58%,#fff0a4 0 3.8%,transparent 4.8%),radial-gradient(circle at 22% 49%,#b9a1ff 0 3.6%,transparent 4.6%),radial-gradient(circle at 76% 45%,#d4b7ff 0 4.5%,transparent 5.5%),radial-gradient(circle at 84% 61%,#fff4b2 0 3.8%,transparent 4.8%),radial-gradient(circle at 92% 39%,#ffabc9 0 4.2%,transparent 5.2%),linear-gradient(180deg,#8ed3a3,#5da47f);border-radius:50% 50% 0 0;opacity:.94}
 #vw-home-v2-root .vw2-speech{position:absolute;z-index:7;left:3.5%;top:7%;width:min(29%,184px);padding:8px 10px 9px;border:2px solid rgba(255,255,255,.98);border-radius:20px 20px 20px 7px;background:linear-gradient(165deg,rgba(255,255,255,.96),rgba(255,231,245,.93));box-shadow:0 4px 0 rgba(118,81,162,.1),0 8px 13px rgba(75,67,129,.07);color:#5d4873;font-size:10px;font-weight:950;line-height:1.22;transform:rotate(-1deg)}
 #vw-home-v2-root .vw2-speech:after{content:"";position:absolute;right:-9px;bottom:9px;width:17px;height:17px;background:#ffeff7;border-right:3px solid #fff;border-bottom:3px solid #fff;transform:rotate(-45deg)}
 #vw-home-v2-root .vw2-speech small{display:block;margin-top:3px;font-size:7px;font-weight:700;color:#81738f;line-height:1.18}
@@ -6810,7 +6816,7 @@
 #vw-home-v2-root .vw2-pet-sparkles{position:absolute;z-index:5;left:50%;top:45%;transform:translate(-50%,-50%);width:270px;height:220px;pointer-events:none;color:#fff7a0}
 #vw-home-v2-root .vw2-pet-sparkles i{position:absolute;font-style:normal;text-shadow:0 2px 0 rgba(132,80,145,.18)}
 #vw-home-v2-root .vw2-pet-sparkles i:nth-child(1){left:3%;top:42%;color:#ff9cc9}#vw-home-v2-root .vw2-pet-sparkles i:nth-child(2){right:4%;top:25%;color:#ffe685}#vw-home-v2-root .vw2-pet-sparkles i:nth-child(3){left:16%;top:7%;color:#fff}#vw-home-v2-root .vw2-pet-sparkles i:nth-child(4){right:16%;bottom:7%;color:#ffadd2}
-#vw-home-v2-root .vw2-reward-card{position:absolute;z-index:7;right:4%;top:8%;width:142px;min-height:48px;padding:5px 9px;border:2px solid rgba(255,255,255,.9);border-radius:17px 17px 13px 13px;background:radial-gradient(circle at 16% 0%,rgba(255,255,255,.9) 0 8%,transparent 29%),linear-gradient(160deg,rgba(255,248,204,.95),rgba(255,201,73,.93));box-shadow:0 4px 0 rgba(149,101,31,.1),0 8px 12px rgba(98,75,42,.07);display:grid;grid-template-columns:33px minmax(0,1fr);align-items:center;gap:5px;color:#704d1b;transform:rotate(1.2deg)}
+#vw-home-v2-root .vw2-reward-card{position:absolute;z-index:7;right:4%;top:8%;width:142px;min-height:48px;padding:5px 9px;border:2px solid rgba(255,255,255,.92);border-radius:17px 17px 13px 13px;background:radial-gradient(circle at 16% 0%,rgba(255,255,255,.94) 0 8%,transparent 29%),linear-gradient(160deg,rgba(255,248,204,.96),rgba(255,193,71,.94));box-shadow:0 4px 0 rgba(149,101,31,.12),0 8px 12px rgba(98,75,42,.08);display:grid;grid-template-columns:33px minmax(0,1fr);align-items:center;gap:5px;color:#704d1b;transform:rotate(1.2deg)}
 #vw-home-v2-root .vw2-reward-card:after{content:"";position:absolute;left:21px;bottom:-24px;width:5px;height:25px;border-radius:0 0 4px 4px;background:linear-gradient(180deg,#b98d65,#8f6547);box-shadow:0 0 0 2px rgba(255,255,255,.28)}
 #vw-home-v2-root .vw2-reward-card>.vw2-icon{width:31px;height:31px}
 #vw-home-v2-root .vw2-reward-card b{display:block;font-size:8.5px;font-weight:950;line-height:1.05}#vw-home-v2-root .vw2-reward-card small{display:block;margin-top:2px;font-size:6.5px;line-height:1.08}
@@ -6836,23 +6842,23 @@
 /* Right side: mission/friend character cards */
 #vw-home-v2-root .vw2-right{display:grid;grid-template-rows:minmax(0,1.25fr) minmax(0,.75fr);gap:9px;min-height:0;overflow:hidden}
 #vw-home-v2-root .vw2-mission,#vw-home-v2-root .vw2-online{min-height:0;border-radius:26px;padding:9px;overflow:hidden}
-#vw-home-v2-root .vw2-mission{display:flex;flex-direction:column;background:radial-gradient(circle at 91% 3%,rgba(255,224,177,.7),transparent 27%),radial-gradient(circle at 8% 100%,rgba(255,230,246,.56),transparent 34%),linear-gradient(180deg,#fffdf8,#fff0e5)}
-#vw-home-v2-root .vw2-online{display:flex;flex-direction:column;background:radial-gradient(circle at 91% 4%,rgba(217,210,255,.72),transparent 30%),radial-gradient(circle at 8% 100%,rgba(199,244,230,.55),transparent 36%),linear-gradient(180deg,#f3fcff,#e5f8ff 57%,#f4edff)}
+#vw-home-v2-root .vw2-mission{display:flex;flex-direction:column;background:radial-gradient(circle at 91% 3%,rgba(255,216,159,.64),transparent 29%),radial-gradient(circle at 8% 100%,rgba(255,222,242,.5),transparent 35%),linear-gradient(180deg,rgba(255,253,248,.88),rgba(255,236,221,.82))}
+#vw-home-v2-root .vw2-online{display:flex;flex-direction:column;background:radial-gradient(circle at 91% 4%,rgba(205,196,255,.66),transparent 31%),radial-gradient(circle at 8% 100%,rgba(187,240,223,.5),transparent 37%),linear-gradient(180deg,rgba(243,252,255,.86),rgba(224,247,255,.8) 57%,rgba(241,232,255,.82))}
 #vw-home-v2-root .vw2-progress{height:12px;flex:0 0 12px;margin:5px 0 7px;border:1px solid rgba(255,255,255,.8);border-radius:999px;background:rgba(219,211,218,.7);overflow:hidden;box-shadow:inset 0 1px 2px rgba(78,67,112,.11),0 1px 0 rgba(255,255,255,.7)}
 #vw-home-v2-root .vw2-progress i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#6ae3b1,#39b978);box-shadow:inset 0 1px 0 rgba(255,255,255,.5);transition:width .2s}
 #vw-home-v2-root .vw2-quests{min-height:0;flex:1;display:flex;flex-direction:column;gap:5px;overflow-y:auto;scrollbar-width:none}
 #vw-home-v2-root .vw2-quests::-webkit-scrollbar{display:none}
-#vw-home-v2-root .vw2-quest-row{position:relative;width:100%;min-height:48px;display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:7px;border:0;border-radius:17px;padding:6px 7px;background:radial-gradient(circle at 7% 0%,rgba(255,255,255,.85),transparent 24%),linear-gradient(160deg,rgba(255,254,248,.91),rgba(255,233,191,.82));box-shadow:0 3px 0 rgba(119,95,139,.06),0 6px 9px rgba(85,72,132,.04),inset 4px 0 0 rgba(255,183,109,.58);color:#584a6e;text-align:left;cursor:pointer}
+#vw-home-v2-root .vw2-quest-row{position:relative;width:100%;min-height:50px;display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;gap:8px;border:0;border-radius:17px;padding:6px 8px;background:radial-gradient(circle at 7% 0%,rgba(255,255,255,.86),transparent 24%),linear-gradient(160deg,rgba(255,255,250,.78),rgba(255,228,180,.68));box-shadow:0 3px 0 rgba(119,95,139,.05),0 6px 9px rgba(85,72,132,.035),inset 4px 0 0 rgba(255,170,87,.66);color:#584a6e;text-align:left;cursor:pointer}
 #vw-home-v2-root .vw2-quest-row.done{background:linear-gradient(160deg,#f5fff9,#d9f4e7)}
-#vw-home-v2-root .vw2-qemoji{width:38px;height:38px;display:grid;place-items:center;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(255,255,255,.24))}.vw2-qemoji .vw2-icon{width:36px!important;height:36px!important}
-#vw-home-v2-root .vw2-qbody{min-width:0}.vw2-qbody b{display:block;font-size:10.3px;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.vw2-qbody i{display:block;height:8px;margin-top:5px;border:1px solid rgba(255,255,255,.68);border-radius:999px;background:rgba(210,202,218,.74);overflow:hidden;box-shadow:inset 0 1px 1px rgba(84,69,112,.08)}.vw2-qbody u{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#58d6b0,#68c5ff 55%,#8b7df0);text-decoration:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.48)}
-#vw-home-v2-root .vw2-qscore{min-width:28px;font-size:7.5px;font-weight:950;color:#685b83;text-align:center}.vw2-qscore .vw2-icon{width:22px!important;height:22px!important}
+#vw-home-v2-root .vw2-qemoji{width:40px;height:40px;display:grid;place-items:center;border-radius:15px;background:linear-gradient(180deg,rgba(255,255,255,.8),rgba(255,255,255,.28))}.vw2-qemoji .vw2-icon{width:38px!important;height:38px!important}
+#vw-home-v2-root .vw2-qbody{min-width:0}.vw2-qbody b{display:block;font-size:10.8px;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.vw2-qbody i{display:block;height:9px;margin-top:5px;border:1px solid rgba(255,255,255,.72);border-radius:999px;background:rgba(206,197,218,.7);overflow:hidden;box-shadow:inset 0 1px 1px rgba(84,69,112,.08)}.vw2-qbody u{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#5adaaf,#6ec8ff 55%,#967ef3);text-decoration:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.54)}
+#vw-home-v2-root .vw2-qscore{min-width:34px;padding:3px 5px;border-radius:999px;background:linear-gradient(180deg,rgba(255,249,206,.9),rgba(255,216,97,.74));font-size:7.8px;font-weight:950;color:#6b5124;text-align:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}.vw2-qscore .vw2-icon{width:24px!important;height:24px!important}
 #vw-home-v2-root .vw2-empty{padding:14px 4px;text-align:center;color:#7e7194;font-size:8px}
-#vw-home-v2-root .vw2-online-card{position:relative;margin-top:6px;min-height:70px;border:0;border-radius:20px;padding:9px 8px 9px 53px;background:radial-gradient(circle at 9% 5%,rgba(255,255,255,.91),transparent 29%),linear-gradient(160deg,rgba(255,250,253,.9),rgba(220,250,239,.88) 58%,rgba(223,231,255,.84));box-shadow:0 3px 0 rgba(86,101,153,.06),0 6px 10px rgba(70,83,135,.04),inset 0 1px 0 rgba(255,255,255,.72);display:flex;flex-direction:column;justify-content:center}
-#vw-home-v2-root .vw2-online-card:before{content:"☺";position:absolute;left:8px;top:50%;transform:translateY(-50%);width:37px;height:37px;border-radius:15px;display:grid;place-items:center;background:linear-gradient(180deg,#d7f0ff,#d7c4ff);border:2px solid rgba(255,255,255,.94);color:#675493;font-size:19px;font-weight:950;box-shadow:0 3px 0 rgba(92,78,151,.08)}
-#vw-home-v2-root .vw2-online-dot{position:absolute;left:37px;bottom:13px;width:11px;height:11px;border:2px solid #fff;border-radius:50%;background:#46d179;box-shadow:0 0 0 2px rgba(79,210,118,.13)}
-#vw-home-v2-root .vw2-online-card b{font-size:10.3px;font-weight:950;color:#463b63;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#vw-home-v2-root .vw2-online-card small{margin-top:3px;font-size:7.7px;font-weight:760;color:#6f6687;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#vw-home-v2-root .vw2-online-card{position:relative;margin-top:6px;min-height:72px;border:0;border-radius:20px;padding:9px 8px 9px 58px;background:radial-gradient(circle at 9% 5%,rgba(255,255,255,.88),transparent 29%),linear-gradient(160deg,rgba(255,250,253,.76),rgba(211,246,235,.7) 58%,rgba(217,226,255,.72));box-shadow:0 3px 0 rgba(86,101,153,.05),0 6px 10px rgba(70,83,135,.035),inset 0 1px 0 rgba(255,255,255,.68);display:flex;flex-direction:column;justify-content:center}
+#vw-home-v2-root .vw2-online-card:before{content:"☺";position:absolute;left:8px;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:17px;display:grid;place-items:center;background:radial-gradient(circle at 30% 18%,#fff 0 10%,transparent 11%),linear-gradient(180deg,#d7f2ff,#d4bfff);border:2px solid rgba(255,255,255,.94);color:#675493;font-size:21px;font-weight:950;box-shadow:0 3px 0 rgba(92,78,151,.08)}
+#vw-home-v2-root .vw2-online-dot{position:absolute;left:42px;bottom:12px;width:12px;height:12px;border:2px solid #fff;border-radius:50%;background:#43d27a;box-shadow:0 0 0 2px rgba(79,210,118,.14)}
+#vw-home-v2-root .vw2-online-card b{font-size:11px;font-weight:950;color:#43355f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#vw-home-v2-root .vw2-online-card small{margin-top:3px;font-size:8px;font-weight:780;color:#69607f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #vw-home-v2-root .vw2-friends-btn{margin-top:auto;height:35px;border:2px solid rgba(255,255,255,.95);border-radius:15px;background:linear-gradient(180deg,#c291ff,#9465e7);box-shadow:0 4px 0 rgba(111,72,174,.16);color:#fff;font-size:9px;font-weight:950;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px}
 #vw-home-v2-root .vw2-friends-btn .vw2-icon{width:24px;height:24px}
 /* ----- BOTTOM HORIZONTAL RAIL: R4 accepted / locked ----- */
@@ -6886,7 +6892,7 @@ html.no-anim #vw-home-v2-root *{scroll-behavior:auto!important;animation:none!im
   #vw-home-v2-root .vw2-top{grid-template-columns:minmax(330px,390px) minmax(370px,1fr) auto}
   #vw-home-v2-root .vw2-top-actions{grid-template-columns:repeat(7,44px)}
   #vw-home-v2-root .vw2-top-actions .vw2-tool-btn{width:44px}
-  #vw-home-v2-root .vw2-main-grid{grid-template-columns:150px 215px minmax(390px,1fr) 260px}
+  #vw-home-v2-root .vw2-main-grid{grid-template-columns:126px 230px minmax(390px,1fr) 260px}
   #vw-home-v2-root .vw2-pet{top:41%;width:122px;height:122px}#vw-home-v2-root .vw2-pet-halo{top:44%;width:124px;height:124px}#vw-home-v2-root .vw2-pet-platform{bottom:3%;width:140px;height:44px;border-width:2px}
   #vw-home-v2-root .vw2-house-preview{width:132px}
 }
@@ -6896,12 +6902,12 @@ html.no-anim #vw-home-v2-root *{scroll-behavior:auto!important;animation:none!im
   #vw-home-v2-root .vw2-shell{grid-template-rows:78px minmax(0,1fr) 50px!important;gap:5px;padding:5px 6px 5px}
   #vw-home-v2-root .vw2-top{grid-row:1!important;grid-template-columns:clamp(210px,31vw,255px) minmax(0,1fr) clamp(146px,21vw,184px);gap:5px;height:78px;min-height:0}
   #vw-home-v2-root .vw2-profile{height:78px;border-width:2px;border-radius:21px;padding:4px 8px 4px 5px;grid-template-columns:66px minmax(0,1fr);gap:7px}
-  #vw-home-v2-root .vw2-profile-kicker{right:7px;top:3px;font-size:5.1px}#vw-home-v2-root .vw2-profile-kicker i{font-size:7.5px}
+  #vw-home-v2-root .vw2-profile-kicker{right:7px;top:3px;font-size:5.4px}#vw-home-v2-root .vw2-profile-kicker i{font-size:7.8px}
   #vw-home-v2-root .vw2-avatar-frame{width:66px;height:66px}#vw-home-v2-root .vw2-avatar-frame:before{border-radius:21px}#vw-home-v2-root .vw2-avatar-frame:after{width:18px;height:18px;border-width:2px;font-size:7.5px}
   #vw-home-v2-root .vw2-avatar{width:61px;height:61px;border-width:2px;border-radius:20px}
   #vw-home-v2-root .vw2-profile-main{padding-top:3px}
-  #vw-home-v2-root .vw2-name-row{padding-right:37px;gap:3px}#vw-home-v2-root .vw2-name-row strong{font-size:16.2px}#vw-home-v2-root .vw2-pencil{width:15px;height:15px;flex-basis:15px}
-  #vw-home-v2-root .vw2-profile-meta{gap:2px 3px;margin-top:2px}#vw-home-v2-root .vw2-profile-meta-chip{padding:2px 4px 3px;border-width:0;border-radius:8px}#vw-home-v2-root .vw2-profile-meta-chip small{font-size:5.1px}#vw-home-v2-root .vw2-profile-meta-chip b{font-size:7.5px;margin-top:1px}
+  #vw-home-v2-root .vw2-name-row{padding-right:37px;gap:3px}#vw-home-v2-root .vw2-name-row strong{font-size:17px}#vw-home-v2-root .vw2-pencil{width:15px;height:15px;flex-basis:15px}
+  #vw-home-v2-root .vw2-profile-meta{gap:2px 4px;margin-top:2px}#vw-home-v2-root .vw2-profile-meta-chip{padding:1px 3px 2px;border-width:0;border-radius:0}#vw-home-v2-root .vw2-profile-meta-chip:nth-child(even){padding-left:5px}#vw-home-v2-root .vw2-profile-meta-chip small{font-size:5.3px}#vw-home-v2-root .vw2-profile-meta-chip b{font-size:7.6px;margin-top:1px}#vw-home-v2-root .vw2-profile-meta-chip.class b{font-size:9px}#vw-home-v2-root .vw2-profile-meta-chip.id b{font-size:7.8px}
   #vw-home-v2-root .vw2-profile-chips{margin-top:2px;gap:2px}#vw-home-v2-root .vw2-rank,#vw-home-v2-root .vw2-sync-chip{padding:2px 5px;font-size:6.3px;border-width:1px}
   #vw-home-v2-root .vw2-wallet{height:78px;gap:3px;justify-content:flex-start}
   #vw-home-v2-root .vw2-wallet-pill{flex:1 1 52px!important;width:auto;min-width:0;height:54px;border-width:2px;border-radius:16px;grid-template-columns:21px minmax(0,1fr);gap:2px;padding:3px}
@@ -6914,33 +6920,34 @@ html.no-anim #vw-home-v2-root *{scroll-behavior:auto!important;animation:none!im
   #vw-home-v2-root .vw2-top-actions{height:78px;grid-template-columns:repeat(4,minmax(31px,1fr));grid-template-rows:repeat(2,35px);gap:3px;align-content:center}
   #vw-home-v2-root .vw2-top-actions .vw2-tool-btn{width:auto;min-width:0;height:35px;border-width:2px;border-radius:11px;padding:1px;display:grid;grid-template-columns:18px minmax(0,1fr);gap:1px}
   #vw-home-v2-root .vw2-top-actions .vw2-tool-btn>span{width:19px;height:19px}#vw-home-v2-root .vw2-top-actions .vw2-tool-btn b{font-size:6.1px}
-  #vw-home-v2-root .vw2-main-grid{grid-row:2!important;grid-template-columns:clamp(82px,13vw,104px) clamp(88px,14vw,112px) minmax(0,1fr) clamp(128px,20vw,166px)!important;gap:5px;height:100%;overflow:hidden}
-  #vw-home-v2-root .vw2-left{grid-column:1!important;grid-row:1!important;height:100%!important;border-width:2px;border-radius:18px;padding:4px 4px 20px;gap:4px}
-  #vw-home-v2-root .vw2-left .vw2-rail-btn{flex-basis:62px;height:62px;min-height:62px}
-  #vw-home-v2-root .vw2-left .vw2-rail-btn:before{left:2px;right:2px;bottom:2px;height:39px;border-width:2px;border-radius:19px 19px 15px 15px;box-shadow:0 3px 0 rgba(83,72,149,.14),0 5px 8px rgba(64,69,136,.08)}
-  #vw-home-v2-root .vw2-left .vw2-rail-btn:after{bottom:29px;width:39px;height:18px;box-shadow:-17px 4px 0 -7px rgba(255,255,255,.93),17px 4px 0 -7px rgba(255,255,255,.93)}
-  #vw-home-v2-root .vw2-left .vw2-rail-art{width:42px;height:42px}.vw2-left .vw2-rail-art .vw2-icon{width:38px!important;height:38px!important}#vw-home-v2-root .vw2-left .vw2-rail-label{bottom:5px;height:15px;font-size:8.4px}
+  #vw-home-v2-root .vw2-main-grid{grid-row:2!important;grid-template-columns:clamp(68px,10vw,80px) clamp(108px,16vw,145px) minmax(0,1fr) clamp(132px,19vw,166px)!important;gap:5px;height:100%;overflow:hidden}
+  #vw-home-v2-root .vw2-left{grid-column:1!important;grid-row:1!important;height:100%!important;border-width:2px;border-radius:18px;padding:4px 2px 20px;gap:3px}
+  #vw-home-v2-root .vw2-left .vw2-rail-btn{flex-basis:58px;height:58px;min-height:58px}
+  #vw-home-v2-root .vw2-left .vw2-rail-btn:before{left:1px;right:1px;bottom:1px;height:37px;border-width:2px;border-radius:18px 18px 14px 14px;box-shadow:0 3px 0 rgba(83,72,149,.14),0 5px 8px rgba(64,69,136,.08)}
+  #vw-home-v2-root .vw2-left .vw2-rail-btn:after{bottom:27px;width:36px;height:17px;box-shadow:-15px 4px 0 -7px rgba(255,255,255,.94),15px 4px 0 -7px rgba(255,255,255,.94)}
+  #vw-home-v2-root .vw2-left .vw2-rail-art{width:39px;height:39px}.vw2-left .vw2-rail-art .vw2-icon{width:36px!important;height:36px!important}#vw-home-v2-root .vw2-left .vw2-rail-label{left:2px;right:2px;bottom:3px;min-height:18px;font-size:7.4px;line-height:.96;padding:1px}
   #vw-home-v2-root .vw2-left-scroll-cue{width:30px;height:16px;margin-top:-15px;font-size:12px}
-  #vw-home-v2-root .vw2-feed{display:flex!important;grid-column:2!important;grid-row:1!important;height:100%!important;border-width:2px;border-radius:18px;padding:5px 4px}
-  #vw-home-v2-root .vw2-section-head{grid-template-columns:23px minmax(0,1fr) auto;gap:3px;min-height:23px}#vw-home-v2-root .vw2-section-head>.vw2-head-icon{width:23px;height:23px;border-width:1px;border-radius:8px;padding:2px}#vw-home-v2-root .vw2-section-head strong{font-size:9px}#vw-home-v2-root .vw2-section-head button,#vw-home-v2-root .vw2-section-head>b{font-size:5.3px;padding:2px 3px}
-  #vw-home-v2-root .vw2-feed-card{margin-top:3px;border-width:0;border-radius:13px;padding:5px 3px;display:flex;flex-direction:column;align-items:center;text-align:center}#vw-home-v2-root .vw2-feed-avatar{width:36px;height:36px;flex-basis:36px;border-width:1px;border-radius:13px;padding:4px}#vw-home-v2-root .vw2-feed-card>div:last-child{margin-top:3px;padding:2px 0 0}#vw-home-v2-root .vw2-feed-card b{font-size:7.5px}#vw-home-v2-root .vw2-feed-card p{font-size:6.5px;line-height:1.22;-webkit-line-clamp:3;margin-top:2px}
-  #vw-home-v2-root .vw2-feed-stats{gap:2px;margin-top:3px}#vw-home-v2-root .vw2-feed-stats span{height:20px;border-width:0;border-radius:7px;font-size:5.4px;gap:1px}#vw-home-v2-root .vw2-feed-stats .vw2-icon{width:11px;height:11px}
-  #vw-home-v2-root .vw2-feed-coin{min-height:24px;margin-top:2px;border-width:0;border-radius:8px;padding:2px;font-size:5.6px;gap:2px}#vw-home-v2-root .vw2-feed-coin .vw2-icon{width:16px;height:16px;flex-basis:16px}
-  #vw-home-v2-root .vw2-feature{grid-column:3!important;grid-row:1!important;height:100%!important;border-width:2px;border-radius:19px;padding:4px;grid-template-rows:27px 18px minmax(0,1fr) 27px;gap:3px;background:linear-gradient(180deg,#8d73df 0 31px,#f7fbff 32px 100%)}
+  #vw-home-v2-root .vw2-feed{display:flex!important;grid-column:2!important;grid-row:1!important;height:100%!important;border-width:2px;border-radius:18px;padding:5px}
+  #vw-home-v2-root .vw2-section-head{grid-template-columns:23px minmax(0,1fr) auto;gap:3px;min-height:23px}#vw-home-v2-root .vw2-section-head>.vw2-head-icon{width:23px;height:23px;border-width:1px;border-radius:8px;padding:2px}#vw-home-v2-root .vw2-section-head strong{font-size:9.4px}#vw-home-v2-root .vw2-section-head button,#vw-home-v2-root .vw2-section-head>b{font-size:5.8px;padding:2px 4px}
+  #vw-home-v2-root .vw2-feed-card{margin-top:3px;border-width:0;border-radius:13px;padding:5px;display:grid;grid-template-columns:31px minmax(0,1fr);gap:4px;align-items:start;text-align:left}#vw-home-v2-root .vw2-feed-avatar{width:31px;height:31px;flex-basis:31px;border-width:1px;border-radius:11px;padding:3px}#vw-home-v2-root .vw2-feed-card>div:last-child{margin-top:0;padding:1px 0 0}#vw-home-v2-root .vw2-feed-card b{font-size:7.8px}#vw-home-v2-root .vw2-feed-card p{font-size:7.1px;line-height:1.25;-webkit-line-clamp:5;margin-top:2px}
+  #vw-home-v2-root .vw2-feed-stats{gap:3px;margin-top:3px}#vw-home-v2-root .vw2-feed-stats span{height:21px;border-width:0;border-radius:8px;font-size:6px;gap:2px}#vw-home-v2-root .vw2-feed-stats .vw2-icon{width:12px;height:12px}
+  #vw-home-v2-root .vw2-feed-coin{min-height:24px;margin-top:3px;border-width:0;border-radius:9px;padding:2px 3px;font-size:6.1px;gap:2px}#vw-home-v2-root .vw2-feed-coin .vw2-icon{width:17px;height:17px;flex-basis:17px}
+  #vw-home-v2-root .vw2-feature{grid-column:3!important;grid-row:1!important;height:100%!important;border-width:2px;border-radius:19px;padding:4px;grid-template-rows:27px 18px minmax(0,1fr) 27px;gap:3px;background:linear-gradient(180deg,#8d73df 0 31px,rgba(247,251,255,.86) 32px 100%)}
   #vw-home-v2-root .vw2-feature-title{height:27px;min-width:58%;padding:0 16px;border-width:2px;border-radius:11px;gap:3px;box-shadow:0 3px 0 rgba(77,53,135,.18)}#vw-home-v2-root .vw2-feature-title:before,#vw-home-v2-root .vw2-feature-title:after{top:6px;width:18px;height:13px;border-width:2px}#vw-home-v2-root .vw2-feature-title:before{left:-12px}#vw-home-v2-root .vw2-feature-title:after{right:-12px}#vw-home-v2-root .vw2-feature-title>span{width:15px;height:15px;flex-basis:15px}#vw-home-v2-root .vw2-feature-title strong{font-size:11px}
   #vw-home-v2-root .vw2-word-ribbon{height:18px;width:min(73%,220px);border-width:1px;padding:0 6px;font-size:6px}#vw-home-v2-root .vw2-word-ribbon:before{font-size:4.3px;margin-right:3px}
   #vw-home-v2-root .vw2-feature-stage{border:0;border-radius:15px}
-  #vw-home-v2-root .vw2-speech{left:2%;top:4%;width:min(30%,96px);padding:4px 5px;border-width:2px;border-radius:10px 10px 10px 4px;font-size:6.2px;line-height:1.12}#vw-home-v2-root .vw2-speech:after{right:-6px;bottom:6px;width:10px;height:10px;border-width:2px}#vw-home-v2-root .vw2-speech small{font-size:4.8px;margin-top:2px}
-  #vw-home-v2-root .vw2-reward-card{right:2%;top:5%;width:80px;min-height:32px;padding:2px 3px;border-width:1px;border-radius:10px;grid-template-columns:20px minmax(0,1fr);gap:2px}#vw-home-v2-root .vw2-reward-card:after{left:12px;bottom:-12px;width:3px;height:13px;box-shadow:none}#vw-home-v2-root .vw2-reward-card>.vw2-icon{width:20px;height:20px}#vw-home-v2-root .vw2-reward-card b{font-size:5.5px}#vw-home-v2-root .vw2-reward-card small{font-size:4.2px}
-  #vw-home-v2-root .vw2-pet-halo{width:114px;height:114px}#vw-home-v2-root .vw2-pet-platform{width:126px;height:39px}#vw-home-v2-root .vw2-pet-platform:before{top:5px;font-size:11px}#vw-home-v2-root .vw2-pet{width:110px;height:110px}#vw-home-v2-root .vw2-pet-sparkles{top:42%;width:150px;height:122px;font-size:8px}
-  #vw-home-v2-root .vw2-house-preview{right:1.5%;bottom:2%;width:84px;min-height:51px;padding:0;border:0;border-radius:10px}#vw-home-v2-root .vw2-house-preview-head{height:14px;padding:0 3px;font-size:5.1px;gap:1px;border-width:1px}#vw-home-v2-root .vw2-house-preview-head .vw2-icon{width:12px;height:12px;flex-basis:12px}#vw-home-v2-root .vw2-house-backdrop{height:35px!important;border-radius:6px}#vw-home-v2-root .vw2-house-backdrop.is-empty:before{font-size:14px}
+  #vw-home-v2-root .vw2-scene-castle{right:4%;top:17%;width:25%;max-width:94px;opacity:.75}#vw-home-v2-root .vw2-scene-path{width:32%;height:55%}
+  #vw-home-v2-root .vw2-speech{left:2%;top:4%;width:min(31%,104px);padding:4px 5px;border-width:2px;border-radius:10px 10px 10px 4px;font-size:7px;line-height:1.14}#vw-home-v2-root .vw2-speech:after{right:-6px;bottom:6px;width:10px;height:10px;border-width:2px}#vw-home-v2-root .vw2-speech small{font-size:5.3px;margin-top:2px}
+  #vw-home-v2-root .vw2-reward-card{right:2%;top:5%;width:86px;min-height:34px;padding:2px 4px;border-width:1px;border-radius:10px;grid-template-columns:21px minmax(0,1fr);gap:2px}#vw-home-v2-root .vw2-reward-card:after{left:13px;bottom:-13px;width:3px;height:14px;box-shadow:none}#vw-home-v2-root .vw2-reward-card>.vw2-icon{width:21px;height:21px}#vw-home-v2-root .vw2-reward-card b{font-size:5.8px}#vw-home-v2-root .vw2-reward-card small{font-size:4.5px}
+  #vw-home-v2-root .vw2-pet-halo{width:120px;height:120px}#vw-home-v2-root .vw2-pet-platform{width:136px;height:41px}#vw-home-v2-root .vw2-pet-platform:before{top:5px;font-size:11px}#vw-home-v2-root .vw2-pet{width:116px;height:116px}#vw-home-v2-root .vw2-pet-sparkles{top:42%;width:158px;height:128px;font-size:8px}
+  #vw-home-v2-root .vw2-house-preview{right:1.5%;bottom:2%;width:96px;min-height:56px;padding:0;border:0;border-radius:10px}#vw-home-v2-root .vw2-house-preview-head{height:15px;padding:0 4px;font-size:5.5px;gap:1px;border-width:1px}#vw-home-v2-root .vw2-house-preview-head .vw2-icon{width:13px;height:13px;flex-basis:13px}#vw-home-v2-root .vw2-house-backdrop{height:40px!important;border-radius:6px}#vw-home-v2-root .vw2-house-backdrop.is-empty:before{font-size:14px}
   #vw-home-v2-root .vw2-stage-copy{bottom:.7%;width:min(42%,136px);padding:2px 4px 3px;border-width:1px;border-radius:999px}#vw-home-v2-root .vw2-stage-copy b{font-size:6.4px}#vw-home-v2-root .vw2-stage-copy span{display:none}
   #vw-home-v2-root .vw2-feature-actions{gap:3px}#vw-home-v2-root .vw2-feature-actions button{height:27px;border-width:2px;border-radius:10px;gap:2px;font-size:5.8px;box-shadow:0 3px 0 rgba(80,65,151,.22)}#vw-home-v2-root .vw2-feature-actions .vw2-icon{width:18px;height:18px}
   #vw-home-v2-root .vw2-right{grid-column:4!important;grid-row:1!important;height:100%!important;gap:5px}
   #vw-home-v2-root .vw2-mission,#vw-home-v2-root .vw2-online{border-width:2px;border-radius:18px;padding:5px}
-  #vw-home-v2-root .vw2-progress{height:8px;flex-basis:8px;margin:3px 0 4px;border-width:1px}
-  #vw-home-v2-root .vw2-quests{gap:3px}#vw-home-v2-root .vw2-quest-row{min-height:32px;border-width:0;border-radius:10px;padding:3px;grid-template-columns:25px minmax(0,1fr) auto;gap:3px}#vw-home-v2-root .vw2-qemoji{width:25px;height:25px}.vw2-qemoji .vw2-icon{width:24px!important;height:24px!important}#vw-home-v2-root .vw2-qbody b{font-size:6.8px}#vw-home-v2-root .vw2-qbody i{height:5px;margin-top:2px}#vw-home-v2-root .vw2-qscore{min-width:19px;font-size:5.2px}.vw2-qscore .vw2-icon{width:16px!important;height:16px!important}
-  #vw-home-v2-root .vw2-online-card{margin-top:3px;min-height:43px;border-width:0;border-radius:11px;padding:4px 4px 4px 34px}#vw-home-v2-root .vw2-online-card:before{left:4px;width:26px;height:26px;border-width:1px;border-radius:9px;font-size:14px}#vw-home-v2-root .vw2-online-dot{left:25px;bottom:7px;width:7px;height:7px;border-width:1px}#vw-home-v2-root .vw2-online-card b{font-size:7.1px}#vw-home-v2-root .vw2-online-card small{font-size:5.4px}#vw-home-v2-root .vw2-friends-btn{height:25px;border-width:1px;border-radius:9px;font-size:6.1px;gap:2px}#vw-home-v2-root .vw2-friends-btn .vw2-icon{width:17px;height:17px}
+  #vw-home-v2-root .vw2-progress{height:9px;flex-basis:9px;margin:3px 0 4px;border-width:1px}
+  #vw-home-v2-root .vw2-quests{gap:3px}#vw-home-v2-root .vw2-quest-row{min-height:34px;border-width:0;border-radius:10px;padding:3px 4px;grid-template-columns:27px minmax(0,1fr) auto;gap:4px}#vw-home-v2-root .vw2-qemoji{width:27px;height:27px}.vw2-qemoji .vw2-icon{width:26px!important;height:26px!important}#vw-home-v2-root .vw2-qbody b{font-size:7.5px}#vw-home-v2-root .vw2-qbody i{height:6px;margin-top:3px}#vw-home-v2-root .vw2-qscore{min-width:24px;padding:2px 3px;font-size:5.7px}.vw2-qscore .vw2-icon{width:17px!important;height:17px!important}
+  #vw-home-v2-root .vw2-online-card{margin-top:3px;min-height:46px;border-width:0;border-radius:11px;padding:4px 4px 4px 39px}#vw-home-v2-root .vw2-online-card:before{left:4px;width:30px;height:30px;border-width:1px;border-radius:10px;font-size:16px}#vw-home-v2-root .vw2-online-dot{left:29px;bottom:7px;width:8px;height:8px;border-width:1px}#vw-home-v2-root .vw2-online-card b{font-size:7.8px}#vw-home-v2-root .vw2-online-card small{font-size:6px}#vw-home-v2-root .vw2-friends-btn{height:26px;border-width:1px;border-radius:9px;font-size:6.5px;gap:2px}#vw-home-v2-root .vw2-friends-btn .vw2-icon{width:18px;height:18px}
   #vw-home-v2-root .vw2-bottom{grid-row:3!important;grid-template-columns:repeat(13,minmax(0,1fr))!important;gap:4px!important;overflow:hidden!important}
   #vw-home-v2-root .vw2-bottom .vw2-mode{height:50px;border-width:3px!important;border-radius:16px;padding:2px!important;gap:1px;box-shadow:0 3px 0 rgba(56,51,120,.26),0 5px 8px rgba(51,50,111,.11),inset 0 2px 0 rgba(255,255,255,.46)!important}
   #vw-home-v2-root .vw2-bottom .vw2-mode>span{width:23px;height:23px;flex-basis:23px}#vw-home-v2-root .vw2-bottom .vw2-mode .vw2-icon{width:23px!important;height:23px!important}#vw-home-v2-root .vw2-bottom .vw2-mode b{font-size:7px!important;line-height:1!important}
@@ -6954,17 +6961,18 @@ html.no-anim #vw-home-v2-root *{scroll-behavior:auto!important;animation:none!im
   #vw-home-v2-root .vw2-profile{height:72px;grid-template-columns:60px minmax(0,1fr);gap:6px}#vw-home-v2-root .vw2-avatar-frame{width:60px;height:60px}#vw-home-v2-root .vw2-avatar{width:55px;height:55px}#vw-home-v2-root .vw2-name-row strong{font-size:14.4px}
   #vw-home-v2-root .vw2-wallet{height:72px}#vw-home-v2-root .vw2-wallet-pill{height:50px}#vw-home-v2-root .vw2-wallet-pill.coin{height:57px}
   #vw-home-v2-root .vw2-top-actions{height:72px;grid-template-rows:repeat(2,32px)}#vw-home-v2-root .vw2-top-actions .vw2-tool-btn{height:32px}
-  #vw-home-v2-root .vw2-main-grid{grid-template-columns:clamp(76px,12.5vw,96px) clamp(82px,13.5vw,105px) minmax(0,1fr) clamp(119px,19.5vw,154px)!important}
-  #vw-home-v2-root .vw2-left .vw2-rail-btn{flex-basis:58px;height:58px;min-height:58px}#vw-home-v2-root .vw2-left .vw2-rail-art{width:39px;height:39px}.vw2-left .vw2-rail-art .vw2-icon{width:37px!important;height:37px!important}#vw-home-v2-root .vw2-left .vw2-rail-label{font-size:7.7px}
-  #vw-home-v2-root .vw2-feed-avatar{width:31px;height:31px;flex-basis:31px}#vw-home-v2-root .vw2-feed-card p{font-size:6.2px;-webkit-line-clamp:2}
-  #vw-home-v2-root .vw2-pet{width:106px;height:106px}#vw-home-v2-root .vw2-pet-halo{width:110px;height:110px}#vw-home-v2-root .vw2-pet-platform{width:120px;height:37px}
-  #vw-home-v2-root .vw2-speech{width:min(29%,80px)}#vw-home-v2-root .vw2-reward-card{width:70px}#vw-home-v2-root .vw2-house-preview{width:72px}
+  #vw-home-v2-root .vw2-main-grid{grid-template-columns:64px 104px minmax(0,1fr) 126px!important}
+  #vw-home-v2-root .vw2-left .vw2-rail-btn{flex-basis:55px;height:55px;min-height:55px}#vw-home-v2-root .vw2-left .vw2-rail-art{width:36px;height:36px}.vw2-left .vw2-rail-art .vw2-icon{width:34px!important;height:34px!important}#vw-home-v2-root .vw2-left .vw2-rail-label{font-size:7px;min-height:17px}
+  #vw-home-v2-root .vw2-feed-avatar{width:29px;height:29px;flex-basis:29px}#vw-home-v2-root .vw2-feed-card p{font-size:6.7px;-webkit-line-clamp:4}
+  #vw-home-v2-root .vw2-pet{width:108px;height:108px}#vw-home-v2-root .vw2-pet-halo{width:112px;height:112px}#vw-home-v2-root .vw2-pet-platform{width:124px;height:38px}
+  #vw-home-v2-root .vw2-scene-castle{width:23%;opacity:.68}#vw-home-v2-root .vw2-scene-path{width:30%}
+  #vw-home-v2-root .vw2-speech{width:min(31%,86px)}#vw-home-v2-root .vw2-reward-card{width:74px}#vw-home-v2-root .vw2-house-preview{width:80px}
   #vw-home-v2-root .vw2-bottom .vw2-mode{height:48px}#vw-home-v2-root .vw2-bottom .vw2-mode b{font-size:6.4px!important}
 }
 @media (max-width:720px) and (orientation:landscape){
   #vw-home-v2-root .vw2-wallet-pill.worth{display:none}
   #vw-home-v2-root .vw2-wallet-pill{flex-basis:45px!important}
-  #vw-home-v2-root .vw2-main-grid{grid-template-columns:78px 84px minmax(0,1fr) 120px!important}
+  #vw-home-v2-root .vw2-main-grid{grid-template-columns:62px 100px minmax(0,1fr) 122px!important}
   #vw-home-v2-root .vw2-feature-title strong{font-size:9.5px}
   #vw-home-v2-root .vw2-stage-cloud.c2,#vw-home-v2-root .vw2-rainbow{display:none}
 }
@@ -8743,6 +8751,10 @@ html.no-anim #vw-home-v2-root *{scroll-behavior:auto!important;animation:none!im
 
               <div class="vw2-mid-hills" aria-hidden="true"></div>
 
+              <div class="vw2-scene-castle" aria-hidden="true">${castleArtwork()}</div>
+
+              <div class="vw2-scene-path" aria-hidden="true"></div>
+
               <div class="vw2-speech"><span id="vw2-pet-greeting">น้องดีใจที่ได้เจอหนูอีกครั้ง!</span><small>ยินดีต้อนรับกลับ Vocab World — ไปผจญภัยด้วยกันนะ</small></div>
 
               <div class="vw2-reward-card">${icon('trophy')}<div><b>ปราสาทรางวัล</b><small>สะสมดาวแล้วปลดล็อก</small></div></div>
@@ -8811,7 +8823,7 @@ html.no-anim #vw-home-v2-root *{scroll-behavior:auto!important;animation:none!im
 
         <footer class="vw2-bottom" aria-label="ทางลัดการเรียนและเกมทั้งหมด">${modeButtons}</footer>
 
-        <div class="vw2-preview-mark">ADMIN PREVIEW · R7 FINAL PREMIUM FIDELITY</div>
+        <div class="vw2-preview-mark">ADMIN PREVIEW · R8 VISUAL MASTER</div>
 
       </div>`;
 
@@ -14119,6 +14131,8 @@ html.no-anim #vw-home-v2-root *{scroll-behavior:auto!important;animation:none!im
 
         verticalOverflow:r ? r.scrollHeight > r.clientHeight + 1 : null,
 
+        pageOverflow:(document.documentElement.scrollWidth > window.innerWidth + 1) || (document.documentElement.scrollHeight > window.innerHeight + 1),
+
 
 
 
@@ -14207,7 +14221,9 @@ html.no-anim #vw-home-v2-root *{scroll-behavior:auto!important;animation:none!im
 
         leftCueCorrect:!!(left && leftCue && ((left.scrollHeight <= left.clientHeight + 2 && !leftCue.classList.contains('is-visible')) || (left.scrollHeight > left.clientHeight + 2 && (leftCue.classList.contains('is-visible') === (left.scrollTop + left.clientHeight < left.scrollHeight - 2))))),
 
-        bottomScrollable:!!(bottom && bottomStyle && ['auto','scroll'].includes(bottomStyle.overflowX) && bottom.scrollWidth > bottom.clientWidth + 1)
+        bottomScrollable:!!(bottom && bottomStyle && ['auto','scroll'].includes(bottomStyle.overflowX) && bottom.scrollWidth > bottom.clientWidth + 1),
+
+        bottomContained:!!(bottom && bottom.scrollWidth <= bottom.clientWidth + 1 && bottom.scrollHeight <= bottom.clientHeight + 1)
 
 
 

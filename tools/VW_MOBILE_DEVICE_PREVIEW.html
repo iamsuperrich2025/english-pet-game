@@ -43,27 +43,29 @@ body{height:100vh;overflow:hidden}.app{height:100%;display:grid;grid-template-ro
 <script>
 'use strict';
 const PRESETS=[[667,375],[800,360],[844,390],[915,412]];
-let selected=2,lastMetrics=null;
+const PRESET_LABELS=['Compact landscape','Android landscape','Reference landscape','iQOO-style 20:9'];
+let selected=3,lastMetrics=null;
 const $=id=>document.getElementById(id), iframe=$('game'), viewer=$('viewer'), wrap=$('wrap'), device=$('device');
 function normalizeUrl(v){try{const u=new URL(v||'http://127.0.0.1:4173/');if(!['http:','https:'].includes(u.protocol)) throw 0;return u.href}catch(_){return 'http://127.0.0.1:4173/'}}
 function load(){iframe.src=normalizeUrl($('url').value);$('url').value=iframe.src;$('status').textContent='โหลด Local Preview แล้ว · รอ Home V2 ส่งผล smoke test';lastMetrics=null;renderChecks()}
-function setPreset(i){selected=i;const [w,h]=PRESETS[i];iframe.style.width=w+'px';iframe.style.height=h+'px';$('logical').textContent=`${w}×${h}`;$('badge').textContent=`${w}×${h}`;document.querySelectorAll('#sizes button').forEach((b,n)=>b.classList.toggle('active',n===i));fit();setTimeout(renderChecks,120)}
+function setPreset(i){selected=i;const [w,h]=PRESETS[i],label=PRESET_LABELS[i]||'';iframe.style.width=w+'px';iframe.style.height=h+'px';$('logical').textContent=`${w}×${h}`;$('badge').textContent=`${w}×${h} · ${label}`;document.querySelectorAll('#sizes button').forEach((b,n)=>b.classList.toggle('active',n===i));fit();setTimeout(renderChecks,120)}
 function fit(){const [w,h]=PRESETS[selected];const vw=Math.max(120,viewer.clientWidth-34),vh=Math.max(120,viewer.clientHeight-52);const dw=w+36,dh=h+26;const scale=Math.max(.25,Math.min(1.55,vw/dw,vh/dh));wrap.style.transform=`translate(-50%,-50%) scale(${scale})`;$('scale').textContent=scale.toFixed(2)+'×'}
 function checkClass(state){return state===true?'pass':state===false?'fail':'warn'}
 function add(label,state,detail){const el=document.createElement('div');el.className='check '+checkClass(state);el.innerHTML=`<i class="dot"></i><div><b>${label}</b><span>${detail}</span></div>`;$('checks').appendChild(el)}
 function renderChecks(){const c=$('checks');c.innerHTML='';const [w,h]=PRESETS[selected],m=lastMetrics;if(!m){add('Logical viewport',null,`${w}×${h} ถูกกำหนดที่ iframe โดยตรง — ไม่ใช้ browser zoom`);add('Runtime metrics',null,'รอหน้าเกม localhost ส่งข้อมูลกลับ');return}
  const exact=m.viewport&&m.viewport.width===w&&m.viewport.height===h;add('Viewport dimensions',exact,`จริง ${m.viewport.width}×${m.viewport.height} · ต้องตรง ${w}×${h}`);
  const hv=m.homeV2||{};add('No horizontal overflow',hv.horizontalOverflow===false,hv.horizontalOverflow===false?'Home V2 ไม่ล้นแนวนอน':'พบ Home V2 horizontal overflow หรือยังไม่มี Home V2');
+ add('No page scrollbar',hv.pageOverflow===false,hv.pageOverflow===false?'document viewport ไม่มี page-level overflow':'พบ page-level overflow/scrollbar');
  add('Locked game layout',hv.locked===true,hv.locked?'root/shell ถูกล็อค ไม่กลายเป็น long page':'root/shell ยังไม่ผ่าน locked-layout check');
  add('Panel/category overlap',Array.isArray(hv.panelOverlaps)&&hv.panelOverlaps.length===0,hv.panelOverlaps&&hv.panelOverlaps.length?`ซ้อนกัน: ${hv.panelOverlaps.join(', ')}`:'ไม่พบ panel overlap ที่มองเห็น');
- const rail=m.rails||{};add('Icon rail navigation',rail.leftScrollable===true,'left rail เลื่อนภายในได้เมื่อรายการยาว');add('Left scrollbar hidden',rail.leftScrollbarHidden===true,'ซ่อน scrollbar ทาง visual แต่คง overflow scrolling');add('Down-arrow scroll cue',rail.leftCueCorrect===true,'cue แสดงเฉพาะเมื่อยังเลื่อนลงได้ และหายเมื่อถึงล่างสุด');add('Shortcut rail navigation',rail.bottomScrollable===true,'bottom shortcuts เลื่อนแนวนอนภายใน viewport');
+ const rail=m.rails||{};add('Icon rail navigation',rail.leftScrollable===true,'left rail เลื่อนภายในได้เมื่อรายการยาว');add('Left scrollbar hidden',rail.leftScrollbarHidden===true,'ซ่อน scrollbar ทาง visual แต่คง overflow scrolling');add('Down-arrow scroll cue',rail.leftCueCorrect===true,'cue แสดงเฉพาะเมื่อยังเลื่อนลงได้ และหายเมื่อถึงล่างสุด');add('Bottom rail contained',rail.bottomContained===true,'bottom rail ที่ล็อกไว้ต้องอยู่ครบใน viewport โดยไม่ล้นหรือเปลี่ยนเป็น rail แบบ scroll');
  const a=hv.actionSources||{};add('Authoritative action sources',Array.isArray(a.missing)&&a.missing.length===0,Array.isArray(a.missing)&&a.missing.length?`source หาย: ${a.missing.join(', ')}`:`ตรวจ ${a.total||0} data-vw2-source · ไม่พบ source หาย`);
  add('Admin / access gate',hv.present?hv.adminAllowed===true:null,hv.present?(hv.adminAllowed?'Home V2 อยู่หลัง admin gate เดิม':'Home V2 present แต่ admin gate ไม่ผ่าน'):'ยังไม่พบ Home V2 (อาจยังไม่ login/admin)');
  $('status').textContent=`Last metrics: ${new Date().toLocaleTimeString()} · Home V2 ${hv.visible?'VISIBLE':'not visible'}`}
-PRESETS.forEach(([w,h],i)=>{const b=document.createElement('button');b.textContent=`${w}×${h}`;b.onclick=()=>setPreset(i);$('sizes').appendChild(b)});
+PRESETS.forEach(([w,h],i)=>{const b=document.createElement('button');b.textContent=i===3?`${w}×${h} · iQOO-style`:`${w}×${h}`;b.title=PRESET_LABELS[i];b.onclick=()=>setPreset(i);$('sizes').appendChild(b)});
 $('open').onclick=load;$('reload').onclick=()=>{try{iframe.contentWindow.location.reload()}catch(_){iframe.src=iframe.src}};$('url').addEventListener('keydown',e=>{if(e.key==='Enter')load()});
 window.addEventListener('resize',fit);window.addEventListener('message',e=>{if(!e.data||e.data.type!=='vw-mobile-device-preview-metrics')return;lastMetrics=e.data;renderChecks()});
-setPreset(2);load();
+setPreset(3);load();
 </script>
 </body>
 </html>

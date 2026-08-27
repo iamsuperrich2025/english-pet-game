@@ -18,42 +18,45 @@ const must = (ok, msg) => { if(!ok) fail.push(msg); };
 
 
 
-/* R7 final premium composition + hierarchy guard. */
+/* R8 visual-master convergence + mobile-first hierarchy guard. */
 
-must(home.includes("Home V2 R7 Final Premium Composition & Hierarchy Pass"), "R7 premium composition stylesheet missing from home-v2.js");
+must(home.includes("Home V2 R8 Visual Master Convergence + Mobile-First Composition Pass"), "R8 visual-master stylesheet missing from home-v2.js");
 
-must(css.includes("Home V2 R7 Final Premium Composition & Hierarchy Pass"), "R7 premium composition stylesheet missing from css/home-v2.css");
+must(css.includes("Home V2 R8 Visual Master Convergence + Mobile-First Composition Pass"), "R8 visual-master stylesheet missing from css/home-v2.css");
 
-must(!home.includes("Visual Fidelity Pass R4"), "R4 override tail still present; R7 must remain a coherent presentation stylesheet");
+must(!home.includes("Visual Fidelity Pass R4"), "legacy R4 override tail returned; R8 must remain a coherent presentation stylesheet");
 
-must(home.includes('class="vw2-avatar-frame"'), "R5 premium avatar frame missing");
+must(home.includes('class="vw2-avatar-frame"'), "premium avatar frame missing");
 
-must(home.includes('class="vw2-house-preview"'), "R5 framed authoritative house preview missing");
+must(home.includes('class="vw2-house-preview"'), "authoritative house preview missing");
 
-must(home.includes('class="vw2-feature-stage"'), "R5 cohesive hero scene missing");
+must(home.includes('class="vw2-feature-stage"'), "cohesive hero scene missing");
 
 must(!home.includes('class="vw2-player-mini"'), "small user portrait must not return inside the pet scene");
 
-must(home.includes('class="vw2-rail-art"'), "illustrated left rail art wrapper missing");
-
-must(home.includes('class="vw2-rail-label"'), "left rail integrated label wrapper missing");
+must(home.includes('class="vw2-rail-art"') && home.includes('class="vw2-rail-label"'), "illustrated left rail wrappers missing");
 
 must(home.includes("scrollbar-width:none!important"), "left rail hidden-scrollbar rule missing");
 
 must(home.includes("function updateLeftRailCue()"), "left rail scroll cue state helper missing");
 
-must(home.includes(".i-pink{fill:#ff82ba") && home.includes(".i-blue{fill:#65c6f7") && home.includes(".i-line{fill:none;stroke:var(--vw2-line)"), "R7 must preserve the R6 explicit pastel SVG palette; black fallback icons could return");
+must(home.includes(".i-pink{fill:#ff82ba") && home.includes(".i-blue{fill:#65c6f7") && home.includes(".i-line{fill:none;stroke:var(--vw2-line)"), "accepted pastel SVG palette changed; black fallback icons could return");
 
-must(css.includes("Explicit styling prevents browser-default black silhouettes"), "R7 black-icon regression guard missing from CSS");
+must(css.includes("Explicit styling prevents browser-default black silhouettes"), "black-icon regression guard missing from CSS");
 
-must(home.includes("grid-template-columns:clamp(210px,31vw,255px)"), "R7 mobile profile width/breathing-room correction missing");
+must(home.includes("grid-template-columns:clamp(68px,10vw,80px) clamp(108px,16vw,145px)"), "R8 narrower left rail / expanded feed mobile composition missing");
 
-must(home.includes("font-size:16.2px") && home.includes("font-size:7.5px"), "R7 mobile profile typography hierarchy missing");
-must(home.includes("border:0;border-radius:24px") && home.includes("vw2-reward-card:after"), "R7 integrated center-world material/signpost treatment missing");
-must(home.includes("vw2-house-backdrop:after") && home.includes('content:"";display:none'), "R7 authoritative in-world house treatment / no fake empty-house icon missing");
-must(home.includes("font-size:10.3px") && home.includes("height:12px;flex:0 0 12px"), "R7 mission/friend readability treatment missing");
-must(home.includes("vw2-feed-card") && home.includes("border:0;border-radius:23px") && home.includes("-webkit-line-clamp:6"), "R7 Global Feed presentation rebuild missing");
+must(home.includes("font-size:17px") && home.includes(".vw2-profile-meta-chip.class b{font-size:9px}"), "R8 mobile profile typography hierarchy missing");
 
+must(home.includes('class="vw2-scene-castle"') && home.includes('class="vw2-scene-path"') && home.includes("function castleArtwork()"), "R8 layered fantasy center-world scenery missing");
+
+must(home.includes("vw2-house-backdrop:after") && home.includes('content:"";display:none'), "authoritative in-world house treatment / no fake empty-house icon missing");
+
+must(home.includes("min-height:34px") && home.includes("height:9px;flex-basis:9px") && home.includes("font-size:7.8px"), "R8 mission/friend mobile readability treatment missing");
+
+must(home.includes("vw2-feed-card") && home.includes("grid-template-columns:31px minmax(0,1fr)") && home.includes("-webkit-line-clamp:5"), "R8 Global Feed mobile presentation rebuild missing");
+
+must(home.includes("pageOverflow:") && home.includes("bottomContained:"), "R8 local mobile overflow/locked-bottom runtime metrics missing");
 
 
 /* Authoritative state/binding guards. */
@@ -82,7 +85,7 @@ must(home.includes('id="vw2-online-count"') && home.includes('id="vw2-online-nam
 
 
 
-/* SOURCE MARKER GUARD — complete baseline lists from CURRENT AFTER-R6 task state. */
+/* SOURCE MARKER GUARD — complete baseline lists preserved from CURRENT AFTER-R7 task state. */
 
 const expectedRail = [
 
@@ -152,7 +155,7 @@ must(expectedBottom.length === 13, "bottom rail baseline count changed");
 
 must(expectedTop.length === 7, "top utility baseline count changed");
 
-/* CURRENT AFTER-R6 expected runtime marker totals.
+/* CURRENT AFTER-R7 expected runtime marker totals preserved by R8.
    44 action markers = coin 1 + top utilities 7 + left rail 19 + feed Classic 1 + center primary 2 + friends 1 + bottom rail 13.
    42 source markers = coin 1 + sourced top utilities 6 + left rail 19 + center primary 2 + friends 1 + bottom rail 13. */
 const expectedActionMarkerCount = 44;
@@ -224,7 +227,9 @@ must(home.includes("vw-mobile-device-preview-metrics"), "local preview runtime m
 
 [[667,375],[800,360],[844,390],[915,412]].forEach(([w,h])=>must(preview.includes(`[${w},${h}]`), `preview preset ${w}x${h} missing`));
 
-must(preview.includes("let selected=2"), "844x390 is not the default preset");
+must(preview.includes("let selected=3"), "iQOO-style 915x412 is not the default preset");
+
+must(preview.includes("iQOO-style 20:9") && preview.includes("i===3?`${w}×${h} · iQOO-style`"), "clearly labeled iQOO-style landscape preset missing");
 
 must(preview.includes("iframe.style.width=w+'px'"), "iframe logical width is not assigned directly");
 
@@ -234,11 +239,15 @@ must(preview.includes("Left scrollbar hidden"), "preview hidden-scrollbar check 
 
 must(preview.includes("Down-arrow scroll cue"), "preview scroll-cue check missing");
 
+must(preview.includes("No page scrollbar"), "preview page-scrollbar check missing");
+
+must(preview.includes("Bottom rail contained"), "preview accepted-bottom-rail containment check missing");
+
 must(!preview.includes("zoom:"), "preview must not use CSS/browser zoom");
 
 
 
 if(fail.length){ console.error("FAIL\n- " + fail.join("\n- ")); process.exit(1); }
 
-console.log("PASS Home V2 R7 final premium composition + preserved pastel icon system + profile/feed/hero/mission/friend hierarchy + authoritative bindings + complete marker parity + fixed mobile landscape static checks");
+console.log("PASS Home V2 R8 visual-master convergence + preserved pastel icon system + richer world/profile/feed/mission/friend hierarchy + authoritative bindings + complete marker parity + exact mobile landscape/iQOO-style preview checks");
 
