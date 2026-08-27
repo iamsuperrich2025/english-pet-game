@@ -28,7 +28,7 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (23 ส.ค.) — อ่านก่อน
-- **รอบ 1265 · กัน Safe Pipeline deploy `dist` คนละ version กับ Git HEAD:** รอบ 1263 บัมพ์ HEAD เป็น `.1136` แต่หยิบ prebuilt `.1134` ขึ้น Hosting ทำให้ live verify หยุดก่อน push
+- **รอบ 1266 · กัน Safe Pipeline deploy `dist` คนละ version กับ Git HEAD:** รอบ 1263 บัมพ์ HEAD เป็น `.1136` แต่หยิบ prebuilt `.1134` ขึ้น Hosting ทำให้ live verify หยุดก่อน push
 - `tools/deploy_firebase.sh` อ่าน version ของ staged HEAD และ prebuilt dist ก่อนใช้ exact artifact; ถ้าไม่ตรงกันจะแจ้งเหตุผลและ fallback build จาก HEAD อัตโนมัติ
 - เพิ่ม `tools/test_safe_deploy_version.js`; `bash -n tools/deploy_firebase.sh` และ regression version gate ผ่าน
 - **รอบ 1264 · แก้ผ้าคลุมมังกรกางอยู่นอกตัว:** profile `dragon.cape` ใหญ่เกินจริง (`3.00×`, y `-0.20`) จึงทับปีก/ขา; ปรับเป็น `1.75×`, y `-0.08` ให้ชุดแนบช่วงคอ–อก (`js/data/wear_extra.js`)

@@ -100,10 +100,16 @@ fi
 #   3) ห้ามแก้ verifier หรือทำให้ mismatch ผ่านปลอม ๆ
 TESTED_DIST="${VW_TESTED_DIST:-$REPO/dist}"
 USE_TESTED_DIST=0
+STAGED_BUILD_VERSION="$(python -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8")).get("version", ""))' "$STAGE/source/version.json")"
+TESTED_BUILD_VERSION=""
+if [[ -f "$TESTED_DIST/version.json" ]]; then
+  TESTED_BUILD_VERSION="$(python -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8")).get("version", ""))' "$TESTED_DIST/version.json")"
+fi
 
 if [[ "${VW_DEPLOY_FORCE_REBUILD:-0}" != "1" ]] \
    && [[ -f "$TESTED_DIST/index.html" ]] \
-   && [[ -f "$TESTED_DIST/sw.js" ]]; then
+   && [[ -f "$TESTED_DIST/sw.js" ]] \
+   && [[ "$TESTED_BUILD_VERSION" == "$STAGED_BUILD_VERSION" ]]; then
   echo "🧪 พบ prebuilt dist ที่ผ่าน Safe Pipeline: $TESTED_DIST"
   rm -rf "$STAGE/source/dist"
   mkdir -p "$STAGE/source/dist"
@@ -119,6 +125,10 @@ if [[ "${VW_DEPLOY_FORCE_REBUILD:-0}" != "1" ]] \
     echo "   fallback: build ใหม่จาก staged git HEAD ตามวิธีเดิม"
     rm -rf "$STAGE/source/dist"
   fi
+elif [[ "${VW_DEPLOY_FORCE_REBUILD:-0}" != "1" ]] \
+  && [[ -f "$TESTED_DIST/index.html" ]] \
+  && [[ -f "$TESTED_DIST/sw.js" ]]; then
+  echo "⚠️ prebuilt dist version=${TESTED_BUILD_VERSION:-missing} ไม่ตรง git HEAD version=$STAGED_BUILD_VERSION — fallback build จาก HEAD"
 fi
 
 if [[ "$USE_TESTED_DIST" -ne 1 ]]; then
