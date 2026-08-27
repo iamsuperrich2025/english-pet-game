@@ -24,15 +24,15 @@ const must = (ok, msg) => { if(!ok) fail.push(msg); };
 
 /* R10 premium cute structural visual-master guard. */
 
-must(home.includes("R10 Premium Cute Structural Visual Master Reconstruction"), "R10 Home V2 JS marker missing");
+must(home.includes("R10.2a UTF-8 Safe Direct Visual Fidelity Correction"), "R10 Home V2 JS marker missing");
 
-must(css.includes("Home V2 R10 Premium Cute Structural Visual Master Reconstruction"), "R10 consolidated stylesheet missing");
+must(css.includes("Home V2 R10.2a UTF-8 Safe Direct Visual Fidelity Correction"), "R10 consolidated stylesheet missing");
 
 must(!css.includes("Home V2 R8 Visual Master Convergence"), "R8 presentation stylesheet header survived R9 consolidation");
 
 must(home.includes('class="vw2-screen-backdrop"') && home.includes('r10_screen_backdrop.svg'), "R10 global illustrated backdrop markup missing");
 
-must(css.includes('url("../img/home-v2/r10_pet_world.svg")'), "R10 illustrated pet-world asset is not used by the center scene");
+must(css.includes('url("data:image/webp;base64,'), "R10.2a embedded approved master-world asset is not used by the center scene");
 
 must(css.includes('url("../img/home-v2/r10_cloud_pedestal.svg")') && css.includes('mask:url("../img/home-v2/r10_cloud_pedestal.svg")'), "R10 cloud/pedestal destination rail asset mask missing");
 
@@ -41,9 +41,9 @@ must(css.includes('url("../img/home-v2/r10_cloud_pedestal.svg")') && css.include
   must(buildWeb.includes(`img/home-v2/${name}`), `R10 build allowlist missing: ${name}`);
 });
 
-must(indexClassic.includes("css/home-v2.css?v=1210") && indexClassic.includes("js/home-v2.js?v=1210"), "R10 Home V2 cache-bust version missing from index_classic.html");
+must(indexClassic.includes("css/home-v2.css?v=1212") && indexClassic.includes("js/home-v2.js?v=1212"), "R10 Home V2 cache-bust version missing from index_classic.html");
 
-must(home.includes('ADMIN PREVIEW · R10 VISUAL MASTER'), "R10 visible admin-preview marker missing");
+must(home.includes('ADMIN PREVIEW · R10.2a MASTER FIDELITY'), "R10 visible admin-preview marker missing");
 
 must(home.includes('class="vw2-avatar-frame"'), "premium avatar frame missing");
 
@@ -272,3 +272,12 @@ if(fail.length){ console.error("FAIL\n- " + fail.join("\n- ")); process.exit(1);
 
 console.log("PASS Home V2 R10 premium cute visual-master structure + richer fantasy world asset + one-row top utilities + compact cloud rail + premium profile/feed/quest/friend hierarchy + locked coin/bottom rail + authoritative bindings + exact mobile landscape/iQOO-style preview checks");
 
+
+// R10.2a UTF-8-safe current-source direct-fidelity guard
+{
+  must(css.includes('data:image/webp;base64,'), 'R10.2a embedded approved master-world asset missing from CSS');
+  must(!css.includes('r10_master_world_clean.webp'), 'R10.2a must not depend on a binary patch file');
+  must(home.includes('vw2-feed-items') && home.includes('feedCardsFromAuthoritativeSource'), 'R10.2a real multi-card Global Feed presentation missing');
+  must(home.includes('id="vw2-feed-text"') && home.includes('id="vw2-feed-likes"'), 'R10.2a legacy feed binding IDs were not preserved');
+  must(css.includes('.vw2-pet-platform{opacity:0!important}'), 'R10.2a duplicate live pedestal suppression missing');
+}

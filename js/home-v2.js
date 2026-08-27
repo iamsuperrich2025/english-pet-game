@@ -54,7 +54,7 @@
 
 
 
-   Vocab World Home V2 — Admin Preview (R10 Premium Cute Structural Visual Master Reconstruction)
+   Vocab World Home V2 — Admin Preview (R10.2a UTF-8 Safe Direct Visual Fidelity Correction)
 
 
 
@@ -8368,16 +8368,13 @@
 
             <div class="vw2-section-head"><span class="vw2-head-icon">${icon('globe')}</span><strong>Global Feed</strong><button data-vw2-action="classic" title="เปิดฟีดเดิม">ดูทั้งหมด</button></div>
 
-            <div class="vw2-feed-card">
-
-              <div class="vw2-feed-avatar">${icon('sparkle')}</div>
-
-              <div><b>กิจกรรมล่าสุด</b><p id="vw2-feed-text">กำลังโหลดกิจกรรมของเพื่อน…</p></div>
-
+            <div id="vw2-feed-items" class="vw2-feed-items">
+              <div class="vw2-feed-card vw2-feed-card-empty">
+                <div class="vw2-feed-avatar">${icon('sparkle')}</div>
+                <div class="vw2-feed-copy"><div class="vw2-feed-card-head"><b>กิจกรรมล่าสุด</b><small>ตอนนี้</small></div><p id="vw2-feed-text">กำลังโหลดกิจกรรมของเพื่อน…</p></div>
+              </div>
             </div>
-
-            <div class="vw2-feed-stats"><span>♡ ถูกใจ <b id="vw2-feed-likes">—</b></span><span>${icon('chat')} ความคิดเห็น</span></div>
-
+            <span id="vw2-feed-likes" class="vw2-feed-legacy-binding" aria-hidden="true">—</span>
             <div class="vw2-feed-coin">${icon('coin')}<span>เรียน เล่น และเติบโตไปพร้อมกัน</span></div>
 
           </section>
@@ -8472,7 +8469,7 @@
 
         <footer class="vw2-bottom" aria-label="ทางลัดการเรียนและเกมทั้งหมด">${modeButtons}</footer>
 
-        <div class="vw2-preview-mark">ADMIN PREVIEW · R10 VISUAL MASTER</div>
+        <div class="vw2-preview-mark">ADMIN PREVIEW · R10.2a MASTER FIDELITY</div>
 
       </div>`;
 
@@ -10920,6 +10917,35 @@
 
 
 
+  function feedCardsFromAuthoritativeSource(){
+    const host = document.getElementById('vw2-feed-items');
+    if(!host) return;
+    try{
+      const seen = new Set();
+      const posts = Array.from(document.querySelectorAll('#feed-list .fpost:not(.fp-clone)')).filter(p=>{
+        const k = p.dataset && p.dataset.key ? p.dataset.key : (p.textContent || '');
+        if(seen.has(k)) return false;
+        seen.add(k); return true;
+      }).slice(0,3);
+      let html = '';
+      for(const post of posts){
+        const name = cleanText((post.querySelector('.fp-name')||{}).textContent || post.dataset.n || 'เพื่อน',28);
+        const when = cleanText((post.querySelector('.fp-when')||{}).textContent || '',20);
+        const tx = cleanText((post.querySelector('.fp-text')||{}).textContent || '',94);
+        const sum = cleanText((post.querySelector('.fp-sum')||{}).textContent || '',42);
+        const fid = post.dataset && post.dataset.fid ? post.dataset.fid : '';
+        let ava = icon('sparkle');
+        try{ if(fid && typeof photoMiniHTML === 'function') ava = photoMiniHTML(fid,'vw2-feed-source-avatar') || ava; }catch(_){ }
+        html += `<article class="vw2-feed-card"><div class="vw2-feed-avatar">${ava}</div><div class="vw2-feed-copy"><div class="vw2-feed-card-head"><b>${htmlEscape(name)}</b><small>${htmlEscape(when)}</small></div><p>${htmlEscape(tx || 'กิจกรรมใหม่ใน Vocab World')}</p>${sum ? `<span class="vw2-feed-reaction">${htmlEscape(sum)}</span>` : ''}</div></article>`;
+      }
+      if(!html){
+        const fallback = cleanText(textOf('#feed-list','ยังไม่มีกิจกรรมใหม่ — เริ่มเล่นเกมเพื่อสร้างเรื่องราวของวันนี้!'),105);
+        html = `<div class="vw2-feed-card vw2-feed-card-empty"><div class="vw2-feed-avatar">${icon('sparkle')}</div><div class="vw2-feed-copy"><div class="vw2-feed-card-head"><b>กิจกรรมล่าสุด</b><small>ตอนนี้</small></div><p>${htmlEscape(fallback)}</p><span class="vw2-feed-reaction">♡ เพื่อน · 💬 ความคิดเห็น</span></div></div>`;
+      }
+      if(host.dataset.vw2Html !== html){ host.innerHTML = html; host.dataset.vw2Html = html; }
+    }catch(_){ }
+  }
+
   function sync(){
 
 
@@ -12125,117 +12151,8 @@
 
 
     }catch(_){ }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const feed = textOf('#feed-list','ยังไม่มีกิจกรรมใหม่ — เริ่มเล่นเกมเพื่อสร้างเรื่องราวของวันนี้!');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    setText('vw2-feed-text', cleanText(feed,150));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    feedCardsFromAuthoritativeSource();
     const likes = (typeof state !== 'undefined' && state && state.feedLikes != null) ? fmt(state.feedLikes) : 'เพื่อน';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     setText('vw2-feed-likes', likes);
 
 
