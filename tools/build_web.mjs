@@ -129,7 +129,7 @@ async function sourceFiles() {
     for (const rel of [...PUBLIC_ROOT_FILES, 'js/app-update.js', 'js/account-deletion.js', 'css/account-deletion.css',
 
       'js/home-v2.js', 'css/home-v2.css',
-      'img/home-v2/r9_screen_backdrop.svg', 'img/home-v2/r9_pet_world.svg', 'img/home-v2/r9_cloud_mask.svg',
+      'img/home-v2/r10_screen_backdrop.svg', 'img/home-v2/r10_pet_world.svg', 'img/home-v2/r10_cloud_pedestal.svg',
 
       'js/data/f1_vocab.js',
 

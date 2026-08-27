@@ -54,7 +54,7 @@
 
 
 
-   Vocab World Home V2 — Admin Preview (R9 Visual Asset + Structural Fidelity Rebuild)
+   Vocab World Home V2 — Admin Preview (R10 Premium Cute Structural Visual Master Reconstruction)
 
 
 
@@ -334,7 +334,7 @@
 
 
 
-  const STYLE_ID = 'vw-home-v2-r9-runtime-style';
+  const STYLE_ID = 'vw-home-v2-r10-runtime-style';
 
 
 
@@ -6622,12 +6622,12 @@
 
   function ensureVisualStyles(){
 
-    /* R9 presentation is consolidated in css/home-v2.css. Keep only a tiny runtime marker
+    /* R10 presentation is consolidated in css/home-v2.css. Keep only a tiny runtime marker
        instead of injecting a second full stylesheet from JavaScript. */
     if(document.getElementById(STYLE_ID)) return;
     const style = document.createElement('style');
     style.id = STYLE_ID;
-    style.textContent = '#vw-home-v2-root{--vw2-r9-runtime-ready:1}';
+    style.textContent = '#vw-home-v2-root{--vw2-r10-runtime-ready:1}';
     document.head.appendChild(style);
 
   }
@@ -8282,7 +8282,7 @@
 
     root.innerHTML = `
 
-      <img class="vw2-screen-backdrop" src="img/home-v2/r9_screen_backdrop.svg" alt="" aria-hidden="true" decoding="async" fetchpriority="high">
+      <img class="vw2-screen-backdrop" src="img/home-v2/r10_screen_backdrop.svg" alt="" aria-hidden="true" decoding="async" fetchpriority="high">
 
       <div class="vw2-sky" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
 
@@ -8472,7 +8472,7 @@
 
         <footer class="vw2-bottom" aria-label="ทางลัดการเรียนและเกมทั้งหมด">${modeButtons}</footer>
 
-        <div class="vw2-preview-mark">ADMIN PREVIEW · R9 VISUAL MASTER</div>
+        <div class="vw2-preview-mark">ADMIN PREVIEW · R10 VISUAL MASTER</div>
 
       </div>`;
 

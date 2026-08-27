@@ -22,28 +22,28 @@ const must = (ok, msg) => { if(!ok) fail.push(msg); };
 
 
 
-/* R9 visual-asset + structural-fidelity guard. */
+/* R10 premium cute structural visual-master guard. */
 
-must(home.includes("R9 Visual Asset + Structural Fidelity Rebuild"), "R9 Home V2 JS marker missing");
+must(home.includes("R10 Premium Cute Structural Visual Master Reconstruction"), "R10 Home V2 JS marker missing");
 
-must(css.includes("Home V2 R9 Visual Asset + Structural Fidelity Rebuild"), "R9 consolidated stylesheet missing");
+must(css.includes("Home V2 R10 Premium Cute Structural Visual Master Reconstruction"), "R10 consolidated stylesheet missing");
 
 must(!css.includes("Home V2 R8 Visual Master Convergence"), "R8 presentation stylesheet header survived R9 consolidation");
 
-must(home.includes('class="vw2-screen-backdrop"') && home.includes('r9_screen_backdrop.svg'), "R9 global illustrated backdrop markup missing");
+must(home.includes('class="vw2-screen-backdrop"') && home.includes('r10_screen_backdrop.svg'), "R10 global illustrated backdrop markup missing");
 
-must(css.includes('url("../img/home-v2/r9_pet_world.svg")'), "R9 illustrated pet-world asset is not used by the center scene");
+must(css.includes('url("../img/home-v2/r10_pet_world.svg")'), "R10 illustrated pet-world asset is not used by the center scene");
 
-must(css.includes('url("../img/home-v2/r9_cloud_mask.svg")') && css.includes('mask:url("../img/home-v2/r9_cloud_mask.svg")'), "R9 cloud/pedestal destination rail asset mask missing");
+must(css.includes('url("../img/home-v2/r10_cloud_pedestal.svg")') && css.includes('mask:url("../img/home-v2/r10_cloud_pedestal.svg")'), "R10 cloud/pedestal destination rail asset mask missing");
 
-["r9_screen_backdrop.svg","r9_pet_world.svg","r9_cloud_mask.svg"].forEach(name=>{
-  must(fs.existsSync(path.join(root,"img","home-v2",name)), `R9 visual asset missing: ${name}`);
-  must(buildWeb.includes(`img/home-v2/${name}`), `R9 build allowlist missing: ${name}`);
+["r10_screen_backdrop.svg","r10_pet_world.svg","r10_cloud_pedestal.svg"].forEach(name=>{
+  must(fs.existsSync(path.join(root,"img","home-v2",name)), `R10 visual asset missing: ${name}`);
+  must(buildWeb.includes(`img/home-v2/${name}`), `R10 build allowlist missing: ${name}`);
 });
 
-must(indexClassic.includes("css/home-v2.css?v=1201") && indexClassic.includes("js/home-v2.js?v=1201"), "R9 Home V2 cache-bust version missing from index_classic.html");
+must(indexClassic.includes("css/home-v2.css?v=1210") && indexClassic.includes("js/home-v2.js?v=1210"), "R10 Home V2 cache-bust version missing from index_classic.html");
 
-must(home.includes('ADMIN PREVIEW · R9 VISUAL MASTER'), "R9 visible admin-preview marker missing");
+must(home.includes('ADMIN PREVIEW · R10 VISUAL MASTER'), "R10 visible admin-preview marker missing");
 
 must(home.includes('class="vw2-avatar-frame"'), "premium avatar frame missing");
 
@@ -63,21 +63,21 @@ must(home.includes(".i-pink{fill:#ff82ba") || css.includes(".i-pink{fill:#ff82ba
 
 must(css.includes("Explicit styling prevents browser-default black silhouettes"), "black-icon regression guard missing from CSS");
 
-must(css.includes("grid-template-columns:clamp(68px,10vw,80px) clamp(108px,16vw,145px)"), "R9 compact left rail / feed mobile composition missing");
+must(css.includes("grid-template-columns:clamp(60px,8.8vw,90px) clamp(108px,18.6vw,190px)"), "R10 visual-master main-column proportions missing");
 
-must(css.includes("font-size:18px") && css.includes(".vw2-profile-meta-chip.class b{font-size:9.6px}"), "R9 mobile profile typography hierarchy missing");
+must(css.includes("font-size:clamp(14px,3.2vh,20px)") && css.includes(".vw2-profile-meta-chip.class b{font-size:9.6px}"), "R10 mobile profile typography hierarchy missing");
 
 must(css.includes(".vw2-stage-cloud,#vw-home-v2-root .vw2-rainbow") && css.includes("display:none!important"), "legacy CSS/vector center scenery was not retired behind R9 illustrated world asset");
 
 must(css.includes("vw2-house-backdrop:after") && css.includes('content:"";display:none'), "authoritative in-world house treatment / no fake empty-house icon missing");
 
-must(css.includes("min-height:36px") && css.includes("height:9px;flex-basis:9px") && css.includes("font-size:7.8px"), "R9 mission/friend mobile readability treatment missing");
+must(css.includes("min-height:clamp(35px,7.5vh,44px)") && css.includes("height:9px;flex-basis:9px") && css.includes("font-size:clamp(7.4px,1.6vh,9.2px)"), "R10 mission/friend mobile readability treatment missing");
 
-must(css.includes("vw2-feed-card") && css.includes("grid-template-columns:31px minmax(0,1fr)") && css.includes("-webkit-line-clamp:5"), "R9 Global Feed mobile presentation rebuild missing");
+must(css.includes("vw2-feed-card") && css.includes("grid-template-columns:clamp(30px,7vh,40px) minmax(0,1fr)") && css.includes("-webkit-line-clamp:6"), "R10 Global Feed mobile presentation rebuild missing");
 
 must(home.includes("pageOverflow:") && home.includes("bottomContained:"), "local mobile overflow/locked-bottom runtime metrics missing");
 
-must(home.includes("--vw2-r9-runtime-ready:1") && !home.includes("Home V2 R8 Visual Master Convergence + Mobile-First Composition Pass"), "R9 did not consolidate the giant duplicated JS stylesheet");
+must(home.includes("--vw2-r10-runtime-ready:1") && !home.includes("Home V2 R8 Visual Master Convergence + Mobile-First Composition Pass"), "R10 did not preserve consolidated runtime stylesheet architecture");
 
 
 /* Authoritative state/binding guards. */
@@ -270,5 +270,5 @@ must(!preview.includes("zoom:"), "preview must not use CSS/browser zoom");
 
 if(fail.length){ console.error("FAIL\n- " + fail.join("\n- ")); process.exit(1); }
 
-console.log("PASS Home V2 R9 illustrated fantasy-world rebuild + cloud destination rail + premium profile/feed/quest/friend hierarchy + locked coin/bottom rail + authoritative bindings + exact mobile landscape/iQOO-style preview checks");
+console.log("PASS Home V2 R10 premium cute visual-master structure + richer fantasy world asset + one-row top utilities + compact cloud rail + premium profile/feed/quest/friend hierarchy + locked coin/bottom rail + authoritative bindings + exact mobile landscape/iQOO-style preview checks");
 

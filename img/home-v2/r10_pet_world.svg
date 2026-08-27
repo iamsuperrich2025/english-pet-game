@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
+<defs>
+ <linearGradient id="sky2" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#62b9ff"/><stop offset=".52" stop-color="#9cddff"/><stop offset="1" stop-color="#def4ff"/></linearGradient>
+ <linearGradient id="hillA" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#8ecf87"/><stop offset="1" stop-color="#4e9e6b"/></linearGradient>
+ <linearGradient id="hillB" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#b5e39c"/><stop offset="1" stop-color="#66b879"/></linearGradient>
+ <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#8bd56f"/><stop offset="1" stop-color="#3f9d63"/></linearGradient>
+ <linearGradient id="path" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff0bc"/><stop offset="1" stop-color="#e4c27f"/></linearGradient>
+ <linearGradient id="castle" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ffe8f1"/><stop offset=".55" stop-color="#f3a8ca"/><stop offset="1" stop-color="#d179b1"/></linearGradient>
+ <radialGradient id="sun" cx="50%" cy="42%" r="46%"><stop stop-color="#fffbd1" stop-opacity=".65"/><stop offset="1" stop-color="#fffbd1" stop-opacity="0"/></radialGradient>
+ <filter id="shadow"><feDropShadow dx="0" dy="7" stdDeviation="5" flood-color="#4b5e80" flood-opacity=".22"/></filter>
+</defs>
+<rect width="1200" height="800" fill="url(#sky2)"/><rect width="1200" height="800" fill="url(#sun)"/>
+<!-- distant clouds -->
+<g fill="#fff" opacity=".93">
+ <ellipse cx="116" cy="130" rx="96" ry="33"/><ellipse cx="185" cy="111" rx="69" ry="40"/><ellipse cx="252" cy="136" rx="96" ry="34"/>
+ <ellipse cx="826" cy="103" rx="75" ry="28"/><ellipse cx="883" cy="87" rx="54" ry="33"/><ellipse cx="937" cy="111" rx="80" ry="30"/>
+ <ellipse cx="1100" cy="181" rx="86" ry="31"/><ellipse cx="1151" cy="161" rx="62" ry="36"/>
+</g>
+<!-- rainbow left -->
+<g fill="none" stroke-linecap="round" opacity=".62">
+ <path d="M70 455c70-170 235-170 305 0" stroke="#ff87b8" stroke-width="28"/><path d="M84 455c63-148 213-148 277 0" stroke="#ffd76a" stroke-width="22"/><path d="M98 455c55-125 190-125 249 0" stroke="#78d88f" stroke-width="18"/><path d="M112 455c47-102 164-102 221 0" stroke="#7cc8ff" stroke-width="14"/>
+</g>
+<!-- atmospheric mountain silhouettes -->
+<path d="M0 432C120 344 188 371 302 402c111 30 181-57 300-71 127-16 240 79 331 55 101-27 165-33 267 13V612H0z" fill="#8fc2b5" opacity=".42"/>
+<path d="M0 495c139-82 258-72 376-26 146 56 251-76 399-49 161 30 225 85 425 18v201H0z" fill="url(#hillB)"/>
+<path d="M0 545c122-62 245-45 358-5 142 51 229-68 373-49 188 25 273 94 469 34v154H0z" fill="url(#hillA)"/>
+<!-- castle at right -->
+<g transform="translate(855 188)" filter="url(#shadow)">
+ <path d="M18 180h250v150H18z" fill="url(#castle)" stroke="#fff" stroke-width="5"/>
+ <path d="M42 183V77h50v106M194 183V61h52v122M112 183V25h62v158" fill="#f7c2dc" stroke="#fff" stroke-width="5"/>
+ <path d="M35 78l32-50 32 50zM185 62l35-51 35 51zM102 27l41-59 41 59z" fill="#7c6bd0" stroke="#fff" stroke-width="5"/>
+ <path d="M143-31v-38" stroke="#fff" stroke-width="6"/><path d="M143-67l30 12-30 13z" fill="#ff7fb5"/>
+ <g fill="#89cfff" stroke="#fff" stroke-width="3"><rect x="49" y="116" width="23" height="36" rx="8"/><rect x="205" y="99" width="24" height="37" rx="8"/><rect x="132" y="84" width="25" height="42" rx="8"/></g>
+ <path d="M116 330v-58c0-28 20-50 46-50s46 22 46 50v58" fill="#8065b8" stroke="#fff" stroke-width="5"/>
+</g>
+<!-- winding road behind pet -->
+<path d="M665 800c-104-76-145-128-112-184 35-60 128-61 154-110 26-49-21-93-89-132-31-18-30-50 23-81 36-21 77-34 117-41" fill="none" stroke="#d1a966" stroke-width="108" opacity=".34" stroke-linecap="round"/>
+<path d="M665 800c-104-76-145-128-112-184 35-60 128-61 154-110 26-49-21-93-89-132-31-18-30-50 23-81 36-21 77-34 117-41" fill="none" stroke="url(#path)" stroke-width="86" stroke-linecap="round"/>
+<path d="M665 800c-104-76-145-128-112-184 35-60 128-61 154-110 26-49-21-93-89-132-31-18-30-50 23-81" fill="none" stroke="#fff9d5" stroke-width="8" opacity=".65" stroke-linecap="round" stroke-dasharray="16 24"/>
+<!-- foreground grass -->
+<path d="M0 635c115-45 193-24 285 4 98 29 185-18 286-19 103-1 174 48 285 37 137-13 190-56 344-9v152H0z" fill="url(#grass)"/>
+<path d="M0 683c148-55 290-12 403 15 145 35 288-57 449-27 132 25 229 53 348 17v112H0z" fill="#61b86a" opacity=".9"/>
+<!-- rocks -->
+<g filter="url(#shadow)"><g fill="#b9bdc9" stroke="#eef4fa" stroke-width="6"><ellipse cx="191" cy="622" rx="53" ry="33"/><ellipse cx="260" cy="650" rx="37" ry="24"/><ellipse cx="997" cy="620" rx="48" ry="30"/><ellipse cx="1064" cy="644" rx="34" ry="23"/></g></g>
+<!-- bushes -->
+<g fill="#55a965" stroke="#94dc86" stroke-width="7"><circle cx="80" cy="604" r="42"/><circle cx="124" cy="590" r="52"/><circle cx="1116" cy="593" r="49"/><circle cx="1165" cy="613" r="39"/></g>
+<!-- flowers -->
+<g stroke="#fff" stroke-width="3" stroke-linejoin="round">
+ <g transform="translate(65 694)"><circle r="8" fill="#ffd652"/><circle cx="-11" r="9" fill="#ff8ec6"/><circle cx="11" r="9" fill="#ff8ec6"/><circle cy="-11" r="9" fill="#ff8ec6"/><circle cy="11" r="9" fill="#ff8ec6"/></g>
+ <g transform="translate(145 740)"><circle r="7" fill="#ffd652"/><circle cx="-10" r="8" fill="#a68cff"/><circle cx="10" r="8" fill="#a68cff"/><circle cy="-10" r="8" fill="#a68cff"/><circle cy="10" r="8" fill="#a68cff"/></g>
+ <g transform="translate(295 704)"><circle r="7" fill="#ffd652"/><circle cx="-9" r="8" fill="#79d9ff"/><circle cx="9" r="8" fill="#79d9ff"/><circle cy="-9" r="8" fill="#79d9ff"/><circle cy="9" r="8" fill="#79d9ff"/></g>
+ <g transform="translate(909 724)"><circle r="7" fill="#ffd652"/><circle cx="-10" r="8" fill="#ff8ec6"/><circle cx="10" r="8" fill="#ff8ec6"/><circle cy="-10" r="8" fill="#ff8ec6"/><circle cy="10" r="8" fill="#ff8ec6"/></g>
+ <g transform="translate(1032 700)"><circle r="7" fill="#ffd652"/><circle cx="-9" r="8" fill="#a68cff"/><circle cx="9" r="8" fill="#a68cff"/><circle cy="-9" r="8" fill="#a68cff"/><circle cy="9" r="8" fill="#a68cff"/></g>
+ <g transform="translate(1130 748)"><circle r="7" fill="#ffd652"/><circle cx="-9" r="8" fill="#79d9ff"/><circle cx="9" r="8" fill="#79d9ff"/><circle cy="-9" r="8" fill="#79d9ff"/><circle cy="9" r="8" fill="#79d9ff"/></g>
+</g>
+<!-- tiny sparkles -->
+<g fill="#fff8ad"><path d="M398 215l6 14 14 6-14 6-6 14-6-14-14-6 14-6z"/><path d="M742 173l5 11 11 5-11 5-5 11-5-11-11-5 11-5z"/><path d="M310 333l4 9 9 4-9 4-4 9-4-9-9-4 9-4z"/></g>
+</svg>
