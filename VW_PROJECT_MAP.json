@@ -1,10 +1,10 @@
 {
   "schema_version": 4,
   "project": "english-pet-game",
-  "structure_signature": "049811bb9e68f27e3d4a452a6f2bf1cab9a00a9277b4cef969c4595a903270e5",
-  "structure_entry_count": 2782,
+  "structure_signature": "785bfb3007c1dbd385b76250a5dbb5fe3b664f956f3d43fb9f405d3562ef91da",
+  "structure_entry_count": 2788,
   "generated_by": "VW Dev Studio Local Token Saver",
-  "generated_at": "2026-08-25T19:21:58",
+  "generated_at": "2026-08-27T18:06:20",
   "generation_mode": "local_no_ai_no_api",
   "areas": {
     "main_world": [
@@ -24,10 +24,10 @@
       "tools/lobby_ground_preview.html",
       "tools/test_f1_lobby_lock.js",
       "tools/test_home_downgrade_guard.js",
+      "tools/test_home_v2_mobile_preview.js",
+      "tools/test_lobby_entry_route.js",
       "tools/test_lobby_settings_responsive.js",
-      "tools/test_lobby_topbar_buttons.js",
-      "tools/test_worlds3d.js",
-      "img/home/README.txt"
+      "tools/test_lobby_topbar_buttons.js"
     ],
     "adventure_world": [
       "js/adventure3d.js",
@@ -145,10 +145,10 @@
       "tools/slice_matching.py",
       "tools/test_f1_hud_minimap.js",
       "tools/test_f1_lobby_lock.js",
+      "tools/test_lobby_entry_route.js",
       "tools/test_lobby_settings_responsive.js",
       "tools/test_lobby_topbar_buttons.js",
-      "tools/test_matching_web_assets.py",
-      "tools/test_picmatch_page_cooldown.js"
+      "tools/test_matching_web_assets.py"
     ],
     "player": [
       "delete-account.html",
