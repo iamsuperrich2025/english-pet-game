@@ -39,6 +39,8 @@ premiumIds.forEach(id=>{
   assert(wear['all_'+id], `missing future-pet fallback all_${id}`);
   ['dog','cat','dragon'].forEach(pet=>assert(wear[pet+'_'+id], `missing ${pet}_${id}`));
 });
+assert(wear.dragon_royal_cape.size === 1.75 && wear.dragon_royal_cape.y === -0.08,
+  'dragon royal cape must stay fitted to the torso instead of flaring over wings and feet');
 
 const ui = read('js/ui.js');
 const images = read('js/images.js');

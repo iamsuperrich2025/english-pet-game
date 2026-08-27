@@ -39,7 +39,7 @@
     dragon: {
       beret:[1.80,-0.90,'head'], tiara:[1.55,-0.81,'head'], hat:[2.10,-1.49,'head'],
       face:[2.30,-1.15,'eye'], neck:[2.00,-0.07,'eye'],
-      hoodie:[2.95,-0.72,'eye'], vest:[2.80,0.10,'eye'], pajamas:[3.00,0.10,'eye'], cape:[3.00,-0.20,'eye'],
+      hoodie:[2.95,-0.72,'eye'], vest:[2.80,0.10,'eye'], pajamas:[3.00,0.10,'eye'], cape:[1.75,-0.08,'eye'],
     },
   };
 
