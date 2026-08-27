@@ -168,6 +168,32 @@ async function settleClaim(claim) {
   return publicResult({...claim, status: 'completed'});
 }
 
+/* RTDB transactions may call the update function once with a local null guess
+   even when the server path exists. Returning undefined on that first guess
+   aborts before the SDK can retry with the authoritative value. Seed only the
+   first null attempt from a just-read snapshot; the server-side hash check still
+   rejects it if another buyer or the seller changed the listing meanwhile. */
+async function claimMarketListing(marketRef, initialValue, tx, uid, buyerName) {
+  let reason = 'sold_out';
+  let attempt = 0;
+  const result = await marketRef.transaction(current => {
+    if (attempt++ === 0 && current === null && initialValue && typeof initialValue === 'object') {
+      current = initialValue;
+    }
+    if (!current || typeof current !== 'object') { reason = 'sold_out'; return; }
+    if (current.st === 'processing') {
+      if (current.tx === tx && current.bid === uid) { reason = ''; return current; }
+      reason = 'sold_out'; return;
+    }
+    const listing = cleanListing(current);
+    if (!listing) { reason = 'invalid'; return; }
+    if (listing.sid === uid) { reason = 'own_item'; return; }
+    reason = '';
+    return {...current, st: 'processing', tx, bid: uid, bn: buyerName, startedAt: Date.now()};
+  }, undefined, false);
+  return {result, reason};
+}
+
 async function beginPurchase(uid, listingKey, requestId) {
   const db = getDatabase();
   const tx = crypto.createHash('sha256').update(`${uid}|${requestId}`).digest('hex').slice(0, 40);
@@ -182,20 +208,9 @@ async function beginPurchase(uid, listingKey, requestId) {
 
   const profile = (await db.ref(`users/${uid}/profile/name`).get()).val();
   const buyerName = typeof profile === 'string' && profile.trim() ? profile.trim().slice(0, 40) : 'เพื่อน';
-  let reason = 'sold_out';
   const marketRef = db.ref(`market/${listingKey}`);
-  const result = await marketRef.transaction(current => {
-    if (!current || typeof current !== 'object') { reason = 'sold_out'; return; }
-    if (current.st === 'processing') {
-      if (current.tx === tx && current.bid === uid) { reason = ''; return current; }
-      reason = 'sold_out'; return;
-    }
-    const listing = cleanListing(current);
-    if (!listing) { reason = 'invalid'; return; }
-    if (listing.sid === uid) { reason = 'own_item'; return; }
-    reason = '';
-    return {...current, st: 'processing', tx, bid: uid, bn: buyerName, startedAt: Date.now()};
-  }, undefined, false);
+  const initialValue = (await marketRef.get()).val();
+  const {result, reason} = await claimMarketListing(marketRef, initialValue, tx, uid, buyerName);
   if (!result.committed) {
     await ledgerRef.update({status: 'failed', reason, failedAt: Date.now()});
     return {ok: false, reason, tx};
@@ -245,4 +260,4 @@ exports.resumeMarketSettlement = onValueUpdated({
   }
 });
 
-exports._test = {cleanListing, beginPurchase, settleClaim};
+exports._test = {cleanListing, claimMarketListing, beginPurchase, settleClaim};

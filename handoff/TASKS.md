@@ -28,6 +28,9 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (23 ส.ค.) — อ่านก่อน
+- **รอบ 1262 · แก้ตลาดขึ้น “มีคนซื้อตัดหน้า” ทุกครั้ง:** RTDB transaction ฝั่ง `marketBuySecure` เคย abort เมื่อ callback รอบแรกเดา `null` ทั้งที่ listing จริงยังอยู่; pre-read snapshot แล้ว seed เฉพาะ null attempt แรก โดย server hash/retry ยังกัน race และไม่ชุบรายการที่ถูกลบจริง (`functions/index.js`)
+- production ledger พบ `sold_out` 14 รายการและยืนยันหลาย key ยังอยู่ใน `/market`; เพิ่ม regression ครบ live listing/null guess + deleted-after-read และคง buyer/seller/refund idempotency (`functions/test_market_settlement.js`)
+- `npm test --prefix functions`, syntax, client transaction และ listing reconcile ผ่านครบ; แก้ `tools/ship.sh` ให้ไฟล์ `functions/` ถูกจัดเป็นงาน deploy ไม่ใช่เอกสาร
 - **รอบ 1261 · แก้ชุดทับภาพสัตว์ตอนป่วย:** `petWearOverlay()` พักการวาด layer ชุดเฉพาะ `p.sick` เพื่อให้เห็นอาการ/อุปกรณ์รักษาชัด แต่คง `equipped` และป้าย “ยังใส่อยู่”; หายแล้วชุดกลับมาเอง (`js/images.js`)
 - เพิ่ม regression ยืนยันป่วย=ไม่มี overlay และสุขภาพปกติ=ยังมี overlay; `node --check js/images.js` + `tools/test_pet_bond.js` ผ่านครบ (`tools/test_pet_bond.js`)
 - visual QA ใน in-app browser ถูก Windows ACL บล็อก (`apply deny-read ACLs`) ตามข้อจำกัดเดิม; ไม่มีไฟล์/ธีม/asset อื่นถูกแตะ
@@ -40,9 +43,6 @@
 - syntax+Sky/Beta regression+asset dimension/alpha/silhouette/budget QA+production build 9,098 ไฟล์+PWA manifest+source/dist thumb SHA-256 ผ่าน; browser visual QA ยังถูก Windows ACL บล็อก
 - **รอบ 1258 · Sky Playground เลือกตัวละครก่อนเข้าได้แล้ว:** dialog จ่าย/เข้าโลกแสดงตัวละคร 6 แบบจาก catalog เดิม เลือกแล้วไฮไลต์ เปลี่ยนข้อความปุ่มเข้า และบันทึก local/cloud ก่อนจ่าย (js/ui.js, css/skyplay3d.css)
 - คง picker ในโลกและ renderer/network contract เดิม; layout 6 คอลัมน์สำหรับ 812×375 + 3 คอลัมน์แนวตั้ง ไม่มี scrollbar และมี regression ครบ (tools/test_skyplay3d.js)
-- syntax+Sky/Beta regression+production build 9,092 ไฟล์+PWA manifest/invariants ผ่าน; browser visual QA ถูก Windows ACL บล็อกตามข้อจำกัดเดิม
-- **รอบ 1257 · เพิ่มสัตว์ใหม่ 6 ชนิดและใช้ราคาตามภาพแนบ:** ช้าง 2,000,000 · เมียร์แคต 70,000 · T. rex 80,000 · ทูแคน 480,000 · ควาย 100,000 · กวางซีกา 70,000 (`js/data/pets.js`)
-- ตรวจชื่อ–ภาพ 691 PNG เดิมครบ; แก้ชื่อชั่วคราว/UUID เป็น contract กลาง แล้วแปลงเป็น WebP 686 ใบ (สัตว์ 153 + ชุดเต็มตัว 504 + catalog/reference 29), 937.8→100.3MB เหลือ 10.7%; alpha ครบและด้านยาว ≤768px
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`

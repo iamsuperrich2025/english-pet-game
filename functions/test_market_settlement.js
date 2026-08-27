@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 const {applyBuyer, applySeller, refundBuyer} = require('./market-settlement');
+const {claimMarketListing} = require('./index')._test;
 
 function wrapper(state) { return {data: JSON.stringify(state), at: 1}; }
 function read(result) { return JSON.parse(result.wrapper.data); }
@@ -38,4 +39,42 @@ assert.equal(read(refundedTwice).coins, 1000, 'refund must be idempotent');
 assert.throws(()=>applyBuyer(wrapper({coins: 100, collection: [], listings: []}), claim, 1), /not_enough_coins/);
 assert.throws(()=>applySeller(wrapper({coins: 0, collection: [], listings: [], tradeSold: []}), claim, 1), /seller_not_ready/);
 
-console.log('PASS secure market settlement: buyer/seller/refund are idempotent');
+(async()=>{
+  const listing = {sid: 'seller', id: 'cake', p: 500, sn: 'ผู้ขาย'};
+  const claimed = {...listing, st: 'processing', tx: claim.tx, bid: claim.bid, bn: claim.bn};
+  let callbacks = 0;
+  const nullGuessRef = {
+    transaction(update){
+      callbacks++;
+      const proposal = update(null); // Firebase's first local guess can be null.
+      assert.equal(proposal.st, 'processing', 'first null guess must not abort a live listing');
+      callbacks++;
+      const authoritative = update(listing);
+      return Promise.resolve({committed: true, snapshot: {val: ()=>authoritative}});
+    },
+  };
+  const live = await claimMarketListing(nullGuessRef, listing, claim.tx, claim.bid, claim.bn);
+  assert.equal(live.result.committed, true);
+  assert.equal(live.reason, '');
+  assert.equal(callbacks, 2);
+  assert.equal(live.result.snapshot.val().tx, claim.tx);
+
+  let deletedCallbacks = 0;
+  const deletedDuringClaimRef = {
+    transaction(update){
+      deletedCallbacks++;
+      const staleProposal = update(null);
+      assert.equal(staleProposal.st, 'processing');
+      deletedCallbacks++;
+      const retry = update(null); // Server says it was really deleted after the pre-read.
+      assert.equal(retry, undefined, 'authoritative null retry must abort instead of resurrecting');
+      return Promise.resolve({committed: false, snapshot: {val: ()=>null}});
+    },
+  };
+  const gone = await claimMarketListing(deletedDuringClaimRef, claimed, claim.tx, claim.bid, claim.bn);
+  assert.equal(gone.result.committed, false);
+  assert.equal(gone.reason, 'sold_out');
+  assert.equal(deletedCallbacks, 2);
+
+  console.log('PASS secure market settlement: idempotent settlement + RTDB null-guess claim retry');
+})().catch(error=>{ console.error(error); process.exit(1); });
