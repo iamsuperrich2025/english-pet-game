@@ -1,15319 +1,1776 @@
-"use strict";
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* ============================================================
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-   Vocab World Home V2 — Admin Preview (R10.3 Locked Visual Master Direct Fidelity Completion)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-   ------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-   Additive UI shell only. It does NOT own economy, auth, quests,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-   Firebase, purchases, or game routing. Existing Lobby DOM stays
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-   in place and existing buttons/functions remain authoritative.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-   ============================================================ */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-(function(){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const ROOT_ID = 'vw-home-v2-root';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const CLASS_ON = 'vw2-active';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const SESSION_KEY = 'vwHomeV2PreviewClassic';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const STYLE_ID = 'vw-home-v2-r10-runtime-style';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  let root = null;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  let classicToggle = null;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  let syncTimer = 0;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  let clockTimer = 0;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  let welcomeTimer = 0;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  let previewReportTimer = 0;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  let v2WasVisible = false;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function adminAllowed(){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    try{ return typeof isAdmin === 'function' && isAdmin() === true; }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    catch(_){ return false; }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function dashboard(){ return document.getElementById('screen-dashboard'); }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function dashboardActive(){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const el = dashboard();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    return !!(el && el.classList.contains('active'));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function previewWanted(){ return sessionStorage.getItem(SESSION_KEY) !== '1'; }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function setPreviewWanted(on){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(on) sessionStorage.removeItem(SESSION_KEY);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    else sessionStorage.setItem(SESSION_KEY, '1');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    syncVisibility();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function cleanText(text, max){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const out = String(text || '').replace(/\s+/g,' ').trim();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    return out.length > max ? out.slice(0, max - 1).trimEnd() + '…' : out;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function textOf(sel, fallback='—'){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const el = document.querySelector(sel);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const t = el ? cleanText(el.textContent, 180) : '';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    return t || fallback;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function htmlEscape(v){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    return String(v == null ? '' : v).replace(/[&<>"]/g, c=>({
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    })[c]);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function fmt(v){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    try{ return typeof fmtNum === 'function' ? fmtNum(v) : Number(v || 0).toLocaleString('th-TH'); }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    catch(_){ return String(v || 0); }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const ICON_ART = {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    coin:`<circle cx="32" cy="34" r="22" class="i-coin"/><ellipse cx="32" cy="28" rx="19" ry="15" class="i-coin-hi"/><path d="M24 34c3 5 13 5 16 0M30 24h4v20h-4z" class="i-line"/><path d="M23 28c4-5 14-6 19-1" class="i-line"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    chat:`<path d="M11 15c0-6 5-10 11-10h20c7 0 12 5 12 12v15c0 7-5 12-12 12H29L18 54l2-10c-5-1-9-5-9-11z" class="i-pink"/><circle cx="25" cy="26" r="3" class="i-dot"/><circle cx="38" cy="26" r="3" class="i-dot"/><path d="M25 34c4 3 10 3 14 0" class="i-line"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    music:`<path d="M22 15v28c0 5-4 9-10 9-5 0-8-3-8-7 0-5 4-8 10-8 2 0 4 0 5 1V20l30-7v24c0 6-5 10-10 10s-9-3-9-8 4-9 10-9c2 0 4 1 6 2V8z" class="i-purple"/><path d="M22 24l27-6" class="i-line"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    moon:`<path d="M45 48c-17 5-32-8-29-25 2-9 8-15 16-18-4 8-2 18 5 24 6 6 15 8 23 4-2 7-7 12-15 15z" class="i-blue"/><path d="M47 9l2 5 5 2-5 2-2 5-2-5-5-2 5-2zM13 40l1 3 3 1-3 1-1 3-1-3-3-1 3-1z" class="i-star"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    settings:`<path d="M26 8h12l2 7 7 3 6-3 6 10-5 5v8l5 5-6 10-7-3-6 3-2 7H26l-2-7-7-3-6 3-6-10 5-5v-8l-5-5 6-10 6 3 7-3z" class="i-mint"/><circle cx="32" cy="34" r="9" class="i-white"/><path d="M32 29v10M27 34h10" class="i-line"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    city:`<path d="M11 52V24h8v-9h9v9h8V12h9v12h8v28z" class="i-purple"/><path d="M7 27l12-12 13 12 13-15 12 15" class="i-roof"/><path d="M26 52V38h12v14M16 33h6M43 33h6" class="i-line"/><path d="M28 18l4-9 4 9" class="i-star"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    potion:`<path d="M25 6h14v8l-3 5v4c9 3 15 11 15 21 0 8-6 14-14 14H27c-8 0-14-6-14-14 0-10 6-18 15-21v-4l-3-5z" class="i-pink"/><path d="M20 37c8-4 18 4 28-1v10c0 6-4 9-10 9H27c-7 0-11-4-11-10 0-3 1-6 4-8z" class="i-blue"/><circle cx="27" cy="42" r="3" class="i-white"/><circle cx="38" cy="47" r="2" class="i-white"/><path d="M24 14h16" class="i-line"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    home:`<path d="M8 30L32 9l24 21v24H39V39H25v15H8z" class="i-peach"/><path d="M5 31L32 7l27 24" class="i-roof"/><path d="M25 54V39h14v15" class="i-line"/><path d="M43 19v-7h7v13" class="i-purple"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    invest:`<circle cx="19" cy="43" r="11" class="i-coin"/><circle cx="42" cy="47" r="9" class="i-coin"/><path d="M31 47V27c0-8 5-14 14-16-1 10-6 16-14 16-8 0-13-5-15-12 9 0 15 4 15 12" class="i-mint"/><path d="M31 26v21" class="i-line"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    gift:`<path d="M10 28h44v28H10z" class="i-pink"/><path d="M7 20h50v12H7z" class="i-purple"/><path d="M28 20c-9 0-14-4-14-9 0-4 3-7 7-7 6 0 10 8 11 16M36 20c9 0 14-4 14-9 0-4-3-7-7-7-6 0-10 8-11 16" class="i-mint"/><path d="M28 20h8v36h-8z" class="i-white"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    globe:`<circle cx="32" cy="32" r="25" class="i-blue"/><path d="M8 30h48M12 42h40M32 7c-8 8-11 17-11 25s3 18 11 25c8-7 11-17 11-25S40 15 32 7z" class="i-white-line"/><path d="M16 17c4 4 9 5 14 2M44 45c-5-3-10-2-14 1" class="i-mint-line"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    sparkle:`<path d="M31 4l5 15 15 5-15 5-5 15-5-15-15-5 15-5z" class="i-star"/><path d="M49 38l3 8 8 3-8 3-3 8-3-8-8-3 8-3zM13 39l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" class="i-pink"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    quest:`<path d="M32 5l7 14 16 2-12 11 3 16-14-8-14 8 3-16L9 21l16-2z" class="i-star"/><circle cx="32" cy="30" r="8" class="i-white"/><path d="M29 30l3 3 6-7" class="i-line"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    friends:`<circle cx="24" cy="24" r="11" class="i-peach"/><circle cx="43" cy="27" r="9" class="i-blue"/><path d="M5 54c2-12 9-18 19-18 11 0 18 6 20 18z" class="i-pink"/><path d="M36 54c1-8 5-13 12-13 6 0 10 4 11 13z" class="i-purple"/><path d="M21 25c2 2 5 2 7 0M40 28c2 1 4 1 6 0" class="i-line"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    controller:`<path d="M17 24c5-5 25-5 30 0 7 7 11 27 2 31-5 2-10-6-13-10h-8c-4 4-9 12-14 10-9-4-5-24 3-31z" class="i-purple"/><path d="M20 34h12M26 28v12" class="i-line"/><circle cx="42" cy="31" r="3" class="i-pink"/><circle cx="48" cy="37" r="3" class="i-mint"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    book:`<path d="M9 11c9-3 17 0 23 6v38c-7-6-15-8-23-5z" class="i-blue"/><path d="M55 11c-9-3-17 0-23 6v38c7-6 15-8 23-5z" class="i-pink"/><path d="M32 17v38" class="i-line"/><path d="M15 22h10M15 29h10M39 22h10M39 29h10" class="i-white-line"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    crown:`<path d="M8 20l12 11 12-20 12 20 12-11-5 32H13z" class="i-coin"/><path d="M14 44h36M20 36h24" class="i-line"/><circle cx="20" cy="21" r="4" class="i-pink"/><circle cx="44" cy="21" r="4" class="i-blue"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    leaf:`<path d="M51 9C30 9 16 20 16 37c0 10 6 17 15 17 17 0 24-18 20-45z" class="i-mint"/><path d="M14 56c8-14 19-25 33-35M25 38c4 0 9 2 12 5" class="i-line"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    star:`<path d="M32 5l8 17 19 2-14 13 4 19-17-9-17 9 4-19L5 24l19-2z" class="i-star"/><path d="M25 31c4 4 10 4 14 0" class="i-line"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    edit:`<path d="M13 47l4-13L42 9c3-3 7-3 10 0l3 3c3 3 3 7 0 10L30 47l-13 4z" class="i-pink"/><path d="M39 12l13 13M17 34l13 13" class="i-white-line"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    back:`<path d="M28 14L10 32l18 18v-10h24V24H28z" class="i-blue"/><path d="M15 32h35" class="i-line"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    check:`<circle cx="32" cy="32" r="25" class="i-mint"/><path d="M19 32l9 9 18-20" class="i-white-line"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  Object.assign(ICON_ART, {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    heart:`<path d="M32 54S8 41 8 23c0-9 6-15 14-15 5 0 8 2 10 6 3-4 6-6 11-6 8 0 14 6 14 15 0 18-25 31-25 31z" class="i-pink"/><path d="M18 31h8l4-9 5 18 4-9h8" class="i-white-line"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    factory:`<path d="M8 54V28l15 8V25l15 9V20l18 9v25z" class="i-blue"/><path d="M43 8h9l2 21H42z" class="i-purple"/><path d="M15 44h8M29 44h8M43 44h7" class="i-white-line"/><circle cx="49" cy="13" r="4" class="i-pink"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    search:`<circle cx="27" cy="27" r="16" class="i-blue"/><path d="M39 39l16 16" class="i-line"/><path d="M18 27c2-7 8-11 15-10" class="i-white-line"/><path d="M44 9l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" class="i-star"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    typing:`<rect x="7" y="16" width="50" height="34" rx="9" class="i-purple"/><path d="M14 25h5M23 25h5M32 25h5M41 25h5M18 34h5M27 34h5M36 34h5M45 34h4M18 43h28" class="i-white-line"/><path d="M50 9l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" class="i-star"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    bubble:`<circle cx="22" cy="38" r="15" class="i-blue"/><circle cx="39" cy="23" r="12" class="i-pink"/><circle cx="48" cy="42" r="8" class="i-mint"/><path d="M15 34c3-5 8-7 13-5M34 20c3-3 7-3 10-1" class="i-white-line"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    target:`<circle cx="30" cy="32" r="24" class="i-peach"/><circle cx="30" cy="32" r="16" class="i-white"/><circle cx="30" cy="32" r="8" class="i-pink"/><path d="M40 21l15-13-2 9 8 1-16 12z" class="i-purple"/><path d="M30 32l15-11" class="i-line"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    cannon:`<path d="M10 35h32l8 10H20z" class="i-purple"/><circle cx="22" cy="49" r="7" class="i-coin"/><circle cx="44" cy="49" r="7" class="i-coin"/><path d="M14 33l6-18 29 10-5 16z" class="i-blue"/><path d="M49 18l4-8 3 8 7 2-7 4-2 8-4-7-7-3z" class="i-star"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    exam:`<path d="M15 8h34v48H15z" class="i-blue"/><path d="M23 19h18M23 28h18M23 37h10" class="i-white-line"/><path d="M37 42l5 5 10-12" class="i-line"/><path d="M22 6h20v8H22z" class="i-peach"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    flag:`<path d="M16 8v48" class="i-line"/><path d="M18 11c10-6 20 7 31 0v24c-11 7-21-6-31 0z" class="i-peach"/><path d="M18 19h31M18 27h31" class="i-white-line"/><circle cx="33" cy="23" r="5" class="i-blue"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    market:`<path d="M10 25h44v31H10z" class="i-mint"/><path d="M7 23l6-14h38l6 14c-4 8-12 8-16 1-5 8-13 8-18 0-4 7-12 7-16-1z" class="i-pink"/><path d="M20 56V38h12v18M39 37h9v10h-9z" class="i-white"/><path d="M20 38h12" class="i-line"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    stats:`<path d="M10 53h44" class="i-line"/><rect x="14" y="32" width="9" height="19" rx="3" class="i-blue"/><rect x="28" y="22" width="9" height="29" rx="3" class="i-mint"/><rect x="42" y="13" width="9" height="38" rx="3" class="i-pink"/><path d="M14 25l11-8 10 3 15-13" class="i-roof"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    trophy:`<path d="M20 8h24v12c0 13-5 22-12 22s-12-9-12-22z" class="i-coin"/><path d="M18 13H8c0 14 6 20 16 19M46 13h10c0 14-6 20-16 19" class="i-roof"/><path d="M32 42v8M22 56h20M25 50h14" class="i-line"/><path d="M32 15l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z" class="i-white"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    picture:`<rect x="7" y="11" width="50" height="42" rx="8" class="i-blue"/><circle cx="42" cy="23" r="6" class="i-star"/><path d="M12 47l14-16 8 8 7-9 12 17z" class="i-mint"/><path d="M15 18h10" class="i-white-line"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    headphones:`<path d="M11 34c0-15 9-25 21-25s21 10 21 25" class="i-roof"/><rect x="8" y="31" width="12" height="21" rx="6" class="i-pink"/><rect x="44" y="31" width="12" height="21" rx="6" class="i-blue"/><path d="M50 50c-2 5-7 7-14 7" class="i-line"/><circle cx="33" cy="57" r="4" class="i-mint"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    clipboard:`<path d="M14 12h36v45H14z" class="i-peach"/><path d="M24 7h16v10H24z" class="i-purple"/><path d="M22 27h20M22 36h20M22 45h13" class="i-white-line"/><circle cx="46" cy="45" r="8" class="i-mint"/><path d="M42 45l3 3 5-6" class="i-line"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    logout:`<path d="M12 10h27v44H12z" class="i-blue"/><path d="M31 32h28M48 21l11 11-11 11" class="i-roof"/><circle cx="20" cy="32" r="3" class="i-white"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    bell:`<path d="M17 43h30l-5-7V24c0-7-4-12-10-12s-10 5-10 12v12z" class="i-star"/><path d="M27 48c1 5 9 5 10 0" class="i-line"/><path d="M46 15l3-6 3 6 6 2-6 3-3 6-3-6-6-3z" class="i-pink"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    bookgold:`<path d="M8 12c9-4 18-1 24 6v37c-7-6-15-8-24-5z" class="i-coin"/><path d="M56 12c-9-4-18-1-24 6v37c7-6 15-8 24-5z" class="i-peach"/><path d="M32 18v37M15 25h11M38 25h11" class="i-white-line"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    computer:`<rect x="8" y="11" width="48" height="34" rx="7" class="i-blue"/><rect x="14" y="17" width="36" height="22" rx="4" class="i-white"/><path d="M25 51h14M30 44v7M34 44v7" class="i-line"/><circle cx="45" cy="21" r="8" class="i-coin"/><path d="M42 21h6M45 18v6" class="i-line"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-    install:`<rect x="13" y="7" width="38" height="50" rx="9" class="i-blue"/><rect x="18" y="12" width="28" height="35" rx="5" class="i-white"/><path d="M32 17v20M24 29l8 8 8-8" class="i-line"/><circle cx="32" cy="51" r="2.5" class="i-mint"/>`,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function icon(name, extra=''){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const art = ICON_ART[name] || ICON_ART.sparkle;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    return `<svg class="vw2-icon ${htmlEscape(extra)}" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <circle cx="32" cy="32" r="29" class="i-sticker"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <ellipse cx="27" cy="20" rx="17" ry="10" class="i-gloss"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ${art}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <path d="M53 8l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" class="i-mini-star"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    </svg>`;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function mascotDragon(){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    return `<svg class="vw2-dragon-art" viewBox="0 0 220 220" aria-hidden="true" focusable="false">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <defs>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        <linearGradient id="vw2dg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#aaf3dc"/><stop offset="1" stop-color="#59caa8"/></linearGradient>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        <linearGradient id="vw2wing" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d8c8ff"/><stop offset="1" stop-color="#9e82ed"/></linearGradient>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      </defs>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <ellipse cx="110" cy="198" rx="61" ry="14" fill="#7761b5" opacity=".18"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <path d="M58 95C31 77 26 111 45 129c10 9 24 7 37-2z" fill="url(#vw2wing)" stroke="#fff" stroke-width="6"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <path d="M162 95c27-18 32 16 13 34-10 9-24 7-37-2z" fill="url(#vw2wing)" stroke="#fff" stroke-width="6"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <path d="M85 62l-16-26 26 13M135 62l16-26-26 13" fill="#ffd7a7" stroke="#fff" stroke-width="6" stroke-linejoin="round"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <path d="M78 126c-18 26-14 62 8 75 17 10 55 10 72-5 19-18 16-50-5-72z" fill="url(#vw2dg)" stroke="#fff" stroke-width="7"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <ellipse cx="113" cy="158" rx="31" ry="37" fill="#fff3c9" opacity=".95"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <path d="M79 139c-18 7-25 22-18 30 6 7 19 1 28-10M148 139c18 7 25 22 18 30-6 7-19 1-28-10" fill="none" stroke="#57b99d" stroke-width="13" stroke-linecap="round"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <ellipse cx="110" cy="95" rx="66" ry="56" fill="url(#vw2dg)" stroke="#fff" stroke-width="8"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <path d="M87 55l8-18 10 19M116 53l10-18 9 20" fill="#8fe2c6" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <ellipse cx="84" cy="96" rx="17" ry="21" fill="#283653"/><ellipse cx="137" cy="96" rx="17" ry="21" fill="#283653"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <circle cx="79" cy="89" r="7" fill="#fff"/><circle cx="132" cy="89" r="7" fill="#fff"/><circle cx="89" cy="104" r="3" fill="#fff" opacity=".8"/><circle cx="142" cy="104" r="3" fill="#fff" opacity=".8"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <ellipse cx="65" cy="119" rx="13" ry="7" fill="#ff9fbd" opacity=".7"/><ellipse cx="155" cy="119" rx="13" ry="7" fill="#ff9fbd" opacity=".7"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <path d="M101 116c5 5 13 5 18 0M104 126c5 6 14 6 20 0" fill="none" stroke="#4b6b69" stroke-width="4" stroke-linecap="round"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <path d="M107 150h11M106 161h13M106 173h13" stroke="#e7c887" stroke-width="4" stroke-linecap="round" opacity=".75"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <path d="M82 193c-5 14 16 15 27 4M139 193c5 14-16 15-27 4" fill="#8fe2c6" stroke="#fff" stroke-width="5"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <path d="M50 68l4 11 11 4-11 4-4 11-4-11-11-4 11-4zM169 54l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" fill="#ffe47c" stroke="#fff" stroke-width="2"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    </svg>`;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function knightFallback(){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    return `<svg class="vw2-knight-art" viewBox="0 0 100 120" aria-hidden="true" focusable="false">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <path d="M25 45V30c0-19 50-19 50 0v15" fill="#dfe9f3" stroke="#fff" stroke-width="6"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <path d="M21 40h58v20H21z" fill="#becce0" stroke="#fff" stroke-width="5"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <path d="M31 55c0-14 38-14 38 0v17c0 17-38 17-38 0z" fill="#ffd7bd" stroke="#fff" stroke-width="5"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <circle cx="43" cy="62" r="4" fill="#2b344b"/><circle cx="58" cy="62" r="4" fill="#2b344b"/><path d="M44 70c4 3 9 3 13 0" fill="none" stroke="#ae6273" stroke-width="3" stroke-linecap="round"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <path d="M31 82h38l10 33H21z" fill="#6a8be8" stroke="#fff" stroke-width="5"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <path d="M50 86l8 12-8 9-8-9z" fill="#ffd75f"/><path d="M34 30l6-13 6 13M54 29l7-14 5 15" fill="#c5d4e8" stroke="#fff" stroke-width="4"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    </svg>`;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function castleArtwork(){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    return `<svg class="vw2-castle-art" viewBox="0 0 320 250" aria-hidden="true" focusable="false">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <defs><linearGradient id="vw2cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff5ff"/><stop offset="1" stop-color="#bba2ff"/></linearGradient></defs>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <ellipse cx="165" cy="227" rx="132" ry="18" fill="#7d6db7" opacity=".13"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <path d="M45 218v-92h45v-38h39v38h50V65h44v61h49v92z" fill="url(#vw2cg)" stroke="#fff" stroke-width="8" stroke-linejoin="round"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <path d="M39 128l28-35 28 35M92 90l17-34 18 34M160 67l21-43 22 43M213 128l31-39 30 39" fill="#ffb9dc" stroke="#fff" stroke-width="7" stroke-linejoin="round"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <path d="M164 218v-58h34v58M65 151h16v20H65zM107 145h17v21h-17zM225 151h17v20h-17z" fill="#8fdcf7" stroke="#fff" stroke-width="5"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <path d="M180 26v-17l24 8-24 8" fill="#ffd858" stroke="#fff" stroke-width="4"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <circle cx="54" cy="188" r="30" fill="#ff9fce" opacity=".8"/><circle cx="35" cy="203" r="22" fill="#f7b3dc"/><circle cx="279" cy="190" r="34" fill="#ffabd4"/><circle cx="298" cy="207" r="23" fill="#f8c0e2"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <path d="M52 178v48M279 176v50" stroke="#9b7f6d" stroke-width="7" stroke-linecap="round"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <path d="M14 92l3 8 8 3-8 3-3 8-3-8-8-3 8-3zM292 83l4 10 10 4-10 4-4 10-4-10-10-4 10-4z" fill="#ffe56f" stroke="#fff" stroke-width="2"/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    </svg>`;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function sourceAttrs(sourceSelector, mirrorVisibility=false){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(!sourceSelector) return '';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    return ` data-vw2-source="${htmlEscape(sourceSelector)}"${mirrorVisibility ? ' data-vw2-mirror-visibility="1"' : ''}`;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function navButton(actionName, iconName, label, sourceSelector=''){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    return `<button class="vw2-rail-btn vw2-rail-${htmlEscape(actionName)}" data-vw2-action="${htmlEscape(actionName)}"${sourceAttrs(sourceSelector)}><span class="vw2-rail-art">${icon(iconName)}</span><b class="vw2-rail-label">${htmlEscape(label)}</b><i class="vw2-source-badge" hidden></i></button>`;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function bottomButton(actionName, iconName, label, tone='violet', sourceSelector=''){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    return `<button class="vw2-mode ${htmlEscape(tone)}" data-vw2-action="${htmlEscape(actionName)}"${sourceAttrs(sourceSelector)}><span>${icon(iconName)}</span><b>${htmlEscape(label)}</b><i class="vw2-source-badge" hidden></i></button>`;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function toolButton(actionName, iconName, label, extra='', sourceSelector='', mirrorVisibility=false){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    return `<button class="vw2-tool-btn ${htmlEscape(extra)}" data-vw2-action="${htmlEscape(actionName)}"${sourceAttrs(sourceSelector, mirrorVisibility)} title="${htmlEscape(label)}"><span>${icon(iconName)}</span><b>${htmlEscape(label)}</b><i class="vw2-source-badge" hidden></i></button>`;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function walletArtwork(kind){
-
-    if(kind === 'coin'){
-
-      return `<span class="vw2-stat-art vw2-stat-art-coin"><img class="vw2-stat-coin-img" src="img/coins/coin_gold.png" alt="" decoding="async"></span>`;
-
-    }
-
-    const iconName = kind === 'today' ? 'star'
-
-      : kind === 'online' ? 'globe'
-
-      : kind === 'computer' ? 'computer'
-
-      : kind === 'worth' ? 'stats'
-
-      : 'sparkle';
-
-    return `<span class="vw2-stat-art">${icon(iconName)}</span>`;
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function currentHouseVisual(){
-
-    try{
-
-      if(typeof state === 'undefined' || !state || !state.home || typeof homeInfo !== 'function'){
-
-        return {id:'', name:'ยังไม่มีที่พัก', variant:'none', url:''};
-
-      }
-
-      const h = homeInfo(state.home);
-
-      if(!h) return {id:'', name:'ยังไม่มีที่พัก', variant:'none', url:''};
-
-
-
-      /* Mirror the authoritative Classic renderer for the variants that exist
-
-         in the current repository: power cut -> _dark, then maintenance decay
-
-         -> _decayed, otherwise normal. img/home was dependency-verified by the
-
-         R3 task exporter before this patch was authored. */
-
-      let variant = 'normal';
-
-      if(state.powerCut) variant = 'dark';
-
-      else if(typeof homeDecayed === 'function' && homeDecayed()) variant = 'decayed';
-
-
-
-      const suffix = variant === 'normal' ? '' : `_${variant}`;
-
-      const key = `home_${h.id}${suffix}`;
-
-      let url = `img/home/${key}.png`;
-
-      try{
-
-        if(typeof IMG_FILES !== 'undefined' && IMG_FILES && IMG_FILES[key]) url = IMG_FILES[key];
-
-      }catch(_){ }
-
-      return {id:h.id, name:h.name || h.id, variant, url};
-
-    }catch(_){
-
-      return {id:'', name:'ยังไม่มีที่พัก', variant:'none', url:''};
-
-    }
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function syncHouseVisual(){
-
-    const box = document.getElementById('vw2-house-visual');
-
-    if(!box) return;
-
-    const h = currentHouseVisual();
-
-    box.dataset.home = h.id || '';
-
-    box.dataset.variant = h.variant || 'none';
-
-    box.classList.toggle('is-empty', !h.url);
-
-    const label = document.getElementById('vw2-house-label');
-
-    if(label) label.textContent = h.url ? h.name : 'ยังไม่มีบ้าน';
-
-
-
-    if(!h.url){
-
-      if(box.dataset.src){
-
-        box.dataset.src = '';
-
-        box.replaceChildren();
-
-      }
-
-      return;
-
-    }
-
-    if(box.dataset.src === h.url) return;
-
-    box.dataset.src = h.url;
-
-    box.innerHTML = `<img src="${htmlEscape(h.url)}" alt="" decoding="async">`;
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function petVisualUrl(){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    try{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      const p = (typeof activePet === 'function') ? activePet() : null;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      const fns = [
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        (typeof currentPetImg === 'function') ? currentPetImg : null,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        (typeof petStateImg === 'function') ? petStateImg : null
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ];
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      for(const fn of fns){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        if(!fn) continue;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        try{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-          const url = fn(p);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-          if(typeof url === 'string' && url.trim()) return url.trim();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        }catch(_){ }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      if(p){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        for(const key of ['img','image','src']){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-          const url = p[key];
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-          if(typeof url === 'string' && url.trim()) return url.trim();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    }catch(_){ }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const src = document.querySelector('#pet-card .pet-wrap img.pet-img, #pet-card img.pet-img, .stage-hero .pet-wrap img.pet-img, .stage-hero img.pet-img');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    return src ? (src.currentSrc || src.getAttribute('src') || '') : '';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function syncPetVisual(){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const box = document.getElementById('vw2-pet');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(!box) return;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const url = petVisualUrl();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(url){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      if(box.dataset.src !== url){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        box.dataset.src = url;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        box.innerHTML = `<img class="vw2-owned-pet" src="${htmlEscape(url)}" alt="สัตว์เลี้ยงของผู้เล่น">`;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      box.classList.add('has-owned-pet');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    }else{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      if(!box.dataset.src){ box.innerHTML = mascotDragon(); }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      box.classList.remove('has-owned-pet');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function liveEarnValue(kind){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    try{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      if(kind === 'online' && typeof onlineLiveTotal === 'function') return onlineLiveTotal();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      if(kind === 'computer' && typeof compLiveTotal === 'function') return compLiveTotal();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    }catch(_){ }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const sel = kind === 'online' ? '#net-pill' : '#comp-pill';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const raw = textOf(sel, '0');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const m = raw.replace(/,/g,'').match(/[+-]?\d+(?:\.\d+)?/);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    return m ? Number(m[0]) : 0;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function liveEarnStatus(kind){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    try{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      if(kind === 'online' && typeof onlineEarnActive === 'function') return onlineEarnActive() ? 'กำลังรับรายได้' : 'หยุดพัก';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      if(kind === 'computer'){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        if(typeof state !== 'undefined' && state){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-          if(!state.computer) return 'ยังไม่ได้ซื้อคอม';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-          if(state.dataCut) return 'บริการถูกระงับ';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-          return 'คอมกำลังทำงาน';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    }catch(_){ }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    return kind === 'online' ? 'รายได้ขณะออนไลน์' : 'รายได้จากคอมพิวเตอร์';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function ensureVisualStyles(){
-
-    /* R10 presentation is consolidated in css/home-v2.css. Keep only a tiny runtime marker
-       instead of injecting a second full stylesheet from JavaScript. */
-    if(document.getElementById(STYLE_ID)) return;
-    const style = document.createElement('style');
-    style.id = STYLE_ID;
-    style.textContent = '#vw-home-v2-root{--vw2-r10-runtime-ready:1}';
-    document.head.appendChild(style);
-
-  }
-
-
-
-  function clickExisting(selector, opts){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    opts = opts || {};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const el = document.querySelector(selector);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(!el || el.disabled) return false;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(opts.classicFirst) setPreviewWanted(false);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    el.click();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    return true;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function openPanelViaExisting(panelId){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    return clickExisting(`.lobby-rail [data-panel="${panelId}"]`, {classicFirst:true});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function openPetShop(){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // Functional-parity rule: delegate to the lobby's existing pet-shop tab.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // Never call render/show functions directly here because that would create
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // a second route that could drift from auth/lock checks in the real lobby.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(!clickExisting('#tab-addpet')) setPreviewWanted(false);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function action(name){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const direct = {
-
-
-
-
-
-
-
-
-
-
-
-
-
-      city:'#btn-rail-city', cure:'#btn-rail-cure', wordsearch:'#btn-rail-wordsearch',
-
-
-
-
-
-
-
-
-
-
-
-
-
-      typing:'#btn-rail-typing', bubble:'#btn-rail-bubble', shoot:'#btn-rail-shootword',
-
-
-
-
-
-
-
-
-
-
-
-
-
-      cannon:'#btn-rail-lettercannon', examstd:'#btn-rail-examstd', onet:'#btn-rail-onet',
-
-
-
-
-
-
-
-
-
-
-
-
-
-      rank:'#btn-rail-rank', stats:'#btn-stats', trophy:'#btn-rail-trophy', chat:'#btn-chat',
-
-
-
-
-
-
-
-
-
-
-
-
-
-      music:'#btn-music', night:'#btn-night', settings:'#btn-settings', install:'#btn-install-top',
-
-
-
-
-
-
-
-
-
-
-
-
-
-      logout:'#btn-logout', play:'#btn-play', cats:'#btn-cats', picmatch:'#btn-picmatch',
-
-
-
-
-
-
-
-
-
-
-
-
-
-      picdict:'#btn-picdict', picquiz:'#btn-picquiz', vocabbook:'#btn-vocab-book',
-
-
-
-
-
-
-
-
-
-
-
-
-
-      bandexam:'#btn-band-exam'
-
-
-
-
-
-
-
-
-
-
-
-
-
-    };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const panels = {
-
-
-
-
-
-
-
-
-
-
-
-
-
-      home:'panel-home', invest:'panel-farm', factory:'panel-factory',
-
-
-
-
-
-
-
-
-
-
-
-
-
-      market:'panel-market', friends:'panel-friends', gifts:'panel-gifts'
-
-
-
-
-
-
-
-
-
-
-
-
-
-    };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const standards = {ielts:'ielts',toeic:'toeic',toefl:'toefl',onetp6:'onetp6',onetm3:'onetm3',onetm6:'onetm6'};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(name === 'classic'){ setPreviewWanted(false); return; }
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(name === 'v2'){ setPreviewWanted(true); return; }
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(name === 'shop'){ openPetShop(); return; }
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(panels[name]){ openPanelViaExisting(panels[name]); return; }
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(standards[name]){ clickExisting(`.lobby-bottom [data-xstd="${standards[name]}"]`); return; }
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(direct[name]) clickExisting(direct[name], {classicFirst:name === 'rank'});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function updateLeftRailCue(){
-
-    if(!root) return;
-
-    const rail = root.querySelector('.vw2-left');
-
-    const cue = rail ? rail.querySelector('.vw2-left-scroll-cue') : null;
-
-    if(!rail || !cue) return;
-
-    const canScroll = rail.scrollHeight > rail.clientHeight + 2;
-
-    const hasMore = canScroll && (rail.scrollTop + rail.clientHeight < rail.scrollHeight - 2);
-
-    cue.classList.toggle('is-visible', hasMore);
-
-    rail.dataset.vw2ScrollMore = hasMore ? '1' : '0';
-
-  }
-
-
-
-  function setupLeftRailCue(){
-
-    if(!root) return;
-
-    const rail = root.querySelector('.vw2-left');
-
-    if(!rail || rail.dataset.vw2CueReady === '1') return;
-
-    rail.dataset.vw2CueReady = '1';
-
-    rail.addEventListener('scroll', ()=>{
-
-      updateLeftRailCue();
-
-      scheduleLocalPreviewReport();
-
-    }, {passive:true});
-
-    window.addEventListener('resize', updateLeftRailCue, {passive:true});
-
-    setTimeout(updateLeftRailCue, 0);
-
-  }
-
-
-
-  function build(){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const dash = dashboard();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(!dash || document.getElementById(ROOT_ID)) return;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    ensureVisualStyles();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const railButtons = [
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['city','city','เมือง 3D','#btn-rail-city'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['shop','potion','ร้านสัตว์','#tab-addpet'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['cure','heart','รักษา','#btn-rail-cure'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['home','home','บ้าน','.lobby-rail [data-panel="panel-home"]'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['invest','invest','ลงทุน','.lobby-rail [data-panel="panel-farm"]'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['factory','factory','โรงงาน','.lobby-rail [data-panel="panel-factory"]'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['wordsearch','search','ค้นหาคำ','#btn-rail-wordsearch'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['typing','typing','พิมพ์คำ','#btn-rail-typing'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['bubble','bubble','เกมฟอง','#btn-rail-bubble'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['shoot','target','ยิงเป้าคำ','#btn-rail-shootword'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['cannon','cannon','Letter Cannon','#btn-rail-lettercannon'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['examstd','exam','ข้อสอบจริง','#btn-rail-examstd'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['onet','flag','O-NET','#btn-rail-onet'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['rank','crown','อันดับ','#btn-rail-rank'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['market','market','ตลาด','.lobby-rail [data-panel="panel-market"]'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['friends','friends','เพื่อน','.lobby-rail [data-panel="panel-friends"]'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['gifts','gift','ของขวัญ','.lobby-rail [data-panel="panel-gifts"]'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['stats','stats','สถิติ','#btn-stats'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['trophy','trophy','ตู้เข็ม','#btn-rail-trophy'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-    ].map(x=>navButton(x[0],x[1],x[2],x[3])).join('');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const modeButtons = [
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['vocabbook','bookgold','สมุดคำศัพท์','book','#btn-vocab-book'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['ielts','book','IELTS','blue','.lobby-bottom [data-xstd="ielts"]'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['toeic','book','TOEIC','green','.lobby-bottom [data-xstd="toeic"]'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['toefl','book','TOEFL','orange','.lobby-bottom [data-xstd="toefl"]'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['onetp6','star','O-NET ป.6','gold','.lobby-bottom [data-xstd="onetp6"]'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['onetm3','leaf','O-NET ม.3','lime','.lobby-bottom [data-xstd="onetm3"]'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['onetm6','crown','O-NET ม.6','violet','.lobby-bottom [data-xstd="onetm6"]'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['cats','sparkle','หมวดคำศัพท์','pink','#btn-cats'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['play','controller','จับคู่คำศัพท์','game','#btn-play'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['picmatch','picture','จับคู่ภาพ','blue','#btn-picmatch'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['picdict','bookgold','Picture Dictionary','green','#btn-picdict'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['picquiz','headphones','ครูถามศัพท์','orange','#btn-picquiz'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['bandexam','clipboard','สอบเลื่อนขั้น','violet','#btn-band-exam'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-    ].map(x=>bottomButton(x[0],x[1],x[2],x[3],x[4])).join('');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    root = document.createElement('div');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    root.id = ROOT_ID;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    root.setAttribute('aria-label','Vocab World Home V2 Admin Preview');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    root.innerHTML = `
-
-      <img class="vw2-screen-backdrop" src="img/home-v2/r10_screen_backdrop.svg" alt="" aria-hidden="true" decoding="async" fetchpriority="high">
-
-      <div class="vw2-sky" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-
-      <div class="vw2-shell">
-
-        <header class="vw2-top">
-
-          <section class="vw2-profile vw2-glass" aria-label="ข้อมูลผู้เล่น">
-
-            <span class="vw2-profile-crown" aria-hidden="true">${icon('crown')}</span>
-
-            <div class="vw2-profile-kicker"><span>PLAYER IDENTITY</span><i aria-hidden="true">✦</i></div>
-
-            <div class="vw2-avatar-frame"><div class="vw2-avatar" id="vw2-avatar">${knightFallback()}</div></div>
-
-            <div class="vw2-profile-main">
-
-              <div class="vw2-name-row"><strong id="vw2-name">ผู้เล่น</strong><span class="vw2-pencil">${icon('edit')}</span></div>
-
-              <div class="vw2-profile-meta">
-
-                <span class="vw2-profile-meta-chip class"><small>LEVEL / CLASS</small><b id="vw2-grade">—</b></span>
-
-                <span class="vw2-profile-meta-chip id"><small>PLAYER ID</small><b id="vw2-id">ID —</b></span>
-
-                <span class="vw2-profile-meta-chip date"><small>DATE</small><b id="vw2-date">—</b></span>
-
-                <span class="vw2-profile-meta-chip time"><small>TIME</small><b id="vw2-clock">—</b></span>
-
-              </div>
-
-              <div class="vw2-profile-chips"><div class="vw2-rank" id="vw2-rank">กำลังโหลดแรงค์…</div><div class="vw2-sync-chip" id="vw2-sync-state" hidden></div></div>
-
-            </div>
-
-          </section>
-
-
-
-          <section class="vw2-wallet" aria-label="ข้อมูลรายได้และทรัพย์สิน">
-
-            <button class="vw2-wallet-pill coin" data-vw2-action="rank" data-vw2-source="#btn-rail-rank" title="เหรียญที่มีอยู่">${walletArtwork('coin')}<span class="vw2-stat-copy"><small>เหรียญของฉัน</small><b id="vw2-coins">0</b><span class="vw2-pill-status">ยอดคงเหลือ</span></span><em>+</em></button>
-
-            <div class="vw2-wallet-pill today" title="เหรียญที่หาได้วันนี้">${walletArtwork('today')}<span class="vw2-stat-copy"><small>รายได้วันนี้</small><b>+<span id="vw2-today">0</span></b><span class="vw2-pill-status">สะสมวันนี้</span></span></div>
-
-            <div class="vw2-wallet-pill online" title="รายได้ที่ได้รับขณะออนไลน์">${walletArtwork('online')}<span class="vw2-stat-copy"><small>รายได้ออนไลน์</small><b>+<span id="vw2-online-earn">0</span></b><span class="vw2-pill-status" id="vw2-online-status">กำลังตรวจสอบ</span></span></div>
-
-            <div class="vw2-wallet-pill computer" title="รายได้สะสมจากคอมพิวเตอร์">${walletArtwork('computer')}<span class="vw2-stat-copy"><small>รายได้จากคอม</small><b>+<span id="vw2-comp-earn">0</span></b><span class="vw2-pill-status" id="vw2-comp-status">กำลังตรวจสอบ</span></span></div>
-
-            <div class="vw2-wallet-pill worth">${walletArtwork('worth')}<span class="vw2-stat-copy"><small>มูลค่ารวม</small><b id="vw2-worth">0</b><span class="vw2-pill-status">ทรัพย์สินทั้งหมด</span></span></div>
-
-          </section>
-
-
-
-          <section class="vw2-top-actions" aria-label="เครื่องมือ — ทุกปุ่มมีข้อความกำกับ">
-
-            ${toolButton('chat','chat','ข้อความ','', '#btn-chat')}
-
-            ${toolButton('music','music','เพลง','', '#btn-music')}
-
-            ${toolButton('night','moon','กลางคืน','', '#btn-night')}
-
-            ${toolButton('settings','settings','ตั้งค่า','', '#btn-settings')}
-
-            ${toolButton('install','install','ติดตั้ง','vw2-install', '#btn-install-top', true)}
-
-            ${toolButton('logout','logout','ออกระบบ','', '#btn-logout')}
-
-            ${toolButton('classic','back','Classic','vw2-classic')}
-
-          </section>
-
-        </header>
-
-
-
-        <div class="vw2-main-grid">
-
-          <nav class="vw2-left vw2-glass" aria-label="เมนูหลักทั้งหมด">${railButtons}<span class="vw2-left-scroll-cue" aria-hidden="true"><span>&#8964;</span></span></nav>
-
-
-
-          <section class="vw2-feed vw2-glass">
-
-            <div class="vw2-section-head"><span class="vw2-head-icon">${icon('globe')}</span><strong>Global Feed</strong><button data-vw2-action="classic" title="เปิดฟีดเดิม">ดูทั้งหมด</button></div>
-
-            <div id="vw2-feed-items" class="vw2-feed-items">
-              <div class="vw2-feed-card vw2-feed-card-empty">
-                <div class="vw2-feed-avatar">${icon('sparkle')}</div>
-                <div class="vw2-feed-copy"><div class="vw2-feed-card-head"><b>กิจกรรมล่าสุด</b><small>ตอนนี้</small></div><p id="vw2-feed-text">กำลังโหลดกิจกรรมของเพื่อน…</p></div>
-              </div>
-            </div>
-            <span id="vw2-feed-likes" class="vw2-feed-legacy-binding" aria-hidden="true">—</span>
-            <div class="vw2-feed-coin">${icon('coin')}<span>เรียน เล่น และเติบโตไปพร้อมกัน</span></div>
-
-          </section>
-
-
-
-          <main class="vw2-feature">
-
-            <div class="vw2-feature-title"><span>${icon('sparkle')}</span><strong>Vocab World</strong><span>${icon('sparkle')}</span></div>
-
-            <div class="vw2-word-ribbon" id="vw2-newword">คำศัพท์ใหม่รอหนูอยู่</div>
-
-            <div class="vw2-feature-stage">
-
-              <div class="vw2-atmosphere" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
-
-              <div class="vw2-stage-cloud c1" aria-hidden="true"></div><div class="vw2-stage-cloud c2" aria-hidden="true"></div>
-
-              <div class="vw2-rainbow" aria-hidden="true"></div>
-
-              <div class="vw2-mid-hills" aria-hidden="true"></div>
-
-              <div class="vw2-scene-castle" aria-hidden="true">${castleArtwork()}</div>
-
-              <div class="vw2-scene-path" aria-hidden="true"></div>
-
-              <div class="vw2-speech"><span id="vw2-pet-greeting">น้องดีใจที่ได้เจอหนูอีกครั้ง!</span><small>ยินดีต้อนรับกลับ Vocab World — ไปผจญภัยด้วยกันนะ</small></div>
-
-              <div class="vw2-reward-card">${icon('trophy')}<div><b>ปราสาทรางวัล</b><small>สะสมดาวแล้วปลดล็อก</small></div></div>
-
-              <div class="vw2-pet-halo" aria-hidden="true"></div>
-
-              <div class="vw2-pet-platform" aria-hidden="true"></div>
-
-              <div class="vw2-pet" id="vw2-pet">${mascotDragon()}</div>
-
-              <div class="vw2-pet-sparkles" aria-hidden="true"><i>♥</i><i>★</i><i>✦</i><i>♥</i></div>
-
-              <div class="vw2-house-preview" aria-label="บ้านที่เลือกอยู่">
-
-                <div class="vw2-house-preview-head">${icon('home')}<span id="vw2-house-label">ยังไม่มีบ้าน</span></div>
-
-                <div class="vw2-house-backdrop is-empty" id="vw2-house-visual" aria-hidden="true"></div>
-
-              </div>
-
-              <div class="vw2-stage-copy"><b id="vw2-pet-name">ออกผจญภัยกับน้อง</b><span>น้องกำลังต้อนรับหนู · ฝึกคำศัพท์ · สะสมเหรียญ</span></div>
-
-              <div class="vw2-stage-foreground" aria-hidden="true"></div>
-
-            </div>
-
-            <div class="vw2-feature-actions">
-
-              <button class="vw2-enter" data-vw2-action="city" data-vw2-source="#btn-rail-city">${icon('city')} เข้าโลก 3D</button>
-
-              <button class="vw2-play" data-vw2-action="play" data-vw2-source="#btn-play">${icon('controller')} เกมจับคู่คำศัพท์</button>
-
-            </div>
-
-          </main>
-
-
-
-          <aside class="vw2-right">
-
-            <section class="vw2-mission vw2-glass">
-
-              <div class="vw2-section-head"><span class="vw2-head-icon">${icon('target')}</span><strong>ภารกิจวันนี้</strong><b id="vw2-quest-count">0/0</b></div>
-
-              <div class="vw2-progress"><i id="vw2-quest-bar"></i></div>
-
-              <div id="vw2-quests" class="vw2-quests"><div class="vw2-empty">กำลังโหลดภารกิจ…</div></div>
-
-            </section>
-
-            <section class="vw2-online vw2-glass">
-
-              <div class="vw2-section-head"><span class="vw2-head-icon">${icon('friends')}</span><strong>เพื่อนออนไลน์</strong><b id="vw2-online-count">—</b></div>
-
-              <div class="vw2-online-card"><span class="vw2-online-dot"></span><div><b id="vw2-online-name">กำลังเชื่อมต่อ…</b><small id="vw2-online-text">เล่นและเรียนไปพร้อมกัน</small></div></div>
-
-              <button class="vw2-friends-btn" data-vw2-action="friends" data-vw2-source=".lobby-rail [data-panel=&quot;panel-friends&quot;]">${icon('friends')} ดูเพื่อนทั้งหมด</button>
-
-            </section>
-
-          </aside>
-
-        </div>
-
-
-
-        <footer class="vw2-bottom" aria-label="ทางลัดการเรียนและเกมทั้งหมด">${modeButtons}</footer>
-
-        <div class="vw2-preview-mark">ADMIN PREVIEW · R10.3 LOCKED MASTER</div>
-
-      </div>`;
-
-
-
-
-
-    dash.appendChild(root);
-
-
-
-    setupLeftRailCue();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    root.addEventListener('click', e=>{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      const b = e.target.closest('[data-vw2-action]');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      if(!b || b.disabled) return;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      e.preventDefault();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      if(typeof sfx !== 'undefined' && sfx && typeof sfx.select === 'function') sfx.select();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      action(b.dataset.vw2Action);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function ensureClassicToggle(){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(classicToggle) return;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    classicToggle = document.createElement('button');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    classicToggle.id = 'vw2-preview-switch';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    classicToggle.type = 'button';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    classicToggle.textContent = 'Home V2';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    classicToggle.title = 'กลับไปดู Home V2 (Admin Preview)';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    classicToggle.addEventListener('click', ()=>setPreviewWanted(true));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    document.body.appendChild(classicToggle);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function copyImage(srcSel, targetId, fallbackHTML){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const src = document.querySelector(srcSel);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const box = document.getElementById(targetId);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(!box) return;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const url = src && src.getAttribute('src');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(url){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      if(box.dataset.src === url) return;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      box.dataset.src = url;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      box.innerHTML = `<img src="${htmlEscape(url)}" alt="">`;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    }else if(!box.dataset.src && fallbackHTML){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      box.innerHTML = fallbackHTML;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function sourceVisible(el){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(!el) return false;
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const cs = window.getComputedStyle ? window.getComputedStyle(el) : null;
-
-
-
-
-
-
-
-
-
-
-
-
-
-    return !el.hidden && (!cs || (cs.display !== 'none' && cs.visibility !== 'hidden'));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function sourceBadge(el){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(!el) return '';
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const badge = el.querySelector && el.querySelector('.rail-badge,.rail-rank-num');
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(!badge || !sourceVisible(badge)) return '';
-
-
-
-
-
-
-
-
-
-
-
-
-
-    return cleanText(badge.textContent, 6) || '•';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function syncSourceParity(){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(!root) return;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    root.querySelectorAll('[data-vw2-source]').forEach(btn=>{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      const selector = btn.dataset.vw2Source || '';
-
-
-
-
-
-
-
-
-
-
-
-
-
-      const source = selector ? document.querySelector(selector) : null;
-
-
-
-
-
-
-
-
-
-
-
-
-
-      const disabled = !!(source && source.disabled);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      btn.disabled = disabled;
-
-
-
-
-
-
-
-
-
-
-
-
-
-      btn.setAttribute('aria-disabled', disabled ? 'true' : 'false');
-
-
-
-
-
-
-
-
-
-
-
-
-
-      if(btn.classList.contains('vw2-rail-btn')){
-
-
-
-
-
-
-
-
-
-
-
-
-
-        const current = !!(source && (source.classList.contains('active') || source.classList.contains('on') || source.getAttribute('aria-current') === 'page' || source.getAttribute('aria-selected') === 'true' || source.getAttribute('aria-pressed') === 'true'));
-
-
-
-
-
-
-
-
-
-
-
-
-
-        btn.classList.toggle('vw2-current', current);
-
-
-
-
-
-
-
-
-
-
-
-
-
-      }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      const badge = btn.querySelector('.vw2-source-badge');
-
-
-
-
-
-
-
-
-
-
-
-
-
-      if(badge){
-
-
-
-
-
-
-
-
-
-
-
-
-
-        const text = sourceBadge(source);
-
-
-
-
-
-
-
-
-
-
-
-
-
-        badge.textContent = text;
-
-
-
-
-
-
-
-
-
-
-
-
-
-        badge.hidden = !text;
-
-
-
-
-
-
-
-
-
-
-
-
-
-      }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      if(btn.dataset.vw2MirrorVisibility === '1') btn.hidden = !sourceVisible(source);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function playPetWelcome(){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(!root) return;
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const pet = document.getElementById('vw2-pet');
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const sparkles = root.querySelector('.vw2-pet-sparkles');
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(!pet) return;
-
-
-
-
-
-
-
-
-
-
-
-
-
-    clearTimeout(welcomeTimer);
-
-
-
-
-
-
-
-
-
-
-
-
-
-    pet.classList.remove('vw2-welcome');
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(sparkles) sparkles.classList.remove('vw2-welcome-burst');
-
-
-
-
-
-
-
-
-
-
-
-
-
-    void pet.offsetWidth;
-
-
-
-
-
-
-
-
-
-
-
-
-
-    pet.classList.add('vw2-welcome');
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(sparkles) sparkles.classList.add('vw2-welcome-burst');
-
-
-
-
-
-
-
-
-
-
-
-
-
-    welcomeTimer = setTimeout(()=>{
-
-
-
-
-
-
-
-
-
-
-
-
-
-      pet.classList.remove('vw2-welcome');
-
-
-
-
-
-
-
-
-
-
-
-
-
-      if(sparkles) sparkles.classList.remove('vw2-welcome-burst');
-
-
-
-
-
-
-
-
-
-
-
-
-
-    }, 1350);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function questHTML(){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(typeof state === 'undefined' || !state) return {html:'<div class="vw2-empty">ยังไม่มีข้อมูลภารกิจ</div>',done:0,total:0};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    try{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      const qs = typeof questsToday === 'function' ? questsToday() : [];
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      const qstate = state.quests || {prog:{},done:[]};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      const doneIds = Array.isArray(qstate.done) ? qstate.done : [];
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      const cards = qs.slice(0,3).map(q=>{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        const done = doneIds.includes(q.id);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        const current = Math.min(Number(q.target)||0, Number((qstate.prog||{})[q.id])||0);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        const target = Number(q.target)||1;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        const pct = done ? 100 : Math.max(0,Math.min(100,Math.round(current/target*100)));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        return `<button class="vw2-quest-row${done?' done':''}" data-vw2-action="classic" title="เปิดหน้าล็อบบี้เดิมเพื่อทำภารกิจ">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-          <span class="vw2-qemoji">${icon('quest')}</span>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-          <span class="vw2-qbody"><b>${htmlEscape(q.name || 'ภารกิจ')}</b><i><u style="width:${pct}%"></u></i></span>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-          <span class="vw2-qscore">${done?icon('check'):`${current}/${target}`}</span>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        </button>`;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      }).join('');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      return {html:cards || '<div class="vw2-empty">วันนี้ยังไม่มีภารกิจ</div>',done:doneIds.length,total:qs.length};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    }catch(_){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      return {html:`<div class="vw2-empty">${htmlEscape(textOf('#quest-card','กำลังโหลดภารกิจ…'))}</div>`,done:0,total:0};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function feedCardsFromAuthoritativeSource(){
-    const host = document.getElementById('vw2-feed-items');
-    if(!host) return;
-    try{
-      const seen = new Set();
-      const posts = Array.from(document.querySelectorAll('#feed-list .fpost:not(.fp-clone)')).filter(p=>{
-        const k = p.dataset && p.dataset.key ? p.dataset.key : (p.textContent || '');
-        if(seen.has(k)) return false;
-        seen.add(k); return true;
-      }).slice(0,3);
-      let html = '';
-      for(const post of posts){
-        const name = cleanText((post.querySelector('.fp-name')||{}).textContent || post.dataset.n || 'เพื่อน',28);
-        const when = cleanText((post.querySelector('.fp-when')||{}).textContent || '',20);
-        const tx = cleanText((post.querySelector('.fp-text')||{}).textContent || '',94);
-        const sum = cleanText((post.querySelector('.fp-sum')||{}).textContent || '',42);
-        const fid = post.dataset && post.dataset.fid ? post.dataset.fid : '';
-        let ava = icon('sparkle');
-        try{ if(fid && typeof photoMiniHTML === 'function') ava = photoMiniHTML(fid,'vw2-feed-source-avatar') || ava; }catch(_){ }
-        html += `<article class="vw2-feed-card"><div class="vw2-feed-avatar">${ava}</div><div class="vw2-feed-copy"><div class="vw2-feed-card-head"><b>${htmlEscape(name)}</b><small>${htmlEscape(when)}</small></div><p>${htmlEscape(tx || 'กิจกรรมใหม่ใน Vocab World')}</p>${sum ? `<span class="vw2-feed-reaction">${htmlEscape(sum)}</span>` : ''}</div></article>`;
-      }
-      if(!html){
-        const fallback = cleanText(textOf('#feed-list','ยังไม่มีกิจกรรมใหม่ — เริ่มเล่นเกมเพื่อสร้างเรื่องราวของวันนี้!'),105);
-        html = `<div class="vw2-feed-card vw2-feed-card-empty"><div class="vw2-feed-avatar">${icon('sparkle')}</div><div class="vw2-feed-copy"><div class="vw2-feed-card-head"><b>กิจกรรมล่าสุด</b><small>ตอนนี้</small></div><p>${htmlEscape(fallback)}</p><span class="vw2-feed-reaction">♡ เพื่อน · 💬 ความคิดเห็น</span></div></div>`;
-      }
-      if(host.dataset.vw2Html !== html){ host.innerHTML = html; host.dataset.vw2Html = html; }
-    }catch(_){ }
-  }
-
-  function sync(){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(!root || !adminAllowed()) return;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const name = (typeof state !== 'undefined' && state && state.profileName) ? state.profileName : textOf('#student-chip','ผู้เล่น');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const uid = (typeof onlineKey === 'function') ? onlineKey() : '';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const id = (typeof idTag === 'function') ? idTag(uid) : '';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const coins = (typeof state !== 'undefined' && state) ? state.coins : textOf('#coin-count','0');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const today = (typeof state !== 'undefined' && state && state.daily) ? state.daily.coins : textOf('#coin-today','0');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    let worth = coins;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    try{ if(typeof netWorth === 'function') worth = netWorth(); }catch(_){ }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const setText=(idName,value)=>{ const el=document.getElementById(idName); if(el){ const next=String(value == null ? '' : value); if(el.textContent !== next) el.textContent=next; } };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    setText('vw2-name', cleanText(name,28));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    setText('vw2-id', id || 'ID —');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    setText('vw2-coins', fmt(coins));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    setText('vw2-today', fmt(today));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    setText('vw2-worth', fmt(worth));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const onlineEarn = liveEarnValue('online');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const compEarn = liveEarnValue('computer');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    setText('vw2-online-earn', fmt(onlineEarn));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    setText('vw2-comp-earn', fmt(compEarn));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    setText('vw2-online-status', liveEarnStatus('online'));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    setText('vw2-comp-status', liveEarnStatus('computer'));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const gradeText = textOf('#grade-line','');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const grade = (typeof state !== 'undefined' && state && state.student && state.student.grade) ? state.student.grade : '';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    setText('vw2-grade', gradeText || (grade ? `ระดับชั้น ${cleanText(grade,20)}` : 'ระดับชั้น —'));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    setText('vw2-date', textOf('#clock-chip .ck-date','—'));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    setText('vw2-clock', textOf('#clock-chip .ck-time', textOf('#clock-chip','วันนี้')));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const offlineSource = document.getElementById('offline-pill');
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const syncChip = document.getElementById('vw2-sync-state');
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(syncChip){
-
-
-
-
-
-
-
-
-
-
-
-
-
-      const offline = sourceVisible(offlineSource);
-
-
-
-
-
-
-
-
-
-
-
-
-
-      syncChip.hidden = !offline;
-
-
-
-
-
-
-
-
-
-
-
-
-
-      if(offline) syncChip.textContent = cleanText(offlineSource.textContent, 42) || 'ออฟไลน์ · ยังไม่ sync';
-
-
-
-
-
-
-
-
-
-
-
-
-
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    setText('vw2-rank', textOf('#rank-tab','แรงค์กำลังอัปเดต'));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    setText('vw2-newword', textOf('#newword-banner','คำศัพท์ใหม่รอหนูอยู่').replace(/^[✨⭐🌟💫\s]+/,'') || 'คำศัพท์ใหม่รอหนูอยู่');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    copyImage('#pass-photo img','vw2-avatar',knightFallback());
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    syncPetVisual();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    syncHouseVisual();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    try{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      if(typeof activePet === 'function'){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        const p=activePet();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        const petName = p && p.name ? cleanText(p.name,24) : 'น้องของฉัน';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        setText('vw2-pet-name', petName);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        setText('vw2-pet-greeting', `${petName} ดีใจที่ได้เจอหนูอีกครั้ง!`);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    }catch(_){ }
-    feedCardsFromAuthoritativeSource();
-    const likes = (typeof state !== 'undefined' && state && state.feedLikes != null) ? fmt(state.feedLikes) : 'เพื่อน';
-    setText('vw2-feed-likes', likes);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const q = questHTML();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const qs = document.getElementById('vw2-quests');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(qs && qs.dataset.vw2Html !== q.html){ qs.innerHTML = q.html; qs.dataset.vw2Html = q.html; }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    setText('vw2-quest-count', `${Math.min(q.done,q.total)}/${q.total}`);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const qb = document.getElementById('vw2-quest-bar');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(qb) qb.style.width = (q.total ? Math.min(100,(q.done/q.total)*100) : 0) + '%';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    let onlineCount = '';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    let onlineName = '';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    try{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      if(typeof Online !== 'undefined' && Online){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        const list = Array.isArray(Online.friends) ? Online.friends : [];
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        onlineCount = String(list.length);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        const f = list[0];
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        if(f) onlineName = f.n || f.name || '';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    }catch(_){ }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(!onlineCount){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      const sub = textOf('#online-sub','');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      const m = sub.match(/\d+/); onlineCount = m ? m[0] : '—';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(!onlineName){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      const raw = textOf('#online-card','กำลังเชื่อมต่อเพื่อนออนไลน์');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      onlineName = cleanText(raw,48);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    setText('vw2-online-count', onlineCount);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    setText('vw2-online-name', onlineName || 'ยังไม่มีเพื่อนออนไลน์');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    setText('vw2-online-text', onlineName ? 'กำลังเรียนอยู่ตอนนี้' : 'ชวนเพื่อนมาเรียนด้วยกัน');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    syncSourceParity();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function localPreviewFrameActive(){
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(window.parent === window) return false;
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const host = String(location.hostname || '').toLowerCase();
-
-
-
-
-
-
-
-
-
-
-
-
-
-    return host === '127.0.0.1' || host === 'localhost' || host === '::1';
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function visibleRect(el){
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(!el) return null;
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const cs = getComputedStyle(el);
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(cs.display === 'none' || cs.visibility === 'hidden') return null;
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const r = el.getBoundingClientRect();
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(r.width < 1 || r.height < 1) return null;
-
-
-
-
-
-
-
-
-
-
-
-
-
-    return {left:r.left,top:r.top,right:r.right,bottom:r.bottom,width:r.width,height:r.height};
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function rectsOverlap(a,b){
-
-
-
-
-
-
-
-
-
-
-
-
-
-    return !!(a && b && Math.min(a.right,b.right)-Math.max(a.left,b.left) > 1 && Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top) > 1);
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function reportLocalPreviewMetrics(){
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(!localPreviewFrameActive()) return;
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const r = document.getElementById(ROOT_ID);
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const shell = r ? r.querySelector('.vw2-shell') : null;
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const left = r ? r.querySelector('.vw2-left') : null;
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const bottom = r ? r.querySelector('.vw2-bottom') : null;
-
-    const leftCue = left ? left.querySelector('.vw2-left-scroll-cue') : null;
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const areas = r ? [
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['left',r.querySelector('.vw2-left')],['feed',r.querySelector('.vw2-feed')],
-
-
-
-
-
-
-
-
-
-
-
-
-
-      ['feature',r.querySelector('.vw2-feature')],['right',r.querySelector('.vw2-right')]
-
-
-
-
-
-
-
-
-
-
-
-
-
-    ] : [];
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const overlaps = [];
-
-
-
-
-
-
-
-
-
-
-
-
-
-    for(let i=0;i<areas.length;i++) for(let j=i+1;j<areas.length;j++){
-
-
-
-
-
-
-
-
-
-
-
-
-
-      if(rectsOverlap(visibleRect(areas[i][1]), visibleRect(areas[j][1]))) overlaps.push(`${areas[i][0]}:${areas[j][0]}`);
-
-
-
-
-
-
-
-
-
-
-
-
-
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const sourceNodes = r ? Array.from(r.querySelectorAll('[data-vw2-source]')) : [];
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const missingSources = sourceNodes.filter(el=>{
-
-
-
-
-
-
-
-
-
-
-
-
-
-      try{ return !el.dataset.vw2Source || !document.querySelector(el.dataset.vw2Source); }
-
-
-
-
-
-
-
-
-
-
-
-
-
-      catch(_){ return true; }
-
-
-
-
-
-
-
-
-
-
-
-
-
-    }).map(el=>el.dataset.vw2Action || '?');
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const rootStyle = r ? getComputedStyle(r) : null;
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const shellStyle = shell ? getComputedStyle(shell) : null;
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const leftStyle = left ? getComputedStyle(left) : null;
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const bottomStyle = bottom ? getComputedStyle(bottom) : null;
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const rootBox = r ? r.getBoundingClientRect() : null;
-
-
-
-
-
-
-
-
-
-
-
-
-
-    window.parent.postMessage({
-
-
-
-
-
-
-
-
-
-
-
-
-
-      type:'vw-mobile-device-preview-metrics',
-
-
-
-
-
-
-
-
-
-
-
-
-
-      viewport:{width:window.innerWidth,height:window.innerHeight,dpr:window.devicePixelRatio || 1},
-
-
-
-
-
-
-
-
-
-
-
-
-
-      homeV2:{
-
-
-
-
-
-
-
-
-
-
-
-
-
-        present:!!r,visible:!!(r && !r.hidden && dashboardActive()),adminAllowed:adminAllowed(),
-
-
-
-
-
-
-
-
-
-
-
-
-
-        rootWidth:rootBox ? Math.round(rootBox.width) : null,rootHeight:rootBox ? Math.round(rootBox.height) : null,
-
-
-
-
-
-
-
-
-
-
-
-
-
-        horizontalOverflow:r ? r.scrollWidth > r.clientWidth + 1 : null,
-
-
-
-
-
-
-
-
-
-
-
-
-
-        verticalOverflow:r ? r.scrollHeight > r.clientHeight + 1 : null,
-
-        pageOverflow:(document.documentElement.scrollWidth > window.innerWidth + 1) || (document.documentElement.scrollHeight > window.innerHeight + 1),
-
-
-
-
-
-
-
-
-
-
-
-
-
-        locked:!!(r && shell && rootStyle && shellStyle && !['auto','scroll'].includes(rootStyle.overflowY) && !['auto','scroll'].includes(shellStyle.overflowY) && shell.scrollHeight <= shell.clientHeight + 1),
-
-
-
-
-
-
-
-
-
-
-
-
-
-        panelOverlaps:overlaps,
-
-
-
-
-
-
-
-
-
-
-
-
-
-        actionSources:{total:sourceNodes.length,missing:missingSources}
-
-
-
-
-
-
-
-
-
-
-
-
-
-      },
-
-
-
-
-
-
-
-
-
-
-
-
-
-      rails:{
-
-
-
-
-
-
-
-
-
-
-
-
-
-        leftScrollable:!!(left && leftStyle && ['auto','scroll'].includes(leftStyle.overflowY) && left.scrollHeight > left.clientHeight + 1),
-
-        leftScrollbarHidden:!!(leftStyle && leftStyle.scrollbarWidth === 'none'),
-
-        leftCueCorrect:!!(left && leftCue && ((left.scrollHeight <= left.clientHeight + 2 && !leftCue.classList.contains('is-visible')) || (left.scrollHeight > left.clientHeight + 2 && (leftCue.classList.contains('is-visible') === (left.scrollTop + left.clientHeight < left.scrollHeight - 2))))),
-
-        bottomScrollable:!!(bottom && bottomStyle && ['auto','scroll'].includes(bottomStyle.overflowX) && bottom.scrollWidth > bottom.clientWidth + 1),
-
-        bottomContained:!!(bottom && bottom.scrollWidth <= bottom.clientWidth + 1 && bottom.scrollHeight <= bottom.clientHeight + 1)
-
-
-
-
-
-
-
-
-
-
-
-
-
-      }
-
-
-
-
-
-
-
-
-
-
-
-
-
-    }, '*');
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function scheduleLocalPreviewReport(){
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(!localPreviewFrameActive()) return;
-
-
-
-
-
-
-
-
-
-
-
-
-
-    clearTimeout(previewReportTimer);
-
-
-
-
-
-
-
-
-
-
-
-
-
-    previewReportTimer = setTimeout(reportLocalPreviewMetrics, 90);
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function scheduleSync(){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    clearTimeout(syncTimer);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    syncTimer = setTimeout(()=>{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      if(adminAllowed() && dashboardActive() && previewWanted()) sync();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    }, 120);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function syncVisibility(){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const dash = dashboard();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(!dash) return;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const allowed = adminAllowed();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const active = dashboardActive();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(!allowed){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      dash.classList.remove(CLASS_ON);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      if(root) root.hidden = true;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      if(classicToggle) classicToggle.hidden = true;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      return;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    ensureClassicToggle();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const showV2 = active && previewWanted();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // Runtime-safety: build Home V2 lazily only after the real dashboard is
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // active and admin authorization is already known. This keeps all Home
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // V2 work off the startup/loading path.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(showV2 && !root) build();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    dash.classList.toggle(CLASS_ON, showV2);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(root) root.hidden = !showV2;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(classicToggle) classicToggle.hidden = !active || showV2;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(showV2 && !v2WasVisible){
-
-
-
-
-
-
-
-
-
-
-
-
-
-      scheduleSync();
-
-
-
-
-
-
-
-
-
-
-
-
-
-      setTimeout(playPetWelcome, 40);
-
-
-
-
-
-
-
-
-
-
-
-
-
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-    v2WasVisible = showV2;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    scheduleLocalPreviewReport();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function tick(){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    syncVisibility();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    if(root && adminAllowed() && dashboardActive() && previewWanted()) sync();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function init(){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // No MutationObserver on the classic Lobby. The existing Lobby has
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // animated/ticker DOM that changes frequently; observing its subtree can
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // create a feedback-heavy main-thread workload. A slow, bounded poll is
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // sufficient for this admin-only preview.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    clearInterval(clockTimer);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    clockTimer = setInterval(tick, 2000);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    window.addEventListener('focus', tick);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    window.addEventListener('resize', scheduleLocalPreviewReport);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    setTimeout(tick, 250);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, {once:true});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  else init();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-})();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+"use strict";
+
+/* ============================================================
+
+   Vocab World Home V2 — Admin Preview (R10.5 Thai Pattern + Grade Identity + Complete Navigation + Premium Button Art + Profile Functionality Pass)
+
+   ------------------------------------------------------------
+
+   Additive UI shell only. It does NOT own economy, auth, quests,
+
+   Firebase, purchases, or game routing. Existing Lobby DOM stays
+
+   in place and existing buttons/functions remain authoritative.
+
+   ============================================================ */
+
+(function(){
+
+  const ROOT_ID = 'vw-home-v2-root';
+
+  const CLASS_ON = 'vw2-active';
+
+  const SESSION_KEY = 'vwHomeV2PreviewClassic';
+
+  const STYLE_ID = 'vw-home-v2-r10-runtime-style';
+
+  let root = null;
+
+  let classicToggle = null;
+
+  let syncTimer = 0;
+
+  let clockTimer = 0;
+
+  let welcomeTimer = 0;
+
+  let previewReportTimer = 0;
+
+  let v2WasVisible = false;
+
+  function adminAllowed(){
+
+    try{ return typeof isAdmin === 'function' && isAdmin() === true; }
+
+    catch(_){ return false; }
+
+  }
+
+  function dashboard(){ return document.getElementById('screen-dashboard'); }
+
+  function dashboardActive(){
+
+    const el = dashboard();
+
+    return !!(el && el.classList.contains('active'));
+
+  }
+
+  function previewWanted(){ return sessionStorage.getItem(SESSION_KEY) !== '1'; }
+
+  function setPreviewWanted(on){
+
+    if(on) sessionStorage.removeItem(SESSION_KEY);
+
+    else sessionStorage.setItem(SESSION_KEY, '1');
+
+    syncVisibility();
+
+  }
+
+  function cleanText(text, max){
+
+    const out = String(text || '').replace(/\s+/g,' ').trim();
+
+    return out.length > max ? out.slice(0, max - 1).trimEnd() + '…' : out;
+
+  }
+
+  function textOf(sel, fallback='—'){
+
+    const el = document.querySelector(sel);
+
+    const t = el ? cleanText(el.textContent, 180) : '';
+
+    return t || fallback;
+
+  }
+
+  function htmlEscape(v){
+
+    return String(v == null ? '' : v).replace(/[&<>"]/g, c=>({
+
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'
+
+    })[c]);
+
+  }
+
+  function fmt(v){
+
+    try{ return typeof fmtNum === 'function' ? fmtNum(v) : Number(v || 0).toLocaleString('th-TH'); }
+
+    catch(_){ return String(v || 0); }
+
+  }
+
+  const ICON_ART = {
+
+    coin:`<circle cx="32" cy="34" r="22" class="i-coin"/><ellipse cx="32" cy="28" rx="19" ry="15" class="i-coin-hi"/><path d="M24 34c3 5 13 5 16 0M30 24h4v20h-4z" class="i-line"/><path d="M23 28c4-5 14-6 19-1" class="i-line"/>`,
+
+    chat:`<path d="M11 15c0-6 5-10 11-10h20c7 0 12 5 12 12v15c0 7-5 12-12 12H29L18 54l2-10c-5-1-9-5-9-11z" class="i-pink"/><circle cx="25" cy="26" r="3" class="i-dot"/><circle cx="38" cy="26" r="3" class="i-dot"/><path d="M25 34c4 3 10 3 14 0" class="i-line"/>`,
+
+    music:`<path d="M22 15v28c0 5-4 9-10 9-5 0-8-3-8-7 0-5 4-8 10-8 2 0 4 0 5 1V20l30-7v24c0 6-5 10-10 10s-9-3-9-8 4-9 10-9c2 0 4 1 6 2V8z" class="i-purple"/><path d="M22 24l27-6" class="i-line"/>`,
+
+    moon:`<path d="M45 48c-17 5-32-8-29-25 2-9 8-15 16-18-4 8-2 18 5 24 6 6 15 8 23 4-2 7-7 12-15 15z" class="i-blue"/><path d="M47 9l2 5 5 2-5 2-2 5-2-5-5-2 5-2zM13 40l1 3 3 1-3 1-1 3-1-3-3-1 3-1z" class="i-star"/>`,
+
+    settings:`<path d="M26 8h12l2 7 7 3 6-3 6 10-5 5v8l5 5-6 10-7-3-6 3-2 7H26l-2-7-7-3-6 3-6-10 5-5v-8l-5-5 6-10 6 3 7-3z" class="i-mint"/><circle cx="32" cy="34" r="9" class="i-white"/><path d="M32 29v10M27 34h10" class="i-line"/>`,
+
+    city:`<path d="M11 52V24h8v-9h9v9h8V12h9v12h8v28z" class="i-purple"/><path d="M7 27l12-12 13 12 13-15 12 15" class="i-roof"/><path d="M26 52V38h12v14M16 33h6M43 33h6" class="i-line"/><path d="M28 18l4-9 4 9" class="i-star"/>`,
+
+    potion:`<path d="M25 6h14v8l-3 5v4c9 3 15 11 15 21 0 8-6 14-14 14H27c-8 0-14-6-14-14 0-10 6-18 15-21v-4l-3-5z" class="i-pink"/><path d="M20 37c8-4 18 4 28-1v10c0 6-4 9-10 9H27c-7 0-11-4-11-10 0-3 1-6 4-8z" class="i-blue"/><circle cx="27" cy="42" r="3" class="i-white"/><circle cx="38" cy="47" r="2" class="i-white"/><path d="M24 14h16" class="i-line"/>`,
+
+    home:`<path d="M8 30L32 9l24 21v24H39V39H25v15H8z" class="i-peach"/><path d="M5 31L32 7l27 24" class="i-roof"/><path d="M25 54V39h14v15" class="i-line"/><path d="M43 19v-7h7v13" class="i-purple"/>`,
+
+    invest:`<circle cx="19" cy="43" r="11" class="i-coin"/><circle cx="42" cy="47" r="9" class="i-coin"/><path d="M31 47V27c0-8 5-14 14-16-1 10-6 16-14 16-8 0-13-5-15-12 9 0 15 4 15 12" class="i-mint"/><path d="M31 26v21" class="i-line"/>`,
+
+    gift:`<path d="M10 28h44v28H10z" class="i-pink"/><path d="M7 20h50v12H7z" class="i-purple"/><path d="M28 20c-9 0-14-4-14-9 0-4 3-7 7-7 6 0 10 8 11 16M36 20c9 0 14-4 14-9 0-4-3-7-7-7-6 0-10 8-11 16" class="i-mint"/><path d="M28 20h8v36h-8z" class="i-white"/>`,
+
+    globe:`<circle cx="32" cy="32" r="25" class="i-blue"/><path d="M8 30h48M12 42h40M32 7c-8 8-11 17-11 25s3 18 11 25c8-7 11-17 11-25S40 15 32 7z" class="i-white-line"/><path d="M16 17c4 4 9 5 14 2M44 45c-5-3-10-2-14 1" class="i-mint-line"/>`,
+
+    sparkle:`<path d="M31 4l5 15 15 5-15 5-5 15-5-15-15-5 15-5z" class="i-star"/><path d="M49 38l3 8 8 3-8 3-3 8-3-8-8-3 8-3zM13 39l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" class="i-pink"/>`,
+
+    quest:`<path d="M32 5l7 14 16 2-12 11 3 16-14-8-14 8 3-16L9 21l16-2z" class="i-star"/><circle cx="32" cy="30" r="8" class="i-white"/><path d="M29 30l3 3 6-7" class="i-line"/>`,
+
+    friends:`<circle cx="24" cy="24" r="11" class="i-peach"/><circle cx="43" cy="27" r="9" class="i-blue"/><path d="M5 54c2-12 9-18 19-18 11 0 18 6 20 18z" class="i-pink"/><path d="M36 54c1-8 5-13 12-13 6 0 10 4 11 13z" class="i-purple"/><path d="M21 25c2 2 5 2 7 0M40 28c2 1 4 1 6 0" class="i-line"/>`,
+
+    controller:`<path d="M17 24c5-5 25-5 30 0 7 7 11 27 2 31-5 2-10-6-13-10h-8c-4 4-9 12-14 10-9-4-5-24 3-31z" class="i-purple"/><path d="M20 34h12M26 28v12" class="i-line"/><circle cx="42" cy="31" r="3" class="i-pink"/><circle cx="48" cy="37" r="3" class="i-mint"/>`,
+
+    book:`<path d="M9 11c9-3 17 0 23 6v38c-7-6-15-8-23-5z" class="i-blue"/><path d="M55 11c-9-3-17 0-23 6v38c7-6 15-8 23-5z" class="i-pink"/><path d="M32 17v38" class="i-line"/><path d="M15 22h10M15 29h10M39 22h10M39 29h10" class="i-white-line"/>`,
+
+    crown:`<path d="M8 20l12 11 12-20 12 20 12-11-5 32H13z" class="i-coin"/><path d="M14 44h36M20 36h24" class="i-line"/><circle cx="20" cy="21" r="4" class="i-pink"/><circle cx="44" cy="21" r="4" class="i-blue"/>`,
+
+    leaf:`<path d="M51 9C30 9 16 20 16 37c0 10 6 17 15 17 17 0 24-18 20-45z" class="i-mint"/><path d="M14 56c8-14 19-25 33-35M25 38c4 0 9 2 12 5" class="i-line"/>`,
+
+    star:`<path d="M32 5l8 17 19 2-14 13 4 19-17-9-17 9 4-19L5 24l19-2z" class="i-star"/><path d="M25 31c4 4 10 4 14 0" class="i-line"/>`,
+
+    edit:`<path d="M13 47l4-13L42 9c3-3 7-3 10 0l3 3c3 3 3 7 0 10L30 47l-13 4z" class="i-pink"/><path d="M39 12l13 13M17 34l13 13" class="i-white-line"/>`,
+
+    back:`<path d="M28 14L10 32l18 18v-10h24V24H28z" class="i-blue"/><path d="M15 32h35" class="i-line"/>`,
+
+    check:`<circle cx="32" cy="32" r="25" class="i-mint"/><path d="M19 32l9 9 18-20" class="i-white-line"/>`,
+
+  };
+
+  Object.assign(ICON_ART, {
+
+    heart:`<path d="M32 54S8 41 8 23c0-9 6-15 14-15 5 0 8 2 10 6 3-4 6-6 11-6 8 0 14 6 14 15 0 18-25 31-25 31z" class="i-pink"/><path d="M18 31h8l4-9 5 18 4-9h8" class="i-white-line"/>`,
+
+    factory:`<path d="M8 54V28l15 8V25l15 9V20l18 9v25z" class="i-blue"/><path d="M43 8h9l2 21H42z" class="i-purple"/><path d="M15 44h8M29 44h8M43 44h7" class="i-white-line"/><circle cx="49" cy="13" r="4" class="i-pink"/>`,
+
+    search:`<circle cx="27" cy="27" r="16" class="i-blue"/><path d="M39 39l16 16" class="i-line"/><path d="M18 27c2-7 8-11 15-10" class="i-white-line"/><path d="M44 9l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" class="i-star"/>`,
+
+    typing:`<rect x="7" y="16" width="50" height="34" rx="9" class="i-purple"/><path d="M14 25h5M23 25h5M32 25h5M41 25h5M18 34h5M27 34h5M36 34h5M45 34h4M18 43h28" class="i-white-line"/><path d="M50 9l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" class="i-star"/>`,
+
+    bubble:`<circle cx="22" cy="38" r="15" class="i-blue"/><circle cx="39" cy="23" r="12" class="i-pink"/><circle cx="48" cy="42" r="8" class="i-mint"/><path d="M15 34c3-5 8-7 13-5M34 20c3-3 7-3 10-1" class="i-white-line"/>`,
+
+    target:`<circle cx="30" cy="32" r="24" class="i-peach"/><circle cx="30" cy="32" r="16" class="i-white"/><circle cx="30" cy="32" r="8" class="i-pink"/><path d="M40 21l15-13-2 9 8 1-16 12z" class="i-purple"/><path d="M30 32l15-11" class="i-line"/>`,
+
+    cannon:`<path d="M10 35h32l8 10H20z" class="i-purple"/><circle cx="22" cy="49" r="7" class="i-coin"/><circle cx="44" cy="49" r="7" class="i-coin"/><path d="M14 33l6-18 29 10-5 16z" class="i-blue"/><path d="M49 18l4-8 3 8 7 2-7 4-2 8-4-7-7-3z" class="i-star"/>`,
+
+    exam:`<path d="M15 8h34v48H15z" class="i-blue"/><path d="M23 19h18M23 28h18M23 37h10" class="i-white-line"/><path d="M37 42l5 5 10-12" class="i-line"/><path d="M22 6h20v8H22z" class="i-peach"/>`,
+
+    flag:`<path d="M16 8v48" class="i-line"/><path d="M18 11c10-6 20 7 31 0v24c-11 7-21-6-31 0z" class="i-peach"/><path d="M18 19h31M18 27h31" class="i-white-line"/><circle cx="33" cy="23" r="5" class="i-blue"/>`,
+
+    market:`<path d="M10 25h44v31H10z" class="i-mint"/><path d="M7 23l6-14h38l6 14c-4 8-12 8-16 1-5 8-13 8-18 0-4 7-12 7-16-1z" class="i-pink"/><path d="M20 56V38h12v18M39 37h9v10h-9z" class="i-white"/><path d="M20 38h12" class="i-line"/>`,
+
+    stats:`<path d="M10 53h44" class="i-line"/><rect x="14" y="32" width="9" height="19" rx="3" class="i-blue"/><rect x="28" y="22" width="9" height="29" rx="3" class="i-mint"/><rect x="42" y="13" width="9" height="38" rx="3" class="i-pink"/><path d="M14 25l11-8 10 3 15-13" class="i-roof"/>`,
+
+    trophy:`<path d="M20 8h24v12c0 13-5 22-12 22s-12-9-12-22z" class="i-coin"/><path d="M18 13H8c0 14 6 20 16 19M46 13h10c0 14-6 20-16 19" class="i-roof"/><path d="M32 42v8M22 56h20M25 50h14" class="i-line"/><path d="M32 15l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z" class="i-white"/>`,
+
+    picture:`<rect x="7" y="11" width="50" height="42" rx="8" class="i-blue"/><circle cx="42" cy="23" r="6" class="i-star"/><path d="M12 47l14-16 8 8 7-9 12 17z" class="i-mint"/><path d="M15 18h10" class="i-white-line"/>`,
+
+    headphones:`<path d="M11 34c0-15 9-25 21-25s21 10 21 25" class="i-roof"/><rect x="8" y="31" width="12" height="21" rx="6" class="i-pink"/><rect x="44" y="31" width="12" height="21" rx="6" class="i-blue"/><path d="M50 50c-2 5-7 7-14 7" class="i-line"/><circle cx="33" cy="57" r="4" class="i-mint"/>`,
+
+    clipboard:`<path d="M14 12h36v45H14z" class="i-peach"/><path d="M24 7h16v10H24z" class="i-purple"/><path d="M22 27h20M22 36h20M22 45h13" class="i-white-line"/><circle cx="46" cy="45" r="8" class="i-mint"/><path d="M42 45l3 3 5-6" class="i-line"/>`,
+
+    logout:`<path d="M12 10h27v44H12z" class="i-blue"/><path d="M31 32h28M48 21l11 11-11 11" class="i-roof"/><circle cx="20" cy="32" r="3" class="i-white"/>`,
+
+    bell:`<path d="M17 43h30l-5-7V24c0-7-4-12-10-12s-10 5-10 12v12z" class="i-star"/><path d="M27 48c1 5 9 5 10 0" class="i-line"/><path d="M46 15l3-6 3 6 6 2-6 3-3 6-3-6-6-3z" class="i-pink"/>`,
+
+    bookgold:`<path d="M8 12c9-4 18-1 24 6v37c-7-6-15-8-24-5z" class="i-coin"/><path d="M56 12c-9-4-18-1-24 6v37c7-6 15-8 24-5z" class="i-peach"/><path d="M32 18v37M15 25h11M38 25h11" class="i-white-line"/>`,
+
+    computer:`<rect x="8" y="11" width="48" height="34" rx="7" class="i-blue"/><rect x="14" y="17" width="36" height="22" rx="4" class="i-white"/><path d="M25 51h14M30 44v7M34 44v7" class="i-line"/><circle cx="45" cy="21" r="8" class="i-coin"/><path d="M42 21h6M45 18v6" class="i-line"/>`,
+
+    camera:`<path d="M12 22h9l4-7h14l4 7h9c4 0 7 3 7 7v20c0 4-3 7-7 7H12c-4 0-7-3-7-7V29c0-4 3-7 7-7z" class="i-purple"/><circle cx="32" cy="39" r="12" class="i-white"/><circle cx="32" cy="39" r="7" class="i-blue"/><path d="M15 29h8M49 29h4" class="i-white-line"/><path d="M49 11l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" class="i-star"/>`,
+
+    racecar:`<path d="M9 38l7-16h28l9 16 5 4v9H6v-9z" class="i-blue"/><path d="M20 24h20l5 11H15z" class="i-white"/><path d="M17 30h12v7H14zM35 30h9l4 7H35z" class="i-purple"/><circle cx="17" cy="50" r="7" class="i-coin"/><circle cx="47" cy="50" r="7" class="i-coin"/><circle cx="17" cy="50" r="3" class="i-line"/><circle cx="47" cy="50" r="3" class="i-line"/><path d="M8 18h10M4 12h16M49 15h10" class="i-roof"/><path d="M50 8h10v12H50zM50 8h5v6h-5M55 14h5v6h-5" class="i-white-line"/>`,
+
+    install:`<rect x="13" y="7" width="38" height="50" rx="9" class="i-blue"/><rect x="18" y="12" width="28" height="35" rx="5" class="i-white"/><path d="M32 17v20M24 29l8 8 8-8" class="i-line"/><circle cx="32" cy="51" r="2.5" class="i-mint"/>`,
+
+  });
+
+  function icon(name, extra=''){
+
+    const art = ICON_ART[name] || ICON_ART.sparkle;
+
+    return `<svg class="vw2-icon ${htmlEscape(extra)}" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+
+      <circle cx="32" cy="32" r="29" class="i-sticker"/>
+
+      <ellipse cx="27" cy="20" rx="17" ry="10" class="i-gloss"/>
+
+      ${art}
+
+      <path d="M53 8l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" class="i-mini-star"/>
+
+    </svg>`;
+
+  }
+
+  function gradeIdentityKind(raw){
+    const grade = cleanText(raw, 48).toLowerCase();
+    if(!grade) return 'neutral';
+    if(/สูงกว่า\s*ปริญญาตรี|ปริญญาโท|ปริญญาเอก/.test(grade)) return 'neutral';
+    if(/ปริญญาตรี|ป\.\s*ตรี|bachelor/.test(grade)) return 'bachelor';
+    if(/มัธยม|ม\.\s*[1-6](?:\D|$)|secondary/.test(grade)) return 'secondary';
+    if(/ต่ำกว่า\s*ประถม/.test(grade)) return 'neutral';
+    if(/ประถม|ป\.\s*[1-6](?:\D|$)|primary/.test(grade)) return 'primary';
+    return 'neutral';
+  }
+
+  function gradeIdentityHTML(rawGrade, legacyText){
+    const actual = cleanText(rawGrade, 28) || cleanText(legacyText, 34) || 'ระดับชั้น —';
+    const kind = gradeIdentityKind(rawGrade || legacyText);
+    const safe = htmlEscape(actual);
+    if(kind === 'primary'){
+      return `<span class="vw2-grade-identity primary"><span class="vw2-grade-symbol" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M32 5l8 17 19 2-14 13 4 19-17-9-17 9 4-19L5 24l19-2z"/></svg></span><span class="vw2-grade-copy"><strong>${safe}</strong><small>ดาวเงิน · ประถม</small></span></span>`;
+    }
+    if(kind === 'secondary'){
+      return `<span class="vw2-grade-identity secondary"><span class="vw2-grade-symbol" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M32 5l8 17 19 2-14 13 4 19-17-9-17 9 4-19L5 24l19-2z"/></svg></span><span class="vw2-grade-copy"><strong>${safe}</strong><small>ดาวทอง · มัธยม</small></span></span>`;
+    }
+    if(kind === 'bachelor'){
+      return `<span class="vw2-grade-identity bachelor"><span class="vw2-grade-symbol" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M17 11h30l11 15-26 31L6 26z"/><path d="M17 11l15 46 15-46M6 26h52L32 11z" class="vw2-grade-gem-line"/></svg></span><span class="vw2-grade-copy"><strong>${safe}</strong><small>เพชร 1 ดวง · ปริญญาตรี</small></span></span>`;
+    }
+    return `<span class="vw2-grade-identity neutral"><span class="vw2-grade-copy"><strong>${safe}</strong></span></span>`;
+  }
+
+  function mascotDragon(){
+
+    return `<svg class="vw2-dragon-art" viewBox="0 0 220 220" aria-hidden="true" focusable="false">
+
+      <defs>
+
+        <linearGradient id="vw2dg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#aaf3dc"/><stop offset="1" stop-color="#59caa8"/></linearGradient>
+
+        <linearGradient id="vw2wing" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d8c8ff"/><stop offset="1" stop-color="#9e82ed"/></linearGradient>
+
+      </defs>
+
+      <ellipse cx="110" cy="198" rx="61" ry="14" fill="#7761b5" opacity=".18"/>
+
+      <path d="M58 95C31 77 26 111 45 129c10 9 24 7 37-2z" fill="url(#vw2wing)" stroke="#fff" stroke-width="6"/>
+
+      <path d="M162 95c27-18 32 16 13 34-10 9-24 7-37-2z" fill="url(#vw2wing)" stroke="#fff" stroke-width="6"/>
+
+      <path d="M85 62l-16-26 26 13M135 62l16-26-26 13" fill="#ffd7a7" stroke="#fff" stroke-width="6" stroke-linejoin="round"/>
+
+      <path d="M78 126c-18 26-14 62 8 75 17 10 55 10 72-5 19-18 16-50-5-72z" fill="url(#vw2dg)" stroke="#fff" stroke-width="7"/>
+
+      <ellipse cx="113" cy="158" rx="31" ry="37" fill="#fff3c9" opacity=".95"/>
+
+      <path d="M79 139c-18 7-25 22-18 30 6 7 19 1 28-10M148 139c18 7 25 22 18 30-6 7-19 1-28-10" fill="none" stroke="#57b99d" stroke-width="13" stroke-linecap="round"/>
+
+      <ellipse cx="110" cy="95" rx="66" ry="56" fill="url(#vw2dg)" stroke="#fff" stroke-width="8"/>
+
+      <path d="M87 55l8-18 10 19M116 53l10-18 9 20" fill="#8fe2c6" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
+
+      <ellipse cx="84" cy="96" rx="17" ry="21" fill="#283653"/><ellipse cx="137" cy="96" rx="17" ry="21" fill="#283653"/>
+
+      <circle cx="79" cy="89" r="7" fill="#fff"/><circle cx="132" cy="89" r="7" fill="#fff"/><circle cx="89" cy="104" r="3" fill="#fff" opacity=".8"/><circle cx="142" cy="104" r="3" fill="#fff" opacity=".8"/>
+
+      <ellipse cx="65" cy="119" rx="13" ry="7" fill="#ff9fbd" opacity=".7"/><ellipse cx="155" cy="119" rx="13" ry="7" fill="#ff9fbd" opacity=".7"/>
+
+      <path d="M101 116c5 5 13 5 18 0M104 126c5 6 14 6 20 0" fill="none" stroke="#4b6b69" stroke-width="4" stroke-linecap="round"/>
+
+      <path d="M107 150h11M106 161h13M106 173h13" stroke="#e7c887" stroke-width="4" stroke-linecap="round" opacity=".75"/>
+
+      <path d="M82 193c-5 14 16 15 27 4M139 193c5 14-16 15-27 4" fill="#8fe2c6" stroke="#fff" stroke-width="5"/>
+
+      <path d="M50 68l4 11 11 4-11 4-4 11-4-11-11-4 11-4zM169 54l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" fill="#ffe47c" stroke="#fff" stroke-width="2"/>
+
+    </svg>`;
+
+  }
+
+  function knightFallback(){
+
+    return `<svg class="vw2-knight-art" viewBox="0 0 100 120" aria-hidden="true" focusable="false">
+
+      <path d="M25 45V30c0-19 50-19 50 0v15" fill="#dfe9f3" stroke="#fff" stroke-width="6"/>
+
+      <path d="M21 40h58v20H21z" fill="#becce0" stroke="#fff" stroke-width="5"/>
+
+      <path d="M31 55c0-14 38-14 38 0v17c0 17-38 17-38 0z" fill="#ffd7bd" stroke="#fff" stroke-width="5"/>
+
+      <circle cx="43" cy="62" r="4" fill="#2b344b"/><circle cx="58" cy="62" r="4" fill="#2b344b"/><path d="M44 70c4 3 9 3 13 0" fill="none" stroke="#ae6273" stroke-width="3" stroke-linecap="round"/>
+
+      <path d="M31 82h38l10 33H21z" fill="#6a8be8" stroke="#fff" stroke-width="5"/>
+
+      <path d="M50 86l8 12-8 9-8-9z" fill="#ffd75f"/><path d="M34 30l6-13 6 13M54 29l7-14 5 15" fill="#c5d4e8" stroke="#fff" stroke-width="4"/>
+
+    </svg>`;
+
+  }
+
+  function castleArtwork(){
+
+    return `<svg class="vw2-castle-art" viewBox="0 0 320 250" aria-hidden="true" focusable="false">
+
+      <defs><linearGradient id="vw2cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff5ff"/><stop offset="1" stop-color="#bba2ff"/></linearGradient></defs>
+
+      <ellipse cx="165" cy="227" rx="132" ry="18" fill="#7d6db7" opacity=".13"/>
+
+      <path d="M45 218v-92h45v-38h39v38h50V65h44v61h49v92z" fill="url(#vw2cg)" stroke="#fff" stroke-width="8" stroke-linejoin="round"/>
+
+      <path d="M39 128l28-35 28 35M92 90l17-34 18 34M160 67l21-43 22 43M213 128l31-39 30 39" fill="#ffb9dc" stroke="#fff" stroke-width="7" stroke-linejoin="round"/>
+
+      <path d="M164 218v-58h34v58M65 151h16v20H65zM107 145h17v21h-17zM225 151h17v20h-17z" fill="#8fdcf7" stroke="#fff" stroke-width="5"/>
+
+      <path d="M180 26v-17l24 8-24 8" fill="#ffd858" stroke="#fff" stroke-width="4"/>
+
+      <circle cx="54" cy="188" r="30" fill="#ff9fce" opacity=".8"/><circle cx="35" cy="203" r="22" fill="#f7b3dc"/><circle cx="279" cy="190" r="34" fill="#ffabd4"/><circle cx="298" cy="207" r="23" fill="#f8c0e2"/>
+
+      <path d="M52 178v48M279 176v50" stroke="#9b7f6d" stroke-width="7" stroke-linecap="round"/>
+
+      <path d="M14 92l3 8 8 3-8 3-3 8-3-8-8-3 8-3zM292 83l4 10 10 4-10 4-4 10-4-10-10-4 10-4z" fill="#ffe56f" stroke="#fff" stroke-width="2"/>
+
+    </svg>`;
+
+  }
+
+  function sourceAttrs(sourceSelector, mirrorVisibility=false){
+
+    if(!sourceSelector) return '';
+
+    return ` data-vw2-source="${htmlEscape(sourceSelector)}"${mirrorVisibility ? ' data-vw2-mirror-visibility="1"' : ''}`;
+
+  }
+
+  function navButton(actionName, iconName, label, sourceSelector=''){
+
+    return `<button class="vw2-rail-btn vw2-rail-${htmlEscape(actionName)}" data-vw2-action="${htmlEscape(actionName)}"${sourceAttrs(sourceSelector)}><span class="vw2-rail-art"><span class="vw2-rail-scene" aria-hidden="true"><i></i></span>${icon(iconName)}<span class="vw2-rail-scene-mark" aria-hidden="true"></span></span><b class="vw2-rail-label">${htmlEscape(label)}</b><i class="vw2-source-badge" hidden></i></button>`;
+
+  }
+
+  function bottomButton(actionName, iconName, label, tone='violet', sourceSelector=''){
+
+    return `<button class="vw2-mode ${htmlEscape(tone)}" data-vw2-action="${htmlEscape(actionName)}"${sourceAttrs(sourceSelector)}><span>${icon(iconName)}</span><b>${htmlEscape(label)}</b><i class="vw2-source-badge" hidden></i></button>`;
+
+  }
+
+  function toolButton(actionName, iconName, label, extra='', sourceSelector='', mirrorVisibility=false){
+
+    return `<button class="vw2-tool-btn ${htmlEscape(extra)}" data-vw2-action="${htmlEscape(actionName)}"${sourceAttrs(sourceSelector, mirrorVisibility)} title="${htmlEscape(label)}"><span>${icon(iconName)}</span><b>${htmlEscape(label)}</b><i class="vw2-source-badge" hidden></i></button>`;
+
+  }
+
+  function walletArtwork(kind){
+
+    if(kind === 'coin'){
+
+      return `<span class="vw2-stat-art vw2-stat-art-coin"><img class="vw2-stat-coin-img" src="img/coins/coin_gold.png" alt="" decoding="async"></span>`;
+
+    }
+
+    const iconName = kind === 'today' ? 'star'
+
+      : kind === 'online' ? 'globe'
+
+      : kind === 'computer' ? 'computer'
+
+      : kind === 'worth' ? 'stats'
+
+      : 'sparkle';
+
+    return `<span class="vw2-stat-art">${icon(iconName)}</span>`;
+
+  }
+
+  function currentHouseVisual(){
+
+    try{
+
+      if(typeof state === 'undefined' || !state || !state.home || typeof homeInfo !== 'function'){
+
+        return {id:'', name:'ยังไม่มีที่พัก', variant:'none', url:''};
+
+      }
+
+      const h = homeInfo(state.home);
+
+      if(!h) return {id:'', name:'ยังไม่มีที่พัก', variant:'none', url:''};
+
+      /* Mirror the authoritative Classic renderer for the variants that exist
+
+         in the current repository: power cut -> _dark, then maintenance decay
+
+         -> _decayed, otherwise normal. img/home was dependency-verified by the
+
+         R3 task exporter before this patch was authored. */
+
+      let variant = 'normal';
+
+      if(state.powerCut) variant = 'dark';
+
+      else if(typeof homeDecayed === 'function' && homeDecayed()) variant = 'decayed';
+
+      const suffix = variant === 'normal' ? '' : `_${variant}`;
+
+      const key = `home_${h.id}${suffix}`;
+
+      let url = `img/home/${key}.png`;
+
+      try{
+
+        if(typeof IMG_FILES !== 'undefined' && IMG_FILES && IMG_FILES[key]) url = IMG_FILES[key];
+
+      }catch(_){ }
+
+      return {id:h.id, name:h.name || h.id, variant, url};
+
+    }catch(_){
+
+      return {id:'', name:'ยังไม่มีที่พัก', variant:'none', url:''};
+
+    }
+
+  }
+
+  function syncHouseVisual(){
+
+    const box = document.getElementById('vw2-house-visual');
+
+    if(!box) return;
+
+    const h = currentHouseVisual();
+
+    box.dataset.home = h.id || '';
+
+    box.dataset.variant = h.variant || 'none';
+
+    box.classList.toggle('is-empty', !h.url);
+
+    const label = document.getElementById('vw2-house-label');
+
+    if(label) label.textContent = h.url ? h.name : 'ยังไม่มีบ้าน';
+
+    if(!h.url){
+
+      if(box.dataset.src){
+
+        box.dataset.src = '';
+
+        box.replaceChildren();
+
+      }
+
+      return;
+
+    }
+
+    if(box.dataset.src === h.url) return;
+
+    box.dataset.src = h.url;
+
+    box.innerHTML = `<img src="${htmlEscape(h.url)}" alt="" decoding="async">`;
+
+  }
+
+  function petVisualUrl(){
+
+    try{
+
+      const p = (typeof activePet === 'function') ? activePet() : null;
+
+      const fns = [
+
+        (typeof currentPetImg === 'function') ? currentPetImg : null,
+
+        (typeof petStateImg === 'function') ? petStateImg : null
+
+      ];
+
+      for(const fn of fns){
+
+        if(!fn) continue;
+
+        try{
+
+          const url = fn(p);
+
+          if(typeof url === 'string' && url.trim()) return url.trim();
+
+        }catch(_){ }
+
+      }
+
+      if(p){
+
+        for(const key of ['img','image','src']){
+
+          const url = p[key];
+
+          if(typeof url === 'string' && url.trim()) return url.trim();
+
+        }
+
+      }
+
+    }catch(_){ }
+
+    const src = document.querySelector('#pet-card .pet-wrap img.pet-img, #pet-card img.pet-img, .stage-hero .pet-wrap img.pet-img, .stage-hero img.pet-img');
+
+    return src ? (src.currentSrc || src.getAttribute('src') || '') : '';
+
+  }
+
+  function syncPetVisual(){
+
+    const box = document.getElementById('vw2-pet');
+
+    if(!box) return;
+
+    const url = petVisualUrl();
+
+    if(url){
+
+      if(box.dataset.src !== url){
+
+        box.dataset.src = url;
+
+        box.innerHTML = `<img class="vw2-owned-pet" src="${htmlEscape(url)}" alt="สัตว์เลี้ยงของผู้เล่น">`;
+
+      }
+
+      box.classList.add('has-owned-pet');
+
+    }else{
+
+      if(!box.dataset.src){ box.innerHTML = mascotDragon(); }
+
+      box.classList.remove('has-owned-pet');
+
+    }
+
+  }
+
+  function liveEarnValue(kind){
+
+    try{
+
+      if(kind === 'online' && typeof onlineLiveTotal === 'function') return onlineLiveTotal();
+
+      if(kind === 'computer' && typeof compLiveTotal === 'function') return compLiveTotal();
+
+    }catch(_){ }
+
+    const sel = kind === 'online' ? '#net-pill' : '#comp-pill';
+
+    const raw = textOf(sel, '0');
+
+    const m = raw.replace(/,/g,'').match(/[+-]?\d+(?:\.\d+)?/);
+
+    return m ? Number(m[0]) : 0;
+
+  }
+
+  function liveEarnStatus(kind){
+
+    try{
+
+      if(kind === 'online' && typeof onlineEarnActive === 'function') return onlineEarnActive() ? 'กำลังรับรายได้' : 'หยุดพัก';
+
+      if(kind === 'computer'){
+
+        if(typeof state !== 'undefined' && state){
+
+          if(!state.computer) return 'ยังไม่ได้ซื้อคอม';
+
+          if(state.dataCut) return 'บริการถูกระงับ';
+
+          return 'คอมกำลังทำงาน';
+
+        }
+
+      }
+
+    }catch(_){ }
+
+    return kind === 'online' ? 'รายได้ขณะออนไลน์' : 'รายได้จากคอมพิวเตอร์';
+
+  }
+
+  function ensureVisualStyles(){
+
+    /* R10 presentation is consolidated in css/home-v2.css. Keep only a tiny runtime marker
+
+       instead of injecting a second full stylesheet from JavaScript. */
+
+    if(document.getElementById(STYLE_ID)) return;
+
+    const style = document.createElement('style');
+
+    style.id = STYLE_ID;
+
+    style.textContent = '#vw-home-v2-root{--vw2-r10-runtime-ready:1}';
+
+    document.head.appendChild(style);
+
+  }
+
+  function clickExisting(selector, opts){
+
+    opts = opts || {};
+
+    const el = document.querySelector(selector);
+
+    if(!el || el.disabled) return false;
+
+    if(opts.classicFirst) setPreviewWanted(false);
+
+    el.click();
+
+    return true;
+
+  }
+
+  function openPanelViaExisting(panelId){
+
+    return clickExisting(`.lobby-rail [data-panel="${panelId}"]`, {classicFirst:true});
+
+  }
+
+  function openPetShop(){
+
+    // Functional-parity rule: delegate to the lobby's existing pet-shop tab.
+
+    // Never call render/show functions directly here because that would create
+
+    // a second route that could drift from auth/lock checks in the real lobby.
+
+    if(!clickExisting('#tab-addpet')) setPreviewWanted(false);
+
+  }
+
+  function authoritativeRacingReady(){
+    return typeof enterF1_3D === 'function';
+  }
+
+  function openRacing(){
+    if(!authoritativeRacingReady()){
+      try{ if(typeof showToast === 'function') showToast('Vocab World Racing ยังไม่พร้อมใน build นี้'); }catch(_){ }
+      return false;
+    }
+    try{ enterF1_3D(); return true; }
+    catch(_){
+      try{ if(typeof showToast === 'function') showToast('ไม่สามารถเปิด Vocab World Racing ได้'); }catch(__){ }
+      return false;
+    }
+  }
+
+  function openAvatarEditor(){
+    // js/photo.js owns validation, local file selection, processing, localStorage and /pphoto persistence.
+    // Delegate to the original #pass-photo trigger instead of creating a second upload implementation.
+    const source = document.querySelector('#pass-photo');
+    if(!source){
+      try{ if(typeof showToast === 'function') showToast('ไม่พบตัวแก้ไขรูปโปรไฟล์เดิม'); }catch(_){ }
+      return false;
+    }
+    setPreviewWanted(false);
+    setTimeout(()=>{
+      try{ source.click(); }
+      catch(_){ try{ source.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window})); }catch(__){ } }
+    },0);
+    return true;
+  }
+
+  function openUserProfile(){
+    // The Task ZIP does not contain the owning profile-route source. Do not invent a route name.
+    // Return to the authoritative Classic identity card and bubble its existing click hook, if present.
+    const source = document.querySelector('#screen-dashboard .id-card');
+    if(!source){
+      try{ if(typeof showToast === 'function') showToast('ไม่พบ User Profile เดิม'); }catch(_){ }
+      return false;
+    }
+    setPreviewWanted(false);
+    setTimeout(()=>{
+      try{
+        source.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window}));
+        if(typeof source.scrollIntoView === 'function') source.scrollIntoView({block:'nearest',inline:'nearest'});
+      }catch(_){ }
+    },0);
+    return true;
+  }
+
+  function syncRuntimeActionParity(){
+    if(!root) return;
+    const racing = root.querySelector('[data-vw2-action="racing"]');
+    if(racing){
+      const ready = authoritativeRacingReady();
+      racing.disabled = !ready;
+      racing.setAttribute('aria-disabled', ready ? 'false' : 'true');
+      racing.title = ready ? 'Vocab World Racing' : 'Vocab World Racing ยังไม่พร้อมใน build นี้';
+    }
+  }
+
+  function action(name){
+
+    const direct = {
+
+      city:'#btn-rail-city', cure:'#btn-rail-cure', wordsearch:'#btn-rail-wordsearch',
+
+      typing:'#btn-rail-typing', bubble:'#btn-rail-bubble', shoot:'#btn-rail-shootword',
+
+      cannon:'#btn-rail-lettercannon', examstd:'#btn-rail-examstd', onet:'#btn-rail-onet',
+
+      rank:'#btn-rail-rank', stats:'#btn-stats', trophy:'#btn-rail-trophy', chat:'#btn-chat',
+
+      music:'#btn-music', night:'#btn-night', settings:'#btn-settings', install:'#btn-install-top',
+
+      logout:'#btn-logout', play:'#btn-play', cats:'#btn-cats', picmatch:'#btn-picmatch',
+
+      picdict:'#btn-picdict', picquiz:'#btn-picquiz', vocabbook:'#btn-vocab-book',
+
+      bandexam:'#btn-band-exam'
+
+    };
+
+    const panels = {
+
+      home:'panel-home', invest:'panel-farm', factory:'panel-factory',
+
+      market:'panel-market', friends:'panel-friends', gifts:'panel-gifts'
+
+    };
+
+    const standards = {ielts:'ielts',toeic:'toeic',toefl:'toefl',onetp6:'onetp6',onetm3:'onetm3',onetm6:'onetm6'};
+
+    if(name === 'classic'){ setPreviewWanted(false); return; }
+
+    if(name === 'v2'){ setPreviewWanted(true); return; }
+
+    if(name === 'shop'){ openPetShop(); return; }
+
+    if(name === 'profile'){ openUserProfile(); return; }
+
+    if(name === 'avatarEdit'){ openAvatarEditor(); return; }
+
+    if(name === 'racing'){ openRacing(); return; }
+
+    if(panels[name]){ openPanelViaExisting(panels[name]); return; }
+
+    if(standards[name]){ clickExisting(`.lobby-bottom [data-xstd="${standards[name]}"]`); return; }
+
+    if(direct[name]) clickExisting(direct[name], {classicFirst:name === 'rank'});
+
+  }
+
+  function updateLeftRailCue(){
+
+    if(!root) return;
+
+    const rail = root.querySelector('.vw2-left');
+
+    const cue = rail ? rail.querySelector('.vw2-left-scroll-cue') : null;
+
+    if(!rail || !cue) return;
+
+    const canScroll = rail.scrollHeight > rail.clientHeight + 2;
+
+    const hasMore = canScroll && (rail.scrollTop + rail.clientHeight < rail.scrollHeight - 2);
+
+    cue.classList.toggle('is-visible', hasMore);
+
+    rail.dataset.vw2ScrollMore = hasMore ? '1' : '0';
+
+  }
+
+  function setupLeftRailCue(){
+
+    if(!root) return;
+
+    const rail = root.querySelector('.vw2-left');
+
+    if(!rail || rail.dataset.vw2CueReady === '1') return;
+
+    rail.dataset.vw2CueReady = '1';
+
+    rail.addEventListener('scroll', ()=>{
+
+      updateLeftRailCue();
+
+      scheduleLocalPreviewReport();
+
+    }, {passive:true});
+
+    window.addEventListener('resize', updateLeftRailCue, {passive:true});
+
+    setTimeout(updateLeftRailCue, 0);
+
+  }
+
+  function build(){
+
+    const dash = dashboard();
+
+    if(!dash || document.getElementById(ROOT_ID)) return;
+
+    ensureVisualStyles();
+
+    const railButtons = [
+
+      ['city','city','เมือง 3D','#btn-rail-city'],
+
+      ['cure','heart','รักษา','#btn-rail-cure'],
+
+      ['home','home','บ้าน','.lobby-rail [data-panel="panel-home"]'],
+
+      ['invest','invest','ลงทุน','.lobby-rail [data-panel="panel-farm"]'],
+
+      ['factory','factory','โรงงาน','.lobby-rail [data-panel="panel-factory"]'],
+
+      ['wordsearch','search','ค้นหาคำ','#btn-rail-wordsearch'],
+
+      ['typing','typing','พิมพ์คำ','#btn-rail-typing'],
+
+      ['bubble','bubble','เกมฟอง','#btn-rail-bubble'],
+
+      ['shoot','target','ยิงเป้าคำ','#btn-rail-shootword'],
+
+      ['cannon','cannon','Letter Cannon','#btn-rail-lettercannon'],
+
+      ['examstd','exam','ข้อสอบจริง','#btn-rail-examstd'],
+
+      ['onet','flag','O-NET','#btn-rail-onet'],
+
+      ['rank','crown','อันดับ','#btn-rail-rank'],
+
+      ['market','market','ตลาด','.lobby-rail [data-panel="panel-market"]'],
+
+      ['friends','friends','เพื่อน','.lobby-rail [data-panel="panel-friends"]'],
+
+      ['gifts','gift','ของขวัญ','.lobby-rail [data-panel="panel-gifts"]'],
+
+      ['stats','stats','สถิติ','#btn-stats'],
+
+      ['trophy','trophy','ตู้เข็ม','#btn-rail-trophy'],
+
+      ['racing','racecar','Vocab World Racing',''],
+
+    ].map(x=>navButton(x[0],x[1],x[2],x[3])).join('');
+
+    const modeButtons = [
+
+      ['vocabbook','bookgold','สมุดคำศัพท์','book','#btn-vocab-book'],
+
+      ['ielts','book','IELTS','blue','.lobby-bottom [data-xstd="ielts"]'],
+
+      ['toeic','book','TOEIC','green','.lobby-bottom [data-xstd="toeic"]'],
+
+      ['toefl','book','TOEFL','orange','.lobby-bottom [data-xstd="toefl"]'],
+
+      ['onetp6','star','O-NET ป.6','gold','.lobby-bottom [data-xstd="onetp6"]'],
+
+      ['onetm3','leaf','O-NET ม.3','lime','.lobby-bottom [data-xstd="onetm3"]'],
+
+      ['onetm6','crown','O-NET ม.6','violet','.lobby-bottom [data-xstd="onetm6"]'],
+
+      ['cats','sparkle','หมวดคำศัพท์','pink','#btn-cats'],
+
+      ['play','controller','จับคู่คำศัพท์','game','#btn-play'],
+
+      ['picmatch','picture','จับคู่ภาพ','blue','#btn-picmatch'],
+
+      ['picdict','bookgold','Picture Dictionary','green','#btn-picdict'],
+
+      ['picquiz','headphones','ครูถามศัพท์','orange','#btn-picquiz'],
+
+      ['bandexam','clipboard','สอบเลื่อนขั้น','violet','#btn-band-exam'],
+
+    ].map(x=>bottomButton(x[0],x[1],x[2],x[3],x[4])).join('');
+
+    root = document.createElement('div');
+
+    root.id = ROOT_ID;
+
+    root.setAttribute('aria-label','Vocab World Home V2 Admin Preview');
+
+    root.innerHTML = `
+
+      <img class="vw2-screen-backdrop" src="img/home-v2/r10_screen_backdrop.svg" alt="" aria-hidden="true" decoding="async" fetchpriority="high">
+
+      <div class="vw2-sky" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+
+      <div class="vw2-shell">
+
+        <header class="vw2-top">
+
+          <section class="vw2-profile vw2-glass vw2-profile-link" data-vw2-action="profile" role="button" tabindex="0" aria-label="เปิด User Profile" title="เปิด User Profile">
+
+            <span class="vw2-thai-profile-corner" aria-hidden="true"></span>
+
+            <span class="vw2-profile-crown" aria-hidden="true">${icon('crown')}</span>
+
+            <div class="vw2-profile-kicker"><span>PLAYER IDENTITY</span><i aria-hidden="true">✦</i></div>
+
+            <div class="vw2-avatar-frame"><div class="vw2-avatar" id="vw2-avatar">${knightFallback()}</div><button type="button" class="vw2-avatar-edit" data-vw2-action="avatarEdit" data-vw2-source="#pass-photo" aria-label="เปลี่ยนรูปโปรไฟล์" title="เปลี่ยนรูปโปรไฟล์">${icon('camera')}</button></div>
+
+            <div class="vw2-profile-main">
+
+              <div class="vw2-name-row"><strong id="vw2-name">ผู้เล่น</strong><span class="vw2-pencil">${icon('edit')}</span></div>
+
+              <div class="vw2-profile-meta">
+
+                <span class="vw2-profile-meta-chip class"><small>LEVEL / CLASS</small><b id="vw2-grade">—</b></span>
+
+                <span class="vw2-profile-meta-chip id"><small>PLAYER ID</small><b id="vw2-id">ID —</b></span>
+
+                <span class="vw2-profile-meta-chip date"><small>DATE</small><b id="vw2-date">—</b></span>
+
+                <span class="vw2-profile-meta-chip time"><small>TIME</small><b id="vw2-clock">—</b></span>
+
+              </div>
+
+              <div class="vw2-profile-chips"><div class="vw2-rank" id="vw2-rank">กำลังโหลดแรงค์…</div><div class="vw2-sync-chip" id="vw2-sync-state" hidden></div></div>
+
+            </div>
+
+          </section>
+
+          <section class="vw2-wallet" aria-label="ข้อมูลรายได้และทรัพย์สิน">
+
+            <button class="vw2-wallet-pill coin" data-vw2-action="rank" data-vw2-source="#btn-rail-rank" title="เหรียญที่มีอยู่">${walletArtwork('coin')}<span class="vw2-stat-copy"><small>เหรียญของฉัน</small><b id="vw2-coins">0</b><span class="vw2-pill-status">ยอดคงเหลือ</span></span><em>+</em></button>
+
+            <div class="vw2-wallet-pill today" title="เหรียญที่หาได้วันนี้">${walletArtwork('today')}<span class="vw2-stat-copy"><small>รายได้วันนี้</small><b>+<span id="vw2-today">0</span></b><span class="vw2-pill-status">สะสมวันนี้</span></span></div>
+
+            <div class="vw2-wallet-pill online" title="รายได้ที่ได้รับขณะออนไลน์">${walletArtwork('online')}<span class="vw2-stat-copy"><small>รายได้ออนไลน์</small><b>+<span id="vw2-online-earn">0</span></b><span class="vw2-pill-status" id="vw2-online-status">กำลังตรวจสอบ</span></span></div>
+
+            <div class="vw2-wallet-pill computer" title="รายได้สะสมจากคอมพิวเตอร์">${walletArtwork('computer')}<span class="vw2-stat-copy"><small>รายได้จากคอม</small><b>+<span id="vw2-comp-earn">0</span></b><span class="vw2-pill-status" id="vw2-comp-status">กำลังตรวจสอบ</span></span></div>
+
+            <div class="vw2-wallet-pill worth">${walletArtwork('worth')}<span class="vw2-stat-copy"><small>มูลค่ารวม</small><b id="vw2-worth">0</b><span class="vw2-pill-status">ทรัพย์สินทั้งหมด</span></span></div>
+
+          </section>
+
+          <section class="vw2-top-actions" aria-label="เครื่องมือ — ทุกปุ่มมีข้อความกำกับ">
+
+            ${toolButton('chat','chat','ข้อความ','', '#btn-chat')}
+
+            ${toolButton('music','music','เพลง','', '#btn-music')}
+
+            ${toolButton('night','moon','กลางคืน','', '#btn-night')}
+
+            ${toolButton('settings','settings','ตั้งค่า','', '#btn-settings')}
+
+            ${toolButton('install','install','ติดตั้ง','vw2-install', '#btn-install-top', true)}
+
+            ${toolButton('logout','logout','ออกระบบ','', '#btn-logout')}
+
+            ${toolButton('classic','back','Classic','vw2-classic')}
+
+          </section>
+
+        </header>
+
+        <div class="vw2-main-grid">
+
+          <nav class="vw2-left vw2-glass" aria-label="เมนูหลักทั้งหมด">${railButtons}<span class="vw2-left-scroll-cue" aria-hidden="true"><span>&#8964;</span></span></nav>
+
+          <section class="vw2-feed vw2-glass">
+
+            <div class="vw2-section-head"><span class="vw2-head-icon">${icon('globe')}</span><strong>Global Feed</strong><button data-vw2-action="classic" title="เปิดฟีดเดิม">ดูทั้งหมด</button></div>
+
+            <div id="vw2-feed-items" class="vw2-feed-items">
+
+              <div class="vw2-feed-card vw2-feed-card-empty">
+
+                <div class="vw2-feed-avatar">${icon('sparkle')}</div>
+
+                <div class="vw2-feed-copy"><div class="vw2-feed-card-head"><b>กิจกรรมล่าสุด</b><small>ตอนนี้</small></div><p id="vw2-feed-text">กำลังโหลดกิจกรรมของเพื่อน…</p></div>
+
+              </div>
+
+            </div>
+
+            <span id="vw2-feed-likes" class="vw2-feed-legacy-binding" aria-hidden="true">—</span>
+
+            <div class="vw2-feed-coin">${icon('coin')}<span>เรียน เล่น และเติบโตไปพร้อมกัน</span></div>
+
+          </section>
+
+          <main class="vw2-feature">
+
+            <div class="vw2-feature-title"><span>${icon('sparkle')}</span><strong>Vocab World</strong><span>${icon('sparkle')}</span></div>
+
+            <div class="vw2-word-ribbon" id="vw2-newword">คำศัพท์ใหม่รอหนูอยู่</div>
+
+            <div class="vw2-feature-stage">
+
+              <div class="vw2-atmosphere" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+
+              <div class="vw2-stage-cloud c1" aria-hidden="true"></div><div class="vw2-stage-cloud c2" aria-hidden="true"></div>
+
+              <div class="vw2-rainbow" aria-hidden="true"></div>
+
+              <div class="vw2-mid-hills" aria-hidden="true"></div>
+
+              <div class="vw2-scene-castle" aria-hidden="true">${castleArtwork()}</div>
+
+              <div class="vw2-scene-path" aria-hidden="true"></div>
+
+              <div class="vw2-speech"><span id="vw2-pet-greeting">น้องดีใจที่ได้เจอหนูอีกครั้ง!</span><small>ยินดีต้อนรับกลับ Vocab World — ไปผจญภัยด้วยกันนะ</small></div>
+
+              <div class="vw2-reward-card">${icon('trophy')}<div><b>ปราสาทรางวัล</b><small>สะสมดาวแล้วปลดล็อก</small></div></div>
+
+              <div class="vw2-pet-halo" aria-hidden="true"></div>
+
+              <div class="vw2-pet-platform" aria-hidden="true"></div>
+
+              <div class="vw2-pet" id="vw2-pet">${mascotDragon()}</div>
+
+              <div class="vw2-pet-sparkles" aria-hidden="true"><i>♥</i><i>★</i><i>✦</i><i>♥</i></div>
+
+              <div class="vw2-house-preview" aria-label="บ้านที่เลือกอยู่">
+
+                <div class="vw2-house-preview-head">${icon('home')}<span id="vw2-house-label">ยังไม่มีบ้าน</span></div>
+
+                <div class="vw2-house-backdrop is-empty" id="vw2-house-visual" aria-hidden="true"></div>
+
+              </div>
+
+              <div class="vw2-stage-copy"><b id="vw2-pet-name">ออกผจญภัยกับน้อง</b><span>น้องกำลังต้อนรับหนู · ฝึกคำศัพท์ · สะสมเหรียญ</span></div>
+
+              <div class="vw2-stage-foreground" aria-hidden="true"></div>
+
+            </div>
+
+            <div class="vw2-feature-actions">
+
+              <button class="vw2-enter" data-vw2-action="city" data-vw2-source="#btn-rail-city">${icon('city')} เข้าโลก 3D</button>
+
+              <button class="vw2-play" data-vw2-action="play" data-vw2-source="#btn-play">${icon('controller')} เกมจับคู่คำศัพท์</button>
+
+              <button class="vw2-shop-link" data-vw2-action="shop" data-vw2-source="#tab-addpet">${icon('potion')} ร้านสัตว์</button>
+
+            </div>
+
+          </main>
+
+          <aside class="vw2-right">
+
+            <section class="vw2-mission vw2-glass">
+
+              <div class="vw2-section-head"><span class="vw2-head-icon">${icon('target')}</span><strong>ภารกิจวันนี้</strong><b id="vw2-quest-count">0/0</b></div>
+
+              <div class="vw2-progress"><i id="vw2-quest-bar"></i></div>
+
+              <div id="vw2-quests" class="vw2-quests"><div class="vw2-empty">กำลังโหลดภารกิจ…</div></div>
+
+            </section>
+
+            <section class="vw2-online vw2-glass">
+
+              <div class="vw2-section-head"><span class="vw2-head-icon">${icon('friends')}</span><strong>เพื่อนออนไลน์</strong><b id="vw2-online-count">—</b></div>
+
+              <div class="vw2-online-card"><span class="vw2-online-dot"></span><div><b id="vw2-online-name">กำลังเชื่อมต่อ…</b><small id="vw2-online-text">เล่นและเรียนไปพร้อมกัน</small></div></div>
+
+              <button class="vw2-friends-btn" data-vw2-action="friends" data-vw2-source=".lobby-rail [data-panel=&quot;panel-friends&quot;]">${icon('friends')} ดูเพื่อนทั้งหมด</button>
+
+            </section>
+
+          </aside>
+
+        </div>
+
+        <footer class="vw2-bottom" aria-label="ทางลัดการเรียนและเกมทั้งหมด">${modeButtons}</footer>
+
+        <div class="vw2-preview-mark">ADMIN PREVIEW · R10.5 LOCKED MASTER</div>
+
+      </div>`;
+
+    dash.appendChild(root);
+
+    setupLeftRailCue();
+
+    root.addEventListener('click', e=>{
+
+      const b = e.target.closest('[data-vw2-action]');
+
+      if(!b || b.disabled) return;
+
+      e.preventDefault();
+
+      if(typeof sfx !== 'undefined' && sfx && typeof sfx.select === 'function') sfx.select();
+
+      action(b.dataset.vw2Action);
+
+    });
+
+    root.addEventListener('keydown', e=>{
+
+      if(e.key !== 'Enter' && e.key !== ' ') return;
+
+      const profile = e.target.closest && e.target.closest('.vw2-profile-link');
+
+      if(!profile || e.target.closest('button')) return;
+
+      e.preventDefault();
+
+      action('profile');
+
+    });
+
+  }
+
+  function ensureClassicToggle(){
+
+    if(classicToggle) return;
+
+    classicToggle = document.createElement('button');
+
+    classicToggle.id = 'vw2-preview-switch';
+
+    classicToggle.type = 'button';
+
+    classicToggle.textContent = 'Home V2';
+
+    classicToggle.title = 'กลับไปดู Home V2 (Admin Preview)';
+
+    classicToggle.addEventListener('click', ()=>setPreviewWanted(true));
+
+    document.body.appendChild(classicToggle);
+
+  }
+
+  function copyImage(srcSel, targetId, fallbackHTML){
+
+    const src = document.querySelector(srcSel);
+
+    const box = document.getElementById(targetId);
+
+    if(!box) return;
+
+    const url = src && src.getAttribute('src');
+
+    if(url){
+
+      if(box.dataset.src === url) return;
+
+      box.dataset.src = url;
+
+      box.innerHTML = `<img src="${htmlEscape(url)}" alt="">`;
+
+    }else if(!box.dataset.src && fallbackHTML){
+
+      box.innerHTML = fallbackHTML;
+
+    }
+
+  }
+
+  function sourceVisible(el){
+
+    if(!el) return false;
+
+    const cs = window.getComputedStyle ? window.getComputedStyle(el) : null;
+
+    return !el.hidden && (!cs || (cs.display !== 'none' && cs.visibility !== 'hidden'));
+
+  }
+
+  function sourceBadge(el){
+
+    if(!el) return '';
+
+    const badge = el.querySelector && el.querySelector('.rail-badge,.rail-rank-num');
+
+    if(!badge || !sourceVisible(badge)) return '';
+
+    return cleanText(badge.textContent, 6) || '•';
+
+  }
+
+  function syncSourceParity(){
+
+    if(!root) return;
+
+    root.querySelectorAll('[data-vw2-source]').forEach(btn=>{
+
+      const selector = btn.dataset.vw2Source || '';
+
+      const source = selector ? document.querySelector(selector) : null;
+
+      const disabled = !!(source && source.disabled);
+
+      btn.disabled = disabled;
+
+      btn.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+
+      if(btn.classList.contains('vw2-rail-btn')){
+
+        const current = !!(source && (source.classList.contains('active') || source.classList.contains('on') || source.getAttribute('aria-current') === 'page' || source.getAttribute('aria-selected') === 'true' || source.getAttribute('aria-pressed') === 'true'));
+
+        btn.classList.toggle('vw2-current', current);
+
+      }
+
+      const badge = btn.querySelector('.vw2-source-badge');
+
+      if(badge){
+
+        const text = sourceBadge(source);
+
+        badge.textContent = text;
+
+        badge.hidden = !text;
+
+      }
+
+      if(btn.dataset.vw2MirrorVisibility === '1') btn.hidden = !sourceVisible(source);
+
+    });
+
+    syncRuntimeActionParity();
+
+  }
+
+  function playPetWelcome(){
+
+    if(!root) return;
+
+    const pet = document.getElementById('vw2-pet');
+
+    const sparkles = root.querySelector('.vw2-pet-sparkles');
+
+    if(!pet) return;
+
+    clearTimeout(welcomeTimer);
+
+    pet.classList.remove('vw2-welcome');
+
+    if(sparkles) sparkles.classList.remove('vw2-welcome-burst');
+
+    void pet.offsetWidth;
+
+    pet.classList.add('vw2-welcome');
+
+    if(sparkles) sparkles.classList.add('vw2-welcome-burst');
+
+    welcomeTimer = setTimeout(()=>{
+
+      pet.classList.remove('vw2-welcome');
+
+      if(sparkles) sparkles.classList.remove('vw2-welcome-burst');
+
+    }, 1350);
+
+  }
+
+  function questHTML(){
+
+    if(typeof state === 'undefined' || !state) return {html:'<div class="vw2-empty">ยังไม่มีข้อมูลภารกิจ</div>',done:0,total:0};
+
+    try{
+
+      const qs = typeof questsToday === 'function' ? questsToday() : [];
+
+      const qstate = state.quests || {prog:{},done:[]};
+
+      const doneIds = Array.isArray(qstate.done) ? qstate.done : [];
+
+      const cards = qs.slice(0,3).map(q=>{
+
+        const done = doneIds.includes(q.id);
+
+        const current = Math.min(Number(q.target)||0, Number((qstate.prog||{})[q.id])||0);
+
+        const target = Number(q.target)||1;
+
+        const pct = done ? 100 : Math.max(0,Math.min(100,Math.round(current/target*100)));
+
+        return `<button class="vw2-quest-row${done?' done':''}" data-vw2-action="classic" title="เปิดหน้าล็อบบี้เดิมเพื่อทำภารกิจ">
+
+          <span class="vw2-qemoji">${icon('quest')}</span>
+
+          <span class="vw2-qbody"><b>${htmlEscape(q.name || 'ภารกิจ')}</b><i><u style="width:${pct}%"></u></i></span>
+
+          <span class="vw2-qscore">${done?icon('check'):`${current}/${target}`}</span>
+
+        </button>`;
+
+      }).join('');
+
+      return {html:cards || '<div class="vw2-empty">วันนี้ยังไม่มีภารกิจ</div>',done:doneIds.length,total:qs.length};
+
+    }catch(_){
+
+      return {html:`<div class="vw2-empty">${htmlEscape(textOf('#quest-card','กำลังโหลดภารกิจ…'))}</div>`,done:0,total:0};
+
+    }
+
+  }
+
+  function feedCardsFromAuthoritativeSource(){
+
+    const host = document.getElementById('vw2-feed-items');
+
+    if(!host) return;
+
+    try{
+
+      const seen = new Set();
+
+      const posts = Array.from(document.querySelectorAll('#feed-list .fpost:not(.fp-clone)')).filter(p=>{
+
+        const k = p.dataset && p.dataset.key ? p.dataset.key : (p.textContent || '');
+
+        if(seen.has(k)) return false;
+
+        seen.add(k); return true;
+
+      }).slice(0,3);
+
+      let html = '';
+
+      for(const post of posts){
+
+        const name = cleanText((post.querySelector('.fp-name')||{}).textContent || post.dataset.n || 'เพื่อน',28);
+
+        const when = cleanText((post.querySelector('.fp-when')||{}).textContent || '',20);
+
+        const tx = cleanText((post.querySelector('.fp-text')||{}).textContent || '',94);
+
+        const sum = cleanText((post.querySelector('.fp-sum')||{}).textContent || '',42);
+
+        const fid = post.dataset && post.dataset.fid ? post.dataset.fid : '';
+
+        let ava = icon('sparkle');
+
+        try{ if(fid && typeof photoMiniHTML === 'function') ava = photoMiniHTML(fid,'vw2-feed-source-avatar') || ava; }catch(_){ }
+
+        html += `<article class="vw2-feed-card"><div class="vw2-feed-avatar">${ava}</div><div class="vw2-feed-copy"><div class="vw2-feed-card-head"><b>${htmlEscape(name)}</b><small>${htmlEscape(when)}</small></div><p>${htmlEscape(tx || 'กิจกรรมใหม่ใน Vocab World')}</p>${sum ? `<span class="vw2-feed-reaction">${htmlEscape(sum)}</span>` : ''}</div></article>`;
+
+      }
+
+      if(!html){
+
+        const fallback = cleanText(textOf('#feed-list','ยังไม่มีกิจกรรมใหม่ — เริ่มเล่นเกมเพื่อสร้างเรื่องราวของวันนี้!'),105);
+
+        html = `<div class="vw2-feed-card vw2-feed-card-empty"><div class="vw2-feed-avatar">${icon('sparkle')}</div><div class="vw2-feed-copy"><div class="vw2-feed-card-head"><b>กิจกรรมล่าสุด</b><small>ตอนนี้</small></div><p>${htmlEscape(fallback)}</p><span class="vw2-feed-reaction">♡ เพื่อน · 💬 ความคิดเห็น</span></div></div>`;
+
+      }
+
+      if(host.dataset.vw2Html !== html){ host.innerHTML = html; host.dataset.vw2Html = html; }
+
+    }catch(_){ }
+
+  }
+
+  function sync(){
+
+    if(!root || !adminAllowed()) return;
+
+    const name = (typeof state !== 'undefined' && state && state.profileName) ? state.profileName : textOf('#student-chip','ผู้เล่น');
+
+    const uid = (typeof onlineKey === 'function') ? onlineKey() : '';
+
+    const id = (typeof idTag === 'function') ? idTag(uid) : '';
+
+    const coins = (typeof state !== 'undefined' && state) ? state.coins : textOf('#coin-count','0');
+
+    const today = (typeof state !== 'undefined' && state && state.daily) ? state.daily.coins : textOf('#coin-today','0');
+
+    let worth = coins;
+
+    try{ if(typeof netWorth === 'function') worth = netWorth(); }catch(_){ }
+
+    const setText=(idName,value)=>{ const el=document.getElementById(idName); if(el){ const next=String(value == null ? '' : value); if(el.textContent !== next) el.textContent=next; } };
+
+    setText('vw2-name', cleanText(name,28));
+
+    setText('vw2-id', id || 'ID —');
+
+    setText('vw2-coins', fmt(coins));
+
+    setText('vw2-today', fmt(today));
+
+    setText('vw2-worth', fmt(worth));
+
+    const onlineEarn = liveEarnValue('online');
+
+    const compEarn = liveEarnValue('computer');
+
+    setText('vw2-online-earn', fmt(onlineEarn));
+
+    setText('vw2-comp-earn', fmt(compEarn));
+
+    setText('vw2-online-status', liveEarnStatus('online'));
+
+    setText('vw2-comp-status', liveEarnStatus('computer'));
+
+    const gradeText = textOf('#grade-line','');
+
+    const grade = (typeof state !== 'undefined' && state && state.student && state.student.grade) ? state.student.grade : '';
+
+    const gradeHost = document.getElementById('vw2-grade');
+
+    if(gradeHost){
+
+      const nextGrade = gradeIdentityHTML(grade, gradeText);
+
+      if(gradeHost.dataset.vw2GradeHtml !== nextGrade){
+
+        gradeHost.innerHTML = nextGrade;
+
+        gradeHost.dataset.vw2GradeHtml = nextGrade;
+
+      }
+
+    }
+
+    setText('vw2-date', textOf('#clock-chip .ck-date','—'));
+
+    setText('vw2-clock', textOf('#clock-chip .ck-time', textOf('#clock-chip','วันนี้')));
+
+    const offlineSource = document.getElementById('offline-pill');
+
+    const syncChip = document.getElementById('vw2-sync-state');
+
+    if(syncChip){
+
+      const offline = sourceVisible(offlineSource);
+
+      syncChip.hidden = !offline;
+
+      if(offline) syncChip.textContent = cleanText(offlineSource.textContent, 42) || 'ออฟไลน์ · ยังไม่ sync';
+
+    }
+
+    setText('vw2-rank', textOf('#rank-tab','แรงค์กำลังอัปเดต'));
+
+    setText('vw2-newword', textOf('#newword-banner','คำศัพท์ใหม่รอหนูอยู่').replace(/^[✨⭐🌟💫\s]+/,'') || 'คำศัพท์ใหม่รอหนูอยู่');
+
+    copyImage('#pass-photo img','vw2-avatar',knightFallback());
+
+    syncPetVisual();
+
+    syncHouseVisual();
+
+    try{
+
+      if(typeof activePet === 'function'){
+
+        const p=activePet();
+
+        const petName = p && p.name ? cleanText(p.name,24) : 'น้องของฉัน';
+
+        setText('vw2-pet-name', petName);
+
+        setText('vw2-pet-greeting', `${petName} ดีใจที่ได้เจอหนูอีกครั้ง!`);
+
+      }
+
+    }catch(_){ }
+
+    feedCardsFromAuthoritativeSource();
+
+    const likes = (typeof state !== 'undefined' && state && state.feedLikes != null) ? fmt(state.feedLikes) : 'เพื่อน';
+
+    setText('vw2-feed-likes', likes);
+
+    const q = questHTML();
+
+    const qs = document.getElementById('vw2-quests');
+
+    if(qs && qs.dataset.vw2Html !== q.html){ qs.innerHTML = q.html; qs.dataset.vw2Html = q.html; }
+
+    setText('vw2-quest-count', `${Math.min(q.done,q.total)}/${q.total}`);
+
+    const qb = document.getElementById('vw2-quest-bar');
+
+    if(qb) qb.style.width = (q.total ? Math.min(100,(q.done/q.total)*100) : 0) + '%';
+
+    let onlineCount = '';
+
+    let onlineName = '';
+
+    try{
+
+      if(typeof Online !== 'undefined' && Online){
+
+        const list = Array.isArray(Online.friends) ? Online.friends : [];
+
+        onlineCount = String(list.length);
+
+        const f = list[0];
+
+        if(f) onlineName = f.n || f.name || '';
+
+      }
+
+    }catch(_){ }
+
+    if(!onlineCount){
+
+      const sub = textOf('#online-sub','');
+
+      const m = sub.match(/\d+/); onlineCount = m ? m[0] : '—';
+
+    }
+
+    if(!onlineName){
+
+      const raw = textOf('#online-card','กำลังเชื่อมต่อเพื่อนออนไลน์');
+
+      onlineName = cleanText(raw,48);
+
+    }
+
+    setText('vw2-online-count', onlineCount);
+
+    setText('vw2-online-name', onlineName || 'ยังไม่มีเพื่อนออนไลน์');
+
+    setText('vw2-online-text', onlineName ? 'กำลังเรียนอยู่ตอนนี้' : 'ชวนเพื่อนมาเรียนด้วยกัน');
+
+    syncSourceParity();
+
+  }
+
+  function localPreviewFrameActive(){
+
+    if(window.parent === window) return false;
+
+    const host = String(location.hostname || '').toLowerCase();
+
+    return host === '127.0.0.1' || host === 'localhost' || host === '::1';
+
+  }
+
+  function visibleRect(el){
+
+    if(!el) return null;
+
+    const cs = getComputedStyle(el);
+
+    if(cs.display === 'none' || cs.visibility === 'hidden') return null;
+
+    const r = el.getBoundingClientRect();
+
+    if(r.width < 1 || r.height < 1) return null;
+
+    return {left:r.left,top:r.top,right:r.right,bottom:r.bottom,width:r.width,height:r.height};
+
+  }
+
+  function rectsOverlap(a,b){
+
+    return !!(a && b && Math.min(a.right,b.right)-Math.max(a.left,b.left) > 1 && Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top) > 1);
+
+  }
+
+  function reportLocalPreviewMetrics(){
+
+    if(!localPreviewFrameActive()) return;
+
+    const r = document.getElementById(ROOT_ID);
+
+    const shell = r ? r.querySelector('.vw2-shell') : null;
+
+    const left = r ? r.querySelector('.vw2-left') : null;
+
+    const bottom = r ? r.querySelector('.vw2-bottom') : null;
+
+    const leftCue = left ? left.querySelector('.vw2-left-scroll-cue') : null;
+
+    const areas = r ? [
+
+      ['left',r.querySelector('.vw2-left')],['feed',r.querySelector('.vw2-feed')],
+
+      ['feature',r.querySelector('.vw2-feature')],['right',r.querySelector('.vw2-right')]
+
+    ] : [];
+
+    const overlaps = [];
+
+    for(let i=0;i<areas.length;i++) for(let j=i+1;j<areas.length;j++){
+
+      if(rectsOverlap(visibleRect(areas[i][1]), visibleRect(areas[j][1]))) overlaps.push(`${areas[i][0]}:${areas[j][0]}`);
+
+    }
+
+    const sourceNodes = r ? Array.from(r.querySelectorAll('[data-vw2-source]')) : [];
+
+    const missingSources = sourceNodes.filter(el=>{
+
+      try{ return !el.dataset.vw2Source || !document.querySelector(el.dataset.vw2Source); }
+
+      catch(_){ return true; }
+
+    }).map(el=>el.dataset.vw2Action || '?');
+
+    const rootStyle = r ? getComputedStyle(r) : null;
+
+    const shellStyle = shell ? getComputedStyle(shell) : null;
+
+    const leftStyle = left ? getComputedStyle(left) : null;
+
+    const bottomStyle = bottom ? getComputedStyle(bottom) : null;
+
+    const rootBox = r ? r.getBoundingClientRect() : null;
+
+    window.parent.postMessage({
+
+      type:'vw-mobile-device-preview-metrics',
+
+      viewport:{width:window.innerWidth,height:window.innerHeight,dpr:window.devicePixelRatio || 1},
+
+      homeV2:{
+
+        present:!!r,visible:!!(r && !r.hidden && dashboardActive()),adminAllowed:adminAllowed(),
+
+        rootWidth:rootBox ? Math.round(rootBox.width) : null,rootHeight:rootBox ? Math.round(rootBox.height) : null,
+
+        horizontalOverflow:r ? r.scrollWidth > r.clientWidth + 1 : null,
+
+        verticalOverflow:r ? r.scrollHeight > r.clientHeight + 1 : null,
+
+        pageOverflow:(document.documentElement.scrollWidth > window.innerWidth + 1) || (document.documentElement.scrollHeight > window.innerHeight + 1),
+
+        locked:!!(r && shell && rootStyle && shellStyle && !['auto','scroll'].includes(rootStyle.overflowY) && !['auto','scroll'].includes(shellStyle.overflowY) && shell.scrollHeight <= shell.clientHeight + 1),
+
+        panelOverlaps:overlaps,
+
+        actionSources:{total:sourceNodes.length,missing:missingSources}
+
+      },
+
+      rails:{
+
+        leftScrollable:!!(left && leftStyle && ['auto','scroll'].includes(leftStyle.overflowY) && left.scrollHeight > left.clientHeight + 1),
+
+        leftScrollbarHidden:!!(leftStyle && leftStyle.scrollbarWidth === 'none'),
+
+        leftCueCorrect:!!(left && leftCue && ((left.scrollHeight <= left.clientHeight + 2 && !leftCue.classList.contains('is-visible')) || (left.scrollHeight > left.clientHeight + 2 && (leftCue.classList.contains('is-visible') === (left.scrollTop + left.clientHeight < left.scrollHeight - 2))))),
+
+        bottomScrollable:!!(bottom && bottomStyle && ['auto','scroll'].includes(bottomStyle.overflowX) && bottom.scrollWidth > bottom.clientWidth + 1),
+
+        bottomContained:!!(bottom && bottom.scrollWidth <= bottom.clientWidth + 1 && bottom.scrollHeight <= bottom.clientHeight + 1)
+
+      }
+
+    }, '*');
+
+  }
+
+  function scheduleLocalPreviewReport(){
+
+    if(!localPreviewFrameActive()) return;
+
+    clearTimeout(previewReportTimer);
+
+    previewReportTimer = setTimeout(reportLocalPreviewMetrics, 90);
+
+  }
+
+  function scheduleSync(){
+
+    clearTimeout(syncTimer);
+
+    syncTimer = setTimeout(()=>{
+
+      if(adminAllowed() && dashboardActive() && previewWanted()) sync();
+
+    }, 120);
+
+  }
+
+  function syncVisibility(){
+
+    const dash = dashboard();
+
+    if(!dash) return;
+
+    const allowed = adminAllowed();
+
+    const active = dashboardActive();
+
+    if(!allowed){
+
+      dash.classList.remove(CLASS_ON);
+
+      if(root) root.hidden = true;
+
+      if(classicToggle) classicToggle.hidden = true;
+
+      return;
+
+    }
+
+    ensureClassicToggle();
+
+    const showV2 = active && previewWanted();
+
+    // Runtime-safety: build Home V2 lazily only after the real dashboard is
+
+    // active and admin authorization is already known. This keeps all Home
+
+    // V2 work off the startup/loading path.
+
+    if(showV2 && !root) build();
+
+    dash.classList.toggle(CLASS_ON, showV2);
+
+    if(root) root.hidden = !showV2;
+
+    if(classicToggle) classicToggle.hidden = !active || showV2;
+
+    if(showV2 && !v2WasVisible){
+
+      scheduleSync();
+
+      setTimeout(playPetWelcome, 40);
+
+    }
+
+    v2WasVisible = showV2;
+
+    scheduleLocalPreviewReport();
+
+  }
+
+  function tick(){
+
+    syncVisibility();
+
+    if(root && adminAllowed() && dashboardActive() && previewWanted()) sync();
+
+  }
+
+  function init(){
+
+    // No MutationObserver on the classic Lobby. The existing Lobby has
+
+    // animated/ticker DOM that changes frequently; observing its subtree can
+
+    // create a feedback-heavy main-thread workload. A slow, bounded poll is
+
+    // sufficient for this admin-only preview.
+
+    clearInterval(clockTimer);
+
+    clockTimer = setInterval(tick, 2000);
+
+    window.addEventListener('focus', tick);
+
+    window.addEventListener('resize', scheduleLocalPreviewReport);
+
+    setTimeout(tick, 250);
+
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, {once:true});
+
+  else init();
+
+})();
+
