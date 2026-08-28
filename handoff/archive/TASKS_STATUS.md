@@ -5626,3 +5626,10 @@
 - **รอบ 1268 · หน้าแรกเข้า landscape อัตโนมัติแทนภาพสั่งหมุนจอ:** ลบ `#rotate-overlay` จาก HTML/CSS; PWA/TWA คง `orientation: landscape` และ runtime เรียก Screen Orientation API ตอนเปิด/กลับเข้าแอป (`index_classic.html`, `css/lobby.css`, `js/util.js`)
 - แท็บ Android แนวตั้งใช้การแตะครั้งแรกเข้า fullscreen แล้วล็อก landscape; browser ที่ไม่รองรับจะไม่ถูก overlay บัง; เพิ่ม regression `tools/test_landscape_entry.js`
 - `node --check`, landscape/lobby regression, production build และ PWA/cache/TWA validator ผ่าน; dist ไม่มี overlay และมี landscape lock; visual QA ถูก Windows ACL บล็อกที่ browser runtime
+
+
+## ⏬ ย้ายเมื่อ 2026-08-28 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1269 · พักการแสดงชุดเมื่อสัตว์หิว:** `petWearOverlay()` คืน `null` เมื่อ `petHungry(p)` เพื่อไม่ให้ชุดบังสีหน้า/ท่าหิว แต่คงข้อมูล equipped และชุดกลับมาเองเมื่อกินอิ่ม (`js/images.js`)
+- ใช้กติกาเดียวกับสถานะป่วย; ภาพ/asset และตำแหน่งชุดตอนสุขภาพปกติไม่เปลี่ยน
+- regression ยืนยันป่วย=ไม่มีชุด, หิว=ไม่มีชุด, ปกติและอิ่ม=ยังเห็นชุด; syntax + pet bond + dress luxury ผ่าน (`tools/test_pet_bond.js`)

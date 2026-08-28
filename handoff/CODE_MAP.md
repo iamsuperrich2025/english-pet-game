@@ -446,7 +446,7 @@ gradeChangeTo:64 · gradeLockNote:91 · openGradeChange:100
 
 ## js/hauntedhotelsession.js (255 บรรทัด · 0 รายการ)
 
-## js/home-v2.js (1,776 บรรทัด · 0 รายการ)
+## js/home-v2.js (1,856 บรรทัด · 0 รายการ)
 
 ## js/hotel3d.js (1,526 บรรทัด · 62 รายการ)
 ### 🗂️ สารบัญโซน js/hotel3d.js (Read/Edit เฉพาะช่วง)
@@ -1033,8 +1033,21 @@ vbRender:148 · vbCardHTML:194
 .xsp-foot:235 · .xsb-box:250,277 · .xsb-head:255,256 · .xsb-grid:257 · .xsb-card:258,262 · .xsb-emoji:263
 .xsb-name:264 · .xsb-info:265 · .xsb-done:266 · .onet-picker:270,271,272,273(+3) · .onet-board:278,279,280
 
-## css/home-v2.css (2,448 บรรทัด · 5 selector)
-#screen-dashboard:10,22 · #vw-home-v2-root:25,28,61,64(+499) · #vw2-preview-switch:727,730 · .night:733 · .no-anim:736
+## css/home-v2.css (237 บรรทัด · 81 selector)
+:root:7 · #screen-dashboard:9,14 · #vw-home-v2-root:17,18,19,20(+19) · .vw2-screen-frame:41 · .vw2-sky:42,43,44,45(+2) · .vw2-shell:49,50
+.vw2-glass:51 · .vw2-top:54 · .vw2-profile:55,56 · .vw2-kanok-corner:57 · .vw2-profile-crown:58,59 · .vw2-profile-kicker:60,61
+.vw2-avatar-frame:62 · .vw2-avatar:63,64,65 · .vw2-avatar-edit:66 · .vw2-profile-main:67 · .vw2-name-row:68,69 · .vw2-pencil:70
+.vw2-profile-meta:71 · .vw2-profile-meta-chip:72,73,74,75 · .vw2-grade-identity:76,79,80 · .vw2-grade-symbol:77,78 · .vw2-grade-gem-line:81 · .vw2-grade-copy:82
+.vw2-profile-chips:83 · .vw2-rank:84 · .vw2-sync-chip:85 · .vw2-wallet:87 · .vw2-wallet-pill:88,89,90,91(+5) · .vw2-stat-art:95,96
+.vw2-stat-art-coin:97 · .vw2-stat-copy:98,99,100 · .vw2-pill-status:102 · .vw2-top-actions:105 · .vw2-tool-btn:106,107,108 · .vw2-main-grid:111,112
+.vw2-left:115,116,117 · .vw2-rail-btn:118,127 · .vw2-rail-art:119,120,121 · .vw2-rail-scene:122,123 · .vw2-rail-scene-mark:124,125 · .vw2-rail-label:126
+.vw2-rail-racing:128 · .vw2-left-scroll-cue:129,130 · .vw2-feed:132,133 · .vw2-section-head:134,135 · .vw2-feed-items:136 · .vw2-feed-card:137
+.vw2-feed-avatar:138,139 · .vw2-feed-copy:140 · .vw2-feed-coin:141,142 · .vw2-feature:144 · .vw2-feature-title:145,146,147 · .vw2-word-ribbon:148,149
+.vw2-feature-stage:150,151 · .vw2-world-scene:152 · .vw2-atmosphere:153 · .vw2-speech:154 · .vw2-reward-card:155,156 · .vw2-pet-halo:157
+.vw2-pet-platform:158,159,160 · .vw2-pet:161,162 · .vw2-pet-sparkles:163,164 · .vw2-house-preview:165 · .vw2-house-preview-head:166 · .vw2-house-backdrop:167,237
+.vw2-stage-copy:168,169 · .vw2-stage-foreground:170 · .vw2-feature-actions:171 · .vw2-right:174 · .vw2-mission:175,176 · .vw2-quests:177
+.vw2-quest-row:178,179 · .vw2-empty:180 · .vw2-online:182 · .vw2-online-copy:183 · .vw2-bottom:186,187 · .vw2-mode:188
+.vw2-preview-mark:189 · .vw2-source-badge:190 · .no-anim:236
 
 ## css/lettercannon.css (48 บรรทัด · 28 selector)
 #lc-game:6,7 · .lc-hud:8 · .lc-glass:9 · .lc-stats:10 · .lc-stat:11 · .lc-coin-stat:12
