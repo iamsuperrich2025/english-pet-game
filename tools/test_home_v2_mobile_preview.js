@@ -16,8 +16,8 @@ const must = (ok, msg) => { if(!ok) fail.push(msg); };
 must(home.includes("R11.4 Visual Master Fidelity Reconstruction + Premium Depth / Composition Recovery"), "R11.4 Home V2 JS marker missing");
 must(css.includes("R11.4 Visual Master Fidelity Reconstruction") && css.includes("--vw2-r111-ready:1") && css.includes("--vw2-r112-ready:1") && css.includes("--vw2-r113-ready:1") && css.includes("--vw2-r114-ready:1"), "R11.4 stylesheet lineage/marker missing");
 must(home.includes("--vw2-r114-runtime-ready:1"), "R11.4 runtime marker missing");
-must(home.includes("ADMIN PREVIEW · R11.5.2 FINAL POLISH"), "R11.5.2 visible ADMIN PREVIEW marker missing");
-must(indexClassic.includes("css/home-v2.css?v=1221") && indexClassic.includes("js/home-v2.js?v=1221"), "R11.5.2 cache-bust missing from index_classic.html");
+must(home.includes("ADMIN PREVIEW · R11.5.3 BOTTOM RAIL RESTORED"), "R11.5.3 visible ADMIN PREVIEW marker missing");
+must(indexClassic.includes("css/home-v2.css?v=1222") && indexClassic.includes("js/home-v2.js?v=1222"), "R11.5.3 cache-bust missing from index_classic.html");
 
 const r111Assets = [
   "r111_screen_frame.svg",
@@ -39,7 +39,7 @@ must(home.includes('r111_pet_world_scene.svg'), "authoritative scenic world asse
 
 
 /* R11.5.1 SAFE LIGHTWEIGHT ASSET BRIDGE + ASSET-DRIVEN VISUAL MASTER guard. */
-must(css.includes("R11.5.1 Safe Lightweight Asset Bridge Rebase") && css.includes("--vw2-r115-ready:1") && css.includes("--vw2-r1151-ready:1") && css.includes("--vw2-r1152-ready:1"), "R11.5.2 stylesheet lineage/marker missing");
+must(css.includes("R11.5.1 Safe Lightweight Asset Bridge Rebase") && css.includes("--vw2-r115-ready:1") && css.includes("--vw2-r1151-ready:1") && css.includes("--vw2-r1152-ready:1") && css.includes("--vw2-r1153-ready:1"), "R11.5.3 stylesheet lineage/marker missing");
 const r115Assets = [
   "r115_profile_shell.webp",
   "r115_stat_coin.webp",
@@ -179,16 +179,21 @@ must(home.includes("textOf('#clock-chip .ck-date'") && home.includes("textOf('#r
 const expectedBottom = ["vocabbook","ielts","toeic","toefl","onetp6","onetm3","onetm6","cats","play","picmatch","picdict","picquiz","bandexam"];
 const bottomOrder = expectedBottom.map(action => home.indexOf(`['${action}',`));
 must(expectedBottom.length === 13 && bottomOrder.every((p, i) => p >= 0 && (!i || p > bottomOrder[i - 1])), "accepted bottom rail inventory/order changed");
-must(css.includes("R11.5.2 BOTTOM RAIL SCROLL RECOVERY") && css.includes("overflow-x:auto!important") && css.includes("scroll-snap-type:x proximity"), "R11.5.2 horizontal bottom rail scroll CSS missing");
-must(/\.vw2-bottom \.vw2-mode\{[^}]*flex:0 0 clamp\(142px/.test(css), "bottom rail buttons are not protected from squeeze");
-must(home.includes("function setupBottomRailScroll()") && home.includes("rail.scrollLeft += e.deltaY") && home.includes("setupBottomRailScroll();"), "bottom rail wheel/touch setup missing");
-must(/\.vw2-mode\{[^}]*font-size:clamp\(8px/.test(css), "bottom rail label readability floor missing");
+must(css.includes("R11.5.3 BOTTOM RAIL GEOMETRY RESTORE + WRAPPER-ONLY SCROLL"), "R11.5.3 bottom rail architecture marker missing");
+must(home.includes('class="vw2-bottom-scroll"') && home.includes('class="vw2-bottom-track"'), "static outer rail / inner scroll wrapper markup missing");
+must(/\.vw2-bottom\{[\s\S]*?display:block!important;[\s\S]*?overflow:hidden!important;[\s\S]*?\}/.test(css), "outer Bottom Rail is not a static clipped frame");
+must(/\.vw2-bottom-scroll\{[\s\S]*?overflow-x:auto!important;[\s\S]*?overflow-y:hidden!important;[\s\S]*?touch-action:pan-x;[\s\S]*?\}/.test(css), "inner Bottom Rail scroll wrapper behavior missing");
+must(css.includes('grid-template-columns:repeat(13,max(72px,calc((100% - 36px)/13)))') && css.includes('grid-template-columns:repeat(13,max(72px,calc((100% - 24px)/13)))'), "R11.5.1-derived equal-column geometry + narrow anti-squeeze floor missing");
+must(!css.includes('flex:0 0 clamp(142px') && !css.includes('min-width:122px!important') && !css.includes('grid-template-rows:100px minmax(0,1fr) 46px'), "R11.5.2 oversized Bottom Rail geometry still present");
+must(css.includes('grid-template-rows:100px minmax(0,1fr) 42px'), "R11.5.1 max-height:390 Bottom Rail height was not restored");
+must(home.includes("function setupBottomRailScroll()") && home.includes("root.querySelector('.vw2-bottom-scroll')") && home.includes("rail.scrollLeft += e.deltaY") && home.includes("setupBottomRailScroll();"), "Bottom Rail input support is not attached to the inner wrapper");
+must(/\.vw2-mode\{[^}]*font-size:clamp\(8px/.test(css), "R11.5.1 bottom rail label scale missing");
 
 /* Mobile landscape targets + regression metrics. */
 ["915", "844", "800", "667"].forEach(w => must(preview.includes(w), `mobile preview device width missing: ${w}`));
 ["412", "390", "360", "375"].forEach(h => must(preview.includes(h), `mobile preview device height missing: ${h}`));
 must(css.includes("@media (max-width:1180px),(max-height:520px)") && css.includes("@media (max-width:760px)") && css.includes("@media (max-height:390px)"), "R11.4 mobile landscape breakpoints missing");
-must(home.includes("pageOverflow:") && home.includes("panelOverlaps:") && home.includes("bottomScrollable:") && home.includes("bottomContained:"), "local mobile overflow/collision/scroll metrics missing");
+must(home.includes("pageOverflow:") && home.includes("pageHorizontalOverflow:") && home.includes("outerBottomRailContained:") && home.includes("bottomScrollWrapperScrollable:") && home.includes("bottomScrollWrapperVerticalOverflow:") && home.includes("all13BottomActionsPresent:") && home.includes("bottomButtonGeometryStable"), "R11.5.3 local mobile Bottom Rail metrics missing");
 must(home.includes("minReadableFontPx:") && home.includes("importantValueClipped"), "R11.4 readability/value-clipping preview metrics missing");
 must(css.includes("overflow:hidden") && css.includes("overscroll-behavior:contain"), "page/rail overflow containment missing");
 
@@ -201,8 +206,8 @@ must(home.includes("function adminAllowed()") && home.includes("typeof isAdmin =
 must(!home.includes("firebase deploy") && !home.includes("deploy production"), "Home V2 source contains unexpected deployment action");
 
 if(fail.length){
-  console.error("Home V2 R11.5.2 validation FAILED:\n- " + fail.join("\n- "));
+  console.error("Home V2 R11.5.3 validation FAILED:\n- " + fail.join("\n- "));
   process.exit(1);
 }
-console.log("Home V2 R11.5.2 validation PASS");
-console.log(`Checked R11.5.2 bottom-rail scroll recovery, R11.5.1 asset-driven fantasy skins (${r115Assets.length} optimized assets / ${r115AssetBytes} bytes), pet diorama depth, ${expectedRail.length} left destinations, ${expectedBottom.length} bottom actions, authoritative bindings, and mobile landscape guards.`);
+console.log("Home V2 R11.5.3 validation PASS");
+console.log(`Checked R11.5.3 wrapper-only Bottom Rail scroll + R11.5.1 geometry recovery, R11.5.1 asset-driven fantasy skins (${r115Assets.length} optimized assets / ${r115AssetBytes} bytes), pet diorama depth, ${expectedRail.length} left destinations, ${expectedBottom.length} bottom actions, authoritative bindings, and mobile landscape guards.`);

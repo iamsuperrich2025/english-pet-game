@@ -469,7 +469,7 @@
   }
   function updateBottomRailScrollState(){
     if(!root) return;
-    const rail = root.querySelector('.vw2-bottom');
+    const rail = root.querySelector('.vw2-bottom-scroll');
     if(!rail) return;
     const max = Math.max(0, rail.scrollWidth - rail.clientWidth);
     const scrollable = max > 2;
@@ -481,10 +481,10 @@
   }
   function setupBottomRailScroll(){
     if(!root) return;
-    const rail = root.querySelector('.vw2-bottom');
+    const rail = root.querySelector('.vw2-bottom-scroll');
     if(!rail || rail.dataset.vw2ScrollReady === '1') return;
     rail.dataset.vw2ScrollReady = '1';
-    rail.tabIndex = 0;
+    if(!rail.hasAttribute('tabindex')) rail.tabIndex = 0;
     rail.title = 'เลื่อนซ้าย–ขวาเพื่อดูทางลัดทั้งหมด';
     rail.addEventListener('scroll', ()=>{
       updateBottomRailScrollState();
@@ -642,8 +642,8 @@
             </section>
           </aside>
         </div>
-        <footer class="vw2-bottom" aria-label="ทางลัดการเรียนและเกมทั้งหมด">${modeButtons}</footer>
-        <div class="vw2-preview-mark">ADMIN PREVIEW · R11.5.2 FINAL POLISH</div>
+        <footer class="vw2-bottom" aria-label="ทางลัดการเรียนและเกมทั้งหมด"><div class="vw2-bottom-scroll" tabindex="0" role="region" aria-label="เลื่อนทางลัดการเรียนและเกม"><div class="vw2-bottom-track">${modeButtons}</div></div></footer>
+        <div class="vw2-preview-mark">ADMIN PREVIEW · R11.5.3 BOTTOM RAIL RESTORED</div>
       </div>`;
     dash.appendChild(root);
     setupLeftRailCue();
@@ -992,6 +992,8 @@
     const shell = r ? r.querySelector('.vw2-shell') : null;
     const left = r ? r.querySelector('.vw2-left') : null;
     const bottom = r ? r.querySelector('.vw2-bottom') : null;
+    const bottomScroll = r ? r.querySelector('.vw2-bottom-scroll') : null;
+    const bottomTrack = r ? r.querySelector('.vw2-bottom-track') : null;
     const leftCue = left ? left.querySelector('.vw2-left-scroll-cue') : null;
     const areas = r ? [
       ['left',r.querySelector('.vw2-left')],['feed',r.querySelector('.vw2-feed')],
@@ -1010,6 +1012,10 @@
     const shellStyle = shell ? getComputedStyle(shell) : null;
     const leftStyle = left ? getComputedStyle(left) : null;
     const bottomStyle = bottom ? getComputedStyle(bottom) : null;
+    const bottomScrollStyle = bottomScroll ? getComputedStyle(bottomScroll) : null;
+    const bottomModes = bottomTrack ? Array.from(bottomTrack.querySelectorAll('.vw2-mode')) : [];
+    const bottomModeHeights = bottomModes.map(el=>el.getBoundingClientRect().height);
+    const bottomButtonGeometryStable = bottomModeHeights.length === 13 && Math.max(...bottomModeHeights) - Math.min(...bottomModeHeights) <= 1;
     const rootBox = r ? r.getBoundingClientRect() : null;
     const readableNodes = r ? Array.from(r.querySelectorAll('.vw2-tool-btn b,.vw2-section-head strong,.vw2-feed-copy p,.vw2-qbody b,.vw2-online-name-line>b,.vw2-mode')) : [];
     const readableSizes = readableNodes.map(el=>parseFloat(getComputedStyle(el).fontSize) || 0).filter(Boolean);
@@ -1028,6 +1034,7 @@
         horizontalOverflow:r ? r.scrollWidth > r.clientWidth + 1 : null,
         verticalOverflow:r ? r.scrollHeight > r.clientHeight + 1 : null,
         pageOverflow:(document.documentElement.scrollWidth > window.innerWidth + 1) || (document.documentElement.scrollHeight > window.innerHeight + 1),
+        pageHorizontalOverflow:document.documentElement.scrollWidth > window.innerWidth + 1,
         locked:!!(r && shell && rootStyle && shellStyle && !['auto','scroll'].includes(rootStyle.overflowY) && !['auto','scroll'].includes(shellStyle.overflowY) && shell.scrollHeight <= shell.clientHeight + 1),
         panelOverlaps:overlaps,
         actionSources:{total:sourceNodes.length,missing:missingSources},
@@ -1038,10 +1045,15 @@
         leftScrollable:!!(left && leftStyle && ['auto','scroll'].includes(leftStyle.overflowY) && left.scrollHeight > left.clientHeight + 1),
         leftScrollbarHidden:!!(leftStyle && leftStyle.scrollbarWidth === 'none'),
         leftCueCorrect:!!(left && leftCue && ((left.scrollHeight <= left.clientHeight + 2 && !leftCue.classList.contains('is-visible')) || (left.scrollHeight > left.clientHeight + 2 && (leftCue.classList.contains('is-visible') === (left.scrollTop + left.clientHeight < left.scrollHeight - 2))))),
-        bottomScrollable:!!(bottom && bottomStyle && ['auto','scroll'].includes(bottomStyle.overflowX) && bottom.scrollWidth > bottom.clientWidth + 1),
-        bottomContained:!!(bottom && bottom.scrollHeight <= bottom.clientHeight + 1),
-        bottomCanScrollLeft:!!(bottom && bottom.scrollLeft > 2),
-        bottomCanScrollRight:!!(bottom && bottom.scrollLeft + bottom.clientWidth < bottom.scrollWidth - 2)
+        bottomScrollable:!!(bottomScroll && bottomScrollStyle && ['auto','scroll'].includes(bottomScrollStyle.overflowX) && bottomScroll.scrollWidth > bottomScroll.clientWidth + 1),
+        bottomContained:!!(bottom && bottomStyle && !['auto','scroll'].includes(bottomStyle.overflowX) && bottom.scrollWidth <= bottom.clientWidth + 1 && bottom.scrollHeight <= bottom.clientHeight + 1),
+        outerBottomRailContained:!!(bottom && bottomStyle && !['auto','scroll'].includes(bottomStyle.overflowX) && bottom.scrollWidth <= bottom.clientWidth + 1 && bottom.scrollHeight <= bottom.clientHeight + 1),
+        bottomScrollWrapperScrollable:!!(bottomScroll && bottomScrollStyle && ['auto','scroll'].includes(bottomScrollStyle.overflowX) && bottomScroll.scrollWidth > bottomScroll.clientWidth + 1),
+        bottomScrollWrapperVerticalOverflow:!!(bottomScroll && bottomScroll.scrollHeight > bottomScroll.clientHeight + 1),
+        all13BottomActionsPresent:bottomModes.length === 13,
+        bottomButtonGeometryStable,
+        bottomCanScrollLeft:!!(bottomScroll && bottomScroll.scrollLeft > 2),
+        bottomCanScrollRight:!!(bottomScroll && bottomScroll.scrollLeft + bottomScroll.clientWidth < bottomScroll.scrollWidth - 2)
       }
     }, '*');
   }
