@@ -40,9 +40,6 @@
 - **รอบ 1271 · ตลาดแสดงประกาศของตัวเองและเป็นตลาดรวมทุกผู้เล่น:** `renderMarketBrowse()` ไม่กรอง `sid===me` แล้ว; การ์ดเจ้าของขึ้น “ร้านของฉัน / โพสต์ขายแล้ว” แบบ disabled จึงเห็นราคา/สินค้าแต่ซื้อเองไม่ได้ (`js/ui.js`)
 - เปลี่ยนข้อความ “ตลาดเพื่อน” เป็น “ตลาดผู้เล่นทั้งหมด — ทุกคนเห็นทุกประกาศ”; `marketWatch()` อ่าน root `/market` โดยไม่กรองเพื่อน และ live Rules ยืนยัน `.read = auth != null` จึงไม่ต้อง Publish Rules (`js/online.js`, `handoff/GAME_RULES.md`)
 - syntax + market visibility/global rules + secure buy + listing reconcile ผ่าน; regression ครอบ own+other card, no own buy action, global root และไม่มี friend filter (`tools/test_market_visibility.js`)
-- **รอบ 1270 · แก้ตลาดค้าง “ระบบกำลังยืนยันรายการ”:** หลังรอบ 1262 claim listing ผ่านแล้ว แต่ transaction ขอ settlement lease ยัง abort จาก RTDB null guess ทำให้ ledger ค้าง `claimed/processing`; รวมทุก transaction ฝั่ง Functions ผ่าน server-seeded wrapper เดียว (`functions/index.js`)
-- production ยืนยัน 3 รายการล่าสุดมี `status=claimed` แต่ไม่มี `leaseBy/leaseUntil`; wrapper ใหม่ครอบ lease, save ผู้ซื้อ/ผู้ขาย, คืน listing และ claim โดย server hash/retry ยังป้องกัน race/ขายซ้ำ
-- syntax + Functions regression + client transaction + listing reconcile ผ่าน; test ล็อกให้ secure market มี `.transaction()` ตรงเพียง wrapper จุดเดียว และยืนยัน null-guess lease ได้จริง (`functions/test_market_settlement.js`)
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`
