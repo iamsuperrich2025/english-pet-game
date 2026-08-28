@@ -37,6 +37,58 @@ must(css.includes('r111_kanok_corner.svg') && css.includes('r111_kanok_band.svg'
 must(!home.includes('r111_screen_frame.svg') && css.includes('.vw2-screen-frame{display:none!important}'), "rejected yellow outer Thai frame returned");
 must(home.includes('r111_pet_world_scene.svg'), "authoritative scenic world asset no longer used");
 
+
+/* R11.5.1 SAFE LIGHTWEIGHT ASSET BRIDGE + ASSET-DRIVEN VISUAL MASTER guard. */
+must(css.includes("R11.5.1 Safe Lightweight Asset Bridge Rebase") && css.includes("--vw2-r115-ready:1") && css.includes("--vw2-r1151-ready:1"), "R11.5.1 stylesheet lineage/marker missing");
+const r115Assets = [
+  "r115_profile_shell.webp",
+  "r115_stat_coin.webp",
+  "r115_stat_today.webp",
+  "r115_stat_online.webp",
+  "r115_stat_computer.webp",
+  "r115_stat_worth.webp",
+  "r115_frame_feed.webp",
+  "r115_frame_mission.webp",
+  "r115_frame_online.webp",
+  "r115_title_plaque.webp",
+  "r115_ticker_plaque.webp",
+  "r115_nav_frame.webp",
+  "r115_nav_racing.webp",
+  "r115_hero_world.webp",
+  "r115_hero_match.webp",
+  "r115_hero_pet.webp",
+  "r115_bottom_blue.webp",
+  "r115_bottom_pink.webp",
+  "r115_bottom_green.webp",
+  "r115_bottom_orange.webp",
+  "r115_bottom_gold.webp",
+  "r115_bottom_lime.webp",
+  "r115_bottom_violet.webp",
+  "r115_bottom_rose.webp",
+  "r115_speech_bubble.webp",
+  "r115_pedestal.webp",
+  "r115_scene_frame.webp",
+  "r115_reward_sign.webp",
+  "r115_house_label.webp",
+  "r115_clouds.webp",
+];
+let r115AssetBytes = 0;
+r115Assets.forEach(name => {
+  const p = path.join(root, "img", "home-v2", name);
+  must(fs.existsSync(p), `R11.5 visual asset missing: ${name}`);
+  if(fs.existsSync(p)) r115AssetBytes += fs.statSync(p).size;
+  must(buildWeb.includes(`img/home-v2/${name}`), `build allowlist missing R11.5 asset: ${name}`);
+  must(css.includes(name), `R11.5 stylesheet does not integrate asset: ${name}`);
+});
+must(r115AssetBytes > 250000 && r115AssetBytes < 700000, `R11.5 asset budget unexpected: ${r115AssetBytes} bytes`);
+must(css.includes('r115_profile_shell.webp') && css.includes('r115_stat_coin.webp'), "asset-driven profile/stat skins missing");
+must(css.includes('r115_frame_feed.webp') && css.includes('r115_frame_mission.webp') && css.includes('r115_frame_online.webp'), "cohesive Feed/Mission/Online frame family missing");
+must(css.includes('r115_title_plaque.webp') && css.includes('r115_ticker_plaque.webp'), "master title/ticker plaques missing");
+must(css.includes('r115_nav_frame.webp') && css.includes('r115_nav_racing.webp'), "asset-driven left navigation missing");
+must(css.includes('r115_pedestal.webp') && css.includes('r115_speech_bubble.webp') && css.includes('r115_clouds.webp'), "center diorama asset depth recovery missing");
+must(css.includes('r115_hero_world.webp') && css.includes('r115_hero_match.webp') && css.includes('r115_hero_pet.webp'), "three hero button skins missing");
+must(css.includes('r115_bottom_blue.webp') && css.includes('r115_bottom_violet.webp') && css.includes('r115_bottom_rose.webp'), "collectible bottom-rail skins missing");
+
 /* Structural material system / premium identity HUD. */
 must(css.includes('--vw2-pearl:#fffdfd') && css.includes('--vw2-violet-deep:#4e278f') && css.includes('--vw2-gold:#e4b34f'), "R11.4 premium material tokens missing");
 must(css.includes('grid-template-rows:clamp(100px,25.5vh,116px)') && css.includes('grid-template-columns:clamp(205px,28.5vw,286px) minmax(0,1fr) clamp(145px,21vw,218px)'), "R11.4 top geometry missing");
@@ -147,8 +199,8 @@ must(home.includes("function adminAllowed()") && home.includes("typeof isAdmin =
 must(!home.includes("firebase deploy") && !home.includes("deploy production"), "Home V2 source contains unexpected deployment action");
 
 if(fail.length){
-  console.error("Home V2 R11.4 validation FAILED:\n- " + fail.join("\n- "));
+  console.error("Home V2 R11.5.1 validation FAILED:\n- " + fail.join("\n- "));
   process.exit(1);
 }
-console.log("Home V2 R11.4 validation PASS");
-console.log(`Checked premium material/HUD reconstruction, pet diorama depth, ${expectedRail.length} left destinations, ${expectedBottom.length} bottom actions, authoritative online/feed/pet/house/profile bindings, and mobile landscape guards.`);
+console.log("Home V2 R11.5.1 validation PASS");
+console.log(`Checked R11.5.1 asset-driven fantasy skins (${r115Assets.length} optimized assets / ${r115AssetBytes} bytes), pet diorama depth, ${expectedRail.length} left destinations, ${expectedBottom.length} bottom actions, authoritative online/feed/pet/house/profile bindings, and mobile landscape guards.`);

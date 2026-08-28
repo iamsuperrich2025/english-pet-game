@@ -134,6 +134,13 @@ async function sourceFiles() {
       'img/home-v2/r11_kanok_corner.svg', 'img/home-v2/r11_kanok_band.svg',
       'img/home-v2/r111_screen_frame.svg', 'img/home-v2/r111_pet_world_scene.svg', 'img/home-v2/r111_cloud_pedestal.svg',
       'img/home-v2/r111_kanok_corner.svg', 'img/home-v2/r111_kanok_band.svg',
+      // Home V2 R11.5.1 asset-driven fantasy UI skins (optimized WebP via VW Dev Studio 0.8.1 Lightweight Asset Bridge).
+      'img/home-v2/r115_profile_shell.webp', 'img/home-v2/r115_stat_coin.webp', 'img/home-v2/r115_stat_today.webp', 'img/home-v2/r115_stat_online.webp', 'img/home-v2/r115_stat_computer.webp',
+      'img/home-v2/r115_stat_worth.webp', 'img/home-v2/r115_frame_feed.webp', 'img/home-v2/r115_frame_mission.webp', 'img/home-v2/r115_frame_online.webp', 'img/home-v2/r115_title_plaque.webp',
+      'img/home-v2/r115_ticker_plaque.webp', 'img/home-v2/r115_nav_frame.webp', 'img/home-v2/r115_nav_racing.webp', 'img/home-v2/r115_hero_world.webp', 'img/home-v2/r115_hero_match.webp',
+      'img/home-v2/r115_hero_pet.webp', 'img/home-v2/r115_bottom_blue.webp', 'img/home-v2/r115_bottom_pink.webp', 'img/home-v2/r115_bottom_green.webp', 'img/home-v2/r115_bottom_orange.webp',
+      'img/home-v2/r115_bottom_gold.webp', 'img/home-v2/r115_bottom_lime.webp', 'img/home-v2/r115_bottom_violet.webp', 'img/home-v2/r115_bottom_rose.webp', 'img/home-v2/r115_speech_bubble.webp',
+      'img/home-v2/r115_pedestal.webp', 'img/home-v2/r115_scene_frame.webp', 'img/home-v2/r115_reward_sign.webp', 'img/home-v2/r115_house_label.webp', 'img/home-v2/r115_clouds.webp',
 
       'js/data/f1_vocab.js',
 
