@@ -28,6 +28,9 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (23 ส.ค.) — อ่านก่อน
+- **รอบ 1274 · แก้ยิงเป้าคำให้ตัวอักษรสัมพันธ์กับคำเสมอ:** ต้นตอคือยิงอักษรอนาคตผิดลำดับแล้วทุกใบกำลังพับ + ปิดเกมหลังจบคำก่อน timer ทำงาน ทำให้ช่วงหนึ่งไม่มีเป้าตรงคำ (`js/shootword.js`)
+- บังคับ invariant ให้อักษรที่เหลือรวมตัวซ้ำต้องอยู่บนแผ่นที่ตั้งขึ้นครบ, ล็อกจนแจกกระดานเสร็จจริง, กัน callback คำเก่า และเปิดใหม่หลังคำจบต้องเริ่มคำสด
+- syntax + regression เดิม/ใหม่ (จำลอง `BOOK` ที่ O ทุกใบพับ) + diff check + production build ผ่าน (`tools/test_shootword_letter_sync.js`)
 - **รอบ 1273 · แก้รูปตัวละคร Sky Playground ว่างทั้ง 6 ช่อง:** ต้นตอ path สั้นใน `url()` ผ่าน CSS custom property ถูก resolve เป็น `/css/img/...` แล้ว 404 เงียบ แม้ thumbnail จริงรวมเพียง 80,302B
 - เปลี่ยน picker ก่อนเข้าและในโลกเป็น `<img>` โดยตรง + `decoding="async"`, คง WebP 174×348 และ layout 812×375 เดิม (`js/ui.js`, `js/skyplay3d.js`, `css/skyplay3d.css`)
 - syntax + Sky regression + asset QA ทั้ง 6 ตัว + production build ผ่าน; test ล็อกไม่ให้ย้อนกลับไปใช้ relative CSS-variable URL (`tools/test_skyplay3d.js`)

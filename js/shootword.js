@@ -53,6 +53,7 @@
      พอรอบ 923 ขยายระยะเป้า 3 เท่า มุมมองไปยังหิ้งแบนลงเหลือ ~0.00-0.06 rad → กล้องเงยสูงข้ามหัวแผ่นตลอด
      กากบาท/ปุ่มยิง (ยิงกลางจอเสมอ) จึงพุ่งไปโดนฉากหลัง ไม่โดนแผ่นสักที · 0.04 = กลางกลุ่มเป้าทั้ง 3 แถว */
   let yaw=0, pitch=0.04, aimMode=false, lastShot=0, boardLock=0; // รอบ 1196: เหลือการยิงมุมปกติโหมดเดียว ไม่มีปุ่มเล็ง
+  let boardDealToken=0, boardDealing=false;      // รอบ 1274: กัน callback แจกคำเก่ามาเขียนทับกระดานคำปัจจุบัน
   let word=null, pos=0, misses=0, streak=0;    // คำปัจจุบัน {w,th} · ตำแหน่งตัวถัดไป · ยิงพลาดในคำนี้
   let roundCoins=0;                           // 🪙 รอบ 1246: เหรียญที่ได้ระหว่างการเข้าเล่นครั้งปัจจุบัน
   let queue=[], qGrade=null;                   // คิวคำไม่ซ้ำจนหมดคลัง (สูตรเดียวกับ ws)
@@ -477,15 +478,20 @@
   function dealBoard(instant){
     /* แจกตัวอักษรของคำลงแผ่นแบบสุ่มตำแหน่ง (ทุกตัวอักษรของคำมีแผ่นของตัวเองครบ →
        การันตีสะกดจบได้เสมอ) ที่เหลือเป็นตัวหลอกสุ่ม · แผ่นเปลี่ยนตัวอักษร "ตอนคว่ำอยู่" เท่านั้น */
+    const dealToken=++boardDealToken, dealWord=word;
     const idx=shuffle(plates.map((_,i)=>i));
     const letters=new Array(plates.length);
     word.w.split('').forEach((ch,i)=>{ letters[idx[i]]=ch; });
     for(let i=word.w.length;i<plates.length;i++) letters[idx[i]]=AZ[Math.floor(Math.random()*26)];
     plates.forEach((P,i)=>{
       if(instant){ setPlateLetter(P,letters[i]); P.st='up'; P.hinge.rotation.x=0; }
-      else setTimeout(()=>flipPlate(P,letters[i]), (i%6)*55 + Math.floor(i/6)*90);
+      else setTimeout(()=>{
+        if(dealToken===boardDealToken && word===dealWord) flipPlate(P,letters[i]);
+      }, (i%6)*55 + Math.floor(i/6)*90);
     });
-    boardLock=instant?0:1.15;               // กันยิงระหว่างแผ่นกำลังตีลังกาเปลี่ยนคำ
+    boardDealing=!instant;
+    boardLock=instant?0:1;                  // ค่าบวก = ล็อก; tick ปลดเมื่อทุกแผ่นตั้งขึ้นจริง ไม่เดาเวลาด้วยค่าคงที่
+    if(instant) ensureRemainingLetters();
   }
   function nextWord(instant){
     word=takeWord();
@@ -555,6 +561,7 @@
       flyLetter(P);
       awardLetterCoin(P, v);
       flipPlate(P, AZ[Math.floor(Math.random()*26)]);   // เด้งกลับมาพร้อมตัวอักษรใหม่ (หมุนป้ายแบบงานวัด)
+      ensureRemainingLetters();                         // อักษรซ้ำที่เคยยิงผิดลำดับต้องยังมีเป้าถัดไปให้ยิงทันที
       showStreak();
       renderWordBar();
       if(pos>=word.w.length) wordDone();
@@ -563,8 +570,38 @@
       SND.plink(); SND.miss();
       shakeCam(0.017);                                   // โดนตัวผิด = สั่นเบากว่า (ยังรู้สึกกระแทกแต่ไม่ฉลอง)
       flipPlate(P,null);                                 // แผ่นผิด: พับแล้วเด้งกลับตัวเดิม
+      ensureRemainingLetters();                         // ถ้าเป็นอักษรของช่วงถัดไป ให้ยกเป้านั้นกลับหรือเติมสำรองทันที
       showStreak();
     }
+  }
+
+  /* รอบ 1274: invariant ของกระดาน — ตัวอักษรที่ยังต้องสะกด (รวมจำนวนอักษรซ้ำ)
+     ต้องอยู่บนแผ่นที่ตั้งขึ้นครบเสมอ ไม่ใช่แค่ครบตอนแจกครั้งแรก */
+  function ensureRemainingLetters(){
+    if(!word) return true;
+    const needed={};
+    word.w.slice(pos).split('').forEach(ch=>{ needed[ch]=(needed[ch]||0)+1; });
+    const upCount={};
+    plates.forEach(P=>{ if(P.st==='up') upCount[P.letter]=(upCount[P.letter]||0)+1; });
+    const missing=[];
+    Object.keys(needed).forEach(ch=>{
+      for(let n=upCount[ch]||0;n<needed[ch];n++) missing.push(ch);
+    });
+    missing.forEach(ch=>{
+      /* กรณีหลัก: เด็กยิงอักษรอนาคตผิดลำดับจนแผ่นกำลังพับ — ยกใบเดิมกลับก่อน */
+      let P=plates.find(x=>x.st!=='up' && x.letter===ch);
+      if(!P){
+        /* ใช้เฉพาะตัวเกินความต้องการ เพื่อไม่ขโมยอักษรจำเป็นตัวอื่นออกจากคำ */
+        P=plates.find(x=>x.st==='up' && (upCount[x.letter]||0)>(needed[x.letter]||0));
+      }
+      if(!P) P=plates.find(x=>x.st!=='up' && x.letter!==ch);
+      if(!P) return;
+      if(P.st==='up') upCount[P.letter]=Math.max(0,(upCount[P.letter]||0)-1);
+      P.st='up'; P.t=0; P.pend=null; P.hinge.rotation.x=0;
+      if(P.letter!==ch) setPlateLetter(P,ch);
+      upCount[ch]=(upCount[ch]||0)+1;
+    });
+    return Object.keys(needed).every(ch=>(upCount[ch]||0)>=needed[ch]);
   }
   function awardLetterCoin(P,worldPos){
     if(typeof addCoins==='function') addCoins(LETTER_COIN);
@@ -599,7 +636,10 @@
     confetti();
     renderTopHud();
     boardLock=1.8;
-    setTimeout(()=>{ if(running) nextWord(false); }, 1750);
+    const completedWord=word;
+    setTimeout(()=>{
+      if(running && word===completedWord && pos>=completedWord.w.length) nextWord(false);
+    }, 1750);
   }
 
   /* ============================================================
@@ -612,7 +652,7 @@
   }
   function tick(dt){
     clock+=dt;
-    if(boardLock>0) boardLock-=dt;
+    if(boardLock>0 && !boardDealing) boardLock-=dt;
     plates.forEach(P=>{
       if(P.st==='fall'){
         P.t+=dt; const k=Math.min(1,P.t/FOLD_DUR);
@@ -634,6 +674,11 @@
         if(P.glow<=0) P.mesh.scale.set(1,1,1);
       }
     });
+    if(boardDealing && plates.every(P=>P.st==='up'&&!P.pend)){
+      boardDealing=false;
+      ensureRemainingLetters();
+      boardLock=0;
+    }
     bulbs.forEach((b,i)=>{ const tw=0.5+0.5*Math.sin(clock*5+i*1.7); b.scale.setScalar(0.75+tw*0.35); });
     tickers.forEach(f=>f(dt,clock));
     // กล้องแกว่งหายใจเบา ๆ ตอนเล็ง (สมจริงขึ้นนิดเดียว ไม่ให้เด็กเวียนหัว)
@@ -1069,7 +1114,8 @@
         nextWord(true);
       }else{
         onResize();
-        if(qGrade!==grade()) nextWord(true);       // เปลี่ยนระดับชั้นระหว่างทาง = คลังคำใหม่
+        if(qGrade!==grade() || !word || pos>=word.w.length) nextWord(true);
+        // ปิดเกมหลังสะกดครบก่อน timer เปลี่ยนคำทำงาน → เปิดใหม่ต้องไม่ค้างอยู่กับคำที่จบแล้ว
       }
       overlay.style.display='block';
       running=true; lastT=performance.now();
@@ -1108,10 +1154,11 @@
     get plates(){return plates;}, get ducks(){return ducks;}, get queue(){return queue;},
     get camera(){return camera;}, get scene(){return scene;}, get renderer(){return renderer;},
     get aimMode(){return aimMode;}, get boardLock(){return boardLock;},
+    get boardDealing(){return boardDealing;},
     get shakeMag(){return shakeMag;}, get roundCoins(){return roundCoins;},
     set boardLock(v){boardLock=v;}, set lastShot(v){lastShot=v;},
     step(dt){ tick(dt||0.016); if(renderer)renderer.render(scene,camera); },
-    shoot, hitPlate, hitDuck, nextWord, dealBoard, pool, takeWord,
+    shoot, hitPlate, hitDuck, nextWord, dealBoard, ensureRemainingLetters, pool, takeWord,
     setView(y,p){ yaw=y; pitch=p; },
     TUNE, ROWS, PT_PER_LETTER, PERFECT_BONUS, DUCK_COIN, COOLDOWN,
   }};
