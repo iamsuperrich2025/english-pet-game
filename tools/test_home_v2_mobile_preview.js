@@ -124,7 +124,7 @@ must(colorDepthPass.includes("The accepted saturated bottom rail is intentionall
 /* R10.5 targeted acceptance guards. */
 const r105 = css.slice(css.indexOf("Home V2 R10.5 — THAI PATTERN"));
 must(r105.length > 0 && r105.includes("--vw2-r105-ready:1"), "R10.5 CSS layer/marker missing");
-must(r105.includes("--vw2-thai-mask") && r105.includes("data:image/svg+xml"), "R10.5 lightweight Thai-pattern SVG mask missing");
+must(r105.includes("--vw2-kanok-band") && r105.includes("--vw2-kanok-corner") && r105.includes("data:image/svg+xml"), "R10.5b lightweight modern-Kanok SVG decoration missing");
 must(r105.includes("vw2-thai-profile-corner") && r105.includes("vw2-shell:before") && r105.includes("vw2-shell:after"), "R10.5 restrained Thai-pattern placements missing");
 must(home.includes("function gradeIdentityKind(raw)") && home.includes("gradeIdentityHTML(rawGrade, legacyText)"), "R10.5 grade identity presentation mapping missing");
 must(home.includes("ดาวเงิน · ประถม") && home.includes("ดาวทอง · มัธยม") && home.includes("เพชร 1 ดวง · ปริญญาตรี"), "R10.5 authoritative education identity labels missing");
@@ -134,6 +134,14 @@ must(home.includes("function openRacing()") && home.includes("typeof enterF1_3D 
 must(home.includes("syncRuntimeActionParity()") && home.includes('[data-vw2-action="racing"]'), "R10.5 Racing dead-button guard missing");
 must(home.includes("vw2-rail-scene") && home.includes("vw2-rail-scene-mark") && r105.includes("vw2-rail-racing .vw2-rail-scene-mark"), "R10.5 premium detailed destination artwork layer missing");
 must(r105.includes("Bottom horizontal rail intentionally untouched in this layer"), "R10.5 bottom-rail preservation note missing");
+
+/* R10.5b modern-Kanok + Global Feed/Rank collision correction. */
+const r105b = css.slice(css.indexOf("Home V2 R10.5b — MODERN KANOK"));
+must(r105b.length > 0, "R10.5b focused correction layer missing");
+must(css.includes("--vw2-r105b-kanok-ready:1") && css.includes("--vw2-kanok-band:url(\"data:image/svg+xml") && css.includes("--vw2-kanok-corner:url(\"data:image/svg+xml"), "R10.5b modern Kanok SVG line-art assets missing");
+must(!css.includes("--vw2-thai-mask:url("), "Rejected R10.5 geometric Thai mask survived R10.5b replacement");
+must(r105b.includes(".vw2-top{position:relative;z-index:8}") && r105b.includes(".vw2-main-grid{position:relative;z-index:2}"), "R10.5b Profile/Global Feed stacking separation missing");
+must(r105b.includes(".vw2-feed .vw2-section-head") && r105b.includes("padding-top:5px") && r105b.includes("width:24px;height:24px"), "R10.5b Global Feed header/icon containment correction missing");
 
 /* Authoritative state/binding guards. */
 

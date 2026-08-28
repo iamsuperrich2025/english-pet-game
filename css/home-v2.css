@@ -2321,25 +2321,26 @@ html.no-anim #vw-home-v2-root *{scroll-behavior:auto!important;animation:none!im
    ============================================================ */
 #vw-home-v2-root{
   --vw2-r105-ready:1;
-  --vw2-thai-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 16'%3E%3Cpath fill='black' d='M0 8h13c7 0 8-7 15-7 5 0 9 3 11 7-2 4-6 7-11 7-7 0-8-7-15-7H0zm41 0 7-7 7 7-7 7zm55 0H83c-7 0-8-7-15-7-5 0-9 3-11 7 2 4 6 7 11 7 7 0 8-7 15-7h13z'/%3E%3C/svg%3E");
+  --vw2-r105b-kanok-ready:1;
+  /* R10.5b: original modern-kanok line art. Curved flame/leaf silhouettes replace the rejected geometric ribbon. */
+  --vw2-kanok-band:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 30'%3E%3Cg fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23f0c968' stroke-width='1.75'%3E%3Cpath d='M2 25C15 24 25 19 31 10C34 6 37 3 42 2C39 8 40 13 44 17C48 21 54 21 60 18C56 25 48 28 40 26C34 24 31 20 30 15C25 22 16 25 2 25Z'/%3E%3Cpath d='M20 21C16 17 17 12 21 8C23 13 27 15 32 14C29 18 25 20 20 21Z'/%3E%3Cpath d='M64 25C77 24 87 19 93 10C96 6 99 3 104 2C101 8 102 13 106 17C110 21 116 21 122 18C118 25 110 28 102 26C96 24 93 20 92 15C87 22 78 25 64 25Z'/%3E%3Cpath d='M82 21C78 17 79 12 83 8C85 13 89 15 94 14C91 18 87 20 82 21Z'/%3E%3Cpath d='M126 25C139 24 149 19 155 10C158 6 161 3 166 2C163 8 164 13 168 17C172 21 178 21 184 18C180 25 172 28 164 26C158 24 155 20 154 15C149 22 140 25 126 25Z'/%3E%3Cpath d='M144 21C140 17 141 12 145 8C147 13 151 15 156 14C153 18 149 20 144 21Z'/%3E%3Cpath d='M188 25C201 24 211 19 217 10C220 6 223 3 228 2C225 8 226 13 230 17C233 20 236 21 239 20'/%3E%3Cpath d='M206 21C202 17 203 12 207 8C209 13 213 15 218 14C215 18 211 20 206 21Z'/%3E%3C/g%3E%3Cg stroke='%23c2a2ea' stroke-width='1.15' opacity='.82'%3E%3Cpath d='M7 27C22 27 33 22 38 15C40 20 45 24 53 26'/%3E%3Cpath d='M69 27C84 27 95 22 100 15C102 20 107 24 115 26'/%3E%3Cpath d='M131 27C146 27 157 22 162 15C164 20 169 24 177 26'/%3E%3Cpath d='M193 27C208 27 219 22 224 15C226 19 231 23 238 25'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  --vw2-kanok-corner:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 48'%3E%3Cg fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 43C24 41 42 31 52 15C57 7 62 3 70 2C66 11 67 19 73 26C79 33 89 33 101 27C95 40 81 45 67 42C55 40 49 33 48 23C39 36 25 42 3 43Z' stroke='%23efc65e' stroke-width='2.2'/%3E%3Cpath d='M28 35C22 30 23 23 29 17C32 24 38 27 46 25C42 31 36 34 28 35Z' stroke='%23f8e6ad' stroke-width='1.75'/%3E%3Cpath d='M49 30C57 31 64 28 68 22C69 31 75 37 87 40' stroke='%23bd9be8' stroke-width='1.55'/%3E%3Cpath d='M8 46C34 46 54 39 64 28' stroke='%239dcdf4' stroke-width='1.1' opacity='.72'/%3E%3C/g%3E%3C/svg%3E");
   --vw2-thai-gold:#efd58b;
   --vw2-thai-pearl:#fff8df;
   --vw2-thai-lavender:#d5b7ef;
 }
 #vw-home-v2-root .vw2-shell:before,
 #vw-home-v2-root .vw2-shell:after{
-  content:"";position:absolute;left:2.5%;right:2.5%;height:12px;pointer-events:none;z-index:24;
-  background:linear-gradient(90deg,transparent 0%,var(--vw2-thai-pearl) 12%,var(--vw2-thai-gold) 33%,var(--vw2-thai-lavender) 51%,#91c8f6 69%,var(--vw2-thai-gold) 88%,transparent 100%);
-  -webkit-mask:var(--vw2-thai-mask) center/96px 16px repeat-x;mask:var(--vw2-thai-mask) center/96px 16px repeat-x;
-  opacity:.58;filter:drop-shadow(0 1px 1px rgba(80,55,130,.18));
+  content:"";position:absolute;left:3.1%;right:3.1%;height:15px;pointer-events:none;z-index:24;
+  background-image:var(--vw2-kanok-band);background-repeat:repeat-x;background-position:center;background-size:120px 15px;
+  -webkit-mask:none;mask:none;opacity:.72;filter:drop-shadow(0 1px 1px rgba(80,55,130,.15));
 }
-#vw-home-v2-root .vw2-shell:before{top:2px}
-#vw-home-v2-root .vw2-shell:after{bottom:2px;transform:rotate(180deg)}
+#vw-home-v2-root .vw2-shell:before{top:1px}
+#vw-home-v2-root .vw2-shell:after{bottom:1px;transform:scaleY(-1)}
 #vw-home-v2-root .vw2-thai-profile-corner{
-  position:absolute;right:7px;top:5px;width:76px;height:15px;pointer-events:none;z-index:1;
-  background:linear-gradient(90deg,var(--vw2-thai-gold),#f7e9b9 42%,var(--vw2-thai-lavender));
-  -webkit-mask:var(--vw2-thai-mask) right center/88px 15px no-repeat;mask:var(--vw2-thai-mask) right center/88px 15px no-repeat;
-  opacity:.52;
+  position:absolute;right:9px;top:5px;width:92px;height:36px;pointer-events:none;z-index:1;
+  background:var(--vw2-kanok-corner) right top/92px 36px no-repeat;
+  -webkit-mask:none;mask:none;opacity:.88;filter:drop-shadow(0 1px 0 rgba(255,255,255,.58));
 }
 
 /* Profile = one target to open User Profile; camera badge = explicit avatar edit flow. */
@@ -2404,5 +2405,44 @@ html.no-anim #vw-home-v2-root *{scroll-behavior:auto!important;animation:none!im
   #vw-home-v2-root .vw2-grade-copy strong{font-size:8.2px}
   #vw-home-v2-root .vw2-grade-copy small{font-size:5.6px}
   #vw-home-v2-root .vw2-rail-scene-mark{width:12px;height:12px;right:-3px;top:-3px;border-width:1px}
-  #vw-home-v2-root .vw2-thai-profile-corner{width:58px;height:11px;opacity:.44}
+  #vw-home-v2-root .vw2-thai-profile-corner{width:68px;height:27px;background-size:68px 27px;opacity:.72}
 }
+
+/* ============================================================
+   Home V2 R10.5b — MODERN KANOK + GLOBAL FEED/RANK COLLISION CORRECTION
+   Focused correction only. R10.5 functionality, navigation, grade identity,
+   bottom rail, R10.4 color depth and Admin Preview remain locked.
+   ============================================================ */
+/* A restrained second Kanok accent lives in the transparent shell gap rather
+   than inside data-heavy controls. It is decorative only and pointer-safe. */
+#vw-home-v2-root .vw2-shell{
+  background-image:var(--vw2-kanok-corner),var(--vw2-kanok-corner);
+  background-repeat:no-repeat,no-repeat;
+  background-position:left 2px top 110px,right 2px top 110px;
+  background-size:78px 31px,78px 31px;
+}
+
+/* The Profile row owns the overlap zone. Global Feed stays visually below it. */
+#vw-home-v2-root .vw2-top{position:relative;z-index:8}
+#vw-home-v2-root .vw2-main-grid{position:relative;z-index:2}
+#vw-home-v2-root .vw2-profile{position:relative;z-index:9}
+#vw-home-v2-root .vw2-feed{position:relative;z-index:1;isolation:isolate}
+
+/* Keep the feed icon fully inside its own header and away from the Rank ribbon. */
+#vw-home-v2-root .vw2-feed .vw2-section-head{
+  min-height:34px;padding-top:5px;align-items:center;overflow:hidden;
+}
+#vw-home-v2-root .vw2-feed .vw2-section-head>.vw2-head-icon{
+  width:24px;height:24px;align-self:center;margin:0;transform:none!important;
+  box-shadow:0 2px 0 rgba(89,91,168,.10);
+}
+#vw-home-v2-root .vw2-feed .vw2-section-head strong{font-size:11.5px}
+
+@media(max-height:480px){
+  #vw-home-v2-root .vw2-shell{background-position:left 1px top 78px,right 1px top 78px;background-size:58px 23px,58px 23px}
+  #vw-home-v2-root .vw2-shell:before,#vw-home-v2-root .vw2-shell:after{height:11px;background-size:92px 11px;opacity:.62}
+  #vw-home-v2-root .vw2-feed .vw2-section-head{min-height:25px;padding-top:3px}
+  #vw-home-v2-root .vw2-feed .vw2-section-head>.vw2-head-icon{width:20px;height:20px}
+  #vw-home-v2-root .vw2-feed .vw2-section-head strong{font-size:9.6px}
+}
+
