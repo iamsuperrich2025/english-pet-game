@@ -1,14 +1,15 @@
 {
   "schema_version": 4,
   "project": "english-pet-game",
-  "structure_signature": "ef6369be4c5ea6c51c22d8dfcaedf549c4dae34fe199ca7253112693bf7424b8",
-  "structure_entry_count": 2797,
+  "structure_signature": "8941829d2833149d8dd5bd29bc7fffb30e0637ca01dfa566345ab2d134eccaf7",
+  "structure_entry_count": 2802,
   "generated_by": "VW Dev Studio Local Token Saver",
-  "generated_at": "2026-08-28T10:58:15",
+  "generated_at": "2026-08-28T13:24:30",
   "generation_mode": "local_no_ai_no_api",
   "areas": {
     "main_world": [
       "img/home-v2/r10_pet_world.svg",
+      "img/home-v2/r11_pet_world.svg",
       "img/home-v2/r9_pet_world.svg",
       "PROMPTS_LOBBY_COD.md",
       "PROMPTS_RANK_HOME.md",
@@ -26,8 +27,7 @@
       "tools/lobby_ground_preview.html",
       "tools/test_f1_lobby_lock.js",
       "tools/test_home_downgrade_guard.js",
-      "tools/test_home_v2_mobile_preview.js",
-      "tools/test_lobby_entry_route.js"
+      "tools/test_home_v2_mobile_preview.js"
     ],
     "adventure_world": [
       "js/adventure3d.js",
@@ -109,10 +109,10 @@
       "img/anim/pet_dog_walk.json",
       "img/anim/pet_dragon_idle.json",
       "img/home-v2/r10_pet_world.svg",
+      "img/home-v2/r11_pet_world.svg",
       "img/home-v2/r9_pet_world.svg",
       "js/data/animalgrade.js",
-      "js/data/pets.js",
-      "js/data/band/b6_toeic_warehouse-workshopsession.js"
+      "js/data/pets.js"
     ],
     "housing": [
       "js/data/band/b6_legal_inhousecounsel-mugshot.js",
@@ -186,13 +186,13 @@
       "tools/test_picquiz_online_start.js",
       "tools/validate_web_build.mjs",
       "img/home-v2/r10_screen_backdrop.svg",
+      "img/home-v2/r11_screen_frame.svg",
       "img/home-v2/r9_screen_backdrop.svg",
       "js/data/fruits.js",
       "store/android/rebuild_apk.py",
       ".claude/worktrees/busy-robinson-b9aaa3/NOTE_URLBAR_FULLSCREEN.md",
       ".claude/worktrees/busy-robinson-b9aaa3/PROMPTS_BUILDINGS.md",
-      ".claude/worktrees/busy-robinson-b9aaa3/PROMPTS_BUILDINGS_KPP.md",
-      ".claude/worktrees/cranky-babbage-1f3a2d/NOTE_URLBAR_FULLSCREEN.md"
+      ".claude/worktrees/busy-robinson-b9aaa3/PROMPTS_BUILDINGS_KPP.md"
     ],
     "firebase": [
       "work/auth-cloud-recovery-dist/js/data/firebase-config.js",

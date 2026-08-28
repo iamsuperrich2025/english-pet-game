@@ -2,7 +2,7 @@
 
 /* ============================================================
 
-   Vocab World Home V2 — Admin Preview (R11 Ultimate Visual Master Convergence + Functional Completion)
+   Vocab World Home V2 — Admin Preview (R11.1 Visual Master Fidelity Rescue + Composition Recovery)
 
    ------------------------------------------------------------
 
@@ -22,7 +22,7 @@
 
   const SESSION_KEY = 'vwHomeV2PreviewClassic';
 
-  const STYLE_ID = 'vw-home-v2-r11-runtime-style';
+  const STYLE_ID = 'vw-home-v2-r111-runtime-style';
 
   let root = null;
 
@@ -613,7 +613,7 @@
 
     style.id = STYLE_ID;
 
-    style.textContent = '#vw-home-v2-root{--vw2-r11-runtime-ready:1}';
+    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1}';
 
     document.head.appendChild(style);
 
@@ -902,7 +902,7 @@
 
     root.innerHTML = `
 
-      <img class="vw2-screen-frame" src="img/home-v2/r11_screen_frame.svg" alt="" aria-hidden="true" decoding="async" fetchpriority="high">
+      <img class="vw2-screen-frame" src="img/home-v2/r111_screen_frame.svg" alt="" aria-hidden="true" decoding="async" fetchpriority="high">
 
       <div class="vw2-sky" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
 
@@ -1010,7 +1010,7 @@
 
             <div class="vw2-feature-stage">
 
-              <img class="vw2-world-scene" src="img/home-v2/r11_pet_world.svg" alt="" aria-hidden="true" decoding="async">
+              <img class="vw2-world-scene" src="img/home-v2/r111_pet_world_scene.svg" alt="" aria-hidden="true" decoding="async">
 
               <div class="vw2-atmosphere" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
 
@@ -1082,7 +1082,7 @@
 
         <footer class="vw2-bottom" aria-label="ทางลัดการเรียนและเกมทั้งหมด">${modeButtons}</footer>
 
-        <div class="vw2-preview-mark">ADMIN PREVIEW · R11 ULTIMATE VISUAL MASTER</div>
+        <div class="vw2-preview-mark">ADMIN PREVIEW · R11.1 VISUAL MASTER FIDELITY RESCUE</div>
 
       </div>`;
 
@@ -1778,6 +1778,8 @@
 
       dash.classList.remove(CLASS_ON);
 
+      document.body.classList.remove('vw2-home-active');
+
       if(root) root.hidden = true;
 
       if(classicToggle) classicToggle.hidden = true;
@@ -1799,6 +1801,9 @@
     if(showV2 && !root) build();
 
     dash.classList.toggle(CLASS_ON, showV2);
+
+    // Scope presentation-only safety rules (including transient toasts) to Home V2.
+    document.body.classList.toggle('vw2-home-active', showV2);
 
     if(root) root.hidden = !showV2;
 

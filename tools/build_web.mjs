@@ -132,6 +132,8 @@ async function sourceFiles() {
       'img/home-v2/r10_screen_backdrop.svg', 'img/home-v2/r10_pet_world.svg', 'img/home-v2/r10_cloud_pedestal.svg',
       'img/home-v2/r11_screen_frame.svg', 'img/home-v2/r11_pet_world.svg', 'img/home-v2/r11_cloud_pedestal.svg',
       'img/home-v2/r11_kanok_corner.svg', 'img/home-v2/r11_kanok_band.svg',
+      'img/home-v2/r111_screen_frame.svg', 'img/home-v2/r111_pet_world_scene.svg', 'img/home-v2/r111_cloud_pedestal.svg',
+      'img/home-v2/r111_kanok_corner.svg', 'img/home-v2/r111_kanok_band.svg',
 
       'js/data/f1_vocab.js',
 
