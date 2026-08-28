@@ -2,7 +2,7 @@
 
 /* ============================================================
 
-   Vocab World Home V2 — Admin Preview (R11.1 Visual Master Fidelity Rescue + Composition Recovery)
+   Vocab World Home V2 — Admin Preview (R11.2 Premium Proportion + Readability Recovery)
 
    ------------------------------------------------------------
 
@@ -613,7 +613,7 @@
 
     style.id = STYLE_ID;
 
-    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1}';
+    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1}';
 
     document.head.appendChild(style);
 
@@ -1082,7 +1082,7 @@
 
         <footer class="vw2-bottom" aria-label="ทางลัดการเรียนและเกมทั้งหมด">${modeButtons}</footer>
 
-        <div class="vw2-preview-mark">ADMIN PREVIEW · R11.1 VISUAL MASTER FIDELITY RESCUE</div>
+        <div class="vw2-preview-mark">ADMIN PREVIEW · R11.2 PREMIUM READABILITY RECOVERY</div>
 
       </div>`;
 

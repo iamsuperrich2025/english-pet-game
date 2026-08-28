@@ -12,12 +12,12 @@ const buildWeb = read("tools", "build_web.mjs");
 const fail = [];
 const must = (ok, msg) => { if(!ok) fail.push(msg); };
 
-/* R11.1 VISUAL MASTER FIDELITY RESCUE + authoritative behavior guard. */
-must(home.includes("R11.1 Visual Master Fidelity Rescue + Composition Recovery"), "R11.1 Home V2 JS marker missing");
-must(css.includes("R11.1 Visual Master Fidelity Rescue + Composition Recovery") && css.includes("--vw2-r111-ready:1"), "R11.1 consolidated stylesheet/marker missing");
-must(home.includes("--vw2-r111-runtime-ready:1"), "R11.1 runtime marker missing");
-must(home.includes("ADMIN PREVIEW · R11.1 VISUAL MASTER FIDELITY RESCUE"), "R11.1 visible ADMIN PREVIEW marker missing");
-must(indexClassic.includes("css/home-v2.css?v=1217") && indexClassic.includes("js/home-v2.js?v=1217"), "R11.1 cache-bust missing from index_classic.html");
+/* R11.2 PREMIUM PROPORTION + READABILITY RECOVERY + authoritative behavior guard. */
+must(home.includes("R11.2 Premium Proportion + Readability Recovery"), "R11.2 Home V2 JS marker missing");
+must(css.includes("R11.1 Visual Master Fidelity Rescue + Composition Recovery") && css.includes("--vw2-r111-ready:1") && css.includes("--vw2-r112-ready:1"), "R11.2 stylesheet lineage/marker missing");
+must(home.includes("--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1"), "R11.2 runtime marker missing");
+must(home.includes("ADMIN PREVIEW · R11.2 PREMIUM READABILITY RECOVERY"), "R11.2 visible ADMIN PREVIEW marker missing");
+must(indexClassic.includes("css/home-v2.css?v=1218") && indexClassic.includes("js/home-v2.js?v=1218"), "R11.2 cache-bust missing from index_classic.html");
 
 const r111Assets = [
   "r111_screen_frame.svg",
@@ -37,6 +37,12 @@ must(css.includes('r111_kanok_corner.svg') && css.includes('r111_kanok_band.svg'
 must(home.includes('r111_pet_world_scene.svg') && !home.includes('src="img/home-v2/r11_pet_world.svg"'), "R11.1 detailed scenic raster did not replace the rejected flat center-world SVG");
 must(css.includes('.vw2-profile:after') && css.includes('.vw2-feed:before') && css.includes('.vw2-mission:before') && css.includes('.vw2-online:before'), "R11.1 refined Kanok placement is incomplete across major panels");
 must(css.includes('.vw2-main-grid{grid-row:2') && css.includes('.vw2-top{grid-row:1'), "R11.1 structural Profile -> main separation missing");
+
+
+/* R11.2 top-bar recovery: Profile remains tall but stats/utilities use a compact shelf. */
+must(css.includes('grid-template-rows:minmax(0,16.8%)') && css.includes('.vw2-profile{height:calc(100% + 7.2vh)') && css.includes('.vw2-left,.vw2-feed{margin-top:7.2vh}'), "R11.2 top-bar/profile split geometry missing");
+must(css.includes('grid-template-columns:1.30fr 1fr 1.03fr 1.08fr 1.08fr') && css.includes('font-variant-numeric:tabular-nums lining-nums'), "R11.2 statistic width/value readability rules missing");
+must(css.includes('text-overflow:clip') && css.includes('.vw2-tool-btn b{font-size:clamp(8.5px,.60vw,11px)'), "R11.2 no-ellipsis / utility label readability rules missing");
 
 /* Profile, avatar persistence delegation and player card. */
 must(home.includes('class="vw2-profile vw2-glass vw2-profile-link"') && home.includes('data-vw2-action="profile"'), "R11 Profile interaction target missing");
@@ -108,15 +114,15 @@ must(css.includes("overflow:hidden") && css.includes("overscroll-behavior:contai
 
 /* Transient notification safety: behavior stays authoritative, presentation is scoped only while V2 is visible. */
 must(home.includes("document.body.classList.toggle('vw2-home-active', showV2)") && home.includes("document.body.classList.remove('vw2-home-active')"), "R11.1 Home V2 body-scope class for transient UI safety missing");
-must(css.includes('body.vw2-home-active .toast') && css.includes('top:calc(23.5vh + 12px)') && css.includes('bottom:auto'), "R11.1 compact safe-zone toast presentation missing");
+must(css.includes('body.vw2-home-active .toast') && css.includes('top:calc(18.2vh + 8px)') && css.includes('bottom:auto'), "R11.2 compact safe-zone toast presentation missing");
 
 /* Admin-only safety. */
 must(home.includes("function adminAllowed()") && home.includes("typeof isAdmin === 'function' && isAdmin() === true"), "ADMIN PREVIEW gate changed/missing");
 must(!home.includes("firebase deploy") && !home.includes("deploy production"), "Home V2 source contains unexpected deployment action");
 
 if(fail.length){
-  console.error("Home V2 R11.1 validation FAILED:\n- " + fail.join("\n- "));
+  console.error("Home V2 R11.2 validation FAILED:\n- " + fail.join("\n- "));
   process.exit(1);
 }
-console.log("Home V2 R11.1 validation PASS");
-console.log(`Checked ${expectedRail.length} left destinations, ${expectedBottom.length} bottom actions, ${r111Assets.length} R11.1 optimized visual assets, authoritative online/feed/pet/house/profile bindings, and mobile landscape guards.`);
+console.log("Home V2 R11.2 validation PASS");
+console.log(`Checked ${expectedRail.length} left destinations, ${expectedBottom.length} bottom actions, ${r111Assets.length} R11.1 retained optimized visual assets, authoritative online/feed/pet/house/profile bindings, and mobile landscape guards.`);
