@@ -40,9 +40,6 @@
 - **รอบ 1269 · พักการแสดงชุดเมื่อสัตว์หิว:** `petWearOverlay()` คืน `null` เมื่อ `petHungry(p)` เพื่อไม่ให้ชุดบังสีหน้า/ท่าหิว แต่คงข้อมูล equipped และชุดกลับมาเองเมื่อกินอิ่ม (`js/images.js`)
 - ใช้กติกาเดียวกับสถานะป่วย; ภาพ/asset และตำแหน่งชุดตอนสุขภาพปกติไม่เปลี่ยน
 - regression ยืนยันป่วย=ไม่มีชุด, หิว=ไม่มีชุด, ปกติและอิ่ม=ยังเห็นชุด; syntax + pet bond + dress luxury ผ่าน (`tools/test_pet_bond.js`)
-- **รอบ 1268 · หน้าแรกเข้า landscape อัตโนมัติแทนภาพสั่งหมุนจอ:** ลบ `#rotate-overlay` จาก HTML/CSS; PWA/TWA คง `orientation: landscape` และ runtime เรียก Screen Orientation API ตอนเปิด/กลับเข้าแอป (`index_classic.html`, `css/lobby.css`, `js/util.js`)
-- แท็บ Android แนวตั้งใช้การแตะครั้งแรกเข้า fullscreen แล้วล็อก landscape; browser ที่ไม่รองรับจะไม่ถูก overlay บัง; เพิ่ม regression `tools/test_landscape_entry.js`
-- `node --check`, landscape/lobby regression, production build และ PWA/cache/TWA validator ผ่าน; dist ไม่มี overlay และมี landscape lock; visual QA ถูก Windows ACL บล็อกที่ browser runtime
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`

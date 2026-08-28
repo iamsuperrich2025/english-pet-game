@@ -2,7 +2,7 @@
 
 > วิธีใช้: หาชื่อฟังก์ชัน/ค่าคงที่/selector ในไฟล์นี้ (Grep หรือกวาดตา) → `Read` ไฟล์จริง `offset=<บรรทัด>` `limit=40`
 > 🗂️ ไฟล์อ้วนมี **สารบัญโซน** (`st-end ชื่อโซน`) — งานทั้งระบบ/โลก 3D: Grep ชื่อโซน → Read/Edit เฉพาะช่วงนั้น **ห้ามอ่านทั้งไฟล์** · เพิ่มระบบใหม่ในไฟล์อ้วนต้องครอบ banner `/* ==== */`+ชื่อโซน (สารบัญเจนเอง)
-> css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: 2026-08-27
+> css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: 2026-08-28
 
 ## js/account-deletion.js (235 บรรทัด · 0 รายการ)
 
@@ -294,6 +294,8 @@ boot:3124
 
 ## js/coinaward.js (21 บรรทัด · 0 รายการ)
 
+## js/dailybox.js (142 บรรทัด · 0 รายการ)
+
 ## js/dictband.js (410 บรรทัด · 27 รายการ)
 BAND_EMOJI:12 · BAND_SET_REWARD:13 · BAND_DONE_BONUS:14 · bandFailMsg:21 · bandLoad:28 · bandShortTH:60
 bandCat:68 · bandSets:90 · bandSetId:99 · bandCheckComplete:102 · bandSetCat:119 · BAND_RETAKE_MAX:131
@@ -444,7 +446,7 @@ gradeChangeTo:64 · gradeLockNote:91 · openGradeChange:100
 
 ## js/hauntedhotelsession.js (255 บรรทัด · 0 รายการ)
 
-## js/home-v2.js (16,104 บรรทัด · 0 รายการ)
+## js/home-v2.js (1,776 บรรทัด · 0 รายการ)
 
 ## js/hotel3d.js (1,526 บรรทัด · 62 รายการ)
 ### 🗂️ สารบัญโซน js/hotel3d.js (Read/Edit เฉพาะช่วง)
@@ -669,9 +671,9 @@ PANEL_TITLES:9 · openPanel:19 · closePanel:29
 
 ## js/lobby3d.js (810 บรรทัด · 0 รายการ)
 
-## js/main.js (523 บรรทัด · 9 รายการ)
-settingsButtonClick:102 · syncMusicBtn:118 · showPetShoppingGrantNotice:152 · showRankRewardNotice:189 · showQuizBackPay:239 · showGiantRefund:284
-showTicketRefund:325 · fitQbp:366 · bootGame:380
+## js/main.js (525 บรรทัด · 9 รายการ)
+settingsButtonClick:103 · syncMusicBtn:119 · showPetShoppingGrantNotice:153 · showRankRewardNotice:190 · showQuizBackPay:240 · showGiantRefund:285
+showTicketRefund:326 · fitQbp:367 · bootGame:381
 
 ## js/moto3d.js (2,776 บรรทัด · 143 รายการ)
 ### 🗂️ สารบัญโซน js/moto3d.js (Read/Edit เฉพาะช่วง)
@@ -1012,6 +1014,10 @@ vbRender:148 · vbCardHTML:194
 .bb-planet:34 · .bb-bubble:35,39,40,41(+4) · .bb-tools:50 · .bb-tool:51,52,53 · .bb-fx:54 · .bb-coinpop:55,56
 .bb-empty:58
 
+## css/dailybox.css (24 บรรทัด · 11 selector)
+.db-overlay:2 · .db-bg-stars:3 · .db-card:4,5,6,8(+2) · .db-grid:7 · .db-chest:10,11 · .db-lid:12,13,14
+.db-body:15 · .db-spark:16 · .db-win:17 · .db-coins:18 · .db-win-copy:19
+
 ## css/exam.css (377 บรรทัด · 77 selector)
 #xs-screen:8,33 · .xs-top:12 · .xs-badge:16 · .xs-mode:17 · .xs-time:18,19,21,22 · .no-anim:24
 .xs-score:25 · .xs-quit:26 · .xs-nav:36 · .xs-dot:40,44,45,46(+1) · .xs-body:50 · .xs-pass:51,55,62
@@ -1027,8 +1033,8 @@ vbRender:148 · vbCardHTML:194
 .xsp-foot:235 · .xsb-box:250,277 · .xsb-head:255,256 · .xsb-grid:257 · .xsb-card:258,262 · .xsb-emoji:263
 .xsb-name:264 · .xsb-info:265 · .xsb-done:266 · .onet-picker:270,271,272,273(+3) · .onet-board:278,279,280
 
-## css/home-v2.css (710 บรรทัด · 5 selector)
-#screen-dashboard:7,15 · #vw-home-v2-root:17,19,51,53(+202) · #vw2-preview-switch:509,511 · .night:513 · .no-anim:515
+## css/home-v2.css (2,448 บรรทัด · 5 selector)
+#screen-dashboard:10,22 · #vw-home-v2-root:25,28,61,64(+499) · #vw2-preview-switch:727,730 · .night:733 · .no-anim:736
 
 ## css/lettercannon.css (48 บรรทัด · 28 selector)
 #lc-game:6,7 · .lc-hud:8 · .lc-glass:9 · .lc-stats:10 · .lc-stat:11 · .lc-coin-stat:12
