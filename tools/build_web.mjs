@@ -181,6 +181,8 @@ async function sourceFiles() {
 
       'css/petpantry.css', 'css/petshopping3d.css',
 
+      'js/dailybox.js', 'css/dailybox.css',
+
       'img/pet-shopping/food_window.webp', 'img/pet-shopping/fashion_window.webp', 'img/pet-shopping/pantry_grant.webp',
 
       'img/pet-shopping/cute_town_mural_v2.webp',

@@ -58,6 +58,7 @@ document.getElementById('btn-register').addEventListener('click', ()=>{
   renderDashboard();
   showScreen('screen-dashboard');
   setTimeout(()=>showPetShoppingGrantNotice(showRankRewardNotice), 700);
+  if(typeof dailyMysteryBoxSchedule === 'function') dailyMysteryBoxSchedule(1200);
 });
 
 document.getElementById('btn-google-login').addEventListener('click', authLoginClick);
@@ -395,6 +396,7 @@ function bootGame(){
   }else{
     renderDashboard();
     showScreen('screen-dashboard');
+    if(typeof dailyMysteryBoxSchedule === 'function') dailyMysteryBoxSchedule(1200);
     // ผู้เล่นเดิมก่อนอัพเดทข้อ 0.2 ยังไม่มีชื่อในเกม → บังคับตั้งก่อนเล่นต่อ
     if(authEnsureProfileName()) setTimeout(()=>showGameEntryRefundNotice(()=>showPetShoppingGrantNotice(showRankRewardNotice)), 700); // คืนค่าเข้า → เงินปรับตัว → รางวัลแรงค์
   }
