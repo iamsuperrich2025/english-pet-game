@@ -467,6 +467,47 @@
     window.addEventListener('resize', updateLeftRailCue, {passive:true});
     setTimeout(updateLeftRailCue, 0);
   }
+  function updateBottomRailScrollState(){
+    if(!root) return;
+    const rail = root.querySelector('.vw2-bottom');
+    if(!rail) return;
+    const max = Math.max(0, rail.scrollWidth - rail.clientWidth);
+    const scrollable = max > 2;
+    rail.classList.toggle('is-scrollable', scrollable);
+    rail.classList.toggle('is-at-start', rail.scrollLeft <= 2);
+    rail.classList.toggle('is-at-end', rail.scrollLeft >= max - 2);
+    rail.dataset.vw2ScrollMax = String(Math.round(max));
+    rail.dataset.vw2ScrollLeft = String(Math.round(rail.scrollLeft));
+  }
+  function setupBottomRailScroll(){
+    if(!root) return;
+    const rail = root.querySelector('.vw2-bottom');
+    if(!rail || rail.dataset.vw2ScrollReady === '1') return;
+    rail.dataset.vw2ScrollReady = '1';
+    rail.tabIndex = 0;
+    rail.title = 'เลื่อนซ้าย–ขวาเพื่อดูทางลัดทั้งหมด';
+    rail.addEventListener('scroll', ()=>{
+      updateBottomRailScrollState();
+      scheduleLocalPreviewReport();
+    }, {passive:true});
+    rail.addEventListener('wheel', e=>{
+      if(rail.scrollWidth <= rail.clientWidth + 2) return;
+      if(Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+      const before = rail.scrollLeft;
+      rail.scrollLeft += e.deltaY;
+      if(Math.abs(rail.scrollLeft - before) > .5) e.preventDefault();
+    }, {passive:false});
+    rail.addEventListener('keydown', e=>{
+      if(e.target !== rail) return;
+      const page = Math.max(90, rail.clientWidth * .72);
+      if(e.key === 'ArrowRight'){ e.preventDefault(); rail.scrollBy({left:page,behavior:'smooth'}); }
+      else if(e.key === 'ArrowLeft'){ e.preventDefault(); rail.scrollBy({left:-page,behavior:'smooth'}); }
+      else if(e.key === 'Home'){ e.preventDefault(); rail.scrollTo({left:0,behavior:'smooth'}); }
+      else if(e.key === 'End'){ e.preventDefault(); rail.scrollTo({left:rail.scrollWidth,behavior:'smooth'}); }
+    });
+    window.addEventListener('resize', updateBottomRailScrollState, {passive:true});
+    setTimeout(updateBottomRailScrollState, 0);
+  }
   function build(){
     const dash = dashboard();
     if(!dash || document.getElementById(ROOT_ID)) return;
@@ -602,10 +643,11 @@
           </aside>
         </div>
         <footer class="vw2-bottom" aria-label="ทางลัดการเรียนและเกมทั้งหมด">${modeButtons}</footer>
-        <div class="vw2-preview-mark">ADMIN PREVIEW · R11.4 VISUAL MASTER FIDELITY</div>
+        <div class="vw2-preview-mark">ADMIN PREVIEW · R11.5.2 FINAL POLISH</div>
       </div>`;
     dash.appendChild(root);
     setupLeftRailCue();
+    setupBottomRailScroll();
     root.addEventListener('click', e=>{
       const onlineRow = e.target.closest && e.target.closest('[data-vw2-online-fid]');
       if(onlineRow){
@@ -997,7 +1039,9 @@
         leftScrollbarHidden:!!(leftStyle && leftStyle.scrollbarWidth === 'none'),
         leftCueCorrect:!!(left && leftCue && ((left.scrollHeight <= left.clientHeight + 2 && !leftCue.classList.contains('is-visible')) || (left.scrollHeight > left.clientHeight + 2 && (leftCue.classList.contains('is-visible') === (left.scrollTop + left.clientHeight < left.scrollHeight - 2))))),
         bottomScrollable:!!(bottom && bottomStyle && ['auto','scroll'].includes(bottomStyle.overflowX) && bottom.scrollWidth > bottom.clientWidth + 1),
-        bottomContained:!!(bottom && bottom.scrollWidth <= bottom.clientWidth + 1 && bottom.scrollHeight <= bottom.clientHeight + 1)
+        bottomContained:!!(bottom && bottom.scrollHeight <= bottom.clientHeight + 1),
+        bottomCanScrollLeft:!!(bottom && bottom.scrollLeft > 2),
+        bottomCanScrollRight:!!(bottom && bottom.scrollLeft + bottom.clientWidth < bottom.scrollWidth - 2)
       }
     }, '*');
   }

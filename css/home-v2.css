@@ -12,6 +12,7 @@
   --vw2-r114-ready:1;
   --vw2-r115-ready:1;
   --vw2-r1151-ready:1;
+  --vw2-r1152-ready:1;
   --vw2-ink:#3f285f;
   --vw2-ink-soft:#705781;
   --vw2-violet:#7141b8;
@@ -430,6 +431,83 @@ body.vw2-home-active .toast button,body.vw2-home-active .toast .toast-close{min-
   .vw2-reward-card{min-height:50px;padding:10px 5px 7px 24%!important}
   .vw2-pet-platform{left:15%;right:15%;bottom:2%;height:31%}
   .vw2-stage-foreground{height:24%}
+}
+
+
+/* ======================== R11.5.2 BOTTOM RAIL SCROLL RECOVERY + FINAL POLISH ======================== */
+/* Keep the approved R11.5.1 fantasy art; recover space by scrolling the rail instead of squeezing 13 destinations. */
+.vw2-bottom{
+  display:flex!important;
+  grid-template-columns:none!important;
+  align-items:stretch!important;
+  gap:8px!important;
+  padding:4px 10px!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  scroll-snap-type:x proximity;
+  scroll-padding-inline:10px;
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+  overscroll-behavior-x:contain;
+  overscroll-behavior-y:none;
+  touch-action:pan-x;
+  -webkit-overflow-scrolling:touch;
+  scroll-behavior:smooth;
+}
+.vw2-bottom::-webkit-scrollbar{display:none!important;width:0!important;height:0!important}
+.vw2-bottom.is-scrollable{cursor:ew-resize}
+.vw2-bottom:focus-visible{outline:2px solid rgba(255,255,255,.96);outline-offset:-3px}
+.vw2-bottom .vw2-mode{
+  flex:0 0 clamp(142px,9.2vw,166px)!important;
+  min-width:142px!important;
+  max-width:166px!important;
+  height:100%!important;
+  scroll-snap-align:start;
+  scroll-snap-stop:normal;
+  padding:3px 10px 3px 27%!important;
+}
+.vw2-bottom .vw2-mode>b{
+  font-size:clamp(9.5px,.70vw,11.5px)!important;
+  line-height:1.04!important;
+  letter-spacing:.005em;
+}
+
+/* Clean the remaining center-stage spill without changing the accepted art. */
+.vw2-reward-card{overflow:hidden!important;width:24%!important;padding:14px 8px 9px 24%!important}
+.vw2-reward-card>div{min-width:0!important;height:100%;display:flex!important;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+.vw2-reward-card b{width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vw2-reward-card small{width:100%;line-height:1.05!important;display:-webkit-box!important;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.vw2-house-preview-head span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Small spacing cleanup: keep panel contents inside the ornamental frame rather than pressed against it. */
+.vw2-right{gap:5px}
+.vw2-mission,.vw2-online{padding-left:9px!important;padding-right:9px!important}
+.vw2-quests{left:9px!important;right:9px!important;bottom:9px!important}
+.vw2-online-list{left:9px!important;right:9px!important}
+.vw2-top-actions{align-content:stretch}
+.vw2-tool-btn{min-width:0!important}
+
+/* Compact landscape keeps real button width and native touch swipe instead of returning to squeezed 13-column layout. */
+@media (max-width:1180px),(max-height:520px){
+  .vw2-bottom{gap:6px!important;padding:3px 8px!important}
+  .vw2-bottom .vw2-mode{
+    flex-basis:clamp(122px,15vw,146px)!important;
+    min-width:122px!important;
+    max-width:146px!important;
+    padding:2px 7px 2px 27%!important;
+  }
+  .vw2-bottom .vw2-mode>b{font-size:clamp(8.8px,1.08vw,10.5px)!important}
+  .vw2-reward-card{width:25%!important;min-height:55px;padding:11px 5px 8px 23%!important}
+  .vw2-mission,.vw2-online{padding-left:7px!important;padding-right:7px!important}
+  .vw2-quests,.vw2-online-list{left:7px!important;right:7px!important}
+}
+@media (max-width:760px){
+  .vw2-bottom .vw2-mode{flex-basis:124px!important;min-width:116px!important;max-width:132px!important}
+}
+@media (max-height:390px){
+  .vw2-shell{grid-template-rows:100px minmax(0,1fr) 46px}
+  .vw2-bottom{padding-top:2px!important;padding-bottom:2px!important}
+  .vw2-reward-card{min-height:50px;padding:9px 5px 7px 23%!important}
 }
 
 @media (prefers-reduced-motion:reduce){#vw-home-v2-root *,#vw-home-v2-root *:before,#vw-home-v2-root *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
