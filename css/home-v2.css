@@ -14,6 +14,7 @@
   --vw2-r1151-ready:1;
   --vw2-r1152-ready:1;
   --vw2-r1153-ready:1;
+  --vw2-r1154-ready:1;
   --vw2-ink:#3f285f;
   --vw2-ink-soft:#705781;
   --vw2-violet:#7141b8;
@@ -388,7 +389,7 @@ body.vw2-home-active .toast button,body.vw2-home-active .toast .toast-close{min-
 }
 
 @media (max-width:1180px),(max-height:520px){
-  .vw2-shell{inset:5px 6px;grid-template-rows:clamp(100px,25.5vh,110px) minmax(0,1fr) clamp(42px,10.8vh,46px);gap:4px}
+  .vw2-shell{inset:5px 6px;grid-template-rows:clamp(100px,25.5vh,110px) minmax(0,1fr) clamp(56px,14vh,60px);gap:4px}
   .vw2-shell:before{top:calc(clamp(100px,25.5vh,110px) - 8px)}
   .vw2-top{gap:4px}
   .vw2-profile{grid-template-columns:clamp(66px,30%,79px) minmax(0,1fr);padding:6px 7px;gap:2px 6px;border-radius:18px}.vw2-profile:after{inset:3px;border-radius:15px}.vw2-avatar-edit{width:26px;height:26px;right:-5px;bottom:-3px}.vw2-name-row{min-height:20px}.vw2-name-row strong{font-size:clamp(15px,1.4vw,20px)}
@@ -416,7 +417,7 @@ body.vw2-home-active .toast button,body.vw2-home-active .toast .toast-close{min-
 }
 
 @media (max-height:390px){
-  .vw2-shell{grid-template-rows:100px minmax(0,1fr) 42px}.vw2-profile-kicker{display:none}.vw2-profile-meta-chip.date,.vw2-profile-meta-chip.time{padding-top:1px;padding-bottom:1px}.vw2-feature{grid-template-rows:28px 20px minmax(0,1fr) 33px}.vw2-speech small{display:none}.vw2-stage-copy span{display:none}.vw2-pet{bottom:17%;height:70%}.vw2-pet-platform{bottom:6%;height:27%}.vw2-pedestal-aura{bottom:3%;height:34%}.vw2-house-preview{bottom:3%;height:29%}
+  .vw2-shell{grid-template-rows:100px minmax(0,1fr) 56px}.vw2-profile-kicker{display:none}.vw2-profile-meta-chip.date,.vw2-profile-meta-chip.time{padding-top:1px;padding-bottom:1px}.vw2-feature{grid-template-rows:28px 20px minmax(0,1fr) 33px}.vw2-speech small{display:none}.vw2-stage-copy span{display:none}.vw2-pet{bottom:17%;height:70%}.vw2-pet-platform{bottom:6%;height:27%}.vw2-pedestal-aura{bottom:3%;height:34%}.vw2-house-preview{bottom:3%;height:29%}
 }
 
 /* R11.5 asset skins: preserve intended artwork proportions at the mobile acceptance viewports. */
@@ -498,8 +499,63 @@ body.vw2-home-active .toast button,body.vw2-home-active .toast .toast-close{min-
   .vw2-quests,.vw2-online-list{left:7px!important;right:7px!important}
 }
 @media (max-height:390px){
-  .vw2-shell{grid-template-rows:100px minmax(0,1fr) 42px}
+  .vw2-shell{grid-template-rows:100px minmax(0,1fr) 56px}
   .vw2-reward-card{min-height:50px;padding:9px 5px 7px 23%!important}
+}
+
+
+/* ======================== R11.5.4 EVIDENCE-DRIVEN GEOMETRY CORRECTION ======================== */
+/* Vertical-only Bottom Rail recovery. R11.5.3 remains authoritative for horizontal width, order and wrapper-only scrolling. */
+.vw2-bottom{padding-top:3px!important;padding-bottom:3px!important}
+.vw2-bottom-scroll{height:100%!important;min-height:0!important}
+.vw2-bottom-track{height:100%!important;min-height:0!important;align-items:stretch!important}
+.vw2-bottom-track .vw2-mode{height:100%!important;min-height:0!important;background-clip:padding-box}
+
+/* Keep the last Left Navigation destination reachable above the static Bottom Rail. */
+.vw2-left{padding-bottom:30px!important;scroll-padding-block:6px 28px}
+.vw2-rail-racing{scroll-margin-bottom:26px}
+.vw2-left-scroll-cue{bottom:0!important}
+
+/* Online Friends footer must sit above the ornate skin and stay inside its own panel. */
+.vw2-online{padding-bottom:39px!important}
+.vw2-online-list{bottom:39px!important}
+.vw2-friends-btn{
+  left:9px!important;right:9px!important;bottom:6px!important;height:30px!important;min-width:0!important;
+  padding:0 8px!important;z-index:20!important;gap:5px!important;line-height:1!important;
+  white-space:nowrap!important;overflow:hidden!important;text-overflow:clip!important;font-size:clamp(11.5px,1.35vw,13px)!important;
+}
+.vw2-friends-btn .vw2-icon{width:18px!important;height:18px!important;flex:0 0 18px}
+
+/* Center reward plaque: secondary copy is shown only when authoritative source data exists. */
+.vw2-reward-card small[hidden]{display:none!important}
+.vw2-reward-card.is-compact>div{justify-content:center!important}
+.vw2-reward-card.is-compact b{margin:0!important}
+
+/* Readability recovery for the fixed landscape HUD: remove micro-label clutter and lift important visible text without changing top-band geometry. */
+@media (max-width:1180px),(max-height:520px){
+  .vw2-profile-kicker,.vw2-profile-meta-chip>small,.vw2-grade-copy>small{display:none!important}
+  .vw2-profile-meta-chip{padding-top:3px!important;padding-bottom:3px!important}
+  .vw2-profile-meta-chip b,.vw2-grade-copy strong,.vw2-rank{font-size:clamp(12px,1.42vw,13.5px)!important;line-height:1.08!important}
+  .vw2-wallet-pill>em{font-size:13px!important}
+  .vw2-stat-copy small{font-size:clamp(12px,1.38vw,13.5px)!important;line-height:1.02!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
+  .vw2-stat-copy b{font-size:clamp(14px,1.7vw,16px)!important}
+  .vw2-wallet-pill.coin .vw2-stat-copy b{font-size:clamp(15px,1.9vw,17px)!important}
+  .vw2-tool-btn{padding-left:2px!important;padding-right:2px!important;gap:2px!important}
+  .vw2-tool-btn span{width:13px!important;height:13px!important;flex-basis:13px!important}
+  .vw2-tool-btn b{font-size:clamp(12px,1.42vw,13.5px)!important;line-height:1!important}
+  .vw2-section-head strong{font-size:clamp(12px,1.4vw,13px)!important}
+  .vw2-section-head>b{font-size:12px!important}
+  .vw2-online-name-line>b,.vw2-online-copy small,.vw2-online-badges,.vw2-online-note{font-size:12px!important;line-height:1.05!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
+  .vw2-online-name-line>b{max-width:100%!important}
+  .vw2-mode{font-size:clamp(8.5px,1.02vw,10px)!important}
+}
+@media (max-height:390px){
+  .vw2-shell{grid-template-rows:100px minmax(0,1fr) 56px}
+  .vw2-left{padding-bottom:28px!important;scroll-padding-bottom:26px}
+  .vw2-friends-btn{height:28px!important;bottom:5px!important;font-size:12px!important}
+  .vw2-online{padding-bottom:36px!important}
+  .vw2-online-list{bottom:36px!important}
+  .vw2-reward-card b{font-size:12px!important}
 }
 
 @media (prefers-reduced-motion:reduce){#vw-home-v2-root *,#vw-home-v2-root *:before,#vw-home-v2-root *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}

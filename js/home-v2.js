@@ -609,7 +609,7 @@
               <div class="vw2-stage-depth" aria-hidden="true"><div class="vw2-stage-castle">${castleArtwork()}</div></div>
               <div class="vw2-atmosphere" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
               <div class="vw2-speech"><span id="vw2-pet-greeting">น้องดีใจที่ได้เจอหนูอีกครั้ง!</span><small>ยินดีต้อนรับกลับ Vocab World — ไปผจญภัยด้วยกันนะ</small></div>
-              <button type="button" class="vw2-reward-card" data-vw2-action="trophy" data-vw2-source="#btn-rail-trophy">${icon('trophy')}<div><b>ประกาศรางวัล</b><small>สะสมดาวและปลดล็อกเกียรติยศ</small></div></button>
+              <button type="button" class="vw2-reward-card" data-vw2-action="trophy" data-vw2-source="#btn-rail-trophy">${icon('trophy')}<div><b id="vw2-reward-title">ตู้เข็ม</b><small id="vw2-reward-info" hidden></small></div></button>
               <div class="vw2-pet-halo" aria-hidden="true"></div>
               <div class="vw2-pedestal-aura" aria-hidden="true"></div>
               <div class="vw2-pet-platform" aria-hidden="true"></div>
@@ -643,7 +643,7 @@
           </aside>
         </div>
         <footer class="vw2-bottom" aria-label="ทางลัดการเรียนและเกมทั้งหมด"><div class="vw2-bottom-scroll" tabindex="0" role="region" aria-label="เลื่อนทางลัดการเรียนและเกม"><div class="vw2-bottom-track">${modeButtons}</div></div></footer>
-        <div class="vw2-preview-mark">ADMIN PREVIEW · R11.5.3 BOTTOM RAIL RESTORED</div>
+        <div class="vw2-preview-mark">ADMIN PREVIEW · R11.5.4 GEOMETRY CORRECTED</div>
       </div>`;
     dash.appendChild(root);
     setupLeftRailCue();
@@ -891,6 +891,22 @@
     const firstParts = first ? onlineNameParts(first.n) : {name:'',badges:''};
     return {count:connected ? String(users.length) : '—', firstName:firstParts.name, firstText:first ? first.act : ''};
   }
+  function syncRewardPlaque(){
+    const card = root ? root.querySelector('.vw2-reward-card') : null;
+    if(!card) return;
+    const titleEl = card.querySelector('#vw2-reward-title');
+    const infoEl = card.querySelector('#vw2-reward-info');
+    const source = document.querySelector('#btn-rail-trophy');
+    const sourceTitle = cleanText(source ? source.textContent : '', 24) || 'ตู้เข็ม';
+    const rankText = cleanText(textOf('#rank-tab',''), 48);
+    if(titleEl) titleEl.textContent = sourceTitle;
+    if(infoEl){
+      infoEl.textContent = rankText;
+      infoEl.hidden = !rankText;
+    }
+    card.classList.toggle('is-compact', !rankText);
+    card.dataset.vw2AuthoritativeInfo = rankText ? 'rank-tab' : 'collapsed';
+  }
   function sync(){
     if(!root || !adminAllowed()) return;
     const name = (typeof state !== 'undefined' && state && state.profileName) ? state.profileName : textOf('#student-chip','ผู้เล่น');
@@ -942,6 +958,7 @@
       if(offline) syncChip.textContent = cleanText(offlineSource.textContent, 42) || 'ออฟไลน์ · ยังไม่ sync';
     }
     setText('vw2-rank', textOf('#rank-tab','แรงค์กำลังอัปเดต'));
+    syncRewardPlaque();
     setText('vw2-newword', textOf('#newword-banner','คำศัพท์ใหม่รอหนูอยู่').replace(/^[✨⭐🌟💫\s]+/,'') || 'คำศัพท์ใหม่รอหนูอยู่');
     copyImage('#pass-photo img','vw2-avatar',knightFallback());
     syncPetVisual();
@@ -1025,6 +1042,52 @@
       const cs = getComputedStyle(el);
       return cs.textOverflow === 'ellipsis' || (cs.overflowX !== 'visible' && el.scrollWidth > el.clientWidth + 1);
     }).map(el=>el.id || el.closest('.vw2-wallet-pill')?.className || '?');
+    const evidenceToken = el => {
+      if(!el) return '?';
+      const action = el.dataset && el.dataset.vw2Action ? `[action=${el.dataset.vw2Action}]` : '';
+      const id = el.id ? `#${el.id}` : '';
+      const cls = typeof el.className === 'string' ? '.' + el.className.trim().split(/\s+/).slice(0,3).join('.') : '';
+      const text = cleanText(el.textContent || '', 48);
+      return `${id}${cls}${action}${text ? ` :: ${text}` : ''}` || el.tagName.toLowerCase();
+    };
+    const clipCandidates = r ? Array.from(r.querySelectorAll('[data-vw2-action],.vw2-mode,.vw2-rail-btn,.vw2-friends-btn,.vw2-reward-card,.vw2-section-head strong,.vw2-stat-copy small,.vw2-stat-copy b,.vw2-tool-btn b,.vw2-online-row,.vw2-feed-card,.vw2-quest-row')) : [];
+    const clippingOffenders = clipCandidates.map(el=>{
+      const rect = el.getBoundingClientRect();
+      const cs = getComputedStyle(el);
+      const outside = Math.max(0,-rect.left,-rect.top,rect.right-window.innerWidth,rect.bottom-window.innerHeight);
+      const innerX = ['hidden','clip','auto'].includes(cs.overflowX) ? Math.max(0,el.scrollWidth-el.clientWidth) : 0;
+      const innerY = ['hidden','clip','auto'].includes(cs.overflowY) ? Math.max(0,el.scrollHeight-el.clientHeight) : 0;
+      const amount = Math.max(outside,innerX,innerY);
+      return amount > 2 ? {token:evidenceToken(el),amountPx:Math.round(amount*10)/10,outsidePx:Math.round(outside*10)/10,internalXPx:innerX,internalYPx:innerY} : null;
+    }).filter(Boolean).sort((a,b)=>b.amountPx-a.amountPx);
+    const bottomClipOffenders = bottomModes.map(el=>{
+      const dy = Math.max(0,el.scrollHeight-el.clientHeight);
+      const dx = Math.max(0,el.scrollWidth-el.clientWidth);
+      return Math.max(dx,dy) > 2 ? {action:el.dataset.vw2Action || '?',internalXPx:dx,internalYPx:dy,heightPx:Math.round(el.getBoundingClientRect().height*10)/10} : null;
+    }).filter(Boolean);
+    const textNodes = r ? Array.from(r.querySelectorAll('.vw2-top small,.vw2-top b,.vw2-top strong,.vw2-top .vw2-tool-btn b,.vw2-section-head strong,.vw2-friends-btn')) : [];
+    const importantTextBelow14 = textNodes.filter(el=>{
+      const cs=getComputedStyle(el);
+      const rect=el.getBoundingClientRect();
+      return cs.display !== 'none' && cs.visibility !== 'hidden' && rect.width > 1 && rect.height > 1 && (parseFloat(cs.fontSize)||0) < 14;
+    }).map(el=>({token:evidenceToken(el),fontPx:Math.round((parseFloat(getComputedStyle(el).fontSize)||0)*10)/10})).sort((a,b)=>a.fontPx-b.fontPx);
+    const interactiveAspectOffenders = r ? Array.from(r.querySelectorAll('button,[role="button"],a')).map(el=>{
+      const rect=el.getBoundingClientRect();
+      if(rect.width < 12 || rect.height < 12) return null;
+      const ratio=Math.max(rect.width/rect.height,rect.height/rect.width);
+      return ratio > 7.5 ? {token:evidenceToken(el),ratio:Math.round(ratio*100)/100,widthPx:Math.round(rect.width),heightPx:Math.round(rect.height)} : null;
+    }).filter(Boolean).sort((a,b)=>b.ratio-a.ratio) : [];
+    const lastRailAction = left ? Array.from(left.querySelectorAll('.vw2-rail-btn')).at(-1) : null;
+    const leftRect = visibleRect(left);
+    const bottomRect = visibleRect(bottom);
+    const lastBottomClearance = lastRailAction && left ? Math.max(0,left.scrollHeight-(lastRailAction.offsetTop+lastRailAction.offsetHeight)) : null;
+    const onlinePanel = r ? r.querySelector('.vw2-online') : null;
+    const friendsButton = r ? r.querySelector('.vw2-friends-btn') : null;
+    const onlineRect = visibleRect(onlinePanel);
+    const friendsRect = visibleRect(friendsButton);
+    const onlineFooterContained = !!(onlineRect && friendsRect && friendsRect.left >= onlineRect.left-1 && friendsRect.right <= onlineRect.right+1 && friendsRect.top >= onlineRect.top-1 && friendsRect.bottom <= onlineRect.bottom+1);
+    const rewardCard = r ? r.querySelector('.vw2-reward-card') : null;
+    const rewardInfo = r ? r.querySelector('#vw2-reward-info') : null;
     window.parent.postMessage({
       type:'vw-mobile-device-preview-metrics',
       viewport:{width:window.innerWidth,height:window.innerHeight,dpr:window.devicePixelRatio || 1},
@@ -1039,7 +1102,16 @@
         panelOverlaps:overlaps,
         actionSources:{total:sourceNodes.length,missing:missingSources},
         minReadableFontPx:minReadableFontPx == null ? null : Math.round(minReadableFontPx * 10) / 10,
-        importantValueClipped
+        importantValueClipped,
+        clippingOffenders:clippingOffenders.slice(0,18),
+        importantTextBelow14:importantTextBelow14.slice(0,18),
+        extremeInteractiveAspectElements:interactiveAspectOffenders.slice(0,18),
+        onlineFooterContained,
+        rewardPlaque:{
+          authoritativeSource:rewardCard ? (rewardCard.dataset.vw2AuthoritativeInfo || 'pending') : 'missing',
+          secondaryHidden:!!(rewardInfo && rewardInfo.hidden),
+          sourceAction:rewardCard ? rewardCard.dataset.vw2Source || '' : ''
+        }
       },
       rails:{
         leftScrollable:!!(left && leftStyle && ['auto','scroll'].includes(leftStyle.overflowY) && left.scrollHeight > left.clientHeight + 1),
@@ -1052,6 +1124,14 @@
         bottomScrollWrapperVerticalOverflow:!!(bottomScroll && bottomScroll.scrollHeight > bottomScroll.clientHeight + 1),
         all13BottomActionsPresent:bottomModes.length === 13,
         bottomButtonGeometryStable,
+        bottomMinButtonHeightPx:bottomModeHeights.length ? Math.round(Math.min(...bottomModeHeights)*10)/10 : null,
+        bottomClipOffenders,
+        leftBottomCollision:rectsOverlap(leftRect,bottomRect),
+        leftLastAction:{
+          action:lastRailAction ? lastRailAction.dataset.vw2Action || '?' : 'missing',
+          bottomClearancePx:lastBottomClearance == null ? null : Math.round(lastBottomClearance*10)/10,
+          reachable:!!(lastRailAction && left && (lastRailAction.offsetTop+lastRailAction.offsetHeight <= left.scrollHeight+1))
+        },
         bottomCanScrollLeft:!!(bottomScroll && bottomScroll.scrollLeft > 2),
         bottomCanScrollRight:!!(bottomScroll && bottomScroll.scrollLeft + bottomScroll.clientWidth < bottomScroll.scrollWidth - 2)
       }
