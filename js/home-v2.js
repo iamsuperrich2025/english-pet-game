@@ -2,7 +2,7 @@
 
 /* ============================================================
 
-   Vocab World Home V2 — Admin Preview (R10.5 Thai Pattern + Grade Identity + Complete Navigation + Premium Button Art + Profile Functionality Pass)
+   Vocab World Home V2 — Admin Preview (R11 Ultimate Visual Master Convergence + Functional Completion)
 
    ------------------------------------------------------------
 
@@ -22,7 +22,7 @@
 
   const SESSION_KEY = 'vwHomeV2PreviewClassic';
 
-  const STYLE_ID = 'vw-home-v2-r10-runtime-style';
+  const STYLE_ID = 'vw-home-v2-r11-runtime-style';
 
   let root = null;
 
@@ -613,7 +613,7 @@
 
     style.id = STYLE_ID;
 
-    style.textContent = '#vw-home-v2-root{--vw2-r10-runtime-ready:1}';
+    style.textContent = '#vw-home-v2-root{--vw2-r11-runtime-ready:1}';
 
     document.head.appendChild(style);
 
@@ -670,37 +670,41 @@
   }
 
   function openAvatarEditor(){
-    // js/photo.js owns validation, local file selection, processing, localStorage and /pphoto persistence.
-    // Delegate to the original #pass-photo trigger instead of creating a second upload implementation.
-    const source = document.querySelector('#pass-photo');
-    if(!source){
-      try{ if(typeof showToast === 'function') showToast('ไม่พบตัวแก้ไขรูปโปรไฟล์เดิม'); }catch(_){ }
-      return false;
+    // R11 functional-completion rule: photo.js remains the single authoritative upload/persistence owner.
+    // Use its public menu when available; otherwise click the Classic camera trigger that already delegates to it.
+    try{
+      if(typeof openPhotoMenu === 'function'){
+        openPhotoMenu();
+        return true;
+      }
+    }catch(_){ }
+    const camera = document.querySelector('#pass-photo .pp-cam');
+    if(camera && !camera.disabled){
+      try{ camera.click(); return true; }catch(_){ }
     }
-    setPreviewWanted(false);
-    setTimeout(()=>{
-      try{ source.click(); }
-      catch(_){ try{ source.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window})); }catch(__){ } }
-    },0);
-    return true;
+    try{ if(typeof showToast === 'function') showToast('ไม่พบตัวแก้ไขรูปโปรไฟล์เดิม'); }catch(_){ }
+    return false;
   }
 
   function openUserProfile(){
-    // The Task ZIP does not contain the owning profile-route source. Do not invent a route name.
-    // Return to the authoritative Classic identity card and bubble its existing click hook, if present.
-    const source = document.querySelector('#screen-dashboard .id-card');
-    if(!source){
-      try{ if(typeof showToast === 'function') showToast('ไม่พบ User Profile เดิม'); }catch(_){ }
-      return false;
+    // Delegate to the existing player-card/profile system instead of inventing a Home-V2-specific route.
+    const uid = (typeof onlineKey === 'function') ? onlineKey() : '';
+    const name = (typeof state !== 'undefined' && state && state.profileName) ? state.profileName : textOf('#student-chip','ผู้เล่น');
+    const grade = (typeof state !== 'undefined' && state && state.student) ? (state.student.grade || '') : '';
+    let publicName = name;
+    try{ if(typeof badgeSuffix === 'function') publicName += badgeSuffix(); }catch(_){ }
+    try{
+      if(typeof showPlayerCard === 'function'){
+        showPlayerCard(uid, publicName, grade);
+        return true;
+      }
+    }catch(_){ }
+    const source = document.querySelector('#student-chip .pl-click, #pass-photo.pl-click');
+    if(source){
+      try{ source.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window})); return true; }catch(_){ }
     }
-    setPreviewWanted(false);
-    setTimeout(()=>{
-      try{
-        source.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window}));
-        if(typeof source.scrollIntoView === 'function') source.scrollIntoView({block:'nearest',inline:'nearest'});
-      }catch(_){ }
-    },0);
-    return true;
+    try{ if(typeof showToast === 'function') showToast('ไม่พบ User Profile เดิม'); }catch(_){ }
+    return false;
   }
 
   function syncRuntimeActionParity(){
@@ -898,7 +902,7 @@
 
     root.innerHTML = `
 
-      <img class="vw2-screen-backdrop" src="img/home-v2/r10_screen_backdrop.svg" alt="" aria-hidden="true" decoding="async" fetchpriority="high">
+      <img class="vw2-screen-frame" src="img/home-v2/r11_screen_frame.svg" alt="" aria-hidden="true" decoding="async" fetchpriority="high">
 
       <div class="vw2-sky" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
 
@@ -908,7 +912,7 @@
 
           <section class="vw2-profile vw2-glass vw2-profile-link" data-vw2-action="profile" role="button" tabindex="0" aria-label="เปิด User Profile" title="เปิด User Profile">
 
-            <span class="vw2-thai-profile-corner" aria-hidden="true"></span>
+            <span class="vw2-kanok-corner" aria-hidden="true"></span>
 
             <span class="vw2-profile-crown" aria-hidden="true">${icon('crown')}</span>
 
@@ -1006,21 +1010,13 @@
 
             <div class="vw2-feature-stage">
 
+              <img class="vw2-world-scene" src="img/home-v2/r11_pet_world.svg" alt="" aria-hidden="true" decoding="async">
+
               <div class="vw2-atmosphere" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
-
-              <div class="vw2-stage-cloud c1" aria-hidden="true"></div><div class="vw2-stage-cloud c2" aria-hidden="true"></div>
-
-              <div class="vw2-rainbow" aria-hidden="true"></div>
-
-              <div class="vw2-mid-hills" aria-hidden="true"></div>
-
-              <div class="vw2-scene-castle" aria-hidden="true">${castleArtwork()}</div>
-
-              <div class="vw2-scene-path" aria-hidden="true"></div>
 
               <div class="vw2-speech"><span id="vw2-pet-greeting">น้องดีใจที่ได้เจอหนูอีกครั้ง!</span><small>ยินดีต้อนรับกลับ Vocab World — ไปผจญภัยด้วยกันนะ</small></div>
 
-              <div class="vw2-reward-card">${icon('trophy')}<div><b>ปราสาทรางวัล</b><small>สะสมดาวแล้วปลดล็อก</small></div></div>
+              <button type="button" class="vw2-reward-card" data-vw2-action="trophy" data-vw2-source="#btn-rail-trophy">${icon('trophy')}<div><b>ประกาศรางวัล</b><small>สะสมดาวและปลดล็อกเกียรติยศ</small></div></button>
 
               <div class="vw2-pet-halo" aria-hidden="true"></div>
 
@@ -1030,15 +1026,15 @@
 
               <div class="vw2-pet-sparkles" aria-hidden="true"><i>♥</i><i>★</i><i>✦</i><i>♥</i></div>
 
-              <div class="vw2-house-preview" aria-label="บ้านที่เลือกอยู่">
+              <button type="button" class="vw2-house-preview" data-vw2-action="home" data-vw2-source=".lobby-rail [data-panel=&quot;panel-home&quot;]" aria-label="เปิดบ้านที่เลือกอยู่">
 
                 <div class="vw2-house-preview-head">${icon('home')}<span id="vw2-house-label">ยังไม่มีบ้าน</span></div>
 
                 <div class="vw2-house-backdrop is-empty" id="vw2-house-visual" aria-hidden="true"></div>
 
-              </div>
+              </button>
 
-              <div class="vw2-stage-copy"><b id="vw2-pet-name">ออกผจญภัยกับน้อง</b><span>น้องกำลังต้อนรับหนู · ฝึกคำศัพท์ · สะสมเหรียญ</span></div>
+              <div class="vw2-stage-copy"><b id="vw2-pet-name">ออกผจญภัยกับน้อง</b><span id="vw2-pet-state">ฝึกคำศัพท์ · สะสมเหรียญ · เติบโตไปด้วยกัน</span></div>
 
               <div class="vw2-stage-foreground" aria-hidden="true"></div>
 
@@ -1072,7 +1068,9 @@
 
               <div class="vw2-section-head"><span class="vw2-head-icon">${icon('friends')}</span><strong>เพื่อนออนไลน์</strong><b id="vw2-online-count">—</b></div>
 
-              <div class="vw2-online-card"><span class="vw2-online-dot"></span><div><b id="vw2-online-name">กำลังเชื่อมต่อ…</b><small id="vw2-online-text">เล่นและเรียนไปพร้อมกัน</small></div></div>
+              <div class="vw2-online-list" id="vw2-online-list" aria-live="polite"><div class="vw2-online-note">กำลังเชื่อมต่อรายชื่อออนไลน์จริง…</div></div>
+
+              <span class="vw2-online-legacy" aria-hidden="true"><b id="vw2-online-name">กำลังเชื่อมต่อ…</b><small id="vw2-online-text">เล่นและเรียนไปพร้อมกัน</small></span>
 
               <button class="vw2-friends-btn" data-vw2-action="friends" data-vw2-source=".lobby-rail [data-panel=&quot;panel-friends&quot;]">${icon('friends')} ดูเพื่อนทั้งหมด</button>
 
@@ -1084,7 +1082,7 @@
 
         <footer class="vw2-bottom" aria-label="ทางลัดการเรียนและเกมทั้งหมด">${modeButtons}</footer>
 
-        <div class="vw2-preview-mark">ADMIN PREVIEW · R10.5 LOCKED MASTER</div>
+        <div class="vw2-preview-mark">ADMIN PREVIEW · R11 ULTIMATE VISUAL MASTER</div>
 
       </div>`;
 
@@ -1093,6 +1091,21 @@
     setupLeftRailCue();
 
     root.addEventListener('click', e=>{
+
+      const onlineRow = e.target.closest && e.target.closest('[data-vw2-online-fid]');
+      if(onlineRow){
+        e.preventDefault();
+        const fid = onlineRow.dataset.vw2OnlineFid || '';
+        const fname = onlineRow.dataset.vw2OnlineName || 'ผู้เล่น';
+        const fgrade = onlineRow.dataset.vw2OnlineGrade || '';
+        try{
+          if(onlineRow.dataset.vw2OnlineSelf !== '1' && typeof openFriendQuickMenu === 'function'){
+            openFriendQuickMenu(fid, fname, fgrade);
+            return;
+          }
+          if(typeof showPlayerCard === 'function'){ showPlayerCard(fid, fname, fgrade); return; }
+        }catch(_){ }
+      }
 
       const b = e.target.closest('[data-vw2-action]');
 
@@ -1328,7 +1341,7 @@
 
         seen.add(k); return true;
 
-      }).slice(0,3);
+      }).slice(0,5);
 
       let html = '';
 
@@ -1364,6 +1377,105 @@
 
     }catch(_){ }
 
+  }
+
+  function petStatusText(p){
+    if(!p) return 'ฝึกคำศัพท์ · สะสมเหรียญ · เติบโตไปด้วยกัน';
+    if(p.sick) return 'น้องกำลังพักรักษาตัว · ดูแลให้น้องหายดีนะ';
+    if(p.sleeping) return 'น้องกำลังหลับปุ๋ย · พักผ่อนเพื่อผจญภัยต่อ';
+    const parts = [];
+    try{
+      if(typeof petStage === 'function'){
+        const stage = petStage(p);
+        if(stage === 'egg') parts.push('กำลังฟักไข่');
+        else if(stage === 'baby') parts.push('กำลังเติบโต');
+        else if(stage === 'adult') parts.push('พร้อมผจญภัย');
+      }
+    }catch(_){ }
+    if(typeof p.hunger === 'number') parts.push(`ความอิ่ม ${Math.max(0,Math.min(100,Math.round(p.hunger)))}%`);
+    parts.push('ฝึกคำศัพท์ · สะสมเหรียญ');
+    return parts.join(' · ');
+  }
+
+  function onlineAvatarHTML(uid){
+    try{
+      if(uid && typeof photoMiniHTML === 'function'){
+        const out = photoMiniHTML(uid,'vw2-online-avatar');
+        if(out) return out;
+      }
+    }catch(_){ }
+    return icon('friends');
+  }
+
+  function onlineGradeHTML(uid, grade){
+    try{
+      if(typeof gradeMark === 'function'){
+        const resolved = (typeof gradeOf === 'function') ? gradeOf(uid, grade) : grade;
+        return gradeMark(resolved, 'vw2-online-grade') || '';
+      }
+    }catch(_){ }
+    return '';
+  }
+
+  function onlineNameParts(raw){
+    try{
+      if(typeof splitNameBadges === 'function'){
+        const out = splitNameBadges(raw || '');
+        return {name:cleanText(out.name || raw || 'ผู้เล่น',30), badges:cleanText(out.badges || '',18)};
+      }
+    }catch(_){ }
+    return {name:cleanText(raw || 'ผู้เล่น',30), badges:''};
+  }
+
+  function onlineRowHTML(user, isSelf){
+    const uid = String(user.id || '');
+    const rawName = user.n || user.name || 'ผู้เล่น';
+    const np = onlineNameParts(rawName);
+    const grade = user.g || '';
+    const act = cleanText(user.act || (isSelf ? 'กำลังเล่นอยู่ตอนนี้' : 'กำลังเล่น Vocab World'),72);
+    const badge = np.badges ? `<span class="vw2-online-badges">${htmlEscape(np.badges)}</span>` : '';
+    return `<button type="button" class="vw2-online-row${isSelf?' is-self':''}" data-vw2-online-fid="${htmlEscape(uid)}" data-vw2-online-name="${htmlEscape(rawName)}" data-vw2-online-grade="${htmlEscape(grade)}"${isSelf?' data-vw2-online-self="1"':''}>
+      <span class="vw2-online-avatar-wrap">${onlineAvatarHTML(uid)}<i class="vw2-online-dot" aria-hidden="true"></i></span>
+      <span class="vw2-online-copy"><span class="vw2-online-name-line"><b>${htmlEscape(np.name)}</b>${badge}${onlineGradeHTML(uid,grade)}</span><small>${htmlEscape(act)}</small></span>
+    </button>`;
+  }
+
+  function syncOnlineUsers(){
+    const host = document.getElementById('vw2-online-list');
+    if(!host) return {count:'—', firstName:'', firstText:''};
+    let connected = false;
+    let users = [];
+    try{
+      connected = !!(typeof Online !== 'undefined' && Online && Online.ready);
+      if(connected){
+        const meUid = (typeof onlineKey === 'function') ? onlineKey() : '';
+        const meName = (typeof state !== 'undefined' && state && state.profileName) ? state.profileName : 'ผู้เล่น';
+        const meGrade = (typeof state !== 'undefined' && state && state.student) ? (state.student.grade || '') : '';
+        let meBadges = '';
+        try{ if(typeof badgeSuffix === 'function') meBadges = badgeSuffix() || ''; }catch(_){ }
+        let meAct = 'กำลังเล่นอยู่ตอนนี้';
+        try{ if(typeof onlineActivity === 'function') meAct = onlineActivity() || meAct; }catch(_){ }
+        users.push({id:meUid,n:meName + meBadges,g:meGrade,act:meAct,self:true});
+        const friends = Array.isArray(Online.friends) ? Online.friends : [];
+        for(const f of friends) users.push({id:f.id,n:f.n || f.name || 'ผู้เล่น',g:f.g || '',act:f.act || 'กำลังเล่น Vocab World',self:false});
+      }
+    }catch(_){ connected = false; users = []; }
+
+    const signature = connected ? users.map(u=>[u.id,u.n,u.g,u.act]).join('|') : 'offline';
+    if(host.dataset.vw2Signature !== signature){
+      host.dataset.vw2Signature = signature;
+      if(connected){
+        host.innerHTML = users.map(u=>onlineRowHTML(u, !!u.self)).join('') || '<div class="vw2-online-note">ยังไม่มีผู้เล่นออนไลน์</div>';
+        try{
+          if(typeof initSideScroll === 'function') setTimeout(()=>{ try{ initSideScroll(host); }catch(_){ } },0);
+        }catch(_){ }
+      }else{
+        host.innerHTML = '<div class="vw2-online-note"><b>กำลังเชื่อมต่อออนไลน์จริง…</b><span>รายชื่อจะปรากฏเมื่อ Firebase presence พร้อมใช้งาน</span></div>';
+      }
+    }
+    const first = users.find(u=>!u.self) || users[0] || null;
+    const firstParts = first ? onlineNameParts(first.n) : {name:'',badges:''};
+    return {count:connected ? String(users.length) : '—', firstName:firstParts.name, firstText:first ? first.act : ''};
   }
 
   function sync(){
@@ -1468,6 +1580,8 @@
 
         setText('vw2-pet-greeting', `${petName} ดีใจที่ได้เจอหนูอีกครั้ง!`);
 
+        setText('vw2-pet-state', petStatusText(p));
+
       }
 
     }catch(_){ }
@@ -1490,47 +1604,13 @@
 
     if(qb) qb.style.width = (q.total ? Math.min(100,(q.done/q.total)*100) : 0) + '%';
 
-    let onlineCount = '';
+    const onlineView = syncOnlineUsers();
 
-    let onlineName = '';
+    setText('vw2-online-count', onlineView.count === '—' ? '—' : `${onlineView.count} คน`);
 
-    try{
+    setText('vw2-online-name', onlineView.firstName || 'กำลังเชื่อมต่อ…');
 
-      if(typeof Online !== 'undefined' && Online){
-
-        const list = Array.isArray(Online.friends) ? Online.friends : [];
-
-        onlineCount = String(list.length);
-
-        const f = list[0];
-
-        if(f) onlineName = f.n || f.name || '';
-
-      }
-
-    }catch(_){ }
-
-    if(!onlineCount){
-
-      const sub = textOf('#online-sub','');
-
-      const m = sub.match(/\d+/); onlineCount = m ? m[0] : '—';
-
-    }
-
-    if(!onlineName){
-
-      const raw = textOf('#online-card','กำลังเชื่อมต่อเพื่อนออนไลน์');
-
-      onlineName = cleanText(raw,48);
-
-    }
-
-    setText('vw2-online-count', onlineCount);
-
-    setText('vw2-online-name', onlineName || 'ยังไม่มีเพื่อนออนไลน์');
-
-    setText('vw2-online-text', onlineName ? 'กำลังเรียนอยู่ตอนนี้' : 'ชวนเพื่อนมาเรียนด้วยกัน');
+    setText('vw2-online-text', onlineView.firstText || 'เล่นและเรียนไปพร้อมกัน');
 
     syncSourceParity();
 

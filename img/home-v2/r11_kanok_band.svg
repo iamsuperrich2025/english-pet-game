@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 110" fill="none">
+  <defs>
+    <linearGradient id="g" x1="70" y1="66" x2="730" y2="44" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E8AF43"/><stop offset=".18" stop-color="#FFF0A4"/><stop offset=".5" stop-color="#F5C85E"/><stop offset=".82" stop-color="#FFF0A4"/><stop offset="1" stop-color="#E8AF43"/>
+    </linearGradient>
+  </defs>
+  <g id="half" stroke="url(#g)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M400 66C357 66 333 60 311 47C286 32 260 30 229 43C252 44 268 53 274 68C251 56 229 56 207 68C182 82 157 82 124 67C147 69 160 62 166 50C141 57 119 54 96 42C73 30 53 31 28 43" stroke-width="4.2"/>
+    <path d="M312 47C302 31 307 18 329 8C322 24 328 34 344 39C333 45 322 48 312 47Z" stroke-width="3.1"/>
+    <path d="M274 68C267 51 276 38 297 32C287 45 290 56 304 64C294 68 284 70 274 68Z" stroke-width="3.1"/>
+    <path d="M207 68C200 51 208 38 228 31C219 45 222 57 237 64C226 68 217 70 207 68Z" stroke-width="3"/>
+    <path d="M166 50C159 35 166 24 184 18C177 31 180 41 193 48C183 51 174 52 166 50Z" stroke-width="2.8"/>
+    <path d="M96 42C88 28 93 17 110 9C105 24 110 33 123 38C113 43 104 44 96 42Z" stroke-width="2.8"/>
+  </g>
+  <use href="#half" transform="translate(800 0) scale(-1 1)"/>
+  <path d="M400 20l9 18 20 3-15 14 4 20-18-10-18 10 4-20-15-14 20-3z" fill="#FFF3A8" stroke="#E6AE42" stroke-width="3"/>
+  <circle cx="400" cy="55" r="6" fill="#FFFFFF"/>
+</svg>

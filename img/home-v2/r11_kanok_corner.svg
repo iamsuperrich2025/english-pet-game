@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none">
+  <defs>
+    <linearGradient id="gold" x1="24" y1="220" x2="204" y2="26" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F7C861"/><stop offset=".42" stop-color="#FFF2B0"/><stop offset=".72" stop-color="#EAAE42"/><stop offset="1" stop-color="#FFF8CF"/>
+    </linearGradient>
+    <linearGradient id="pearl" x1="52" y1="195" x2="187" y2="42" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity=".35"/><stop offset=".55" stop-color="#FFF8E8" stop-opacity=".9"/><stop offset="1" stop-color="#DCC8FF" stop-opacity=".7"/>
+    </linearGradient>
+  </defs>
+  <!-- Original modern Kanok: rising curved stem with nested flame/leaf tips. -->
+  <path d="M18 222C31 196 35 174 58 157C82 139 103 124 104 94C105 69 119 43 151 21C141 43 144 61 158 74C174 89 199 80 220 55C214 86 194 108 169 113C148 117 133 108 123 94C121 126 108 151 84 168C60 185 49 203 45 225" stroke="url(#gold)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M45 196C34 176 43 158 67 146C58 164 63 179 82 185C68 192 56 196 45 196Z" stroke="url(#gold)" stroke-width="4.5" stroke-linejoin="round"/>
+  <path d="M76 165C67 145 76 126 100 115C91 135 97 149 115 155C101 162 88 166 76 165Z" stroke="url(#gold)" stroke-width="4.5" stroke-linejoin="round"/>
+  <path d="M105 128C99 108 109 91 130 80C122 99 128 112 145 118C132 125 118 129 105 128Z" stroke="url(#gold)" stroke-width="4.5" stroke-linejoin="round"/>
+  <path d="M128 93C123 74 133 58 151 49C145 66 150 77 165 83C153 89 140 93 128 93Z" stroke="url(#gold)" stroke-width="4.2" stroke-linejoin="round"/>
+  <path d="M154 75C163 58 177 51 196 54C179 62 174 74 179 88C167 85 159 81 154 75Z" stroke="url(#pearl)" stroke-width="3.2" stroke-linejoin="round"/>
+  <path d="M29 218C41 191 54 174 81 155M81 155C103 140 116 119 118 91M118 91C119 70 129 51 149 34" stroke="url(#pearl)" stroke-width="2.4" stroke-linecap="round"/>
+  <circle cx="29" cy="219" r="4.5" fill="#FFF2A5"/>
+  <path d="M205 31l3.2 8.3 8.3 3.2-8.3 3.2-3.2 8.3-3.2-8.3-8.3-3.2 8.3-3.2z" fill="#FFF5B5"/>
+</svg>

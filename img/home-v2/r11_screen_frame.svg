@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" fill="none">
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="1600" y2="900" gradientUnits="userSpaceOnUse"><stop stop-color="#FFF4AE"/><stop offset=".24" stop-color="#E8B34C"/><stop offset=".5" stop-color="#FFF7C8"/><stop offset=".76" stop-color="#E4A93E"/><stop offset="1" stop-color="#FFF3AA"/></linearGradient>
+    <linearGradient id="pearl" x1="800" y1="0" x2="800" y2="900" gradientUnits="userSpaceOnUse"><stop stop-color="#FFFFFF" stop-opacity=".95"/><stop offset=".5" stop-color="#EBDFFF" stop-opacity=".85"/><stop offset="1" stop-color="#FFDCEB" stop-opacity=".9"/></linearGradient>
+  </defs>
+  <rect x="4" y="4" width="1592" height="892" rx="30" stroke="#FFFFFF" stroke-width="8" opacity=".9"/>
+  <rect x="10" y="10" width="1580" height="880" rx="26" stroke="url(#gold)" stroke-width="3"/>
+  <path d="M40 36h430M1130 36h430M40 864h430M1130 864h430" stroke="url(#pearl)" stroke-width="2" opacity=".8"/>
+  <g stroke="url(#gold)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 145C31 112 44 88 74 70c33-20 57-35 60-66M37 96c-8-19 2-35 25-42-12 17-7 31 10 38-14 6-25 8-35 4Zm45-30c-7-18 3-34 25-43-11 18-6 30 11 37-13 6-25 8-36 6Z" stroke-width="4.5"/>
+    <path d="M1582 145c-13-33-26-57-56-75-33-20-57-35-60-66m97 92c8-19-2-35-25-42 12 17 7 31-10 38 14 6 25 8 35 4Zm-45-30c7-18-3-34-25-43 11 18 6 30-11 37 13 6 25 8 36 6Z" stroke-width="4.5"/>
+    <path d="M18 755c13 33 26 57 56 75 33 20 57 35 60 66M37 804c-8 19 2 35 25 42-12-17-7-31 10-38-14-6-25-8-35-4Zm45 30c-7 18 3 34 25 43-11-18-6-30 11-37-13-6-25-8-36-6Z" stroke-width="4.5"/>
+    <path d="M1582 755c-13 33-26 57-56 75-33 20-57 35-60 66m97-92c8 19-2 35-25 42 12-17 7-31-10-38 14-6 25-8 35-4Zm-45 30c7 18-3 34-25 43 11-18 6-30-11-37 13-6 25-8 36-6Z" stroke-width="4.5"/>
+  </g>
+  <g fill="#FFF7BE">
+    <path d="M502 27l4 10 10 4-10 4-4 10-4-10-10-4 10-4z"/><path d="M1098 27l4 10 10 4-10 4-4 10-4-10-10-4 10-4z"/><path d="M502 873l4-10 10-4-10-4-4-10-4 10-10 4 10 4z"/><path d="M1098 873l4-10 10-4-10-4-4-10-4 10-10 4 10 4z"/>
+  </g>
+</svg>

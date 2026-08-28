@@ -130,6 +130,8 @@ async function sourceFiles() {
 
       'js/home-v2.js', 'css/home-v2.css',
       'img/home-v2/r10_screen_backdrop.svg', 'img/home-v2/r10_pet_world.svg', 'img/home-v2/r10_cloud_pedestal.svg',
+      'img/home-v2/r11_screen_frame.svg', 'img/home-v2/r11_pet_world.svg', 'img/home-v2/r11_cloud_pedestal.svg',
+      'img/home-v2/r11_kanok_corner.svg', 'img/home-v2/r11_kanok_band.svg',
 
       'js/data/f1_vocab.js',
 
