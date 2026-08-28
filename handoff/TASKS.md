@@ -28,6 +28,9 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (23 ส.ค.) — อ่านก่อน
+- **รอบ 1273 · แก้รูปตัวละคร Sky Playground ว่างทั้ง 6 ช่อง:** ต้นตอ path สั้นใน `url()` ผ่าน CSS custom property ถูก resolve เป็น `/css/img/...` แล้ว 404 เงียบ แม้ thumbnail จริงรวมเพียง 80,302B
+- เปลี่ยน picker ก่อนเข้าและในโลกเป็น `<img>` โดยตรง + `decoding="async"`, คง WebP 174×348 และ layout 812×375 เดิม (`js/ui.js`, `js/skyplay3d.js`, `css/skyplay3d.css`)
+- syntax + Sky regression + asset QA ทั้ง 6 ตัว + production build ผ่าน; test ล็อกไม่ให้ย้อนกลับไปใช้ relative CSS-variable URL (`tools/test_skyplay3d.js`)
 - **รอบ 1272 · กล่องสุ่มรายวันน่ารัก 5 ใบ:** รางวัล 5,000/4,000/3,000/2,000/1,000 ถูก crypto shuffle และบังคับทุกช่องไม่ซ้ำตำแหน่งเมื่อวาน; เปิดได้ 1 ใบ/วัน (`js/dailybox.js`, `css/dailybox.css`)
 - ระบบล็อก claim ก่อน `addCoins()` + save/Cloud ทันทีและอ่าน local save สดกันสองแท็บ; reload ก่อนรับทราบจะเปิดใบยินดีเดิม ไม่จ่ายซ้ำ และไม่มี timer/Esc/backdrop ปิดเอง
 - ภาพหีบ CSS 5 แบบ + ฝาเปิด/เหรียญพุ่ง/เสียง level-up+coinGet; production build fingerprint ผ่าน, shuffle 200 วัน + syntax + landscape/Lobby regression ผ่าน (`tools/test_dailybox.js`, `tools/build_web.mjs`)

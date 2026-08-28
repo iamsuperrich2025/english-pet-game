@@ -206,7 +206,7 @@
     sprite.position.y=.015;sprite.material.rotation=animate&&waving?Math.sin(t*.02)*.055:0;
   }
   function renderCharacterPicker(){
-    const selected=selectedCharacter();ui.characterGrid.innerHTML=PLAYER_CHARACTERS.map(c=>`<button data-character="${c.id}" class="${c.id===selected?'selected':''}" aria-pressed="${c.id===selected}"><span style="--sp-character-thumb:url('${c.thumb}')"></span><b>${esc(c.name)}</b></button>`).join('');
+    const selected=selectedCharacter();ui.characterGrid.innerHTML=PLAYER_CHARACTERS.map(c=>`<button data-character="${c.id}" class="${c.id===selected?'selected':''}" aria-pressed="${c.id===selected}"><img src="${esc(c.thumb)}" alt="" width="174" height="348" decoding="async"><b>${esc(c.name)}</b></button>`).join('');
   }
   function addCurvedTail(root,points,color,shape){
     for(let i=1;i<points.length;i++){const a=points[i-1],b=points[i],dx=b[0]-a[0],dy=b[1]-a[1],dz=b[2]-a[2],flat=Math.hypot(dx,dz),length=Math.hypot(dx,dy,dz),thickness=Math.max(.085,.2-i*.022),segment=meshSoft(thickness,thickness,length,color,thickness*.42);segment.position.set((a[0]+b[0])*.5,(a[1]+b[1])*.5,(a[2]+b[2])*.5);segment.rotation.order='YXZ';segment.rotation.y=Math.atan2(dx,dz);segment.rotation.x=-Math.atan2(dy,flat);segment.name=`${shape}-tail-segment-${i}`;root.add(segment);}
