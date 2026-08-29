@@ -6,8 +6,14 @@ const {getDatabase} = require('firebase-admin/database');
 const {logger} = require('firebase-functions');
 const {setGlobalOptions} = require('firebase-functions/v2');
 const {onCall, HttpsError} = require('firebase-functions/v2/https');
-const {onValueUpdated} = require('firebase-functions/v2/database');
+const {onValueCreated, onValueUpdated, onValueWritten} = require('firebase-functions/v2/database');
 const {MarketStateError, applyBuyer, applySeller, refundBuyer} = require('./market-settlement');
+const {
+  CAMPAIGN: CAKE_REFUND_CAMPAIGN,
+  collectCakeRefundEntitlements,
+  applyCakeRefundEntitlement,
+  parseSave: parseCakeRefundSave,
+} = require('./cake-price-refund');
 
 const REGION = 'asia-southeast1';
 const DB_INSTANCE = 'english-pet-game-default-rtdb';
@@ -270,7 +276,83 @@ exports.resumeMarketSettlement = onValueUpdated({
   }
 });
 
+/* One-time, server-only migration for the 2026-08-29 cake gift price reduction.
+   The job path is denied to clients by default. Firebase Admin creates one job,
+   this worker reports aggregate counts only, and the per-player campaign marker
+   makes both the initial credit and every repair idempotent. */
+async function runCakeGiftRefundJob(jobRef, dryRun) {
+  const db = getDatabase();
+  const [usersSnap, giftsSnap] = await Promise.all([
+    db.ref('users').get(),
+    db.ref('gifts').get(),
+  ]);
+  const entitlements = collectCakeRefundEntitlements(usersSnap.val() || {}, giftsSnap.val() || {});
+  const rows = Object.entries(entitlements);
+  const report = rows.reduce((sum, [, row]) => {
+    sum.players++;
+    sum.coins += Number(row.amount) || 0;
+    sum.accepted += Number(row.acceptedCount) || 0;
+    sum.pending += Number(row.pendingCount) || 0;
+    sum.escrows += Object.keys(row.escrow || {}).length;
+    return sum;
+  }, {players:0, coins:0, accepted:0, pending:0, escrows:0, applied:0, deferred:0});
+
+  if (dryRun) return report;
+  if (rows.length) await db.ref(`cakeRefundLedger/${CAKE_REFUND_CAMPAIGN}`).update(entitlements);
+  for (const [uid, entitlement] of rows) {
+    try {
+      await transactSave(uid, current => applyCakeRefundEntitlement(current, entitlement, Date.now()));
+      report.applied++;
+    } catch (error) {
+      report.deferred++;
+      logger.warn('cake gift refund deferred until a valid save is written', {uid, code:error.code || error.message});
+    }
+  }
+  return report;
+}
+
+exports.runCakeGiftPriceRefund = onValueCreated({
+  ref: '/maintenance/cakeGiftRefundJobs/{jobId}',
+  instance: DB_INSTANCE,
+  retry: false,
+  maxInstances: 1,
+}, async event => {
+  const job = event.data.val() || {};
+  if (job.campaign !== CAKE_REFUND_CAMPAIGN) {
+    await event.data.ref.update({status:'rejected', reason:'campaign_mismatch', finishedAt:Date.now()});
+    return;
+  }
+  await event.data.ref.update({status:'running', startedAt:Date.now()});
+  try {
+    const report = await runCakeGiftRefundJob(event.data.ref, job.dryRun === true);
+    await event.data.ref.update({status:job.dryRun === true ? 'dry_run_complete' : 'completed', report, finishedAt:Date.now()});
+  } catch (error) {
+    logger.error('cake gift refund job failed', {code:error.code || error.message});
+    await event.data.ref.update({status:'failed', reason:String(error.code || error.message).slice(0, 120), finishedAt:Date.now()});
+    throw error;
+  }
+});
+
+/* If an online device later overwrites the server credit with a stale save,
+   heal it from the private server ledger. The campaign marker prevents loops. */
+exports.healCakeGiftPriceRefund = onValueWritten({
+  ref: '/users/{uid}/save',
+  instance: DB_INSTANCE,
+  retry: false,
+  maxInstances: 5,
+}, async event => {
+  const after = event.data.after.val();
+  const state = parseCakeRefundSave(after);
+  if (!state || (state.cakePriceRefunds && state.cakePriceRefunds[CAKE_REFUND_CAMPAIGN])) return;
+  const entitlement = (await getDatabase().ref(`cakeRefundLedger/${CAKE_REFUND_CAMPAIGN}/${event.params.uid}`).get()).val();
+  if (!entitlement) return;
+  await transactionFromServer(event.data.after.ref, current =>
+    applyCakeRefundEntitlement(current, entitlement, Date.now()).wrapper
+  );
+});
+
 exports._test = {
   cleanListing, transactionWithSeed, transactionFromServer,
   acquireSettlementLease, claimMarketListing, beginPurchase, settleClaim,
+  runCakeGiftRefundJob,
 };

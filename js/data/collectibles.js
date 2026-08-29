@@ -34,16 +34,16 @@ const COLLECT_CATS = [
    → สินค้าระดับสูงคุ้มแรงกว่า แต่ต้องขยันสะสมคำนานกว่า */
 const COLLECTIBLES = [
   /* ---- 🍰 อาหาร/เบเกอรี่ ---- */
-  {id:'cupcake',      emoji:'🧁', name:'คัพเค้กสตรอว์เบอร์รี', cat:'food',    tier:'common',    price:500,     words:20},
+  {id:'cupcake',      emoji:'🧁', name:'คัพเค้กสตรอว์เบอร์รี', cat:'food',    tier:'common',    price:3000,    words:60},
   {id:'donut',        emoji:'🍩', name:'โดนัทเคลือบ',          cat:'food',    tier:'common',    price:800,     words:30},
   {id:'cookiejar',    emoji:'🍪', name:'โหลคุกกี้',            cat:'food',    tier:'common',    price:1200,    words:45},
   {id:'icecream',     emoji:'🍨', name:'ไอศกรีมซันเดย์',       cat:'food',    tier:'common',    price:1500,    words:55},
   {id:'boba',         emoji:'🧋', name:'ชานมไข่มุก',           cat:'food',    tier:'common',    price:2000,    words:70},
   {id:'macaron',      emoji:'🍬', name:'ชุดมาการองสายรุ้ง',    cat:'food',    tier:'rare',      price:5000,    words:100},
   {id:'chocbox',      emoji:'🍫', name:'กล่องช็อกโกแลตหรู',    cat:'food',    tier:'rare',      price:8000,    words:160},
-  {id:'fruitcake',    emoji:'🍰', name:'เค้กผลไม้สด',          cat:'food',    tier:'rare',      price:12000,   words:240},
-  {id:'rainbowcake',  emoji:'🌈', name:'เค้กสายรุ้ง',          cat:'food',    tier:'rare',      price:18000,   words:360},
-  {id:'weddingcake',  emoji:'🎂', name:'เค้กฉลอง 5 ชั้น',      cat:'food',    tier:'epic',      price:40000,   words:500},
+  {id:'fruitcake',    emoji:'🍰', name:'เค้กผลไม้สด',          cat:'food',    tier:'rare',      price:5000,    words:100},
+  {id:'rainbowcake',  emoji:'🌈', name:'เค้กสายรุ้ง',          cat:'food',    tier:'rare',      price:5000,    words:100},
+  {id:'weddingcake',  emoji:'🎂', name:'เค้กฉลอง 5 ชั้น',      cat:'food',    tier:'epic',      price:5000,    words:100},
   /* เค้กชุดใหม่ใช้รายการกลางเดียวกับร้านของขวัญ เพื่อล็อกชื่อ/ภาพ/ราคาไม่ให้เหลื่อมกัน */
   ...NEW_CAKES_2026.map(({giftPrice, ...cake})=>({...cake, cat:'food'})),
   /* ---- 🧸 ของเล่น ---- */

@@ -28,11 +28,10 @@ for(const [index, cake] of snapshot.cakes.entries()){
   assert.equal(cake.id, `cake2026_${serial}`);
   assert.equal(cake.image, `img/collectibles/cakes2026/cake_${serial}_256.webp`);
   assert.equal(cake.displayImage, `img/collectibles/cakes2026/cake_${serial}.webp`);
-  assert.ok(cake.price >= 12000 && cake.price <= 40000, `${cake.id} factory price`);
-  assert.ok(cake.giftPrice >= 3500 && cake.giftPrice <= 22000, `${cake.id} gift price`);
-  const expectedTier = cake.price >= 25000 ? "epic" : "rare";
-  assert.equal(cake.tier, expectedTier, `${cake.id} tier`);
-  assert.equal(cake.words, Math.round(cake.price / (expectedTier === "epic" ? 80 : 50)), `${cake.id} words`);
+  assert.ok(cake.price >= 3000 && cake.price <= 5000, `${cake.id} factory price`);
+  assert.equal(cake.giftPrice, cake.price, `${cake.id} same gift price`);
+  assert.ok(cake.tier === "rare" || cake.tier === "epic", `${cake.id} tier preserved`);
+  assert.equal(cake.words, Math.max(60, Math.round(cake.price / 50)), `${cake.id} words`);
 
   const collect = byCollect.get(cake.id);
   const gift = byGift.get(cake.id);
@@ -51,6 +50,14 @@ for(const [index, cake] of snapshot.cakes.entries()){
     const limit = rel.includes("_256.webp") ? 50000 : 120000;
     assert.ok(bytes.length <= limit, `${rel} <= ${limit} bytes`);
   }
+}
+
+const allCakeGifts = snapshot.gifts.filter(g=>g.cat === "cake");
+assert.equal(allCakeGifts.length, 125, "all cake gifts");
+assert.ok(allCakeGifts.every(g=>g.price >= 3000 && g.price <= 5000), "every cake gift is 3,000-5,000");
+for(const id of ["cupcake", "fruitcake", "rainbowcake", "weddingcake", ...snapshot.cakes.map(c=>c.id)]){
+  const cake = byCollect.get(id);
+  assert.ok(cake && cake.price >= 3000 && cake.price <= 5000, `${id} factory cake is 3,000-5,000`);
 }
 
 const manifest = JSON.parse(read("img/collectibles/cakes2026/cake_assets_manifest.json"));

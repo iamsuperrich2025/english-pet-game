@@ -325,7 +325,7 @@ function showGiantRefund(){
    ============================================================ */
 function showTicketRefund(){
   const b = state.ticketRefund;
-  if(!b || !b.total){ if(typeof showRankMoveRewardNotice === 'function') showRankMoveRewardNotice(); return; }
+  if(!b || !b.total){ showCakeGiftRefundNotice(); return; }
   state.ticketRefund = null; saveState();
   const num  = (typeof fmtNum === 'function') ? fmtNum : (n)=>String(n);
   const name = state.profileName || (state.student && state.student.first) || 'หนู';
@@ -351,7 +351,7 @@ function showTicketRefund(){
     window.removeEventListener('resize', refit);
     ov.remove();
     if(document.getElementById('screen-dashboard').classList.contains('active')) renderDashboard();
-    if(typeof showRankMoveRewardNotice === 'function') showRankMoveRewardNotice();
+    showCakeGiftRefundNotice();
   });
   document.body.appendChild(ov);
   fitQbp(ov.querySelector('.qbp'));
@@ -400,6 +400,38 @@ function bootGame(){
     // ผู้เล่นเดิมก่อนอัพเดทข้อ 0.2 ยังไม่มีชื่อในเกม → บังคับตั้งก่อนเล่นต่อ
     if(authEnsureProfileName()) setTimeout(()=>showGameEntryRefundNotice(()=>showPetShoppingGrantNotice(showRankRewardNotice)), 700); // คืนค่าเข้า → เงินปรับตัว → รางวัลแรงค์
   }
+}
+
+/* 🎂 คืนเฉพาะส่วนต่างของเค้กที่เคยซื้อจากร้านแล้วส่งให้เพื่อน
+   เครดิตเกิดฝั่ง server ก่อน ป้ายนี้มีหน้าที่แจ้งยอดและล้างเมื่อกดรับทราบเท่านั้น */
+function showCakeGiftRefundNotice(){
+  const b = state.cakeGiftRefundNotice;
+  if(!b || !b.total){ if(typeof showRankMoveRewardNotice === 'function') showRankMoveRewardNotice(); return; }
+  const num = (typeof fmtNum === 'function') ? fmtNum : (n)=>String(n);
+  if(typeof sfx !== 'undefined' && sfx.coinGet) sfx.coinGet();
+  const ov = document.createElement('div');
+  ov.className = 'rankup-overlay';
+  ov.innerHTML = `
+    <div class="rankup-rays" style="--rank-color:#ff9fc8"></div>
+    <div class="rankup-content qbp">
+      <div class="rankup-title">🎂 ปรับราคาเค้กแล้ว — คืนส่วนต่างให้หนู!</div>
+      <div class="qbp-coin">🪙</div>
+      <div class="rankup-name" style="color:#ff9d00">+${num(b.total)} เหรียญ 🪙</div>
+      <p class="rankup-sub">ราคาเค้กทุกชนิดปรับเป็น <b>3,000–5,000 เหรียญ</b><br>
+        <small>หนูเคยซื้อเค้กจากร้านและส่งให้เพื่อน ${num(b.count || 0)} ชิ้นในราคาที่สูงกว่าราคาใหม่<br>
+        ระบบคืนส่วนต่าง <b>${num(b.total)} เหรียญ</b> เข้ากระเป๋าเรียบร้อยแล้ว<br>
+        เค้กจากโรงงานและตลาดผู้เล่นไม่ถูกนับในเงินคืนนี้</small></p>
+      <button class="rankup-btn">รับทราบและเก็บเหรียญ 🥳</button>
+    </div>`;
+  let refitT = 0;
+  const refit = ()=>{ clearTimeout(refitT); refitT = setTimeout(()=>fitQbp(ov.querySelector('.qbp')), 140); };
+  ov.querySelector('.rankup-btn').addEventListener('click', ()=>{
+    clearTimeout(refitT); window.removeEventListener('resize', refit);
+    state.cakeGiftRefundNotice = null; saveState(); ov.remove();
+    if(document.getElementById('screen-dashboard').classList.contains('active')) renderDashboard();
+    if(typeof showRankMoveRewardNotice === 'function') showRankMoveRewardNotice();
+  });
+  document.body.appendChild(ov); fitQbp(ov.querySelector('.qbp')); window.addEventListener('resize', refit);
 }
 
 // ระหว่างรอ auth โชว์หน้า login ไว้ก่อน (auth.js พาไปหน้าถัดไปเอง)

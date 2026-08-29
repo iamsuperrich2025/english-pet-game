@@ -4,7 +4,8 @@
    ------------------------------------------------------------
    กติกา:
    - ลำดับคือรหัสถาวร cake2026_001..103; เพิ่มของใหม่ต่อท้ายเท่านั้น
-   - price = ราคาฐานโรงงาน/ตลาด, giftPrice = ราคาซื้อส่งเป็นของขวัญ
+   - ราคาเค้กทุกชนิดล็อกช่วง 3,000–5,000 (รอบปรับราคา 2026-08-29)
+   - ค่าในรายการด้านล่างคือราคาเดิม ใช้คำนวณลำดับราคาและคืนส่วนต่างย้อนหลัง
    - image = thumbnail 256×256 สำหรับการ์ดแบบ lazy-load
    - displayImage = WebP 512×512 สำหรับฉากเปิดของขวัญ/ดูภาพใหญ่
    ============================================================ */
@@ -135,11 +136,14 @@ const NEW_CAKES_2026 = Object.freeze([
 ].map((cake, index)=>{
   const serial = String(index + 1).padStart(3, '0');
   const tier = cake.price >= 25000 ? 'epic' : 'rare';
+  const price = Math.max(3000, Math.min(5000, cake.giftPrice));
   return Object.freeze({
     ...cake,
+    price,
+    giftPrice:price,
     id:`cake2026_${serial}`,
     tier,
-    words:Math.round(cake.price / (tier === 'epic' ? 80 : 50)),
+    words:Math.max(60, Math.round(price / 50)),
     image:`img/collectibles/cakes2026/cake_${serial}_256.webp`,
     displayImage:`img/collectibles/cakes2026/cake_${serial}.webp`,
   });

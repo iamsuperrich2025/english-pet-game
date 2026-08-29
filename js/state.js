@@ -216,6 +216,9 @@ const DEFAULT_STATE = {
   nwAt:0,                             // รอบ 326: เวลาที่เปลี่ยนคำล่าสุด (เปลี่ยนทุก 2 นาทีระหว่างอยู่ Lobby)
   greetSent:{},                       // รอบ 325: {uid: 'YYYY-MM-DD'} วันล่าสุดที่ส่ง "ทักทายน้อง" ให้แต่ละคน (จำกัดคนละ 1/วัน)
   giftBox:[],                         // ของขวัญที่ "รับ" ไว้ (ข้อ 0.5): {k:'shop'|'collect', id, from, fn:ชื่อผู้ส่ง, ts} — ขายต่อ/ส่งต่อไม่ได้ ไม่รวม assetValue
+  cakePriceRefunds:{},                // campaign คืนส่วนต่างราคาเค้กของขวัญ (server marker กันคืนซ้ำ)
+  cakeGiftEscrowV1:{},                // <toUid>:<giftKey> → ยอดที่เหลือให้คืนเมื่อปฏิเสธ/หมดอายุ
+  cakeGiftRefundNotice:null,          // ป้ายแจ้งยอดคืนเงินเค้กจากร้านที่เคยส่งให้เพื่อน
   playerFedDay:'',                    // ข้อ 6: mealDayKey ของมื้อเย็นที่ผู้เล่น (คน) กินแล้ว
   foodQuizPlayDay:'',                  // ควิซอาหารปลอดภัย: วัน (toDateString) ที่นับจำนวนรอบที่เล่นอยู่
   foodQuizPlayCount:0,                 // ควิซอาหารปลอดภัย: เล่นไปแล้วกี่รอบในวันนั้น (เพดาน FOODQUIZ_MAX_PLAYS)
@@ -701,6 +704,13 @@ function loadState(){
       if(!Array.isArray(s.giftBox)) s.giftBox = [];
       s.giftBox = s.giftBox.filter(x=>x && (x.k === 'shop' || x.k === 'collect') &&
         (x.k === 'shop' ? giftInfo(x.id) : collectInfo(x.id)));
+      if(!s.cakePriceRefunds || typeof s.cakePriceRefunds !== 'object' || Array.isArray(s.cakePriceRefunds)) s.cakePriceRefunds = {};
+      if(!s.cakeGiftEscrowV1 || typeof s.cakeGiftEscrowV1 !== 'object' || Array.isArray(s.cakeGiftEscrowV1)) s.cakeGiftEscrowV1 = {};
+      for(const key of Object.keys(s.cakeGiftEscrowV1)){
+        const value = Number(s.cakeGiftEscrowV1[key]);
+        if(!Number.isFinite(value) || value < 0 || value > 5000) delete s.cakeGiftEscrowV1[key];
+      }
+      if(s.cakeGiftRefundNotice && (!Number.isFinite(Number(s.cakeGiftRefundNotice.total)) || Number(s.cakeGiftRefundNotice.total) <= 0)) s.cakeGiftRefundNotice = null;
       // 📰 Follow + Feed (รอบ 155 · default เปิดทุกหมวดตั้งแต่รอบ 565): เซฟเก่าไม่มี → ใช้ default / ไม่ follow ใคร
       if(!s.feedShare || typeof s.feedShare !== 'object' || Array.isArray(s.feedShare))
         s.feedShare = structuredClone(DEFAULT_STATE.feedShare);

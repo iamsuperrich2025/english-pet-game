@@ -606,12 +606,22 @@ function giftInWatch(){
 let giftOutWatchers = {};                 // friendUid → ฟังก์ชันเลิกฟัง
 
 /* คืนของให้ผู้ส่ง (ถูกปฏิเสธ/หมดอายุ): collectible กลับเข้าคลัง · ของร้านคืนเหรียญ */
+function cakeGiftEscrowKey(rec){ return rec && rec.to && rec.key ? `${rec.to}:${rec.key}` : ''; }
+function cakeGiftEscrowClear(rec){
+  const key = cakeGiftEscrowKey(rec);
+  if(!key || !state.cakeGiftEscrowV1 || !Object.prototype.hasOwnProperty.call(state.cakeGiftEscrowV1, key)) return false;
+  delete state.cakeGiftEscrowV1[key];
+  return true;
+}
 function giftReclaim(rec){
   if(rec.k === 'collect' && typeof collectInfo === 'function' && collectInfo(rec.id)){
     state.collection.push(rec.id);
   }else if(rec.k === 'shop'){
     const g = giftInfo(rec.id);
-    if(g) state.coins += g.price;         // คืนเหรียญ (ไม่ผ่าน addCoins กันบวกยอดวันนี้ซ้ำ)
+    const key = cakeGiftEscrowKey(rec);
+    const legacy = key && state.cakeGiftEscrowV1 ? Number(state.cakeGiftEscrowV1[key]) : NaN;
+    if(g) state.coins += Number.isFinite(legacy) ? legacy : g.price; // คืนยอด escrow จริง ไม่ผ่าน addCoins
+    cakeGiftEscrowClear(rec);
   }
   saveState();
 }
@@ -634,10 +644,11 @@ function giftOutWatchSync(){
       snap.forEach(gNode=>{
         const key = gNode.key, v = gNode.val();
         if(!v) return;
-        const rec = {k: v.k, id: v.id};
+        const rec = {k: v.k, id: v.id, key, to: friendUid};
         if(v.st === 'accepted'){
           if(!Online.giftOutDone[key]){
             Online.giftOutDone[key] = true;
+            if(cakeGiftEscrowClear(rec)) saveState();
             const g = v.k === 'shop' ? giftInfo(v.id) : (typeof collectInfo === 'function' && collectInfo(v.id));
             if(typeof toast === 'function') toast('🎉 เพื่อนรับ' + (g ? g.name : 'ของขวัญ') + 'แล้ว! ดีใจด้วยนะ');
             ref.child(key).remove().catch(()=>{});
