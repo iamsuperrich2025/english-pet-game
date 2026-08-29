@@ -28,6 +28,8 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (29 ส.ค.) — อ่านก่อน
+- **รอบ 1277 · อัปเกรด Cloud Functions SDK อย่างปลอดภัย:** `firebase-functions` จากติดตั้งจริง 6.6.0 (`^6.4.0`) เป็น stable 7.3.2; Node 22 + `firebase-admin` 13.10 peer compatible และไม่มี `functions.config()` (`functions/package.json`, `functions/package-lock.json`)
+- market settlement + cake refund ผ่านก่อน/หลังอัปเกรดทั้ง Node 22.23.2/24.19.0; local manifest โหลด 4 endpoints ครบ, ไม่เรียก migration/production DB และไม่แตะ `cakeRefundLedger`; audit เหลือ moderate transitive 8 รายการโดยไม่มี non-breaking fix
 - **รอบ 1276 · เค้กทุกชนิดราคา 3,000–5,000 + คืนส่วนต่างเฉพาะเค้กร้านที่ส่งให้เพื่อน:** ราคาเดิมถูก clamp รักษาลำดับ; โรงงาน 107 แบบ/ร้านของขวัญ 125 แบบผ่าน policy (`cakes2026.js`, `collectibles.js`, `gifts.js`)
 - Cloud Functions สแกน `giftBox` ที่รับแล้วและ `/gifts` ที่ยัง pending, คืนส่วนต่างให้ UID ผู้ส่งด้วย campaign marker + private ledger; ไม่รวมโรงงาน/ตลาดผู้เล่น และมี heal trigger กันเซฟเครื่องเก่าเขียนทับ (`functions/cake-price-refund.js`, `functions/index.js`)
 - ของขวัญ pending เก็บยอด escrow เดิมในเซฟผู้ส่ง: ราคาเดิมต่ำกว่า 3,000 ไม่คืนเกิน, ราคาเดิมสูงกว่า 5,000 ได้ส่วนต่างก่อนและคืนยอดคงเหลือเมื่อปฏิเสธ/หมดอายุ; ป้ายแจ้งยอดกดรับทราบครั้งเดียว (`state.js`, `online.js`, `main.js`)
