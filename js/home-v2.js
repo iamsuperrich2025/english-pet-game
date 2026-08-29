@@ -375,7 +375,7 @@
     if(document.getElementById(STYLE_ID)) return;
     const style = document.createElement('style');
     style.id = STYLE_ID;
-    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1}';
+    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1}';
     document.head.appendChild(style);
   }
   function clickExisting(selector, opts){
@@ -556,8 +556,14 @@
       if(rail.scrollWidth <= rail.clientWidth + 2) return;
       if(Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
       const before = rail.scrollLeft;
-      rail.scrollLeft += e.deltaY;
-      if(Math.abs(rail.scrollLeft - before) > .5) e.preventDefault();
+      const max = Math.max(0, rail.scrollWidth - rail.clientWidth);
+      const next = Math.max(0, Math.min(max, before + e.deltaY));
+      if(Math.abs(next - before) <= .5) return;
+      e.preventDefault();
+      const priorBehavior = rail.style.scrollBehavior;
+      rail.style.scrollBehavior = 'auto';
+      rail.scrollLeft = next;
+      requestAnimationFrame(()=>{ rail.style.scrollBehavior = priorBehavior; });
     }, {passive:false});
     rail.addEventListener('keydown', e=>{
       if(e.target !== rail) return;
@@ -653,18 +659,18 @@
         <div class="vw2-main-grid">
           <nav class="vw2-left vw2-glass" aria-label="เมนูหลักทั้งหมด">${railButtons}<span class="vw2-left-scroll-cue" aria-hidden="true"><span>&#8964;</span></span></nav>
           <section class="vw2-feed vw2-glass">
-            <div class="vw2-section-head"><span class="vw2-head-icon">${icon('globe')}</span><strong>Global Feed</strong><button data-vw2-action="classic" title="เปิดฟีดเดิม">ดูทั้งหมด</button></div>
+            <div class="vw2-section-head"><span class="vw2-head-icon">${icon('globe')}</span><strong>Global Feed</strong><button class="vw2-feed-all" data-vw2-action="classic" title="ดู Global Feed ทั้งหมด" aria-label="ดู Global Feed ทั้งหมด">↗</button></div>
             <div id="vw2-feed-items" class="vw2-feed-items">
               <div class="vw2-feed-card vw2-feed-card-empty">
                 <div class="vw2-feed-avatar">${icon('sparkle')}</div>
-                <div class="vw2-feed-copy"><div class="vw2-feed-card-head"><b>กิจกรรมล่าสุด</b><small>ตอนนี้</small></div><p id="vw2-feed-text">กำลังโหลดกิจกรรมของเพื่อน…</p></div>
+                <div class="vw2-feed-copy"><div class="vw2-feed-card-head"><b>กิจกรรมและตลาดรวม</b><small>ตอนนี้</small></div><p id="vw2-feed-text">กำลังโหลดกิจกรรมและสินค้าจากผู้เล่นทุกคน…</p></div>
               </div>
             </div>
             <span id="vw2-feed-likes" class="vw2-feed-legacy-binding" aria-hidden="true">—</span>
-            <div class="vw2-feed-coin">${icon('coin')}<span>เรียน เล่น และเติบโตไปพร้อมกัน</span></div>
+            <button type="button" class="vw2-feed-coin" data-vw2-action="market" title="เปิดตลาดผู้เล่นทั้งหมด">${icon('market')}<span>ตลาดผู้เล่นทั้งหมด · แตะสินค้าเพื่อเปิดตลาด</span></button>
           </section>
           <main class="vw2-feature">
-            <div class="vw2-feature-title"><span>${icon('sparkle')}</span><strong>Vocab World</strong><span>${icon('sparkle')}</span></div>
+            <div class="vw2-feature-title" aria-hidden="true"><span>${icon('sparkle')}</span><strong></strong><span>${icon('sparkle')}</span></div>
             <button type="button" class="vw2-word-ribbon" id="vw2-newword" data-vw2-action="newWord" data-vw2-source="#newword-banner" aria-label="เปิดคำศัพท์ใหม่">
               <span class="vw2-word-kicker">NEW WORD</span>
               <span class="vw2-word-copy"><strong id="vw2-newword-word">คำใหม่กำลังมา</strong><small id="vw2-newword-hint">แตะเพื่อฟังเสียงและดูความหมาย</small></span>
@@ -709,7 +715,7 @@
           </aside>
         </div>
         <footer class="vw2-bottom" aria-label="ทางลัดการเรียนและเกมทั้งหมด"><div class="vw2-bottom-scroll" tabindex="0" role="region" aria-label="เลื่อนทางลัดการเรียนและเกม"><div class="vw2-bottom-track">${modeButtons}</div></div></footer>
-        <div class="vw2-preview-mark">ADMIN PREVIEW · R13 HUD READABILITY</div>
+        <div class="vw2-preview-mark">ADMIN PREVIEW · R14 EXPANDED HERO + GLOBAL MARKET</div>
       </div>`;
     dash.appendChild(root);
     setupLeftRailCue();
@@ -837,6 +843,38 @@
       return {html:`<div class="vw2-empty">${htmlEscape(textOf('#quest-card','กำลังโหลดภารกิจ…'))}</div>`,done:0,total:0};
     }
   }
+  function marketFeedCardsHTML(){
+    const ready = typeof Online !== 'undefined' && Online && Online.marketOk === true;
+    const items = ready && Array.isArray(Online.market) ? Online.market : [];
+    const count = items.length;
+    let html = `<div class="vw2-feed-market-divider"><b>🏪 ตลาดผู้เล่นทั้งหมด</b><span>${ready ? `${count} ชิ้น` : 'กำลังเชื่อมต่อ…'}</span></div>`;
+    if(!ready){
+      return html + `<div class="vw2-feed-market-note">กำลังโหลดประกาศขายจากผู้เล่นทุกคน…</div>`;
+    }
+    if(!count){
+      return html + `<button type="button" class="vw2-feed-market-note" data-vw2-action="market">ยังไม่มีสินค้าลงขาย · แตะเพื่อเปิดตลาด</button>`;
+    }
+    const me = (typeof onlineKey === 'function') ? onlineKey() : '';
+    for(const item of items){
+      try{
+        const c = typeof collectInfo === 'function' ? collectInfo(item.id) : null;
+        if(!c) continue;
+        const img = typeof collectImg === 'function' ? collectImg(item.id) : '';
+        const own = item.sid === me;
+        const name = cleanText(c.name || item.id || 'สินค้า',34);
+        const seller = cleanText(item.sn || 'ผู้เล่น',32);
+        const price = typeof fmtNum === 'function' ? fmtNum(Number(item.p)||0) : fmt(Number(item.p)||0);
+        const art = img
+          ? `<img src="${htmlEscape(img)}" alt="" loading="lazy" decoding="async">`
+          : `<span>${htmlEscape(c.emoji || '🎁')}</span>`;
+        html += `<button type="button" class="vw2-feed-card vw2-market-feed-card${own?' is-own':''}" data-vw2-action="market" data-vw2-market-key="${htmlEscape(item.key || '')}" aria-label="เปิดตลาด: ${htmlEscape(name)} ราคา ${htmlEscape(price)} เหรียญ">
+          <span class="vw2-feed-product">${art}</span>
+          <span class="vw2-feed-copy"><span class="vw2-feed-card-head"><b>${htmlEscape(name)}</b><small>🪙 ${htmlEscape(price)}</small></span><span class="vw2-market-seller">${own?'ร้านของฉัน':`ร้านของ ${htmlEscape(seller)}`}</span><span class="vw2-feed-reaction">${own?'โพสต์ขายแล้ว':'แตะเพื่อดูในตลาด'}</span></span>
+        </button>`;
+      }catch(_){ }
+    }
+    return html;
+  }
   function feedCardsFromAuthoritativeSource(){
     const host = document.getElementById('vw2-feed-items');
     if(!host) return;
@@ -847,6 +885,7 @@
         if(seen.has(k)) return false;
         seen.add(k); return true;
       }).slice(0,5);
+      const marketHtml = marketFeedCardsHTML();
       let html = '';
       for(const post of posts){
         const name = cleanText((post.querySelector('.fp-name')||{}).textContent || post.dataset.n || 'เพื่อน',28);
@@ -862,6 +901,7 @@
         const fallback = cleanText(textOf('#feed-list','ยังไม่มีกิจกรรมใหม่ — เริ่มเล่นเกมเพื่อสร้างเรื่องราวของวันนี้!'),105);
         html = `<div class="vw2-feed-card vw2-feed-card-empty"><div class="vw2-feed-avatar">${icon('sparkle')}</div><div class="vw2-feed-copy"><div class="vw2-feed-card-head"><b>กิจกรรมล่าสุด</b><small>ตอนนี้</small></div><p>${htmlEscape(fallback)}</p><span class="vw2-feed-reaction">♡ เพื่อน · 💬 ความคิดเห็น</span></div></div>`;
       }
+      html = marketHtml + html;
       if(host.dataset.vw2Html !== html){ host.innerHTML = html; host.dataset.vw2Html = html; }
     }catch(_){ }
   }

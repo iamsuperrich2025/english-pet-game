@@ -18,8 +18,18 @@ must(css.includes("R11.4 Visual Master Fidelity Reconstruction") && css.includes
 must(home.includes("--vw2-r114-runtime-ready:1"), "R11.4 runtime marker missing");
 must(home.includes("R12 / รอบ 1279") && css.includes("R12 / รอบ 1279") && css.includes("--vw2-r1279-ready:1") && home.includes("--vw2-r1279-runtime-ready:1"), "R12 / รอบ 1279 lineage markers missing");
 must(home.includes("R13 / รอบ 1280") && css.includes("R13 / รอบ 1280") && css.includes("--vw2-r1280-ready:1") && home.includes("--vw2-r1280-runtime-ready:1"), "R13 / รอบ 1280 lineage markers missing");
-must(home.includes("ADMIN PREVIEW · R13 HUD READABILITY"), "R13 visible ADMIN PREVIEW marker missing");
-must(indexClassic.includes("css/home-v2.css?v=1280") && indexClassic.includes("js/home-v2.js?v=1280"), "R13 cache-bust missing from index_classic.html");
+must(home.includes("R14 EXPANDED HERO + GLOBAL MARKET") && css.includes("R14 / รอบ 1281") && css.includes("--vw2-r1281-ready:1") && home.includes("--vw2-r1281-runtime-ready:1"), "R14 / รอบ 1281 lineage markers missing");
+must(home.includes("ADMIN PREVIEW · R14 EXPANDED HERO + GLOBAL MARKET"), "R14 visible ADMIN PREVIEW marker missing");
+must(indexClassic.includes("css/home-v2.css?v=1281") && indexClassic.includes("js/home-v2.js?v=1281"), "R14 cache-bust missing from index_classic.html");
+must(css.includes("margin-top:-49px") && css.includes("grid-template-columns:repeat(3,minmax(0,1fr))") && css.includes(".vw2-wallet-pill.computer,.vw2-wallet-pill.worth"), "R14 expanded hero / three-primary-card HUD missing");
+must(home.includes('<strong></strong>') && css.includes(".vw2-feature-title>strong{display:none!important}") && css.includes(".vw2-word-ribbon{") && css.includes("left:23%;right:23%;top:8px"), "R14 New Word did not replace the Vocab World plaque");
+must(home.includes("function marketFeedCardsHTML()") && home.includes("Array.isArray(Online.market)") && home.includes("for(const item of items)"), "R14 Global Feed does not include every authoritative market listing");
+must(home.includes('class="vw2-feed-card vw2-market-feed-card') && home.includes('data-vw2-action="market"') && css.includes(".vw2-feed-market-divider") && css.includes(".vw2-market-feed-card"), "R14 market listing presentation/action missing");
+must(home.indexOf("html = marketHtml + html;") < home.indexOf("if(host.dataset.vw2Html !== html)"), "R14 market cards are appended after the feed render point");
+must(css.includes(".vw2-feed .vw2-section-head,.vw2-mission .vw2-section-head,.vw2-online .vw2-section-head") && css.includes("height:36px") && css.includes(".vw2-online-list{top:50px!important}"), "R14 panel-title alignment missing");
+must(css.includes("grid-template-columns:repeat(13,156px)") && css.includes("grid-template-columns:repeat(13,146px)") && css.includes("word-break:keep-all"), "R14 Bottom Rail text geometry missing");
+must(home.includes("R13 / รอบ 1280"), "R13 JS lineage marker missing");
+must(indexClassic.includes("css/home-v2.css?v=1281") && indexClassic.includes("js/home-v2.js?v=1281"), "Home V2 current cache-bust missing from index_classic.html");
 must(css.includes("grid-template-columns:minmax(132px,1.08fr) repeat(2,minmax(112px,1fr))") && css.includes("grid-row:1/3"), "R13 two-row wallet hierarchy missing");
 must(css.includes("grid-template-columns:repeat(13,minmax(132px,9.4vw))") && css.includes("grid-template-columns:repeat(13,126px)"), "R13 Bottom Rail label-proportion geometry missing");
 must(css.includes("font-size:clamp(11.5px,.86vw,14px)!important") && css.includes("background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(246,231,255,.94))!important"), "R13 Left Navigation caption readability missing");
@@ -204,7 +214,8 @@ must(css.includes('grid-template-columns:repeat(13,minmax(104px,8.4vw))') && css
 must(!css.includes('flex:0 0 clamp(142px') && !css.includes('min-width:122px!important'), "R11.5.2 oversized Bottom Rail width geometry still present");
 must(css.includes('grid-template-rows:clamp(100px,25.5vh,110px) minmax(0,1fr) clamp(56px,14vh,60px)'), "R11.5.4 mobile Bottom Rail vertical budget missing");
 must(css.includes('grid-template-rows:100px minmax(0,1fr) 56px') && !css.includes('grid-template-rows:100px minmax(0,1fr) 42px'), "R11.5.4 max-height:390 Bottom Rail vertical recovery missing");
-must(home.includes("function setupBottomRailScroll()") && home.includes("root.querySelector('.vw2-bottom-scroll')") && home.includes("rail.scrollLeft += e.deltaY") && home.includes("setupBottomRailScroll();"), "Bottom Rail input support is not attached to the inner wrapper");
+must(home.includes("function setupBottomRailScroll()") && home.includes("root.querySelector('.vw2-bottom-scroll')") && home.includes("rail.scrollLeft = next") && home.includes("setupBottomRailScroll();"), "Bottom Rail input support is not attached to the inner wrapper");
+must(css.includes("scroll-snap-type:none") && css.includes("scroll-snap-align:none"), "Bottom Rail must not snap wheel/touch scrolling back to the first button");
 must(css.includes('.vw2-left{padding-bottom:30px!important') && css.includes('.vw2-rail-racing{scroll-margin-bottom:26px}') && css.includes('.vw2-left-scroll-cue{bottom:0!important}'), "R11.5.4 Left Navigation bottom-clearance/internal-scroll correction missing");
 must(css.includes('z-index:20!important') && css.includes('.vw2-friends-btn') && css.includes('white-space:nowrap!important') && css.includes('.vw2-online-list{bottom:39px!important}'), "R11.5.4 Online Friends footer containment correction missing");
 must(home.includes('function syncRewardPlaque()') && home.includes("textOf('#rank-tab','')") && home.includes("card.dataset.vw2AuthoritativeInfo") && !home.includes('สะสมดาวและปลดล็อกเกียรติยศ'), "R11.5.4 authoritative Center World reward plaque correction missing / fake copy remains");
@@ -231,5 +242,5 @@ if(fail.length){
   console.error("Home V2 R11.5.4 validation FAILED:\n- " + fail.join("\n- "));
   process.exit(1);
 }
-console.log("Home V2 R13 / รอบ 1280 validation PASS");
-console.log(`Checked R13 two-row wallet, proportional Bottom Rail labels, readable Left Navigation captions, preserved R12 scene + Classic-like horizontal scrolling, ${expectedRail.length} left destinations, ${expectedBottom.length} bottom actions, authoritative bindings, admin gate, and mobile landscape guards.`);
+console.log("Home V2 R14 / รอบ 1281 validation PASS");
+console.log(`Checked R14 expanded hero/New Word plaque, all-player market feed, aligned panel headings, Bottom Rail labels, ${expectedRail.length} left destinations, ${expectedBottom.length} bottom actions, authoritative bindings, admin gate, and mobile landscape guards.`);

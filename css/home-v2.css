@@ -456,7 +456,7 @@ body.vw2-home-active .toast button,body.vw2-home-active .toast .toast-close{min-
   min-height:0;
   overflow-x:auto!important;
   overflow-y:hidden!important;
-  scroll-snap-type:x proximity;
+  scroll-snap-type:none;
   scroll-padding-inline:0;
   scrollbar-width:none;
   -ms-overflow-style:none;
@@ -479,7 +479,7 @@ body.vw2-home-active .toast button,body.vw2-home-active .toast .toast-close{min-
   min-height:0;
   align-items:stretch;
 }
-.vw2-bottom-track .vw2-mode{scroll-snap-align:start;scroll-snap-stop:normal}
+.vw2-bottom-track .vw2-mode{scroll-snap-align:none}
 
 /* Preserve the non-Bottom-Rail cleanup accepted from R11.5.2. */
 .vw2-reward-card{overflow:hidden!important;width:24%!important;padding:14px 8px 9px 24%!important}
@@ -773,5 +773,202 @@ body.vw2-home-active .toast button,body.vw2-home-active .toast .toast-close{min-
 @media (max-height:390px){
   .vw2-feature{grid-template-rows:minmax(0,1fr) 35px}
 }
+
+/* ======================== R14 / รอบ 1281 — EXPANDED HERO + GLOBAL MARKET FEED ======================== */
+/* The center world rises beneath a three-card primary HUD. Secondary computer/worth chips flank New Word. */
+#vw-home-v2-root{--vw2-r1281-ready:1}
+.vw2-top{overflow:visible;pointer-events:none;z-index:20}
+.vw2-profile,.vw2-top-actions,.vw2-wallet-pill{pointer-events:auto}
+.vw2-wallet{
+  position:relative;
+  overflow:visible;
+  pointer-events:none;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-template-rows:56px;
+  align-items:start;
+  gap:5px;
+}
+.vw2-wallet-pill{height:56px!important;min-height:0}
+.vw2-wallet-pill.coin{grid-row:auto;grid-column:auto}
+.vw2-wallet-pill.coin .vw2-stat-art{width:43px;height:43px;flex-basis:43px}
+.vw2-wallet-pill.computer,.vw2-wallet-pill.worth{
+  position:absolute;
+  top:63px;
+  width:22%;
+  height:38px!important;
+  z-index:36;
+  padding:4px 7px!important;
+  border-radius:13px!important;
+  background:linear-gradient(145deg,rgba(255,255,255,.93),rgba(235,225,255,.90))!important;
+  backdrop-filter:blur(5px);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.9),0 3px 9px rgba(61,40,96,.20)!important;
+}
+.vw2-wallet-pill.computer{left:1%}
+.vw2-wallet-pill.worth{right:1%}
+.vw2-wallet-pill.computer .vw2-stat-art,.vw2-wallet-pill.worth .vw2-stat-art{width:24px;height:24px;flex-basis:24px}
+.vw2-wallet-pill.computer .vw2-stat-copy small,.vw2-wallet-pill.worth .vw2-stat-copy small{font-size:10px!important}
+.vw2-wallet-pill.computer .vw2-stat-copy b,.vw2-wallet-pill.worth .vw2-stat-copy b{font-size:13px!important}
+
+/* The fantasy scene now occupies the full red-marked hero area and the old title plaque becomes New Word. */
+.vw2-feature{
+  position:relative;
+  z-index:12;
+  margin-top:-49px;
+  grid-template-rows:minmax(0,1fr) 45px;
+  gap:4px;
+  isolation:isolate;
+}
+.vw2-feature-stage{grid-row:1;min-height:0;border-radius:21px}
+.vw2-world-scene{object-position:center 55%;transform:scale(1.018)}
+.vw2-feature-actions{grid-row:2}
+.vw2-feature-title{
+  position:absolute;
+  left:23%;right:23%;top:8px;
+  width:auto;height:49px;
+  z-index:31;
+  border-radius:18px;
+}
+.vw2-feature-title>strong{display:none!important}
+.vw2-feature-title:before,.vw2-feature-title:after{width:23%;height:19px;opacity:.46}
+.vw2-word-ribbon{
+  position:absolute;
+  left:23%;right:23%;top:8px;
+  width:auto;height:49px;
+  z-index:32;
+  padding:4px 34px!important;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  gap:7px;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  color:#fff8d4;
+}
+.vw2-word-kicker{background:rgba(239,91,157,.95);font-size:8px}
+.vw2-word-copy{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.vw2-word-copy strong{font-size:clamp(17px,1.42vw,24px);color:#fff8d3;text-shadow:0 2px 2px rgba(70,30,108,.48)}
+.vw2-word-copy small{font-size:clamp(9px,.67vw,11px);color:#fff;opacity:.94;text-shadow:0 1px 2px rgba(68,34,101,.55)}
+.vw2-word-reward{padding:3px 6px;background:rgba(255,246,199,.94)}
+.vw2-speech{top:18%;width:32%}
+.vw2-pet{height:72%;bottom:13%}
+
+/* Panel titles sit on their own inner plaques instead of colliding with the ornate frame. */
+.vw2-feed .vw2-section-head,.vw2-mission .vw2-section-head,.vw2-online .vw2-section-head{
+  position:relative;
+  z-index:4;
+  width:100%;
+  height:36px;
+  min-height:36px;
+  padding:0 9px;
+  border-radius:12px;
+  background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(255,241,251,.82));
+  border:1px solid rgba(255,255,255,.92);
+  box-shadow:inset 0 0 0 1px rgba(154,103,184,.12),0 2px 5px rgba(77,46,105,.10);
+  display:flex;
+  align-items:center;
+  gap:6px!important;
+}
+.vw2-feed .vw2-section-head strong,.vw2-mission .vw2-section-head strong,.vw2-online .vw2-section-head strong{
+  min-width:0;
+  flex:1;
+  font-size:clamp(13px,1vw,16px)!important;
+  line-height:1!important;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.vw2-section-head>b,.vw2-section-head>button{flex:0 0 auto;margin:0!important}
+.vw2-feed .vw2-head-icon{display:flex!important;width:23px;height:23px;flex:0 0 23px}
+.vw2-feed-items{top:50px}
+.vw2-quests{top:55px!important}
+.vw2-online-list{top:50px!important}
+
+/* Global Feed starts with every live Online.market listing, then keeps the authoritative social posts below. */
+.vw2-feed-market-divider{position:sticky;top:0;z-index:4;min-height:28px;display:flex;align-items:center;justify-content:space-between;gap:6px;padding:5px 8px;border-radius:10px;background:linear-gradient(90deg,#fff3bf,#ffd98a);border:1px solid #e9b34f;color:#6d4518;box-shadow:0 2px 5px rgba(101,64,39,.12)}
+.vw2-feed-market-divider b{font-size:clamp(9.5px,.72vw,11.5px);line-height:1.05}
+.vw2-feed-market-divider span{font-size:clamp(8px,.58vw,9.5px);font-weight:1000;white-space:nowrap}
+.vw2-feed-market-note{width:100%;min-height:46px;padding:7px;border-radius:10px;background:rgba(255,255,255,.82);border:1px dashed rgba(185,129,66,.48);color:#74536e;font-size:clamp(8.5px,.62vw,10px);font-weight:900;text-align:center}
+.vw2-market-feed-card{width:100%;grid-template-columns:47px minmax(0,1fr);min-height:61px;text-align:left;cursor:pointer}
+.vw2-market-feed-card:hover{filter:brightness(1.025);transform:translateY(-1px)}
+.vw2-market-feed-card.is-own{background:linear-gradient(110deg,#fff9dc,#f2e6ff)}
+.vw2-feed-product{width:47px;height:47px;display:grid;place-items:center;overflow:hidden;border-radius:11px;background:#fff;border:1px solid rgba(227,181,85,.58);box-shadow:inset 0 0 0 1px rgba(255,255,255,.8),0 2px 5px rgba(84,53,100,.12);font-size:27px}
+.vw2-feed-product img{width:100%;height:100%;object-fit:contain}
+.vw2-market-seller{display:block;margin-top:3px;font-size:clamp(8.5px,.62vw,10px);line-height:1.08;color:#65476e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vw2-feed-coin{border:0;cursor:pointer}
+
+/* Wider illustrated tabs give Thai/English labels a stable two-line area. */
+.vw2-bottom-track{grid-template-columns:repeat(13,156px);gap:6px}
+.vw2-mode{padding:4px 8px 4px 39%!important}
+.vw2-mode>b{height:100%;display:flex!important;align-items:center;justify-content:center;font-size:clamp(13px,.96vw,15.5px)!important;line-height:1.08!important;white-space:normal!important;word-break:keep-all;overflow-wrap:normal;text-align:center!important}
+
+@media (max-width:1180px),(max-height:520px){
+  .vw2-wallet{grid-template-rows:49px;gap:3px}
+  .vw2-wallet-pill{height:49px!important}
+  .vw2-wallet-pill.coin .vw2-stat-art{width:34px;height:34px;flex-basis:34px}
+  .vw2-wallet-pill.computer,.vw2-wallet-pill.worth{top:55px;width:23%;height:33px!important;padding:3px 5px!important}
+  .vw2-wallet-pill.computer .vw2-stat-art,.vw2-wallet-pill.worth .vw2-stat-art{width:20px;height:20px;flex-basis:20px}
+  .vw2-wallet-pill.computer .vw2-stat-copy small,.vw2-wallet-pill.worth .vw2-stat-copy small{font-size:8.5px!important}
+  .vw2-wallet-pill.computer .vw2-stat-copy b,.vw2-wallet-pill.worth .vw2-stat-copy b{font-size:11.5px!important}
+  .vw2-feature{margin-top:-44px;grid-template-rows:minmax(0,1fr) 38px}
+  .vw2-feature-title,.vw2-word-ribbon{left:23%;right:23%;top:7px;height:43px}
+  .vw2-word-ribbon{padding:3px 20px!important;gap:4px}
+  .vw2-word-copy strong{font-size:clamp(15px,1.86vw,19px)}
+  .vw2-word-copy small{font-size:clamp(8px,1.02vw,10px)}
+  .vw2-speech{top:21%;width:34%}
+  .vw2-pet{height:70%;bottom:14%}
+  .vw2-feed .vw2-section-head,.vw2-mission .vw2-section-head,.vw2-online .vw2-section-head{height:31px;min-height:31px;padding:0 6px;border-radius:10px}
+  .vw2-feed-items{top:43px}.vw2-quests{top:47px!important}.vw2-online-list{top:43px!important}
+  .vw2-feed .vw2-head-icon{width:19px;height:19px;flex-basis:19px}
+  .vw2-bottom-track{grid-template-columns:repeat(13,150px);gap:5px}
+  .vw2-mode{padding-left:40%!important}
+  .vw2-mode>b{font-size:13px!important}
+}
+@media (max-width:760px){
+  .vw2-wallet-pill.computer,.vw2-wallet-pill.worth{width:25%}
+  .vw2-feature-title,.vw2-word-ribbon{left:25%;right:25%}
+  .vw2-word-ribbon{padding-left:8px!important;padding-right:8px!important}
+  .vw2-word-kicker{font-size:7px;padding:2px 4px}
+  .vw2-word-copy small,.vw2-word-reward{display:none}
+  .vw2-bottom-track{grid-template-columns:repeat(13,146px)}
+  .vw2-mode{padding-left:41%!important}
+  .vw2-mode>b{font-size:12.5px!important}
+}
+@media (max-height:390px){
+  .vw2-feature{margin-top:-42px;grid-template-rows:minmax(0,1fr) 35px}
+  .vw2-feature-title,.vw2-word-ribbon{top:6px;height:40px}
+  .vw2-speech{top:22%}
+}
+/* Lift live copy above the decorative frame; let the hero plaque rise through the transparent top grid. */
+.vw2-main-grid{overflow:visible!important}
+.vw2-feature-title{left:8%;right:8%}
+.vw2-word-ribbon{left:15%;right:15%;background:linear-gradient(180deg,rgba(112,63,184,.98),rgba(76,36,139,.98))!important;border:2px solid #efcf78!important;border-radius:18px!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.52),0 3px 8px rgba(54,29,95,.28)!important}
+@media (max-width:1180px),(max-height:520px){
+  .vw2-feature-title{left:10%;right:10%}
+  .vw2-word-ribbon{left:23%;right:23%}
+}
+@media (max-width:760px){
+  .vw2-feature-title{left:8%;right:8%}
+  .vw2-word-ribbon{left:25%;right:25%}
+.vw2-bottom-track{grid-template-columns:repeat(13,166px)}
+.vw2-mode>b{height:auto;min-height:32px;padding:4px 3px;border-radius:10px;background:linear-gradient(90deg,rgba(68,34,101,.10),rgba(59,27,91,.30));font-size:clamp(14px,1.02vw,16px)!important;text-shadow:0 1px 2px rgba(45,22,72,.72)}
+@media (max-width:1180px),(max-height:520px){
+  .vw2-bottom-track{grid-template-columns:repeat(13,158px)}
+  .vw2-mode>b{min-height:30px;font-size:14px!important}
+}
+@media (max-width:760px){
+  .vw2-bottom-track{grid-template-columns:repeat(13,154px)}
+  .vw2-mode>b{font-size:13.5px!important}
+}
+.vw2-feed .vw2-section-head>.vw2-feed-all{width:25px;height:25px;min-width:25px;padding:0!important;display:grid;place-items:center;font-size:14px!important;line-height:1}
+.vw2-feed .vw2-section-head strong{overflow:visible!important;text-overflow:clip!important}
+@media (max-width:760px){
+  .vw2-feed .vw2-head-icon{display:none!important}
+  .vw2-feed .vw2-section-head>.vw2-feed-all{width:21px;height:21px;min-width:21px;font-size:12px!important}
+  .vw2-feed .vw2-section-head strong{font-size:11.5px!important}
+}
+}
+.vw2-top{z-index:auto!important}
+.vw2-wallet-pill.computer,.vw2-wallet-pill.worth{z-index:40}
+.vw2-feed .vw2-section-head,.vw2-mission .vw2-section-head,.vw2-online .vw2-section-head{z-index:20!important;background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(255,241,251,.88))!important}
+.vw2-feed .vw2-head-icon{opacity:1!important}
 @media (prefers-reduced-motion:reduce){#vw-home-v2-root *,#vw-home-v2-root *:before,#vw-home-v2-root *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 html.no-anim #vw-home-v2-root *,html.no-anim #vw-home-v2-root *:before,html.no-anim #vw-home-v2-root *:after{animation:none!important;transition:none!important}
