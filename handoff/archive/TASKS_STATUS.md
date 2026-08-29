@@ -5676,3 +5676,11 @@
 - สร้าง WebP โปร่งใส 512×512 + thumbnail 256×256 ครบ 103 คู่; display รวม 6.21MB/สูงสุด 83.3KB, thumb รวม 2.37MB/สูงสุด 30.9KB และมี manifest+pipeline+validator ล็อก 1:1/fill 82–90%
 - การ์ดโรงงาน/ของขวัญ/ตลาด/คลังใช้ thumbnail + `loading="lazy"`/IntersectionObserver; ฉากเปิดใช้ 512 เท่านั้นและภาพที่อยู่นอก viewport ไม่ถูกโหลด (`js/ui.js`, `js/images.js`)
 - syntax + data/asset regression + deep image QA + production build + Edge headless 812×375 ผ่าน; โรงงานโหลดใกล้จอ 12/103 และอีก 101 pending (`tools/test_cakes2026.js`, `tools/validate_cake_assets.py`)
+
+
+## ⏬ ย้ายเมื่อ 2026-08-29 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1276 · เค้กทุกชนิดราคา 3,000–5,000 + คืนส่วนต่างเฉพาะเค้กร้านที่ส่งให้เพื่อน:** ราคาเดิมถูก clamp รักษาลำดับ; โรงงาน 107 แบบ/ร้านของขวัญ 125 แบบผ่าน policy (`cakes2026.js`, `collectibles.js`, `gifts.js`)
+- Cloud Functions สแกน `giftBox` ที่รับแล้วและ `/gifts` ที่ยัง pending, คืนส่วนต่างให้ UID ผู้ส่งด้วย campaign marker + private ledger; ไม่รวมโรงงาน/ตลาดผู้เล่น และมี heal trigger กันเซฟเครื่องเก่าเขียนทับ (`functions/cake-price-refund.js`, `functions/index.js`)
+- ของขวัญ pending เก็บยอด escrow เดิมในเซฟผู้ส่ง: ราคาเดิมต่ำกว่า 3,000 ไม่คืนเกิน, ราคาเดิมสูงกว่า 5,000 ได้ส่วนต่างก่อนและคืนยอดคงเหลือเมื่อปฏิเสธ/หมดอายุ; ป้ายแจ้งยอดกดรับทราบครั้งเดียว (`state.js`, `online.js`, `main.js`)
+- syntax + policy 125/107 + refund idempotency + market regression + asset QA + production build + Edge 812×375 ผ่าน; live `.1148` + migration `completed`: 4 ผู้เล่น/9 เค้กรับแล้ว/คืน 105,000/escrow เดิม 1/ไม่ deferred (`runCakeGiftPriceRefund`, `healCakeGiftPriceRefund`)
