@@ -28,10 +28,10 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (30 ส.ค.) — อ่านก่อน
-- **รอบ 1281 · Home V2 R14 Expanded Hero + Global Market (Admin Preview เท่านั้น):** ขยายฉากสัตว์ขึ้นแทนพื้นที่ว่างใต้ wallet, ย้าย New Word ไปป้ายกลางและซ่อนคำ Vocab World, จัด Global Feed/ภารกิจวันนี้/เพื่อนออนไลน์ และปรับข้อความปุ่มล่างให้พอดี
-- Global Feed อ่าน `Online.market` ทั้งชุดเพื่อแสดงสินค้าที่ผู้เล่นทุกคนลงขาย (ไม่กรองเฉพาะเพื่อน) และแตะการ์ด/ท้าย feed เปิดตลาดเดิม; ปุ่มเดิม 55 จุด/44 actions, New Word, music state และแตะสัตว์เปิด profile ยังทำงาน
-- แก้ Bottom Rail ไม่ให้ scroll-snap ดึงกลับปุ่มแรก; source + production dist ผ่าน wheel 0→280, 13 ปุ่มไม่มีข้อความล้น/vertical overflow, market mock 8 ผู้ขายแสดงครบ และหน้าจอ 1320×617, 915×412, 812×375, 667×375 ไม่มี page overflow
-- admin mock เห็น R14 ส่วน non-admin mock ไม่สร้าง Home V2 root (`actions=0`) ทั้ง source/dist; ไฟล์หลัก `css/home-v2.css`, `js/home-v2.js`, `index_classic.html`, `tools/test_home_v2_mobile_preview.js`; ยังรอผู้ใช้ตรวจจริงก่อนเปิดให้ทุกคน
+- **รอบ 1282 · Home V2 R15 Fantasy Buttons + Polished Panels (Admin Preview เท่านั้น):** เปลี่ยนหัวข้อเป็น “ผู้เล่นออนไลน์”, ทำป้าย Global Feed แบบแฟนตาซี, ตัดข้อความตลาดยาว และเปลี่ยนปุ่มกลางเป็น “โปรไฟล์สัตว์เลี้ยง” โดยยังคงปุ่มเมือง 3D ที่แถบซ้าย
+- สร้าง WebP โปร่งใสน้ำหนักเบา 2 ภาพรวม 38,306 bytes สำหรับกรอบปุ่มล่างครบชิ้นและลายประดับ panel; Bottom Rail 13 ปุ่มเลื่อนแนวนอน 0→280 ไม่มีข้อความ/แนวตั้งล้นใน 915×412, 812×375 และ 667×375
+- Global Feed ยังอ่าน `Online.market` ทั้งชุด: mock 8/8 ร้านจากผู้เล่นหลายคนแสดงครบและแตะสินค้าเปิดตลาดเดิม; ปุ่ม 55 จุด/44 actions ไม่มี source ขาดหรือ disabled, New Word, music state, แตะสัตว์และปุ่มกลางเปิด profile ผ่าน
+- ย้าย Home V2 root ไป `body` เพื่อแก้การถูก Classic dashboard ตัดขอบล่าง; source/dist ไม่มี page overflow, admin เห็น R15 ส่วน non-admin ไม่สร้าง Home V2 root (`actions=0`); ยังรอผู้ใช้ตรวจจริงก่อนเปิดให้ทุกคน
 - **รอบ 1279 · Home V2 R12 Visual Master Rebuild (Admin Preview เท่านั้น):** สร้างฉากแฟนตาซี WebP 1600×900/238KB และปรับ composition/material/readability ให้ใกล้ `references/HOME_V2_ULTIMATE_VISUAL_MASTER.png` โดยไม่แตะ Firebase/economy/routing/action bindings
 - Bottom Rail 13 ปุ่มคงลำดับ/handler เดิม เปลี่ยนเป็นแถบแนวนอนปุ่มกว้าง เลื่อนซ้าย–ขวาด้วย touch/trackpad/mouse wheel/keyboard; 4 viewport 667×375, 800×360, 844×390, 915×412 ไม่มี page overflow และ rail ไม่มี vertical overflow
 - production build + regression ผ่าน; asset อยู่ใน dist, actions 52 จุดครบ; runtime admin mock เห็น R12 และ non-admin mock `homeVisible=false`/ไม่มี Home V2 root ทั้ง source และ production dist

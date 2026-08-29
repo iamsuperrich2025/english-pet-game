@@ -18,9 +18,9 @@ must(css.includes("R11.4 Visual Master Fidelity Reconstruction") && css.includes
 must(home.includes("--vw2-r114-runtime-ready:1"), "R11.4 runtime marker missing");
 must(home.includes("R12 / รอบ 1279") && css.includes("R12 / รอบ 1279") && css.includes("--vw2-r1279-ready:1") && home.includes("--vw2-r1279-runtime-ready:1"), "R12 / รอบ 1279 lineage markers missing");
 must(home.includes("R13 / รอบ 1280") && css.includes("R13 / รอบ 1280") && css.includes("--vw2-r1280-ready:1") && home.includes("--vw2-r1280-runtime-ready:1"), "R13 / รอบ 1280 lineage markers missing");
-must(home.includes("R14 EXPANDED HERO + GLOBAL MARKET") && css.includes("R14 / รอบ 1281") && css.includes("--vw2-r1281-ready:1") && home.includes("--vw2-r1281-runtime-ready:1"), "R14 / รอบ 1281 lineage markers missing");
-must(home.includes("ADMIN PREVIEW · R14 EXPANDED HERO + GLOBAL MARKET"), "R14 visible ADMIN PREVIEW marker missing");
-must(indexClassic.includes("css/home-v2.css?v=1281") && indexClassic.includes("js/home-v2.js?v=1281"), "R14 cache-bust missing from index_classic.html");
+must(css.includes("R14 / รอบ 1281") && css.includes("--vw2-r1281-ready:1") && home.includes("--vw2-r1281-runtime-ready:1"), "R14 / รอบ 1281 lineage markers missing");
+must(home.includes("ADMIN PREVIEW · R15 FANTASY BUTTONS + POLISHED PANELS"), "R15 visible ADMIN PREVIEW marker missing");
+must(indexClassic.includes("css/home-v2.css?v=1282") && indexClassic.includes("js/home-v2.js?v=1282"), "R15 cache-bust missing from index_classic.html");
 must(css.includes("margin-top:-49px") && css.includes("grid-template-columns:repeat(3,minmax(0,1fr))") && css.includes(".vw2-wallet-pill.computer,.vw2-wallet-pill.worth"), "R14 expanded hero / three-primary-card HUD missing");
 must(home.includes('<strong></strong>') && css.includes(".vw2-feature-title>strong{display:none!important}") && css.includes(".vw2-word-ribbon{") && css.includes("left:23%;right:23%;top:8px"), "R14 New Word did not replace the Vocab World plaque");
 must(home.includes("function marketFeedCardsHTML()") && home.includes("Array.isArray(Online.market)") && home.includes("for(const item of items)"), "R14 Global Feed does not include every authoritative market listing");
@@ -28,8 +28,16 @@ must(home.includes('class="vw2-feed-card vw2-market-feed-card') && home.includes
 must(home.indexOf("html = marketHtml + html;") < home.indexOf("if(host.dataset.vw2Html !== html)"), "R14 market cards are appended after the feed render point");
 must(css.includes(".vw2-feed .vw2-section-head,.vw2-mission .vw2-section-head,.vw2-online .vw2-section-head") && css.includes("height:36px") && css.includes(".vw2-online-list{top:50px!important}"), "R14 panel-title alignment missing");
 must(css.includes("grid-template-columns:repeat(13,156px)") && css.includes("grid-template-columns:repeat(13,146px)") && css.includes("word-break:keep-all"), "R14 Bottom Rail text geometry missing");
+must(home.includes("R15 FANTASY BUTTONS + POLISHED PANELS") && css.includes("R15 / รอบ 1282") && css.includes("--vw2-r1282-ready:1") && home.includes("--vw2-r1282-runtime-ready:1"), "R15 / รอบ 1282 lineage markers missing");
+must(indexClassic.includes("css/home-v2.css?v=1282") && indexClassic.includes("js/home-v2.js?v=1282"), "R15 cache-bust missing from index_classic.html");
+must(home.includes("<strong>ผู้เล่นออนไลน์</strong>") && !home.includes("<strong>เพื่อนออนไลน์</strong>"), "R15 online panel title was not renamed");
+must(home.includes('data-vw2-action="petProfile" aria-label="เปิดโปรไฟล์สัตว์เลี้ยง"') && home.includes("โปรไฟล์สัตว์เลี้ยง</button>"), "R15 center pet-profile action missing");
+must(!home.includes("ตลาดผู้เล่นทั้งหมด ·") && !home.includes("🏪 ตลาดผู้เล่นทั้งหมด"), "R15 removed market wording is still visible");
+must(css.includes('r1282_bottom_frame.webp') && css.includes('r1282_filigree.webp') && css.includes(".vw2-mode>span{") && css.includes("display:grid!important"), "R15 generated fantasy buttons/decor are not integrated");
+must(css.includes("position:fixed!important") && css.includes("height:100dvh"), "R15 viewport lock is missing; Bottom Rail can be clipped by the dashboard offset");
+must(home.includes("document.body.appendChild(root)") && !home.includes("dash.appendChild(root)"), "R15 Home V2 root is still mounted inside the clipped Classic dashboard container");
 must(home.includes("R13 / รอบ 1280"), "R13 JS lineage marker missing");
-must(indexClassic.includes("css/home-v2.css?v=1281") && indexClassic.includes("js/home-v2.js?v=1281"), "Home V2 current cache-bust missing from index_classic.html");
+must(indexClassic.includes("css/home-v2.css?v=1282") && indexClassic.includes("js/home-v2.js?v=1282"), "Home V2 current cache-bust missing from index_classic.html");
 must(css.includes("grid-template-columns:minmax(132px,1.08fr) repeat(2,minmax(112px,1fr))") && css.includes("grid-row:1/3"), "R13 two-row wallet hierarchy missing");
 must(css.includes("grid-template-columns:repeat(13,minmax(132px,9.4vw))") && css.includes("grid-template-columns:repeat(13,126px)"), "R13 Bottom Rail label-proportion geometry missing");
 must(css.includes("font-size:clamp(11.5px,.86vw,14px)!important") && css.includes("background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(246,231,255,.94))!important"), "R13 Left Navigation caption readability missing");
@@ -44,6 +52,12 @@ must(css.includes('data-vw2-action="music"].is-music-on') && css.includes('data-
 const r1279Scene = path.join(root, "img", "home-v2", "r1279_fantasy_world.webp");
 must(fs.existsSync(r1279Scene) && fs.statSync(r1279Scene).size > 150000 && fs.statSync(r1279Scene).size < 500000, "R12 optimized fantasy scene missing / outside mobile budget");
 must(home.includes("img/home-v2/r1279_fantasy_world.webp") && buildWeb.includes("img/home-v2/r1279_fantasy_world.webp"), "R12 fantasy scene is not integrated in runtime/build");
+const r1282Assets = ["r1282_bottom_frame.webp", "r1282_filigree.webp"];
+r1282Assets.forEach(name => {
+  const asset = path.join(root, "img", "home-v2", name);
+  must(fs.existsSync(asset) && fs.statSync(asset).size > 10000 && fs.statSync(asset).size < 50000, `R15 lightweight generated asset missing/outside budget: ${name}`);
+  must(buildWeb.includes(`img/home-v2/${name}`), `R15 generated asset is not copied by build: ${name}`);
+});
 
 const r111Assets = [
   "r111_screen_frame.svg",
@@ -242,5 +256,5 @@ if(fail.length){
   console.error("Home V2 R11.5.4 validation FAILED:\n- " + fail.join("\n- "));
   process.exit(1);
 }
-console.log("Home V2 R14 / รอบ 1281 validation PASS");
-console.log(`Checked R14 expanded hero/New Word plaque, all-player market feed, aligned panel headings, Bottom Rail labels, ${expectedRail.length} left destinations, ${expectedBottom.length} bottom actions, authoritative bindings, admin gate, and mobile landscape guards.`);
+console.log("Home V2 R15 / รอบ 1282 validation PASS");
+console.log(`Checked R15 generated fantasy buttons/decor, Global Feed plaque, online/player copy, pet-profile shortcut, ${expectedRail.length} left destinations, ${expectedBottom.length} bottom actions, authoritative bindings, admin gate, and mobile landscape guards.`);

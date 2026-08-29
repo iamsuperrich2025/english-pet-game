@@ -375,7 +375,7 @@
     if(document.getElementById(STYLE_ID)) return;
     const style = document.createElement('style');
     style.id = STYLE_ID;
-    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1}';
+    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1}';
     document.head.appendChild(style);
   }
   function clickExisting(selector, opts){
@@ -667,7 +667,7 @@
               </div>
             </div>
             <span id="vw2-feed-likes" class="vw2-feed-legacy-binding" aria-hidden="true">—</span>
-            <button type="button" class="vw2-feed-coin" data-vw2-action="market" title="เปิดตลาดผู้เล่นทั้งหมด">${icon('market')}<span>ตลาดผู้เล่นทั้งหมด · แตะสินค้าเพื่อเปิดตลาด</span></button>
+            <button type="button" class="vw2-feed-coin" data-vw2-action="market" title="เปิดตลาด" aria-label="เปิดตลาด"><span aria-hidden="true">${icon('market')}</span></button>
           </section>
           <main class="vw2-feature">
             <div class="vw2-feature-title" aria-hidden="true"><span>${icon('sparkle')}</span><strong></strong><span>${icon('sparkle')}</span></div>
@@ -695,7 +695,7 @@
               <div class="vw2-stage-foreground" aria-hidden="true"></div>
             </div>
             <div class="vw2-feature-actions">
-              <button class="vw2-enter" data-vw2-action="city" data-vw2-source="#btn-rail-city">${icon('city')} เข้าโลก 3D</button>
+              <button class="vw2-enter" data-vw2-action="petProfile" aria-label="เปิดโปรไฟล์สัตว์เลี้ยง">${icon('heart')} โปรไฟล์สัตว์เลี้ยง</button>
               <button class="vw2-play" data-vw2-action="play" data-vw2-source="#btn-play">${icon('controller')} เกมจับคู่คำศัพท์</button>
               <button class="vw2-shop-link" data-vw2-action="shop" data-vw2-source="#screen-select">${icon('potion')} ร้านสัตว์</button>
             </div>
@@ -707,7 +707,7 @@
               <div id="vw2-quests" class="vw2-quests"><div class="vw2-empty">กำลังโหลดภารกิจ…</div></div>
             </section>
             <section class="vw2-online vw2-glass">
-              <div class="vw2-section-head"><span class="vw2-head-icon">${icon('friends')}</span><strong>เพื่อนออนไลน์</strong><b id="vw2-online-count">—</b></div>
+              <div class="vw2-section-head"><span class="vw2-head-icon">${icon('friends')}</span><strong>ผู้เล่นออนไลน์</strong><b id="vw2-online-count">—</b></div>
               <div class="vw2-online-list" id="vw2-online-list" aria-live="polite"><div class="vw2-online-note">กำลังเชื่อมต่อรายชื่อออนไลน์จริง…</div></div>
               <span class="vw2-online-legacy" aria-hidden="true"><b id="vw2-online-name">กำลังเชื่อมต่อ…</b><small id="vw2-online-text">เล่นและเรียนไปพร้อมกัน</small></span>
               <button class="vw2-friends-btn" data-vw2-action="friends" data-vw2-source=".lobby-rail [data-panel=&quot;panel-friends&quot;]">${icon('friends')} ดูเพื่อนทั้งหมด</button>
@@ -715,9 +715,11 @@
           </aside>
         </div>
         <footer class="vw2-bottom" aria-label="ทางลัดการเรียนและเกมทั้งหมด"><div class="vw2-bottom-scroll" tabindex="0" role="region" aria-label="เลื่อนทางลัดการเรียนและเกม"><div class="vw2-bottom-track">${modeButtons}</div></div></footer>
-        <div class="vw2-preview-mark">ADMIN PREVIEW · R14 EXPANDED HERO + GLOBAL MARKET</div>
+        <div class="vw2-preview-mark">ADMIN PREVIEW · R15 FANTASY BUTTONS + POLISHED PANELS</div>
       </div>`;
-    dash.appendChild(root);
+    // Mount at body level so the fixed admin preview is not clipped by the
+    // Classic dashboard's translated/scaled screen container.
+    document.body.appendChild(root);
     setupLeftRailCue();
     setupBottomRailScroll();
     root.addEventListener('click', e=>{
@@ -847,7 +849,7 @@
     const ready = typeof Online !== 'undefined' && Online && Online.marketOk === true;
     const items = ready && Array.isArray(Online.market) ? Online.market : [];
     const count = items.length;
-    let html = `<div class="vw2-feed-market-divider"><b>🏪 ตลาดผู้เล่นทั้งหมด</b><span>${ready ? `${count} ชิ้น` : 'กำลังเชื่อมต่อ…'}</span></div>`;
+    let html = `<div class="vw2-feed-market-divider"><b>🏪 สินค้าใหม่ในตลาด</b><span>${ready ? `${count} ชิ้น` : 'กำลังเชื่อมต่อ…'}</span></div>`;
     if(!ready){
       return html + `<div class="vw2-feed-market-note">กำลังโหลดประกาศขายจากผู้เล่นทุกคน…</div>`;
     }

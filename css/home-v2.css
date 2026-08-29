@@ -972,3 +972,161 @@ body.vw2-home-active .toast button,body.vw2-home-active .toast .toast-close{min-
 .vw2-feed .vw2-head-icon{opacity:1!important}
 @media (prefers-reduced-motion:reduce){#vw-home-v2-root *,#vw-home-v2-root *:before,#vw-home-v2-root *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 html.no-anim #vw-home-v2-root *,html.no-anim #vw-home-v2-root *:before,html.no-anim #vw-home-v2-root *:after{animation:none!important;transition:none!important}
+
+/* ======================== R15 / รอบ 1282 — FANTASY BUTTONS + POLISHED PANELS ======================== */
+/* ImageGen assets are shared across the rail/panels to keep the full visual upgrade under 40 KB. */
+#vw-home-v2-root{
+  --vw2-r1282-ready:1;
+  --vw2-mode-accent:#8c63cf;
+  position:fixed!important;
+  inset:0!important;
+  width:100vw;
+  height:100dvh;
+}
+
+/* Global Feed receives a complete generated fantasy plaque instead of floating copy. */
+.vw2-feed .vw2-section-head{
+  height:48px!important;
+  min-height:48px!important;
+  margin:-3px -2px 0;
+  padding:8px 15px 9px 17px!important;
+  gap:5px;
+  border:0!important;
+  border-radius:0!important;
+  overflow:visible;
+  background:transparent url("../img/home-v2/r1282_bottom_frame.webp") center/100% 100% no-repeat!important;
+  box-shadow:none!important;
+}
+.vw2-feed .vw2-section-head:after{display:none!important}
+.vw2-feed .vw2-section-head strong{
+  color:#573170;
+  font-size:clamp(12px,.92vw,15px)!important;
+  font-weight:1000;
+  text-shadow:0 1px 0 rgba(255,255,255,.98);
+}
+.vw2-feed .vw2-section-head .vw2-head-icon{width:23px;height:23px;flex-basis:23px}
+.vw2-feed .vw2-section-head>.vw2-feed-all{
+  width:23px;height:23px;min-width:23px;
+  color:#74408c;
+  background:radial-gradient(circle,#fff 0 48%,#f0d9ff 52%,#d3a25a 55% 64%,#fff1ba 67%)!important;
+  border:0!important;
+  box-shadow:0 2px 5px rgba(77,43,108,.18)!important;
+}
+.vw2-feed-items{top:59px!important;bottom:7px!important;padding-bottom:34px}
+.vw2-feed:after{
+  background-image:url("../img/home-v2/r1282_filigree.webp"),url("../img/home-v2/r115_frame_feed.webp")!important;
+  background-position:center 41px,center!important;
+  background-size:86% 18px,100% 100%!important;
+}
+.vw2-feed-coin{
+  z-index:24;
+  left:auto!important;right:10px!important;bottom:8px!important;
+  width:29px!important;height:29px!important;padding:0!important;
+  border-radius:50%!important;
+  background:radial-gradient(circle at 35% 28%,#fff 0 15%,#f5ddff 35%,#9b60cf 67%,#653196 100%)!important;
+  color:#fff!important;
+  box-shadow:inset 0 0 0 2px #fff,inset 0 0 0 4px #e9bd61,0 3px 7px rgba(64,35,93,.24)!important;
+}
+.vw2-feed-coin>span{display:grid;place-items:center;width:100%;height:100%}
+.vw2-feed-coin .vw2-icon{width:17px!important;height:17px!important;filter:drop-shadow(0 1px 1px rgba(53,27,75,.35))}
+.vw2-feed-market-divider{background:linear-gradient(90deg,#fff7d8,#ffe8aa)!important}
+
+/* Use the generated flourish as subtle fill where the image frames previously felt empty. */
+.vw2-mission:after{
+  background-image:url("../img/home-v2/r1282_filigree.webp"),url("../img/home-v2/r115_frame_mission.webp")!important;
+  background-position:center calc(100% - 7px),center!important;
+  background-size:72% 15px,100% 100%!important;
+}
+.vw2-online:after{
+  background-image:url("../img/home-v2/r1282_filigree.webp"),url("../img/home-v2/r115_frame_online.webp")!important;
+  background-position:center calc(100% - 8px),center!important;
+  background-size:72% 15px,100% 100%!important;
+}
+.vw2-stage-foreground:before{
+  content:"";
+  position:absolute;
+  left:9%;right:9%;bottom:16%;
+  height:34%;
+  background:url("../img/home-v2/r1282_filigree.webp") center/contain no-repeat;
+  opacity:.25;
+}
+
+/* The former city shortcut is now an honest pet-profile shortcut; City 3D remains on the left rail. */
+.vw2-feature-actions{grid-template-columns:1.16fr 1.12fr .9fr}
+.vw2-feature-actions .vw2-enter{padding:0 7px!important;font-size:clamp(8.5px,.67vw,10.8px)!important}
+
+/* One complete generated frame is reused for all 13 horizontal buttons; live icons keep each route distinct. */
+.vw2-bottom-track{grid-template-columns:repeat(13,176px);gap:7px;padding:0 2px}
+.vw2-mode{
+  --vw2-mode-accent:#8c63cf;
+  position:relative;
+  border:0!important;
+  border-radius:0!important;
+  padding:5px 13px 5px 48px!important;
+  overflow:hidden;
+  background-color:transparent!important;
+  background-image:url("../img/home-v2/r1282_bottom_frame.webp")!important;
+  background-position:center!important;
+  background-size:100% 100%!important;
+  background-repeat:no-repeat!important;
+  box-shadow:none!important;
+  color:#4f2b68!important;
+  text-shadow:0 1px 0 rgba(255,255,255,.98)!important;
+}
+.vw2-mode.book,.vw2-mode.blue{--vw2-mode-accent:#4eaee4}
+.vw2-mode.green{--vw2-mode-accent:#40bd88}
+.vw2-mode.orange,.vw2-mode.game{--vw2-mode-accent:#ed9652}
+.vw2-mode.gold{--vw2-mode-accent:#e4ad39}
+.vw2-mode.lime{--vw2-mode-accent:#76bd57}
+.vw2-mode.violet{--vw2-mode-accent:#8c63cf}
+.vw2-mode.pink{--vw2-mode-accent:#dc619d}
+.vw2-mode>span{
+  position:absolute;
+  left:12px;top:50%;
+  transform:translateY(-50%);
+  display:grid!important;
+  place-items:center;
+  width:31px!important;height:31px!important;
+  border-radius:50%;
+  background:radial-gradient(circle at 35% 28%,#fff 0 13%,color-mix(in srgb,var(--vw2-mode-accent) 38%,#fff) 35%,var(--vw2-mode-accent) 72%,#68419c 100%);
+  border:2px solid #ffe8a5;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.74),0 2px 5px rgba(65,36,92,.22);
+  filter:none!important;
+}
+.vw2-mode>span .vw2-icon{width:20px!important;height:20px!important;filter:drop-shadow(0 1px 1px rgba(52,28,75,.24))}
+.vw2-mode>b{
+  height:100%!important;
+  min-height:0!important;
+  padding:0!important;
+  border-radius:0!important;
+  display:flex!important;
+  align-items:center;
+  justify-content:center;
+  background:none!important;
+  color:#4f2b68!important;
+  font-size:clamp(13.5px,.98vw,15px)!important;
+  line-height:1.08!important;
+  text-shadow:0 1px 0 rgba(255,255,255,.98)!important;
+}
+.vw2-mode:hover{filter:brightness(1.035);transform:translateY(-1px)}
+.vw2-mode:active{transform:translateY(1px)}
+
+@media (max-width:1180px),(max-height:520px){
+  .vw2-feed .vw2-section-head{height:42px!important;min-height:42px!important;padding:6px 11px 7px 14px!important}
+  .vw2-feed-items{top:53px!important}
+  .vw2-bottom-track{grid-template-columns:repeat(13,168px)}
+  .vw2-mode{padding-left:45px!important}
+  .vw2-mode>span{left:11px;width:29px!important;height:29px!important}
+  .vw2-mode>b{font-size:13.5px!important}
+}
+@media (max-width:760px){
+  .vw2-feed .vw2-head-icon{display:grid!important;width:17px!important;height:17px!important;flex-basis:17px!important}
+  .vw2-feed .vw2-section-head{height:39px!important;min-height:39px!important;padding:5px 9px 6px 12px!important}
+  .vw2-feed .vw2-section-head strong{font-size:10.5px!important}
+  .vw2-feed .vw2-section-head>.vw2-feed-all{width:18px!important;height:18px!important;min-width:18px!important;font-size:10px!important}
+  .vw2-feed-items{top:50px!important}
+  .vw2-bottom-track{grid-template-columns:repeat(13,164px)}
+  .vw2-mode{padding-left:43px!important}
+  .vw2-mode>span{left:10px;width:28px!important;height:28px!important}
+  .vw2-mode>b{font-size:13px!important}
+}

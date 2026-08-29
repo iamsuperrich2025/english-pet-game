@@ -142,6 +142,7 @@ async function sourceFiles() {
       'img/home-v2/r115_bottom_gold.webp', 'img/home-v2/r115_bottom_lime.webp', 'img/home-v2/r115_bottom_violet.webp', 'img/home-v2/r115_bottom_rose.webp', 'img/home-v2/r115_speech_bubble.webp',
       'img/home-v2/r115_pedestal.webp', 'img/home-v2/r115_scene_frame.webp', 'img/home-v2/r115_reward_sign.webp', 'img/home-v2/r115_house_label.webp', 'img/home-v2/r115_clouds.webp',
       'img/home-v2/r1279_fantasy_world.webp',
+      'img/home-v2/r1282_bottom_frame.webp', 'img/home-v2/r1282_filigree.webp',
 
       'js/data/f1_vocab.js',
 
