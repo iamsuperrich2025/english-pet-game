@@ -40,10 +40,6 @@
 - syntax + Sky regression + asset QA ทั้ง 6 ตัว + production build ผ่าน; test ล็อกไม่ให้ย้อนกลับไปใช้ relative CSS-variable URL (`tools/test_skyplay3d.js`)
 - **รอบ 1272 · กล่องสุ่มรายวันน่ารัก 5 ใบ:** รางวัล 5,000/4,000/3,000/2,000/1,000 ถูก crypto shuffle และบังคับทุกช่องไม่ซ้ำตำแหน่งเมื่อวาน; เปิดได้ 1 ใบ/วัน (`js/dailybox.js`, `css/dailybox.css`)
 - ระบบล็อก claim ก่อน `addCoins()` + save/Cloud ทันทีและอ่าน local save สดกันสองแท็บ; reload ก่อนรับทราบจะเปิดใบยินดีเดิม ไม่จ่ายซ้ำ และไม่มี timer/Esc/backdrop ปิดเอง
-- ภาพหีบ CSS 5 แบบ + ฝาเปิด/เหรียญพุ่ง/เสียง level-up+coinGet; production build fingerprint ผ่าน, shuffle 200 วัน + syntax + landscape/Lobby regression ผ่าน (`tools/test_dailybox.js`, `tools/build_web.mjs`)
-- **รอบ 1271 · ตลาดแสดงประกาศของตัวเองและเป็นตลาดรวมทุกผู้เล่น:** `renderMarketBrowse()` ไม่กรอง `sid===me` แล้ว; การ์ดเจ้าของขึ้น “ร้านของฉัน / โพสต์ขายแล้ว” แบบ disabled จึงเห็นราคา/สินค้าแต่ซื้อเองไม่ได้ (`js/ui.js`)
-- เปลี่ยนข้อความ “ตลาดเพื่อน” เป็น “ตลาดผู้เล่นทั้งหมด — ทุกคนเห็นทุกประกาศ”; `marketWatch()` อ่าน root `/market` โดยไม่กรองเพื่อน และ live Rules ยืนยัน `.read = auth != null` จึงไม่ต้อง Publish Rules (`js/online.js`, `handoff/GAME_RULES.md`)
-- syntax + market visibility/global rules + secure buy + listing reconcile ผ่าน; regression ครอบ own+other card, no own buy action, global root และไม่มี friend filter (`tools/test_market_visibility.js`)
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`
