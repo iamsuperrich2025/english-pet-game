@@ -1,6 +1,7 @@
 "use strict";
 /* ============================================================
    Vocab World Home V2 — Admin Preview (R11.4 Visual Master Fidelity Reconstruction + Premium Depth / Composition Recovery)
+   R12 / รอบ 1279 — Ultimate Visual Master scenic + composition rebuild
    ------------------------------------------------------------
    Additive UI shell only. It does NOT own economy, auth, quests,
    Firebase, purchases, or game routing. Existing Lobby DOM stays
@@ -339,7 +340,7 @@
     if(document.getElementById(STYLE_ID)) return;
     const style = document.createElement('style');
     style.id = STYLE_ID;
-    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1}';
+    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1}';
     document.head.appendChild(style);
   }
   function clickExisting(selector, opts){
@@ -605,7 +606,7 @@
             <div class="vw2-feature-title"><span>${icon('sparkle')}</span><strong>Vocab World</strong><span>${icon('sparkle')}</span></div>
             <div class="vw2-word-ribbon" id="vw2-newword">คำศัพท์ใหม่รอหนูอยู่</div>
             <div class="vw2-feature-stage">
-              <img class="vw2-world-scene" src="img/home-v2/r111_pet_world_scene.svg" alt="" aria-hidden="true" decoding="async">
+              <img class="vw2-world-scene" src="img/home-v2/r1279_fantasy_world.webp" alt="" aria-hidden="true" decoding="async" fetchpriority="high">
               <div class="vw2-stage-depth" aria-hidden="true"><div class="vw2-stage-castle">${castleArtwork()}</div></div>
               <div class="vw2-atmosphere" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
               <div class="vw2-speech"><span id="vw2-pet-greeting">น้องดีใจที่ได้เจอหนูอีกครั้ง!</span><small>ยินดีต้อนรับกลับ Vocab World — ไปผจญภัยด้วยกันนะ</small></div>
@@ -643,7 +644,7 @@
           </aside>
         </div>
         <footer class="vw2-bottom" aria-label="ทางลัดการเรียนและเกมทั้งหมด"><div class="vw2-bottom-scroll" tabindex="0" role="region" aria-label="เลื่อนทางลัดการเรียนและเกม"><div class="vw2-bottom-track">${modeButtons}</div></div></footer>
-        <div class="vw2-preview-mark">ADMIN PREVIEW · R11.5.4 GEOMETRY CORRECTED</div>
+        <div class="vw2-preview-mark">ADMIN PREVIEW · R12 VISUAL MASTER REBUILD</div>
       </div>`;
     dash.appendChild(root);
     setupLeftRailCue();

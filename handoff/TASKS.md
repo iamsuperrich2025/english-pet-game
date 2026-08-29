@@ -28,6 +28,10 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (29 ส.ค.) — อ่านก่อน
+- **รอบ 1279 · Home V2 R12 Visual Master Rebuild (Admin Preview เท่านั้น):** สร้างฉากแฟนตาซี WebP 1600×900/238KB และปรับ composition/material/readability ให้ใกล้ `references/HOME_V2_ULTIMATE_VISUAL_MASTER.png` โดยไม่แตะ Firebase/economy/routing/action bindings
+- Bottom Rail 13 ปุ่มคงลำดับ/handler เดิม เปลี่ยนเป็นแถบแนวนอนปุ่มกว้าง เลื่อนซ้าย–ขวาด้วย touch/trackpad/mouse wheel/keyboard; 4 viewport 667×375, 800×360, 844×390, 915×412 ไม่มี page overflow และ rail ไม่มี vertical overflow
+- production build + regression ผ่าน; asset อยู่ใน dist, actions 52 จุดครบ; runtime admin mock เห็น R12 และ non-admin mock `homeVisible=false`/ไม่มี Home V2 root ทั้ง source และ production dist
+- ไฟล์หลัก: `js/home-v2.js`, `css/home-v2.css`, `img/home-v2/r1279_fantasy_world.webp`, `index_classic.html`, `tools/build_web.mjs`, `tools/test_home_v2_mobile_preview.js`; รอผู้ใช้ตรวจภาพจริงก่อนเปิดให้ทุกคน
 - **รอบ 1278 · อัปเกรด Firebase Admin SDK v14:** ติดตั้งจริง `firebase-admin` 13.10.0 (`^13.5.0`) → latest v14 14.3.0 (`^14.3.0`); Node 22 ตรงทั้ง package/Firebase manifests และ `firebase-functions` 7.3.2 รองรับ peer v14 (`functions/package.json`, `functions/package-lock.json`)
 - market settlement + cake refund ผ่าน baseline/final ทั้ง Node 22.23.2/24.19.0; clean Node 22 install + manifest 4 endpoints ผ่าน, ไม่เรียก production job/RTDB และไม่แตะ `cakeRefundLedger`; audit เหลือ moderate transitive 7 รายการโดยไม่มี non-breaking fix
 - **รอบ 1277 · อัปเกรด Cloud Functions SDK อย่างปลอดภัย:** `firebase-functions` จากติดตั้งจริง 6.6.0 (`^6.4.0`) เป็น stable 7.3.2; Node 22 + `firebase-admin` 13.10 peer compatible และไม่มี `functions.config()` (`functions/package.json`, `functions/package-lock.json`)

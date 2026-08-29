@@ -141,6 +141,7 @@ async function sourceFiles() {
       'img/home-v2/r115_hero_pet.webp', 'img/home-v2/r115_bottom_blue.webp', 'img/home-v2/r115_bottom_pink.webp', 'img/home-v2/r115_bottom_green.webp', 'img/home-v2/r115_bottom_orange.webp',
       'img/home-v2/r115_bottom_gold.webp', 'img/home-v2/r115_bottom_lime.webp', 'img/home-v2/r115_bottom_violet.webp', 'img/home-v2/r115_bottom_rose.webp', 'img/home-v2/r115_speech_bubble.webp',
       'img/home-v2/r115_pedestal.webp', 'img/home-v2/r115_scene_frame.webp', 'img/home-v2/r115_reward_sign.webp', 'img/home-v2/r115_house_label.webp', 'img/home-v2/r115_clouds.webp',
+      'img/home-v2/r1279_fantasy_world.webp',
 
       'js/data/f1_vocab.js',
 

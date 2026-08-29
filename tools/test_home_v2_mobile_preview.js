@@ -16,8 +16,12 @@ const must = (ok, msg) => { if(!ok) fail.push(msg); };
 must(home.includes("R11.4 Visual Master Fidelity Reconstruction + Premium Depth / Composition Recovery"), "R11.4 Home V2 JS marker missing");
 must(css.includes("R11.4 Visual Master Fidelity Reconstruction") && css.includes("--vw2-r111-ready:1") && css.includes("--vw2-r112-ready:1") && css.includes("--vw2-r113-ready:1") && css.includes("--vw2-r114-ready:1"), "R11.4 stylesheet lineage/marker missing");
 must(home.includes("--vw2-r114-runtime-ready:1"), "R11.4 runtime marker missing");
-must(home.includes("ADMIN PREVIEW · R11.5.4 GEOMETRY CORRECTED"), "R11.5.4 visible ADMIN PREVIEW marker missing");
-must(indexClassic.includes("css/home-v2.css?v=1223") && indexClassic.includes("js/home-v2.js?v=1223"), "R11.5.4 cache-bust missing from index_classic.html");
+must(home.includes("R12 / รอบ 1279") && css.includes("R12 / รอบ 1279") && css.includes("--vw2-r1279-ready:1") && home.includes("--vw2-r1279-runtime-ready:1"), "R12 / รอบ 1279 lineage markers missing");
+must(home.includes("ADMIN PREVIEW · R12 VISUAL MASTER REBUILD"), "R12 visible ADMIN PREVIEW marker missing");
+must(indexClassic.includes("css/home-v2.css?v=1279") && indexClassic.includes("js/home-v2.js?v=1279"), "R12 cache-bust missing from index_classic.html");
+const r1279Scene = path.join(root, "img", "home-v2", "r1279_fantasy_world.webp");
+must(fs.existsSync(r1279Scene) && fs.statSync(r1279Scene).size > 150000 && fs.statSync(r1279Scene).size < 500000, "R12 optimized fantasy scene missing / outside mobile budget");
+must(home.includes("img/home-v2/r1279_fantasy_world.webp") && buildWeb.includes("img/home-v2/r1279_fantasy_world.webp"), "R12 fantasy scene is not integrated in runtime/build");
 
 const r111Assets = [
   "r111_screen_frame.svg",
@@ -35,7 +39,7 @@ const scenicAsset = read("img", "home-v2", "r111_pet_world_scene.svg");
 must(scenicAsset.includes("data:image/webp;base64,") && scenicAsset.length < 80000, "optimized scenic wrapper regression");
 must(css.includes('r111_kanok_corner.svg') && css.includes('r111_kanok_band.svg'), "integrated Thai/fantasy panel accents missing");
 must(!home.includes('r111_screen_frame.svg') && css.includes('.vw2-screen-frame{display:none!important}'), "rejected yellow outer Thai frame returned");
-must(home.includes('r111_pet_world_scene.svg'), "authoritative scenic world asset no longer used");
+must(home.includes('r1279_fantasy_world.webp'), "R12 authoritative scenic world asset no longer used");
 
 
 /* R11.5.1 SAFE LIGHTWEIGHT ASSET BRIDGE + ASSET-DRIVEN VISUAL MASTER guard. */
@@ -184,7 +188,7 @@ must(css.includes("R11.5.4 EVIDENCE-DRIVEN GEOMETRY CORRECTION"), "R11.5.4 geome
 must(home.includes('class="vw2-bottom-scroll"') && home.includes('class="vw2-bottom-track"'), "static outer rail / inner scroll wrapper markup missing");
 must(/\.vw2-bottom\{[\s\S]*?display:block!important;[\s\S]*?overflow:hidden!important;[\s\S]*?\}/.test(css), "outer Bottom Rail is not a static clipped frame");
 must(/\.vw2-bottom-scroll\{[\s\S]*?overflow-x:auto!important;[\s\S]*?overflow-y:hidden!important;[\s\S]*?touch-action:pan-x;[\s\S]*?\}/.test(css), "inner Bottom Rail scroll wrapper behavior missing");
-must(css.includes('grid-template-columns:repeat(13,max(72px,calc((100% - 36px)/13)))') && css.includes('grid-template-columns:repeat(13,max(72px,calc((100% - 24px)/13)))'), "R11.5.1-derived equal-column geometry + narrow anti-squeeze floor missing");
+must(css.includes('grid-template-columns:repeat(13,minmax(104px,8.4vw))') && css.includes('width:max-content') && css.includes('grid-template-columns:repeat(13,96px)'), "R12 Classic-like horizontal Bottom Rail width/scroll geometry missing");
 must(!css.includes('flex:0 0 clamp(142px') && !css.includes('min-width:122px!important'), "R11.5.2 oversized Bottom Rail width geometry still present");
 must(css.includes('grid-template-rows:clamp(100px,25.5vh,110px) minmax(0,1fr) clamp(56px,14vh,60px)'), "R11.5.4 mobile Bottom Rail vertical budget missing");
 must(css.includes('grid-template-rows:100px minmax(0,1fr) 56px') && !css.includes('grid-template-rows:100px minmax(0,1fr) 42px'), "R11.5.4 max-height:390 Bottom Rail vertical recovery missing");
@@ -215,5 +219,5 @@ if(fail.length){
   console.error("Home V2 R11.5.4 validation FAILED:\n- " + fail.join("\n- "));
   process.exit(1);
 }
-console.log("Home V2 R11.5.4 validation PASS");
-console.log(`Checked R11.5.4 vertical Bottom Rail recovery + preserved R11.5.3 wrapper-only horizontal scroll, R11.5.1 asset-driven fantasy skins (${r115Assets.length} optimized assets / ${r115AssetBytes} bytes), pet diorama depth, ${expectedRail.length} left destinations, ${expectedBottom.length} bottom actions, authoritative bindings, and mobile landscape guards.`);
+console.log("Home V2 R12 / รอบ 1279 validation PASS");
+console.log(`Checked R12 generated scenic asset + Classic-like horizontal Bottom Rail scrolling, preserved R11.5.4 geometry guards, R11.5.1 fantasy skins (${r115Assets.length} optimized assets / ${r115AssetBytes} bytes), ${expectedRail.length} left destinations, ${expectedBottom.length} bottom actions, authoritative bindings, admin gate, and mobile landscape guards.`);
