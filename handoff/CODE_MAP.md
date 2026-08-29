@@ -446,7 +446,7 @@ gradeChangeTo:64 · gradeLockNote:91 · openGradeChange:100
 
 ## js/hauntedhotelsession.js (255 บรรทัด · 0 รายการ)
 
-## js/home-v2.js (1,198 บรรทัด · 0 รายการ)
+## js/home-v2.js (1,199 บรรทัด · 0 รายการ)
 
 ## js/hotel3d.js (1,526 บรรทัด · 62 รายการ)
 ### 🗂️ สารบัญโซน js/hotel3d.js (Read/Edit เฉพาะช่วง)
@@ -1033,22 +1033,22 @@ vbRender:148 · vbCardHTML:194
 .xsp-foot:235 · .xsb-box:250,277 · .xsb-head:255,256 · .xsb-grid:257 · .xsb-card:258,262 · .xsb-emoji:263
 .xsb-name:264 · .xsb-info:265 · .xsb-done:266 · .onet-picker:270,271,272,273(+3) · .onet-board:278,279,280
 
-## css/home-v2.css (562 บรรทัด · 86 selector)
-:root:8 · #screen-dashboard:32,37 · #vw-home-v2-root:39,40,50,51(+18) · .vw2-screen-frame:72 · .vw2-sky:73,74,83,90(+1) · .vw2-shell:93,98
-.vw2-glass:102 · .vw2-top:115 · .vw2-profile:120,134,138,280(+1) · .vw2-kanok-corner:139 · .vw2-profile-crown:140 · .vw2-profile-kicker:141,142
-.vw2-avatar-frame:143,148,286,287 · .vw2-avatar:149,150 · .vw2-avatar-edit:151 · .vw2-profile-main:152 · .vw2-name-row:153,154 · .vw2-pencil:155
-.vw2-profile-meta:156 · .vw2-profile-meta-chip:157,158,159,160(+1) · .vw2-grade-identity:161 · .vw2-grade-copy:162 · .vw2-profile-chips:163 · .vw2-achievement-mark:164
-.vw2-rank:165,289 · .vw2-sync-chip:166 · .vw2-wallet:168 · .vw2-wallet-pill:169,175,176,177(+14) · .vw2-stat-art:179 · .vw2-stat-copy:180
-.vw2-top-actions:182,491 · .vw2-tool-btn:183,189,190,307(+3) · .vw2-main-grid:193 · .vw2-left:196,197,312,515 · .vw2-rail-btn:198,313 · .vw2-rail-art:199,200,201,202(+3)
-.vw2-rail-scene:203,204 · .vw2-rail-scene-mark:205,318 · .vw2-rail-label:206,319 · .vw2-left-scroll-cue:207,517 · .vw2-feed:210,211,323,324(+4) · .vw2-section-head:212,213,214,333
-.vw2-feed-items:215 · .vw2-feed-card:216,334 · .vw2-feed-avatar:217 · .vw2-feed-copy:218 · .vw2-feed-coin:219 · .vw2-feature:222
-.vw2-feature-title:223,224,337,338 · .vw2-word-ribbon:225,226,227,339(+1) · .vw2-feature-stage:228,343,344 · .vw2-world-scene:229 · .vw2-stage-depth:230,231,232,345(+1) · .vw2-stage-castle:233,347
-.vw2-atmosphere:234 · .vw2-speech:235,348,349,350 · .vw2-reward-card:236,351,352,353(+7) · .vw2-pet-halo:237,238 · .vw2-pedestal-aura:239,240,356 · .vw2-pet-platform:241,242,243,354(+1)
-.vw2-pet:244,357 · .vw2-pet-sparkles:245 · .vw2-house-preview:246 · .vw2-stage-copy:247,361 · .vw2-feature-actions:248,364,365 · .vw2-right:251,487
-.vw2-mission:252,325,330,488 · .vw2-quests:253,489 · .vw2-quest-row:254 · .vw2-online:255,326,331,520 · .vw2-online-row:256 · .vw2-friends-btn:257,522,527
-.vw2-bottom:260,261,371,441(+1) · .vw2-mode:262,372,373,374(+8) · .vw2-preview-mark:263 · .vw2-home-active:266,267,268 · .vw2-rail-racing:314,320,516 · .vw2-house-preview-head:358,359,486
-.vw2-stage-foreground:360 · .vw2-enter:366 · .vw2-play:367 · .vw2-shop-link:368 · .vw2-bottom-scroll:447,466,467,468(+1) · .vw2-bottom-track:469,479,511,512
-.vw2-online-list:490,521 · .no-anim:562
+## css/home-v2.css (631 บรรทัด · 86 selector)
+:root:9 · #screen-dashboard:34,39 · #vw-home-v2-root:41,42,52,53(+21) · .vw2-screen-frame:74 · .vw2-sky:75,76,85,92(+1) · .vw2-shell:95,100,582
+.vw2-glass:104 · .vw2-top:117 · .vw2-profile:122,136,140,282(+1) · .vw2-kanok-corner:141 · .vw2-profile-crown:142 · .vw2-profile-kicker:143,144
+.vw2-avatar-frame:145,150,288,289 · .vw2-avatar:151,152 · .vw2-avatar-edit:153 · .vw2-profile-main:154 · .vw2-name-row:155,156 · .vw2-pencil:157
+.vw2-profile-meta:158 · .vw2-profile-meta-chip:159,160,161,162(+1) · .vw2-grade-identity:163 · .vw2-grade-copy:164 · .vw2-profile-chips:165 · .vw2-achievement-mark:166
+.vw2-rank:167,291 · .vw2-sync-chip:168 · .vw2-wallet:170 · .vw2-wallet-pill:171,177,178,179(+14) · .vw2-stat-art:181 · .vw2-stat-copy:182
+.vw2-top-actions:184,493 · .vw2-tool-btn:185,191,192,309(+3) · .vw2-main-grid:195,583 · .vw2-left:198,199,314,517 · .vw2-rail-btn:200,315 · .vw2-rail-art:201,202,203,204(+3)
+.vw2-rail-scene:205,206 · .vw2-rail-scene-mark:207,320 · .vw2-rail-label:208,321 · .vw2-left-scroll-cue:209,519 · .vw2-feed:212,213,325,326(+6) · .vw2-section-head:214,215,216,335(+1)
+.vw2-feed-items:217 · .vw2-feed-card:218,336 · .vw2-feed-avatar:219 · .vw2-feed-copy:220 · .vw2-feed-coin:221 · .vw2-feature:224
+.vw2-feature-title:225,226,339,340 · .vw2-word-ribbon:227,228,229,341(+1) · .vw2-feature-stage:230,345,346,587 · .vw2-world-scene:231,588 · .vw2-stage-depth:232,233,234,347(+2) · .vw2-stage-castle:235,349,589
+.vw2-atmosphere:236 · .vw2-speech:237,350,351,352 · .vw2-reward-card:238,353,354,355(+7) · .vw2-pet-halo:239,240,592 · .vw2-pedestal-aura:241,242,358 · .vw2-pet-platform:243,244,245,356(+1)
+.vw2-pet:246,359 · .vw2-pet-sparkles:247 · .vw2-house-preview:248 · .vw2-stage-copy:249,363 · .vw2-feature-actions:250,366,367 · .vw2-right:253,489
+.vw2-mission:254,327,332,490 · .vw2-quests:255,491 · .vw2-quest-row:256 · .vw2-online:257,328,333,522 · .vw2-online-row:258 · .vw2-friends-btn:259,524,529
+.vw2-bottom:262,263,373,443(+2) · .vw2-mode:264,374,375,376(+9) · .vw2-preview-mark:265,593 · .vw2-home-active:268,269,270 · .vw2-rail-racing:316,322,518 · .vw2-house-preview-head:360,361,488
+.vw2-stage-foreground:362,591 · .vw2-enter:368 · .vw2-play:369 · .vw2-shop-link:370 · .vw2-bottom-scroll:449,468,469,470(+2) · .vw2-bottom-track:471,481,513,514(+1)
+.vw2-online-list:492,523 · .no-anim:631
 
 ## css/lettercannon.css (48 บรรทัด · 28 selector)
 #lc-game:6,7 · .lc-hud:8 · .lc-glass:9 · .lc-stats:10 · .lc-stat:11 · .lc-coin-stat:12

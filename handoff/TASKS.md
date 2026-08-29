@@ -40,10 +40,6 @@
 - Cloud Functions สแกน `giftBox` ที่รับแล้วและ `/gifts` ที่ยัง pending, คืนส่วนต่างให้ UID ผู้ส่งด้วย campaign marker + private ledger; ไม่รวมโรงงาน/ตลาดผู้เล่น และมี heal trigger กันเซฟเครื่องเก่าเขียนทับ (`functions/cake-price-refund.js`, `functions/index.js`)
 - ของขวัญ pending เก็บยอด escrow เดิมในเซฟผู้ส่ง: ราคาเดิมต่ำกว่า 3,000 ไม่คืนเกิน, ราคาเดิมสูงกว่า 5,000 ได้ส่วนต่างก่อนและคืนยอดคงเหลือเมื่อปฏิเสธ/หมดอายุ; ป้ายแจ้งยอดกดรับทราบครั้งเดียว (`state.js`, `online.js`, `main.js`)
 - syntax + policy 125/107 + refund idempotency + market regression + asset QA + production build + Edge 812×375 ผ่าน; live `.1148` + migration `completed`: 4 ผู้เล่น/9 เค้กรับแล้ว/คืน 105,000/escrow เดิม 1/ไม่ deferred (`runCakeGiftPriceRefund`, `healCakeGiftPriceRefund`)
-- **รอบ 1275 · เพิ่มเค้กใหม่ 103 แบบในโรงงานและของขวัญ:** ใช้ข้อมูลกลางเดียวกัน ตั้งราคาโรงงาน 12,000–40,000 / ของขวัญ 3,500–18,000 ตามระดับ rare/epic (`js/data/cakes2026.js`)
-- สร้าง WebP โปร่งใส 512×512 + thumbnail 256×256 ครบ 103 คู่; display รวม 6.21MB/สูงสุด 83.3KB, thumb รวม 2.37MB/สูงสุด 30.9KB และมี manifest+pipeline+validator ล็อก 1:1/fill 82–90%
-- การ์ดโรงงาน/ของขวัญ/ตลาด/คลังใช้ thumbnail + `loading="lazy"`/IntersectionObserver; ฉากเปิดใช้ 512 เท่านั้นและภาพที่อยู่นอก viewport ไม่ถูกโหลด (`js/ui.js`, `js/images.js`)
-- syntax + data/asset regression + deep image QA + production build + Edge headless 812×375 ผ่าน; โรงงานโหลดใกล้จอ 12/103 และอีก 101 pending (`tools/test_cakes2026.js`, `tools/validate_cake_assets.py`)
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`
