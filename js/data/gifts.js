@@ -6,7 +6,7 @@
    collectible" จากคลังก็ได้ — ดู online.js/ui.js)
    ของที่ "ได้รับ" เก็บใน state.giftBox (ห้องของขวัญแยกต่างหาก)
    → ขายต่อ/ส่งต่อไม่ได้ · ไม่รวมกับ collection/ตลาด/assetValue
-   ภาพ: img/gifts/gift_<id>.png (ไม่มีภาพ → ใช้อีโมจิแทนอัตโนมัติ)
+   ภาพเดิม: img/gifts/gift_<id>.png · รายการที่มี image ใช้ WebP ร่วมได้
    prompt: PROMPTS_GIFTS.md (เค้ก 22 · กุหลาบ 14 · การ์ด 14)
    ============================================================ */
 
@@ -43,6 +43,8 @@ const GIFTS = [
   {id:'cake_marble',    emoji:'🎂', name:'เค้กหินอ่อนหรู',          cat:'cake', price:15000},
   {id:'cake_tiered',    emoji:'🎂', name:'เค้ก 3 ชั้นขาวทอง',       cat:'cake', price:18000},
   {id:'cake_pearl',     emoji:'🎂', name:'เค้กไข่มุกหรู',           cat:'cake', price:22000},
+  /* เค้กชุดใหม่อ้างรายการกลางเดียวกับโรงงานและใช้ภาพ WebP ชุดเดียวกัน */
+  ...NEW_CAKES_2026.map(({id, emoji, name, giftPrice:price, image, displayImage})=>({id, emoji, name, cat:'cake', price, image, displayImage})),
   /* ---- 🌹 กุหลาบ 14 แบบ ---- */
   {id:'rose_red',        emoji:'🌹', name:'กุหลาบแดง 1 ดอก',        cat:'rose', price:600},
   {id:'rose_pink',       emoji:'🌷', name:'กุหลาบชมพู 1 ดอก',       cat:'rose', price:600},

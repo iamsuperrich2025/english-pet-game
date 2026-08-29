@@ -3617,7 +3617,44 @@ function openChat(friend){
 /* ============================================================
    ระบบส่งของขวัญ (ข้อ 0.5) — ห้องของขวัญ + กล่องเลือกส่ง + ฉากเปิด
    ============================================================ */
-function giftImg(id){ return IMG_FILES[`gift_${id}`] || null; }
+function versionedAssetPath(path, version){
+  if(!path) return null;
+  return path + (version ? `${path.includes('?') ? '&' : '?'}v=${version}` : '');
+}
+function giftImg(id, display=false){
+  const gift = giftInfo(id);
+  return display && gift && gift.displayImage
+    ? versionedAssetPath(gift.displayImage, GIFTS_IMG_V)
+    : (IMG_FILES[`gift_${id}`] || null);
+}
+
+/* Gift Asset Performance Rule: src จริงถูกใส่เมื่อภาพอยู่ใน/ใกล้ viewport เท่านั้น
+   width/height ล็อกพื้นที่ 1:1 กันการ์ดกระโดด และ loading=lazy เป็นด่านสำรองของ browser */
+const LAZY_ASSET_PIXEL = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+function lazyAssetHTML(src, alt=''){
+  return `<img src="${LAZY_ASSET_PIXEL}" data-lazy-src="${src}" loading="lazy" decoding="async" width="256" height="256" alt="${escapeHTML(alt)}">`;
+}
+function bindLazyAssets(root){
+  if(!root) return;
+  const images = [...root.querySelectorAll('img[data-lazy-src]')];
+  if(!images.length) return;
+  const load = img=>{
+    const src = img.dataset.lazySrc;
+    if(src){ img.src = src; delete img.dataset.lazySrc; }
+  };
+  if(typeof IntersectionObserver !== 'function'){
+    images.forEach(load);
+    return;
+  }
+  const observer = new IntersectionObserver(entries=>{
+    for(const entry of entries){
+      if(!entry.isIntersecting) continue;
+      load(entry.target);
+      observer.unobserve(entry.target);
+    }
+  }, {root:null, rootMargin:'240px 320px', threshold:0.01});
+  images.forEach(img=>observer.observe(img));
+}
 
 function giftDateStr(ts){
   if(!ts) return '';
@@ -3688,9 +3725,9 @@ function giftItemPic(k, id){
   if(k === 'greet'){ const gr = greetInfo(id);
     return `<span class="hq-emoji">${gr ? gr.e : '🐾'}</span>`; }
   if(k === 'shop'){ const g = giftInfo(id), img = giftImg(id);
-    return img ? `<img src="${img}" alt="">` : `<span class="hq-emoji">${g ? g.emoji : '🎁'}</span>`; }
+    return img ? lazyAssetHTML(img, g ? g.name : '') : `<span class="hq-emoji">${g ? g.emoji : '🎁'}</span>`; }
   const c = collectInfo(id), img = collectImg(id);
-  return img ? `<img src="${img}" alt="">` : `<span class="hq-emoji">${c ? c.emoji : '📦'}</span>`;
+  return img ? lazyAssetHTML(img, c ? c.name : '') : `<span class="hq-emoji">${c ? c.emoji : '📦'}</span>`;
 }
 /* 🚫🍰 รอบ 952 (ผู้ใช้สั่ง): ของขวัญชิ้นนี้เป็น "ของกิน" และตอนนี้ป่วยเพราะหิวอยู่ไหม (true = ห้ามส่ง)
    ครอบทั้ง 🍪 คำทัก "ฝากขนมให้น้อง" · 🎂 เค้กจากร้านของขวัญ · ของสะสมหมวดอาหาร */
@@ -3764,6 +3801,7 @@ function renderGiftPanel(){
   }
 
   el.innerHTML = html;
+  bindLazyAssets(el);
   el.querySelectorAll('.gift-accept').forEach(b=>b.addEventListener('click', ()=>{
     const it = (Online.giftIn || [])[+b.dataset.i]; if(it) acceptGift(it);
   }));
@@ -3835,9 +3873,9 @@ function showGreetReveal(it){
 function showGiftReveal(it){
   if(sfx.rankup) sfx.rankup();
   const name = giftItemName(it.k, it.id);
-  const img  = it.k === 'shop' ? giftImg(it.id) : collectImg(it.id);
+  const img  = it.k === 'shop' ? giftImg(it.id, true) : collectImg(it.id, true);
   const emo  = it.k === 'shop' ? ((giftInfo(it.id) || {}).emoji || '🎁') : ((collectInfo(it.id) || {}).emoji || '📦');
-  const pic  = img ? `<img class="collect-reveal-img" src="${img}" alt="">` : `<span class="cr-emoji">${emo}</span>`;
+  const pic  = img ? `<img class="collect-reveal-img" src="${img}" decoding="async" width="512" height="512" alt="${escapeHTML(name)}">` : `<span class="cr-emoji">${emo}</span>`;
   const overlay = document.createElement('div');
   overlay.className = 'rankup-overlay';
   overlay.innerHTML = `
@@ -3887,7 +3925,7 @@ function openGiftPicker(friend){
         const img = giftImg(g.id), afford = state.coins >= g.price;
         return `<div class="hq-card gp-card${afford ? '' : ' gp-poor'}" data-k="shop" data-id="${g.id}" style="border-color:#e6a4c4">
           <div class="hq-head">${g.name}</div>
-          <div class="hq-pic">${img ? `<img src="${img}" alt="">` : `<span class="hq-emoji">${g.emoji}</span>`}</div>
+          <div class="hq-pic">${img ? lazyAssetHTML(img, g.name) : `<span class="hq-emoji">${g.emoji}</span>`}</div>
           <div class="hq-price gp-price">🪙 ${fmtNum(g.price)}</div>
         </div>`;
       }).join('') + `</div>`;
@@ -3904,7 +3942,7 @@ function openGiftPicker(friend){
           const c = collectInfo(id), tier = COLLECT_TIERS[c.tier], img = collectImg(id);
           return `<div class="hq-card gp-card" data-k="collect" data-id="${id}" style="border-color:${tier.color}">
             <div class="hq-head">${c.name}</div>
-            <div class="hq-pic">${img ? `<img src="${img}" alt="">` : `<span class="hq-emoji">${c.emoji}</span>`}<span class="hq-badge">×${counts[id]}</span></div>
+            <div class="hq-pic">${img ? lazyAssetHTML(img, c.name) : `<span class="hq-emoji">${c.emoji}</span>`}<span class="hq-badge">×${counts[id]}</span></div>
             <div class="hq-price gp-price">มูลค่า 🪙${fmtNum(c.price)}</div>
           </div>`;
         }).join('') + `</div>`;
@@ -3913,6 +3951,7 @@ function openGiftPicker(friend){
     body.querySelectorAll('.gp-card').forEach(card=>card.addEventListener('click', ()=>{
       confirmSendGift(friend, card.dataset.k, card.dataset.id, ()=>overlay.remove());
     }));
+    bindLazyAssets(body);
   }
 
   overlay.querySelectorAll('.gp-tab').forEach(b=>b.addEventListener('click', ()=>{
@@ -8206,7 +8245,12 @@ function sellAllFruit(){
    - คลังของฉัน: ตั้งราคาขายเอง · ลูกค้าจำลองมาซื้อตามเวลา (marketTick)
    หมายเหตุ: ผู้ซื้อเป็น "จำลอง" — เฟส 2 ต่อ Firebase ให้ผู้เล่นจริงซื้อขายของที่เพื่อนผลิต
    ============================================================ */
-function collectImg(id){ return IMG_FILES[`collect_${id}`] || null; }
+function collectImg(id, display=false){
+  const item = collectInfo(id);
+  return display && item && item.displayImage
+    ? versionedAssetPath(item.displayImage, COLLECTIBLES_IMG_V)
+    : (IMG_FILES[`collect_${id}`] || null);
+}
 
 /* ============================================================
    โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
@@ -8218,6 +8262,7 @@ function renderFactoryCard(){
   el.innerHTML = `<h3 class="shop-title">🏭 โรงงานผลิตสินค้า</h3>
     <p class="collect-sub">มีเหรียญพอ กด "ซื้อเลย" รับสินค้าเข้าคลังทันที · เหรียญไม่พอ เล่นเกมคำศัพท์เก็บแต้มผลิตเองได้ฟรี (ตอบถูก 1 คำ = 1 แต้ม) ได้ของแล้วเอาไปตั้งขายที่เมนู 🏪 ตลาดได้เลย</p>
     ${renderFactory()}`;
+  bindLazyAssets(el);
 
   const catSel = document.getElementById('factory-cat');
   if(catSel) catSel.addEventListener('change', ()=>{ factoryCat = catSel.value; sfx.select(); renderFactoryCard(); });
@@ -8261,6 +8306,7 @@ function renderMarketCard(){
     ${renderOrdersUI()}
     ${renderMarketBrowse()}
     ${renderVehicleShop()}`;
+  bindLazyAssets(el);
 
   el.querySelectorAll('.strip-wrap').forEach(bindStripArrows);   // รอบ 292: ลูกศรแถบปัดแนวนอน (ตลาดรวม+คลังของฉัน)
   const soldOk = document.getElementById('mkt-sold-ok');
@@ -8310,7 +8356,7 @@ function openWishlistDialog(){
     const on = (state.wishlist || []).includes(c.id);
     const tier = COLLECT_TIERS[c.tier], img = collectImg(c.id);
     return `<div class="wl-it ${on ? 'on' : ''}" data-id="${c.id}" style="border-color:${on ? '#e0447a' : tier.color}">
-      ${img ? `<img src="${img}" alt="">` : `<span class="wl-emoji">${c.emoji}</span>`}
+      ${img ? lazyAssetHTML(img, c.name) : `<span class="wl-emoji">${c.emoji}</span>`}
       <div class="wl-name">${c.name}</div>
       <div class="wl-h">${on ? '💖 เล็งอยู่' : '🤍 แตะเพื่อเล็ง'}</div>
     </div>`;
@@ -8339,10 +8385,12 @@ function openWishlistDialog(){
     sfx.select();
     saveState();
     wrap.innerHTML = grid();
+    bindLazyAssets(wrap);
     updateWishBadge();
   });
   overlay.querySelector('.cf-ok').addEventListener('click', ()=>{ overlay.remove(); renderMarketCard(); });
   document.body.appendChild(overlay);
+  bindLazyAssets(overlay);
 }
 
 /* ลูกศรเลื่อนแถบปัดแนวนอน (สไตล์ SimCity BuildIt) — wrap = .strip-wrap ที่มี .strip-x ข้างใน
@@ -8374,7 +8422,7 @@ function renderMarketBrowse(){
         return `<div class="hq-card ${wished ? 'mb-wish' : ''}" style="border-color:${wished ? '#e0447a' : tier.color}">
           <div class="hq-head">${own ? '🏪 ' : (wished ? '💖 ' : '')}${c.name}</div>
           <div class="hq-pic">
-            ${img?`<img src="${img}" alt="">`:`<span class="hq-emoji">${c.emoji}</span>`}
+            ${img ? lazyAssetHTML(img, c.name) : `<span class="hq-emoji">${c.emoji}</span>`}
             <span class="hq-stars" style="color:${tier.color}">${tier.stars}</span>
           </div>
           <div class="mb-seller">${own ? '🏪 ร้านของฉัน' : `🧑 ร้านของ ${escapeHTML(m.sn)}`}</div>
@@ -9025,7 +9073,7 @@ function renderFactory(){
     return `<div class="hq-card ${cur?'hq-cur':''}" style="border-color:${tier.color}">
       <div class="hq-head">${c.name}</div>
       <div class="hq-pic">
-        ${img?`<img src="${img}" alt="">`:`<span class="hq-emoji">${c.emoji}</span>`}
+        ${img ? lazyAssetHTML(img, c.name) : `<span class="hq-emoji">${c.emoji}</span>`}
         <span class="hq-badge">🔤 ${fmtNum(c.words)}</span>
         <span class="hq-stars" style="color:${tier.color}">${tier.stars}</span>
       </div>
@@ -9180,7 +9228,7 @@ function renderCollectMine(){
       return `<div class="hq-card" style="border-color:${tier.color}">
         <div class="hq-head">${c.name}</div>
         <div class="hq-pic">
-          ${img?`<img src="${img}" alt="">`:`<span class="hq-emoji">${c.emoji}</span>`}
+          ${img ? lazyAssetHTML(img, c.name) : `<span class="hq-emoji">${c.emoji}</span>`}
           <span class="hq-badge">×${counts[id]}</span>
           <span class="hq-stars" style="color:${tier.color}">${tier.stars}</span>
         </div>
@@ -9368,7 +9416,7 @@ function showCollectReveal(id, price, produced){
   // ซื้อของ (จ่ายเหรียญ — โรงงาน/ตลาดผู้เล่น) = เสียงแคชเชียร์ชิ้ง! · ผลิตเอง = แฟนแฟร์เดิม
   if(!produced && price != null && sfx.cashier) sfx.cashier();
   else sfx.rankup();
-  const img = collectImg(id);
+  const img = collectImg(id, true);
   const overlay = document.createElement('div');
   overlay.className = 'rankup-overlay';
   const sub = produced
@@ -9379,7 +9427,7 @@ function showCollectReveal(id, price, produced){
     <div class="rankup-content">
       <div class="rankup-title">${produced ? '🏭 ผลิตสำเร็จ!' : '🎁 ได้ของสะสมใหม่!'}</div>
       <div class="collect-reveal-frame" style="--rank-color:${tier.color}">
-        ${img ? `<img class="collect-reveal-img" src="${img}" alt="">` : `<span class="cr-emoji">${c.emoji}</span>`}
+        ${img ? `<img class="collect-reveal-img" src="${img}" decoding="async" width="512" height="512" alt="${escapeHTML(c.name)}">` : `<span class="cr-emoji">${c.emoji}</span>`}
       </div>
       <div class="rankup-name" style="color:${tier.color}">${c.name}</div>
       <div class="collect-reveal-stars" style="color:${tier.color}">${tier.stars} ${tier.label}</div>

@@ -5,7 +5,7 @@
    แนวคิดใหม่ (5 ก.ค. 2026): ผู้เล่น "ผลิต" สินค้าเองในโรงงาน
    โดยจ่ายด้วยแต้มคำศัพท์ (ตอบถูก 1 คำ = 1 แต้มผลิต) ผลิตครบ
    ได้ของเข้าคลัง → ตั้งราคาขายต่อในตลาด / ส่งมอบออเดอร์พิเศษ
-   ภาพ: img/collectibles/collect_<id>.png
+   ภาพเดิม: img/collectibles/collect_<id>.png · รายการที่มี image ใช้ WebP ร่วมได้
    (prompt: PROMPTS_COLLECTIBLES.md ชุดแรก 12 + PROMPTS_PRODUCTS.md อีก 38)
    ไม่มีภาพ → ใช้อีโมจิแทนอัตโนมัติ
    ============================================================ */
@@ -44,6 +44,8 @@ const COLLECTIBLES = [
   {id:'fruitcake',    emoji:'🍰', name:'เค้กผลไม้สด',          cat:'food',    tier:'rare',      price:12000,   words:240},
   {id:'rainbowcake',  emoji:'🌈', name:'เค้กสายรุ้ง',          cat:'food',    tier:'rare',      price:18000,   words:360},
   {id:'weddingcake',  emoji:'🎂', name:'เค้กฉลอง 5 ชั้น',      cat:'food',    tier:'epic',      price:40000,   words:500},
+  /* เค้กชุดใหม่ใช้รายการกลางเดียวกับร้านของขวัญ เพื่อล็อกชื่อ/ภาพ/ราคาไม่ให้เหลื่อมกัน */
+  ...NEW_CAKES_2026.map(({giftPrice, ...cake})=>({...cake, cat:'food'})),
   /* ---- 🧸 ของเล่น ---- */
   {id:'kite',         emoji:'🪁', name:'ว่าวมังกร',            cat:'toy',     tier:'common',    price:1000,    words:40},
   {id:'teaset',       emoji:'🫖', name:'ชุดน้ำชากระเบื้อง',    cat:'toy',     tier:'common',    price:2500,    words:85},

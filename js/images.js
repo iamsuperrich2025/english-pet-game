@@ -68,8 +68,22 @@ function probeImages(keys, dir='img', version=''){
   }));
 }
 function probeRankImages(){ return probeImages(RANKS.map(r=>`rank_${r.id}`), 'img/rank'); }
-function probeCollectImages(){ return probeImages(COLLECTIBLES.map(c=>`collect_${c.id}`), 'img/collectibles', COLLECTIBLES_IMG_V); }
-function probeGiftImages(){ return probeImages(GIFTS.map(g=>`gift_${g.id}`), 'img/gifts', GIFTS_IMG_V); }
+/* รายการที่ระบุ image มีไฟล์แน่นอนจาก data: ลงทะเบียน path ตรงและปล่อยให้ browser โหลดเมื่อเปิดแผง
+   จึงไม่ดาวน์โหลดเค้ก WebP ชุดใหญ่ตั้งแต่หน้า login; รายการเดิมยัง probe PNG + fallback emoji เหมือนเดิม */
+function probeCatalogImages(items, prefix, dir, version){
+  const unresolved = [];
+  for(const item of items){
+    const key = `${prefix}_${item.id}`;
+    if(item.image){
+      IMG_FILES[key] = item.image + (version ? `?v=${version}` : '');
+    }else{
+      unresolved.push(key);
+    }
+  }
+  return probeImages(unresolved, dir, version);
+}
+function probeCollectImages(){ return probeCatalogImages(COLLECTIBLES, 'collect', 'img/collectibles', COLLECTIBLES_IMG_V); }
+function probeGiftImages(){ return probeCatalogImages(GIFTS, 'gift', 'img/gifts', GIFTS_IMG_V); }
 function probeHomeImages(){
   // ภาพบ้านปกติ + เสื่อมสภาพ (ค้างค่าบำรุง) + พัง (ฉากแจ้งเตือน) + มืด (ถูกตัดไฟ) + แห้ง (ถูกตัดน้ำ)
   return probeImages(HOMES.flatMap(h=>[`home_${h.id}`, `home_${h.id}_decayed`, `home_${h.id}_ruined`, `home_${h.id}_dark`, `home_${h.id}_nowater`]), 'img/home');
