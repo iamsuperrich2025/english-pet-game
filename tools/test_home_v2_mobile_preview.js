@@ -17,8 +17,20 @@ must(home.includes("R11.4 Visual Master Fidelity Reconstruction + Premium Depth 
 must(css.includes("R11.4 Visual Master Fidelity Reconstruction") && css.includes("--vw2-r111-ready:1") && css.includes("--vw2-r112-ready:1") && css.includes("--vw2-r113-ready:1") && css.includes("--vw2-r114-ready:1"), "R11.4 stylesheet lineage/marker missing");
 must(home.includes("--vw2-r114-runtime-ready:1"), "R11.4 runtime marker missing");
 must(home.includes("R12 / รอบ 1279") && css.includes("R12 / รอบ 1279") && css.includes("--vw2-r1279-ready:1") && home.includes("--vw2-r1279-runtime-ready:1"), "R12 / รอบ 1279 lineage markers missing");
-must(home.includes("ADMIN PREVIEW · R12 VISUAL MASTER REBUILD"), "R12 visible ADMIN PREVIEW marker missing");
-must(indexClassic.includes("css/home-v2.css?v=1279") && indexClassic.includes("js/home-v2.js?v=1279"), "R12 cache-bust missing from index_classic.html");
+must(home.includes("R13 / รอบ 1280") && css.includes("R13 / รอบ 1280") && css.includes("--vw2-r1280-ready:1") && home.includes("--vw2-r1280-runtime-ready:1"), "R13 / รอบ 1280 lineage markers missing");
+must(home.includes("ADMIN PREVIEW · R13 HUD READABILITY"), "R13 visible ADMIN PREVIEW marker missing");
+must(indexClassic.includes("css/home-v2.css?v=1280") && indexClassic.includes("js/home-v2.js?v=1280"), "R13 cache-bust missing from index_classic.html");
+must(css.includes("grid-template-columns:minmax(132px,1.08fr) repeat(2,minmax(112px,1fr))") && css.includes("grid-row:1/3"), "R13 two-row wallet hierarchy missing");
+must(css.includes("grid-template-columns:repeat(13,minmax(132px,9.4vw))") && css.includes("grid-template-columns:repeat(13,126px)"), "R13 Bottom Rail label-proportion geometry missing");
+must(css.includes("font-size:clamp(11.5px,.86vw,14px)!important") && css.includes("background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(246,231,255,.94))!important"), "R13 Left Navigation caption readability missing");
+must(home.includes('data-vw2-action="petProfile"') && home.includes('function openActivePetProfile()') && home.includes("typeof openPetInfoOverlay === 'function'"), "R13 visible pet no longer delegates to the authoritative Classic pet profile");
+must(css.includes('.vw2-pet{') && css.includes('pointer-events:auto!important') && css.includes('.vw2-pet:focus-visible'), "R13 pet profile control is not pointer/keyboard accessible");
+must(home.includes('data-vw2-action="newWord"') && home.includes('function syncNewWordCard()') && home.includes("clickExisting('#newword-banner')"), "R13 New Word card is not visible/authoritatively bound");
+must(home.includes('id="vw2-newword-word"') && home.includes('id="vw2-newword-hint"') && css.includes('New Word is a primary learning card') && css.includes('.vw2-word-copy strong'), "R13 New Word hierarchy missing");
+must(home.includes("typeof renderPetShop === 'function' && typeof showScreen === 'function'") && home.includes("showScreen('screen-select')"), "R13 pet shop does not use the current authoritative route");
+must(home.includes('data-vw2-action="shop" data-vw2-source="#screen-select"'), "R13 pet shop source evidence does not match the current screen route");
+must(home.includes('function syncMusicState()') && home.includes("Music.isMusicOn === 'function'") && home.includes("label.textContent = on ? 'เพลงเปิด' : 'เพลงปิด'"), "R13 music button state sync missing");
+must(css.includes('data-vw2-action="music"].is-music-on') && css.includes('data-vw2-action="music"].is-music-off') && css.includes('background:#c94f72'), "R13 music on/off visual distinction missing");
 const r1279Scene = path.join(root, "img", "home-v2", "r1279_fantasy_world.webp");
 must(fs.existsSync(r1279Scene) && fs.statSync(r1279Scene).size > 150000 && fs.statSync(r1279Scene).size < 500000, "R12 optimized fantasy scene missing / outside mobile budget");
 must(home.includes("img/home-v2/r1279_fantasy_world.webp") && buildWeb.includes("img/home-v2/r1279_fantasy_world.webp"), "R12 fantasy scene is not integrated in runtime/build");
@@ -219,5 +231,5 @@ if(fail.length){
   console.error("Home V2 R11.5.4 validation FAILED:\n- " + fail.join("\n- "));
   process.exit(1);
 }
-console.log("Home V2 R12 / รอบ 1279 validation PASS");
-console.log(`Checked R12 generated scenic asset + Classic-like horizontal Bottom Rail scrolling, preserved R11.5.4 geometry guards, R11.5.1 fantasy skins (${r115Assets.length} optimized assets / ${r115AssetBytes} bytes), ${expectedRail.length} left destinations, ${expectedBottom.length} bottom actions, authoritative bindings, admin gate, and mobile landscape guards.`);
+console.log("Home V2 R13 / รอบ 1280 validation PASS");
+console.log(`Checked R13 two-row wallet, proportional Bottom Rail labels, readable Left Navigation captions, preserved R12 scene + Classic-like horizontal scrolling, ${expectedRail.length} left destinations, ${expectedBottom.length} bottom actions, authoritative bindings, admin gate, and mobile landscape guards.`);

@@ -28,6 +28,10 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (29 ส.ค.) — อ่านก่อน
+- **รอบ 1280 · Home V2 R13 HUD Readability (Admin Preview เท่านั้น):** จัด wallet บนใหม่เป็นเหรียญหลัก + สถิติ 2×2 ไม่บีบข้อความ, ขยายป้ายเมนูซ้าย และปรับสัดส่วนตัวอักษร Bottom Rail โดยคงการเลื่อนแนวนอนแบบ Classic
+- เพิ่มการ์ด New Word ที่แสดงคำจริง/กดเปิดระบบเดิม, แตะสัตว์เปิด profile เดิม, ร้านสัตว์ใช้ route เดิม และปุ่มเพลงแสดงสถานะ `เพลงเปิด`/`เพลงปิด` ต่างกันชัดเจน
+- source + production dist ผ่าน 54 action nodes/44 actions, ไม่มี source binding หายหรือปุ่ม disabled; pet profile, New Word, music toggle และ wheel scroll ผ่าน; 1457×680, 915×412, 812×375, 667×375 ไม่มี page overflow
+- admin mock เห็น R13 ส่วน non-admin mock ไม่สร้าง Home V2 root (`actions=0`) ทั้ง source/dist; ไฟล์หลัก `css/home-v2.css`, `js/home-v2.js`, `index_classic.html`, `tools/test_home_v2_mobile_preview.js`; รอผู้ใช้ตรวจภาพจริงก่อนเปิดให้ทุกคน
 - **รอบ 1279 · Home V2 R12 Visual Master Rebuild (Admin Preview เท่านั้น):** สร้างฉากแฟนตาซี WebP 1600×900/238KB และปรับ composition/material/readability ให้ใกล้ `references/HOME_V2_ULTIMATE_VISUAL_MASTER.png` โดยไม่แตะ Firebase/economy/routing/action bindings
 - Bottom Rail 13 ปุ่มคงลำดับ/handler เดิม เปลี่ยนเป็นแถบแนวนอนปุ่มกว้าง เลื่อนซ้าย–ขวาด้วย touch/trackpad/mouse wheel/keyboard; 4 viewport 667×375, 800×360, 844×390, 915×412 ไม่มี page overflow และ rail ไม่มี vertical overflow
 - production build + regression ผ่าน; asset อยู่ใน dist, actions 52 จุดครบ; runtime admin mock เห็น R12 และ non-admin mock `homeVisible=false`/ไม่มี Home V2 root ทั้ง source และ production dist

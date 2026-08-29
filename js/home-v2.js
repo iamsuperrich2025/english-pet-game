@@ -2,6 +2,7 @@
 /* ============================================================
    Vocab World Home V2 — Admin Preview (R11.4 Visual Master Fidelity Reconstruction + Premium Depth / Composition Recovery)
    R12 / รอบ 1279 — Ultimate Visual Master scenic + composition rebuild
+   R13 / รอบ 1280 — HUD, Bottom Rail and Left Navigation readability rebalance
    ------------------------------------------------------------
    Additive UI shell only. It does NOT own economy, auth, quests,
    Firebase, purchases, or game routing. Existing Lobby DOM stays
@@ -311,6 +312,40 @@
       box.classList.remove('has-owned-pet');
     }
   }
+  function syncNewWordCard(){
+    const card = document.getElementById('vw2-newword');
+    const source = document.getElementById('newword-banner');
+    if(!card) return;
+    let word = cleanText(source?.querySelector('.nw-word')?.textContent || '', 32);
+    const hint = cleanText(source?.querySelector('.nw-hint')?.textContent || '', 72);
+    const reward = cleanText(source?.querySelector('.nw-coin')?.textContent || '', 18);
+    try{ if(!word && typeof newWordPick !== 'undefined' && Array.isArray(newWordPick)) word = cleanText(newWordPick[0] || '', 32); }catch(_){ }
+    const set=(idName,value)=>{ const el=document.getElementById(idName); if(el && el.textContent !== value) el.textContent=value; };
+    set('vw2-newword-word', word || 'คำใหม่กำลังมา');
+    set('vw2-newword-hint', hint || 'แตะเพื่อฟังเสียงและดูความหมาย');
+    set('vw2-newword-reward', reward || '🪙 +1');
+    card.disabled = !word;
+    card.setAttribute('aria-disabled', word ? 'false' : 'true');
+    card.title = word ? `เปิดคำศัพท์ใหม่ ${word}` : 'กำลังเตรียมคำศัพท์ใหม่';
+  }
+  function syncMusicState(){
+    const btn = root ? root.querySelector('[data-vw2-action="music"]') : null;
+    if(!btn) return;
+    let on = true;
+    try{
+      if(typeof Music !== 'undefined' && Music && typeof Music.isMusicOn === 'function') on = !!Music.isMusicOn();
+      else{
+        const source=document.getElementById('btn-music');
+        on = !(source && source.classList.contains('off'));
+      }
+    }catch(_){ }
+    btn.classList.toggle('is-music-on', on);
+    btn.classList.toggle('is-music-off', !on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    btn.title = on ? 'เพลงกำลังเปิด — แตะเพื่อปิด' : 'เพลงปิดอยู่ — แตะเพื่อเปิด';
+    const label=btn.querySelector('b');
+    if(label) label.textContent = on ? 'เพลงเปิด' : 'เพลงปิด';
+  }
   function liveEarnValue(kind){
     try{
       if(kind === 'online' && typeof onlineLiveTotal === 'function') return onlineLiveTotal();
@@ -340,7 +375,7 @@
     if(document.getElementById(STYLE_ID)) return;
     const style = document.createElement('style');
     style.id = STYLE_ID;
-    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1}';
+    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1}';
     document.head.appendChild(style);
   }
   function clickExisting(selector, opts){
@@ -355,10 +390,15 @@
     return clickExisting(`.lobby-rail [data-panel="${panelId}"]`, {classicFirst:true});
   }
   function openPetShop(){
-    // Functional-parity rule: delegate to the lobby's existing pet-shop tab.
-    // Never call render/show functions directly here because that would create
-    // a second route that could drift from auth/lock checks in the real lobby.
-    if(!clickExisting('#tab-addpet')) setPreviewWanted(false);
+    // Same public route as Classic. The + tab is absent for players with no pet.
+    try{
+      if(typeof renderPetShop === 'function' && typeof showScreen === 'function'){
+        renderPetShop(); showScreen('screen-select'); return true;
+      }
+    }catch(_){ }
+    if(clickExisting('#tab-addpet')) return true;
+    try{ if(typeof showToast === 'function') showToast('ไม่พบร้านสัตว์เลี้ยงเดิม'); }catch(_){ }
+    return false;
   }
   function authoritativeRacingReady(){
     return typeof enterF1_3D === 'function';
@@ -388,6 +428,22 @@
       try{ camera.click(); return true; }catch(_){ }
     }
     try{ if(typeof showToast === 'function') showToast('ไม่พบตัวแก้ไขรูปโปรไฟล์เดิม'); }catch(_){ }
+    return false;
+  }
+  function openActivePetProfile(){
+    // Keep the Classic pet profile as the only owner of pet data and care actions.
+    try{
+      if(typeof openPetInfoOverlay === 'function'){
+        openPetInfoOverlay();
+        return true;
+      if(typeof activePet === 'function' && !activePet()){
+        openPetShop();
+        return false;
+      }
+      }
+    }catch(_){ }
+    if(clickExisting('#btn-pet-info')) return true;
+    try{ if(typeof showToast === 'function') showToast('ไม่พบหน้าโปรไฟล์สัตว์เดิม'); }catch(_){ }
     return false;
   }
   function openUserProfile(){
@@ -439,12 +495,17 @@
     if(name === 'classic'){ setPreviewWanted(false); return; }
     if(name === 'v2'){ setPreviewWanted(true); return; }
     if(name === 'shop'){ openPetShop(); return; }
+    if(name === 'petProfile'){ openActivePetProfile(); return; }
     if(name === 'profile'){ openUserProfile(); return; }
     if(name === 'avatarEdit'){ openAvatarEditor(); return; }
+    if(name === 'newWord'){ clickExisting('#newword-banner'); return; }
     if(name === 'racing'){ openRacing(); return; }
     if(panels[name]){ openPanelViaExisting(panels[name]); return; }
     if(standards[name]){ clickExisting(`.lobby-bottom [data-xstd="${standards[name]}"]`); return; }
-    if(direct[name]) clickExisting(direct[name], {classicFirst:name === 'rank'});
+    if(direct[name]){
+      clickExisting(direct[name], {classicFirst:name === 'rank'});
+      if(name === 'music') setTimeout(syncMusicState, 0);
+    }
   }
   function updateLeftRailCue(){
     if(!root) return;
@@ -573,10 +634,10 @@
             </div>
           </section>
           <section class="vw2-wallet" aria-label="ข้อมูลรายได้และทรัพย์สิน">
-            <button class="vw2-wallet-pill coin" data-vw2-action="rank" data-vw2-source="#btn-rail-rank" title="เหรียญที่มีอยู่">${walletArtwork('coin')}<span class="vw2-stat-copy"><small>เหรียญของฉัน</small><b id="vw2-coins">0</b><span class="vw2-pill-status">ยอดคงเหลือ</span></span><em>+</em></button>
-            <div class="vw2-wallet-pill today" title="เหรียญที่หาได้วันนี้">${walletArtwork('today')}<span class="vw2-stat-copy"><small>รายได้วันนี้</small><b>+<span id="vw2-today">0</span></b><span class="vw2-pill-status">สะสมวันนี้</span></span></div>
-            <div class="vw2-wallet-pill online" title="รายได้ที่ได้รับขณะออนไลน์">${walletArtwork('online')}<span class="vw2-stat-copy"><small>รายได้ออนไลน์</small><b>+<span id="vw2-online-earn">0</span></b><span class="vw2-pill-status" id="vw2-online-status">กำลังตรวจสอบ</span></span></div>
-            <div class="vw2-wallet-pill computer" title="รายได้สะสมจากคอมพิวเตอร์">${walletArtwork('computer')}<span class="vw2-stat-copy"><small>รายได้จากคอม</small><b>+<span id="vw2-comp-earn">0</span></b><span class="vw2-pill-status" id="vw2-comp-status">กำลังตรวจสอบ</span></span></div>
+            <button class="vw2-wallet-pill coin" data-vw2-action="rank" data-vw2-source="#btn-rail-rank" title="เหรียญที่มีอยู่">${walletArtwork('coin')}<span class="vw2-stat-copy"><small>เหรียญคงเหลือ</small><b id="vw2-coins">0</b><span class="vw2-pill-status">ยอดพร้อมใช้</span></span><em>+</em></button>
+            <div class="vw2-wallet-pill today" title="เหรียญที่หาได้วันนี้">${walletArtwork('today')}<span class="vw2-stat-copy"><small>วันนี้</small><b>+<span id="vw2-today">0</span></b><span class="vw2-pill-status">สะสมวันนี้</span></span></div>
+            <div class="vw2-wallet-pill online" title="รายได้ที่ได้รับขณะออนไลน์">${walletArtwork('online')}<span class="vw2-stat-copy"><small>ออนไลน์</small><b>+<span id="vw2-online-earn">0</span></b><span class="vw2-pill-status" id="vw2-online-status">กำลังตรวจสอบ</span></span></div>
+            <div class="vw2-wallet-pill computer" title="รายได้สะสมจากคอมพิวเตอร์">${walletArtwork('computer')}<span class="vw2-stat-copy"><small>จากคอม</small><b>+<span id="vw2-comp-earn">0</span></b><span class="vw2-pill-status" id="vw2-comp-status">กำลังตรวจสอบ</span></span></div>
             <div class="vw2-wallet-pill worth">${walletArtwork('worth')}<span class="vw2-stat-copy"><small>มูลค่ารวม</small><b id="vw2-worth">0</b><span class="vw2-pill-status">ทรัพย์สินทั้งหมด</span></span></div>
           </section>
           <section class="vw2-top-actions" aria-label="เครื่องมือ — ทุกปุ่มมีข้อความกำกับ">
@@ -604,7 +665,11 @@
           </section>
           <main class="vw2-feature">
             <div class="vw2-feature-title"><span>${icon('sparkle')}</span><strong>Vocab World</strong><span>${icon('sparkle')}</span></div>
-            <div class="vw2-word-ribbon" id="vw2-newword">คำศัพท์ใหม่รอหนูอยู่</div>
+            <button type="button" class="vw2-word-ribbon" id="vw2-newword" data-vw2-action="newWord" data-vw2-source="#newword-banner" aria-label="เปิดคำศัพท์ใหม่">
+              <span class="vw2-word-kicker">NEW WORD</span>
+              <span class="vw2-word-copy"><strong id="vw2-newword-word">คำใหม่กำลังมา</strong><small id="vw2-newword-hint">แตะเพื่อฟังเสียงและดูความหมาย</small></span>
+              <span class="vw2-word-reward" id="vw2-newword-reward">🪙 +1</span>
+            </button>
             <div class="vw2-feature-stage">
               <img class="vw2-world-scene" src="img/home-v2/r1279_fantasy_world.webp" alt="" aria-hidden="true" decoding="async" fetchpriority="high">
               <div class="vw2-stage-depth" aria-hidden="true"><div class="vw2-stage-castle">${castleArtwork()}</div></div>
@@ -614,7 +679,7 @@
               <div class="vw2-pet-halo" aria-hidden="true"></div>
               <div class="vw2-pedestal-aura" aria-hidden="true"></div>
               <div class="vw2-pet-platform" aria-hidden="true"></div>
-              <div class="vw2-pet" id="vw2-pet">${mascotDragon()}</div>
+              <button type="button" class="vw2-pet" id="vw2-pet" data-vw2-action="petProfile" aria-label="เปิดโปรไฟล์สัตว์เลี้ยง">${mascotDragon()}</button>
               <div class="vw2-pet-sparkles" aria-hidden="true"><i>♥</i><i>★</i><i>✦</i><i>♥</i></div>
               <button type="button" class="vw2-house-preview" data-vw2-action="home" data-vw2-source=".lobby-rail [data-panel=&quot;panel-home&quot;]" aria-label="เปิดบ้านที่เลือกอยู่">
                 <div class="vw2-house-preview-head">${icon('home')}<span id="vw2-house-label">ยังไม่มีบ้าน</span></div>
@@ -626,7 +691,7 @@
             <div class="vw2-feature-actions">
               <button class="vw2-enter" data-vw2-action="city" data-vw2-source="#btn-rail-city">${icon('city')} เข้าโลก 3D</button>
               <button class="vw2-play" data-vw2-action="play" data-vw2-source="#btn-play">${icon('controller')} เกมจับคู่คำศัพท์</button>
-              <button class="vw2-shop-link" data-vw2-action="shop" data-vw2-source="#tab-addpet">${icon('potion')} ร้านสัตว์</button>
+              <button class="vw2-shop-link" data-vw2-action="shop" data-vw2-source="#screen-select">${icon('potion')} ร้านสัตว์</button>
             </div>
           </main>
           <aside class="vw2-right">
@@ -644,7 +709,7 @@
           </aside>
         </div>
         <footer class="vw2-bottom" aria-label="ทางลัดการเรียนและเกมทั้งหมด"><div class="vw2-bottom-scroll" tabindex="0" role="region" aria-label="เลื่อนทางลัดการเรียนและเกม"><div class="vw2-bottom-track">${modeButtons}</div></div></footer>
-        <div class="vw2-preview-mark">ADMIN PREVIEW · R12 VISUAL MASTER REBUILD</div>
+        <div class="vw2-preview-mark">ADMIN PREVIEW · R13 HUD READABILITY</div>
       </div>`;
     dash.appendChild(root);
     setupLeftRailCue();
@@ -960,7 +1025,8 @@
     }
     setText('vw2-rank', textOf('#rank-tab','แรงค์กำลังอัปเดต'));
     syncRewardPlaque();
-    setText('vw2-newword', textOf('#newword-banner','คำศัพท์ใหม่รอหนูอยู่').replace(/^[✨⭐🌟💫\s]+/,'') || 'คำศัพท์ใหม่รอหนูอยู่');
+    syncNewWordCard();
+    syncMusicState();
     copyImage('#pass-photo img','vw2-avatar',knightFallback());
     syncPetVisual();
     syncHouseVisual();

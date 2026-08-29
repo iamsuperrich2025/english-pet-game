@@ -17,6 +17,7 @@
   --vw2-r1153-ready:1;
   --vw2-r1154-ready:1;
   --vw2-r1279-ready:1;
+  --vw2-r1280-ready:1;
   --vw2-ink:#3f285f;
   --vw2-ink-soft:#705781;
   --vw2-violet:#7141b8;
@@ -627,5 +628,150 @@ body.vw2-home-active .toast button,body.vw2-home-active .toast .toast-close{min-
   .vw2-pet{bottom:13%;height:67%}.vw2-stage-copy span{display:none}
 }
 
+/* ======================== R13 / รอบ 1280 — HUD + NAV READABILITY REBALANCE ======================== */
+/* Presentation only. Live values, action routing and the admin-only gate remain authoritative. */
+.vw2-top{
+  grid-template-columns:clamp(238px,27vw,330px) minmax(0,1fr) clamp(164px,18.5vw,240px);
+  gap:6px;
+}
+.vw2-wallet{
+  grid-template-columns:minmax(132px,1.08fr) repeat(2,minmax(112px,1fr));
+  grid-template-rows:repeat(2,minmax(0,1fr));
+  gap:5px;
+}
+.vw2-wallet-pill{
+  padding:5px 10px!important;
+  border:1px solid rgba(255,255,255,.94)!important;
+  border-radius:15px!important;
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:7px!important;
+  background-image:none!important;
+  box-shadow:inset 0 0 0 1px rgba(119,76,170,.18),inset 0 5px 9px rgba(255,255,255,.48),0 3px 8px rgba(58,37,99,.16)!important;
+  overflow:hidden;
+}
+.vw2-wallet-pill.coin{grid-row:1/3;background:linear-gradient(145deg,#fff8cb 0%,#ffd76f 58%,#f1aa31 100%)!important}
+.vw2-wallet-pill.today{background:linear-gradient(145deg,#fffdfd,#f7d9f3)!important}
+.vw2-wallet-pill.online{background:linear-gradient(145deg,#fdfefe,#d6efff)!important}
+.vw2-wallet-pill.computer{background:linear-gradient(145deg,#fff,#e7dcff)!important}
+.vw2-wallet-pill.worth{background:linear-gradient(145deg,#fff,#dfe5ff)!important}
+.vw2-wallet-pill .vw2-stat-art{display:flex!important;width:31px;height:31px;flex:0 0 31px}
+.vw2-wallet-pill.coin .vw2-stat-art{width:52px;height:52px;flex-basis:52px}
+.vw2-wallet-pill .vw2-stat-copy{width:auto!important;flex:1;align-items:flex-start!important;text-align:left!important;gap:2px!important;overflow:hidden!important}
+.vw2-wallet-pill .vw2-stat-copy small{font-size:clamp(10.5px,.77vw,12.5px)!important;line-height:1!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.vw2-wallet-pill .vw2-stat-copy b{max-width:100%;font-size:clamp(14px,1.12vw,18px)!important;line-height:1.02!important;letter-spacing:-.025em!important;white-space:nowrap!important;overflow:visible!important}
+.vw2-wallet-pill.coin .vw2-stat-copy b{font-size:clamp(17px,1.42vw,23px)!important}
+.vw2-wallet-pill .vw2-pill-status{font-size:9px;line-height:1;max-width:100%}
+.vw2-wallet-pill:not(.coin) .vw2-pill-status{display:none!important}
+.vw2-wallet-pill>em{width:19px;height:19px;right:5px;top:5px}
+
+/* Bottom shortcuts keep Classic-style horizontal scrolling, with labels sized to the illustrated tabs. */
+.vw2-bottom-track{grid-template-columns:repeat(13,minmax(132px,9.4vw));gap:5px}
+.vw2-mode{
+  padding:4px 8px 4px 37%!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+.vw2-mode>b{
+  display:-webkit-box!important;
+  width:100%!important;
+  max-width:100%;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden!important;
+  font-size:clamp(13px,1.02vw,16.5px)!important;
+  line-height:1.1!important;
+  letter-spacing:-.01em;
+  text-align:center!important;
+}
+/* The visible pet is a real, keyboard-accessible control that opens the authoritative Classic profile. */
+.vw2-pet{
+  pointer-events:auto!important;
+  cursor:pointer;
+  padding:0;
+  border:0!important;
+  background:transparent!important;
+}
+.vw2-pet:focus-visible{outline:3px solid rgba(255,238,136,.98);outline-offset:3px;border-radius:38%}
+
+/* New Word is a primary learning card, not a low-contrast ticker. */
+.vw2-feature{grid-template-rows:31px 40px minmax(0,1fr) 45px}
+.vw2-word-ribbon{min-width:0;height:40px;padding:4px 12px!important;display:grid!important;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:9px;color:#44235f;cursor:pointer;overflow:hidden}
+.vw2-word-ribbon:before,.vw2-word-ribbon:after{display:none!important}
+.vw2-word-kicker{padding:3px 7px;border-radius:999px;background:linear-gradient(180deg,#f887ba,#d74b92);color:#fff;font-size:9px;font-weight:1000;letter-spacing:.045em;white-space:nowrap;box-shadow:inset 0 0 0 1px rgba(255,255,255,.58)}
+.vw2-word-copy{min-width:0;display:flex;align-items:baseline;justify-content:center;gap:7px;overflow:hidden}
+.vw2-word-copy strong{font-size:clamp(15px,1.25vw,21px);line-height:1;color:#4f2780;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px #fff}
+.vw2-word-copy small{font-size:clamp(9px,.65vw,11px);line-height:1;color:#775b83;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vw2-word-reward{padding:3px 7px;border-radius:999px;background:rgba(255,246,199,.94);border:1px solid #e0ad42;color:#795018;font-size:10px;font-weight:1000;white-space:nowrap}
+.vw2-word-ribbon:disabled{cursor:default;filter:saturate(.7)}
+.vw2-word-ribbon:focus-visible{outline:3px solid rgba(255,238,136,.98);outline-offset:-3px}
+
+/* Left destinations gain a real caption plaque instead of micro text floating on the artwork. */
+.vw2-main-grid{grid-template-columns:minmax(0,10.5%) minmax(0,19%) minmax(0,47.5%) minmax(0,23%)}
+.vw2-rail-label,.vw2-rail-racing .vw2-rail-label{
+  width:88%;
+  min-height:22px;
+  margin-top:-1px;
+  padding:4px 5px;
+  border:1px solid rgba(226,184,80,.78)!important;
+  border-radius:999px!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(246,231,255,.94))!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.9),0 2px 5px rgba(65,39,108,.18)!important;
+  color:#492768!important;
+  text-shadow:0 1px #fff!important;
+  font-size:clamp(11.5px,.86vw,14px)!important;
+  line-height:1.05;
+  white-space:normal;
+}
+
+/* Music state must be readable without relying on title text or memory. */
+.vw2-tool-btn[data-vw2-action="music"]{transition:filter .18s ease,box-shadow .18s ease,background .18s ease!important}
+.vw2-tool-btn[data-vw2-action="music"].is-music-on{background:linear-gradient(180deg,#f4fff9,#bff1d5)!important;border-color:#78d59f!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.95),inset 0 -5px 9px rgba(33,154,91,.12),0 0 0 2px rgba(70,206,128,.18),0 3px 8px rgba(45,119,78,.2)!important}
+.vw2-tool-btn[data-vw2-action="music"].is-music-on b{color:#176a43!important}
+.vw2-tool-btn[data-vw2-action="music"].is-music-on span{filter:drop-shadow(0 0 4px rgba(36,204,112,.48))}
+.vw2-tool-btn[data-vw2-action="music"].is-music-off{background:linear-gradient(180deg,#f4f1f7,#d7cfdf)!important;border-color:#b9a8c6!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.88),inset 0 -5px 9px rgba(81,67,96,.10),0 3px 7px rgba(62,48,74,.14)!important}
+.vw2-tool-btn[data-vw2-action="music"].is-music-off b{color:#74677d!important}
+.vw2-tool-btn[data-vw2-action="music"].is-music-off span{filter:grayscale(1);opacity:.68}
+.vw2-tool-btn[data-vw2-action="music"].is-music-off span:after{content:"";position:absolute;left:50%;top:-2px;width:2px;height:22px;border-radius:2px;background:#c94f72;transform:rotate(-43deg);box-shadow:0 0 0 1px rgba(255,255,255,.72)}
+.vw2-section-head strong{font-size:clamp(12.5px,.9vw,15px)!important}
+.vw2-section-head>b,.vw2-section-head>button{font-size:clamp(10px,.72vw,12px)!important}
+
+@media (max-width:1180px),(max-height:520px){
+  .vw2-top{grid-template-columns:clamp(210px,27vw,270px) minmax(0,1fr) clamp(145px,19vw,190px);gap:4px}
+  .vw2-wallet{grid-template-columns:minmax(92px,1.04fr) repeat(2,minmax(78px,1fr));gap:3px}
+  .vw2-wallet-pill{padding:4px 5px!important;gap:4px!important;border-radius:12px!important}
+  .vw2-wallet-pill .vw2-stat-art{width:23px;height:23px;flex-basis:23px}
+  .vw2-wallet-pill.coin .vw2-stat-art{width:38px;height:38px;flex-basis:38px}
+  .vw2-wallet-pill .vw2-stat-copy small{font-size:clamp(9.5px,1.14vw,11px)!important}
+  .vw2-wallet-pill .vw2-stat-copy b{font-size:clamp(12.5px,1.48vw,15px)!important}
+  .vw2-wallet-pill.coin .vw2-stat-copy b{font-size:clamp(14px,1.72vw,18px)!important}
+  .vw2-wallet-pill .vw2-pill-status{display:none!important}
+  .vw2-word-ribbon{left:18%;right:18%;top:30px;height:37px;padding:3px 8px!important;gap:6px}
+  .vw2-feature{grid-template-rows:minmax(0,1fr) 38px}
+  .vw2-word-kicker{font-size:8px;padding:2px 5px}
+  .vw2-word-copy{display:block;text-align:center}
+  .vw2-word-copy strong{display:block;font-size:clamp(14px,1.9vw,18px)}
+  .vw2-word-copy small{display:block;margin-top:1px;font-size:clamp(8px,1.05vw,10px)}
+  .vw2-word-reward{font-size:9px;padding:2px 5px}
+  .vw2-bottom-track{grid-template-columns:repeat(13,132px);gap:4px}
+  .vw2-mode>b{font-size:clamp(12.5px,1.52vw,14.5px)!important}
+  .vw2-rail-label,.vw2-rail-racing .vw2-rail-label{width:94%;min-height:20px;padding:3px 3px;font-size:clamp(10.5px,1.28vw,12.5px)!important}
+}
+@media (max-width:760px){
+  .vw2-main-grid{grid-template-columns:minmax(0,11.5%) minmax(0,19%) minmax(0,45.5%) minmax(0,24%)}
+  .vw2-bottom-track{grid-template-columns:repeat(13,126px)}
+  .vw2-mode{padding-left:42%!important}
+  .vw2-mode>b{font-size:12.5px!important}
+  .vw2-rail-label,.vw2-rail-racing .vw2-rail-label{font-size:10.5px!important}
+  .vw2-word-ribbon{left:8%;right:8%;height:35px}
+  .vw2-word-copy small{display:none}
+  .vw2-word-reward{font-size:8px;padding:2px 4px}
+}
+
+@media (max-height:390px){
+  .vw2-feature{grid-template-rows:minmax(0,1fr) 35px}
+}
 @media (prefers-reduced-motion:reduce){#vw-home-v2-root *,#vw-home-v2-root *:before,#vw-home-v2-root *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 html.no-anim #vw-home-v2-root *,html.no-anim #vw-home-v2-root *:before,html.no-anim #vw-home-v2-root *:after{animation:none!important;transition:none!important}
