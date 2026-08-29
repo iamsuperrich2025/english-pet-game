@@ -5656,3 +5656,9 @@
 - syntax + Sky regression + asset QA ทั้ง 6 ตัว + production build ผ่าน; test ล็อกไม่ให้ย้อนกลับไปใช้ relative CSS-variable URL (`tools/test_skyplay3d.js`)
 - **รอบ 1272 · กล่องสุ่มรายวันน่ารัก 5 ใบ:** รางวัล 5,000/4,000/3,000/2,000/1,000 ถูก crypto shuffle และบังคับทุกช่องไม่ซ้ำตำแหน่งเมื่อวาน; เปิดได้ 1 ใบ/วัน (`js/dailybox.js`, `css/dailybox.css`)
 - ระบบล็อก claim ก่อน `addCoins()` + save/Cloud ทันทีและอ่าน local save สดกันสองแท็บ; reload ก่อนรับทราบจะเปิดใบยินดีเดิม ไม่จ่ายซ้ำ และไม่มี timer/Esc/backdrop ปิดเอง
+
+
+## ⏬ ย้ายเมื่อ 2026-08-29 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- syntax + regression เดิม/ใหม่ (จำลอง `BOOK` ที่ O ทุกใบพับ) + diff check + production build ผ่าน (`tools/test_shootword_letter_sync.js`)
+- **รอบ 1273 · แก้รูปตัวละคร Sky Playground ว่างทั้ง 6 ช่อง:** ต้นตอ path สั้นใน `url()` ผ่าน CSS custom property ถูก resolve เป็น `/css/img/...` แล้ว 404 เงียบ แม้ thumbnail จริงรวมเพียง 80,302B

@@ -40,8 +40,6 @@
 - syntax + data/asset regression + deep image QA + production build + Edge headless 812×375 ผ่าน; โรงงานโหลดใกล้จอ 12/103 และอีก 101 pending (`tools/test_cakes2026.js`, `tools/validate_cake_assets.py`)
 - **รอบ 1274 · แก้ยิงเป้าคำให้ตัวอักษรสัมพันธ์กับคำเสมอ:** ต้นตอคือยิงอักษรอนาคตผิดลำดับแล้วทุกใบกำลังพับ + ปิดเกมหลังจบคำก่อน timer ทำงาน ทำให้ช่วงหนึ่งไม่มีเป้าตรงคำ (`js/shootword.js`)
 - บังคับ invariant ให้อักษรที่เหลือรวมตัวซ้ำต้องอยู่บนแผ่นที่ตั้งขึ้นครบ, ล็อกจนแจกกระดานเสร็จจริง, กัน callback คำเก่า และเปิดใหม่หลังคำจบต้องเริ่มคำสด
-- syntax + regression เดิม/ใหม่ (จำลอง `BOOK` ที่ O ทุกใบพับ) + diff check + production build ผ่าน (`tools/test_shootword_letter_sync.js`)
-- **รอบ 1273 · แก้รูปตัวละคร Sky Playground ว่างทั้ง 6 ช่อง:** ต้นตอ path สั้นใน `url()` ผ่าน CSS custom property ถูก resolve เป็น `/css/img/...` แล้ว 404 เงียบ แม้ thumbnail จริงรวมเพียง 80,302B
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`
