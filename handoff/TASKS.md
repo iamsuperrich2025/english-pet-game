@@ -15,6 +15,10 @@
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
 ### 🔫 คิวงานปืน/โลกยานแม่/โลกใหม่ที่รออยู่ (ผู้ใช้อนุมัติล่วงหน้าแล้ว ทำได้เลยไม่ต้องถาม)
+- **รอบ 1315 · Dragon Sky Siege enemy/boss loop:** เพิ่มเครื่องบินศัตรู HP จริงสูงสุด 3 ลำ ยิงกระสุนเล็งกลับ; โดนผู้เล่นลดพลังมังกรหนึ่งดวงและยิงทำลายได้
+- บอสออกทุก 30 วินาทีของเวลาเล่น ยิงกระจาย 3 นัด มีแถบ HP; เมื่อชนะจะเพิ่มคลื่น/HP บอส เติม Missile หนึ่งลูก และวนบอสถัดไปอีก 30 วินาทีโดยไม่จบภารกิจ
+- ใช้ `f1VocabForStudent()` ร่วมกับเกม F1 โดยตรง: 5 ช่วงชั้น × 500 คำตรงระดับ ไม่ทำข้อมูลซ้ำ; สำรับสับใหม่เมื่อครบ 500 และกันคำซ้ำติดขอบชุด
+- syntax + Dragon Sky Siege/F1 vocab regression + clean production build/validate ผ่าน; ศัตรูและบอสวาดด้วย Canvas ไม่มี raster asset ใหม่ และแคชจำนวนคำไม่สร้าง pool ซ้ำใน HUD
 - **รอบ 1314 · Home V2 Classic left rail:** คืนเฉพาะรางเมนูซ้ายเป็นปุ่มกรมท่าทรงมนแบบ Classic และอ่านไอคอนจริงจาก `.rail-ico` ของปุ่มต้นทาง พร้อม fallback ชุดเดิมครบ 29 ปลายทาง
 - คืนป้ายเลื่อน `▲ บนสุด` / `▼ มีอีก` แบบกดได้; Profile, Global Feed, stage, New Vocab และ Bottom Rail ไม่เปลี่ยน
 - syntax + Home V2 regression + production build ผ่าน; marker อยู่ทั้ง unhashed/hashed build, Browser runtime ถูก Windows ACL บล็อก
