@@ -446,7 +446,7 @@ gradeChangeTo:64 · gradeLockNote:91 · openGradeChange:100
 
 ## js/hauntedhotelsession.js (255 บรรทัด · 0 รายการ)
 
-## js/home-v2.js (1,753 บรรทัด · 0 รายการ)
+## js/home-v2.js (1,679 บรรทัด · 0 รายการ)
 
 ## js/hotel3d.js (1,526 บรรทัด · 62 รายการ)
 ### 🗂️ สารบัญโซน js/hotel3d.js (Read/Edit เฉพาะช่วง)
@@ -1035,8 +1035,8 @@ vbRender:148 · vbCardHTML:194
 .xsp-foot:235 · .xsb-box:250,277 · .xsb-head:255,256 · .xsb-grid:257 · .xsb-card:258,262 · .xsb-emoji:263
 .xsb-name:264 · .xsb-info:265 · .xsb-done:266 · .onet-picker:270,271,272,273(+3) · .onet-board:278,279,280
 
-## css/home-v2.css (1,673 บรรทัด · 136 selector)
-:root:9 · #screen-dashboard:35,40 · #vw-home-v2-root:42,43,53,54(+42) · .vw2-screen-frame:75 · .vw2-sky:76,77,86,93(+1) · .vw2-shell:96,101,583
+## css/home-v2.css (1,732 บรรทัด · 136 selector)
+:root:9 · #screen-dashboard:35,40 · #vw-home-v2-root:42,43,53,54(+43) · .vw2-screen-frame:75 · .vw2-sky:76,77,86,93(+1) · .vw2-shell:96,101,583
 .vw2-glass:105 · .vw2-top:118,633,780,969 · .vw2-profile:123,137,141,283(+2) · .vw2-kanok-corner:142 · .vw2-profile-crown:143 · .vw2-profile-kicker:144,145
 .vw2-avatar-frame:146,151,289,290 · .vw2-avatar:152,153 · .vw2-avatar-edit:154 · .vw2-profile-main:155 · .vw2-name-row:156,157 · .vw2-pencil:158
 .vw2-profile-meta:159 · .vw2-profile-meta-chip:160,161,162,163(+1) · .vw2-grade-identity:164 · .vw2-grade-copy:165 · .vw2-profile-chips:166 · .vw2-achievement-mark:167
@@ -1048,8 +1048,8 @@ vbRender:148 · vbCardHTML:194
 .vw2-atmosphere:237 · .vw2-speech:238,351,352,353(+4) · .vw2-reward-card:239,354,355,356(+7) · .vw2-pet-halo:240,241,593 · .vw2-pedestal-aura:242,243,359 · .vw2-pet-platform:244,245,246,357(+1)
 .vw2-pet:247,360,690,697(+1) · .vw2-pet-sparkles:248 · .vw2-house-preview:249 · .vw2-stage-copy:250,364,1178,1179(+1) · .vw2-feature-actions:251,367,368,823(+5) · .vw2-right:254,490
 .vw2-mission:255,328,333,491(+1) · .vw2-quests:256,492,882 · .vw2-quest-row:257,1274 · .vw2-online:258,329,334,523(+2) · .vw2-online-row:259,1195 · .vw2-friends-btn:260,525,530,1200(+1)
-.vw2-bottom:263,264,374,444(+5) · .vw2-mode:265,375,376,377(+27) · .vw2-preview-mark:266,594 · .vw2-home-active:269,270,271 · .vw2-rail-racing:317,323,519,1334 · .vw2-house-preview-head:361,362,489,1181(+2)
-.vw2-stage-foreground:363,592,1045 · .vw2-enter:369 · .vw2-play:370 · .vw2-shop-link:371 · .vw2-bottom-scroll:450,469,470,471(+4) · .vw2-bottom-track:472,482,514,515(+8)
+.vw2-bottom:263,264,374,444(+6) · .vw2-mode:265,375,376,377(+27) · .vw2-preview-mark:266,594 · .vw2-home-active:269,270,271 · .vw2-rail-racing:317,323,519,1334 · .vw2-house-preview-head:361,362,489,1181(+2)
+.vw2-stage-foreground:363,592,1045 · .vw2-enter:369 · .vw2-play:370 · .vw2-shop-link:371 · .vw2-bottom-scroll:450,469,470,471(+5) · .vw2-bottom-track:472,482,514,515(+22)
 .vw2-online-list:493,524,883,1194 · .vw2-word-kicker:703,846,1267 · .vw2-word-copy:704,705,706,847(+4) · .vw2-word-reward:707,850 · .vw2-feed-market-divider:886,887,888,1032 · .vw2-feed-market-note:889
 .vw2-market-feed-card:890,891,892,1186(+3) · .vw2-feed-product:893,894 · .vw2-market-seller:895,1190 · .no-anim:974 · .vw2-house-backdrop:1183 · .vw2-online-name-line:1196,1197
 .vw2-online-badges:1198 · .vw2-online-copy:1199 · .vw2-rail-cure:1203,1204,1205,1206 · .vw2-online-modal-open:1210 · .vw2-online-modal:1211,1212 · .vw2-online-modal-panel:1213,1214
@@ -1058,7 +1058,7 @@ vbRender:148 · vbCardHTML:194
 .vw2-pet-modal:1431,1432 · .vw2-pet-modal-panel:1433,1434,1495 · .vw2-pet-modal-head:1435,1436,1439,1440(+3) · .vw2-pet-modal-emblem:1437,1438 · .vw2-pet-modal-close:1443,1444,1459 · .vw2-pet-modal-list:1445,1446
 .vw2-owned-pet-card:1447,1448,1449,1456 · .vw2-owned-pet-thumb:1450,1451,1452 · .vw2-owned-pet-copy:1453,1454,1455 · .vw2-pet-modal-empty:1457 · .vw2-pet-modal-foot:1458 · .vw2-pet-modal-healbar:1497
 .vw2-heal-all:1498,1499,1500,1505(+3) · .vw2-heal-all-icon:1501 · .vw2-heal-all-copy:1502,1503,1504 · .vw2-adventure-hub:1531,1537,1538,1539(+22) · .vw2-adventure-landmark:1545,1549,1550,1617(+1) · .vw2-adventure-copy:1551,1552,1553,1622(+2)
-.vw2-adventure-menu:1557,1558,1568,1569(+14) · .vw2-adventure-menu-panel:1559,1560,1561,1562(+8) · .vw2-adventure-menu-scroll:1565,1566 · .vw2-adventure-menu-track:1567,1638
+.vw2-adventure-menu:1557,1558,1568,1569(+15) · .vw2-adventure-menu-panel:1559,1560,1561,1562(+8) · .vw2-adventure-menu-scroll:1565,1566 · .vw2-adventure-menu-track:1567,1638
 
 ## css/lettercannon.css (48 บรรทัด · 28 selector)
 #lc-game:6,7 · .lc-hud:8 · .lc-glass:9 · .lc-stats:10 · .lc-stat:11 · .lc-coin-stat:12
