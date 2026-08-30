@@ -1035,8 +1035,8 @@ vbRender:148 · vbCardHTML:194
 .xsp-foot:235 · .xsb-box:250,277 · .xsb-head:255,256 · .xsb-grid:257 · .xsb-card:258,262 · .xsb-emoji:263
 .xsb-name:264 · .xsb-info:265 · .xsb-done:266 · .onet-picker:270,271,272,273(+3) · .onet-board:278,279,280
 
-## css/home-v2.css (2,338 บรรทัด · 136 selector)
-:root:9 · #screen-dashboard:35,40 · #vw-home-v2-root:42,43,53,54(+93) · .vw2-screen-frame:75 · .vw2-sky:76,77,86,93(+1) · .vw2-shell:96,101,583
+## css/home-v2.css (2,354 บรรทัด · 136 selector)
+:root:9 · #screen-dashboard:35,40 · #vw-home-v2-root:42,43,53,54(+94) · .vw2-screen-frame:75 · .vw2-sky:76,77,86,93(+1) · .vw2-shell:96,101,583
 .vw2-glass:105 · .vw2-top:118,633,780,969(+2) · .vw2-profile:123,137,141,283(+3) · .vw2-kanok-corner:142 · .vw2-profile-crown:143 · .vw2-profile-kicker:144,145
 .vw2-avatar-frame:146,151,289,290(+1) · .vw2-avatar:152,153,1966,1970(+3) · .vw2-avatar-edit:154,2023 · .vw2-profile-main:155,1885 · .vw2-name-row:156,157,1886 · .vw2-pencil:158
 .vw2-profile-meta:159,1821,1887 · .vw2-profile-meta-chip:160,161,162,163(+12) · .vw2-grade-identity:164 · .vw2-grade-copy:165 · .vw2-profile-chips:166,1900 · .vw2-achievement-mark:167,1901
