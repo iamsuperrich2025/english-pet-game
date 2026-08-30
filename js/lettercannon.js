@@ -1,6 +1,6 @@
 "use strict";
 /* ============================================================
-   🐉💥 Dragon Sky Siege (รอบ 1306)
+   🐉💥 Dragon Sky Siege (รอบ 1307)
    Portrait vertical shooter: freely fly, spell five words, survive the boss wave.
    Three ballistic rounds, homing missiles, ten hearts and a living dragon gunner.
    ============================================================ */
@@ -44,8 +44,8 @@
   let hud={},timers=new Set(),playerImage=null,playerLoad=null,orientationLocked=false,gameFullscreen=false,skyGradient=null,noiseBuffers=Object.create(null);
   function later(fn,ms){const id=setTimeout(()=>{timers.delete(id);fn();},ms);timers.add(id);return id;}
   function clearTimers(){timers.forEach(clearTimeout);timers.clear();}
+  function resetFrameClock(){last=frameAt=0;}
   function queueCloudSave(){
-  function resetFrameClock(){last=performance.now();frameAt=last-FRAME_MS;}
     if(saveTimer){clearTimeout(saveTimer);timers.delete(saveTimer);}
     saveTimer=later(()=>{saveTimer=0;if(typeof authPushSave==='function')authPushSave(false);},650);
   }
@@ -286,7 +286,7 @@
     shockwaves.forEach(o=>{if(o.alive&&(o.life-=dt)<=0)o.alive=false;});
   }
   function draw(t){ctx.save();if(shake)ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);drawBackground(t);drawBase();letters.forEach(o=>{if(o.alive)(o.kind==='power'?drawPower(o,t):o.kind==='meteor'?drawMeteor(o,t):drawLetter(o,t));});ctx.globalCompositeOperation='source-over';bullets.forEach(b=>{if(b.alive)drawProjectile(b);});ctx.globalCompositeOperation='lighter';ctx.shadowBlur=0;particles.forEach(p=>{if(!p.alive)return;ctx.globalAlpha=clamp(p.life/p.max,0,1);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();});shockwaves.forEach(o=>{if(!o.alive)return;const k=1-o.life/o.max,r=o.start+(o.end-o.start)*k;ctx.globalAlpha=(1-k)*.82;ctx.strokeStyle=o.color;ctx.lineWidth=5*(1-k)+1;ctx.shadowColor=o.color;ctx.shadowBlur=18;ctx.beginPath();ctx.arc(o.x,o.y,r,0,7);ctx.stroke();});ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;ctx.shadowBlur=0;drawDragonGunner(t);ctx.restore();}
-  function frame(now){if(!running)return;raf=requestAnimationFrame(frame);const since=now-frameAt;if(paused||counting){const gap=paused?100:33;if(since<gap)return;frameAt=now;last=now;draw(now/1000);return;}if(since<FRAME_MS*.9)return;frameAt=now-(since%FRAME_MS);const dt=Math.min(.033,Math.max(0,(now-last)/1000||.016));last=now;update(dt);draw(now/1000);if(((now/250)|0)!==(((now-dt*1000)/250)|0))renderHud();}
+  function frame(now){if(!running)return;raf=requestAnimationFrame(frame);if(!frameAt){frameAt=now-FRAME_MS;last=now-FRAME_MS;}const since=now-frameAt;if(paused||counting){const gap=paused?100:33;if(since<gap)return;frameAt=now;last=now;draw(now/1000);return;}if(since<FRAME_MS*.9)return;frameAt=now-(since%FRAME_MS);const dt=Math.min(.033,Math.max(0,(now-last)/1000||.016));last=now;update(dt);draw(now/1000);if(((now/250)|0)!==(((now-dt*1000)/250)|0))renderHud();}
   function bind(){
     abort=new AbortController();const s={signal:abort.signal};
     const point=e=>{const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height};};
@@ -308,11 +308,16 @@
   function countdown(){counting=true;const m=document.createElement('div');m.className='lc-modal lc-countdown';root.appendChild(m);let n=3;const step=()=>{if(!running||!m.isConnected)return;m.innerHTML='<div class="lc-count">'+(n?n:'GO!')+'</div><button class="lc-btn lc-count-exit">🚪 ออกจากเกม</button>';m.querySelector('button').onclick=close;sound('correct');if(n--){later(step,650);}else later(()=>{m.remove();counting=false;resetFrameClock();},520);};step();}
   function buildDom(){
     root=document.createElement('div');root.id='lc-game';root.innerHTML='<canvas class="lc-game-canvas" aria-label="สนาม Dragon Sky Siege — ลากนิ้วเพื่อบินและจัดแนวยิงอัตโนมัติให้ตรงเป้าหมาย"></canvas><div class="lc-hud"><div class="lc-stats lc-glass"><div class="lc-stat"><span>คะแนน</span><b id="lc-score">0</b></div><div class="lc-stat"><span>สตรีค</span><b id="lc-combo">0</b></div><div class="lc-stat lc-shield-stat"><span>พลังมังกร</span><b id="lc-shield" aria-label="พลังมังกร 10 ดวง"></b></div><div class="lc-stat"><span>ภารกิจ</span><b id="lc-words">0/'+MISSION_WORDS+'</b></div><div class="lc-stat"><span>สถานะ</span><b id="lc-wave">คลื่น 1</b></div><div class="lc-stat"><span>เหรียญ</span><b id="lc-coins">0</b></div></div><div class="lc-wordbox lc-glass"><div class="lc-target" id="lc-target"></div><div class="lc-meaning" id="lc-meaning"></div><div class="lc-progress" id="lc-progress"></div></div><div class="lc-actions"><button class="lc-iconbtn" id="lc-sound" title="เปิด/ปิดเสียง">🔊</button><button class="lc-iconbtn lc-missilebtn" id="lc-missile" title="ยิง Missile (M)">🚀 3</button><button class="lc-iconbtn" id="lc-pause-btn" title="พัก">⏸</button><button class="lc-iconbtn lc-exitwide" id="lc-exit" title="ออกจากเกมกลับ Lobby">🚪 ออก</button></div><div class="lc-power lc-glass"><div class="lc-power-name" id="lc-power-name">กระสุน TRACER</div><div class="lc-power-bar"><div class="lc-power-fill" id="lc-power-fill"></div></div></div><div class="lc-hint lc-glass"><b>AUTO FIRE</b> · ลากสนามเพื่อบิน · M Missile</div></div>';
-    document.body.appendChild(root);canvas=root.querySelector('canvas');ctx=canvas.getContext('2d',{alpha:false});['score','combo','shield','words','wave','coins','target','meaning','progress','power-name','power-fill','pause-btn','exit','sound','missile','fire-left','fire-right'].forEach(k=>hud[k.replace(/-([a-z])/g,(_m,c)=>c.toUpperCase())]=root.querySelector('#lc-'+k));hud.powerName=root.querySelector('#lc-power-name');hud.powerFill=root.querySelector('#lc-power-fill');hud.pause=root.querySelector('#lc-pause-btn');const coinStat=hud.coins.parentElement;coinStat.classList.add('lc-coin-stat');coinStat.insertAdjacentHTML('beforeend','<img src="'+COIN_IMAGE+'" alt="เหรียญทอง">');
+    document.body.appendChild(root);canvas=root.querySelector('canvas');ctx=canvas.getContext('2d',{alpha:false});['score','combo','shield','words','wave','coins','target','meaning','progress','power-name','power-fill','pause-btn','exit','sound','missile'].forEach(k=>hud[k.replace(/-([a-z])/g,(_m,c)=>c.toUpperCase())]=root.querySelector('#lc-'+k));hud.powerName=root.querySelector('#lc-power-name');hud.powerFill=root.querySelector('#lc-power-fill');hud.pause=root.querySelector('#lc-pause-btn');const coinStat=hud.coins.parentElement;coinStat.classList.add('lc-coin-stat');coinStat.insertAdjacentHTML('beforeend','<img src="'+COIN_IMAGE+'" alt="เหรียญทอง">');
+  }
+  async function lockPortrait(){
+    if(!screen.orientation||!screen.orientation.lock)return false;
+    for(const mode of ['portrait-primary','portrait']){try{await screen.orientation.lock(mode);orientationLocked=true;return true;}catch(_e){}}
+    return false;
   }
   async function requestPortrait(){
-    const coarse=typeof matchMedia==='function'&&matchMedia('(pointer:coarse)').matches;if(!coarse)return;
-    try{if(!document.fullscreenElement&&document.documentElement.requestFullscreen){await document.documentElement.requestFullscreen({navigationUI:'hide'});gameFullscreen=true;}if(screen.orientation&&screen.orientation.lock){await screen.orientation.lock('portrait');orientationLocked=true;}}catch(_e){}
+    if(!document.fullscreenElement&&document.documentElement.requestFullscreen){try{await document.documentElement.requestFullscreen({navigationUI:'hide'});gameFullscreen=true;}catch(_e){}}
+    await lockPortrait();
   }
   function releasePortrait(){try{if(orientationLocked&&screen.orientation&&screen.orientation.unlock)screen.orientation.unlock();}catch(_e){}orientationLocked=false;if(gameFullscreen&&document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(()=>{});gameFullscreen=false;}
   function startGame(){if(!opening||running)return;opening=false;buildDom();layout();playerX=W*.5;playerY=H*.76;playerVX=playerVY=0;bind();running=true;resetMission();if(typeof Music!=='undefined'&&Music.suspendBg)Music.suspendBg();resetFrameClock();raf=requestAnimationFrame(frame);tutorial();}
