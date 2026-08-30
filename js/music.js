@@ -47,7 +47,7 @@ const Music = (function(){
     return out;
   }
 
-  /* ---------- ชุดเพลงออฟไลน์ ----------
+  /* ---------- 🎵 รอบ 1298: ชุดเพลงออฟไลน์ ----------
      ไม่ใส่เพลงใน SW PRECACHE เพราะ install ของ Service Worker เกิดทุก deploy ไม่ใช่เฉพาะตอนติดตั้ง PWA
      เก็บด้วย content hash เดียวกับ sw.js: เพลงเดิมอยู่ข้ามเวอร์ชัน · เพลงที่เปลี่ยนเท่านั้นจึงดาวน์โหลดใหม่ */
   function offlineSupported(){

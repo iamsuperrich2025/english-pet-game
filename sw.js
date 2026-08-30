@@ -160,7 +160,7 @@ function parseSingleRange(header, size) {
   return { start, end };
 }
 
-/* ไฟล์เพลงออฟไลน์เก็บเป็น response เต็มด้วย content hash แต่ <audio> มักขอเป็น Range
+/* 🎵 รอบ 1298: ไฟล์เพลงออฟไลน์เก็บเป็น response เต็มด้วย content hash แต่ <audio> มักขอเป็น Range
    ตัดช่วงจากไฟล์ใน Cache Storage แล้วตอบ 206; ไม่มีไฟล์ในเครื่องจึงค่อยออกเครือข่ายตามปกติ */
 async function cachedRangeOrNetwork(request, url) {
   const cache = await caches.open(ASSET_CACHE);
