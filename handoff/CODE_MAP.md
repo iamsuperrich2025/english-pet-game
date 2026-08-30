@@ -664,7 +664,7 @@ msbKickOut:9678 · tickMsBeam:9688 · TURBO_EVERY:9741 · TURBO_MS:9742 · TURBO
 TURBO_TRACK:9745 · resetTurbo:9747 · turboPick:9752 · turboBegin:9759 · tickTurbo:9771 · fit:9782
 tick:9788 · frame:9796 · build:9860 · start:9942 · exitWorld:10069
 
-## js/lettercannon.js (335 บรรทัด · 0 รายการ)
+## js/lettercannon.js (333 บรรทัด · 0 รายการ)
 
 ## js/lobby.js (52 บรรทัด · 3 รายการ)
 PANEL_TITLES:9 · openPanel:19 · closePanel:29
@@ -1060,12 +1060,12 @@ vbRender:148 · vbCardHTML:194
 .vw2-heal-all:1498,1499,1500,1505(+3) · .vw2-heal-all-icon:1501 · .vw2-heal-all-copy:1502,1503,1504 · .vw2-adventure-hub:1531,1537,1538,1539(+22) · .vw2-adventure-landmark:1545,1549,1550,1617(+1) · .vw2-adventure-copy:1551,1552,1553,1622(+2)
 .vw2-adventure-menu:1557,1558,1568,1569(+15) · .vw2-adventure-menu-panel:1559,1560,1561,1562(+8) · .vw2-adventure-menu-scroll:1565,1566 · .vw2-adventure-menu-track:1567,1638
 
-## css/lettercannon.css (85 บรรทัด · 30 selector)
-#lc-game:6,7,13,14(+27) · .lc-hud:8 · .lc-glass:9 · .lc-stats:10 · .lc-stat:11,12 · .lc-coin-stat:15
+## css/lettercannon.css (80 บรรทัด · 29 selector)
+#lc-game:6,7,13,14(+24) · .lc-hud:8 · .lc-glass:9 · .lc-stats:10 · .lc-stat:11,12 · .lc-coin-stat:15
 .lc-wordbox:16 · .lc-target:17 · .lc-meaning:18 · .lc-progress:19 · .lc-slot:20,21 · .lc-actions:23
 .lc-iconbtn:24,25 · .lc-exitwide:26 · .lc-power:27 · .lc-power-name:28 · .lc-hint:29 · .lc-move:30,31
-.lc-shoot:32,33 · .lc-modal:34,35 · .lc-count-exit:36 · .lc-card:37,38 · .lc-result-card:39,41 · .lc-result-grid:40
-.lc-btn:43 · .lc-count:44 · .lc-toast:46 · .lc-coinfx:48 · .lc-announce:50 · .lc-rotate:51
+.lc-modal:32,33 · .lc-count-exit:34 · .lc-card:35,36 · .lc-result-card:37,39 · .lc-result-grid:38 · .lc-btn:41
+.lc-count:42 · .lc-toast:44 · .lc-coinfx:46 · .lc-announce:48 · .lc-rotate:49
 
 ## css/lobby.css (6,173 บรรทัด · 832 selector)
 :root:6,5886 · html:15 · body:21,5850,5892 · *:41,42,43,44 · #app:47 · h1:49

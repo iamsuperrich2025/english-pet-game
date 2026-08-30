@@ -40,9 +40,6 @@
 - syntax + Home V2 regression + build `.1170` + `validate:build` ผ่าน; scope `css/home-v2.css`, `js/home-v2.js`, `index_classic.html`, `tools/test_home_v2_mobile_preview.js`
 - **รอบ 1299 · ปลดด่าน deploy เพลงออฟไลน์:** เปลี่ยน async arrow 4 จุดใน `js/music.js`/`js/util.js` เป็น async function แบบพฤติกรรมเดิม เพื่อไม่ให้ static guard อ่านคำว่า `async` เป็นชื่อฟังก์ชันที่ไม่มีนิยาม
 - syntax + offline regression ผ่าน และ `check_undefined_calls.py` เหลือ 0 ชื่อไม่รู้จัก; scope ส่งเฉพาะสองไฟล์นี้ ไม่แตะ `css/petshopping3d.css`
-- **รอบ 1298 · ชุดเพลงออฟไลน์:** เพิ่มแท็บ ⬇️ ออฟไลน์ในตั้งค่า ดาวน์โหลด 7 เพลงรวม 11.6 MB ลง Cache Storage ครั้งเดียว พร้อมแถบความคืบหน้า/ตรวจเพลงใหม่/ลบชุดเพลง
-- ใช้ content hash เดิมข้ามเวอร์ชันเกม โหลดใหม่เฉพาะเพลงที่เปลี่ยน ขอ persistent storage และหลังติดตั้ง PWA เปิดแท็บดาวน์โหลดให้ทันทีโดยไม่ยัดเพลงใน PRECACHE
-- `sw.js` ตอบ Range จากไฟล์เต็มในเครื่องเป็น HTTP 206; regression + build `.1166` ผ่าน และ live test ยืนยันรอบสอง 0 audio GET, ลบ/ดาวน์โหลดใหม่ได้
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`
