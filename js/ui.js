@@ -8376,6 +8376,7 @@ function renderMarketCard(){
   el.querySelectorAll('.ml-cancel').forEach(b=>b.addEventListener('click', ()=>cancelListing(+b.dataset.i)));
   el.querySelectorAll('.mb-buy').forEach(b=>b.addEventListener('click', ()=>openMarketBuyDialog(b.dataset.key)));
   el.querySelectorAll('.car-buy').forEach(b=>b.addEventListener('click', ()=>openCarBuyDialog(b.dataset.id)));
+  el.querySelectorAll('.mkt-pet-card').forEach(b=>b.addEventListener('click', ()=>openPetPurchase(b.dataset.pet)));
   if(typeof csInit==='function') csInit();   // 🚗 โชว์รูมรถ (thumb+จอใหญ่ ตัวรถ+ภายในห้องโดยสาร วนโชว์)
   if(typeof rsInit==='function') rsInit();   // 🤖 โชว์รูมหุ่นยนต์ (thumb+จอใหญ่วนโชว์)
   const insBtn = document.getElementById('car-buy-ins');
@@ -8662,7 +8663,8 @@ function renderVehicleShop(){
     · จ่ายสด หรือผ่อน ${CAR_LOAN_MONTHS} เดือน (ดาวน์ ${Math.round(CAR_DOWN_RATE*100)}%) โปะปิดยอดได้ทุกเมื่อ</div>
     ${mine}
     ${renderCarShowroom()}
-    ${renderRobotShop()}`;
+    ${renderRobotShop()}
+    ${renderPetMarketShop()}`;
 }
 
 /* 🚗 รอบ 212: โชว์รูมรถ — thumb ซ้าย (ตัวรถ+ราคา+ยอดขาย) · จอใหญ่ขวา (ตัวรถใหญ่ไฟฟ้าไล่ตัวสีประจำคัน + ภาพภายในห้องโดยสาร)
@@ -8777,6 +8779,26 @@ function renderRobotShop(){
       <div class="rs-stage"><div class="rs-big" id="rs-big"></div><div class="rs-info" id="rs-info"></div></div>
       <div class="strip-wrap"><button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button><div class="rs-list strip-x grid2x8">${thumbs}</div><button class="strip-arrow sa-r" aria-label="เลื่อนขวา">❯</button></div>
     </div>`;
+}
+
+/* 🐾 รอบ 1317: สัตว์ทุกชนิดอยู่ต่อจากโชว์รูมหุ่นยนต์ในตลาด
+   ใช้ PETS/ภาพ/ราคาและ purchase flow ชุดเดียวกับร้านสัตว์เดิม */
+function renderPetMarketShop(){
+  const cards = Object.keys(PETS).map(key=>{
+    const p = PETS[key], img = IMG_FILES[startImgKey(key)];
+    const owned = hasPetType(key), afford = state.coins >= p.price;
+    return `<button type="button" class="mkt-pet-card${owned?' owned-pet':''}${!owned&&!afford?' cant-afford':''}" data-pet="${key}" aria-label="${owned?'เลี้ยงอยู่แล้ว':`ซื้อ ${escapeHTML(p.name)}`}">
+      <span class="mkt-pet-picture">${img ? `<img src="${img}" alt="${escapeHTML(p.eggName)}">` : startHTML(key)}</span>
+      <span class="mkt-pet-name">${escapeHTML(p.name)}</span>
+      <span class="mkt-pet-stage">${escapeHTML(p.eggName)}</span>
+      <span class="mkt-pet-price">${owned ? '✅ เลี้ยงอยู่แล้ว' : `🪙${fmtNum(p.price)}`}</span>
+      ${!owned&&!afford ? `<span class="mkt-pet-short">ขาดอีก 🪙${fmtNum(p.price-state.coins)}</span>` : ''}
+      ${soldBadge('pet_'+key)}
+    </button>`;
+  }).join('');
+  return `<div class="mkt-listhead mkt-pet-head" id="mkt-pets">🐾 สัตว์เลี้ยงทั้งหมด — รับน้องกลับบ้าน</div>
+    <div class="gp-note">สัตว์ทุกชนิดใช้ราคาและกติกาเดียวกับร้านสัตว์ · เลี้ยงได้ชนิดละ 1 ตัว · ต้องตั้งชื่อก่อนซื้อ</div>
+    <div class="strip-wrap mkt-pet-wrap"><button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button><div class="mkt-pet-list strip-x grid2x8">${cards}</div><button class="strip-arrow sa-r" aria-label="เลื่อนขวา">❯</button></div>`;
 }
 /* แสดงหุ่นตัวที่ i บนจอใหญ่ + ไฟฟ้าไล่ตัว (mask ตามรูปหุ่น) + ป้ายข้อมูล/ปุ่มซื้อ */
 function rsShowBig(i){
@@ -9601,6 +9623,45 @@ function openHomeShop(){
 /* ============================================================
    ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
    ============================================================ */
+/* Purchase authority shared by the original pet shop and the Market catalog. */
+function openPetPurchase(key){
+  const conf = PETS[key];
+  if(!conf){ sfx.wrong(); toast('ไม่พบข้อมูลสัตว์ชนิดนี้'); return; }
+  if(hasPetType(key)){ sfx.select(); toast(`มี${conf.name}อยู่แล้วจ้า เลี้ยงน้องให้โตกันเถอะ 🥰`); return; }
+  if(state.coins < conf.price){
+    sfx.wrong();
+    toast(`${conf.eggName} ราคา 🪙${fmtNum(conf.price)} — เล่นเกมจับคู่สะสมเหรียญก่อนนะ!`);
+    return;
+  }
+  askConfirm(`<h2>รับ${conf.eggName}มาเลี้ยง?</h2>
+    <p style="font-size:16px;margin:6px 0">${conf.eggDesc}<br>ราคา <b>🪙${fmtNum(conf.price)}</b><br><small>${conf.ability}</small></p>`,
+    'รับเลย! 🥰', ()=>{
+      // ข้อ 7: บังคับตั้งชื่อก่อนรับน้อง (กดยกเลิก = ไม่ซื้อ เหรียญไม่หาย)
+      askNameDialog({
+        emoji:'🏷️', title:`ตั้งชื่อให้${conf.name}ก่อนรับกลับบ้าน`,
+        desc:'ชื่อไทย/อังกฤษ/ตัวเลข 1–9 ตัว (เปลี่ยนทีหลังได้ที่ปุ่ม ✏️)',
+        placeholder:'เช่น บ็อบบี้, Lucky', min:1, max:9,
+        okText:'รับเลย! 🥰', cancelText:'ยังไม่รับ',
+        onOk:(name)=>{
+          state.coins -= conf.price;
+          state.pets.push(newPet(key, name));
+          state.active = state.pets.length - 1;
+          if(typeof sellInc==='function') sellInc('pet_'+key);
+          saveState();
+          if(typeof feedEvent === 'function') feedEvent('other', `รับน้องใหม่ ${conf.emoji||'🐾'} "${name}" มาเลี้ยงแล้ว 🥰`);
+          if(typeof testerBoost === 'function') testerBoost();
+          sfx.levelup();
+          toast(conf.startKey === 'egg'
+            ? `ได้ ${name} มาแล้ว! เล่นเกมเพื่อฟักไข่กันเถอะ 🎉`
+            : `ได้ ${name} มาแล้ว! เล่นเกมให้น้องแข็งแรงจนลืมตากันเถอะ 🎉`);
+          renderDashboard();
+          showScreen('screen-dashboard');
+          probeImages(petImageKeys(key)).then(renderDashboard);
+        },
+      });
+    });
+}
+
 function renderPetShop(){
   document.getElementById('petshop-coin-count').textContent = fmtNum(state.coins);
   const grid = document.getElementById('egg-grid');
@@ -9619,43 +9680,7 @@ function renderPetShop(){
     </div>`;
   }).join('');
   grid.querySelectorAll('.egg-card').forEach(card=>{
-    card.addEventListener('click', ()=>{
-      const key = card.dataset.pet;
-      const conf = PETS[key];
-      if(hasPetType(key)){ sfx.select(); toast(`มี${conf.name}อยู่แล้วจ้า เลี้ยงน้องให้โตกันเถอะ 🥰`); return; }
-      if(state.coins < conf.price){
-        sfx.wrong();
-        toast(`${conf.eggName} ราคา 🪙${fmtNum(conf.price)} — เล่นเกมจับคู่สะสมเหรียญก่อนนะ!`);
-        return;
-      }
-      askConfirm(`<h2>รับ${conf.eggName}มาเลี้ยง?</h2>
-        <p style="font-size:16px;margin:6px 0">${conf.eggDesc}<br>ราคา <b>🪙${fmtNum(conf.price)}</b><br><small>${conf.ability}</small></p>`,
-        'รับเลย! 🥰', ()=>{
-          // ข้อ 7: บังคับตั้งชื่อก่อนรับน้อง (กดยกเลิก = ไม่ซื้อ เหรียญไม่หาย)
-          askNameDialog({
-            emoji:'🏷️', title:`ตั้งชื่อให้${conf.name}ก่อนรับกลับบ้าน`,
-            desc:'ชื่อไทย/อังกฤษ/ตัวเลข 1–9 ตัว (เปลี่ยนทีหลังได้ที่ปุ่ม ✏️)',
-            placeholder:'เช่น บ็อบบี้, Lucky', min:1, max:9,
-            okText:'รับเลย! 🥰', cancelText:'ยังไม่รับ',
-            onOk:(name)=>{
-              state.coins -= conf.price;
-              state.pets.push(newPet(key, name));
-              state.active = state.pets.length - 1;
-              if(typeof sellInc==='function') sellInc('pet_'+key);   // 🛒 นับยอดขายสัตว์เลี้ยง
-              saveState();
-              if(typeof feedEvent === 'function') feedEvent('other', `รับน้องใหม่ ${conf.emoji||'🐾'} "${name}" มาเลี้ยงแล้ว 🥰`);
-              if(typeof testerBoost === 'function') testerBoost();  // 🧪 ผู้ทดสอบ: น้องโตเต็มวัยทันที ไม่ต้อง login ใหม่
-              sfx.levelup();
-              toast(conf.startKey === 'egg'
-                ? `ได้ ${name} มาแล้ว! เล่นเกมเพื่อฟักไข่กันเถอะ 🎉`
-                : `ได้ ${name} มาแล้ว! เล่นเกมให้น้องแข็งแรงจนลืมตากันเถอะ 🎉`);
-              renderDashboard();
-              showScreen('screen-dashboard');
-              probeImages(petImageKeys(key)).then(renderDashboard);
-            },
-          });
-        });
-    });
+    card.addEventListener('click', ()=>openPetPurchase(card.dataset.pet));
   });
 }
 

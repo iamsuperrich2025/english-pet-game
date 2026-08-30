@@ -6171,3 +6171,39 @@ body #screen-picmatch.screen.active .pm-grid{width:100%;}
   #screen-picmatch .pm-now-th{font-size:11px;}
   .pm-wordcard .pm-word-text{font-size:clamp(10px,1.9vh,14px);}
 }
+
+/* ============================================================
+   🐾 รอบ 1317: แคตตาล็อกสัตว์ทั้งหมดต่อใต้โชว์รูมหุ่นยนต์ในตลาด
+   ============================================================ */
+.mkt-pet-head{margin-top:22px;color:#8b4f9f;font-size:16px;}
+.mkt-pet-wrap{margin:8px 0 16px;}
+.mkt-pet-list{align-items:stretch;}
+.mkt-pet-card{
+  position:relative;min-height:174px;padding:8px 7px 9px;overflow:hidden;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:3px;
+  border:2px solid #e4b95d;border-radius:16px;color:#4e2d67;font-family:inherit;text-align:center;
+  background:radial-gradient(circle at 50% 0,#fff 0 15%,transparent 42%),linear-gradient(180deg,#fffaf0,#f9e5fb 62%,#e7dcff);
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.82),0 4px 9px rgba(47,28,78,.24);
+}
+.mkt-pet-card:hover{filter:brightness(1.04);transform:translateY(-1px);}
+.mkt-pet-card:active{transform:scale(.97);}
+.mkt-pet-card.owned-pet{border-color:#67c99a;background:linear-gradient(180deg,#f5fff8,#dff5e9);}
+.mkt-pet-card.cant-afford{filter:saturate(.72);}
+.mkt-pet-picture{width:100%;height:88px;display:grid;place-items:center;overflow:hidden;border-radius:12px;background:rgba(255,255,255,.72);}
+.mkt-pet-picture>img{width:100%;height:100%;object-fit:contain;}
+.mkt-pet-picture>.egg,.mkt-pet-picture>.basket{transform:scale(.66);transform-origin:center;}
+.mkt-pet-name{max-width:100%;font-size:13px;line-height:1.08;font-weight:1000;white-space:normal;}
+.mkt-pet-stage{max-width:100%;font-size:10px;line-height:1.08;color:#806b8e;white-space:normal;}
+.mkt-pet-price{margin-top:auto;min-width:82%;padding:4px 6px;border-radius:999px;background:#fff4c8;border:1px solid #e1b84e;color:#7a4d12;font-size:11.5px;font-weight:1000;}
+.mkt-pet-card.owned-pet .mkt-pet-price{background:#e4f8ea;border-color:#71c895;color:#26714a;}
+.mkt-pet-short{font-size:9.5px;line-height:1.05;color:#bd4d61;}
+.mkt-pet-card .sold-badge{position:absolute;right:4px;top:4px;z-index:2;}
+@media (max-height:520px){
+  .mkt-pet-head{margin-top:14px;font-size:14px;}
+  .mkt-pet-card{min-height:130px;padding:5px;gap:2px;border-radius:12px;}
+  .mkt-pet-picture{height:59px;border-radius:9px;}
+  .mkt-pet-name{font-size:11px;}
+  .mkt-pet-stage{font-size:8.5px;}
+  .mkt-pet-price{padding:3px 4px;font-size:9.5px;}
+  .mkt-pet-short{display:none;}
+}

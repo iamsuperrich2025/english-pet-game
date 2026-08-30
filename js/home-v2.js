@@ -775,7 +775,6 @@
       market:'panel-market', friends:'panel-friends', gifts:'panel-gifts'
     };
     const standards = {ielts:'ielts',toeic:'toeic',toefl:'toefl',onetp6:'onetp6',onetm3:'onetm3',onetm6:'onetm6'};
-    if(name === 'classic'){ setPreviewWanted(false); return; }
     if(name === 'v2'){ setPreviewWanted(true); return; }
     if(name === 'shop'){ openPetShop(); return; }
     if(name === 'petProfile'){ openActivePetProfile(); return; }
@@ -1020,13 +1019,12 @@
             ${toolButton('settings','settings','ตั้งค่า','', '#btn-settings')}
             ${toolButton('install','install','ติดตั้ง','vw2-install', '#btn-install-top', true)}
             ${toolButton('logout','logout','ออกระบบ','', '#btn-logout')}
-            ${toolButton('classic','back','Classic','vw2-classic')}
           </section>
         </header>
         <div class="vw2-main-grid">
           <nav class="vw2-left vw2-glass" aria-label="เมนูหลักทั้งหมด"><button type="button" class="vw2-left-scroll-cue up" aria-label="กลับไปเมนูบนสุด">▲ บนสุด</button>${railButtons}<button type="button" class="vw2-left-scroll-cue down" aria-label="เลื่อนดูเมนูถัดไป">▼ มีอีก</button></nav>
           <section class="vw2-feed vw2-glass">
-            <div class="vw2-section-head"><span class="vw2-head-icon">${icon('globe')}</span><strong>Global Feed</strong><button class="vw2-feed-all" data-vw2-action="classic" title="ดู Global Feed ทั้งหมด" aria-label="ดู Global Feed ทั้งหมด">↗</button></div>
+            <div class="vw2-section-head"><span class="vw2-head-icon">${icon('globe')}</span><strong>Global Feed</strong></div>
             <div id="vw2-feed-items" class="vw2-feed-items">
               <div class="vw2-feed-card vw2-feed-card-empty">
                 <div class="vw2-feed-avatar">${icon('sparkle')}</div>
@@ -1298,11 +1296,11 @@
         const current = Math.min(Number(q.target)||0, Number((qstate.prog||{})[q.id])||0);
         const target = Number(q.target)||1;
         const pct = done ? 100 : Math.max(0,Math.min(100,Math.round(current/target*100)));
-        return `<button class="vw2-quest-row${done?' done':''}" data-vw2-action="classic" title="เปิดหน้าล็อบบี้เดิมเพื่อทำภารกิจ">
+        return `<div class="vw2-quest-row${done?' done':''}">
           <span class="vw2-qemoji">${icon('quest')}</span>
           <span class="vw2-qbody"><b>${htmlEscape(q.name || 'ภารกิจ')}</b><i><u style="width:${pct}%"></u></i></span>
           <span class="vw2-qscore">${done?icon('check'):`${current}/${target}`}</span>
-        </button>`;
+        </div>`;
       }).join('');
       return {html:cards || '<div class="vw2-empty">วันนี้ยังไม่มีภารกิจ</div>',done:doneIds.length,total:qs.length};
     }catch(_){
