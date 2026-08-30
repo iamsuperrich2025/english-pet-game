@@ -40,9 +40,6 @@
 - **รอบ 1300 · Home V2 R28:** ย้าย New Word ลงพ้น HUD, จัดแถบผู้เล่นใหม่ให้ ID/วันที่เต็ม, และทำปุ่มเรียนสีสดพร้อมขอบทองสะท้อนแบบ premium
 - คง R27 ลูบสัตว์/กดค้างผ่าน Classic handler และกรอบ Global Feed nine-slice ทุกจอ; cache-bust Home V2 เป็น `v=1300`
 - Real Chromium QA ทั้ง source + production dist ที่ 1320×617, 1280×720, 1000×640, 812×375: overlap/profile clip/page overflow = 0 และตรวจภาพจอใหญ่+812×375 ด้วยตาแล้ว
-- syntax + Home V2 regression + build `.1170` + `validate:build` ผ่าน; scope `css/home-v2.css`, `js/home-v2.js`, `index_classic.html`, `tools/test_home_v2_mobile_preview.js`
-- **รอบ 1299 · ปลดด่าน deploy เพลงออฟไลน์:** เปลี่ยน async arrow 4 จุดใน `js/music.js`/`js/util.js` เป็น async function แบบพฤติกรรมเดิม เพื่อไม่ให้ static guard อ่านคำว่า `async` เป็นชื่อฟังก์ชันที่ไม่มีนิยาม
-- syntax + offline regression ผ่าน และ `check_undefined_calls.py` เหลือ 0 ชื่อไม่รู้จัก; scope ส่งเฉพาะสองไฟล์นี้ ไม่แตะ `css/petshopping3d.css`
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`

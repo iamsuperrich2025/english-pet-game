@@ -5727,3 +5727,10 @@
 - **รอบ 1298 · ชุดเพลงออฟไลน์:** เพิ่มแท็บ ⬇️ ออฟไลน์ในตั้งค่า ดาวน์โหลด 7 เพลงรวม 11.6 MB ลง Cache Storage ครั้งเดียว พร้อมแถบความคืบหน้า/ตรวจเพลงใหม่/ลบชุดเพลง
 - ใช้ content hash เดิมข้ามเวอร์ชันเกม โหลดใหม่เฉพาะเพลงที่เปลี่ยน ขอ persistent storage และหลังติดตั้ง PWA เปิดแท็บดาวน์โหลดให้ทันทีโดยไม่ยัดเพลงใน PRECACHE
 - `sw.js` ตอบ Range จากไฟล์เต็มในเครื่องเป็น HTTP 206; regression + build `.1166` ผ่าน และ live test ยืนยันรอบสอง 0 audio GET, ลบ/ดาวน์โหลดใหม่ได้
+
+
+## ⏬ ย้ายเมื่อ 2026-08-30 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- syntax + Home V2 regression + build `.1170` + `validate:build` ผ่าน; scope `css/home-v2.css`, `js/home-v2.js`, `index_classic.html`, `tools/test_home_v2_mobile_preview.js`
+- **รอบ 1299 · ปลดด่าน deploy เพลงออฟไลน์:** เปลี่ยน async arrow 4 จุดใน `js/music.js`/`js/util.js` เป็น async function แบบพฤติกรรมเดิม เพื่อไม่ให้ static guard อ่านคำว่า `async` เป็นชื่อฟังก์ชันที่ไม่มีนิยาม
+- syntax + offline regression ผ่าน และ `check_undefined_calls.py` เหลือ 0 ชื่อไม่รู้จัก; scope ส่งเฉพาะสองไฟล์นี้ ไม่แตะ `css/petshopping3d.css`
