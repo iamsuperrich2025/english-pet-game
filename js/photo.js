@@ -349,7 +349,9 @@ function openPhotoCrop(f, onSaved){
     st.src = src;
     st.w = src.width || src.naturalWidth;
     st.h = src.height || src.naturalHeight;
-    st.V = Math.round(stage.getBoundingClientRect().width) || 240;
+    // popIn เริ่มกล่องที่ scale(.4): getBoundingClientRect() ระหว่าง animation จะได้เพียง 40%
+    // ของช่องจริง ทำให้ canvas เล็กติดมุมซ้ายบน ใช้ขนาด layout ซึ่งไม่ถูก transform แทน
+    st.V = Math.round(stage.clientWidth) || Math.round(stage.getBoundingClientRect().width) || 240;
     const s = scale();
     st.ox = (st.V - st.w * s) / 2;      // เริ่มที่กึ่งกลางรูป
     st.oy = (st.V - st.h * s) / 2;
