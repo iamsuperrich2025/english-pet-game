@@ -48,8 +48,8 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/account-deletion.js** (235 บรรทัด) — Account deletion — protected, re-authenticated, multi-path cleanup · Destructive writes begin only after typed confirmation + recent Google auth.
 - **js/adv3d_css.js** (1,272 บรรทัด) — adv3d_css.js — CSS ของ DOM overlay โลก 3D ทุกโหมด (adv/haunt/heli/drone/ · drive/soccer/mecha) — 🪓 รอบ 544 เฟส 1: ผ่าออกจาก js/adventure3d.js · ไฟล์นี้เป็น "ข้อมูลล้วน" ห้ามมี logic — ประกาศ window.ADV3D_CSS อย่างเดียว
 - **js/adv3d_intro.js** (86 บรรทัด) — ❓ ADV3D_INTRO — data การ์ด "วิธีเล่น" ทุกโลก (ผ่าจาก js/adventure3d.js เฟส 2 รอบ 545) · data ล้วน ไม่มี logic · โหลดผ่าน loadAdv3d() ใน js/ui.js ก่อนไฟล์หลักเสมอ
-- **js/adv3d_tex.js** (245 บรรทัด) — adv3d_tex.js — 🪓 เฟส 3 (รอบ 546): ผ่าจาก js/adventure3d.js โซน "Texture ตัวอักษร / emoji / ป้ายชื่อผู้เล่น (canvas → sprite)" · IIFE จบในตัว expose window.Adv3dTex — ไฟล์หลักคง alias ชื่อเดิม จุดเรียกทั้งไฟล์ไม่ต้องแก้ · โหลดก่อนไฟล์หลักใน loadAdv3d() (js/ui.js) · deps ตอนรัน: THREE (global) · ค่าจาก closure ไฟล์หลัก inject ผ่าน Adv3dTex.bind({adRenterActive…
-- **js/adventure3d.js** (13,401 บรรทัด) — adventure3d.js — โลก 3D First-person 2 โหมด (คิว 7725691507 ข้อ 8 + ต่อยอด) · 🌍 adv   = โลกผจญภัยกลางวัน: เก็บตัวอักษรประกอบคำ 15🪙/คำ · monster ยิงสู้ได้ · 👻 haunt = โรงแรมผีสิง: 25🪙/คำ · ผี PNG ไล่ผู้เล่นใกล้สุดหลังไฟดับ
+- **js/adv3d_tex.js** (250 บรรทัด) — adv3d_tex.js — 🪓 เฟส 3 (รอบ 546): ผ่าจาก js/adventure3d.js โซน "Texture ตัวอักษร / emoji / ป้ายชื่อผู้เล่น (canvas → sprite)" · IIFE จบในตัว expose window.Adv3dTex — ไฟล์หลักคง alias ชื่อเดิม จุดเรียกทั้งไฟล์ไม่ต้องแก้ · โหลดก่อนไฟล์หลักใน loadAdv3d() (js/ui.js) · deps ตอนรัน: THREE (global) · ค่าจาก closure ไฟล์หลัก inject ผ่าน Adv3dTex.bind({adRenterActive…
+- **js/adventure3d.js** (13,402 บรรทัด) — adventure3d.js — โลก 3D First-person 2 โหมด (คิว 7725691507 ข้อ 8 + ต่อยอด) · 🌍 adv   = โลกผจญภัยกลางวัน: เก็บตัวอักษรประกอบคำ 15🪙/คำ · monster ยิงสู้ได้ · 👻 haunt = โรงแรมผีสิง: 25🪙/คำ · ผี PNG ไล่ผู้เล่นใกล้สุดหลังไฟดับ
 - **js/app-update.js** (214 บรรทัด) — (ไม่มี comment หัวไฟล์)
 - **js/arena3d.js** (724 บรรทัด) — 🌀🔤 รอบ 1045 — VOCAB ARENA · โลกผจญภัย PvE มุมกล้อง MOBA-inspired ที่ออกแบบใหม่สำหรับ Vocab World · - ไม่ใช้แผนที่/ฮีโร่/ไอคอน/เอฟเฟกต์/เสียงจากเกมอื่น
 - **js/assetaward.js** (21 บรรทัด) — 🏆 รางวัลรายเดือน Top 10 กระดานมูลค่าทรัพย์สินรวม — ใช้โรงงานกลางใน award.js
@@ -73,7 +73,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/hauntedhoteldirector.js** (321 บรรทัด) — hauntedhoteldirector.js — Haunted Hotel Horror Director (Phase 3) · Lightweight local pacing + compact, transaction-claimed shared scare intent. · Mission authority, movement, rewards and scene rendering stay outside this module.
 - **js/hauntedhotelghost.js** (239 บรรทัด) — hauntedhotelghost.js — Haunted Hotel PNG ghost runtime · One lightweight subdivided plane + shader; no physics, post-processing, · dynamic lights or cosmetic Firebase state.
 - **js/hauntedhotelsession.js** (255 บรรทัด) — hauntedhotelsession.js — Haunted Hotel canonical run adapter · One low-frequency Firebase record per NetRoom hotel instance. · This module intentionally does not know about rendering, movement or rewards.
-- **js/home-v2.js** (1,958 บรรทัด) — Vocab World Home V2 — Admin Preview (R11.4 Visual Master Fidelity Reconstruction + Premium Depth / Composition Recovery) · R12 / รอบ 1279 — Ultimate Visual Master scenic + composition rebuild · R13 / รอบ 1280 — HUD, Bottom Rail and Left Navigation readability rebalance
+- **js/home-v2.js** (1,956 บรรทัด) — Vocab World Home V2 — Admin Preview (R11.4 Visual Master Fidelity Reconstruction + Premium Depth / Composition Recovery) · R12 / รอบ 1279 — Ultimate Visual Master scenic + composition rebuild · R13 / รอบ 1280 — HUD, Bottom Rail and Left Navigation readability rebalance
 - **js/hotel3d.js** (1,526 บรรทัด) — hotel3d.js — 🏨 โรงแรมผีสิง 5 ชั้น (รอบ 684 · ยกบรรยากาศ/ภารกิจงานศพไทยรอบ 1060) · สร้าง "ตัวโรงแรม" ล้วน ๆ (โมเดล+ชนกำแพง+บันได+ลิฟต์+เฟอร์นิเจอร์+รูปตามอง) · ส่วน "การเล่น" (ผี/ไฟฉาย/ตัวอักษร/เสียง) อยู่ในโซน 🏨 ของ js/adventure3d.js
 - **js/images.js** (286 บรรทัด) — ระบบตรวจหาภาพเจนอัตโนมัติ (ใช้ new Image() probe — ใช้ได้ทั้ง · file:// และ http:// ต่างจาก fetch ที่ถูกบล็อกใน file://) · โฟลเดอร์ภาพ:
 - **js/invasion3d.js** (10,581 บรรทัด) — 🛸 invasion3d.js — โลก "ยานแม่บุกโลก" (Invasion · รอบ 413 · กติกาใหม่รอบ 556) · FPS สไตล์ Delta Force ในเมืองทะเลทรายตะวันออกกลาง — ยานแม่ลำมหึมาลอยเต็มท้องฟ้า (สไตล์ ID4) · 🔤 กติการอบ 556 (ผู้ใช้สั่ง — แทนระบบแผงตัวอักษร+แกนพลังงานเดิมทั้งหมด):
@@ -103,7 +103,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/thaitime.js** (52 บรรทัด) — 🇹🇭 js/thaitime.js — "เวลาไทย" กลางของทั้งเกม (รอบ 988) · ปัญหาที่แก้: ทุกจุดในเกมอ่านเวลาจาก `new Date().getHours()` = **นาฬิกาของเครื่องผู้เล่น · เครื่องที่ตั้งไทม์โซนเป็นต่างประเทศ (หรือ tablet/PC ที่ตั้งเวลาไม่ตรง) จะได้ชั่วโมงผิด
 - **js/tpaward.js** (42 บรรทัด) — 🏆 tpaward.js — รางวัลรายเดือนของกระดานอันดับ ⌨️ พิมพ์คำ (รอบ 649 · แก้กติกาอันดับรอบ 654) · ผู้ใช้สั่ง 28 ก.ค. 2026: "ทำแบบเดียวกับแท็บ 🔎 ค้นหาคำ" · ① Top 10 ได้เหรียญรางวัลทุกวันที่ 1 ของเดือน (10,000 ลดหลั่นถึง 1,000)
 - **js/typing.js** (370 บรรทัด) — ⌨️ typing.js — เกม "พิมพ์คำศัพท์" (Keyboard Typing) รอบ 648 · ผู้ใช้สั่ง 28 ก.ค. 2026 · ปุ่มรางซ้ายล็อบบี้ → กระดานเต็มจอ (มีปุ่มปิดชัดเจน) · - แป้นวางตามตำแหน่งคีย์บอร์ดจริง (QWERTY เหลื่อมแถว) · ปุ่มนูน 3 มิติ กดแล้วยุบ-เด้งขึ้นทันที
-- **js/ui.js** (10,243 บรรทัด) — UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
+- **js/ui.js** (10,268 บรรทัด) — UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
 - **js/util.js** (1,473 บรรทัด) — UTIL: เสียง / เอฟเฟกต์ / เครื่องมือทั่วไป
 - **js/vocabbook.js** (207 บรรทัด) — 📒 สมุดคำศัพท์ของฉัน + ข้อสอบทบทวนส่วนตัว (รอบ 288) · เก็บทุกคำที่เด็กเจอในเกมจับคู่/ข้อสอบทุกแบบ (รวม band) ลง state.vocabBook · ถาวรข้ามเซสชัน: {en: {th, c:ถูกกี่ครั้ง, w:ผิดกี่ครั้ง, t:เจอล่าสุด, lw:ครั้งล่าสุดผิด?}}
 - **js/wordsearch.js** (524 บรรทัด) — 🔎 wordsearch.js — เกมค้นหาคำศัพท์ (Word Search) รอบ 194 · แผงฟ้าล้ำยุคเลื่อนออกจากซ้าย · สุ่มคำไม่ซ้ำในแต่ละเกม · 🆕 รอบ 588: กระดานเกือบเต็มจอ · แถบ "หาคำเหล่านี้ให้เจอ" ย้ายขึ้นบนสุด จัดกึ่งกลาง
@@ -113,9 +113,9 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/bubble.css** (60 บรรทัด) — 🫧 เกมฟองคำศัพท์ — เต็มจอ ไม่มี scrollbar ทั้ง desktop/mobile landscape
 - **css/dailybox.css** (24 บรรทัด) — 🎁🪙 กล่องสุ่มรายวัน — รอบ 1272 · CSS illustration ล้วน ไม่พึ่ง asset ภาพภายนอก
 - **css/exam.css** (377 บรรทัด) — 📋 exam.css — จอข้อสอบจริงแบบมาตรฐาน IELTS/TOEIC/TOEFL (รอบ 812 · js/examstd.js) · กฎทองข้อ 7: กล่องทั้งใบต้องอยู่ในจอ หน้าไม่เลื่อน — บทอ่านยาวจึงเลื่อน "ในกรอบตัวเอง" · (ข้อสอบการอ่านเลี่ยงไม่ได้ที่จะมีบทความยาว แต่กรอบนอกไม่มี scrollbar)
-- **css/home-v2.css** (2,237 บรรทัด) — Vocab World Home V2 — R11.5.1 Safe Lightweight Asset Bridge Rebase · + Asset-Driven Visual Master Convergence / Premium Fantasy UI Refinement · ADMIN PREVIEW ONLY · R11.3 readability + authoritative handlers preserved
+- **css/home-v2.css** (2,270 บรรทัด) — Vocab World Home V2 — R11.5.1 Safe Lightweight Asset Bridge Rebase · + Asset-Driven Visual Master Convergence / Premium Fantasy UI Refinement · ADMIN PREVIEW ONLY · R11.3 readability + authoritative handlers preserved
 - **css/lettercannon.css** (83 บรรทัด) — 🐉💥 Dragon Sky Siege (รอบ 1312) · Portrait 9:16 vertical shooter HUD. Desktop centers the flight lane; · touch devices use the full portrait viewport.
-- **css/lobby.css** (6,173 บรรทัด) — THEME 2.0 "เมืองทันสมัยโทนฟ้า" — LOBBY แนวนอน + UI ยุคหลังทั้งหมด (โหลดทับ style.css · cascade ทีหลังชนะ · เปลี่ยนเฉพาะหน้าตา ไม่แตะ logic) · ครอบคลุม: แถบบน/ราง rail/แผง panel (ตลาด-โรงงาน-บ้าน-เพื่อน) · โชว์รูมหุ่น .rs-* รถ .cs-* · Word Search .ws-* · ข้อมูลน้อง .pi-* · แชท+ธีมแชท · กระดานอันดับ/เข็ม · สไปรต์น้อง .pet-anim/ฉาก .stage-hero · โทนสี: น้ำเงินเ…
+- **css/lobby.css** (6,209 บรรทัด) — THEME 2.0 "เมืองทันสมัยโทนฟ้า" — LOBBY แนวนอน + UI ยุคหลังทั้งหมด (โหลดทับ style.css · cascade ทีหลังชนะ · เปลี่ยนเฉพาะหน้าตา ไม่แตะ logic) · ครอบคลุม: แถบบน/ราง rail/แผง panel (ตลาด-โรงงาน-บ้าน-เพื่อน) · โชว์รูมหุ่น .rs-* รถ .cs-* · Word Search .ws-* · ข้อมูลน้อง .pi-* · แชท+ธีมแชท · กระดานอันดับ/เข็ม · สไปรต์น้อง .pet-anim/ฉาก .stage-hero · โทนสี: น้ำเงินเ…
 - **css/onetpromo.css** (27 บรรทัด) — 🇹🇭 รอบ 1186: ป้าย O-NET เกือบเต็มจอ · พอดีจอแนวนอน 812×375
 - **css/petfashion.css** (32 บรรทัด) — ⚔️🎀 ร้านแฟชั่นแบบลากดู–ลองใส่–ยืนยันซื้อ — รอบ 1292
 - **css/petpantry.css** (6 บรรทัด) — 🗄️🐾 Pet Pantry — รอบ 1158
@@ -127,6 +127,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/style.css** (2,430 บรรทัด) — Pet Vocab Adventure — สไตล์พื้นฐานรุ่นแรกทั้งเกม (โดน lobby.css โหลดทับบางส่วน — แก้หน้าตาโซนล็อบบี้/UI ใหม่ให้ไปที่ lobby.css ก่อน) · ครอบคลุม: screens/login/dashboard · เกมจับคู่ .word-card + แบบทดสอบ .quiz-* · shop/ที่พัก/หมวดคำศัพท์ · หิว-ป่วย/สภาพอากาศ · ตั้งค่า/วิธีเล่น/level-up overlay · คลังของฉัน/กล่องขาย · เอฟเฟกต์ลอย/เหรียญ/rotate-overlay
 - **sw.js** (281 บรรทัด) — Vocab World service worker · Delivery contract: · - HTML navigations are network-first with the last valid shell as fallback.
 <!-- AUTO-FILES:END -->
+
 
 
 
