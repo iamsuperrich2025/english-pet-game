@@ -1287,11 +1287,10 @@ body.vw2-online-modal-open{overflow:hidden!important}
 .vw2-feature-actions button,.vw2-feature-actions .vw2-enter{font-size:max(11.5px,clamp(11px,.82vw,13px))!important}
 .vw2-friends-btn{font-size:max(10.5px,clamp(10px,.74vw,12px))!important}
 
-/* Home V2 itself is admin-gated. Restore every authoritative Classic 3D-world
-   entry here and make the private/test state explicit without bypassing its
+/* Restore every authoritative Classic 3D-world entry without bypassing its
    original click handler, fee dialog, health guard or beta permission. */
 .vw2-rail-btn[data-vw2-action^="world"]{position:relative;flex-basis:84px;min-height:84px}
-.vw2-rail-btn[data-vw2-action^="world"]:after{
+.vw2-rail-btn[data-vw2-admin-only-world="1"]:after{
   content:"ADMIN";position:absolute;right:2px;top:2px;z-index:9;padding:2px 4px;
   border-radius:999px;background:linear-gradient(180deg,#fff1a8,#e0a93d);color:#69400f;
   border:1px solid #fff;font-size:7px;font-weight:1000;line-height:1;letter-spacing:.025em;
@@ -1320,4 +1319,44 @@ body.vw2-online-modal-open{overflow:hidden!important}
   /* The compact wallet leaves an off-centre safe gap: use it exactly so the
      complete learning plaque stays readable without touching either chip. */
   .vw2-feature-title,.vw2-word-ribbon{left:29.25%!important;right:22.5%!important}
+}
+
+/* ======================== R19 / รอบ 1287 — EXACT WORLD ACCESS MATRIX ======================== */
+#vw-home-v2-root{--vw2-r1287-ready:1}
+
+/* Every vertical navigation caption owns its complete text area. Let the
+   control grow for a future longer label instead of clipping a second line. */
+.vw2-rail-btn{
+  flex:0 0 auto!important;
+  min-height:92px!important;
+  height:auto!important;
+}
+.vw2-rail-racing{min-height:98px!important}
+.vw2-rail-art{flex:0 0 53px}
+.vw2-rail-label,.vw2-rail-racing .vw2-rail-label{
+  box-sizing:border-box!important;
+  width:90%!important;
+  min-height:30px!important;
+  height:auto!important;
+  margin-top:-1px!important;
+  padding:4px 5px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  line-height:1.08!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  overflow-wrap:anywhere;
+  word-break:normal;
+}
+
+@media (max-width:760px),(max-height:420px){
+  .vw2-rail-btn{min-height:88px!important}
+  .vw2-rail-racing{min-height:94px!important}
+  .vw2-rail-label,.vw2-rail-racing .vw2-rail-label{
+    min-height:28px!important;
+    padding:3px 3px!important;
+    line-height:1.08!important;
+  }
 }

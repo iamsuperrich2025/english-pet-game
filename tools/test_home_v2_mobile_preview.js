@@ -40,8 +40,9 @@ must(css.includes("container-type:inline-size") && css.includes("scroll-snap-typ
 must(css.includes("calc((100cqw - 64px)/7)") && css.includes("calc((100cqw - 56px)/6)") && css.includes("calc((100cqw - 48px)/5)") && css.includes("calc((100cqw - 40px)/4)"), "R16 full-page responsive button sizing missing");
 must(home.includes("R13 / รอบ 1280"), "R13 JS lineage marker missing");
 must(css.includes("R17 / รอบ 1284") && css.includes("--vw2-r1284-ready:1") && home.includes("--vw2-r1284-runtime-ready:1"), "R17 / รอบ 1284 lineage markers missing");
-must(home.includes("ADMIN PREVIEW · R18 ADMIN WORLDS + READABILITY") && home.includes("R18 / รอบ 1286") && css.includes("R18 / รอบ 1286") && css.includes("--vw2-r1286-ready:1") && home.includes("--vw2-r1286-runtime-ready:1"), "R18 / รอบ 1286 lineage markers missing");
-must(indexClassic.includes("css/home-v2.css?v=1286") && indexClassic.includes("js/home-v2.js?v=1286"), "R18 cache-bust missing from index_classic.html");
+must(home.includes("R18 / รอบ 1286") && css.includes("R18 / รอบ 1286") && css.includes("--vw2-r1286-ready:1") && home.includes("--vw2-r1286-runtime-ready:1"), "R18 / รอบ 1286 lineage markers missing");
+must(home.includes("ADMIN PREVIEW · R19 SIX-WORLD ACCESS MATRIX") && home.includes("R19 / รอบ 1287") && css.includes("R19 / รอบ 1287") && css.includes("--vw2-r1287-ready:1") && home.includes("--vw2-r1287-runtime-ready:1"), "R19 / รอบ 1287 lineage markers missing");
+must(indexClassic.includes("css/home-v2.css?v=1287") && indexClassic.includes("js/home-v2.js?v=1287"), "R19 cache-bust missing from index_classic.html");
 must(css.includes(".vw2-feature-title,.vw2-word-ribbon{top:-25px!important}"), "R17 complete New Word control was not moved into the upper HUD lane");
 must(css.includes(".vw2-feature{overflow:visible!important}") && css.includes("left:24%!important;right:24%!important;top:-25px!important"), "R18 New Word plaque is not fully visible in the safe HUD lane");
 must(css.includes("-webkit-line-clamp:2") && css.includes("font-size:clamp(10.5px,.74vw,12px)!important") && css.includes(".vw2-feed .vw2-section-head .vw2-head-icon{display:none!important}"), "R18 child-readable mission/feed typography guards missing");
@@ -206,9 +207,16 @@ const tuplePattern = (action, source) => {
 expectedRail.forEach(([action, source]) => must(tuplePattern(action, source).test(home), `left rail marker missing: ${action}`));
 const railOrder = expectedRail.map(([action]) => home.indexOf(`['${action}',`));
 must(expectedRail.length === 29 && railOrder.every((p, i) => p >= 0 && (!i || p > railOrder[i - 1])), "authoritative left rail order changed");
-must(home.includes("worldAdv:'#btn-world-adv'") && home.includes("worldSky:'#btn-world-sky'") && home.includes("startsWith('world')") && css.includes('data-vw2-action^="world"'), "R18 admin-only Classic world parity missing");
+const adminOnlyWorlds = ["worldAdv","worldSky","worldDrive","worldMoto","worldInvasion","worldMecha"];
+const publicWorlds = ["worldHaunt","worldHeli","worldDrone","worldSoccer"];
+must(home.includes("const ADMIN_ONLY_WORLD_ACTIONS = new Set") && adminOnlyWorlds.every(action=>home.includes(`'${action}'`)), "R19 exact six-world admin set missing");
+must(home.includes("btn.hidden = adminOnly && !adminWorldAllowed()") && home.includes("data-vw2-admin-only-world") && css.includes('data-vw2-admin-only-world="1"]:after'), "R19 future public-view admin hiding/badge guard missing");
+must(publicWorlds.every(action=>home.includes(`['${action}',`)) && !publicWorlds.some(action=>adminOnlyWorlds.includes(action)), "R19 public world inventory changed");
+must(home.includes("worldAdv:'#btn-world-adv'") && home.includes("worldSky:'#btn-world-sky'") && home.includes("startsWith('world')") && css.includes('data-vw2-action^="world"'), "R19 Classic world parity missing");
 must(expectedRail.at(-1)[0] === "racing" && home.includes("typeof enterF1_3D === 'function'") && home.includes("enterF1_3D();"), "Vocab World Racing is not bottom-most / authoritative entry is missing");
 must(css.includes('r111_cloud_pedestal.svg') && css.includes('.vw2-rail-art:after') && css.includes('scrollbar-width:none'), "premium cloud/pedestal left rail or hidden-scrollbar behavior missing");
+must(/\.vw2-rail-btn\{[\s\S]*?flex:0 0 auto!important;[\s\S]*?min-height:92px!important;[\s\S]*?height:auto!important;[\s\S]*?\}/.test(css), "R19 vertical rail controls cannot grow with longer labels");
+must(/\.vw2-rail-label,\.vw2-rail-racing \.vw2-rail-label\{[\s\S]*?min-height:30px!important;[\s\S]*?white-space:normal!important;[\s\S]*?overflow:visible!important;[\s\S]*?text-overflow:clip!important;[\s\S]*?\}/.test(css), "R19 vertical rail two-line caption containment guard missing");
 
 /* Global Feed mirrors real posts, no invented persisted feed. */
 must(home.includes("#feed-list .fpost:not(.fp-clone)") && home.includes(".slice(0,5)"), "Global Feed does not mirror authoritative posts");
@@ -275,5 +283,5 @@ if(fail.length){
   console.error("Home V2 R11.5.4 validation FAILED:\n- " + fail.join("\n- "));
   process.exit(1);
 }
-console.log("Home V2 R18 / รอบ 1286 validation PASS");
-console.log(`Checked R18 safe New Word HUD, child-readable Thai labels, R17 direct market confirmation, full online-player sheet/text, sick cure alert, R16 Bottom Rail, ${expectedRail.length} left destinations, ${expectedBottom.length} bottom actions, admin gate, and mobile landscape guards.`);
+console.log("Home V2 R19 / รอบ 1287 validation PASS");
+console.log(`Checked exact six-world admin matrix, four public worlds, non-clipping two-line rail labels, safe New Word HUD, child-readable Thai labels, direct market confirmation, online-player sheet, sick cure alert, ${expectedRail.length} left destinations, ${expectedBottom.length} bottom actions, admin gate, and mobile landscape guards.`);

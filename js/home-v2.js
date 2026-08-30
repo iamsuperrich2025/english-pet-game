@@ -4,6 +4,7 @@
    R12 / รอบ 1279 — Ultimate Visual Master scenic + composition rebuild
    R13 / รอบ 1280 — HUD, Bottom Rail and Left Navigation readability rebalance
    R18 / รอบ 1286 — Learning readability + safe New Word HUD lane
+   R19 / รอบ 1287 — Exact six-world admin access matrix
    ------------------------------------------------------------
    Additive UI shell only. It does NOT own economy, auth, quests,
    Firebase, purchases, or game routing. Existing Lobby DOM stays
@@ -24,6 +25,10 @@
   let latestOnlineUsers = [];
   let latestOnlineConnected = false;
   function adminAllowed(){
+    try{ return typeof isAdmin === 'function' && isAdmin() === true; }
+    catch(_){ return false; }
+  }
+  function adminWorldAllowed(){
     try{ return typeof isAdmin === 'function' && isAdmin() === true; }
     catch(_){ return false; }
   }
@@ -214,8 +219,12 @@
     if(!sourceSelector) return '';
     return ` data-vw2-source="${htmlEscape(sourceSelector)}"${mirrorVisibility ? ' data-vw2-mirror-visibility="1"' : ''}`;
   }
+  const ADMIN_ONLY_WORLD_ACTIONS = new Set([
+    'worldAdv','worldSky','worldDrive','worldMoto','worldInvasion','worldMecha'
+  ]);
   function navButton(actionName, iconName, label, sourceSelector=''){
-    return `<button class="vw2-rail-btn vw2-rail-${htmlEscape(actionName)}" data-vw2-action="${htmlEscape(actionName)}"${sourceAttrs(sourceSelector)}><span class="vw2-rail-art"><span class="vw2-rail-scene" aria-hidden="true"><i></i></span>${icon(iconName)}<span class="vw2-rail-scene-mark" aria-hidden="true"></span></span><b class="vw2-rail-label">${htmlEscape(label)}</b><i class="vw2-source-badge" hidden></i></button>`;
+    const adminOnly = ADMIN_ONLY_WORLD_ACTIONS.has(actionName);
+    return `<button class="vw2-rail-btn vw2-rail-${htmlEscape(actionName)}" data-vw2-action="${htmlEscape(actionName)}"${adminOnly ? ' data-vw2-admin-only-world="1"' : ''}${sourceAttrs(sourceSelector)}><span class="vw2-rail-art"><span class="vw2-rail-scene" aria-hidden="true"><i></i></span>${icon(iconName)}<span class="vw2-rail-scene-mark" aria-hidden="true"></span></span><b class="vw2-rail-label">${htmlEscape(label)}</b><i class="vw2-source-badge" hidden></i></button>`;
   }
   function bottomButton(actionName, iconName, label, tone='violet', sourceSelector=''){
     return `<button class="vw2-mode ${htmlEscape(tone)}" data-vw2-action="${htmlEscape(actionName)}"${sourceAttrs(sourceSelector)}><span>${icon(iconName)}</span><b>${htmlEscape(label)}</b><i class="vw2-source-badge" hidden></i></button>`;
@@ -381,7 +390,7 @@
     if(document.getElementById(STYLE_ID)) return;
     const style = document.createElement('style');
     style.id = STYLE_ID;
-    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1}';
+    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1;--vw2-r1287-runtime-ready:1}';
     document.head.appendChild(style);
   }
   function clickExisting(selector, opts){
@@ -736,7 +745,7 @@
           </aside>
         </div>
         <footer class="vw2-bottom" aria-label="ทางลัดการเรียนและเกมทั้งหมด"><div class="vw2-bottom-scroll" tabindex="0" role="region" aria-label="เลื่อนทางลัดการเรียนและเกม"><div class="vw2-bottom-track">${modeButtons}</div></div></footer>
-        <div class="vw2-preview-mark">ADMIN PREVIEW · R18 ADMIN WORLDS + READABILITY</div>
+        <div class="vw2-preview-mark">ADMIN PREVIEW · R19 SIX-WORLD ACCESS MATRIX</div>
       </div>
       <div class="vw2-online-modal" id="vw2-online-modal" role="dialog" aria-modal="true" aria-labelledby="vw2-online-modal-title" aria-hidden="true" hidden>
         <section class="vw2-online-modal-panel">
@@ -851,9 +860,12 @@
         const current = !!(source && (source.classList.contains('active') || source.classList.contains('on') || source.getAttribute('aria-current') === 'page' || source.getAttribute('aria-selected') === 'true' || source.getAttribute('aria-pressed') === 'true'));
         btn.classList.toggle('vw2-current', current);
         if((btn.dataset.vw2Action || '').startsWith('world')){
+          const adminOnly = btn.dataset.vw2AdminOnlyWorld === '1';
           const locked = !!(source && (source.classList.contains('locked') || source.classList.contains('soon-locked')));
           btn.classList.toggle('vw2-world-locked', locked);
-          btn.title = locked ? (source.title || 'โลกนี้ยังล็อกอยู่') : btn.textContent.trim() + ' · ปุ่มสำหรับแอดมิน';
+          btn.hidden = adminOnly && !adminWorldAllowed();
+          btn.title = locked ? (source.title || 'โลกนี้ยังล็อกอยู่')
+            : btn.textContent.trim() + (adminOnly ? ' · เฉพาะแอดมิน' : ' · ผู้เล่นทุกคนเข้าได้');
         }
       }
       const badge = btn.querySelector('.vw2-source-badge');
