@@ -1875,3 +1875,77 @@ body.vw2-pet-modal-open{overflow:hidden!important}
   .vw2-feed-items{left:10px!important;right:10px!important;bottom:8px!important;padding-bottom:36px!important}
   .vw2-feed-coin{right:11px!important;bottom:10px!important}
 }
+
+/* ======================== R28 / รอบ 1300 — VISUAL-QA HUD CLEARANCE + PREMIUM JEWEL RAIL ======================== */
+/* Verified in a real Chromium render at 1320x617, 1280x720, 1000x640 and
+   812x375. New Word begins below the main-grid boundary; profile rows stay
+   internally contained; the learning rail keeps R26 whole-card paging. */
+#vw-home-v2-root{--vw2-r1300-ready:1}
+.vw2-feature-title,.vw2-word-ribbon{top:54px!important}
+.vw2-profile-main{gap:2px!important;justify-content:flex-start!important}
+.vw2-name-row{min-height:20px!important}
+.vw2-profile-meta{
+  grid-template-columns:minmax(0,1fr) minmax(0,.9fr) minmax(48px,.62fr)!important;
+  grid-template-areas:"class id time" "date date date";gap:2px 4px!important;
+}
+.vw2-profile-meta-chip.class{grid-area:class}.vw2-profile-meta-chip.id{grid-area:id}
+.vw2-profile-meta-chip.time{grid-area:time}.vw2-profile-meta-chip.date{grid-area:date}
+.vw2-profile-meta-chip{min-height:0!important;padding:1px 5px!important;border-radius:7px!important}
+.vw2-profile-meta-chip small{font-size:clamp(7px,.5vw,8px)!important;line-height:1!important}
+.vw2-profile-meta-chip b{min-height:10px!important;font-size:clamp(9px,.69vw,11px)!important;line-height:1!important}
+.vw2-profile-meta-chip.class .vw2-grade-copy small{display:none!important}
+.vw2-profile-meta-chip.class .vw2-grade-symbol{display:none!important}
+.vw2-profile-meta-chip.class .vw2-grade-identity{line-height:1!important}
+.vw2-profile-meta-chip.date b{font-size:clamp(9.5px,.72vw,11.5px)!important;white-space:nowrap!important}
+.vw2-profile-chips{min-height:16px!important;gap:3px!important}
+.vw2-achievement-mark{width:18px!important;height:18px!important;flex-basis:18px!important}
+.vw2-rank{padding:2px 8px!important;font-size:clamp(9px,.66vw,11px)!important}
+
+/* Saturated jewel colours + a double gold/specular edge. Geometry is left to
+   the R26 final paging rules, so no button can become a clipped half-card. */
+.vw2-bottom{
+  border-color:#ffd86a!important;
+  background:radial-gradient(circle at 18% -30%,rgba(255,255,255,.98),transparent 34%),radial-gradient(circle at 84% 130%,rgba(107,208,255,.46),transparent 36%),linear-gradient(180deg,#fff6d7 0%,#ffd9f4 48%,#cab8ff 100%)!important;
+  box-shadow:inset 0 3px 0 rgba(255,255,255,.98),inset 0 -4px 0 rgba(119,67,164,.2),0 0 0 1px #d99b2e,0 5px 13px rgba(69,37,111,.3)!important;
+}
+.vw2-bottom-track .vw2-mode{
+  --card-a:#45caff;--card-b:#0d87e9;--card-shadow:#075aa8;--card-rim:#ffe188;--card-ink:#fff;
+  border:2px solid var(--card-rim)!important;
+  background:radial-gradient(circle at 24% -10%,rgba(255,255,255,.94),transparent 31%),linear-gradient(155deg,var(--card-a) 0%,var(--card-b) 67%,var(--card-shadow) 100%)!important;
+  color:var(--card-ink)!important;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.96),inset 0 -4px 0 rgba(21,32,91,.2),0 0 0 1px #d69b30,0 4px 8px rgba(48,31,91,.28)!important;
+  text-shadow:0 1px 2px rgba(32,22,78,.58)!important;
+}
+.vw2-bottom-track .vw2-mode.book,.vw2-bottom-track .vw2-mode.blue{--card-a:#47d1ff;--card-b:#1088ed;--card-shadow:#0756a3}
+.vw2-bottom-track .vw2-mode.green{--card-a:#4ee6a3;--card-b:#18b877;--card-shadow:#087a50}
+.vw2-bottom-track .vw2-mode.lime{--card-a:#a4ed5e;--card-b:#52bc45;--card-shadow:#2c812d}
+.vw2-bottom-track .vw2-mode.orange,.vw2-bottom-track .vw2-mode.game{--card-a:#ffbd58;--card-b:#f36f3e;--card-shadow:#b9412d}
+.vw2-bottom-track .vw2-mode.gold{--card-a:#ffe16b;--card-b:#f4ac24;--card-shadow:#b66e0b}
+.vw2-bottom-track .vw2-mode.violet{--card-a:#d18bff;--card-b:#8b4fe0;--card-shadow:#542b9f}
+.vw2-bottom-track .vw2-mode.pink{--card-a:#ff8fc9;--card-b:#e84293;--card-shadow:#a91f65}
+.vw2-bottom-track .vw2-mode:before{
+  z-index:1!important;inset:2px!important;border:1px solid rgba(255,255,255,.82)!important;
+  background:linear-gradient(118deg,transparent 0 24%,rgba(255,255,255,.58) 31%,transparent 40%)!important;
+  border-radius:11px 17px 11px 17px!important;opacity:.82;pointer-events:none;
+}
+.vw2-bottom-track .vw2-mode:after{z-index:3!important;color:#fff3a2!important;opacity:.96!important;text-shadow:0 0 4px #fff,0 1px 2px rgba(113,66,10,.52)!important}
+.vw2-bottom-track .vw2-mode>span,.vw2-bottom-track .vw2-mode>b{position:relative!important;z-index:2!important}
+.vw2-bottom-track .vw2-mode>span{
+  border-color:#fff0b5!important;background:radial-gradient(circle at 35% 25%,#fff 0 22%,#fff9dc 44%,rgba(255,255,255,.82) 72%,var(--card-a) 100%)!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.92),0 2px 6px rgba(39,25,80,.31),0 0 0 1px #dca73e!important;
+}
+.vw2-bottom-track .vw2-mode>b{color:#fff!important;text-shadow:0 1px 2px rgba(37,21,77,.72),0 0 3px rgba(255,255,255,.18)!important}
+.vw2-bottom-track .vw2-mode:hover{filter:saturate(1.12) brightness(1.08)!important}
+
+@media (max-height:520px){
+  .vw2-profile{grid-template-rows:10px minmax(0,1fr)!important;padding-top:4px!important;padding-bottom:4px!important}
+  .vw2-profile-kicker{font-size:6.5px!important}
+  .vw2-profile-main{gap:1px!important}
+  .vw2-name-row{min-height:17px!important}.vw2-name-row strong{font-size:15px!important}
+  .vw2-profile-meta{gap:1px 3px!important}
+  .vw2-profile-meta-chip{padding:0 4px!important}
+  .vw2-profile-meta-chip small{font-size:6.5px!important}.vw2-profile-meta-chip b{font-size:9px!important;min-height:9px!important}
+  .vw2-profile-meta-chip.date b{font-size:8.5px!important}
+  .vw2-profile-chips{min-height:14px!important}.vw2-achievement-mark{width:16px!important;height:16px!important;flex-basis:16px!important}
+  .vw2-rank{padding:1px 6px!important;font-size:8.5px!important}
+}
