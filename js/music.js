@@ -26,12 +26,13 @@ const Music = (function(){
   let car = null, carIdx = 0, carOn = false;
   let audioCtx = null, analyser = null, srcNode = null, freq = null;
   let probePromise = null, offlineDownload = null;
+  let pageHidden = document.hidden || document.visibilityState === 'hidden';
 
   function soundOn(){ return typeof state === 'undefined' || state.sound; }
   function musicOn(){ return !(typeof state !== 'undefined' && state.musicOff); }   // 🎵 รอบ 184: ปุ่มปิดเพลงแยก
   // 🐛 รอบ 387: เพลงตามฉาก (sceneBg) ต้องเล่นได้แม้ bg โดนพักตอนเข้าโลก 3D — เดิม bgSuspended
   //    บล็อกหมด ทำให้เพลงโลกเฮลิฯ ไม่เคยดังตั้งแต่รอบ 369 (ฉากขอเพลงเอง = ตั้งใจให้ดังในโลก)
-  function bgAllowed(){ return soundOn() && musicOn() && !carOn && (!bgSuspended || !!sceneName); }
+  function bgAllowed(){ return !pageHidden && soundOn() && musicOn() && !carOn && (!bgSuspended || !!sceneName); }
   function mode(){ return (typeof state !== 'undefined' && MODES.includes(state.musicMode)) ? state.musicMode : 'all'; }
   function setMode(m){ if(MODES.includes(m) && typeof state !== 'undefined'){ state.musicMode = m; if(typeof saveState === 'function') saveState(); } }
 
@@ -196,7 +197,7 @@ const Music = (function(){
   function setMusic(on){
     if(typeof state !== 'undefined'){ state.musicOff = !on; if(typeof saveState === 'function') saveState(); }
     if(!on){ if(bg) bg.pause(); }
-    else if(!carOn && (!bgSuspended || sceneName) && soundOn()){ bgStarted ? (bg && bg.play().catch(()=>{})) : startBg(); }   // 🐛 รอบ 387: เปิดเพลงกลับกลางโลก 3D ที่มีเพลงฉากต้องกลับมาดัง
+    else if(!pageHidden && !carOn && (!bgSuspended || sceneName) && soundOn()){ bgStarted ? (bg && bg.play().catch(()=>{})) : startBg(); }   // 🐛 รอบ 387: เปิดเพลงกลับกลางโลก 3D ที่มีเพลงฉากต้องกลับมาดัง
   }
   function isMusicOn(){ return musicOn(); }
 
@@ -218,8 +219,8 @@ const Music = (function(){
     if(!car){ car = new Audio(); car.volume = CAR_VOL; car.addEventListener('ended', carEnded); }
     car.src = carTracks[carIdx].url;
     ensureCtx();
-    if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
-    if(soundOn() && carOn) car.play().catch(()=>{});
+    if(!pageHidden && audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
+    if(!pageHidden && soundOn() && carOn) car.play().catch(()=>{});
   }
   function carEnded(){
     const m = mode();
@@ -230,7 +231,7 @@ const Music = (function(){
   function carRadio(on){
     carOn = !!on;
     if(carOn){ if(bg) bg.pause(); carPlay(carIdx); }
-    else{ if(car) car.pause(); if(!bgSuspended && soundOn()){ bgStarted ? (bg && bg.play().catch(()=>{})) : startBg(); } }
+    else{ if(car) car.pause(); if(!pageHidden && !bgSuspended && soundOn()){ bgStarted ? (bg && bg.play().catch(()=>{})) : startBg(); } }
   }
 
   /* ---------- 🤫 รอบ 859 (ผู้ใช้สั่ง): เปิดหน้าสอบ/ควิซ/เกมจากแถบล่าง Lobby → เพลงค่อยๆ เฟดเงียบ
@@ -264,13 +265,37 @@ const Music = (function(){
       else if(bg) bg.volume = BG_VOL;
     }
   }
-  setInterval(duckTick, 250);
+  let duckTickT = 0;
+  function startDuckWatch(){ if(!duckTickT) duckTickT = setInterval(duckTick, 250); }
+  function pauseHiddenMusic(){
+    clearInterval(duckFadeT); duckFadeT = 0;
+    clearInterval(duckTickT); duckTickT = 0;
+    if(bg){ bg.pause(); bg.volume = BG_VOL; }
+    if(car) car.pause();
+    if(audioCtx && audioCtx.state === 'running') audioCtx.suspend().catch(()=>{});
+  }
+  function resumeVisibleMusic(){
+    if(pageHidden) return;
+    startDuckWatch(); duckTick();
+    if(document.querySelector(DUCK_SEL)) return;
+    if(carOn){
+      if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
+      if(soundOn() && car) car.play().catch(()=>{});
+    }else if(bg && bgStarted && bgAllowed()) bg.play().catch(()=>{});
+  }
+  function handleVisibilityChange(){
+    pageHidden = document.hidden || document.visibilityState === 'hidden';
+    if(pageHidden) pauseHiddenMusic();
+    else resumeVisibleMusic();
+  }
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  startDuckWatch();
 
   // ---------- โลก 3D: พัก/คืน bg ----------
   function suspendBg(){ bgSuspended = true; if(bg) bg.pause(); }
   function resumeBg(){
     bgSuspended = false; carOn = false; if(car) car.pause();
-    if(!(soundOn() && musicOn())) return;
+    if(pageHidden || !(soundOn() && musicOn())) return;
     if(!bgStarted){ startBg(); return; }
     // 🎀 รอบ 746: ออกจากโลกที่มีเพลงตามฉาก (เฮลิฯ) เพลงที่ค้างอยู่ไม่ใช่เพลงล็อบบี้ → เริ่มเพลงล็อบบี้ใหม่
     if(!sceneName && bgTracks.length && !bgTracks.some(t=>t.url===bgUrl)){ bgPlay(bgIdx); return; }
@@ -279,7 +304,7 @@ const Music = (function(){
 
   // ---------- สลับเสียงในตั้งค่า ----------
   function onSound(){
-    if(!soundOn()){ if(bg) bg.pause(); if(car) car.pause(); return; }
+    if(pageHidden || !soundOn()){ if(bg) bg.pause(); if(car) car.pause(); return; }
     if(carOn){ if(car) car.play().catch(()=>{}); }
     else if((!bgSuspended || sceneName) && musicOn()){ bgStarted ? (bg && bg.play().catch(()=>{})) : startBg(); }   // 🐛 รอบ 387
   }
@@ -299,7 +324,7 @@ const Music = (function(){
       sceneTracks = lob.concat(bgm);                    // เพลงตามฉากค้นชื่อจากทุกไฟล์ใน sound/bgm/
       // 🎀 รอบ 746: มี lobby_*.mp3 = เพลงล็อบบี้ใหม่ (แทน bgm_* เดิม) · ไม่มี = พฤติกรรมเดิมทุกอย่าง
       bgTracks = lob.length ? lob : (bgm.length ? bgm : cars);   // ไม่มีชุด bgm เฉพาะ → ใช้เพลงชุดรถเป็น bg ด้วย
-      const go = ()=>{ if(soundOn() && !bgSuspended) startBg(); };
+      const go = ()=>{ if(!pageHidden && soundOn() && !bgSuspended) startBg(); };
       window.addEventListener('pointerdown', go, {once:true});
       window.addEventListener('keydown', go, {once:true});
     });
@@ -316,6 +341,7 @@ const Music = (function(){
     offlinePackInfo, offlinePackDownload, offlinePackRemove,
     /* test hooks — ใช้เฉพาะตอนเทสต์ preview (🤫 รอบ 859: ตรวจการเฟดเพลงตอนเปิดหน้าสอบ) */
     _t:{ get ducked(){ return ducked; }, get vol(){ return bg ? bg.volume : null; },
-         get paused(){ return bg ? bg.paused : null; }, get started(){ return bgStarted; }, duckTick },
+         get paused(){ return bg ? bg.paused : null; }, get started(){ return bgStarted; },
+         get pageHidden(){ return pageHidden; }, duckTick, handleVisibilityChange },
   };
 })();

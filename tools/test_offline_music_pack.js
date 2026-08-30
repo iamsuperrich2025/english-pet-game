@@ -20,6 +20,10 @@ assert(css.includes('.set-offline-card') && css.includes('@media (max-height:430
 assert(html.includes("openSettings('offline')"), 'successful PWA install must reveal the offline-pack tab');
 assert(sw.includes('cachedRangeOrNetwork(request, url)'), 'Range requests are not routed through the local cache');
 assert(sw.includes("status: 206, statusText: 'Partial Content'"), 'cached media must answer HTTP 206');
+assert(music.includes("document.addEventListener('visibilitychange', handleVisibilityChange)"), 'music visibility lifecycle listener missing');
+assert(music.includes('function pauseHiddenMusic()') && music.includes('if(bg){ bg.pause(); bg.volume = BG_VOL; }') && music.includes('if(car) car.pause()'), 'hidden page must pause lobby music and car radio');
+assert(music.includes("if(audioCtx && audioCtx.state === 'running') audioCtx.suspend()") && music.includes('clearInterval(duckTickT); duckTickT = 0;'), 'hidden page must suspend audio processing and duck polling');
+assert(music.includes('function resumeVisibleMusic()') && music.includes('if(pageHidden || !(soundOn() && musicOn())) return;'), 'visible resume must respect user music/sound state and world suspension');
 
 class TestRequest extends Request {
   constructor(input, init) {
@@ -82,5 +86,5 @@ assert.strictEqual(range('bytes=1000-', 1000), null);
   assert.strictEqual(await fallback.text(), 'network');
   assert.strictEqual(networkFallbacks, 1, 'uncached Range must fall back to the network exactly once');
 
-  console.log('PASS offline music pack: persistent hash cache, install/settings UI, and cached 206 Range playback');
+  console.log('PASS music lifecycle: persistent offline cache, cached 206 Range playback, and hidden-page audio suspension');
 })().catch(error=>{ console.error(error); process.exitCode = 1; });

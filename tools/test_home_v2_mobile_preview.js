@@ -52,7 +52,7 @@ must(home.includes("R24 / รอบ 1293") && css.includes("R24 / รอบ 1293
 must(home.includes("R25 / รอบ 1294") && css.includes("R25 / รอบ 1294") && css.includes("--vw2-r1294-ready:1") && home.includes("--vw2-r1294-runtime-ready:1"), "R25 / รอบ 1294 lineage markers missing");
 must(home.includes("R26 / รอบ 1295") && css.includes("R26 / รอบ 1295") && css.includes("--vw2-r1295-ready:1") && home.includes("--vw2-r1295-runtime-ready:1"), "R26 / รอบ 1295 lineage markers missing");
 must(home.includes("R27 / รอบ 1296") && css.includes("R27 / รอบ 1296") && css.includes("--vw2-r1296-ready:1") && home.includes("--vw2-r1296-runtime-ready:1"), "R27 / รอบ 1296 lineage markers missing");
-must(indexClassic.includes("css/home-v2.css?v=1314") && indexClassic.includes("js/home-v2.js?v=1314"), "R33 cache-bust missing from index_classic.html");
+must(indexClassic.includes("css/home-v2.css?v=1316") && indexClassic.includes("js/home-v2.js?v=1316"), "R34 cache-bust missing from index_classic.html");
 must(home.includes("R28 / รอบ 1300") && home.includes("--vw2-r1300-runtime-ready:1") && css.includes("R28 / รอบ 1300") && css.includes("--vw2-r1300-ready:1"), "R28 browser-verified visual contract missing");
 must(css.includes("grid-template-areas:\"class id time\" \"date date date\"") && css.includes("top:54px!important") && css.includes("--card-shadow:#075aa8"), "R28 HUD clearance/profile/date/premium rail rules missing");
 must(home.includes("R29 / รอบ 1305") && home.includes("--vw2-r1305-runtime-ready:1") && css.includes("R29 / รอบ 1305") && css.includes("--vw2-r1305-ready:1"), "R29 visual-hierarchy lineage markers missing");
@@ -83,7 +83,13 @@ must(home.includes("CLASSIC_RAIL_GLYPHS") && home.includes("function classicRail
 must(!home.includes('<span class="vw2-rail-scene"') && home.includes('class="vw2-classic-rail-ico"'), "R33 fantasy rail scene still rendered instead of Classic icon");
 must(home.includes('class="vw2-left-scroll-cue up"') && home.includes('class="vw2-left-scroll-cue down"') && home.includes('▲ บนสุด') && home.includes('▼ มีอีก'), "R33 Classic up/down rail cues missing");
 must(css.includes("CLASSIC LEFT RAIL + ORIGINAL ICONS") && css.includes("background:rgba(7,33,63,.86)!important") && css.includes('.vw2-classic-rail-ico{') && css.includes('font-family:"Segoe UI Emoji"'), "R33 Classic navy rail/original icon skin missing");
-must(home.includes("ADMIN PREVIEW · R33 CLASSIC RAIL · ORIGINAL ICONS"), "R33 preview badge missing");
+must(!home.includes("ADMIN PREVIEW · R33 CLASSIC RAIL · ORIGINAL ICONS"), "stale R33 preview badge remains");
+must(home.includes("R34 / รอบ 1316") && home.includes("--vw2-r1316-runtime-ready:1") && css.includes("R34 / รอบ 1316") && css.includes("--vw2-r1316-ready:1"), "R34 four-slot HUD lineage markers missing");
+must(home.includes('class="vw2-wallet-pill hud-link graph"') && home.includes('data-vw2-action="rankGraph"') && home.includes("typeof openRankGraph === 'function'") && home.includes("openRankGraph();"), "R34 graph shortcut does not reuse the original rank graph");
+must(home.includes('class="vw2-wallet-pill hud-link rank-shortcut"') && home.includes('data-vw2-source="#btn-rail-rank"') && home.includes('data-vw2-action="rank"'), "R34 combined-ranking shortcut does not reuse the original ranking page");
+must(home.indexOf('class="vw2-wallet-pill computer"') < home.indexOf('class="vw2-wallet-pill worth"') && home.indexOf('class="vw2-wallet-pill worth"') < home.indexOf('class="vw2-wallet-pill hud-link graph"') && home.indexOf('class="vw2-wallet-pill hud-link graph"') < home.indexOf('class="vw2-wallet-pill hud-link rank-shortcut"'), "R34 secondary HUD order changed");
+must(css.includes("FOUR-SLOT SECONDARY HUD") && css.includes("width:calc((100% - 15px)/4)!important") && css.includes("left:calc((100% + 5px)/4)!important") && css.includes("left:calc((100% + 5px)/2)!important") && css.includes("right:0!important"), "R34 four equal HUD slots missing");
+must(home.includes("ADMIN PREVIEW · R34 HUD LINKS · GRAPH + RANKINGS"), "R34 preview badge missing");
 must(!home.includes("ADMIN PREVIEW · R21 HEAL ALL PETS"), "stale R21 preview badge remains");
 must(css.includes(".vw2-feature-title,.vw2-word-ribbon{top:-25px!important}"), "R17 complete New Word control was not moved into the upper HUD lane");
 must(css.includes(".vw2-feature{overflow:visible!important}") && css.includes("left:24%!important;right:24%!important;top:-25px!important"), "R18 New Word plaque is not fully visible in the safe HUD lane");
@@ -368,5 +374,5 @@ if(fail.length){
   console.error("Home V2 R11.5.4 validation FAILED:\n- " + fail.join("\n- "));
   process.exit(1);
 }
-console.log("Home V2 R33 / รอบ 1314 validation PASS");
-console.log(`Checked Classic left-rail frames, original icon glyphs and up/down cues; royal New Vocab jewel balance; idle thermal guards; profile/feed alignment; ${expectedRail.length} left destinations; all ${expectedBottom.length} learning actions; and admin gate.`);
+console.log("Home V2 R34 / รอบ 1316 validation PASS");
+console.log(`Checked four ordered secondary HUD slots with authoritative graph/rank routes; Classic left rail; royal New Vocab balance; ${expectedRail.length} left destinations; all ${expectedBottom.length} learning actions; and admin gate.`);

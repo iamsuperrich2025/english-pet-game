@@ -19,6 +19,7 @@
    R31 / รอบ 1311 — Idle thermal guard + suspended Classic runtime
    R32 / รอบ 1313 — Royal jewel New Vocab frame + optically balanced content lanes
    R33 / รอบ 1314 — Classic left rail skin + original Classic icon glyphs
+   R34 / รอบ 1316 — Four-slot secondary HUD: computer, worth, graph and rankings
    ------------------------------------------------------------
    Additive UI shell only. It does NOT own economy, auth, quests,
    Firebase, purchases, or game routing. Existing Lobby DOM stays
@@ -319,6 +320,8 @@
       : kind === 'online' ? 'globe'
       : kind === 'computer' ? 'computer'
       : kind === 'worth' ? 'stats'
+      : kind === 'graph' ? 'stats'
+      : kind === 'rank' ? 'crown'
       : 'sparkle';
     return `<span class="vw2-stat-art">${icon(iconName)}</span>`;
   }
@@ -469,7 +472,7 @@
     if(document.getElementById(STYLE_ID)) return;
     const style = document.createElement('style');
     style.id = STYLE_ID;
-    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1;--vw2-r1287-runtime-ready:1;--vw2-r1288-runtime-ready:1;--vw2-r1289-runtime-ready:1;--vw2-r1290-runtime-ready:1;--vw2-r1291-runtime-ready:1;--vw2-r1293-runtime-ready:1;--vw2-r1294-runtime-ready:1;--vw2-r1295-runtime-ready:1;--vw2-r1296-runtime-ready:1;--vw2-r1300-runtime-ready:1;--vw2-r1305-runtime-ready:1;--vw2-r1309-runtime-ready:1;--vw2-r1311-runtime-ready:1;--vw2-r1313-runtime-ready:1;--vw2-r1314-runtime-ready:1}';
+    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1;--vw2-r1287-runtime-ready:1;--vw2-r1288-runtime-ready:1;--vw2-r1289-runtime-ready:1;--vw2-r1290-runtime-ready:1;--vw2-r1291-runtime-ready:1;--vw2-r1293-runtime-ready:1;--vw2-r1294-runtime-ready:1;--vw2-r1295-runtime-ready:1;--vw2-r1296-runtime-ready:1;--vw2-r1300-runtime-ready:1;--vw2-r1305-runtime-ready:1;--vw2-r1309-runtime-ready:1;--vw2-r1311-runtime-ready:1;--vw2-r1313-runtime-ready:1;--vw2-r1314-runtime-ready:1;--vw2-r1316-runtime-ready:1}';
     document.head.appendChild(style);
   }
   function clickExisting(selector, opts){
@@ -782,6 +785,11 @@
     if(name === 'avatarEdit'){ openAvatarEditor(); return; }
     if(name === 'newWord'){ clickExisting('#newword-banner'); return; }
     if(name === 'onlinePlayers'){ openOnlinePlayersModal(); return; }
+    if(name === 'rankGraph'){
+      if(typeof openRankGraph === 'function') openRankGraph();
+      else try{ if(typeof showToast === 'function') showToast('กราฟอันดับยังไม่พร้อม'); }catch(_){ }
+      return;
+    }
     if(name === 'racing'){ openRacing(); return; }
     if(panels[name]){ openPanelViaExisting(panels[name]); return; }
     if(standards[name]){ clickExisting(`.lobby-bottom [data-xstd="${standards[name]}"]`); return; }
@@ -1002,6 +1010,8 @@
             <div class="vw2-wallet-pill online" title="รายได้ที่ได้รับขณะออนไลน์">${walletArtwork('online')}<span class="vw2-stat-copy"><small>ออนไลน์</small><b>+<span id="vw2-online-earn">0</span></b><span class="vw2-pill-status" id="vw2-online-status">กำลังตรวจสอบ</span></span></div>
             <div class="vw2-wallet-pill computer" title="รายได้สะสมจากคอมพิวเตอร์">${walletArtwork('computer')}<span class="vw2-stat-copy"><small>จากคอม</small><b>+<span id="vw2-comp-earn">0</span></b><span class="vw2-pill-status" id="vw2-comp-status">กำลังตรวจสอบ</span></span></div>
             <div class="vw2-wallet-pill worth">${walletArtwork('worth')}<span class="vw2-stat-copy"><small>มูลค่ารวม</small><b id="vw2-worth">0</b><span class="vw2-pill-status">ทรัพย์สินทั้งหมด</span></span></div>
+            <button type="button" class="vw2-wallet-pill hud-link graph" data-vw2-action="rankGraph" title="เปิดกราฟอันดับเดิม" aria-label="เปิดกราฟอันดับ">${walletArtwork('graph')}<span class="vw2-stat-copy"><b>กราฟอันดับ</b></span></button>
+            <button type="button" class="vw2-wallet-pill hud-link rank-shortcut" data-vw2-action="rank" data-vw2-source="#btn-rail-rank" title="เปิดหน้าอันดับรวมเดิม" aria-label="เปิดหน้าอันดับรวม">${walletArtwork('rank')}<span class="vw2-stat-copy"><b>อันดับ</b></span></button>
           </section>
           <section class="vw2-top-actions" aria-label="เครื่องมือ — ทุกปุ่มมีข้อความกำกับ">
             ${toolButton('chat','chat','ข้อความ','', '#btn-chat')}
@@ -1077,7 +1087,7 @@
           </aside>
         </div>
         <footer class="vw2-bottom" aria-label="กิจกรรมภาษาอังกฤษ"><div class="vw2-bottom-scroll" role="region" aria-label="เลื่อนกิจกรรมภาษาอังกฤษซ้ายขวา"><div class="vw2-bottom-track">${learningModeButtons}</div></div></footer>
-        <div class="vw2-preview-mark">ADMIN PREVIEW · R33 CLASSIC RAIL · ORIGINAL ICONS</div>
+        <div class="vw2-preview-mark">ADMIN PREVIEW · R34 HUD LINKS · GRAPH + RANKINGS</div>
       </div>
       <div class="vw2-online-modal" id="vw2-online-modal" role="dialog" aria-modal="true" aria-labelledby="vw2-online-modal-title" aria-hidden="true" hidden>
         <section class="vw2-online-modal-panel">
