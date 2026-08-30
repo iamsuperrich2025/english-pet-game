@@ -40,9 +40,6 @@
 - **รอบ 1302 · Home V2 ครอปรูปเต็มช่อง:** แก้ภาพหดติดมุมซ้ายบน เพราะวัด `getBoundingClientRect()` ตอนกล่อง `popIn scale(.4)`
 - ใช้ `stage.clientWidth` ซึ่งเป็นขนาด layout ก่อน transform แล้วคง bounding rect เป็น fallback; สูตร cover จึงวาดรูปเต็มช่องตั้งแต่เปิดกล่อง
 - syntax + regression ครอปรูป + Home V2 R29 + production build/validate ผ่าน; scope `js/photo.js`, `tools/test_photo_crop_viewport.js`
-- **รอบ 1300 · Home V2 R28:** ย้าย New Word ลงพ้น HUD, จัดแถบผู้เล่นใหม่ให้ ID/วันที่เต็ม, และทำปุ่มเรียนสีสดพร้อมขอบทองสะท้อนแบบ premium
-- คง R27 ลูบสัตว์/กดค้างผ่าน Classic handler และกรอบ Global Feed nine-slice ทุกจอ; cache-bust Home V2 เป็น `v=1300`
-- Real Chromium QA ทั้ง source + production dist ที่ 1320×617, 1280×720, 1000×640, 812×375: overlap/profile clip/page overflow = 0 และตรวจภาพจอใหญ่+812×375 ด้วยตาแล้ว
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`
