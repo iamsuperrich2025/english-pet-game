@@ -1,6 +1,6 @@
 "use strict";
 /* ============================================================
-   🐉💥 Dragon Sky Siege (รอบ 1301)
+   🐉💥 Dragon Sky Siege (รอบ 1303)
    Portrait vertical shooter: freely fly, spell five words, survive the boss wave.
    Three ballistic rounds, homing missiles, ten hearts and a living dragon gunner.
    ============================================================ */
@@ -26,7 +26,7 @@
   const MOVE_SPEED_CAP=1500, MOVE_SPEED_FACTOR=1.5, MOVE_ACCEL=34, MOVE_BRAKE=42;
   const COIN_IMAGE='img/coins/coin_gold.png';
   const FALLBACK=[['CAT','แมว'],['DOG','สุนัข'],['BOOK','หนังสือ'],['APPLE','แอปเปิล'],['WATER','น้ำ']];
-  const PLAYER={size:1254,url:'assets/images/letter_cannon/dragon_gunner_player.png'};
+  const PLAYER={size:1254,url:'assets/images/letter_cannon/dragon_gunner_player.webp'};
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   const pick=a=>a[(Math.random()*a.length)|0];
   const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]];}return a;};

@@ -106,3 +106,9 @@
 - เพิ่มสไปรต์มังกรพื้นหลังโปร่งที่เจนใหม่ พร้อมแยกชั้นหางให้แกว่งตามเวลา/ความเร็ว; ฉากหลังเป็นสมรภูมิเลื่อนหลายชั้น มีเกาะ เมฆ และเครื่องบินไกลแบบ procedural
 - เพิ่มหัวใจ 10 ดวง, กระสุน TRACER/HEAVY/PIERCER ที่มีภาพหัวกระสุนโลหะและเสียง noise transient, Missile ล็อกเป้า 3 ลูก (+1 เมื่อครบคำ) พร้อมรัศมีระเบิด
 - QA ผ่าน: `node tools/test_letter_cannon.js`, `node --check js/lettercannon.js`, production build `2026-08-30.1171`; hash สไปรต์ source/dist ตรงกัน
+
+## รอบ 1303 — กฎเหล็กภาพเบา + WebP lossless
+
+- บันทึกกฎถาวรใน Global AGENTS.md: ห้าม PNG เป็น final/runtime โดยปริยาย; ใช้ SVG/AVIF/WebP ตามประเภท และต้องตรวจ codec, dimensions, alpha, visual quality และ bytes
+- แปลงมังกรจาก PNG 1,269,791 bytes เป็น WebP lossless 958,794 bytes (ลด 24.49%) โดย RGBA/alpha ตรงกันทุกพิกเซล; ลบ PNG runtime และเปลี่ยน code/build/docs/test เป็น .webp
+- QA ผ่าน: VP8L 1254×1254 มี alpha, regression ผ่าน, production build 2026-08-30.1173, source/dist SHA-256 ตรงกัน ABAB132E...09B4, ไม่มี PNG ทั้ง source/dist

@@ -121,7 +121,7 @@ NOTES: Separate from Invasion combat.
 SYSTEM: Letter Cannon vocabulary minigame
 PURPOSE: Portrait 9:16 vertical shooter: freely fly a weapon-mounted dragon, spell five words, protect ten hearts from meteors, and survive a two-hit boss wave.
 PRIMARY FILE: `js/lettercannon.js`
-RELATED FILES: `css/lettercannon.css`, `assets/images/letter_cannon/dragon_gunner_player.png`, `tools/test_letter_cannon.js`, `index_classic.html`, `js/city3d.js`, `js/main.js`
+RELATED FILES: `css/lettercannon.css`, `assets/images/letter_cannon/dragon_gunner_player.webp`, `tools/test_letter_cannon.js`, `index_classic.html`, `js/city3d.js`, `js/main.js`
 PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.LetterCannon`, `open`, `close`
 DEPENDENCIES: `vocabForStudent`, shared state/rewards/audio, Canvas 2D.
 NOTES: Canvas 2D solo gameplay with drag/WASD free flight, animated tail, a procedurally scrolling battlefield, Tracer/Heavy/Piercer rounds, homing missiles, layered ballistic SFX, streak powers, retained coin rewards, touch-only portrait lock/fullscreen lifecycle, and no WebGL lifecycle.
