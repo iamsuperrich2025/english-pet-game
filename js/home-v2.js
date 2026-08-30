@@ -5,6 +5,7 @@
    R13 / รอบ 1280 — HUD, Bottom Rail and Left Navigation readability rebalance
    R18 / รอบ 1286 — Learning readability + safe New Word HUD lane
    R19 / รอบ 1287 — Exact six-world admin access matrix
+   R20 / รอบ 1288 — Scrollable pet actions + mobile layout profiles
    ------------------------------------------------------------
    Additive UI shell only. It does NOT own economy, auth, quests,
    Firebase, purchases, or game routing. Existing Lobby DOM stays
@@ -390,7 +391,7 @@
     if(document.getElementById(STYLE_ID)) return;
     const style = document.createElement('style');
     style.id = STYLE_ID;
-    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1;--vw2-r1287-runtime-ready:1}';
+    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1;--vw2-r1287-runtime-ready:1;--vw2-r1288-runtime-ready:1}';
     document.head.appendChild(style);
   }
   function clickExisting(selector, opts){
@@ -448,18 +449,109 @@
   function openActivePetProfile(){
     // Keep the Classic pet profile as the only owner of pet data and care actions.
     try{
-      if(typeof openPetInfoOverlay === 'function'){
-        openPetInfoOverlay();
-        return true;
       if(typeof activePet === 'function' && !activePet()){
         openPetShop();
         return false;
       }
+      if(typeof openPetInfoOverlay === 'function'){
+        openPetInfoOverlay();
+        return true;
       }
     }catch(_){ }
     if(clickExisting('#btn-pet-info')) return true;
     try{ if(typeof showToast === 'function') showToast('ไม่พบหน้าโปรไฟล์สัตว์เดิม'); }catch(_){ }
     return false;
+  }
+  function renameActivePet(){
+    let pet = null;
+    try{ pet = typeof activePet === 'function' ? activePet() : null; }catch(_){ }
+    if(!pet){ openPetShop(); return false; }
+    try{
+      if(typeof renamePet === 'function'){
+        renamePet(pet);
+        return true;
+      }
+    }catch(_){ }
+    if(clickExisting('#btn-pet-rename')) return true;
+    try{ if(typeof showToast === 'function') showToast('ไม่พบตัวเปลี่ยนชื่อสัตว์เดิม'); }catch(_){ }
+    return false;
+  }
+  function ownedPets(){
+    try{ return typeof state !== 'undefined' && state && Array.isArray(state.pets) ? state.pets : []; }
+    catch(_){ return []; }
+  }
+  function ownedPetThumb(p){
+    let url = '';
+    try{ if(typeof currentPetImg === 'function') url = currentPetImg(p) || ''; }catch(_){ }
+    if(url) return `<img src="${htmlEscape(url)}" alt="" decoding="async">`;
+    let face = '🐾';
+    try{
+      const conf = typeof PETS !== 'undefined' && PETS ? PETS[p.type] : null;
+      const stage = typeof petStage === 'function' ? petStage(p) : 'adult';
+      face = stage === 'egg' ? (conf?.startKey === 'egg' ? '🥚' : '🧺') : (conf?.[stage] || conf?.adult || face);
+    }catch(_){ }
+    return `<span aria-hidden="true">${htmlEscape(face)}</span>`;
+  }
+  function ownedPetsHTML(){
+    const pets = ownedPets();
+    if(!pets.length) return '<div class="vw2-pet-modal-empty">ยังไม่มีสัตว์เลี้ยง — ไปเลือกรับน้องตัวแรกที่ร้านสัตว์กันเถอะ</div>';
+    let active = 0;
+    try{ active = Math.max(0, Number(state.active) || 0); }catch(_){ }
+    return pets.map((p,index)=>{
+      const name = completeText(p?.name, (typeof PETS !== 'undefined' && PETS?.[p?.type]?.name) || 'น้อง');
+      const status = petStatusText(p);
+      const sick = !!p?.sick;
+      return `<button type="button" class="vw2-owned-pet-card${index === active ? ' is-active' : ''}${sick ? ' is-sick' : ''}" data-vw2-pet-index="${index}" aria-label="เลือก ${htmlEscape(name)}">
+        <span class="vw2-owned-pet-thumb">${ownedPetThumb(p)}${sick ? '<i>ป่วย</i>' : ''}</span>
+        <span class="vw2-owned-pet-copy"><b>${htmlEscape(name)}</b><small>${htmlEscape(status)}</small></span>
+        <em>${index === active ? 'กำลังเล่นอยู่' : 'เลือกน้อง'}</em>
+      </button>`;
+    }).join('');
+  }
+  function syncOwnedPetsModal(){
+    const list = document.getElementById('vw2-pet-modal-list');
+    const count = document.getElementById('vw2-pet-modal-count');
+    const pets = ownedPets();
+    if(count) count.textContent = `${pets.length} ตัว`;
+    if(list){
+      const html = ownedPetsHTML();
+      if(list.dataset.vw2Html !== html){
+        list.innerHTML = html;
+        list.dataset.vw2Html = html;
+      }
+    }
+  }
+  function openOwnedPetsModal(){
+    const pets = ownedPets();
+    if(!pets.length){ openPetShop(); return false; }
+    const modal = document.getElementById('vw2-pet-modal');
+    if(!modal) return false;
+    syncOwnedPetsModal();
+    modal.hidden = false;
+    modal.setAttribute('aria-hidden','false');
+    document.body.classList.add('vw2-pet-modal-open');
+    setTimeout(()=>modal.querySelector('.vw2-owned-pet-card.is-active,.vw2-owned-pet-card')?.focus(), 0);
+    return true;
+  }
+  function closeOwnedPetsModal(){
+    const modal = document.getElementById('vw2-pet-modal');
+    if(!modal) return;
+    modal.hidden = true;
+    modal.setAttribute('aria-hidden','true');
+    document.body.classList.remove('vw2-pet-modal-open');
+  }
+  function chooseOwnedPet(index){
+    const pets = ownedPets();
+    if(!Number.isInteger(index) || index < 0 || index >= pets.length) return false;
+    try{
+      state.active = index;
+      if(typeof saveState === 'function') saveState();
+      if(typeof sfx !== 'undefined' && sfx && typeof sfx.select === 'function') sfx.select();
+      if(typeof renderDashboard === 'function') renderDashboard();
+      closeOwnedPetsModal();
+      setTimeout(()=>{ sync(); playPetWelcome(); }, 0);
+      return true;
+    }catch(_){ return false; }
   }
   function openUserProfile(){
     // Delegate to the existing player-card/profile system instead of inventing a Home-V2-specific route.
@@ -515,6 +607,8 @@
     if(name === 'v2'){ setPreviewWanted(true); return; }
     if(name === 'shop'){ openPetShop(); return; }
     if(name === 'petProfile'){ openActivePetProfile(); return; }
+    if(name === 'petRename'){ renameActivePet(); return; }
+    if(name === 'ownedPets'){ openOwnedPetsModal(); return; }
     if(name === 'profile'){ openUserProfile(); return; }
     if(name === 'avatarEdit'){ openAvatarEditor(); return; }
     if(name === 'newWord'){ clickExisting('#newword-banner'); return; }
@@ -596,11 +690,65 @@
     window.addEventListener('resize', updateBottomRailScrollState, {passive:true});
     setTimeout(updateBottomRailScrollState, 0);
   }
+  function updateFeatureActionScrollState(){
+    if(!root) return;
+    const rail = root.querySelector('.vw2-feature-action-scroll');
+    if(!rail) return;
+    const max = Math.max(0, rail.scrollWidth - rail.clientWidth);
+    rail.classList.toggle('is-scrollable', max > 2);
+    rail.classList.toggle('is-at-start', rail.scrollLeft <= 2);
+    rail.classList.toggle('is-at-end', rail.scrollLeft >= max - 2);
+    rail.dataset.vw2ScrollMax = String(Math.round(max));
+    rail.dataset.vw2ScrollLeft = String(Math.round(rail.scrollLeft));
+  }
+  function setupFeatureActionScroll(){
+    if(!root) return;
+    const rail = root.querySelector('.vw2-feature-action-scroll');
+    if(!rail || rail.dataset.vw2ScrollReady === '1') return;
+    rail.dataset.vw2ScrollReady = '1';
+    rail.title = 'เลื่อนซ้าย–ขวาเพื่อดูเมนูสัตว์เลี้ยงทั้งหมด';
+    rail.addEventListener('scroll', ()=>{
+      updateFeatureActionScrollState();
+      scheduleLocalPreviewReport();
+    }, {passive:true});
+    rail.addEventListener('wheel', e=>{
+      if(rail.scrollWidth <= rail.clientWidth + 2 || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+      const max = Math.max(0, rail.scrollWidth - rail.clientWidth);
+      const next = Math.max(0, Math.min(max, rail.scrollLeft + e.deltaY));
+      if(Math.abs(next - rail.scrollLeft) <= .5) return;
+      e.preventDefault();
+      rail.scrollLeft = next;
+    }, {passive:false});
+    rail.addEventListener('keydown', e=>{
+      if(e.target !== rail) return;
+      const page = Math.max(92, rail.clientWidth * .72);
+      if(e.key === 'ArrowRight'){ e.preventDefault(); rail.scrollBy({left:page,behavior:'smooth'}); }
+      else if(e.key === 'ArrowLeft'){ e.preventDefault(); rail.scrollBy({left:-page,behavior:'smooth'}); }
+      else if(e.key === 'Home'){ e.preventDefault(); rail.scrollTo({left:0,behavior:'smooth'}); }
+      else if(e.key === 'End'){ e.preventDefault(); rail.scrollTo({left:rail.scrollWidth,behavior:'smooth'}); }
+    });
+    window.addEventListener('resize', updateFeatureActionScrollState, {passive:true});
+    setTimeout(updateFeatureActionScrollState, 0);
+  }
+  function syncLayoutProfile(){
+    if(!root) return;
+    const width = Math.max(window.innerWidth || 0, document.documentElement.clientWidth || 0);
+    const height = Math.max(window.innerHeight || 0, document.documentElement.clientHeight || 0);
+    let profile = 'desktop';
+    if(width <= 700 || height <= 390) profile = 'phone-compact';
+    else if(width <= 850 || height <= 430) profile = 'phone-standard';
+    else if(width <= 960 || height <= 500) profile = 'phone-wide';
+    else if(width <= 1180 || height <= 600) profile = 'tablet-landscape';
+    root.dataset.vw2LayoutProfile = profile;
+    root.style.setProperty('--vw2-screen-ratio', (width / Math.max(1,height)).toFixed(3));
+    updateFeatureActionScrollState();
+  }
   function build(){
     const dash = dashboard();
     if(!dash || document.getElementById(ROOT_ID)) return;
     ensureVisualStyles();
     const railButtons = [
+      ['cure','heart','รักษา','#btn-rail-cure'],
       ['city','city','เมือง 3D','#btn-rail-city'],
       ['worldAdv','globe','โลกผจญภัย','#btn-world-adv'],
       ['worldSky','sparkle','Sky Playground','#btn-world-sky'],
@@ -612,7 +760,6 @@
       ['worldMoto','racecar','โลกมอเตอร์ไซค์','#btn-world-moto'],
       ['worldInvasion','target','โลกยานแม่','#btn-world-invasion'],
       ['worldMecha','controller','โลกหุ่นรบ','#btn-world-mecha'],
-      ['cure','heart','รักษา','#btn-rail-cure'],
       ['home','home','บ้าน','.lobby-rail [data-panel="panel-home"]'],
       ['invest','invest','ลงทุน','.lobby-rail [data-panel="panel-farm"]'],
       ['factory','factory','โรงงาน','.lobby-rail [data-panel="panel-factory"]'],
@@ -725,9 +872,14 @@
               <div class="vw2-stage-foreground" aria-hidden="true"></div>
             </div>
             <div class="vw2-feature-actions">
-              <button class="vw2-enter" data-vw2-action="petProfile" aria-label="เปิดโปรไฟล์สัตว์เลี้ยง">${icon('heart')} โปรไฟล์สัตว์เลี้ยง</button>
-              <button class="vw2-play" data-vw2-action="play" data-vw2-source="#btn-play">${icon('controller')} เกมจับคู่คำศัพท์</button>
-              <button class="vw2-shop-link" data-vw2-action="shop" data-vw2-source="#screen-select">${icon('potion')} ร้านสัตว์</button>
+              <div class="vw2-feature-action-scroll" tabindex="0" role="region" aria-label="เลื่อนเมนูสัตว์เลี้ยงซ้ายขวา">
+                <div class="vw2-feature-action-track">
+                  <button class="vw2-enter" data-vw2-action="petProfile" aria-label="เปิดโปรไฟล์สัตว์เลี้ยง">${icon('heart')}<span>โปรไฟล์สัตว์เลี้ยง</span></button>
+                  <button class="vw2-pet-name-action vw2-play" data-vw2-action="petRename" aria-label="เปลี่ยนชื่อสัตว์เลี้ยง">${icon('edit')}<span><small>เปลี่ยนชื่อ</small><b id="vw2-action-pet-name">น้องของฉัน</b></span></button>
+                  <button class="vw2-owned-pets-action vw2-enter" data-vw2-action="ownedPets" aria-label="ดูสัตว์เลี้ยงที่ซื้อไว้ทั้งหมด">${icon('friends')}<span><small>สัตว์ที่ซื้อไว้</small><b id="vw2-owned-pet-count">สัตว์ของฉัน</b></span></button>
+                  <button class="vw2-shop-link" data-vw2-action="shop" data-vw2-source="#screen-select">${icon('potion')}<span>ร้านสัตว์</span></button>
+                </div>
+              </div>
             </div>
           </main>
           <aside class="vw2-right">
@@ -745,7 +897,7 @@
           </aside>
         </div>
         <footer class="vw2-bottom" aria-label="ทางลัดการเรียนและเกมทั้งหมด"><div class="vw2-bottom-scroll" tabindex="0" role="region" aria-label="เลื่อนทางลัดการเรียนและเกม"><div class="vw2-bottom-track">${modeButtons}</div></div></footer>
-        <div class="vw2-preview-mark">ADMIN PREVIEW · R19 SIX-WORLD ACCESS MATRIX</div>
+        <div class="vw2-preview-mark">ADMIN PREVIEW · R20 PET ACTIONS + MOBILE PROFILES</div>
       </div>
       <div class="vw2-online-modal" id="vw2-online-modal" role="dialog" aria-modal="true" aria-labelledby="vw2-online-modal-title" aria-hidden="true" hidden>
         <section class="vw2-online-modal-panel">
@@ -758,13 +910,40 @@
           <div class="vw2-online-modal-list" id="vw2-online-modal-list" tabindex="0"><div class="vw2-online-note">กำลังเชื่อมต่อรายชื่อออนไลน์จริง…</div></div>
           <footer class="vw2-online-modal-foot"><button type="button" class="vw2-online-modal-close bottom" data-vw2-online-close>ปิดหน้าผู้เล่นออนไลน์</button></footer>
         </section>
+      </div>
+      <div class="vw2-pet-modal" id="vw2-pet-modal" role="dialog" aria-modal="true" aria-labelledby="vw2-pet-modal-title" aria-hidden="true" hidden>
+        <section class="vw2-pet-modal-panel">
+          <header class="vw2-pet-modal-head">
+            <span class="vw2-pet-modal-emblem" aria-hidden="true">${icon('heart')}</span>
+            <span><strong id="vw2-pet-modal-title">สัตว์ของฉัน</strong><small>เลือกน้องที่ซื้อไว้แล้วเพื่อพาออกมาเล่น</small></span>
+            <b id="vw2-pet-modal-count">0 ตัว</b>
+            <button type="button" class="vw2-pet-modal-close top" data-vw2-pet-close aria-label="ปิดหน้าสัตว์ของฉัน">ปิด ✕</button>
+          </header>
+          <div class="vw2-pet-modal-list" id="vw2-pet-modal-list" tabindex="0"></div>
+          <footer class="vw2-pet-modal-foot"><button type="button" class="vw2-pet-modal-close bottom" data-vw2-pet-close>ปิดหน้าสัตว์ของฉัน</button></footer>
+        </section>
       </div>`;
     // Mount at body level so the fixed admin preview is not clipped by the
     // Classic dashboard's translated/scaled screen container.
     document.body.appendChild(root);
     setupLeftRailCue();
     setupBottomRailScroll();
+    setupFeatureActionScroll();
+    syncLayoutProfile();
+    window.addEventListener('resize', syncLayoutProfile, {passive:true});
     root.addEventListener('click', e=>{
+      const closePets = e.target.closest && e.target.closest('[data-vw2-pet-close]');
+      if(closePets || (e.target && e.target.id === 'vw2-pet-modal')){
+        e.preventDefault();
+        closeOwnedPetsModal();
+        return;
+      }
+      const petChoice = e.target.closest && e.target.closest('[data-vw2-pet-index]');
+      if(petChoice){
+        e.preventDefault();
+        chooseOwnedPet(Number(petChoice.dataset.vw2PetIndex));
+        return;
+      }
       const closeOnline = e.target.closest && e.target.closest('[data-vw2-online-close]');
       if(closeOnline || (e.target && e.target.id === 'vw2-online-modal')){
         e.preventDefault();
@@ -804,6 +983,9 @@
       action(b.dataset.vw2Action);
     });
     root.addEventListener('keydown', e=>{
+      if(e.key === 'Escape' && document.getElementById('vw2-pet-modal')?.hidden === false){
+        e.preventDefault(); closeOwnedPetsModal(); return;
+      }
       if(e.key === 'Escape' && document.getElementById('vw2-online-modal')?.hidden === false){
         e.preventDefault(); closeOnlinePlayersModal(); return;
       }
@@ -1192,8 +1374,22 @@
         setText('vw2-pet-name', petName);
         setText('vw2-pet-greeting', `${petName} ดีใจที่ได้เจอหนูอีกครั้ง!`);
         setText('vw2-pet-state', petStatusText(p));
+        setText('vw2-action-pet-name', p ? petName : 'ยังไม่มีสัตว์');
+        const renameButton = root?.querySelector('[data-vw2-action="petRename"]');
+        if(renameButton){
+          renameButton.title = p ? `เปลี่ยนชื่อ ${petName}` : 'ไปเลือกรับสัตว์เลี้ยงตัวแรก';
+          renameButton.setAttribute('aria-label', renameButton.title);
+        }
       }
     }catch(_){ }
+    const petCount = ownedPets().length;
+    setText('vw2-owned-pet-count', petCount ? `สัตว์ของฉัน ${petCount} ตัว` : 'ยังไม่มีสัตว์');
+    const ownedButton = root?.querySelector('[data-vw2-action="ownedPets"]');
+    if(ownedButton){
+      ownedButton.title = petCount ? `ดูสัตว์เลี้ยงที่ซื้อไว้ ${petCount} ตัว` : 'ไปเลือกรับสัตว์เลี้ยงตัวแรก';
+      ownedButton.setAttribute('aria-label', ownedButton.title);
+    }
+    if(document.getElementById('vw2-pet-modal')?.hidden === false) syncOwnedPetsModal();
     feedCardsFromAuthoritativeSource();
     const likes = (typeof state !== 'undefined' && state && state.feedLikes != null) ? fmt(state.feedLikes) : 'เพื่อน';
     setText('vw2-feed-likes', likes);
@@ -1208,6 +1404,7 @@
     setText('vw2-online-name', onlineView.firstName || 'กำลังเชื่อมต่อ…');
     setText('vw2-online-text', onlineView.firstText || 'เล่นและเรียนไปพร้อมกัน');
     syncSourceParity();
+    syncLayoutProfile();
   }
   function localPreviewFrameActive(){
     if(window.parent === window) return false;
@@ -1233,6 +1430,8 @@
     const bottom = r ? r.querySelector('.vw2-bottom') : null;
     const bottomScroll = r ? r.querySelector('.vw2-bottom-scroll') : null;
     const bottomTrack = r ? r.querySelector('.vw2-bottom-track') : null;
+    const featureActionScroll = r ? r.querySelector('.vw2-feature-action-scroll') : null;
+    const featureActionTrack = r ? r.querySelector('.vw2-feature-action-track') : null;
     const leftCue = left ? left.querySelector('.vw2-left-scroll-cue') : null;
     const areas = r ? [
       ['left',r.querySelector('.vw2-left')],['feed',r.querySelector('.vw2-feed')],
@@ -1252,6 +1451,7 @@
     const leftStyle = left ? getComputedStyle(left) : null;
     const bottomStyle = bottom ? getComputedStyle(bottom) : null;
     const bottomScrollStyle = bottomScroll ? getComputedStyle(bottomScroll) : null;
+    const featureActionScrollStyle = featureActionScroll ? getComputedStyle(featureActionScroll) : null;
     const bottomModes = bottomTrack ? Array.from(bottomTrack.querySelectorAll('.vw2-mode')) : [];
     const bottomModeHeights = bottomModes.map(el=>el.getBoundingClientRect().height);
     const bottomButtonGeometryStable = bottomModeHeights.length === 13 && Math.max(...bottomModeHeights) - Math.min(...bottomModeHeights) <= 1;
@@ -1315,6 +1515,7 @@
       viewport:{width:window.innerWidth,height:window.innerHeight,dpr:window.devicePixelRatio || 1},
       homeV2:{
         present:!!r,visible:!!(r && !r.hidden && dashboardActive()),adminAllowed:adminAllowed(),
+        layoutProfile:r ? r.dataset.vw2LayoutProfile || '' : '',
         rootWidth:rootBox ? Math.round(rootBox.width) : null,rootHeight:rootBox ? Math.round(rootBox.height) : null,
         horizontalOverflow:r ? r.scrollWidth > r.clientWidth + 1 : null,
         verticalOverflow:r ? r.scrollHeight > r.clientHeight + 1 : null,
@@ -1355,7 +1556,11 @@
           reachable:!!(lastRailAction && left && (lastRailAction.offsetTop+lastRailAction.offsetHeight <= left.scrollHeight+1))
         },
         bottomCanScrollLeft:!!(bottomScroll && bottomScroll.scrollLeft > 2),
-        bottomCanScrollRight:!!(bottomScroll && bottomScroll.scrollLeft + bottomScroll.clientWidth < bottomScroll.scrollWidth - 2)
+        bottomCanScrollRight:!!(bottomScroll && bottomScroll.scrollLeft + bottomScroll.clientWidth < bottomScroll.scrollWidth - 2),
+        featureActionCount:featureActionTrack ? featureActionTrack.querySelectorAll('[data-vw2-action]').length : 0,
+        featureActionScrollable:!!(featureActionScroll && featureActionScrollStyle && ['auto','scroll'].includes(featureActionScrollStyle.overflowX) && featureActionScroll.scrollWidth > featureActionScroll.clientWidth + 1),
+        featureActionVerticalOverflow:!!(featureActionScroll && featureActionScroll.scrollHeight > featureActionScroll.clientHeight + 1),
+        featureActionCanScrollRight:!!(featureActionScroll && featureActionScroll.scrollLeft + featureActionScroll.clientWidth < featureActionScroll.scrollWidth - 2)
       }
     }, '*');
   }
@@ -1378,6 +1583,7 @@
     if(!allowed){
       dash.classList.remove(CLASS_ON);
       document.body.classList.remove('vw2-home-active');
+      closeOwnedPetsModal();
       if(root) root.hidden = true;
       if(classicToggle) classicToggle.hidden = true;
       return;
@@ -1392,6 +1598,7 @@
     // Scope presentation-only safety rules (including transient toasts) to Home V2.
     document.body.classList.toggle('vw2-home-active', showV2);
     if(root) root.hidden = !showV2;
+    if(!showV2) closeOwnedPetsModal();
     if(classicToggle) classicToggle.hidden = !active || showV2;
     if(showV2 && !v2WasVisible){
       scheduleSync();

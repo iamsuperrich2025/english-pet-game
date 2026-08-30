@@ -1360,3 +1360,132 @@ body.vw2-online-modal-open{overflow:hidden!important}
     line-height:1.08!important;
   }
 }
+
+/* ======================== R20 / รอบ 1288 — PET ACTION RAIL + DEVICE PROFILES ======================== */
+#vw-home-v2-root{--vw2-r1288-ready:1}
+
+/* The centre action group is an independent horizontal rail. Every button
+   remains a complete plaque; touch, trackpad, mouse wheel and keyboard can
+   move the inner rail without shifting the main page. */
+.vw2-feature-actions{
+  display:block!important;
+  min-width:0!important;
+  overflow:hidden!important;
+  position:relative;
+}
+.vw2-feature-action-scroll{
+  width:100%;
+  height:100%;
+  min-width:0;
+  overflow-x:auto;
+  overflow-y:hidden;
+  scrollbar-width:none;
+  overscroll-behavior-x:contain;
+  touch-action:pan-x;
+  scroll-snap-type:x proximity;
+  scroll-behavior:smooth;
+  -webkit-overflow-scrolling:touch;
+}
+.vw2-feature-action-scroll::-webkit-scrollbar{display:none;width:0;height:0}
+.vw2-feature-action-scroll:focus-visible{outline:2px solid rgba(255,255,255,.96);outline-offset:-3px;border-radius:12px}
+.vw2-feature-action-track{
+  width:max-content;
+  min-width:100%;
+  height:100%;
+  box-sizing:border-box;
+  display:flex;
+  align-items:stretch;
+  gap:6px;
+  padding:0 3px;
+}
+.vw2-feature-action-track>button{
+  flex:0 0 clamp(136px,12.3vw,170px)!important;
+  min-width:0!important;
+  height:100%!important;
+  min-height:0!important;
+  scroll-snap-align:start;
+  box-sizing:border-box;
+}
+.vw2-feature-action-track>button>span{
+  min-width:0;
+  max-width:88%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:1px;
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+  overflow-wrap:anywhere;
+  line-height:1.04;
+}
+.vw2-feature-action-track>button>span>small{font-size:clamp(8.5px,.62vw,10px);line-height:1;color:inherit;opacity:.82}
+.vw2-feature-action-track>button>span>b{max-width:100%;font-size:clamp(10.5px,.78vw,12.5px);line-height:1.04;color:inherit;white-space:normal;overflow-wrap:anywhere}
+.vw2-pet-name-action{background-image:url("../img/home-v2/r115_hero_match.webp")!important}
+.vw2-owned-pets-action{background-image:url("../img/home-v2/r115_hero_world.webp")!important}
+
+/* Purchased-pet chooser: presentation is new, while selection and persistence
+   remain the authoritative Classic state.active/saveState/renderDashboard path. */
+body.vw2-pet-modal-open{overflow:hidden!important}
+.vw2-pet-modal{position:fixed;inset:0;z-index:12020;display:grid;place-items:center;padding:10px;background:radial-gradient(circle at 50% 12%,rgba(255,238,183,.34),transparent 38%),rgba(42,21,75,.76);backdrop-filter:blur(5px)}
+.vw2-pet-modal[hidden]{display:none!important}
+.vw2-pet-modal-panel{position:relative;width:min(760px,96vw);height:min(590px,calc(100vh - 20px));min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr) auto;overflow:hidden;border-radius:26px;background:linear-gradient(180deg,#fffaf2,#f7eaff 58%,#e6dcff);border:3px solid #f1cb68;box-shadow:inset 0 0 0 2px #fff,inset 0 0 0 5px rgba(143,89,188,.3),0 20px 52px rgba(27,10,52,.5)}
+.vw2-pet-modal-panel:before{content:"";position:absolute;inset:5px;z-index:0;pointer-events:none;border-radius:19px;background:url("../img/home-v2/r1282_filigree.webp") center 8px/48% 18px no-repeat,url("../img/home-v2/r115_frame_online.webp") center/100% 100% no-repeat;opacity:.4}
+.vw2-pet-modal-head,.vw2-pet-modal-list,.vw2-pet-modal-foot{position:relative;z-index:2}
+.vw2-pet-modal-head{min-height:66px;padding:9px 12px;display:grid;grid-template-columns:44px minmax(0,1fr) auto auto;align-items:center;gap:9px;background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(249,231,255,.91));border-bottom:1px solid rgba(178,128,201,.3)}
+.vw2-pet-modal-emblem{width:44px;height:44px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle at 35% 28%,#fff,#ffdceb 45%,#bd6ed3 73%);border:2px solid #f1ca67;box-shadow:inset 0 0 0 2px rgba(255,255,255,.8),0 3px 8px rgba(75,40,109,.24)}
+.vw2-pet-modal-emblem .vw2-icon{width:31px;height:31px}
+.vw2-pet-modal-head>span:nth-child(2){min-width:0;display:flex;flex-direction:column;gap:2px}
+.vw2-pet-modal-head strong{font-size:clamp(18px,2vw,25px);line-height:1.05;color:#4a2768}
+.vw2-pet-modal-head small{font-size:clamp(10px,1.18vw,13px);line-height:1.1;color:#785d85;white-space:normal}
+.vw2-pet-modal-head>b{padding:5px 9px;border-radius:999px;background:#fff0b5;border:1px solid #dda63a;color:#694116;font-size:clamp(11px,1.3vw,14px);white-space:nowrap}
+.vw2-pet-modal-close{font-weight:1000;border:1px solid rgba(255,255,255,.92)!important;color:#fff!important;background:linear-gradient(180deg,#a96ddd,#6936b2)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.44),0 3px 8px rgba(65,33,101,.25)!important}
+.vw2-pet-modal-close.top{min-width:68px;height:34px;padding:4px 10px;border-radius:999px!important;font-size:12px}
+.vw2-pet-modal-list{min-height:0;padding:12px;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;overscroll-behavior:contain;touch-action:pan-y;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-content:start;gap:10px}
+.vw2-pet-modal-list::-webkit-scrollbar{display:none;width:0;height:0}
+.vw2-owned-pet-card{position:relative;min-width:0;min-height:152px;padding:10px 9px 9px;display:grid;grid-template-rows:76px auto auto;justify-items:center;align-items:center;gap:4px;border:2px solid #e6bd62!important;border-radius:18px!important;background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(251,226,247,.96))!important;color:#4c2d62!important;box-shadow:inset 0 0 0 2px rgba(255,255,255,.75),0 5px 11px rgba(73,38,105,.16)!important}
+.vw2-owned-pet-card.is-active{border-color:#8a5bd1!important;background:linear-gradient(180deg,#fff,#eadcff)!important;box-shadow:inset 0 0 0 2px #fff,0 0 0 3px rgba(138,91,209,.2),0 6px 14px rgba(72,35,112,.25)!important}
+.vw2-owned-pet-card.is-sick{border-color:#ed6275!important}
+.vw2-owned-pet-thumb{position:relative;width:76px;height:76px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle at 38% 30%,#fff,#fae6ff 56%,#c997e6);box-shadow:inset 0 0 0 2px #fff,0 3px 8px rgba(77,41,107,.2);font-size:42px;overflow:visible}
+.vw2-owned-pet-thumb img{max-width:94%;max-height:94%;width:auto;height:auto;object-fit:contain;filter:drop-shadow(0 4px 3px rgba(55,34,79,.2))}
+.vw2-owned-pet-thumb i{position:absolute;right:-5px;top:-3px;padding:2px 5px;border-radius:999px;background:#d7193f;color:#fff;border:1px solid #fff;font-size:9px;font-style:normal;font-weight:1000}
+.vw2-owned-pet-copy{min-width:0;max-width:100%;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}
+.vw2-owned-pet-copy b{max-width:100%;font-size:14px;line-height:1.08;white-space:normal;overflow-wrap:anywhere}
+.vw2-owned-pet-copy small{max-width:100%;font-size:10.5px;line-height:1.12;white-space:normal;overflow-wrap:anywhere;color:#765f7f}
+.vw2-owned-pet-card em{padding:3px 8px;border-radius:999px;background:#8b58ce;color:#fff;font-size:10px;font-style:normal;font-weight:900}
+.vw2-pet-modal-empty{grid-column:1/-1;min-height:150px;display:grid;place-items:center;padding:20px;text-align:center;font-size:15px;font-weight:900;color:#694a79}
+.vw2-pet-modal-foot{min-height:50px;padding:7px 12px 10px;display:flex;justify-content:center;align-items:center;background:linear-gradient(180deg,rgba(239,226,255,.82),rgba(223,207,249,.96));border-top:1px solid rgba(167,119,192,.25)}
+.vw2-pet-modal-close.bottom{width:min(360px,88%);min-height:34px;padding:6px 16px;border-radius:999px!important;font-size:clamp(12px,1.4vw,15px)}
+
+/* Device-specific landscape compositions. The JS classifier chooses one
+   stable profile from real viewport width + height, avoiding one squeezed
+   desktop layout across every phone. */
+#vw-home-v2-root[data-vw2-layout-profile="tablet-landscape"] .vw2-main-grid{grid-template-columns:minmax(0,9.5%) minmax(0,19.5%) minmax(0,47.5%) minmax(0,23.5%)}
+#vw-home-v2-root[data-vw2-layout-profile="tablet-landscape"] .vw2-feature-action-track>button{flex-basis:142px!important}
+#vw-home-v2-root[data-vw2-layout-profile="phone-wide"] .vw2-main-grid{grid-template-columns:minmax(0,10%) minmax(0,19.5%) minmax(0,46.5%) minmax(0,24%)}
+#vw-home-v2-root[data-vw2-layout-profile="phone-wide"] .vw2-feature-action-track>button{flex-basis:128px!important}
+#vw-home-v2-root[data-vw2-layout-profile="phone-standard"] .vw2-main-grid{grid-template-columns:minmax(0,10.5%) minmax(0,19.5%) minmax(0,46%) minmax(0,24%)}
+#vw-home-v2-root[data-vw2-layout-profile="phone-standard"] .vw2-feature-action-track>button{flex-basis:116px!important}
+#vw-home-v2-root[data-vw2-layout-profile="phone-compact"] .vw2-main-grid{grid-template-columns:minmax(0,11.5%) minmax(0,19%) minmax(0,44.5%) minmax(0,25%)}
+#vw-home-v2-root[data-vw2-layout-profile="phone-compact"] .vw2-feature-action-track{gap:4px;padding-inline:2px}
+#vw-home-v2-root[data-vw2-layout-profile="phone-compact"] .vw2-feature-action-track>button{flex-basis:104px!important}
+#vw-home-v2-root[data-vw2-layout-profile="phone-compact"] .vw2-feature-action-track>button>span>small{font-size:8.5px}
+#vw-home-v2-root[data-vw2-layout-profile="phone-compact"] .vw2-feature-action-track>button>span>b{font-size:10px}
+
+@media (max-width:850px),(max-height:430px){
+  .vw2-pet-modal{padding:5px}
+  .vw2-pet-modal-panel{width:98vw;height:calc(100vh - 10px);border-radius:19px}
+  .vw2-pet-modal-head{min-height:51px;padding:5px 7px;grid-template-columns:35px minmax(0,1fr) auto auto;gap:5px}
+  .vw2-pet-modal-emblem{width:35px;height:35px}.vw2-pet-modal-emblem .vw2-icon{width:24px;height:24px}
+  .vw2-pet-modal-head strong{font-size:14px}.vw2-pet-modal-head small{font-size:9px}
+  .vw2-pet-modal-head>b{padding:3px 6px;font-size:10px}
+  .vw2-pet-modal-close.top{min-width:54px;height:29px;padding:3px 6px;font-size:10px}
+  .vw2-pet-modal-list{padding:7px 8px;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .vw2-owned-pet-card{min-height:112px;padding:6px;grid-template-rows:54px auto auto;gap:2px;border-radius:13px!important}
+  .vw2-owned-pet-thumb{width:54px;height:54px;font-size:31px}
+  .vw2-owned-pet-copy b{font-size:11.5px}.vw2-owned-pet-copy small{font-size:9px}
+  .vw2-owned-pet-card em{padding:2px 6px;font-size:8.5px}
+  .vw2-pet-modal-foot{min-height:39px;padding:4px 8px 6px}
+  .vw2-pet-modal-close.bottom{min-height:29px;padding:4px 12px;font-size:11px}
+}

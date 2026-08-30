@@ -29,7 +29,7 @@ must(css.includes(".vw2-feed .vw2-section-head,.vw2-mission .vw2-section-head,.v
 must(css.includes("grid-template-columns:repeat(13,156px)") && css.includes("grid-template-columns:repeat(13,146px)") && css.includes("word-break:keep-all"), "R14 Bottom Rail text geometry missing");
 must(css.includes("R15 / รอบ 1282") && css.includes("--vw2-r1282-ready:1") && home.includes("--vw2-r1282-runtime-ready:1"), "R15 / รอบ 1282 lineage markers missing");
 must(home.includes("<strong>ผู้เล่นออนไลน์</strong>") && !home.includes("<strong>เพื่อนออนไลน์</strong>"), "R15 online panel title was not renamed");
-must(home.includes('data-vw2-action="petProfile" aria-label="เปิดโปรไฟล์สัตว์เลี้ยง"') && home.includes("โปรไฟล์สัตว์เลี้ยง</button>"), "R15 center pet-profile action missing");
+must(home.includes('data-vw2-action="petProfile" aria-label="เปิดโปรไฟล์สัตว์เลี้ยง"') && home.includes("<span>โปรไฟล์สัตว์เลี้ยง</span>"), "R15 center pet-profile action missing");
 must(!home.includes("ตลาดผู้เล่นทั้งหมด ·") && !home.includes("🏪 ตลาดผู้เล่นทั้งหมด"), "R15 removed market wording is still visible");
 must(css.includes('r1282_bottom_frame.webp') && css.includes('r1282_filigree.webp') && css.includes(".vw2-mode>span{") && css.includes("display:grid!important"), "R15 generated fantasy buttons/decor are not integrated");
 must(css.includes("position:fixed!important") && css.includes("height:100dvh"), "R15 viewport lock is missing; Bottom Rail can be clipped by the dashboard offset");
@@ -41,8 +41,9 @@ must(css.includes("calc((100cqw - 64px)/7)") && css.includes("calc((100cqw - 56p
 must(home.includes("R13 / รอบ 1280"), "R13 JS lineage marker missing");
 must(css.includes("R17 / รอบ 1284") && css.includes("--vw2-r1284-ready:1") && home.includes("--vw2-r1284-runtime-ready:1"), "R17 / รอบ 1284 lineage markers missing");
 must(home.includes("R18 / รอบ 1286") && css.includes("R18 / รอบ 1286") && css.includes("--vw2-r1286-ready:1") && home.includes("--vw2-r1286-runtime-ready:1"), "R18 / รอบ 1286 lineage markers missing");
-must(home.includes("ADMIN PREVIEW · R19 SIX-WORLD ACCESS MATRIX") && home.includes("R19 / รอบ 1287") && css.includes("R19 / รอบ 1287") && css.includes("--vw2-r1287-ready:1") && home.includes("--vw2-r1287-runtime-ready:1"), "R19 / รอบ 1287 lineage markers missing");
-must(indexClassic.includes("css/home-v2.css?v=1287") && indexClassic.includes("js/home-v2.js?v=1287"), "R19 cache-bust missing from index_classic.html");
+must(home.includes("R19 / รอบ 1287") && css.includes("R19 / รอบ 1287") && css.includes("--vw2-r1287-ready:1") && home.includes("--vw2-r1287-runtime-ready:1"), "R19 / รอบ 1287 lineage markers missing");
+must(home.includes("ADMIN PREVIEW · R20 PET ACTIONS + MOBILE PROFILES") && home.includes("R20 / รอบ 1288") && css.includes("R20 / รอบ 1288") && css.includes("--vw2-r1288-ready:1") && home.includes("--vw2-r1288-runtime-ready:1"), "R20 / รอบ 1288 lineage markers missing");
+must(indexClassic.includes("css/home-v2.css?v=1288") && indexClassic.includes("js/home-v2.js?v=1288"), "R20 cache-bust missing from index_classic.html");
 must(css.includes(".vw2-feature-title,.vw2-word-ribbon{top:-25px!important}"), "R17 complete New Word control was not moved into the upper HUD lane");
 must(css.includes(".vw2-feature{overflow:visible!important}") && css.includes("left:24%!important;right:24%!important;top:-25px!important"), "R18 New Word plaque is not fully visible in the safe HUD lane");
 must(css.includes("-webkit-line-clamp:2") && css.includes("font-size:clamp(10.5px,.74vw,12px)!important") && css.includes(".vw2-feed .vw2-section-head .vw2-head-icon{display:none!important}"), "R18 child-readable mission/feed typography guards missing");
@@ -185,13 +186,13 @@ must(home.includes("ดาวเงิน · ประถม") && home.includes(
 
 /* Left destination inventory + Racing bottom-most. */
 const expectedRail = [
+  ["cure","#btn-rail-cure"],
   ["city","#btn-rail-city"],
   ["worldAdv","#btn-world-adv"], ["worldSky","#btn-world-sky"],
   ["worldHaunt","#btn-world-haunt"], ["worldHeli","#btn-world-heli"],
   ["worldDrone","#btn-world-drone"], ["worldDrive","#btn-world-drive"],
   ["worldSoccer","#btn-world-soccer"], ["worldMoto","#btn-world-moto"],
   ["worldInvasion","#btn-world-invasion"], ["worldMecha","#btn-world-mecha"],
-  ["cure","#btn-rail-cure"],
   ["home",'.lobby-rail [data-panel="panel-home"]'], ["invest",'.lobby-rail [data-panel="panel-farm"]'],
   ["factory",'.lobby-rail [data-panel="panel-factory"]'], ["wordsearch","#btn-rail-wordsearch"],
   ["typing","#btn-rail-typing"], ["bubble","#btn-rail-bubble"], ["shoot","#btn-rail-shootword"],
@@ -217,6 +218,18 @@ must(expectedRail.at(-1)[0] === "racing" && home.includes("typeof enterF1_3D ===
 must(css.includes('r111_cloud_pedestal.svg') && css.includes('.vw2-rail-art:after') && css.includes('scrollbar-width:none'), "premium cloud/pedestal left rail or hidden-scrollbar behavior missing");
 must(/\.vw2-rail-btn\{[\s\S]*?flex:0 0 auto!important;[\s\S]*?min-height:92px!important;[\s\S]*?height:auto!important;[\s\S]*?\}/.test(css), "R19 vertical rail controls cannot grow with longer labels");
 must(/\.vw2-rail-label,\.vw2-rail-racing \.vw2-rail-label\{[\s\S]*?min-height:30px!important;[\s\S]*?white-space:normal!important;[\s\S]*?overflow:visible!important;[\s\S]*?text-overflow:clip!important;[\s\S]*?\}/.test(css), "R19 vertical rail two-line caption containment guard missing");
+must(expectedRail[0][0] === "cure" && home.indexOf("['cure','heart','รักษา'") < home.indexOf("['city','city','เมือง 3D'"), "R20 cure button is not the first left-rail action");
+
+/* R20 pet actions reuse Classic ownership/rename paths and scroll independently. */
+must(home.includes('class="vw2-feature-action-scroll"') && home.includes('class="vw2-feature-action-track"') && home.includes("function setupFeatureActionScroll()") && css.includes("touch-action:pan-x"), "R20 centre pet-action horizontal rail missing");
+must(home.includes('data-vw2-action="petRename"') && home.includes('id="vw2-action-pet-name"') && home.includes("typeof renamePet === 'function'") && home.includes("renamePet(pet)"), "R20 active-pet rename button no longer delegates to Classic renamePet");
+must(!home.includes('class="vw2-play" data-vw2-action="play"') && home.includes("['play','controller','จับคู่คำศัพท์'"), "R20 centre matching button was not replaced while Bottom Rail matching game was preserved");
+must(home.includes('data-vw2-action="ownedPets"') && home.includes('id="vw2-pet-modal-list"') && home.includes("state.active = index") && home.includes("typeof saveState === 'function'") && home.includes("typeof renderDashboard === 'function'"), "R20 purchased-pet chooser does not reuse authoritative Classic state/selection");
+must(home.includes('class="vw2-pet-modal-close top"') && home.includes('class="vw2-pet-modal-close bottom"') && css.includes(".vw2-pet-modal-list::-webkit-scrollbar{display:none"), "R20 purchased-pet chooser close/hidden-scrollbar contract missing");
+must(home.includes("featureActionCount:") && home.includes("featureActionScrollable:") && home.includes("featureActionVerticalOverflow:") && home.includes("layoutProfile:"), "R20 action-rail/device-profile preview metrics missing");
+["phone-compact","phone-standard","phone-wide","tablet-landscape"].forEach(profile=>{
+  must(home.includes(`profile = '${profile}'`) && css.includes(`data-vw2-layout-profile="${profile}"`), `R20 layout profile missing: ${profile}`);
+});
 
 /* Global Feed mirrors real posts, no invented persisted feed. */
 must(home.includes("#feed-list .fpost:not(.fp-clone)") && home.includes(".slice(0,5)"), "Global Feed does not mirror authoritative posts");
@@ -269,6 +282,7 @@ must(css.includes("@media (max-width:1180px),(max-height:520px)") && css.include
 must(home.includes("pageOverflow:") && home.includes("pageHorizontalOverflow:") && home.includes("outerBottomRailContained:") && home.includes("bottomScrollWrapperScrollable:") && home.includes("bottomScrollWrapperVerticalOverflow:") && home.includes("all13BottomActionsPresent:") && home.includes("bottomButtonGeometryStable"), "R11.5.4 local mobile Bottom Rail metrics missing");
 must(home.includes("clippingOffenders:") && home.includes("bottomClipOffenders") && home.includes("bottomMinButtonHeightPx:") && home.includes("leftBottomCollision:") && home.includes("leftLastAction:") && home.includes("onlineFooterContained") && home.includes("importantTextBelow14:") && home.includes("extremeInteractiveAspectElements:") && home.includes("rewardPlaque:"), "R11.5.4 precise Geometry Guard evidence metrics missing");
 must(home.includes("minReadableFontPx:") && home.includes("importantValueClipped"), "R11.4 readability/value-clipping preview metrics missing");
+must(home.includes("width <= 700 || height <= 390") && home.includes("width <= 850 || height <= 430") && home.includes("width <= 960 || height <= 500") && home.includes("width <= 1180 || height <= 600"), "R20 device profile width/height coverage missing");
 must(css.includes("overflow:hidden") && css.includes("overscroll-behavior:contain"), "page/rail overflow containment missing");
 
 /* Transient notification safety. */
@@ -283,5 +297,5 @@ if(fail.length){
   console.error("Home V2 R11.5.4 validation FAILED:\n- " + fail.join("\n- "));
   process.exit(1);
 }
-console.log("Home V2 R19 / รอบ 1287 validation PASS");
-console.log(`Checked exact six-world admin matrix, four public worlds, non-clipping two-line rail labels, safe New Word HUD, child-readable Thai labels, direct market confirmation, online-player sheet, sick cure alert, ${expectedRail.length} left destinations, ${expectedBottom.length} bottom actions, admin gate, and mobile landscape guards.`);
+console.log("Home V2 R20 / รอบ 1288 validation PASS");
+console.log(`Checked first-position cure, scrollable pet actions, Classic rename/owned-pet selection, four device profiles, exact six-world admin matrix, non-clipping rail labels, ${expectedRail.length} left destinations, ${expectedBottom.length} bottom actions, and admin gate.`);
