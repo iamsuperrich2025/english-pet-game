@@ -1,6 +1,6 @@
 "use strict";
 /* ============================================================
-   🐉💥 Dragon Sky Siege (รอบ 1304)
+   🐉💥 Dragon Sky Siege (รอบ 1306)
    Portrait vertical shooter: freely fly, spell five words, survive the boss wave.
    Three ballistic rounds, homing missiles, ten hearts and a living dragon gunner.
    ============================================================ */
@@ -21,7 +21,8 @@
     {id:'piercer',name:'PIERCER',speed:1.9,color:'#7feaff',core:'#eaffff',size:5,damage:1,pierce:1,sound:'pierce'}
   ];
   const MAX_MISSILES=3, MISSILE_BLAST=105;
-  const MAX_LETTERS=12, MAX_BULLETS=42, MAX_PARTICLES=260, SHOT_ANGLE=-Math.PI/2, WORD_BONUS=50;
+  const MAX_LETTERS=12, MAX_BULLETS=42, MAX_PARTICLES=140, SHOT_ANGLE=-Math.PI/2, WORD_BONUS=50;
+  const FRAME_MS=1000/60,DPR_CAP=1.5,MUZZLE_PARTICLES=7,ROUND_TRAIL_STEP=.065,MISSILE_TRAIL_STEP=.035;
   const MISSION_WORDS=5, MAX_SHIELD=10, BASE_LINE=.9;
   const MOVE_SPEED_CAP=1500, MOVE_SPEED_FACTOR=1.5, MOVE_ACCEL=34, MOVE_BRAKE=42;
   const COIN_IMAGE='img/coins/coin_gold.png';
@@ -32,18 +33,19 @@
   const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
   const ANNOUNCEMENT_KEY='vwLetterCannonAnnouncement1152';
   let root=null,canvas=null,ctx=null,raf=0,abort=null,audio=null,opening=false,saveTimer=0;
-  let W=0,H=0,dpr=1,last=0,elapsed=0,running=false,paused=false,counting=false;
+  let W=0,H=0,dpr=1,last=0,frameAt=0,elapsed=0,running=false,paused=false,counting=false;
   let word=null,pos=0,queue=[],queueGrade='',score=0,combo=0,wordsDone=0,coinsRun=0;
   let shield=MAX_SHIELD,wave=1,bossMode=false,missionEnded=false,threatsStopped=0,misses=0;
   let fireAt=0,spawnAt=0,threatAt=0,powerAt=0,playerX=0,playerY=0,playerVX=0,playerVY=0;
   let activePower=null,powerLeft=0,powerTotal=0,shake=0,flash=0,flashSide=0,barrelCycle=0;
   let missiles=MAX_MISSILES,currentAmmo=AMMO[0],shotSeq=0;
   let dragPointer=null,dragX=0,dragY=0,keyLeft=false,keyRight=false,keyUp=false,keyDown=false;
-  let letters=[],bullets=[],particles=[],shockwaves=[],stars=[],clouds=[],letterSeq=0,wordSeq=0,rewardedLetters=new Set(),rewardedWords=new Set();
-  let hud={},timers=new Set(),playerImage=null,playerLoad=null,orientationLocked=false,gameFullscreen=false;
+  let letters=[],bullets=[],particles=[],shockwaves=[],stars=[],clouds=[],letterSeq=0,wordSeq=0,particleCursor=0,rewardedLetters=new Set(),rewardedWords=new Set();
+  let hud={},timers=new Set(),playerImage=null,playerLoad=null,orientationLocked=false,gameFullscreen=false,skyGradient=null,noiseBuffers=Object.create(null);
   function later(fn,ms){const id=setTimeout(()=>{timers.delete(id);fn();},ms);timers.add(id);return id;}
   function clearTimers(){timers.forEach(clearTimeout);timers.clear();}
   function queueCloudSave(){
+  function resetFrameClock(){last=performance.now();frameAt=last-FRAME_MS;}
     if(saveTimer){clearTimeout(saveTimer);timers.delete(saveTimer);}
     saveTimer=later(()=>{saveTimer=0;if(typeof authPushSave==='function')authPushSave(false);},650);
   }
@@ -127,24 +129,24 @@
   }
   function resetMission(){
     clearTimers();score=combo=wordsDone=coinsRun=pos=0;shield=MAX_SHIELD;wave=1;bossMode=missionEnded=false;threatsStopped=misses=0;elapsed=0;spawnAt=.35;threatAt=2.4;powerAt=8;
-    letters=[];bullets=[];particles=[];shockwaves=[];rewardedLetters.clear();rewardedWords.clear();activePower=null;powerLeft=powerTotal=0;missiles=MAX_MISSILES;shotSeq=0;currentAmmo=AMMO[0];barrelCycle=flashSide=0;paused=false;nextWord();renderHud();
+    letters=[];bullets=[];particles=[];shockwaves=[];particleCursor=0;rewardedLetters.clear();rewardedWords.clear();activePower=null;powerLeft=powerTotal=0;missiles=MAX_MISSILES;shotSeq=0;currentAmmo=AMMO[0];barrelCycle=flashSide=0;paused=false;nextWord();renderHud();
   }
   function bullet(angle,side,muzzleIndex,ammo){
     const a=ammo||currentAmmo,g=playerGeometry(cannonX(),playerY,playerSize(),muzzleIndex,0),bx=g.muzzle.x,by=g.muzzle.y,o=bullets.find(x=>!x.alive)||{},speed=H*a.speed;
-    Object.assign(o,{alive:true,kind:'round',ammo:a,damage:a.damage,pierce:a.pierce,x:bx,y:by,px:bx,py:by,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,life:1.25,side:!!side,homing:activePower&&activePower.id==='homing'&&!side,phase:Math.random()*6.28});if(!bullets.includes(o)&&bullets.length<MAX_BULLETS)bullets.push(o);return o;
+    Object.assign(o,{alive:true,kind:'round',ammo:a,damage:a.damage,pierce:a.pierce,x:bx,y:by,px:bx,py:by,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,life:1.25,trailLeft:0,side:!!side,homing:activePower&&activePower.id==='homing'&&!side,phase:Math.random()*6.28});if(!bullets.includes(o)&&bullets.length<MAX_BULLETS)bullets.push(o);return o;
   }
   function fire(){
     if(!running||paused||counting||missionEnded)return;const ammo=AMMO[shotSeq%AMMO.length],now=performance.now(),gap=activePower&&activePower.id==='beam'?110:ammo.id==='tracer'?175:ammo.id==='heavy'?315:240;if(now-fireAt<gap)return;fireAt=now;shotSeq++;currentAmmo=ammo;
     const side=barrelCycle++%2;flashSide=side;
     if(activePower&&activePower.id==='beam'){beamHit(side);sound('beam');}
     else{bullet(SHOT_ANGLE,false,side,ammo);if(activePower&&activePower.id==='triple'){bullet(SHOT_ANGLE-.11,true,0,ammo);bullet(SHOT_ANGLE+.11,true,1,ammo);}sound(ammo.sound);}
-    const m=playerGeometry(cannonX(),playerY,playerSize(),side,0).muzzle;for(let i=0;i<13;i++)particle(m.x,m.y,pick(['#ffffff',ammo.core,ammo.color,'#ff9f45']),SHOT_ANGLE+(Math.random()-.5)*.72,80+Math.random()*280,.22+Math.random()*.24,2+Math.random()*4);
-    shockwave(m.x,m.y,ammo.color,5,34,.28);shake=Math.max(shake,ammo.id==='heavy'?7:4.8);flash=.13;renderHud();
+    const m=playerGeometry(cannonX(),playerY,playerSize(),side,0).muzzle;for(let i=0;i<MUZZLE_PARTICLES;i++)particle(m.x,m.y,pick(['#ffffff',ammo.core,ammo.color,'#ff9f45']),SHOT_ANGLE+(Math.random()-.5)*.72,80+Math.random()*280,.22+Math.random()*.24,2+Math.random()*4);
+    shockwave(m.x,m.y,ammo.color,5,34,.28);shake=Math.max(shake,ammo.id==='heavy'?7:4.8);flash=.13;
   }
   function missileTarget(){return letters.filter(o=>o.alive&&o.kind==='meteor').sort((a,b)=>b.y-a.y)[0]||null;}
   function spawnMissile(target){
     const side=barrelCycle++%2,g=playerGeometry(cannonX(),playerY,playerSize(),side,0),m=g.muzzle,o=bullets.find(x=>!x.alive)||{};
-    Object.assign(o,{alive:true,kind:'missile',target,x:m.x,y:m.y,px:m.x,py:m.y,vx:0,vy:-H*.72,speed:H*.72,life:4,side:false,phase:Math.random()*6.28});if(!bullets.includes(o)&&bullets.length<MAX_BULLETS)bullets.push(o);return o;
+    Object.assign(o,{alive:true,kind:'missile',target,x:m.x,y:m.y,px:m.x,py:m.y,vx:0,vy:-H*.72,speed:H*.72,life:4,trailLeft:0,side:false,phase:Math.random()*6.28});if(!bullets.includes(o)&&bullets.length<MAX_BULLETS)bullets.push(o);return o;
   }
   function fireMissile(){
     if(!running||paused||counting||missionEnded)return false;if(missiles<=0){toast('Missile หมด — สะกดครบคำเพื่อเติม','#ffd179');return false;}const target=missileTarget();if(!target){toast('ยังไม่มีอุกกาบาตให้ล็อกเป้า','#9deaff');return false;}
@@ -179,7 +181,7 @@
     if(typeof speakWord==='function')speakWord(word.en.toLowerCase());
     toast('🌟 '+word.en+' · '+word.th+'  ครบคำ! +'+WORD_BONUS+' เหรียญ','#ffe85c');celebrate();paused=true;
     if(wordsDone>=MISSION_WORDS){later(()=>finishMission(true),900);return;}
-    wave=1+Math.floor(wordsDone/2);bossMode=wordsDone===MISSION_WORDS-1;later(()=>{if(running&&!missionEnded){nextWord();paused=false;last=performance.now();if(bossMode)toast('👾 BOSS WAVE — อุกกาบาตเกราะหนา!','#ffcf76');}},820);
+    wave=1+Math.floor(wordsDone/2);bossMode=wordsDone===MISSION_WORDS-1;later(()=>{if(running&&!missionEnded){nextWord();paused=false;resetFrameClock();if(bossMode)toast('👾 BOSS WAVE — อุกกาบาตเกราะหนา!','#ffcf76');}},820);
   }
   function awardLetterCoin(o,x,y){
     if(!o||o.coinAwarded||rewardedLetters.has(o.rewardId))return false;o.coinAwarded=true;rewardedLetters.add(o.rewardId);coinsRun++;
@@ -199,7 +201,7 @@
     activePower=p;powerLeft=powerTotal=p.time;toast(p.icon+' '+p.name,p.color);renderHud();
   }
   function celebrate(){for(let i=0;i<40;i++)particle(W*.5,H*.32,pick(['#fff278','#60eaff','#ff72d2','#9b83ff']),Math.random()*6.28,80+Math.random()*260,1+Math.random());sound('win');}
-  function particle(x,y,color,a,s,life,r){let p=particles.find(v=>!v.alive)||{};Object.assign(p,{alive:true,x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,r:r||1.5+Math.random()*3,color,life:life||.65,max:life||.65});if(!particles.includes(p)&&particles.length<MAX_PARTICLES)particles.push(p);}
+  function particle(x,y,color,a,s,life,r){let p;if(particles.length<MAX_PARTICLES){p={};particles.push(p);}else p=particles[particleCursor];particleCursor=(particleCursor+1)%MAX_PARTICLES;Object.assign(p,{alive:true,x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,r:r||1.5+Math.random()*3,color,life:life||.65,max:life||.65});}
   function burst(x,y,color,n){for(let i=0;i<n;i++)particle(x,y,color,Math.random()*6.28,40+Math.random()*190,.35+Math.random()*.55);}
   function shockwave(x,y,color,start,end,life){let o=shockwaves.find(v=>!v.alive)||{};Object.assign(o,{alive:true,x,y,color,start,end,life,max:life});if(!shockwaves.includes(o))shockwaves.push(o);}
   function impact(x,y,color,n,r){burst(x,y,color,n);for(let i=0;i<8;i++)particle(x,y,i%2?'#ffffff':'#ff8bdc',Math.random()*6.28,170+Math.random()*280,.45+Math.random()*.5,3+Math.random()*5);shockwave(x,y,'#ffffff',5,(r||28)*2.5,.42);shockwave(x,y,color,8,(r||28)*3.4,.62);shake=Math.max(shake,7.5);}
@@ -208,8 +210,7 @@
 
   function noiseBurst(type,t){
     if(!audio||!['shot','heavy','pierce','missile','explode'].includes(type))return;
-    const dur=type==='explode'?.42:type==='missile'?.28:type==='heavy'?.16:.085,len=Math.max(1,(audio.sampleRate*dur)|0),buf=audio.createBuffer(1,len,audio.sampleRate),d=buf.getChannelData(0);
-    for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,type==='explode'?.75:1.8);
+    const dur=type==='explode'?.42:type==='missile'?.28:type==='heavy'?.16:.085,len=Math.max(1,(audio.sampleRate*dur)|0);let buf=noiseBuffers[type];if(!buf){buf=audio.createBuffer(1,len,audio.sampleRate);const d=buf.getChannelData(0);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,type==='explode'?.75:1.8);noiseBuffers[type]=buf;}
     const src=audio.createBufferSource(),filter=audio.createBiquadFilter(),gain=audio.createGain();src.buffer=buf;filter.type=type==='pierce'?'highpass':'lowpass';filter.frequency.value=type==='pierce'?1800:type==='explode'?850:1250;gain.gain.setValueAtTime(type==='explode'?.16:type==='heavy'?.13:.09,t);gain.gain.exponentialRampToValueAtTime(.001,t+dur);src.connect(filter);filter.connect(gain);gain.connect(audio.destination);src.start(t);
   }
   function toneSound(type){
@@ -222,7 +223,7 @@
     hud.shield.innerHTML=Array.from({length:MAX_SHIELD},(_v,i)=>'<i class="'+(i<shield?'on':'')+'">❤</i>').join('');hud.shield.setAttribute('aria-label','พลังมังกรเหลือ '+shield+' จาก '+MAX_SHIELD+' ดวง');hud.wave.textContent=bossMode?'BOSS':'คลื่น '+wave;root.classList.toggle('boss',bossMode);
     hud.powerName.textContent=activePower?activePower.icon+' '+activePower.name:'กระสุน '+currentAmmo.name;hud.powerFill.style.width=activePower?(powerLeft/powerTotal*100)+'%':'0%';hud.missile.textContent='🚀 '+missiles;hud.missile.disabled=missiles<=0;hud.sound.textContent=typeof state==='undefined'||state.sound?'🔊':'🔇';
   }
-  function layout(){if(!canvas)return;const r=canvas.getBoundingClientRect();dpr=Math.min(2,window.devicePixelRatio||1);W=Math.max(280,r.width);H=Math.max(480,r.height);canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);if(playerX){const p=playerLimits();playerX=clamp(playerX,p.minX,p.maxX);playerY=clamp(playerY||H*.76,p.minY,p.maxY);}initSky();}
+  function layout(){if(!canvas)return;const r=canvas.getBoundingClientRect();dpr=Math.min(DPR_CAP,window.devicePixelRatio||1);W=Math.max(280,r.width);H=Math.max(480,r.height);canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);skyGradient=ctx.createLinearGradient(0,0,0,H);skyGradient.addColorStop(0,'#315b68');skyGradient.addColorStop(.46,'#24505b');skyGradient.addColorStop(1,'#102f45');if(playerX){const p=playerLimits();playerX=clamp(playerX,p.minX,p.maxX);playerY=clamp(playerY||H*.76,p.minY,p.maxY);}initSky();}
   function initSky(){stars=Array.from({length:8},(_,i)=>({x:.1+((i*37)%80)/100,y:i*.15,s:.45+(i%3)*.15,p:i*1.7}));clouds=Array.from({length:9},(_,i)=>({x:.08+((i*29)%84)/100,y:i*.14,s:.5+(i%4)*.2,v:34+(i%3)*17,h:i%2}));}
   function drawDistantPlane(x,y,s,a){
     ctx.save();ctx.translate(x,y);ctx.globalAlpha=a;ctx.fillStyle='#a8d9cf';ctx.beginPath();ctx.moveTo(0,-13*s);ctx.lineTo(5*s,-1*s);ctx.lineTo(19*s,6*s);ctx.lineTo(17*s,11*s);ctx.lineTo(4*s,7*s);ctx.lineTo(3*s,16*s);ctx.lineTo(-3*s,16*s);ctx.lineTo(-4*s,7*s);ctx.lineTo(-17*s,11*s);ctx.lineTo(-19*s,6*s);ctx.lineTo(-5*s,-1*s);ctx.closePath();ctx.fill();ctx.restore();
@@ -232,7 +233,7 @@
     ctx.strokeStyle='rgba(229,207,138,.45)';ctx.lineWidth=Math.max(1,3*s);ctx.beginPath();ctx.moveTo(-50*s,6*s);ctx.bezierCurveTo(-15*s,-18*s,18*s,18*s,48*s,-7*s);ctx.stroke();ctx.restore();
   }
   function drawBackground(t){
-    const scroll=(t*78)%(H+160),g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#315b68');g.addColorStop(.46,'#24505b');g.addColorStop(1,'#102f45');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+    const scroll=(t*78)%(H+160);ctx.fillStyle=skyGradient||'#24505b';ctx.fillRect(0,0,W,H);
     ctx.strokeStyle='rgba(191,235,227,.09)';ctx.lineWidth=1;for(let i=0;i<15;i++){const y=(i*72+scroll)%(H+72)-36;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y+18);ctx.stroke();}
     for(let i=0;i<7;i++){const y=(i*173+scroll*1.12)%(H+220)-110,x=W*(.18+((i*43)%67)/100);drawIsland(x,y,.48+(i%3)*.17);}
     stars.forEach((p,i)=>{const y=(p.y*H+scroll*.52)%(H+120)-60,x=p.x*W+Math.sin(t*.65+p.p)*24;drawDistantPlane(x,y,p.s,.18+(i%3)*.06);});
@@ -267,7 +268,7 @@
   function tickBullet(b,dt){
     if(!b.alive)return;b.px=b.x;b.py=b.y;let target=null;if(b.kind==='missile'){if(!b.target||!b.target.alive)b.target=missileTarget();target=b.target;}else if(b.homing)target=letters.find(o=>o.alive&&o.kind==='letter'&&o.ch===nextNeeded());
     if(target){const a=Math.atan2(target.y-b.y,target.x-b.x),s=b.kind==='missile'?b.speed:Math.hypot(b.vx,b.vy),turn=b.kind==='missile'?9:7;b.vx+=(Math.cos(a)*s-b.vx)*Math.min(1,dt*turn);b.vy+=(Math.sin(a)*s-b.vy)*Math.min(1,dt*turn);}b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;if(b.life<=0||b.x<-35||b.x>W+35||b.y<-45||b.y>H+45)b.alive=false;if(!b.alive)return;
-    const trail=b.kind==='missile'?'#ff9b38':(b.ammo||AMMO[0]).color;if(Math.random()<.82)particle(b.x,b.y,trail,Math.atan2(-b.vy,-b.vx)+(Math.random()-.5)*.6,25+Math.random()*95,.18+Math.random()*.17,b.kind==='missile'?3.5:1.8+Math.random()*2.3);
+    b.trailLeft=(b.trailLeft||0)-dt;if(b.trailLeft<=0){b.trailLeft+=b.kind==='missile'?MISSILE_TRAIL_STEP:ROUND_TRAIL_STEP;const trail=b.kind==='missile'?'#ff9b38':(b.ammo||AMMO[0]).color;particle(b.x,b.y,trail,Math.atan2(-b.vy,-b.vx)+(Math.random()-.5)*.6,25+Math.random()*95,.18+Math.random()*.17,b.kind==='missile'?3.5:1.8+Math.random()*2.3);}
     for(const o of letters){if(!o.alive||Math.hypot(b.x-o.x,b.y-o.y)>=o.r+(b.kind==='missile'?13:7))continue;if(b.kind==='missile'){explodeMissile(b);break;}hit(o,b.side,b.damage);if(b.pierce>0){b.pierce--;b.x+=b.vx*.012;b.y+=b.vy*.012;}else{b.alive=false;break;}}
   }
   function update(dt){
@@ -284,8 +285,8 @@
     particles.forEach(p=>{if(!p.alive)return;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=90*dt;p.life-=dt;if(p.life<=0)p.alive=false;});
     shockwaves.forEach(o=>{if(o.alive&&(o.life-=dt)<=0)o.alive=false;});
   }
-  function draw(t){ctx.save();if(shake)ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);drawBackground(t);drawBase();letters.forEach(o=>{if(o.alive)(o.kind==='power'?drawPower(o,t):o.kind==='meteor'?drawMeteor(o,t):drawLetter(o,t));});ctx.globalCompositeOperation='source-over';bullets.forEach(b=>{if(b.alive)drawProjectile(b);});ctx.globalCompositeOperation='lighter';particles.forEach(p=>{if(!p.alive)return;ctx.globalAlpha=clamp(p.life/p.max,0,1);ctx.shadowColor=p.color;ctx.shadowBlur=p.r*3;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();});shockwaves.forEach(o=>{if(!o.alive)return;const k=1-o.life/o.max,r=o.start+(o.end-o.start)*k;ctx.globalAlpha=(1-k)*.82;ctx.strokeStyle=o.color;ctx.lineWidth=5*(1-k)+1;ctx.shadowColor=o.color;ctx.shadowBlur=18;ctx.beginPath();ctx.arc(o.x,o.y,r,0,7);ctx.stroke();});ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;ctx.shadowBlur=0;drawDragonGunner(t);ctx.restore();}
-  function frame(now){if(!running)return;raf=requestAnimationFrame(frame);if(paused||counting){last=now;draw(now/1000);return;}const dt=Math.min(.033,Math.max(0,(now-last)/1000||.016));last=now;update(dt);draw(now/1000);if(((now/250)|0)!==(((now-dt*1000)/250)|0))renderHud();}
+  function draw(t){ctx.save();if(shake)ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);drawBackground(t);drawBase();letters.forEach(o=>{if(o.alive)(o.kind==='power'?drawPower(o,t):o.kind==='meteor'?drawMeteor(o,t):drawLetter(o,t));});ctx.globalCompositeOperation='source-over';bullets.forEach(b=>{if(b.alive)drawProjectile(b);});ctx.globalCompositeOperation='lighter';ctx.shadowBlur=0;particles.forEach(p=>{if(!p.alive)return;ctx.globalAlpha=clamp(p.life/p.max,0,1);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();});shockwaves.forEach(o=>{if(!o.alive)return;const k=1-o.life/o.max,r=o.start+(o.end-o.start)*k;ctx.globalAlpha=(1-k)*.82;ctx.strokeStyle=o.color;ctx.lineWidth=5*(1-k)+1;ctx.shadowColor=o.color;ctx.shadowBlur=18;ctx.beginPath();ctx.arc(o.x,o.y,r,0,7);ctx.stroke();});ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;ctx.shadowBlur=0;drawDragonGunner(t);ctx.restore();}
+  function frame(now){if(!running)return;raf=requestAnimationFrame(frame);const since=now-frameAt;if(paused||counting){const gap=paused?100:33;if(since<gap)return;frameAt=now;last=now;draw(now/1000);return;}if(since<FRAME_MS*.9)return;frameAt=now-(since%FRAME_MS);const dt=Math.min(.033,Math.max(0,(now-last)/1000||.016));last=now;update(dt);draw(now/1000);if(((now/250)|0)!==(((now-dt*1000)/250)|0))renderHud();}
   function bind(){
     abort=new AbortController();const s={signal:abort.signal};
     const point=e=>{const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height};};
@@ -300,11 +301,11 @@
     hud.pause.addEventListener('click',()=>{resetInput();pause();},s);hud.exit.addEventListener('click',close,s);hud.sound.addEventListener('click',toggleSound,s);hud.missile.addEventListener('click',fireMissile,s);
   }
   function toggleSound(){if(typeof state!=='undefined'){state.sound=!state.sound;if(typeof saveState==='function')saveState();if(typeof Music!=='undefined'&&Music.onSound)Music.onSound();}renderHud();sound('correct');}
-  function pause(force){if(!root||counting||missionEnded)return;paused=force===true?true:!paused;dragPointer=null;keyLeft=keyRight=keyUp=keyDown=false;playerVX=playerVY=0;let m=root.querySelector('#lc-pause');if(paused&&!m){m=document.createElement('div');m.id='lc-pause';m.className='lc-modal';m.innerHTML='<div class="lc-card"><h2>⏸ พักภารกิจ</h2><p>คลื่นศัตรูและพลังมังกรหยุดรออยู่ตรงนี้ครับ</p><div class="lc-buttons"><button class="lc-btn primary" data-a="go">▶ เล่นต่อ</button><button class="lc-btn" data-a="exit">🚪 กลับ Lobby</button></div></div>';root.appendChild(m);m.querySelector('[data-a=go]').onclick=()=>pause();m.querySelector('[data-a=exit]').onclick=close;}else if(!paused&&m){m.remove();last=performance.now();}}
+  function pause(force){if(!root||counting||missionEnded)return;paused=force===true?true:!paused;dragPointer=null;keyLeft=keyRight=keyUp=keyDown=false;playerVX=playerVY=0;let m=root.querySelector('#lc-pause');if(paused&&!m){m=document.createElement('div');m.id='lc-pause';m.className='lc-modal';m.innerHTML='<div class="lc-card"><h2>⏸ พักภารกิจ</h2><p>คลื่นศัตรูและพลังมังกรหยุดรออยู่ตรงนี้ครับ</p><div class="lc-buttons"><button class="lc-btn primary" data-a="go">▶ เล่นต่อ</button><button class="lc-btn" data-a="exit">🚪 กลับ Lobby</button></div></div>';root.appendChild(m);m.querySelector('[data-a=go]').onclick=()=>pause();m.querySelector('[data-a=exit]').onclick=close;}else if(!paused&&m){m.remove();resetFrameClock();}}
   function tutorial(){
     if(localStorage.getItem('vwDragonSkyIntro1')==='1'){countdown();return;}const m=document.createElement('div');m.className='lc-modal';m.innerHTML='<div class="lc-card"><h2>🐉 Dragon Sky Siege</h2><p><b>ลากนิ้วบนสนามเพื่อบินอิสระ</b> หรือใช้ WASD/ปุ่มลูกศร<br>ปืนจะยิงอัตโนมัติ พร้อมสลับ TRACER, HEAVY และ PIERCER ให้เอง</p><p>บินจัดแนวยิงให้ตรงตัวอักษรสีทอง · ทำลายอุกกาบาต <b>!</b> ก่อนหลุดสนาม<br>กด <b>M</b> หรือปุ่ม 🚀 เพื่อปล่อย Missile ล็อกเป้า</p><p>คุณมีหัวใจ <b>10 ดวง</b> และได้ Missile คืน 1 ลูกเมื่อสะกดครบคำครับ</p><div class="lc-buttons"><button class="lc-btn primary" data-a="start">🚀 ทะยานขึ้นฟ้า</button><button class="lc-btn" data-a="exit">🚪 ออกจากเกม</button></div></div>';root.appendChild(m);m.querySelector('[data-a=start]').onclick=()=>{localStorage.setItem('vwDragonSkyIntro1','1');m.remove();countdown();};m.querySelector('[data-a=exit]').onclick=close;
   }
-  function countdown(){counting=true;const m=document.createElement('div');m.className='lc-modal lc-countdown';root.appendChild(m);let n=3;const step=()=>{if(!running||!m.isConnected)return;m.innerHTML='<div class="lc-count">'+(n?n:'GO!')+'</div><button class="lc-btn lc-count-exit">🚪 ออกจากเกม</button>';m.querySelector('button').onclick=close;sound('correct');if(n--){later(step,650);}else later(()=>{m.remove();counting=false;last=performance.now();},520);};step();}
+  function countdown(){counting=true;const m=document.createElement('div');m.className='lc-modal lc-countdown';root.appendChild(m);let n=3;const step=()=>{if(!running||!m.isConnected)return;m.innerHTML='<div class="lc-count">'+(n?n:'GO!')+'</div><button class="lc-btn lc-count-exit">🚪 ออกจากเกม</button>';m.querySelector('button').onclick=close;sound('correct');if(n--){later(step,650);}else later(()=>{m.remove();counting=false;resetFrameClock();},520);};step();}
   function buildDom(){
     root=document.createElement('div');root.id='lc-game';root.innerHTML='<canvas class="lc-game-canvas" aria-label="สนาม Dragon Sky Siege — ลากนิ้วเพื่อบินและจัดแนวยิงอัตโนมัติให้ตรงเป้าหมาย"></canvas><div class="lc-hud"><div class="lc-stats lc-glass"><div class="lc-stat"><span>คะแนน</span><b id="lc-score">0</b></div><div class="lc-stat"><span>สตรีค</span><b id="lc-combo">0</b></div><div class="lc-stat lc-shield-stat"><span>พลังมังกร</span><b id="lc-shield" aria-label="พลังมังกร 10 ดวง"></b></div><div class="lc-stat"><span>ภารกิจ</span><b id="lc-words">0/'+MISSION_WORDS+'</b></div><div class="lc-stat"><span>สถานะ</span><b id="lc-wave">คลื่น 1</b></div><div class="lc-stat"><span>เหรียญ</span><b id="lc-coins">0</b></div></div><div class="lc-wordbox lc-glass"><div class="lc-target" id="lc-target"></div><div class="lc-meaning" id="lc-meaning"></div><div class="lc-progress" id="lc-progress"></div></div><div class="lc-actions"><button class="lc-iconbtn" id="lc-sound" title="เปิด/ปิดเสียง">🔊</button><button class="lc-iconbtn lc-missilebtn" id="lc-missile" title="ยิง Missile (M)">🚀 3</button><button class="lc-iconbtn" id="lc-pause-btn" title="พัก">⏸</button><button class="lc-iconbtn lc-exitwide" id="lc-exit" title="ออกจากเกมกลับ Lobby">🚪 ออก</button></div><div class="lc-power lc-glass"><div class="lc-power-name" id="lc-power-name">กระสุน TRACER</div><div class="lc-power-bar"><div class="lc-power-fill" id="lc-power-fill"></div></div></div><div class="lc-hint lc-glass"><b>AUTO FIRE</b> · ลากสนามเพื่อบิน · M Missile</div></div>';
     document.body.appendChild(root);canvas=root.querySelector('canvas');ctx=canvas.getContext('2d',{alpha:false});['score','combo','shield','words','wave','coins','target','meaning','progress','power-name','power-fill','pause-btn','exit','sound','missile','fire-left','fire-right'].forEach(k=>hud[k.replace(/-([a-z])/g,(_m,c)=>c.toUpperCase())]=root.querySelector('#lc-'+k));hud.powerName=root.querySelector('#lc-power-name');hud.powerFill=root.querySelector('#lc-power-fill');hud.pause=root.querySelector('#lc-pause-btn');const coinStat=hud.coins.parentElement;coinStat.classList.add('lc-coin-stat');coinStat.insertAdjacentHTML('beforeend','<img src="'+COIN_IMAGE+'" alt="เหรียญทอง">');
@@ -314,9 +315,9 @@
     try{if(!document.fullscreenElement&&document.documentElement.requestFullscreen){await document.documentElement.requestFullscreen({navigationUI:'hide'});gameFullscreen=true;}if(screen.orientation&&screen.orientation.lock){await screen.orientation.lock('portrait');orientationLocked=true;}}catch(_e){}
   }
   function releasePortrait(){try{if(orientationLocked&&screen.orientation&&screen.orientation.unlock)screen.orientation.unlock();}catch(_e){}orientationLocked=false;if(gameFullscreen&&document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(()=>{});gameFullscreen=false;}
-  function startGame(){if(!opening||running)return;opening=false;buildDom();layout();playerX=W*.5;playerY=H*.76;playerVX=playerVY=0;bind();running=true;resetMission();if(typeof Music!=='undefined'&&Music.suspendBg)Music.suspendBg();last=performance.now();raf=requestAnimationFrame(frame);tutorial();}
+  function startGame(){if(!opening||running)return;opening=false;buildDom();layout();playerX=W*.5;playerY=H*.76;playerVX=playerVY=0;bind();running=true;resetMission();if(typeof Music!=='undefined'&&Music.suspendBg)Music.suspendBg();resetFrameClock();raf=requestAnimationFrame(frame);tutorial();}
   function open(){if(running||opening)return;opening=true;requestPortrait();loadPlayerAssets().then(startGame).catch(err=>{opening=false;console.error(err);releasePortrait();if(typeof toast==='function')toast('⚠️ โหลดภาพมังกรนักบินไม่สำเร็จ กรุณารีเฟรชแล้วลองใหม่');});}
-  function close(){opening=false;running=false;dragPointer=null;keyLeft=keyRight=keyUp=keyDown=false;playerVX=playerVY=0;flushCloudSave();clearTimers();cancelAnimationFrame(raf);if(abort)abort.abort();abort=null;letters.length=bullets.length=particles.length=shockwaves.length=0;try{if(audio&&audio.state==='running')audio.suspend();}catch(e){}if(root)root.remove();root=canvas=ctx=null;releasePortrait();if(typeof Music!=='undefined'&&Music.resumeBg)Music.resumeBg();if(typeof renderDashboard==='function')renderDashboard();}
+  function close(){opening=false;running=false;frameAt=0;dragPointer=null;keyLeft=keyRight=keyUp=keyDown=false;playerVX=playerVY=0;flushCloudSave();clearTimers();cancelAnimationFrame(raf);if(abort)abort.abort();abort=null;letters.length=bullets.length=particles.length=shockwaves.length=0;try{if(audio&&audio.state==='running')audio.suspend();}catch(e){}if(root)root.remove();root=canvas=ctx=null;releasePortrait();if(typeof Music!=='undefined'&&Music.resumeBg)Music.resumeBg();if(typeof renderDashboard==='function')renderDashboard();}
   function announcementSeen(){try{return !!(typeof state!=='undefined'&&state.letterCannonAnnouncementSeen)||localStorage.getItem(ANNOUNCEMENT_KEY)==='1';}catch(e){return false;}}
   function rememberAnnouncement(){try{localStorage.setItem(ANNOUNCEMENT_KEY,'1');}catch(e){}if(typeof state!=='undefined'){state.letterCannonAnnouncementSeen=true;if(typeof saveState==='function')saveState();if(typeof authPushSave==='function')authPushSave(false);}}
   function guideToMenu(){if(typeof closePanel==='function')closePanel();const b=document.getElementById('btn-rail-lettercannon');if(!b)return;setTimeout(()=>{b.scrollIntoView({behavior:'smooth',block:'center'});b.classList.add('lc-menu-highlight');try{b.focus({preventScroll:true});}catch(e){b.focus();}setTimeout(()=>b.classList.remove('lc-menu-highlight'),5200);},120);}
@@ -329,5 +330,5 @@
   function watchAnnouncement(){if(maybeShowAnnouncement()||typeof MutationObserver==='undefined')return;const ob=new MutationObserver(()=>{if(maybeShowAnnouncement())ob.disconnect();});ob.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});}
   function bindRail(){const b=document.getElementById('btn-rail-lettercannon');if(b)b.addEventListener('click',()=>{if(typeof closePanel==='function')closePanel();open();});watchAnnouncement();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bindRail);else bindRail();
-  window.LetterCannon={open,close,maybeShowAnnouncement,guideToMenu,_t:{wordPool,nextWord,ensureNeeded,spawnLetter,spawnPower,spawnMeteor,bullet,fire,spawnMissile,fireMissile,explodeMissile,tickBullet,hit,activate,damageBase,resetMission,awardLetterCoin,awardWordBonus,playerGeometry,playerSize,playerLimits,turretGeometry,turretSize,cannonLimits,get word(){return word;},get pos(){return pos;},get score(){return score;},get combo(){return combo;},get wordsDone(){return wordsDone;},get coinsRun(){return coinsRun;},get shield(){return shield;},get wave(){return wave;},get bossMode(){return bossMode;},get threatsStopped(){return threatsStopped;},get misses(){return misses;},get missiles(){return missiles;},get currentAmmo(){return currentAmmo;},get running(){return running;},get paused(){return paused;},get playerX(){return playerX;},get playerY(){return playerY;},get playerVX(){return playerVX;},get playerVY(){return playerVY;},get letters(){return letters;},get bullets(){return bullets;},get particles(){return particles;},get shockwaves(){return shockwaves;},get activePower(){return activePower;},setPlayer(x,y){const p=playerLimits();playerX=clamp(x,p.minX,p.maxX);playerY=clamp(y,p.minY,p.maxY);playerVX=playerVY=0;},setPlayerX(x){playerX=clamp(x,cannonLimits().min,cannonLimits().max);playerVX=0;},setMove(left,right,up,down){keyLeft=!!left;keyRight=!!right;keyUp=!!up;keyDown=!!down;},setViewport(w,h){W=w;H=h;if(!playerX)playerX=W*.5;if(!playerY)playerY=H*.76;},step(dt){update(dt||.016);},PLAYER,AMMO,MAX_MISSILES,MISSILE_BLAST,SHOT_ANGLE,POWER,MAX_LETTERS,MAX_BULLETS,WORD_BONUS,MISSION_WORDS,MAX_SHIELD,BASE_LINE,MOVE_SPEED_CAP,MOVE_SPEED_FACTOR,MOVE_ACCEL,MOVE_BRAKE,COIN_IMAGE}};
+  window.LetterCannon={open,close,maybeShowAnnouncement,guideToMenu,_t:{wordPool,nextWord,ensureNeeded,spawnLetter,spawnPower,spawnMeteor,bullet,fire,spawnMissile,fireMissile,explodeMissile,tickBullet,hit,activate,damageBase,resetMission,awardLetterCoin,awardWordBonus,playerGeometry,playerSize,playerLimits,turretGeometry,turretSize,cannonLimits,get word(){return word;},get pos(){return pos;},get score(){return score;},get combo(){return combo;},get wordsDone(){return wordsDone;},get coinsRun(){return coinsRun;},get shield(){return shield;},get wave(){return wave;},get bossMode(){return bossMode;},get threatsStopped(){return threatsStopped;},get misses(){return misses;},get missiles(){return missiles;},get currentAmmo(){return currentAmmo;},get running(){return running;},get paused(){return paused;},get playerX(){return playerX;},get playerY(){return playerY;},get playerVX(){return playerVX;},get playerVY(){return playerVY;},get letters(){return letters;},get bullets(){return bullets;},get particles(){return particles;},get shockwaves(){return shockwaves;},get activePower(){return activePower;},setPlayer(x,y){const p=playerLimits();playerX=clamp(x,p.minX,p.maxX);playerY=clamp(y,p.minY,p.maxY);playerVX=playerVY=0;},setPlayerX(x){playerX=clamp(x,cannonLimits().min,cannonLimits().max);playerVX=0;},setMove(left,right,up,down){keyLeft=!!left;keyRight=!!right;keyUp=!!up;keyDown=!!down;},setViewport(w,h){W=w;H=h;if(!playerX)playerX=W*.5;if(!playerY)playerY=H*.76;},step(dt){update(dt||.016);},PLAYER,AMMO,MAX_MISSILES,MISSILE_BLAST,SHOT_ANGLE,POWER,MAX_LETTERS,MAX_BULLETS,MAX_PARTICLES,WORD_BONUS,MISSION_WORDS,MAX_SHIELD,BASE_LINE,MOVE_SPEED_CAP,MOVE_SPEED_FACTOR,MOVE_ACCEL,MOVE_BRAKE,FRAME_MS,DPR_CAP,MUZZLE_PARTICLES,ROUND_TRAIL_STEP,MISSILE_TRAIL_STEP,COIN_IMAGE}};
 })();

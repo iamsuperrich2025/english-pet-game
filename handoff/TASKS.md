@@ -28,6 +28,9 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (30 ส.ค.) — อ่านก่อน
+- **รอบ 1306 · Dragon Sky Siege ลื่นขึ้น:** ต้นตอคือ render ตาม 120/144 Hz, DPR 2, trail/blur/audio buffer/HUD allocation ซ้ำทุกนัดและทุกเฟรม
+- ล็อก active 60 FPS, pause 10/countdown 30, DPR 1.5, trail อิงเวลา, particle ring 140, cache noise/gradient และไม่ rebuild HUD ตอน autofire; gameplay/อาวุธ/ฉาก/หางมังกรครบ
+- regression performance + production build .1176 + PWA validate ผ่าน; พิกเซลลด 43.75%, render high-Hz ลด 50–58%, trail ลด 68.73%; scope js/lettercannon.js, tools/test_letter_cannon.js
 - **รอบ 1305 · Home V2 visual cleanup:** แยก New Word ออกจาก speech, ใส่ภาพโปรไฟล์กลับในกรอบ, ทำปุ่มสัตว์ 4 ปุ่มเต็มใบ และคงสัดส่วนกรอบ Global Feed
 - ซ่อนชื่อบ้าน/ปราสาทตามผู้ใช้สั่งและขยายภาพเต็มช่อง; ต้นตอหลักคือ R28 `top:54px` ทับ stage กับ action rail กว้างเกินคอลัมน์กลาง
 - syntax + Home V2 regression + production build/validate ผ่าน; scope `css/home-v2.css`, `js/home-v2.js`, `index_classic.html`, `tools/test_home_v2_mobile_preview.js`
