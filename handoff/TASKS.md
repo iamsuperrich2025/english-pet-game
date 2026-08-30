@@ -40,10 +40,6 @@
 - หมายเหตุ: source พร้อมส่งถูก auto-collect เข้า local commit `cf3dd436` ระหว่างรอบคู่ขนาน 1297; รอบนี้ใช้ SHIP manifest จำกัดเฉพาะไฟล์เพลงและไม่แตะ `css/petshopping3d.css`
 - **รอบ 1297 · Letter Cannon → Word Siege:** เปลี่ยนจาก endless/no-penalty เป็นภารกิจ 5 คำ 3 คลื่น มีโล่ฐาน 3 ชั้น อุกกาบาต และบอสคำสุดท้ายที่ต้องยิง 2 ครั้ง
 - ยิงตัวผิดทำสตรีคขาด/ลดคะแนนแต่ไม่หักเหรียญ; ยิงถูกต่อเนื่อง 6 ครั้งได้ homing อัตโนมัติ และคงรางวัลเดิม +1/ตัวอักษร +50/ครบคำ พร้อมหน้าผล S–D/เล่นใหม่
-- แก้ `js/lettercannon.js`, `css/lettercannon.css`, `tools/test_letter_cannon.js`, `docs/PROJECT_MAP.md`; ไม่แตะข้อมูลคำศัพท์/ระบบออนไลน์/ไฟล์งาน Home V2 คู่ขนาน
-- node syntax + regression ถึง boss/reset/reward/lifecycle ผ่าน; production build `.1166` ผ่าน · visual browser QA ติด Windows ACL ของ browser runtime (ไม่ใช่ error เกม)
-- **รอบ 1296 · Home V2 R27 (Admin Preview):** ย้ายพื้นที่ว่างจากการ์ด วันนี้/ออนไลน์ให้แถบผู้เล่นกว้างขึ้น แสดง Player ID 6 ตัวและวันที่ไทยแบบวัน–เดือนเต็ม–ปี
-- คืน interaction น้องกลางฉากผ่าน handler Classic: แตะสั้นร้อง/เด้ง/หัวใจแล้วเปิดโปรไฟล์ และกดค้าง 800 ms เพื่อลูบยาวรับ EXP วันละครั้ง
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`

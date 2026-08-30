@@ -446,7 +446,7 @@ gradeChangeTo:64 · gradeLockNote:91 · openGradeChange:100
 
 ## js/hauntedhotelsession.js (255 บรรทัด · 0 รายการ)
 
-## js/home-v2.js (1,812 บรรทัด · 0 รายการ)
+## js/home-v2.js (1,813 บรรทัด · 0 รายการ)
 
 ## js/hotel3d.js (1,526 บรรทัด · 62 รายการ)
 ### 🗂️ สารบัญโซน js/hotel3d.js (Read/Edit เฉพาะช่วง)
@@ -664,7 +664,7 @@ msbKickOut:9678 · tickMsBeam:9688 · TURBO_EVERY:9741 · TURBO_MS:9742 · TURBO
 TURBO_TRACK:9745 · resetTurbo:9747 · turboPick:9752 · turboBegin:9759 · tickTurbo:9771 · fit:9782
 tick:9788 · frame:9796 · build:9860 · start:9942 · exitWorld:10069
 
-## js/lettercannon.js (284 บรรทัด · 0 รายการ)
+## js/lettercannon.js (292 บรรทัด · 0 รายการ)
 
 ## js/lobby.js (52 บรรทัด · 3 รายการ)
 PANEL_TITLES:9 · openPanel:19 · closePanel:29
@@ -1035,21 +1035,21 @@ vbRender:148 · vbCardHTML:194
 .xsp-foot:235 · .xsb-box:250,277 · .xsb-head:255,256 · .xsb-grid:257 · .xsb-card:258,262 · .xsb-emoji:263
 .xsb-name:264 · .xsb-info:265 · .xsb-done:266 · .onet-picker:270,271,272,273(+3) · .onet-board:278,279,280
 
-## css/home-v2.css (1,877 บรรทัด · 136 selector)
-:root:9 · #screen-dashboard:35,40 · #vw-home-v2-root:42,43,53,54(+46) · .vw2-screen-frame:75 · .vw2-sky:76,77,86,93(+1) · .vw2-shell:96,101,583
+## css/home-v2.css (1,951 บรรทัด · 136 selector)
+:root:9 · #screen-dashboard:35,40 · #vw-home-v2-root:42,43,53,54(+47) · .vw2-screen-frame:75 · .vw2-sky:76,77,86,93(+1) · .vw2-shell:96,101,583
 .vw2-glass:105 · .vw2-top:118,633,780,969(+1) · .vw2-profile:123,137,141,283(+2) · .vw2-kanok-corner:142 · .vw2-profile-crown:143 · .vw2-profile-kicker:144,145
-.vw2-avatar-frame:146,151,289,290 · .vw2-avatar:152,153 · .vw2-avatar-edit:154 · .vw2-profile-main:155 · .vw2-name-row:156,157 · .vw2-pencil:158
-.vw2-profile-meta:159,1821 · .vw2-profile-meta-chip:160,161,162,163(+3) · .vw2-grade-identity:164 · .vw2-grade-copy:165 · .vw2-profile-chips:166 · .vw2-achievement-mark:167
-.vw2-rank:168,292 · .vw2-sync-chip:169 · .vw2-wallet:171,637,782 · .vw2-wallet-pill:172,178,179,180(+39) · .vw2-stat-art:182 · .vw2-stat-copy:183
+.vw2-avatar-frame:146,151,289,290 · .vw2-avatar:152,153 · .vw2-avatar-edit:154 · .vw2-profile-main:155,1885 · .vw2-name-row:156,157,1886 · .vw2-pencil:158
+.vw2-profile-meta:159,1821,1887 · .vw2-profile-meta-chip:160,161,162,163(+12) · .vw2-grade-identity:164 · .vw2-grade-copy:165 · .vw2-profile-chips:166,1900 · .vw2-achievement-mark:167,1901
+.vw2-rank:168,292,1902 · .vw2-sync-chip:169 · .vw2-wallet:171,637,782 · .vw2-wallet-pill:172,178,179,180(+39) · .vw2-stat-art:182 · .vw2-stat-copy:183
 .vw2-top-actions:185,494 · .vw2-tool-btn:186,192,193,310(+11) · .vw2-main-grid:196,584,712,941 · .vw2-left:199,200,315,518 · .vw2-rail-btn:201,316,1292,1293(+3) · .vw2-rail-art:202,203,204,205(+4)
 .vw2-rail-scene:206,207 · .vw2-rail-scene-mark:208,321 · .vw2-rail-label:209,322,713,1336 · .vw2-left-scroll-cue:210,520 · .vw2-feed:213,214,326,327(+23) · .vw2-section-head:215,216,217,336(+5)
 .vw2-feed-items:218,881,1015,1857 · .vw2-feed-card:219,337 · .vw2-feed-avatar:220 · .vw2-feed-copy:221 · .vw2-feed-coin:222,896,1021,1030(+2) · .vw2-feature:225,700,813,1265
-.vw2-feature-title:226,227,340,341(+6) · .vw2-word-ribbon:228,229,230,342(+7) · .vw2-feature-stage:231,346,347,588(+1) · .vw2-world-scene:232,589,822 · .vw2-stage-depth:233,234,235,348(+2) · .vw2-stage-castle:236,350,590
+.vw2-feature-title:226,227,340,341(+7) · .vw2-word-ribbon:228,229,230,342(+7) · .vw2-feature-stage:231,346,347,588(+1) · .vw2-world-scene:232,589,822 · .vw2-stage-depth:233,234,235,348(+2) · .vw2-stage-castle:236,350,590
 .vw2-atmosphere:237 · .vw2-speech:238,351,352,353(+4) · .vw2-reward-card:239,354,355,356(+7) · .vw2-pet-halo:240,241,593 · .vw2-pedestal-aura:242,243,359 · .vw2-pet-platform:244,245,246,357(+1)
 .vw2-pet:247,360,690,697(+3) · .vw2-pet-sparkles:248 · .vw2-house-preview:249 · .vw2-stage-copy:250,364,1178,1179(+1) · .vw2-feature-actions:251,367,368,823(+5) · .vw2-right:254,490
 .vw2-mission:255,328,333,491(+1) · .vw2-quests:256,492,882 · .vw2-quest-row:257,1274 · .vw2-online:258,329,334,523(+2) · .vw2-online-row:259,1195 · .vw2-friends-btn:260,525,530,1200(+1)
-.vw2-bottom:263,264,374,444(+13) · .vw2-mode:265,375,376,377(+27) · .vw2-preview-mark:266,594 · .vw2-home-active:269,270,271 · .vw2-rail-racing:317,323,519,1334 · .vw2-house-preview-head:361,362,489,1181(+2)
-.vw2-stage-foreground:363,592,1045 · .vw2-enter:369 · .vw2-play:370 · .vw2-shop-link:371 · .vw2-bottom-scroll:450,469,470,471(+6) · .vw2-bottom-track:472,482,514,515(+28)
+.vw2-bottom:263,264,374,444(+14) · .vw2-mode:265,375,376,377(+27) · .vw2-preview-mark:266,594 · .vw2-home-active:269,270,271 · .vw2-rail-racing:317,323,519,1334 · .vw2-house-preview-head:361,362,489,1181(+2)
+.vw2-stage-foreground:363,592,1045 · .vw2-enter:369 · .vw2-play:370 · .vw2-shop-link:371 · .vw2-bottom-scroll:450,469,470,471(+6) · .vw2-bottom-track:472,482,514,515(+42)
 .vw2-online-list:493,524,883,1194 · .vw2-word-kicker:703,846,1267 · .vw2-word-copy:704,705,706,847(+4) · .vw2-word-reward:707,850 · .vw2-feed-market-divider:886,887,888,1032 · .vw2-feed-market-note:889
 .vw2-market-feed-card:890,891,892,1186(+3) · .vw2-feed-product:893,894 · .vw2-market-seller:895,1190 · .no-anim:974 · .vw2-house-backdrop:1183 · .vw2-online-name-line:1196,1197
 .vw2-online-badges:1198 · .vw2-online-copy:1199 · .vw2-rail-cure:1203,1204,1205,1206 · .vw2-online-modal-open:1210 · .vw2-online-modal:1211,1212 · .vw2-online-modal-panel:1213,1214
