@@ -16,7 +16,7 @@
 - ยก New Word ไปแทนช่องแถวรองเดิมตาม desktop/compact/จอเตี้ย และขยายปุ่มสัตว์เป็นรางกว้างพร้อม safe area/ตัวอักษรสีขาว contrast สูง; syntax + Home V2 regression + production build + PWA/cache/TWA validator ผ่าน
 - **รอบ 1320 · ซ่อนป้ายติดต่อโฆษณาทุกโลก:** ป้ายว่างไม่วาดข้อความและซ่อนทั้งแผ่น/เสา รวมป้ายผนังโลกเฮลิฯ กับป้ายชื่อเชิญบนตึก; ป้ายผู้เช่าหรือภาพผู้สนับสนุนจริงยังแสดงตามเดิม
 - แก้ `js/adv3d_tex.js`, `js/adventure3d.js`; syntax + regression 11 เงื่อนไข + production build `.1187` + PWA/cache/TWA validator ผ่าน (ว่าง/เช่า/หมดอายุ/ภาพจริง/ทุกชนิดป้าย)
-- **รอบ 1321 · Home V2 ปุ่มยาว + สัตว์ไม่ลอย:** ขยายปุ่มสัตว์บนจอ landscape/มือถือเป็น 236–264px (มือถือ 244px) ให้ข้อความไทยไม่ตกขอบ และลด `bottom` ของภาพสัตว์เหลือ 10%/9% ให้แตะแท่นมากขึ้น
+- **รอบ 1322 · Home V2 ปุ่มยาว + สัตว์ไม่ลอย:** ขยายปุ่มสัตว์บนจอ landscape/มือถือเป็น 236–264px (มือถือ 244px) ให้ข้อความไทยไม่ตกขอบ และลด `bottom` ของภาพสัตว์เหลือ 10%/9% ให้แตะแท่นมากขึ้น
 - แก้ `css/home-v2.css`, `index_classic.html`, `tools/test_home_v2_mobile_preview.js`; syntax + Home V2 regression + production build ผ่าน; Browser visual QA ยังถูก Windows ACL บล็อก
 - **รอบ 1317 · Home V2 HUD + ตลาดสัตว์:** แถวรอง 4 ช่องสูงเท่าแถวหลัก 56px/49px และ New Word มี safe gap 5/7/6px ตาม desktop/compact/จอเตี้ย; ถอดปุ่มและ route Classic พร้อมจัดเครื่องมือ 6 ปุ่มเต็มกรอบ
 - ตลาดต่อท้ายหุ่นยนต์เพิ่มสัตว์ครบ 9 ชนิดจาก `PETS`; ร้านเดิมกับตลาดใช้ `openPetPurchase()` จุดเดียว จึงคงราคา/ห้ามชนิดซ้ำ/ตั้งชื่อ/ยอดขายเดิม

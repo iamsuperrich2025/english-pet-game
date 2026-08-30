@@ -2336,3 +2336,19 @@ body.vw2-home-active.vw2-page-hidden #vw-home-v2-root *:after{animation-play-sta
   #vw-home-v2-root .vw2-word-ribbon{top:-7px!important}
   #vw-home-v2-root .vw2-feature-action-track>button{flex-basis:176px!important}
 }
+/* ======================== R37 / รอบ 1322 — GROUNDED PET + LONG ACTION PLAQUES ======================== */
+/* Thai labels need a wider centre safe-area than the ornamental frame leaves
+   at phone/short-landscape sizes. Keep the swipe rail and extend whole plaques
+   so profile, pet name and owned-pet count do not wrap against the frame ends. */
+#vw-home-v2-root{--vw2-r1322-ready:1}
+@media (max-width:1180px),(max-height:520px){
+  #vw-home-v2-root .vw2-feature-action-track>button{flex-basis:clamp(236px,26vw,264px)!important}
+  #vw-home-v2-root .vw2-pet{bottom:10%!important}
+}
+@media (max-width:760px){
+  #vw-home-v2-root .vw2-feature-action-track>button{flex-basis:244px!important}
+}
+@media (max-height:390px){
+  #vw-home-v2-root .vw2-feature-action-track>button{flex-basis:236px!important}
+  #vw-home-v2-root .vw2-pet{bottom:9%!important}
+}
