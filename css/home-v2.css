@@ -1773,3 +1773,39 @@ body.vw2-pet-modal-open{overflow:hidden!important}
 @media (prefers-reduced-motion:reduce){
   .vw2-bottom:before,.vw2-bottom:after{transition:none}
 }
+
+/* ======================== R26 / รอบ 1295 — FULL-CARD PAGED LEARNING RAIL ======================== */
+/* Keep the accepted R24/R25 toy-card artwork. Only the horizontal geometry
+   changes: every resting viewport contains whole cards, never a clipped next
+   card. Side gutters belong to the scroll cues, not to button content. */
+#vw-home-v2-root{--vw2-r1295-ready:1}
+.vw2-bottom{
+  display:grid!important;grid-template-columns:24px minmax(0,1fr) 24px!important;
+  grid-template-rows:minmax(0,1fr)!important;gap:4px!important;align-items:stretch!important;
+}
+.vw2-bottom-scroll{
+  grid-column:2!important;grid-row:1!important;container-type:inline-size;
+  scroll-snap-type:x mandatory!important;scroll-padding-inline:0!important;
+}
+.vw2-bottom-track{
+  grid-template-columns:repeat(13,calc((100cqw - 36px)/7))!important;
+  gap:6px!important;padding:3px 0!important;box-sizing:border-box!important;
+}
+.vw2-bottom-track .vw2-mode{
+  scroll-snap-align:start!important;scroll-snap-stop:always!important;
+}
+.vw2-bottom:before,.vw2-bottom:after{
+  position:static!important;top:auto!important;right:auto!important;left:auto!important;
+  grid-row:1!important;width:22px!important;height:30px!important;margin:0!important;
+  align-self:center!important;justify-self:center!important;
+}
+.vw2-bottom:before{grid-column:1!important}.vw2-bottom:after{grid-column:3!important}
+@media (max-width:1180px),(max-height:520px){
+  .vw2-bottom-track{grid-template-columns:repeat(13,calc((100cqw - 25px)/6))!important;gap:5px!important}
+}
+@media (max-width:960px){
+  .vw2-bottom-track{grid-template-columns:repeat(13,calc((100cqw - 20px)/5))!important;gap:5px!important}
+}
+@media (max-width:760px){
+  .vw2-bottom-track{grid-template-columns:repeat(13,calc((100cqw - 12px)/4))!important;gap:4px!important}
+}

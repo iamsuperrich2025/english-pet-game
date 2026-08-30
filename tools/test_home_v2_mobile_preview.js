@@ -48,8 +48,9 @@ must(home.includes("R21 / รอบ 1289") && css.includes("R21 / รอบ 1289
 must(home.includes("R22 / รอบ 1290") && css.includes("R22 / รอบ 1290") && css.includes("--vw2-r1290-ready:1") && home.includes("--vw2-r1290-runtime-ready:1"), "R22 / รอบ 1290 lineage markers missing");
 must(home.includes("R23 / รอบ 1291") && css.includes("R23 / รอบ 1291") && css.includes("--vw2-r1291-ready:1") && home.includes("--vw2-r1291-runtime-ready:1"), "R23 / รอบ 1291 lineage markers missing");
 must(home.includes("R24 / รอบ 1293") && css.includes("R24 / รอบ 1293") && css.includes("--vw2-r1293-ready:1") && home.includes("--vw2-r1293-runtime-ready:1"), "R24 / รอบ 1293 lineage markers missing");
-must(home.includes("ADMIN PREVIEW · R25 ALIGNED SINGLE-ROW LEARNING RAIL") && home.includes("R25 / รอบ 1294") && css.includes("R25 / รอบ 1294") && css.includes("--vw2-r1294-ready:1") && home.includes("--vw2-r1294-runtime-ready:1"), "R25 / รอบ 1294 lineage markers missing");
-must(indexClassic.includes("css/home-v2.css?v=1294") && indexClassic.includes("js/home-v2.js?v=1294"), "R25 cache-bust missing from index_classic.html");
+must(home.includes("R25 / รอบ 1294") && css.includes("R25 / รอบ 1294") && css.includes("--vw2-r1294-ready:1") && home.includes("--vw2-r1294-runtime-ready:1"), "R25 / รอบ 1294 lineage markers missing");
+must(home.includes("ADMIN PREVIEW · R26 FULL-CARD PAGED LEARNING RAIL") && home.includes("R26 / รอบ 1295") && css.includes("R26 / รอบ 1295") && css.includes("--vw2-r1295-ready:1") && home.includes("--vw2-r1295-runtime-ready:1"), "R26 / รอบ 1295 lineage markers missing");
+must(indexClassic.includes("css/home-v2.css?v=1295") && indexClassic.includes("js/home-v2.js?v=1295"), "R26 cache-bust missing from index_classic.html");
 must(!home.includes("ADMIN PREVIEW · R21 HEAL ALL PETS"), "stale R21 preview badge remains");
 must(css.includes(".vw2-feature-title,.vw2-word-ribbon{top:-25px!important}"), "R17 complete New Word control was not moved into the upper HUD lane");
 must(css.includes(".vw2-feature{overflow:visible!important}") && css.includes("left:24%!important;right:24%!important;top:-25px!important"), "R18 New Word plaque is not fully visible in the safe HUD lane");
@@ -289,6 +290,10 @@ must(home.includes("if(!allowed)") && home.includes("if(!showV2) closeOwnedPetsM
 must(css.includes("BOTTOM GEOMETRY RESET") && css.includes("transform:none!important;translate:none!important") && css.includes("height:auto!important;min-height:0!important"), "R25 inherited icon/label geometry is not fully reset");
 must(home.includes("frame?.classList.toggle('can-scroll-right'") && css.includes(".vw2-bottom.can-scroll-left:before,.vw2-bottom.can-scroll-right:after"), "R25 horizontal scroll affordance missing");
 must(home.includes("bottomIconMaxCenterErrorPx:") && home.includes("bottomLabelMaxCenterErrorPx:") && home.includes("bottomScrollCueCorrect:"), "R25 alignment/cue preview metrics missing");
+must(css.includes("FULL-CARD PAGED LEARNING RAIL") && css.includes("scroll-snap-type:x mandatory!important") && css.includes("scroll-padding-inline:0!important") && css.includes("scroll-snap-stop:always!important"), "R26 whole-card paging/snap contract missing");
+['calc((100cqw - 36px)/7)','calc((100cqw - 25px)/6)','calc((100cqw - 20px)/5)','calc((100cqw - 12px)/4)'].forEach(formula=>must(css.includes(formula), `R26 responsive whole-card formula missing: ${formula}`));
+must(css.includes("grid-template-columns:24px minmax(0,1fr) 24px!important") && css.includes("padding:3px 0!important") && home.includes("bottomWholeCardPageAligned:") && home.includes("bottomPartiallyVisibleActions") && home.includes("bottomFullyVisibleActionCount"), "R26 separate cue columns / whole-card evidence metrics missing");
+must(!css.includes("R26 / รอบ 1295 — FULL-CARD PAGED LEARNING RAIL") || css.lastIndexOf("scroll-snap-align:start!important") > css.lastIndexOf("scroll-snap-align:none!important"), "R26 whole-card snap is not the final rail authority");
 must(css.includes("R11.5.3 BOTTOM RAIL GEOMETRY RESTORE + WRAPPER-ONLY SCROLL"), "R11.5.3 wrapper-only Bottom Rail architecture was lost");
 must(css.includes("R11.5.4 EVIDENCE-DRIVEN GEOMETRY CORRECTION"), "R11.5.4 geometry-correction marker missing");
 must(home.includes('class="vw2-bottom-scroll"') && home.includes('class="vw2-bottom-track"'), "static outer rail / inner scroll wrapper markup missing");
@@ -327,5 +332,5 @@ if(fail.length){
   console.error("Home V2 R11.5.4 validation FAILED:\n- " + fail.join("\n- "));
   process.exit(1);
 }
-console.log("Home V2 R25 / รอบ 1294 validation PASS");
-console.log(`Checked aligned single-row learning rail, honest scroll cues, zero flyout DOM, atomic one-tap heal-all, mobile profiles, ${expectedRail.length} left destinations, all ${expectedBottom.length} learning actions, and admin gate.`);
+console.log("Home V2 R26 / รอบ 1295 validation PASS");
+console.log(`Checked whole-card paged learning rail, zero clipped trailing buttons, aligned card content, semantic left icons, ${expectedRail.length} left destinations, all ${expectedBottom.length} learning actions, and admin gate.`);
