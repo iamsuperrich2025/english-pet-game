@@ -2268,3 +2268,71 @@ body.vw2-home-active.vw2-page-hidden #vw-home-v2-root *:after{animation-play-sta
     grid-template-rows:repeat(2,minmax(0,1fr))!important;
   }
 }
+
+/* ======================== R36 / รอบ 1319 — SWIPE HUD + RAISED WORD + WIDE PET ACTIONS ======================== */
+#vw-home-v2-root{--vw2-r1319-ready:1}
+/* The seven authoritative HUD items form one card-paged rail. The initial
+   viewport shows the three primary cards; the other four follow naturally. */
+#vw-home-v2-root .vw2-wallet{
+  display:flex!important;
+  grid-template-columns:none!important;
+  grid-template-rows:none!important;
+  align-items:flex-start!important;
+  gap:5px!important;
+  height:60px!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  pointer-events:auto!important;
+  scroll-snap-type:x mandatory!important;
+  scroll-behavior:smooth;
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+  touch-action:pan-x;
+  overscroll-behavior-x:contain;
+  -webkit-overflow-scrolling:touch;
+}
+#vw-home-v2-root .vw2-wallet::-webkit-scrollbar{display:none}
+#vw-home-v2-root .vw2-wallet>.vw2-wallet-pill{
+  position:relative!important;
+  inset:auto!important;
+  top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;
+  width:auto!important;
+  height:56px!important;
+  flex:0 0 calc((100% - 10px)/3)!important;
+  scroll-snap-align:start;
+  scroll-snap-stop:always;
+}
+/* New Word occupies the former secondary-HUD lane. */
+#vw-home-v2-root .vw2-feature-title,
+#vw-home-v2-root .vw2-word-ribbon{top:-9px!important}
+/* The ornamental ends remain visible while the central copy gets a wider,
+   high-contrast safe area on every pet action. */
+#vw-home-v2-root .vw2-feature-action-scroll{overflow-x:auto!important;touch-action:pan-x!important}
+#vw-home-v2-root .vw2-feature-action-track{width:max-content!important;min-width:100%!important;gap:10px!important;padding-inline:5px!important}
+#vw-home-v2-root .vw2-feature-action-track>button{
+  flex:0 0 clamp(212px,18vw,248px)!important;
+  color:#fff!important;
+  text-shadow:0 2px 2px rgba(57,22,94,.78),0 0 4px rgba(53,20,84,.46)!important;
+}
+#vw-home-v2-root .vw2-feature-action-track>button>span{
+  max-width:72%!important;
+  padding-inline:6px!important;
+  color:inherit!important;
+}
+#vw-home-v2-root .vw2-feature-action-track>button>span>small,
+#vw-home-v2-root .vw2-feature-action-track>button>span>b{color:inherit!important;overflow-wrap:normal!important;word-break:keep-all!important}
+@media (max-width:1180px),(max-height:520px){
+  #vw-home-v2-root .vw2-wallet{gap:3px!important;height:53px!important}
+  #vw-home-v2-root .vw2-wallet>.vw2-wallet-pill{height:49px!important;flex-basis:calc((100% - 6px)/3)!important}
+  #vw-home-v2-root .vw2-feature-title,
+  #vw-home-v2-root .vw2-word-ribbon{top:calc(95px - clamp(102px,25.5vh,108px))!important}
+  #vw-home-v2-root .vw2-feature-action-track>button{flex-basis:clamp(190px,22vw,224px)!important}
+}
+@media (max-width:760px){
+  #vw-home-v2-root .vw2-feature-action-track>button{flex-basis:184px!important}
+}
+@media (max-height:390px){
+  #vw-home-v2-root .vw2-feature-title,
+  #vw-home-v2-root .vw2-word-ribbon{top:-7px!important}
+  #vw-home-v2-root .vw2-feature-action-track>button{flex-basis:176px!important}
+}

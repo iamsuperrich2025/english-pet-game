@@ -20,6 +20,7 @@
    R32 / รอบ 1313 — Royal jewel New Vocab frame + optically balanced content lanes
    R33 / รอบ 1314 — Classic left rail skin + original Classic icon glyphs
    R34 / รอบ 1316 — Four-slot secondary HUD: computer, worth, graph and rankings
+   R36 / รอบ 1319 — Swipeable seven-card HUD + raised New Word + wider pet actions
    ------------------------------------------------------------
    Additive UI shell only. It does NOT own economy, auth, quests,
    Firebase, purchases, or game routing. Existing Lobby DOM stays
@@ -472,7 +473,7 @@
     if(document.getElementById(STYLE_ID)) return;
     const style = document.createElement('style');
     style.id = STYLE_ID;
-    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1;--vw2-r1287-runtime-ready:1;--vw2-r1288-runtime-ready:1;--vw2-r1289-runtime-ready:1;--vw2-r1290-runtime-ready:1;--vw2-r1291-runtime-ready:1;--vw2-r1293-runtime-ready:1;--vw2-r1294-runtime-ready:1;--vw2-r1295-runtime-ready:1;--vw2-r1296-runtime-ready:1;--vw2-r1300-runtime-ready:1;--vw2-r1305-runtime-ready:1;--vw2-r1309-runtime-ready:1;--vw2-r1311-runtime-ready:1;--vw2-r1313-runtime-ready:1;--vw2-r1314-runtime-ready:1;--vw2-r1316-runtime-ready:1}';
+    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1;--vw2-r1287-runtime-ready:1;--vw2-r1288-runtime-ready:1;--vw2-r1289-runtime-ready:1;--vw2-r1290-runtime-ready:1;--vw2-r1291-runtime-ready:1;--vw2-r1293-runtime-ready:1;--vw2-r1294-runtime-ready:1;--vw2-r1295-runtime-ready:1;--vw2-r1296-runtime-ready:1;--vw2-r1300-runtime-ready:1;--vw2-r1305-runtime-ready:1;--vw2-r1309-runtime-ready:1;--vw2-r1311-runtime-ready:1;--vw2-r1313-runtime-ready:1;--vw2-r1314-runtime-ready:1;--vw2-r1316-runtime-ready:1;--vw2-r1319-runtime-ready:1}';
     document.head.appendChild(style);
   }
   function clickExisting(selector, opts){
@@ -826,6 +827,51 @@
     window.addEventListener('resize', updateLeftRailCue, {passive:true});
     setTimeout(updateLeftRailCue, 0);
   }
+  function updateWalletScrollState(){
+    if(!root) return;
+    const rail = root.querySelector('.vw2-wallet');
+    if(!rail) return;
+    const max = Math.max(0, rail.scrollWidth - rail.clientWidth);
+    const scrollable = max > 2;
+    rail.classList.toggle('is-scrollable', scrollable);
+    rail.classList.toggle('is-at-start', rail.scrollLeft <= 2);
+    rail.classList.toggle('is-at-end', rail.scrollLeft >= max - 2);
+    rail.dataset.vw2ScrollMax = String(Math.round(max));
+    rail.dataset.vw2ScrollLeft = String(Math.round(rail.scrollLeft));
+  }
+  function setupWalletScroll(){
+    if(!root) return;
+    const rail = root.querySelector('.vw2-wallet');
+    if(!rail || rail.dataset.vw2ScrollReady === '1') return;
+    rail.dataset.vw2ScrollReady = '1';
+    rail.title = 'เลื่อนซ้าย–ขวาเพื่อดูข้อมูลและปุ่มทั้งหมด';
+    rail.addEventListener('scroll', ()=>{
+      updateWalletScrollState();
+      scheduleLocalPreviewReport();
+    }, {passive:true});
+    rail.addEventListener('wheel', e=>{
+      if(rail.scrollWidth <= rail.clientWidth + 2 || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+      const before = rail.scrollLeft;
+      const max = Math.max(0, rail.scrollWidth - rail.clientWidth);
+      const next = Math.max(0, Math.min(max, before + e.deltaY));
+      if(Math.abs(next - before) <= .5) return;
+      e.preventDefault();
+      const priorBehavior = rail.style.scrollBehavior;
+      rail.style.scrollBehavior = 'auto';
+      rail.scrollLeft = next;
+      requestAnimationFrame(()=>{ rail.style.scrollBehavior = priorBehavior; });
+    }, {passive:false});
+    rail.addEventListener('keydown', e=>{
+      if(e.target !== rail) return;
+      const page = Math.max(90, rail.clientWidth * .72);
+      if(e.key === 'ArrowRight'){ e.preventDefault(); rail.scrollBy({left:page,behavior:'smooth'}); }
+      else if(e.key === 'ArrowLeft'){ e.preventDefault(); rail.scrollBy({left:-page,behavior:'smooth'}); }
+      else if(e.key === 'Home'){ e.preventDefault(); rail.scrollTo({left:0,behavior:'smooth'}); }
+      else if(e.key === 'End'){ e.preventDefault(); rail.scrollTo({left:rail.scrollWidth,behavior:'smooth'}); }
+    });
+    window.addEventListener('resize', updateWalletScrollState, {passive:true});
+    setTimeout(updateWalletScrollState, 0);
+  }
   function updateBottomRailScrollState(){
     if(!root) return;
     const rail = root.querySelector('.vw2-bottom-scroll');
@@ -927,6 +973,7 @@
     else if(width <= 1180 || height <= 600) profile = 'tablet-landscape';
     root.dataset.vw2LayoutProfile = profile;
     root.style.setProperty('--vw2-screen-ratio', (width / Math.max(1,height)).toFixed(3));
+    updateWalletScrollState();
     updateFeatureActionScrollState();
   }
   function build(){
@@ -1003,7 +1050,7 @@
               <div class="vw2-profile-chips"><span class="vw2-achievement-mark" aria-hidden="true">${icon('trophy')}</span><div class="vw2-rank" id="vw2-rank">กำลังโหลดแรงค์…</div><div class="vw2-sync-chip" id="vw2-sync-state" hidden></div></div>
             </div>
           </section>
-          <section class="vw2-wallet" aria-label="ข้อมูลรายได้และทรัพย์สิน">
+          <section class="vw2-wallet" tabindex="0" role="region" aria-label="ข้อมูลรายได้ ทรัพย์สิน กราฟ และอันดับ เลื่อนซ้ายขวาได้">
             <button class="vw2-wallet-pill coin" data-vw2-action="rank" data-vw2-source="#btn-rail-rank" title="เหรียญที่มีอยู่">${walletArtwork('coin')}<span class="vw2-stat-copy"><small>เหรียญคงเหลือ</small><b id="vw2-coins">0</b><span class="vw2-pill-status">ยอดพร้อมใช้</span></span><em>+</em></button>
             <div class="vw2-wallet-pill today" title="เหรียญที่หาได้วันนี้">${walletArtwork('today')}<span class="vw2-stat-copy"><small>วันนี้</small><b>+<span id="vw2-today">0</span></b><span class="vw2-pill-status">สะสมวันนี้</span></span></div>
             <div class="vw2-wallet-pill online" title="รายได้ที่ได้รับขณะออนไลน์">${walletArtwork('online')}<span class="vw2-stat-copy"><small>ออนไลน์</small><b>+<span id="vw2-online-earn">0</span></b><span class="vw2-pill-status" id="vw2-online-status">กำลังตรวจสอบ</span></span></div>
@@ -1123,6 +1170,7 @@
     document.body.appendChild(root);
     bindVisiblePetPat();
     setupLeftRailCue();
+    setupWalletScroll();
     setupBottomRailScroll();
     setupFeatureActionScroll();
     syncLayoutProfile();
@@ -1676,6 +1724,8 @@
     const bottom = r ? r.querySelector('.vw2-bottom') : null;
     const bottomScroll = r ? r.querySelector('.vw2-bottom-scroll') : null;
     const bottomTrack = r ? r.querySelector('.vw2-bottom-track') : null;
+    const wallet = r ? r.querySelector('.vw2-wallet') : null;
+    const walletItems = wallet ? Array.from(wallet.querySelectorAll(':scope>.vw2-wallet-pill')) : [];
     const featureActionScroll = r ? r.querySelector('.vw2-feature-action-scroll') : null;
     const featureActionTrack = r ? r.querySelector('.vw2-feature-action-track') : null;
     const leftUpCue = left ? left.querySelector('.vw2-left-scroll-cue.up') : null;
@@ -1698,6 +1748,7 @@
     const leftStyle = left ? getComputedStyle(left) : null;
     const bottomStyle = bottom ? getComputedStyle(bottom) : null;
     const bottomScrollStyle = bottomScroll ? getComputedStyle(bottomScroll) : null;
+    const walletStyle = wallet ? getComputedStyle(wallet) : null;
     const featureActionScrollStyle = featureActionScroll ? getComputedStyle(featureActionScroll) : null;
     const bottomModes = bottomTrack ? Array.from(bottomTrack.querySelectorAll('.vw2-mode')) : [];
     const learningActions = ['vocabbook','ielts','toeic','toefl','onetp6','onetm3','onetm6','cats','play','picmatch','picdict','picquiz','bandexam'];
@@ -1831,6 +1882,10 @@
         leftScrollable:!!(left && leftStyle && ['auto','scroll'].includes(leftStyle.overflowY) && left.scrollHeight > left.clientHeight + 1),
         leftScrollbarHidden:!!(leftStyle && leftStyle.scrollbarWidth === 'none'),
         leftCueCorrect:!!(left && leftUpCue && leftDownCue && ((left.scrollHeight <= left.clientHeight + 2 && !leftUpCue.classList.contains('is-visible') && !leftDownCue.classList.contains('is-visible')) || (left.scrollHeight > left.clientHeight + 2 && leftUpCue.classList.contains('is-visible') === (left.scrollTop > 2) && leftDownCue.classList.contains('is-visible') === (left.scrollTop + left.clientHeight < left.scrollHeight - 2)))),
+        walletItemCount:walletItems.length,
+        walletScrollable:!!(wallet && walletStyle && ['auto','scroll'].includes(walletStyle.overflowX) && wallet.scrollWidth > wallet.clientWidth + 1),
+        walletCanScrollLeft:!!(wallet && wallet.scrollLeft > 2),
+        walletCanScrollRight:!!(wallet && wallet.scrollLeft + wallet.clientWidth < wallet.scrollWidth - 2),
         bottomScrollable:!!(bottomScroll && bottomScrollStyle && ['auto','scroll'].includes(bottomScrollStyle.overflowX) && bottomScroll.scrollWidth > bottomScroll.clientWidth + 1),
         bottomContained:!!(bottom && bottomStyle && !['auto','scroll'].includes(bottomStyle.overflowX) && bottom.scrollWidth <= bottom.clientWidth + 1 && bottom.scrollHeight <= bottom.clientHeight + 1),
         outerBottomRailContained:!!(bottom && bottomStyle && !['auto','scroll'].includes(bottomStyle.overflowX) && bottom.scrollWidth <= bottom.clientWidth + 1 && bottom.scrollHeight <= bottom.clientHeight + 1),

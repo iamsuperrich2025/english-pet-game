@@ -52,7 +52,7 @@ must(home.includes("R24 / รอบ 1293") && css.includes("R24 / รอบ 1293
 must(home.includes("R25 / รอบ 1294") && css.includes("R25 / รอบ 1294") && css.includes("--vw2-r1294-ready:1") && home.includes("--vw2-r1294-runtime-ready:1"), "R25 / รอบ 1294 lineage markers missing");
 must(home.includes("R26 / รอบ 1295") && css.includes("R26 / รอบ 1295") && css.includes("--vw2-r1295-ready:1") && home.includes("--vw2-r1295-runtime-ready:1"), "R26 / รอบ 1295 lineage markers missing");
 must(home.includes("R27 / รอบ 1296") && css.includes("R27 / รอบ 1296") && css.includes("--vw2-r1296-ready:1") && home.includes("--vw2-r1296-runtime-ready:1"), "R27 / รอบ 1296 lineage markers missing");
-must(indexClassic.includes("css/home-v2.css?v=1317") && indexClassic.includes("js/home-v2.js?v=1317"), "R35 cache-bust missing from index_classic.html");
+must(indexClassic.includes("css/home-v2.css?v=1319") && indexClassic.includes("js/home-v2.js?v=1319"), "R36 cache-bust missing from index_classic.html");
 must(home.includes("R28 / รอบ 1300") && home.includes("--vw2-r1300-runtime-ready:1") && css.includes("R28 / รอบ 1300") && css.includes("--vw2-r1300-ready:1"), "R28 browser-verified visual contract missing");
 must(css.includes("grid-template-areas:\"class id time\" \"date date date\"") && css.includes("top:54px!important") && css.includes("--card-shadow:#075aa8"), "R28 HUD clearance/profile/date/premium rail rules missing");
 must(home.includes("R29 / รอบ 1305") && home.includes("--vw2-r1305-runtime-ready:1") && css.includes("R29 / รอบ 1305") && css.includes("--vw2-r1305-ready:1"), "R29 visual-hierarchy lineage markers missing");
@@ -381,12 +381,18 @@ must(indexClassic.includes("css/lobby.css?v=1317") && indexClassic.includes("js/
 
 must(r35SafeGaps.every(gap=>gap >= 5), `R35 New Word clearance below secondary HUD is below 5px: ${r35SafeGaps.join(',')}`);
 must(!home.includes("toolButton('classic'") && !home.includes("name === 'classic'") && !home.includes('data-vw2-action="classic"'), "obsolete Classic-page link remains in Home V2");
+must(css.includes("R36 / รอบ 1319") && css.includes("--vw2-r1319-ready:1") && home.includes("R36 / รอบ 1319") && home.includes("--vw2-r1319-runtime-ready:1"), "R36 swipe-HUD lineage markers missing");
+must(home.includes('class="vw2-wallet" tabindex="0" role="region"') && home.includes("function setupWalletScroll()") && home.includes("setupWalletScroll();") && home.includes("walletItemCount:walletItems.length") && home.includes("walletScrollable:"), "R36 accessible wallet scroll runtime/metrics missing");
+must(css.includes("display:flex!important") && css.includes("flex:0 0 calc((100% - 10px)/3)!important") && css.includes("scroll-snap-type:x mandatory!important") && css.includes("overscroll-behavior-x:contain"), "R36 seven-card swipe rail geometry missing");
+must(home.indexOf('class="vw2-wallet-pill coin"') < home.indexOf('class="vw2-wallet-pill today"') && home.indexOf('class="vw2-wallet-pill today"') < home.indexOf('class="vw2-wallet-pill online"') && home.indexOf('class="vw2-wallet-pill online"') < home.indexOf('class="vw2-wallet-pill computer"'), "R36 primary cards do not lead the combined wallet rail");
+must(css.includes(".vw2-word-ribbon{top:-9px!important}") && css.includes("top:calc(95px - clamp(102px,25.5vh,108px))!important") && css.includes(".vw2-word-ribbon{top:-7px!important}"), "R36 New Word does not occupy the former secondary-HUD lane responsively");
+must(css.includes("flex:0 0 clamp(212px,18vw,248px)!important") && css.includes("flex-basis:clamp(190px,22vw,224px)!important") && css.includes("max-width:72%!important") && css.includes("color:#fff!important"), "R36 pet actions lack wide safe-copy area or contrast");
+must(css.includes("Six current tools fill the panel exactly") && css.includes("grid-template-rows:repeat(2,minmax(0,1fr))!important"), "six-tool panel does not close the removed Classic row");
 
 if(fail.length){
-  console.error("Home V2 R35 validation FAILED:\n- " + fail.join("\n- "));
+  console.error("Home V2 R36 validation FAILED:\n- " + fail.join("\n- "));
   process.exit(1);
 }
 
-must(css.includes("Six current tools fill the panel exactly") && css.includes("grid-template-rows:repeat(2,minmax(0,1fr))!important"), "six-tool panel does not close the removed Classic row");
-console.log("Home V2 R35 / รอบ 1317 validation PASS");
-console.log(`Checked equal-height primary/secondary HUD geometry, responsive New Word clearance, authoritative graph/rank routes; ${expectedRail.length} left destinations; all ${expectedBottom.length} learning actions; and admin gate.`);
+console.log("Home V2 R36 / รอบ 1319 validation PASS");
+console.log(`Checked seven-card swipe HUD, raised New Word lane, wide high-contrast pet actions, authoritative graph/rank routes; ${expectedRail.length} left destinations; all ${expectedBottom.length} learning actions; and admin gate.`);
