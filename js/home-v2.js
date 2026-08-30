@@ -10,6 +10,7 @@
    R22 / รอบ 1290 — Admin-only fantasy adventure dock
    R23 / รอบ 1291 — Bright child-friendly fantasy play dock + readable flyouts
    R24 / รอบ 1293 — Cute single-row learning rail; no pet-obscuring flyout
+   R25 / รอบ 1294 — Bottom-button geometry reset + honest scroll cues
    ------------------------------------------------------------
    Additive UI shell only. It does NOT own economy, auth, quests,
    Firebase, purchases, or game routing. Existing Lobby DOM stays
@@ -138,6 +139,18 @@
     camera:`<path d="M12 22h9l4-7h14l4 7h9c4 0 7 3 7 7v20c0 4-3 7-7 7H12c-4 0-7-3-7-7V29c0-4 3-7 7-7z" class="i-purple"/><circle cx="32" cy="39" r="12" class="i-white"/><circle cx="32" cy="39" r="7" class="i-blue"/><path d="M15 29h8M49 29h4" class="i-white-line"/><path d="M49 11l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" class="i-star"/>`,
     racecar:`<path d="M9 38l7-16h28l9 16 5 4v9H6v-9z" class="i-blue"/><path d="M20 24h20l5 11H15z" class="i-white"/><path d="M17 30h12v7H14zM35 30h9l4 7H35z" class="i-purple"/><circle cx="17" cy="50" r="7" class="i-coin"/><circle cx="47" cy="50" r="7" class="i-coin"/><circle cx="17" cy="50" r="3" class="i-line"/><circle cx="47" cy="50" r="3" class="i-line"/><path d="M8 18h10M4 12h16M49 15h10" class="i-roof"/><path d="M50 8h10v12H50zM50 8h5v6h-5M55 14h5v6h-5" class="i-white-line"/>`,
     install:`<rect x="13" y="7" width="38" height="50" rx="9" class="i-blue"/><rect x="18" y="12" width="28" height="35" rx="5" class="i-white"/><path d="M32 17v20M24 29l8 8 8-8" class="i-line"/><circle cx="32" cy="51" r="2.5" class="i-mint"/>`,
+  });
+  Object.assign(ICON_ART, {
+    adventure:`<path d="M9 55V29h10V18h8v11h9V14h9v15h10v26z" class="i-purple"/><path d="M14 29l9-9 9 9 9-13 10 13" class="i-roof"/><path d="M27 55V42h11v13M14 38h7M44 38h7" class="i-white-line"/><path d="M22 55c3-8 8-13 16-16 5-2 10-2 16-1" class="i-coin"/>`,
+    skyplay:`<path d="M13 39c-6 0-10-4-10-9 0-6 5-10 11-10 2-8 8-13 16-13 9 0 16 6 17 15 7 0 12 4 12 10 0 5-4 8-10 8z" class="i-blue"/><path d="M24 34v17M43 34v17M24 37h19" class="i-line"/><path d="M28 50h11l-2 6h-7z" class="i-pink"/><path d="M12 26c5-4 10-5 15-3" class="i-white-line"/>`,
+    ghost:`<path d="M16 54V30C16 17 23 8 32 8s16 9 16 22v24l-8-6-8 7-8-7z" class="i-purple"/><circle cx="26" cy="29" r="4" class="i-white"/><circle cx="39" cy="29" r="4" class="i-white"/><circle cx="27" cy="29" r="2" class="i-line"/><circle cx="40" cy="29" r="2" class="i-line"/><path d="M27 40c3-3 7-3 10 0" class="i-white-line"/>`,
+    helicopter:`<path d="M17 28h24c8 0 14 5 14 12H25c-8 0-13-4-13-9 0-2 2-3 5-3z" class="i-blue"/><path d="M43 31l12-12h5L53 38M12 32H5M24 42l-4 8M45 42l4 8M17 50h8M44 50h9" class="i-line"/><path d="M29 18v10M12 17h36" class="i-roof"/><rect x="26" y="31" width="12" height="7" rx="3" class="i-white"/>`,
+    drone:`<circle cx="13" cy="20" r="8" class="i-blue"/><circle cx="51" cy="20" r="8" class="i-blue"/><circle cx="13" cy="46" r="8" class="i-pink"/><circle cx="51" cy="46" r="8" class="i-pink"/><path d="M19 24l9 6M45 24l-9 6M19 42l9-6M45 42l-9-6" class="i-line"/><rect x="25" y="26" width="14" height="14" rx="5" class="i-purple"/><circle cx="32" cy="34" r="4" class="i-white"/>`,
+    soccer:`<circle cx="32" cy="32" r="25" class="i-white"/><path d="M32 19l8 6-3 10H27l-3-10z" class="i-purple"/><path d="M32 7v12M11 20l13 5M53 20l-13 5M16 49l11-14M48 49L37 35M18 55l-2-6M46 55l2-6" class="i-line"/><path d="M13 18l5-8 10-2M51 18l-5-8-10-2" class="i-blue"/>`,
+    motorcycle:`<circle cx="16" cy="47" r="10" class="i-blue"/><circle cx="49" cy="47" r="10" class="i-blue"/><circle cx="16" cy="47" r="4" class="i-white"/><circle cx="49" cy="47" r="4" class="i-white"/><path d="M16 47l11-16h12l10 16M26 31l8 16M25 40h17" class="i-line"/><path d="M27 24h13l6 7H27z" class="i-pink"/><path d="M41 22h9M47 22l4 7" class="i-roof"/>`,
+    mothership:`<path d="M9 35c5-12 14-18 23-18s18 6 23 18c-5 8-14 12-23 12S14 43 9 35z" class="i-purple"/><path d="M22 20c2-8 6-12 10-12s8 4 10 12z" class="i-blue"/><ellipse cx="32" cy="35" rx="25" ry="8" class="i-peach"/><circle cx="19" cy="36" r="3" class="i-white"/><circle cx="32" cy="38" r="3" class="i-white"/><circle cx="45" cy="36" r="3" class="i-white"/><path d="M25 47l-5 10M32 48v11M39 47l5 10" class="i-mint-line"/>`,
+    mecha:`<rect x="17" y="10" width="30" height="25" rx="8" class="i-blue"/><rect x="20" y="37" width="24" height="18" rx="5" class="i-purple"/><path d="M17 41H8v11M47 41h9v11M25 55v6M39 55v6M32 10V5" class="i-line"/><circle cx="25" cy="22" r="4" class="i-white"/><circle cx="39" cy="22" r="4" class="i-white"/><path d="M25 30h14" class="i-white-line"/><path d="M27 42l5 5 5-5" class="i-star"/>`,
+    pinboard:`<rect x="10" y="8" width="44" height="48" rx="7" class="i-peach"/><rect x="15" y="13" width="34" height="38" rx="4" class="i-white"/><circle cx="23" cy="27" r="7" class="i-pink"/><circle cx="41" cy="27" r="7" class="i-blue"/><circle cx="32" cy="43" r="7" class="i-coin"/><path d="M20 34l-2 10 5-3 5 3-2-10M38 34l-2 10 5-3 5 3-2-10M29 50l-2 7 5-3 5 3-2-7" class="i-line"/>`,
   });
   function icon(name, extra=''){
     const art = ICON_ART[name] || ICON_ART.sparkle;
@@ -395,7 +408,7 @@
     if(document.getElementById(STYLE_ID)) return;
     const style = document.createElement('style');
     style.id = STYLE_ID;
-    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1;--vw2-r1287-runtime-ready:1;--vw2-r1288-runtime-ready:1;--vw2-r1289-runtime-ready:1;--vw2-r1290-runtime-ready:1;--vw2-r1291-runtime-ready:1;--vw2-r1293-runtime-ready:1}';
+    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1;--vw2-r1287-runtime-ready:1;--vw2-r1288-runtime-ready:1;--vw2-r1289-runtime-ready:1;--vw2-r1290-runtime-ready:1;--vw2-r1291-runtime-ready:1;--vw2-r1293-runtime-ready:1;--vw2-r1294-runtime-ready:1}';
     document.head.appendChild(style);
   }
   function clickExisting(selector, opts){
@@ -688,6 +701,9 @@
     rail.classList.toggle('is-at-end', rail.scrollLeft >= max - 2);
     rail.dataset.vw2ScrollMax = String(Math.round(max));
     rail.dataset.vw2ScrollLeft = String(Math.round(rail.scrollLeft));
+    const frame = rail.closest('.vw2-bottom');
+    frame?.classList.toggle('can-scroll-left', scrollable && rail.scrollLeft > 2);
+    frame?.classList.toggle('can-scroll-right', scrollable && rail.scrollLeft < max - 2);
   }
   function setupBottomRailScroll(){
     if(!root) return;
@@ -784,16 +800,16 @@
     const railButtons = [
       ['cure','heart','รักษา','#btn-rail-cure'],
       ['city','city','เมือง 3D','#btn-rail-city'],
-      ['worldAdv','globe','โลกผจญภัย','#btn-world-adv'],
-      ['worldSky','sparkle','Sky Playground','#btn-world-sky'],
-      ['worldHaunt','moon','โลกผีสิง','#btn-world-haunt'],
-      ['worldHeli','cannon','โลกเฮลิคอปเตอร์','#btn-world-heli'],
-      ['worldDrone','target','โลกโดรน FPV','#btn-world-drone'],
+      ['worldAdv','adventure','โลกผจญภัย','#btn-world-adv'],
+      ['worldSky','skyplay','Sky Playground','#btn-world-sky'],
+      ['worldHaunt','ghost','โลกผีสิง','#btn-world-haunt'],
+      ['worldHeli','helicopter','โลกเฮลิคอปเตอร์','#btn-world-heli'],
+      ['worldDrone','drone','โลกโดรน FPV','#btn-world-drone'],
       ['worldDrive','racecar','โลกขับรถ','#btn-world-drive'],
-      ['worldSoccer','star','โลกฟุตบอล','#btn-world-soccer'],
-      ['worldMoto','racecar','โลกมอเตอร์ไซค์','#btn-world-moto'],
-      ['worldInvasion','target','โลกยานแม่','#btn-world-invasion'],
-      ['worldMecha','controller','โลกหุ่นรบ','#btn-world-mecha'],
+      ['worldSoccer','soccer','โลกฟุตบอล','#btn-world-soccer'],
+      ['worldMoto','motorcycle','โลกมอเตอร์ไซค์','#btn-world-moto'],
+      ['worldInvasion','mothership','โลกยานแม่','#btn-world-invasion'],
+      ['worldMecha','mecha','โลกหุ่นรบ','#btn-world-mecha'],
       ['home','home','บ้าน','.lobby-rail [data-panel="panel-home"]'],
       ['invest','invest','ลงทุน','.lobby-rail [data-panel="panel-farm"]'],
       ['factory','factory','โรงงาน','.lobby-rail [data-panel="panel-factory"]'],
@@ -809,7 +825,7 @@
       ['friends','friends','เพื่อน','.lobby-rail [data-panel="panel-friends"]'],
       ['gifts','gift','ของขวัญ','.lobby-rail [data-panel="panel-gifts"]'],
       ['stats','stats','สถิติ','#btn-stats'],
-      ['trophy','trophy','ตู้เข็ม','#btn-rail-trophy'],
+      ['trophy','pinboard','ตู้เข็ม','#btn-rail-trophy'],
       ['racing','racecar','Vocab World Racing',''],
     ].map(x=>navButton(x[0],x[1],x[2],x[3])).join('');
     const learningModes = [
@@ -932,7 +948,7 @@
           </aside>
         </div>
         <footer class="vw2-bottom" aria-label="กิจกรรมภาษาอังกฤษ"><div class="vw2-bottom-scroll" role="region" aria-label="เลื่อนกิจกรรมภาษาอังกฤษซ้ายขวา"><div class="vw2-bottom-track">${learningModeButtons}</div></div></footer>
-        <div class="vw2-preview-mark">ADMIN PREVIEW · R24 CUTE SINGLE-ROW LEARNING RAIL</div>
+        <div class="vw2-preview-mark">ADMIN PREVIEW · R25 ALIGNED SINGLE-ROW LEARNING RAIL</div>
       </div>
       <div class="vw2-online-modal" id="vw2-online-modal" role="dialog" aria-modal="true" aria-labelledby="vw2-online-modal-title" aria-hidden="true" hidden>
         <section class="vw2-online-modal-panel">
@@ -1505,6 +1521,20 @@
     const allLearningRoutesPresent = bottomModes.length === learningActions.length && learningActions.every(actionName=>bottomTrack?.querySelector(`[data-vw2-action="${actionName}"]`));
     const bottomModeHeights = bottomModes.map(el=>el.getBoundingClientRect().height);
     const bottomButtonGeometryStable = bottomModeHeights.length === 13 && Math.max(...bottomModeHeights) - Math.min(...bottomModeHeights) <= 1;
+    const bottomIconCenterErrors = bottomModes.map(el=>{
+      const iconNode = el.querySelector(':scope>span');
+      if(!iconNode) return Infinity;
+      const buttonBox = el.getBoundingClientRect();
+      const iconBox = iconNode.getBoundingClientRect();
+      return Math.abs((iconBox.top + iconBox.bottom - buttonBox.top - buttonBox.bottom) / 2);
+    });
+    const bottomLabelCenterErrors = bottomModes.map(el=>{
+      const labelNode = el.querySelector(':scope>b');
+      if(!labelNode) return Infinity;
+      const buttonBox = el.getBoundingClientRect();
+      const labelBox = labelNode.getBoundingClientRect();
+      return Math.abs((labelBox.top + labelBox.bottom - buttonBox.top - buttonBox.bottom) / 2);
+    });
     const rootBox = r ? r.getBoundingClientRect() : null;
     const readableNodes = r ? Array.from(r.querySelectorAll('.vw2-tool-btn b,.vw2-section-head strong,.vw2-feed-copy p,.vw2-qbody b,.vw2-online-name-line>b,.vw2-mode')) : [];
     const readableSizes = readableNodes.map(el=>parseFloat(getComputedStyle(el).fontSize) || 0).filter(Boolean);
@@ -1600,6 +1630,9 @@
         adventureFlyoutPresent:!!(r && r.querySelector('#vw2-adventure-menu')),
         bottomButtonGeometryStable,
         bottomMinButtonHeightPx:bottomModeHeights.length ? Math.round(Math.min(...bottomModeHeights)*10)/10 : null,
+        bottomIconMaxCenterErrorPx:bottomIconCenterErrors.length ? Math.round(Math.max(...bottomIconCenterErrors)*10)/10 : null,
+        bottomLabelMaxCenterErrorPx:bottomLabelCenterErrors.length ? Math.round(Math.max(...bottomLabelCenterErrors)*10)/10 : null,
+        bottomScrollCueCorrect:!!(bottom && bottomScroll && (bottom.classList.contains('can-scroll-right') === (bottomScroll.scrollLeft < bottomScroll.scrollWidth-bottomScroll.clientWidth-2))),
         bottomClipOffenders,
         leftBottomCollision:rectsOverlap(leftRect,bottomRect),
         leftLastAction:{

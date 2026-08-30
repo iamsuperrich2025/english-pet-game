@@ -47,8 +47,9 @@ must(home.includes("R20 / รอบ 1288") && css.includes("R20 / รอบ 1288
 must(home.includes("R21 / รอบ 1289") && css.includes("R21 / รอบ 1289") && css.includes("--vw2-r1289-ready:1") && home.includes("--vw2-r1289-runtime-ready:1"), "R21 / รอบ 1289 lineage markers missing");
 must(home.includes("R22 / รอบ 1290") && css.includes("R22 / รอบ 1290") && css.includes("--vw2-r1290-ready:1") && home.includes("--vw2-r1290-runtime-ready:1"), "R22 / รอบ 1290 lineage markers missing");
 must(home.includes("R23 / รอบ 1291") && css.includes("R23 / รอบ 1291") && css.includes("--vw2-r1291-ready:1") && home.includes("--vw2-r1291-runtime-ready:1"), "R23 / รอบ 1291 lineage markers missing");
-must(home.includes("ADMIN PREVIEW · R24 CUTE SINGLE-ROW LEARNING RAIL") && home.includes("R24 / รอบ 1293") && css.includes("R24 / รอบ 1293") && css.includes("--vw2-r1293-ready:1") && home.includes("--vw2-r1293-runtime-ready:1"), "R24 / รอบ 1293 lineage markers missing");
-must(indexClassic.includes("css/home-v2.css?v=1293") && indexClassic.includes("js/home-v2.js?v=1293"), "R24 cache-bust missing from index_classic.html");
+must(home.includes("R24 / รอบ 1293") && css.includes("R24 / รอบ 1293") && css.includes("--vw2-r1293-ready:1") && home.includes("--vw2-r1293-runtime-ready:1"), "R24 / รอบ 1293 lineage markers missing");
+must(home.includes("ADMIN PREVIEW · R25 ALIGNED SINGLE-ROW LEARNING RAIL") && home.includes("R25 / รอบ 1294") && css.includes("R25 / รอบ 1294") && css.includes("--vw2-r1294-ready:1") && home.includes("--vw2-r1294-runtime-ready:1"), "R25 / รอบ 1294 lineage markers missing");
+must(indexClassic.includes("css/home-v2.css?v=1294") && indexClassic.includes("js/home-v2.js?v=1294"), "R25 cache-bust missing from index_classic.html");
 must(!home.includes("ADMIN PREVIEW · R21 HEAL ALL PETS"), "stale R21 preview badge remains");
 must(css.includes(".vw2-feature-title,.vw2-word-ribbon{top:-25px!important}"), "R17 complete New Word control was not moved into the upper HUD lane");
 must(css.includes(".vw2-feature{overflow:visible!important}") && css.includes("left:24%!important;right:24%!important;top:-25px!important"), "R18 New Word plaque is not fully visible in the safe HUD lane");
@@ -214,6 +215,13 @@ const tuplePattern = (action, source) => {
 expectedRail.forEach(([action, source]) => must(tuplePattern(action, source).test(home), `left rail marker missing: ${action}`));
 const railOrder = expectedRail.map(([action]) => home.indexOf(`['${action}',`));
 must(expectedRail.length === 29 && railOrder.every((p, i) => p >= 0 && (!i || p > railOrder[i - 1])), "authoritative left rail order changed");
+const semanticRailIcons = [
+  ['worldAdv','adventure'],['worldSky','skyplay'],['worldHaunt','ghost'],
+  ['worldHeli','helicopter'],['worldDrone','drone'],['worldSoccer','soccer'],
+  ['worldMoto','motorcycle'],['worldInvasion','mothership'],['worldMecha','mecha'],
+  ['trophy','pinboard']
+];
+semanticRailIcons.forEach(([action, iconName])=>must(home.includes(`['${action}','${iconName}'`), `left rail icon does not explain its destination: ${action}`));
 const adminOnlyWorlds = ["worldAdv","worldSky","worldDrive","worldMoto","worldInvasion","worldMecha"];
 const publicWorlds = ["worldHaunt","worldHeli","worldDrone","worldSoccer"];
 must(home.includes("const ADMIN_ONLY_WORLD_ACTIONS = new Set") && adminOnlyWorlds.every(action=>home.includes(`'${action}'`)), "R19 exact six-world admin set missing");
@@ -278,6 +286,9 @@ must(!home.includes('id="vw2-adventure-menu"') && !home.includes("function setAd
 must(css.includes("CUTE SINGLE-ROW LEARNING RAIL") && css.includes("grid-template-columns:repeat(13,minmax(138px,9.7vw))!important") && css.includes("grid-template-rows:minmax(0,1fr)!important") && css.includes("grid-auto-flow:column!important"), "R24 cute single-row visual contract missing");
 must(css.includes(".vw2-adventure-menu{display:none!important}") && css.includes(".vw2-bottom-track .vw2-mode>span{") && css.includes("background-image:none!important"), "R24 no-flyout/new-button skin guard missing");
 must(home.includes("if(!allowed)") && home.includes("if(!showV2) closeOwnedPetsModal();"), "R24 admin visibility guard missing");
+must(css.includes("BOTTOM GEOMETRY RESET") && css.includes("transform:none!important;translate:none!important") && css.includes("height:auto!important;min-height:0!important"), "R25 inherited icon/label geometry is not fully reset");
+must(home.includes("frame?.classList.toggle('can-scroll-right'") && css.includes(".vw2-bottom.can-scroll-left:before,.vw2-bottom.can-scroll-right:after"), "R25 horizontal scroll affordance missing");
+must(home.includes("bottomIconMaxCenterErrorPx:") && home.includes("bottomLabelMaxCenterErrorPx:") && home.includes("bottomScrollCueCorrect:"), "R25 alignment/cue preview metrics missing");
 must(css.includes("R11.5.3 BOTTOM RAIL GEOMETRY RESTORE + WRAPPER-ONLY SCROLL"), "R11.5.3 wrapper-only Bottom Rail architecture was lost");
 must(css.includes("R11.5.4 EVIDENCE-DRIVEN GEOMETRY CORRECTION"), "R11.5.4 geometry-correction marker missing");
 must(home.includes('class="vw2-bottom-scroll"') && home.includes('class="vw2-bottom-track"'), "static outer rail / inner scroll wrapper markup missing");
@@ -316,5 +327,5 @@ if(fail.length){
   console.error("Home V2 R11.5.4 validation FAILED:\n- " + fail.join("\n- "));
   process.exit(1);
 }
-console.log("Home V2 R24 / รอบ 1293 validation PASS");
-console.log(`Checked cute single-row learning rail, zero flyout DOM, atomic one-tap heal-all, mobile profiles, ${expectedRail.length} left destinations, all ${expectedBottom.length} learning actions, and admin gate.`);
+console.log("Home V2 R25 / รอบ 1294 validation PASS");
+console.log(`Checked aligned single-row learning rail, honest scroll cues, zero flyout DOM, atomic one-tap heal-all, mobile profiles, ${expectedRail.length} left destinations, all ${expectedBottom.length} learning actions, and admin gate.`);
