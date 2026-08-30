@@ -1257,7 +1257,7 @@ function openSettings(initialTab){
     packDownload.disabled = packBusy;
     if(packRemove) packRemove.hidden = info.doneFiles === 0 || packBusy;
   };
-  const refreshPack = async()=>{
+  const refreshPack = async function(){
     if(!(typeof Music!=='undefined' && Music.offlinePackInfo)){
       paintPack({supported:false, reason:'ระบบเพลงยังโหลดไม่เสร็จ กรุณาลองใหม่'});
       return;
@@ -1266,7 +1266,7 @@ function openSettings(initialTab){
     const info = await Music.offlinePackInfo().catch(error=>({supported:true,ready:false,reason:error.message}));
     paintPack(info);
   };
-  if(packDownload) packDownload.addEventListener('click', async()=>{
+  if(packDownload) packDownload.addEventListener('click', async function(){
     if(packBusy) return;
     packBusy = true; packDownload.disabled = true; if(packRemove) packRemove.hidden = true;
     packDownload.textContent = 'กำลังดาวน์โหลด...';
@@ -1287,7 +1287,7 @@ function openSettings(initialTab){
     }
   });
   if(packRemove) packRemove.addEventListener('click', ()=>{
-    askConfirm('<h2>🗑️ ลบชุดเพลงออฟไลน์?</h2><p>เกมจะกลับไปเปิดเพลงจากอินเทอร์เน็ต และดาวน์โหลดใหม่ได้ทุกเมื่อ</p>', 'ลบชุดเพลง', async()=>{
+    askConfirm('<h2>🗑️ ลบชุดเพลงออฟไลน์?</h2><p>เกมจะกลับไปเปิดเพลงจากอินเทอร์เน็ต และดาวน์โหลดใหม่ได้ทุกเมื่อ</p>', 'ลบชุดเพลง', async function(){
       packBusy = true; paintPack({supported:true,ready:false,reason:'กำลังลบชุดเพลงออกจากเครื่อง...'});
       try{ await Music.offlinePackRemove(); toast('ลบชุดเพลงออฟไลน์แล้ว'); }
       catch(error){ toast('ลบชุดเพลงไม่สำเร็จ: ' + error.message); }

@@ -115,7 +115,7 @@ const Music = (function(){
   }
   async function offlinePackDownload(onProgress){
     if(offlineDownload) return offlineDownload;
-    offlineDownload = (async()=>{
+    offlineDownload = (async function(){
       if(!offlineSupported()) throw new Error('อุปกรณ์นี้ยังไม่รองรับการเก็บเพลงออฟไลน์');
       const files = await offlineCatalog();
       offlineSaveMeta(files);
