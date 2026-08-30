@@ -5,6 +5,7 @@ const path = require("path");
 const root = path.resolve(__dirname, "..");
 const read = (...p) => fs.readFileSync(path.join(root, ...p), "utf8");
 const home = read("js", "home-v2.js");
+const ui = read("js", "ui.js");
 const css = read("css", "home-v2.css");
 const preview = read("tools", "VW_MOBILE_DEVICE_PREVIEW.html");
 const indexClassic = read("index_classic.html");
@@ -42,8 +43,11 @@ must(home.includes("R13 / รอบ 1280"), "R13 JS lineage marker missing");
 must(css.includes("R17 / รอบ 1284") && css.includes("--vw2-r1284-ready:1") && home.includes("--vw2-r1284-runtime-ready:1"), "R17 / รอบ 1284 lineage markers missing");
 must(home.includes("R18 / รอบ 1286") && css.includes("R18 / รอบ 1286") && css.includes("--vw2-r1286-ready:1") && home.includes("--vw2-r1286-runtime-ready:1"), "R18 / รอบ 1286 lineage markers missing");
 must(home.includes("R19 / รอบ 1287") && css.includes("R19 / รอบ 1287") && css.includes("--vw2-r1287-ready:1") && home.includes("--vw2-r1287-runtime-ready:1"), "R19 / รอบ 1287 lineage markers missing");
-must(home.includes("ADMIN PREVIEW · R20 PET ACTIONS + MOBILE PROFILES") && home.includes("R20 / รอบ 1288") && css.includes("R20 / รอบ 1288") && css.includes("--vw2-r1288-ready:1") && home.includes("--vw2-r1288-runtime-ready:1"), "R20 / รอบ 1288 lineage markers missing");
-must(indexClassic.includes("css/home-v2.css?v=1288") && indexClassic.includes("js/home-v2.js?v=1288"), "R20 cache-bust missing from index_classic.html");
+must(home.includes("R20 / รอบ 1288") && css.includes("R20 / รอบ 1288") && css.includes("--vw2-r1288-ready:1") && home.includes("--vw2-r1288-runtime-ready:1"), "R20 / รอบ 1288 lineage markers missing");
+must(home.includes("R21 / รอบ 1289") && css.includes("R21 / รอบ 1289") && css.includes("--vw2-r1289-ready:1") && home.includes("--vw2-r1289-runtime-ready:1"), "R21 / รอบ 1289 lineage markers missing");
+must(home.includes("ADMIN PREVIEW · R22 FANTASY ADVENTURE DOCK") && home.includes("R22 / รอบ 1290") && css.includes("R22 / รอบ 1290") && css.includes("--vw2-r1290-ready:1") && home.includes("--vw2-r1290-runtime-ready:1"), "R22 / รอบ 1290 lineage markers missing");
+must(indexClassic.includes("css/home-v2.css?v=1290") && indexClassic.includes("js/home-v2.js?v=1290"), "R22 cache-bust missing from index_classic.html");
+must(!home.includes("ADMIN PREVIEW · R21 HEAL ALL PETS"), "stale R21 preview badge remains");
 must(css.includes(".vw2-feature-title,.vw2-word-ribbon{top:-25px!important}"), "R17 complete New Word control was not moved into the upper HUD lane");
 must(css.includes(".vw2-feature{overflow:visible!important}") && css.includes("left:24%!important;right:24%!important;top:-25px!important"), "R18 New Word plaque is not fully visible in the safe HUD lane");
 must(css.includes("-webkit-line-clamp:2") && css.includes("font-size:clamp(10.5px,.74vw,12px)!important") && css.includes(".vw2-feed .vw2-section-head .vw2-head-icon{display:none!important}"), "R18 child-readable mission/feed typography guards missing");
@@ -226,6 +230,14 @@ must(home.includes('data-vw2-action="petRename"') && home.includes('id="vw2-acti
 must(!home.includes('class="vw2-play" data-vw2-action="play"') && home.includes("['play','controller','จับคู่คำศัพท์'"), "R20 centre matching button was not replaced while Bottom Rail matching game was preserved");
 must(home.includes('data-vw2-action="ownedPets"') && home.includes('id="vw2-pet-modal-list"') && home.includes("state.active = index") && home.includes("typeof saveState === 'function'") && home.includes("typeof renderDashboard === 'function'"), "R20 purchased-pet chooser does not reuse authoritative Classic state/selection");
 must(home.includes('class="vw2-pet-modal-close top"') && home.includes('class="vw2-pet-modal-close bottom"') && css.includes(".vw2-pet-modal-list::-webkit-scrollbar{display:none"), "R20 purchased-pet chooser close/hidden-scrollbar contract missing");
+
+/* R21 one-tap heal-all is atomic, visible and reuses the Classic cure rules. */
+must(ui.includes("function applyCureState(") && ui.includes("function cureAllPets()"), "R21 shared Classic heal rule / bulk entry missing");
+must(ui.indexOf("if(state.coins < totalCost)") < ui.indexOf("state.coins -= totalCost") && ui.includes("sickPets.forEach(p=>{ if(applyCureState(p, slotNow, now)) hungry++; })"), "R21 heal-all is not atomic or does not apply the shared cure rule to every sick pet");
+must(ui.includes("ยังขาด 🪙") && ui.includes("จึงยังไม่ได้รักษาน้องตัวใด") && ui.includes("รักษาน้องครบ"), "R21 heal-all success/insufficient-funds feedback missing");
+must(home.includes('id="vw2-heal-all"') && home.includes("data-vw2-heal-all") && home.includes("function healAllOwnedPets()") && home.includes("typeof cureAllPets !== 'function'"), "R21 owned-pet sheet heal-all control is not bound to Classic cureAllPets");
+must(home.includes("const sickCount = pets.filter(p=>p && p.sick).length") && home.includes("const totalCost = sickCount * unitCost") && home.includes("const coinShort = Math.max(0, totalCost - coins)") && home.includes("healAll.disabled = sickCount === 0") && home.includes("ขาด 🪙${fmt(coinShort)}"), "R21 heal-all live count/cost/shortfall/disabled state missing");
+must(css.includes(".vw2-heal-all.is-ready") && css.includes(".vw2-heal-all:disabled") && css.includes("grid-template-rows:auto auto minmax(0,1fr) auto"), "R21 heal-all visual hierarchy/responsive modal row missing");
 must(home.includes("featureActionCount:") && home.includes("featureActionScrollable:") && home.includes("featureActionVerticalOverflow:") && home.includes("layoutProfile:"), "R20 action-rail/device-profile preview metrics missing");
 ["phone-compact","phone-standard","phone-wide","tablet-landscape"].forEach(profile=>{
   must(home.includes(`profile = '${profile}'`) && css.includes(`data-vw2-layout-profile="${profile}"`), `R20 layout profile missing: ${profile}`);
@@ -255,10 +267,16 @@ must(!/firebase\s*\.\s*database\s*\(/.test(home) && !/\.ref\s*\(\s*['"]\/?presen
 must(home.includes("typeof questsToday === 'function'") && home.includes("state.quests"), "mission logic binding changed");
 must(home.includes("textOf('#clock-chip .ck-date'") && home.includes("textOf('#rank-tab'"), "Profile date/rank source binding changed");
 
-/* Bottom horizontal rail is inventory/order locked and remains readable. */
+/* R22 fantasy dock groups the complete legacy inventory behind child-facing destinations. */
 const expectedBottom = ["vocabbook","ielts","toeic","toefl","onetp6","onetm3","onetm6","cats","play","picmatch","picdict","picquiz","bandexam"];
 const bottomOrder = expectedBottom.map(action => home.indexOf(`['${action}',`));
 must(expectedBottom.length === 13 && bottomOrder.every((p, i) => p >= 0 && (!i || p > bottomOrder[i - 1])), "accepted bottom rail inventory/order changed");
+const expectedDock = ["สมุดนักผจญภัย","สนามฝึกคำศัพท์","หอคอยท้าทาย","แผนที่โลก"];
+must(expectedDock.every(label=>home.includes(`'${label}'`)), "R22 four fantasy destination labels missing");
+must(home.includes("data-vw2-adventure-group") && home.includes("data-vw2-adventure-panel") && home.includes("function setAdventureMenu(group='')") && home.includes("function toggleAdventureMenu(group)"), "R22 adventure flyout behavior missing");
+must(home.includes("modeButtons('training')") && home.includes("modeButtons('challenge')") && home.includes("worldMenuButtons"), "R22 training/challenge/world route groups missing");
+must(css.includes("FANTASY ADVENTURE DOCK") && css.includes("grid-template-columns:repeat(4,minmax(0,1fr))!important") && css.includes(".vw2-adventure-menu[hidden]"), "R22 fantasy dock visual/responsive contract missing");
+must(home.includes("if(!showV2){ closeOwnedPetsModal(); setAdventureMenu(''); }") && home.includes("if(!allowed)") && home.includes("setAdventureMenu('');"), "R22 admin visibility/menu-close guard missing");
 must(css.includes("R11.5.3 BOTTOM RAIL GEOMETRY RESTORE + WRAPPER-ONLY SCROLL"), "R11.5.3 wrapper-only Bottom Rail architecture was lost");
 must(css.includes("R11.5.4 EVIDENCE-DRIVEN GEOMETRY CORRECTION"), "R11.5.4 geometry-correction marker missing");
 must(home.includes('class="vw2-bottom-scroll"') && home.includes('class="vw2-bottom-track"'), "static outer rail / inner scroll wrapper markup missing");
@@ -279,7 +297,7 @@ must(/\.vw2-mode\{[^}]*font-size:clamp\(8px/.test(css) && css.includes('font-siz
 ["915", "844", "800", "667"].forEach(w => must(preview.includes(w), `mobile preview device width missing: ${w}`));
 ["412", "390", "360", "375"].forEach(h => must(preview.includes(h), `mobile preview device height missing: ${h}`));
 must(css.includes("@media (max-width:1180px),(max-height:520px)") && css.includes("@media (max-width:760px)") && css.includes("@media (max-height:390px)"), "R11.4 mobile landscape breakpoints missing");
-must(home.includes("pageOverflow:") && home.includes("pageHorizontalOverflow:") && home.includes("outerBottomRailContained:") && home.includes("bottomScrollWrapperScrollable:") && home.includes("bottomScrollWrapperVerticalOverflow:") && home.includes("all13BottomActionsPresent:") && home.includes("bottomButtonGeometryStable"), "R11.5.4 local mobile Bottom Rail metrics missing");
+must(home.includes("pageOverflow:") && home.includes("pageHorizontalOverflow:") && home.includes("outerBottomRailContained:") && home.includes("bottomScrollWrapperScrollable:") && home.includes("bottomScrollWrapperVerticalOverflow:") && home.includes("all4AdventureHubsPresent:") && home.includes("all13BottomActionsPresent:") && home.includes("adventureMenuActionCount:") && home.includes("bottomButtonGeometryStable"), "R22 local mobile adventure-dock metrics missing");
 must(home.includes("clippingOffenders:") && home.includes("bottomClipOffenders") && home.includes("bottomMinButtonHeightPx:") && home.includes("leftBottomCollision:") && home.includes("leftLastAction:") && home.includes("onlineFooterContained") && home.includes("importantTextBelow14:") && home.includes("extremeInteractiveAspectElements:") && home.includes("rewardPlaque:"), "R11.5.4 precise Geometry Guard evidence metrics missing");
 must(home.includes("minReadableFontPx:") && home.includes("importantValueClipped"), "R11.4 readability/value-clipping preview metrics missing");
 must(home.includes("width <= 700 || height <= 390") && home.includes("width <= 850 || height <= 430") && home.includes("width <= 960 || height <= 500") && home.includes("width <= 1180 || height <= 600"), "R20 device profile width/height coverage missing");
@@ -297,5 +315,5 @@ if(fail.length){
   console.error("Home V2 R11.5.4 validation FAILED:\n- " + fail.join("\n- "));
   process.exit(1);
 }
-console.log("Home V2 R20 / รอบ 1288 validation PASS");
-console.log(`Checked first-position cure, scrollable pet actions, Classic rename/owned-pet selection, four device profiles, exact six-world admin matrix, non-clipping rail labels, ${expectedRail.length} left destinations, ${expectedBottom.length} bottom actions, and admin gate.`);
+console.log("Home V2 R22 / รอบ 1290 validation PASS");
+console.log(`Checked fantasy adventure dock, grouped training/challenge/world routes, atomic one-tap heal-all, mobile profiles, ${expectedRail.length} left destinations, all ${expectedBottom.length} learning actions, and admin gate.`);

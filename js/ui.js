@@ -5951,26 +5951,33 @@ function showFeedResult(p, food, shapeChange){
   }, 450);
 }
 
-function curePet(){
-  const p = activePet();
-  if(!p || !p.sick) return;
-  if(state.coins < CURE_COST){
-    sfx.wrong();
-    toast(`ค่ารักษา 🪙${fmtNum(CURE_COST)} — เหรียญไม่พอ ไปเล่นเกมเก็บเหรียญมารักษาน้องนะ!`);
-    return;
-  }
-  state.coins -= CURE_COST;
+/* ใช้กฎรักษาก้อนเดียวกันทั้ง "รักษาตัวปัจจุบัน" และ "รักษาทั้งหมด"
+   เพื่อให้พิษ/ความหิว/อากาศ/น้ำ ถูกรีเซ็ตตรงกันทุกทางเข้า */
+function applyCureState(p, slotNow, now){
   if(p.sickCause === 'toxin') p.toxin = 0;           // ข้อ 5.1: หมอขับพิษให้ตอนรักษา (เฉพาะป่วยจากพิษ)
   p.sick = false; p.sickCause = null;
   /* 🍚 รอบ 1034: หายป่วยแล้ว "ยังไม่ได้กินข้าว" ต้องป้อนได้ทันที
      ของเดิมตั้ง fedUpTo=มื้อนี้ + fullness เต็ม (นับว่ากินแล้วทั้งที่ยังไม่ได้กิน) → เมนูอาหารล็อกยกกระดาน
      ถึงพรุ่งนี้ 18:00 น้องเลยค้างผอมโซ เพราะ missedMeals ล้างได้ตอนกินเต็มหลอดเท่านั้น
      ตอนนี้กันป่วยซ้ำมื้อเดิมด้วย hungerSickSlot แทน (ดู careTick ใน state.js) */
-  const slotNow = currentSlotStart(Date.now());
   p.hungerSickSlot = slotNow;
   const stillHungryAfterCure = p.fedUpTo < slotNow;
-  p.heatFrom = (p.type === 'dragon' || heatProtected()) ? null : Date.now();
-  p.thirstFrom = state.waterCut ? Date.now() : null; // ยังถูกตัดน้ำอยู่ → เริ่มนับรอบใหม่
+  p.heatFrom = (p.type === 'dragon' || heatProtected()) ? null : now;
+  p.thirstFrom = state.waterCut ? now : null; // ยังถูกตัดน้ำอยู่ → เริ่มนับรอบใหม่
+  return stillHungryAfterCure;
+}
+
+function curePet(){
+  const p = activePet();
+  if(!p || !p.sick) return false;
+  if(state.coins < CURE_COST){
+    sfx.wrong();
+    toast(`ค่ารักษา 🪙${fmtNum(CURE_COST)} — เหรียญไม่พอ ไปเล่นเกมเก็บเหรียญมารักษาน้องนะ!`);
+    return false;
+  }
+  state.coins -= CURE_COST;
+  const now = Date.now();
+  const stillHungryAfterCure = applyCureState(p, currentSlotStart(now), now);
   sfx.levelup();
   toast(stillHungryAfterCure
     ? '💊 รักษาหายแล้ว! แต่น้องยังไม่ได้กินมื้อนี้เลย — กด 🍽️ ให้อาหารได้เลยนะ'
@@ -5978,6 +5985,36 @@ function curePet(){
   saveState();
   renderDashboard();
   cureCelebrateFx();   // เรียกหลัง render เพื่อให้คลาสเด้งเกาะ .pet-stage ตัวใหม่ (ที่ไม่ grayscale แล้ว)
+  return true;
+}
+
+/* 🩺 รอบ 1289: ปุ่มเดียวรักษาสัตว์ป่วยทุกตัว
+   เช็กยอดรวมก่อนแตะ state เสมอ จึงไม่เกิดเคสเงินหมดกลางทางแล้วหายป่วยแค่บางตัว */
+function cureAllPets(){
+  const sickPets = Array.isArray(state.pets) ? state.pets.filter(p=>p && p.sick) : [];
+  if(!sickPets.length){
+    toast('💚 สัตว์ทุกตัวแข็งแรงดีอยู่แล้ว ไม่ต้องเสียค่ารักษานะ');
+    return {healed:false,count:0,cost:0,hungry:0};
+  }
+  const totalCost = sickPets.length * CURE_COST;
+  if(state.coins < totalCost){
+    const short = Math.max(0, totalCost - Math.floor(state.coins || 0));
+    sfx.wrong();
+    toast(`ต้องใช้ค่ารักษารวม 🪙${fmtNum(totalCost)} — ยังขาด 🪙${fmtNum(short)} จึงยังไม่ได้รักษาน้องตัวใด`);
+    return {healed:false,count:sickPets.length,cost:totalCost,hungry:0};
+  }
+  state.coins -= totalCost;
+  const now = Date.now();
+  const slotNow = currentSlotStart(now);
+  let hungry = 0;
+  sickPets.forEach(p=>{ if(applyCureState(p, slotNow, now)) hungry++; });
+  sfx.levelup();
+  saveState();
+  renderDashboard();
+  toast(`💊 รักษาน้องครบ ${fmtNum(sickPets.length)} ตัวแล้ว! ใช้ 🪙${fmtNum(totalCost)}`
+    + (hungry ? ` · มี ${fmtNum(hungry)} ตัวที่ยังไม่ได้กินมื้อนี้นะ` : ' · ทุกตัวกลับมาแข็งแรงแล้ว 🎉'));
+  cureCelebrateFx();
+  return {healed:true,count:sickPets.length,cost:totalCost,hungry};
 }
 
 /* 💗 หัวใจลอยขึ้นจาก anchor (ไม่มี/ถูกซ่อน = กลางจอ) — ใช้ทั้งรักษาหาย + ป้อนอาหาร */

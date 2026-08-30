@@ -1489,3 +1489,103 @@ body.vw2-pet-modal-open{overflow:hidden!important}
   .vw2-pet-modal-foot{min-height:39px;padding:4px 8px 6px}
   .vw2-pet-modal-close.bottom{min-height:29px;padding:4px 12px;font-size:11px}
 }
+
+/* ======================== R21 / รอบ 1289 — ONE-TAP HEAL ALL PETS ======================== */
+#vw-home-v2-root{--vw2-r1289-ready:1}
+.vw2-pet-modal-panel{grid-template-rows:auto auto minmax(0,1fr) auto}
+.vw2-pet-modal-head,.vw2-pet-modal-healbar,.vw2-pet-modal-list,.vw2-pet-modal-foot{position:relative;z-index:2}
+.vw2-pet-modal-healbar{padding:8px 12px;background:linear-gradient(180deg,rgba(255,246,250,.98),rgba(255,222,231,.96));border-bottom:1px solid rgba(211,74,103,.28)}
+.vw2-heal-all{width:100%;min-height:54px;padding:6px 12px!important;display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:10px;border-radius:17px!important;border:2px solid #ff93a6!important;background:linear-gradient(180deg,#ff687c,#d91d49)!important;color:#fff!important;box-shadow:inset 0 1px rgba(255,255,255,.82),inset 0 -3px rgba(126,0,32,.18),0 5px 12px rgba(153,21,56,.3)!important;text-align:left}
+.vw2-heal-all.is-ready{animation:vw2-heal-all-ready 1.6s ease-in-out infinite}
+.vw2-heal-all.is-short-coins{background:linear-gradient(180deg,#f69b4e,#d45d24)!important;border-color:#ffd18b!important}
+.vw2-heal-all-icon{width:40px;height:40px;display:grid;place-items:center;border-radius:50%;background:#fff;color:#d91d49;font-size:25px;line-height:1;box-shadow:inset 0 0 0 2px #ffd5dc,0 2px 6px rgba(97,0,28,.24)}
+.vw2-heal-all-copy{min-width:0;display:flex;flex-direction:column;gap:2px}
+.vw2-heal-all-copy b{font-size:clamp(15px,2vw,21px);line-height:1.05;white-space:normal;overflow-wrap:anywhere;text-shadow:0 1px 2px rgba(91,0,25,.4)}
+.vw2-heal-all-copy small{font-size:clamp(10.5px,1.25vw,13px);line-height:1.12;white-space:normal;overflow-wrap:anywhere;color:#fff9fb}
+.vw2-heal-all em{min-width:90px;padding:7px 10px;border-radius:999px;background:#fff;color:#b10d37;font-size:clamp(11px,1.35vw,14px);line-height:1;text-align:center;font-style:normal;font-weight:1000;white-space:nowrap;box-shadow:0 2px 5px rgba(96,0,27,.2)}
+.vw2-heal-all:disabled{cursor:default;opacity:1!important;border-color:#8cd5b6!important;background:linear-gradient(180deg,#66d2a7,#35a879)!important;box-shadow:inset 0 1px rgba(255,255,255,.8),0 3px 8px rgba(34,119,86,.2)!important}
+.vw2-heal-all:disabled .vw2-heal-all-icon{color:#20845f;box-shadow:inset 0 0 0 2px #c9f4e3,0 2px 6px rgba(24,103,76,.18)}
+.vw2-heal-all:disabled em{color:#237657}
+@keyframes vw2-heal-all-ready{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.006);filter:brightness(1.06)}}
+
+@media (max-width:850px),(max-height:430px){
+  .vw2-pet-modal-healbar{padding:4px 7px}
+  .vw2-heal-all{min-height:42px;padding:4px 8px!important;grid-template-columns:31px minmax(0,1fr) auto;gap:6px;border-radius:13px!important}
+  .vw2-heal-all-icon{width:30px;height:30px;font-size:19px}
+  .vw2-heal-all-copy b{font-size:13.5px}.vw2-heal-all-copy small{font-size:10px}
+  .vw2-heal-all em{min-width:70px;padding:5px 7px;font-size:10.5px}
+}
+
+/* ======================== R22 / รอบ 1290 — FANTASY ADVENTURE DOCK ======================== */
+/* Admin Home V2 now presents destinations as a toy-like fantasy travel dock.
+   The original learning/exam/world routes remain authoritative inside flyouts. */
+#vw-home-v2-root{--vw2-r1290-ready:1}
+.vw2-bottom{
+  padding:3px 5px!important;border:2px solid #79bfd0!important;border-radius:17px!important;
+  background:radial-gradient(circle at 16% 0,rgba(132,238,215,.23),transparent 30%),radial-gradient(circle at 78% 100%,rgba(120,115,238,.23),transparent 34%),linear-gradient(180deg,#214e69,#182d51 58%,#132440)!important;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.3),inset 0 -4px 0 rgba(6,18,39,.28),0 6px 13px rgba(25,20,61,.28)!important;
+}
+.vw2-bottom:before,.vw2-bottom:after{display:none!important}
+.vw2-bottom-scroll{overflow:hidden!important;cursor:default!important}
+.vw2-bottom-track{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:5px!important;width:100%!important;min-width:0!important;height:100%!important;align-items:stretch!important}
+.vw2-adventure-hub{
+  --dock-a:#33866d;--dock-b:#19534e;--dock-rim:#8ce5bd;position:relative;isolation:isolate;min-width:0;height:100%;padding:3px 9px 3px 4px;display:grid;grid-template-columns:clamp(33px,3.3vw,43px) minmax(0,1fr) 14px;align-items:center;gap:6px;
+  border:2px solid var(--dock-rim)!important;border-radius:14px 18px 14px 18px!important;color:#fff!important;text-align:left;
+  background:radial-gradient(circle at 22% 0,rgba(255,255,255,.28),transparent 35%),linear-gradient(145deg,var(--dock-a),var(--dock-b))!important;
+  box-shadow:inset 0 2px rgba(255,255,255,.32),inset 0 -4px rgba(5,20,34,.2),0 3px 6px rgba(5,17,37,.26)!important;text-shadow:0 1px 2px rgba(5,15,32,.48);overflow:hidden
+}
+.vw2-adventure-hub:before{content:"";position:absolute;inset:2px;z-index:-1;border:1px dashed rgba(255,255,255,.2);border-radius:10px 15px 10px 15px;pointer-events:none}
+.vw2-adventure-hub:after{content:"✦";position:absolute;right:17px;top:1px;color:rgba(255,244,168,.68);font-size:8px;pointer-events:none}
+.vw2-adventure-hub.training{--dock-a:#df8b35;--dock-b:#9e4528;--dock-rim:#ffd283}
+.vw2-adventure-hub.challenge{--dock-a:#7450bb;--dock-b:#3a2f79;--dock-rim:#c9a9ff}
+.vw2-adventure-hub.worlds{--dock-a:#287fb0;--dock-b:#25538d;--dock-rim:#82dcff}
+.vw2-adventure-hub:hover{filter:brightness(1.08)}
+.vw2-adventure-hub:active{transform:translateY(1px)}
+.vw2-adventure-hub.is-active{transform:translateY(-2px);filter:brightness(1.13);box-shadow:inset 0 2px rgba(255,255,255,.38),inset 0 -4px rgba(5,20,34,.18),0 0 0 2px rgba(255,241,165,.48),0 5px 12px rgba(5,17,37,.38)!important}
+.vw2-adventure-landmark{position:relative;width:clamp(32px,3.15vw,41px);height:calc(100% - 2px);min-height:31px;display:grid;place-items:center;border-radius:50% 50% 43% 43%;background:radial-gradient(circle at 38% 25%,#fff,#dfffea 39%,#68cbb0 72%,#245f65);border:2px solid rgba(255,255,255,.82);box-shadow:0 2px 5px rgba(7,20,43,.32)}
+.vw2-adventure-hub.training .vw2-adventure-landmark{background:radial-gradient(circle at 38% 25%,#fff,#ffedbd 39%,#e9973f 72%,#7d3529)}
+.vw2-adventure-hub.challenge .vw2-adventure-landmark{background:radial-gradient(circle at 38% 25%,#fff,#eee0ff 39%,#a277df 72%,#493276)}
+.vw2-adventure-hub.worlds .vw2-adventure-landmark{background:radial-gradient(circle at 38% 25%,#fff,#dff6ff 39%,#61bce3 72%,#28538e)}
+.vw2-adventure-landmark .vw2-icon{position:relative;z-index:2;width:72%;height:72%;filter:drop-shadow(0 1px 1px rgba(23,37,67,.22))}
+.vw2-adventure-landmark i{position:absolute;left:7%;right:7%;bottom:-3px;height:7px;border-radius:50%;background:#173949;opacity:.45}
+.vw2-adventure-copy{min-width:0;display:flex;flex-direction:column;gap:1px}
+.vw2-adventure-copy b{font-size:clamp(10.5px,.92vw,14px);line-height:1.05;white-space:normal;overflow-wrap:anywhere}
+.vw2-adventure-copy small{font-size:clamp(7.5px,.58vw,9.5px);line-height:1;color:rgba(255,255,255,.84);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vw2-adventure-hub>em{font-style:normal;font-size:22px;line-height:1;color:#fff3b0;justify-self:end}
+.vw2-adventure-hub:focus-visible,.vw2-adventure-menu .vw2-mode:focus-visible{outline:3px solid #fff4a8!important;outline-offset:-3px}
+
+.vw2-adventure-menu{position:absolute;left:10%;right:.25%;bottom:calc(clamp(42px,10.8vh,50px) + 8px);z-index:74;height:84px;padding:4px 6px;border-radius:18px;border:2px solid #7fd0cf;background:radial-gradient(circle at 20% 0,rgba(121,229,204,.2),transparent 31%),linear-gradient(180deg,rgba(24,57,79,.985),rgba(19,32,64,.99));box-shadow:inset 0 2px rgba(255,255,255,.2),0 8px 20px rgba(17,14,47,.45);overflow:hidden}
+.vw2-adventure-menu[hidden],.vw2-adventure-menu-panel[hidden]{display:none!important}
+.vw2-adventure-menu-panel{height:100%;min-height:0;display:grid;grid-template-rows:25px minmax(0,1fr);gap:3px}
+.vw2-adventure-menu-panel>header{min-width:0;display:grid;grid-template-columns:23px auto minmax(0,1fr) auto;gap:5px;align-items:center;padding:0 3px;color:#fff}
+.vw2-adventure-menu-panel>header>span{font-size:17px;line-height:1}
+.vw2-adventure-menu-panel>header>b{font-size:12px;line-height:1;white-space:nowrap;color:#fff7c3}
+.vw2-adventure-menu-panel>header>small{min-width:0;font-size:9px;line-height:1;color:#cce9ea;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vw2-adventure-menu-panel>header>button{min-width:55px;height:22px;padding:2px 8px;border-radius:10px!important;border:1px solid #bdebee!important;background:#2b6980!important;color:#fff!important;font-size:9px;font-weight:1000;box-shadow:inset 0 1px rgba(255,255,255,.24)!important}
+.vw2-adventure-menu-scroll{width:100%;min-width:0;min-height:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-x:contain;touch-action:pan-x;-webkit-overflow-scrolling:touch}
+.vw2-adventure-menu-scroll::-webkit-scrollbar{display:none;width:0;height:0}
+.vw2-adventure-menu-track{width:max-content;min-width:100%;height:100%;display:flex;align-items:stretch;gap:4px}
+.vw2-adventure-menu .vw2-mode{flex:0 0 clamp(112px,11vw,146px)!important;min-width:0!important;height:100%!important;padding:2px 7px!important;display:flex!important;gap:5px!important;border:2px solid #87cfd4!important;border-radius:11px 14px 11px 14px!important;background:linear-gradient(145deg,#377b89,#28506f)!important;color:#fff!important;box-shadow:inset 0 2px rgba(255,255,255,.24),inset 0 -3px rgba(8,24,48,.2),0 2px 4px rgba(7,16,39,.3)!important;text-shadow:0 1px 2px rgba(3,13,31,.45);overflow:hidden}
+.vw2-adventure-menu .vw2-mode.challenge,.vw2-adventure-menu .vw2-mode.violet{background:linear-gradient(145deg,#7958b7,#463579)!important;border-color:#c2a7ee!important}
+.vw2-adventure-menu .vw2-mode.gold,.vw2-adventure-menu .vw2-mode.orange{background:linear-gradient(145deg,#d9873f,#8e472e)!important;border-color:#ffd191!important}
+.vw2-adventure-menu .vw2-mode.green,.vw2-adventure-menu .vw2-mode.lime{background:linear-gradient(145deg,#3c9674,#286052)!important;border-color:#9ce2bb!important}
+.vw2-adventure-menu .vw2-mode.world,.vw2-adventure-menu .vw2-mode.blue{background:linear-gradient(145deg,#388ab1,#315080)!important;border-color:#8dd9f2!important}
+.vw2-adventure-menu .vw2-mode>span{width:31px!important;height:31px!important;flex:0 0 31px!important;display:grid!important;place-items:center!important;padding:3px!important;border-radius:50%!important;background:rgba(255,255,255,.9)!important;filter:none!important}
+.vw2-adventure-menu .vw2-mode>span .vw2-icon{width:100%!important;height:100%!important}
+.vw2-adventure-menu .vw2-mode>b{font-size:clamp(9.5px,.74vw,11px)!important;line-height:1.05!important;text-align:left!important;white-space:normal!important;overflow-wrap:anywhere}
+
+@media (max-width:1180px),(max-height:520px){
+  .vw2-adventure-menu{left:10%;bottom:calc(clamp(58px,14.5vh,62px) + 7px);height:73px;padding:3px 5px}
+  .vw2-adventure-menu-panel{grid-template-rows:22px minmax(0,1fr);gap:2px}
+  .vw2-adventure-copy small{display:none}.vw2-adventure-copy b{font-size:clamp(10px,1.12vw,12px)}
+  .vw2-adventure-hub{grid-template-columns:36px minmax(0,1fr) 11px;gap:4px;padding-right:6px}
+  .vw2-adventure-landmark{width:35px;min-height:33px}.vw2-adventure-menu .vw2-mode{flex-basis:112px!important}
+}
+@media (max-width:760px),(max-height:390px){
+  .vw2-bottom{padding-inline:3px!important}.vw2-bottom-track{gap:3px!important}
+  .vw2-adventure-hub{grid-template-columns:32px minmax(0,1fr);padding:2px 4px;gap:3px;border-radius:11px 14px 11px 14px!important}
+  .vw2-adventure-landmark{width:31px;min-height:30px}.vw2-adventure-hub>em{display:none}
+  .vw2-adventure-copy b{font-size:9.5px;line-height:1.04}.vw2-adventure-menu{left:11%;right:.4%;bottom:65px;height:68px;border-radius:14px}
+  .vw2-adventure-menu-panel>header{grid-template-columns:20px auto minmax(0,1fr) auto}.vw2-adventure-menu-panel>header>span{font-size:14px}.vw2-adventure-menu-panel>header>b{font-size:10.5px}.vw2-adventure-menu-panel>header>small{font-size:8px}
+  .vw2-adventure-menu .vw2-mode{flex-basis:103px!important;padding-inline:4px!important}.vw2-adventure-menu .vw2-mode>span{width:28px!important;height:28px!important;flex-basis:28px!important}.vw2-adventure-menu .vw2-mode>b{font-size:9px!important}
+}

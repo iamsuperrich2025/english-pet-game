@@ -6,6 +6,8 @@
    R18 / รอบ 1286 — Learning readability + safe New Word HUD lane
    R19 / รอบ 1287 — Exact six-world admin access matrix
    R20 / รอบ 1288 — Scrollable pet actions + mobile layout profiles
+   R21 / รอบ 1289 — One-tap heal-all action in owned-pet sheet
+   R22 / รอบ 1290 — Admin-only fantasy adventure dock
    ------------------------------------------------------------
    Additive UI shell only. It does NOT own economy, auth, quests,
    Firebase, purchases, or game routing. Existing Lobby DOM stays
@@ -230,6 +232,11 @@
   function bottomButton(actionName, iconName, label, tone='violet', sourceSelector=''){
     return `<button class="vw2-mode ${htmlEscape(tone)}" data-vw2-action="${htmlEscape(actionName)}"${sourceAttrs(sourceSelector)}><span>${icon(iconName)}</span><b>${htmlEscape(label)}</b><i class="vw2-source-badge" hidden></i></button>`;
   }
+  function adventureHubButton(group, iconName, label, hint, tone, actionName=''){
+    const actionAttr = actionName ? ` data-vw2-action="${htmlEscape(actionName)}"` : '';
+    const groupAttr = group ? ` data-vw2-adventure-group="${htmlEscape(group)}" aria-expanded="false" aria-controls="vw2-adventure-menu"` : '';
+    return `<button class="vw2-adventure-hub ${htmlEscape(tone)}"${actionAttr}${groupAttr}><span class="vw2-adventure-landmark" aria-hidden="true">${icon(iconName)}<i></i></span><span class="vw2-adventure-copy"><b>${htmlEscape(label)}</b><small>${htmlEscape(hint)}</small></span><em aria-hidden="true">›</em></button>`;
+  }
   function toolButton(actionName, iconName, label, extra='', sourceSelector='', mirrorVisibility=false){
     return `<button class="vw2-tool-btn ${htmlEscape(extra)}" data-vw2-action="${htmlEscape(actionName)}"${sourceAttrs(sourceSelector, mirrorVisibility)} title="${htmlEscape(label)}"><span>${icon(iconName)}</span><b>${htmlEscape(label)}</b><i class="vw2-source-badge" hidden></i></button>`;
   }
@@ -391,7 +398,7 @@
     if(document.getElementById(STYLE_ID)) return;
     const style = document.createElement('style');
     style.id = STYLE_ID;
-    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1;--vw2-r1287-runtime-ready:1;--vw2-r1288-runtime-ready:1}';
+    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1;--vw2-r1287-runtime-ready:1;--vw2-r1288-runtime-ready:1;--vw2-r1289-runtime-ready:1;--vw2-r1290-runtime-ready:1}';
     document.head.appendChild(style);
   }
   function clickExisting(selector, opts){
@@ -511,8 +518,29 @@
   function syncOwnedPetsModal(){
     const list = document.getElementById('vw2-pet-modal-list');
     const count = document.getElementById('vw2-pet-modal-count');
+    const healAll = document.getElementById('vw2-heal-all');
+    const healSummary = document.getElementById('vw2-heal-all-summary');
+    const healLabel = document.getElementById('vw2-heal-all-label');
     const pets = ownedPets();
+    const sickCount = pets.filter(p=>p && p.sick).length;
+    const unitCost = (typeof CURE_COST === 'number' && CURE_COST > 0) ? CURE_COST : 0;
+    const totalCost = sickCount * unitCost;
+    const coins = (typeof state !== 'undefined' && state) ? Number(state.coins || 0) : 0;
+    const coinShort = Math.max(0, totalCost - coins);
     if(count) count.textContent = `${pets.length} ตัว`;
+    if(healAll){
+      healAll.disabled = sickCount === 0;
+      healAll.classList.toggle('is-ready', sickCount > 0);
+      healAll.classList.toggle('is-short-coins', sickCount > 0 && coins < totalCost);
+      healAll.setAttribute('aria-label', sickCount
+        ? `รักษาสัตว์ป่วยทั้งหมด ${sickCount} ตัว ค่ารักษารวม ${totalCost} เหรียญ${coinShort ? ` เหรียญไม่พอ ขาด ${coinShort}` : ''}`
+        : 'สัตว์ทุกตัวแข็งแรงดีแล้ว');
+      healAll.title = sickCount ? 'แตะครั้งเดียวเพื่อรักษาสัตว์ป่วยทุกตัว' : 'สัตว์ทุกตัวแข็งแรงดีแล้ว';
+    }
+    if(healSummary) healSummary.textContent = sickCount
+      ? `ป่วย ${fmt(sickCount)} ตัว · ค่ารักษารวม 🪙${fmt(totalCost)}${coinShort ? ` · ขาด 🪙${fmt(coinShort)}` : ''}`
+      : 'สัตว์ทุกตัวแข็งแรงดีแล้ว ไม่เสียเหรียญ';
+    if(healLabel) healLabel.textContent = sickCount ? (coinShort ? `ขาด 🪙${fmt(coinShort)}` : `รักษา ${fmt(sickCount)} ตัว`) : 'แข็งแรงดี';
     if(list){
       const html = ownedPetsHTML();
       if(list.dataset.vw2Html !== html){
@@ -520,6 +548,15 @@
         list.dataset.vw2Html = html;
       }
     }
+  }
+  function healAllOwnedPets(){
+    try{
+      if(typeof cureAllPets !== 'function') return false;
+      const result = cureAllPets();
+      syncOwnedPetsModal();
+      setTimeout(()=>{ sync(); syncOwnedPetsModal(); }, 0);
+      return !!(result && result.healed);
+    }catch(_){ return false; }
   }
   function openOwnedPetsModal(){
     const pets = ownedPets();
@@ -690,6 +727,32 @@
     window.addEventListener('resize', updateBottomRailScrollState, {passive:true});
     setTimeout(updateBottomRailScrollState, 0);
   }
+  function setAdventureMenu(group=''){
+    if(!root) return;
+    const menu = root.querySelector('#vw2-adventure-menu');
+    if(!menu) return;
+    const current = ['training','challenge','worlds'].includes(group) ? group : '';
+    menu.hidden = !current;
+    menu.setAttribute('aria-hidden', current ? 'false' : 'true');
+    root.dataset.vw2AdventureMenu = current;
+    root.querySelectorAll('[data-vw2-adventure-group]').forEach(btn=>{
+      const active = !!current && btn.dataset.vw2AdventureGroup === current;
+      btn.classList.toggle('is-active', active);
+      btn.setAttribute('aria-expanded', active ? 'true' : 'false');
+    });
+    root.querySelectorAll('[data-vw2-adventure-panel]').forEach(panel=>{
+      panel.hidden = panel.dataset.vw2AdventurePanel !== current;
+    });
+    if(current){
+      const scroll = menu.querySelector(`[data-vw2-adventure-panel="${current}"] .vw2-adventure-menu-scroll`);
+      if(scroll) scroll.scrollLeft = 0;
+    }
+    scheduleLocalPreviewReport();
+  }
+  function toggleAdventureMenu(group){
+    const current = root ? root.dataset.vw2AdventureMenu || '' : '';
+    setAdventureMenu(current === group ? '' : group);
+  }
   function updateFeatureActionScrollState(){
     if(!root) return;
     const rail = root.querySelector('.vw2-feature-action-scroll');
@@ -778,21 +841,45 @@
       ['trophy','trophy','ตู้เข็ม','#btn-rail-trophy'],
       ['racing','racecar','Vocab World Racing',''],
     ].map(x=>navButton(x[0],x[1],x[2],x[3])).join('');
-    const modeButtons = [
-      ['vocabbook','bookgold','สมุดคำศัพท์','book','#btn-vocab-book'],
-      ['ielts','book','IELTS','blue','.lobby-bottom [data-xstd="ielts"]'],
-      ['toeic','book','TOEIC','green','.lobby-bottom [data-xstd="toeic"]'],
-      ['toefl','book','TOEFL','orange','.lobby-bottom [data-xstd="toefl"]'],
-      ['onetp6','star','O-NET ป.6','gold','.lobby-bottom [data-xstd="onetp6"]'],
-      ['onetm3','leaf','O-NET ม.3','lime','.lobby-bottom [data-xstd="onetm3"]'],
-      ['onetm6','crown','O-NET ม.6','violet','.lobby-bottom [data-xstd="onetm6"]'],
-      ['cats','sparkle','หมวดคำศัพท์','pink','#btn-cats'],
-      ['play','controller','จับคู่คำศัพท์','game','#btn-play'],
-      ['picmatch','picture','จับคู่ภาพ','blue','#btn-picmatch'],
-      ['picdict','bookgold','Picture Dictionary','green','#btn-picdict'],
-      ['picquiz','headphones','ครูถามศัพท์','orange','#btn-picquiz'],
-      ['bandexam','clipboard','สอบเลื่อนขั้น','violet','#btn-band-exam'],
-    ].map(x=>bottomButton(x[0],x[1],x[2],x[3],x[4])).join('');
+    const learningModes = [
+      ['vocabbook','bookgold','สมุดคำศัพท์','book','#btn-vocab-book','journal'],
+      ['ielts','book','IELTS','blue','.lobby-bottom [data-xstd="ielts"]','challenge'],
+      ['toeic','book','TOEIC','green','.lobby-bottom [data-xstd="toeic"]','challenge'],
+      ['toefl','book','TOEFL','orange','.lobby-bottom [data-xstd="toefl"]','challenge'],
+      ['onetp6','star','O-NET ป.6','gold','.lobby-bottom [data-xstd="onetp6"]','challenge'],
+      ['onetm3','leaf','O-NET ม.3','lime','.lobby-bottom [data-xstd="onetm3"]','challenge'],
+      ['onetm6','crown','O-NET ม.6','violet','.lobby-bottom [data-xstd="onetm6"]','challenge'],
+      ['cats','sparkle','หมวดคำศัพท์','pink','#btn-cats','training'],
+      ['play','controller','จับคู่คำศัพท์','game','#btn-play','training'],
+      ['picmatch','picture','จับคู่ภาพ','blue','#btn-picmatch','training'],
+      ['picdict','bookgold','Picture Dictionary','green','#btn-picdict','training'],
+      ['picquiz','headphones','ครูถามศัพท์','orange','#btn-picquiz','training'],
+      ['bandexam','clipboard','สอบเลื่อนขั้น','violet','#btn-band-exam','challenge'],
+    ];
+    const modeButtons = group=>learningModes.filter(x=>x[5] === group).map(x=>bottomButton(x[0],x[1],x[2],x[3],x[4])).join('');
+    const worldMenuButtons = [
+      ['city','city','เมือง 3D','#btn-rail-city'],
+      ['worldAdv','globe','โลกผจญภัย','#btn-world-adv'],
+      ['worldSky','sparkle','Sky Playground','#btn-world-sky'],
+      ['worldHaunt','moon','โลกผีสิง','#btn-world-haunt'],
+      ['worldHeli','cannon','โลกเฮลิคอปเตอร์','#btn-world-heli'],
+      ['worldDrone','target','โลกโดรน FPV','#btn-world-drone'],
+      ['worldDrive','racecar','โลกขับรถ','#btn-world-drive'],
+      ['worldSoccer','star','โลกฟุตบอล','#btn-world-soccer'],
+      ['worldMoto','racecar','โลกมอเตอร์ไซค์','#btn-world-moto'],
+      ['worldInvasion','target','โลกยานแม่','#btn-world-invasion'],
+      ['worldMecha','controller','โลกหุ่นรบ','#btn-world-mecha'],
+    ].map(x=>bottomButton(x[0],x[1],x[2],'world',x[3])).join('');
+    const adventureDockButtons = [
+      adventureHubButton('','bookgold','สมุดนักผจญภัย','เก็บคำศัพท์และความสำเร็จ','journal','vocabbook'),
+      adventureHubButton('training','controller','สนามฝึกคำศัพท์','เล่น ฝึก ฟัง และจับคู่','training'),
+      adventureHubButton('challenge','crown','หอคอยท้าทาย','พิชิตด่านและข้อสอบ','challenge'),
+      adventureHubButton('worlds','globe','แผนที่โลก','เลือกดินแดนออกผจญภัย','worlds'),
+    ].join('');
+    const adventureMenus = `
+      <section class="vw2-adventure-menu-panel" data-vw2-adventure-panel="training" hidden><header><span>⚔️</span><b>สนามฝึกคำศัพท์</b><small>เลือกเกมฝึกที่อยากเล่น</small><button type="button" data-vw2-adventure-close aria-label="ปิดสนามฝึกคำศัพท์">ปิด ✕</button></header><div class="vw2-adventure-menu-scroll" tabindex="0"><div class="vw2-adventure-menu-track">${modeButtons('training')}</div></div></section>
+      <section class="vw2-adventure-menu-panel" data-vw2-adventure-panel="challenge" hidden><header><span>🏰</span><b>หอคอยท้าทาย</b><small>เลือกด่านที่อยากพิชิต</small><button type="button" data-vw2-adventure-close aria-label="ปิดหอคอยท้าทาย">ปิด ✕</button></header><div class="vw2-adventure-menu-scroll" tabindex="0"><div class="vw2-adventure-menu-track">${modeButtons('challenge')}</div></div></section>
+      <section class="vw2-adventure-menu-panel" data-vw2-adventure-panel="worlds" hidden><header><span>🗺️</span><b>แผนที่โลก</b><small>เลือกดินแดนที่อยากออกเดินทาง</small><button type="button" data-vw2-adventure-close aria-label="ปิดแผนที่โลก">ปิด ✕</button></header><div class="vw2-adventure-menu-scroll" tabindex="0"><div class="vw2-adventure-menu-track">${worldMenuButtons}</div></div></section>`;
     root = document.createElement('div');
     root.id = ROOT_ID;
     root.setAttribute('aria-label','Vocab World Home V2 Admin Preview');
@@ -896,8 +983,9 @@
             </section>
           </aside>
         </div>
-        <footer class="vw2-bottom" aria-label="ทางลัดการเรียนและเกมทั้งหมด"><div class="vw2-bottom-scroll" tabindex="0" role="region" aria-label="เลื่อนทางลัดการเรียนและเกม"><div class="vw2-bottom-track">${modeButtons}</div></div></footer>
-        <div class="vw2-preview-mark">ADMIN PREVIEW · R20 PET ACTIONS + MOBILE PROFILES</div>
+        <div class="vw2-adventure-menu" id="vw2-adventure-menu" role="region" aria-label="เมนูจุดหมายผจญภัย" aria-hidden="true" hidden>${adventureMenus}</div>
+        <footer class="vw2-bottom" aria-label="จุดเดินทางใน Vocab World"><div class="vw2-bottom-scroll" role="region" aria-label="เลือกจุดหมายผจญภัย"><div class="vw2-bottom-track">${adventureDockButtons}</div></div></footer>
+        <div class="vw2-preview-mark">ADMIN PREVIEW · R22 FANTASY ADVENTURE DOCK</div>
       </div>
       <div class="vw2-online-modal" id="vw2-online-modal" role="dialog" aria-modal="true" aria-labelledby="vw2-online-modal-title" aria-hidden="true" hidden>
         <section class="vw2-online-modal-panel">
@@ -919,6 +1007,13 @@
             <b id="vw2-pet-modal-count">0 ตัว</b>
             <button type="button" class="vw2-pet-modal-close top" data-vw2-pet-close aria-label="ปิดหน้าสัตว์ของฉัน">ปิด ✕</button>
           </header>
+          <div class="vw2-pet-modal-healbar">
+            <button type="button" class="vw2-heal-all" id="vw2-heal-all" data-vw2-heal-all disabled>
+              <span class="vw2-heal-all-icon" aria-hidden="true">🩺</span>
+              <span class="vw2-heal-all-copy"><b>รักษาสัตว์ป่วยทั้งหมด</b><small id="vw2-heal-all-summary">กำลังตรวจสุขภาพสัตว์ทุกตัว…</small></span>
+              <em id="vw2-heal-all-label">แข็งแรงดี</em>
+            </button>
+          </div>
           <div class="vw2-pet-modal-list" id="vw2-pet-modal-list" tabindex="0"></div>
           <footer class="vw2-pet-modal-foot"><button type="button" class="vw2-pet-modal-close bottom" data-vw2-pet-close>ปิดหน้าสัตว์ของฉัน</button></footer>
         </section>
@@ -932,6 +1027,22 @@
     syncLayoutProfile();
     window.addEventListener('resize', syncLayoutProfile, {passive:true});
     root.addEventListener('click', e=>{
+      const adventureGroup = e.target.closest && e.target.closest('[data-vw2-adventure-group]');
+      if(adventureGroup){
+        e.preventDefault();
+        try{ if(typeof sfx !== 'undefined' && sfx && typeof sfx.select === 'function') sfx.select(); }catch(_){ }
+        toggleAdventureMenu(adventureGroup.dataset.vw2AdventureGroup || '');
+        return;
+      }
+      if(e.target.closest && e.target.closest('[data-vw2-adventure-close]')){
+        e.preventDefault(); setAdventureMenu(''); return;
+      }
+      const healAllPetsButton = e.target.closest && e.target.closest('[data-vw2-heal-all]');
+      if(healAllPetsButton){
+        e.preventDefault();
+        if(!healAllPetsButton.disabled) healAllOwnedPets();
+        return;
+      }
       const closePets = e.target.closest && e.target.closest('[data-vw2-pet-close]');
       if(closePets || (e.target && e.target.id === 'vw2-pet-modal')){
         e.preventDefault();
@@ -977,12 +1088,19 @@
         return;
       }
       const b = e.target.closest('[data-vw2-action]');
-      if(!b || b.disabled) return;
+      if(!b || b.disabled){
+        if(root.dataset.vw2AdventureMenu && !e.target.closest('.vw2-adventure-menu')) setAdventureMenu('');
+        return;
+      }
       e.preventDefault();
       if(typeof sfx !== 'undefined' && sfx && typeof sfx.select === 'function') sfx.select();
+      if(b.closest('.vw2-adventure-menu') || b.classList.contains('vw2-adventure-hub')) setAdventureMenu('');
       action(b.dataset.vw2Action);
     });
     root.addEventListener('keydown', e=>{
+      if(e.key === 'Escape' && root.dataset.vw2AdventureMenu){
+        e.preventDefault(); setAdventureMenu(''); return;
+      }
       if(e.key === 'Escape' && document.getElementById('vw2-pet-modal')?.hidden === false){
         e.preventDefault(); closeOwnedPetsModal(); return;
       }
@@ -1430,6 +1548,7 @@
     const bottom = r ? r.querySelector('.vw2-bottom') : null;
     const bottomScroll = r ? r.querySelector('.vw2-bottom-scroll') : null;
     const bottomTrack = r ? r.querySelector('.vw2-bottom-track') : null;
+    const adventureMenu = r ? r.querySelector('#vw2-adventure-menu') : null;
     const featureActionScroll = r ? r.querySelector('.vw2-feature-action-scroll') : null;
     const featureActionTrack = r ? r.querySelector('.vw2-feature-action-track') : null;
     const leftCue = left ? left.querySelector('.vw2-left-scroll-cue') : null;
@@ -1452,11 +1571,14 @@
     const bottomStyle = bottom ? getComputedStyle(bottom) : null;
     const bottomScrollStyle = bottomScroll ? getComputedStyle(bottomScroll) : null;
     const featureActionScrollStyle = featureActionScroll ? getComputedStyle(featureActionScroll) : null;
-    const bottomModes = bottomTrack ? Array.from(bottomTrack.querySelectorAll('.vw2-mode')) : [];
+    const bottomModes = bottomTrack ? Array.from(bottomTrack.querySelectorAll('.vw2-adventure-hub')) : [];
+    const adventureMenuModes = adventureMenu ? Array.from(adventureMenu.querySelectorAll('.vw2-mode')) : [];
+    const learningActions = ['vocabbook','ielts','toeic','toefl','onetp6','onetm3','onetm6','cats','play','picmatch','picdict','picquiz','bandexam'];
+    const allLearningRoutesPresent = !!(r && learningActions.every(actionName=>r.querySelector(`[data-vw2-action="${actionName}"]`)));
     const bottomModeHeights = bottomModes.map(el=>el.getBoundingClientRect().height);
-    const bottomButtonGeometryStable = bottomModeHeights.length === 13 && Math.max(...bottomModeHeights) - Math.min(...bottomModeHeights) <= 1;
+    const bottomButtonGeometryStable = bottomModeHeights.length === 4 && Math.max(...bottomModeHeights) - Math.min(...bottomModeHeights) <= 1;
     const rootBox = r ? r.getBoundingClientRect() : null;
-    const readableNodes = r ? Array.from(r.querySelectorAll('.vw2-tool-btn b,.vw2-section-head strong,.vw2-feed-copy p,.vw2-qbody b,.vw2-online-name-line>b,.vw2-mode')) : [];
+    const readableNodes = r ? Array.from(r.querySelectorAll('.vw2-tool-btn b,.vw2-section-head strong,.vw2-feed-copy p,.vw2-qbody b,.vw2-online-name-line>b,.vw2-mode,.vw2-adventure-hub b')) : [];
     const readableSizes = readableNodes.map(el=>parseFloat(getComputedStyle(el).fontSize) || 0).filter(Boolean);
     const minReadableFontPx = readableSizes.length ? Math.min(...readableSizes) : null;
     const importantValueNodes = r ? Array.from(r.querySelectorAll('.vw2-stat-copy b')) : [];
@@ -1472,7 +1594,7 @@
       const text = cleanText(el.textContent || '', 48);
       return `${id}${cls}${action}${text ? ` :: ${text}` : ''}` || el.tagName.toLowerCase();
     };
-    const clipCandidates = r ? Array.from(r.querySelectorAll('[data-vw2-action],.vw2-mode,.vw2-rail-btn,.vw2-friends-btn,.vw2-reward-card,.vw2-section-head strong,.vw2-stat-copy small,.vw2-stat-copy b,.vw2-tool-btn b,.vw2-online-row,.vw2-feed-card,.vw2-quest-row')) : [];
+    const clipCandidates = r ? Array.from(r.querySelectorAll('[data-vw2-action],.vw2-mode,.vw2-adventure-hub,.vw2-rail-btn,.vw2-friends-btn,.vw2-reward-card,.vw2-section-head strong,.vw2-stat-copy small,.vw2-stat-copy b,.vw2-tool-btn b,.vw2-online-row,.vw2-feed-card,.vw2-quest-row')) : [];
     const clippingOffenders = clipCandidates.map(el=>{
       const rect = el.getBoundingClientRect();
       const cs = getComputedStyle(el);
@@ -1545,7 +1667,9 @@
         outerBottomRailContained:!!(bottom && bottomStyle && !['auto','scroll'].includes(bottomStyle.overflowX) && bottom.scrollWidth <= bottom.clientWidth + 1 && bottom.scrollHeight <= bottom.clientHeight + 1),
         bottomScrollWrapperScrollable:!!(bottomScroll && bottomScrollStyle && ['auto','scroll'].includes(bottomScrollStyle.overflowX) && bottomScroll.scrollWidth > bottomScroll.clientWidth + 1),
         bottomScrollWrapperVerticalOverflow:!!(bottomScroll && bottomScroll.scrollHeight > bottomScroll.clientHeight + 1),
-        all13BottomActionsPresent:bottomModes.length === 13,
+        all4AdventureHubsPresent:bottomModes.length === 4,
+        all13BottomActionsPresent:allLearningRoutesPresent,
+        adventureMenuActionCount:adventureMenuModes.length,
         bottomButtonGeometryStable,
         bottomMinButtonHeightPx:bottomModeHeights.length ? Math.round(Math.min(...bottomModeHeights)*10)/10 : null,
         bottomClipOffenders,
@@ -1584,6 +1708,7 @@
       dash.classList.remove(CLASS_ON);
       document.body.classList.remove('vw2-home-active');
       closeOwnedPetsModal();
+      setAdventureMenu('');
       if(root) root.hidden = true;
       if(classicToggle) classicToggle.hidden = true;
       return;
@@ -1598,7 +1723,7 @@
     // Scope presentation-only safety rules (including transient toasts) to Home V2.
     document.body.classList.toggle('vw2-home-active', showV2);
     if(root) root.hidden = !showV2;
-    if(!showV2) closeOwnedPetsModal();
+    if(!showV2){ closeOwnedPetsModal(); setAdventureMenu(''); }
     if(classicToggle) classicToggle.hidden = !active || showV2;
     if(showV2 && !v2WasVisible){
       scheduleSync();
