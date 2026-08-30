@@ -95,7 +95,7 @@ function ghostScareSrc(){
   return (t.image && t.image.src) || null;
 }
 /* 📢 ป้ายโฆษณาบนยอดตึก (รอบ 58) — พื้นหลังคนละสไตล์ต่อป้าย + เลขป้ายมุมซ้ายเสมอ
-   ยังไม่มีลูกค้า = ข้อความ "ติดต่อโฆษณา โทร 064-357 6645"
+   รอบ 1320: ป้ายว่างไม่แสดงในทุกโลก · มีภาพลูกค้าหรือผู้เช่าจริงจึงค่อยแสดง
    วางไฟล์ img/ads/ad_<เลข>.png (สัดส่วน 8:3 เช่น 1024×384) → ภาพลูกค้าขึ้นแทนทันที */
 const AD_STYLES=[
   ['#ff8a80','#b71c1c','#fff'],['#81d4fa','#0d47a1','#fff'],['#c5e1a5','#33691e','#1b3609'],
@@ -106,12 +106,20 @@ const AD_STYLES=[
 /* 🪧 รอบ 362: ผู้เช่าป้ายจาก DB /ads/<n>={uid,n,ts} — ผู้เล่นจ่ายเหรียญจองใส่ชื่อ 7 วัน
    ลูกค้าจริง (img/ads/ad_<n>.png) สำคัญกว่าเสมอ · _adTexDraws เก็บตัววาดซ้ำต่อป้าย (ข้อมูล DB มาทีหลัง) */
 const _adTexDraws={}, _adHasImg={};
-function adBoardTexture(n){
+function adBoardTexture(n,onContent){
   const cv=document.createElement('canvas'); cv.width=512; cv.height=192;
   const c=cv.getContext('2d');
   const [c1,c2,tc]=AD_STYLES[(n-1)%AD_STYLES.length];
   const tex=new THREE.CanvasTexture(cv);
   const draw=(img)=>{
+    const renter=_hookRenter(n);
+    const hasContent=!!(img||renter);
+    c.clearRect(0,0,512,192);
+    if(!hasContent){
+      tex.needsUpdate=true;
+      if(onContent) onContent(false);
+      return;
+    }
     const g=c.createLinearGradient(0,0,512,192);
     g.addColorStop(0,c1); g.addColorStop(1,c2);
     c.fillStyle=g; c.fillRect(0,0,512,192);
@@ -121,7 +129,6 @@ function adBoardTexture(n){
     else if(n%3===1){ for(let x=28;x<512;x+=72) for(let y=28;y<192;y+=68){ c.beginPath(); c.arc(x,y,13,0,7); c.fill(); } }
     else{ c.font='40px serif'; for(let x=14;x<512;x+=92) c.fillText('✦',x,58+((x/92|0)%2)*84); }
     c.globalAlpha=1;
-    const renter=_hookRenter(n);
     if(img){
       c.drawImage(img,6,6,500,180);                    // โฆษณาลูกค้าเต็มป้าย (เว้นกรอบ 6px)
     }else if(renter){                                  // 🪧 ป้ายผู้เล่นเช่า — ชื่อเล่น+เข็ม (ไม่มีชื่อจริง)
@@ -130,10 +137,6 @@ function adBoardTexture(n){
       let fs=52; c.font='900 '+fs+'px Kanit, Tahoma, Arial';
       while(fs>20 && c.measureText(renter.n).width>470){ fs-=4; c.font='900 '+fs+'px Kanit, Tahoma, Arial'; }
       c.fillText(renter.n,256,140);
-    }else{
-      c.fillStyle=tc; c.textAlign='center';
-      c.font='900 42px Kanit, Tahoma, Arial'; c.fillText('ติดต่อโฆษณา',256,76);
-      c.font='900 50px Kanit, Tahoma, Arial'; c.fillText('โทร 064-357 6645',256,142);
     }
     // กรอบขาว + เลขป้าย (โชว์ตลอดแม้มีโฆษณา — ลูกค้าใช้อ้างอิงว่าลงป้ายไหน)
     c.lineWidth=8; c.strokeStyle='rgba(255,255,255,.9)'; c.strokeRect(4,4,504,184);
@@ -142,6 +145,7 @@ function adBoardTexture(n){
     c.fillStyle='#ffd54f'; c.font='900 24px Arial'; c.textAlign='center';
     c.fillText('ป้าย '+n,56,37);
     tex.needsUpdate=true;
+    if(onContent) onContent(true);
   };
   draw(null);
   const img=new Image();                               // probe ภาพลูกค้า (กติกาเดียวกับ probeImages)
@@ -150,14 +154,15 @@ function adBoardTexture(n){
   _adTexDraws[n]=()=>draw(_adHasImg[n]?img:null);      // 🪧 วาดซ้ำเมื่อข้อมูลผู้เช่ามาถึง/เปลี่ยน
   return tex;
 }
-/* 📢 รอบ 204: ป้ายโฆษณาตั้งพื้น (แผ่น 8:3 บนเสา 2 ต้น) — ใช้ adBoardTexture (โชว์ "ติดต่อโฆษณา โทร 064-357 6645"
-   ตราบใดที่ยังไม่มีไฟล์ img/ads/ad_<n>.png) · ติดในโลกที่ยังไม่มีป้าย (adv/haunt/drone/soccer/mecha) */
+/* 📢 รอบ 204: ป้ายโฆษณาตั้งพื้น (แผ่น 8:3 บนเสา 2 ต้น)
+   รอบ 1320: ซ่อนทั้งแผ่นและเสาเมื่อไม่มีภาพลูกค้าหรือผู้เช่าจริง */
 /* _adSeq ประกาศหัวไฟล์ — ไฟล์หลักตั้งฐานเลขป้าย (ต่อจากป้ายเฮลิฯ กันชน ad_<n>.png) ผ่าน bind ค่า adSeqBase */
 function addAdBillboard(sc,n,x,z,angle,groundY){
   const pw=7, ph=pw*3/8, postH=3;
   const g=new THREE.Group();
+  g.visible=false;
   const panel=new THREE.Mesh(new THREE.PlaneGeometry(pw,ph),
-    new THREE.MeshBasicMaterial({map:adBoardTexture(n),side:THREE.DoubleSide}));
+    new THREE.MeshBasicMaterial({map:adBoardTexture(n,v=>{g.visible=v;}),transparent:true,side:THREE.DoubleSide}));
   panel.position.y=postH+ph/2; g.add(panel);
   const poleG=new THREE.CylinderGeometry(.13,.13,postH+ph,6), poleM=new THREE.MeshLambertMaterial({color:0x37474f});
   [-pw/3,pw/3].forEach(off=>{ const p=new THREE.Mesh(poleG,poleM); p.position.set(off,(postH+ph)/2,0); g.add(p); });

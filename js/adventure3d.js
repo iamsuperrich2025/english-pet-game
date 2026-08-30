@@ -98,7 +98,7 @@ const AD_RENT_COIN = 1000;      // 🪧 รอบ 362: ค่าเช่าป�
 const AD_RENT_MS = 7*864e5;     // อายุสัญญาเช่า 7 วัน — ต้องตรงกับ rules /ads (604800000 ms)
 /* 📢 รอบ 183: ชื่อร้านบนตึกในโลกขับรถ — เอาชื่อจริงจาก OSM ออก (กันปัญหาลิขสิทธิ์)
    โชว์เฉพาะ "ผู้ลงโฆษณากับเรา" เท่านั้น → เพิ่มชื่อที่นี่ (เรียงขึ้นตึกอัตโนมัติ) · ว่าง = ตึกไม่มีชื่อ
-   ตึกที่ไม่มีผู้ลงโฆษณา จะขึ้นป้ายเชิญ "ลงโฆษณาที่นี่" ห่างๆ (ทุก ~16 หลัง) */
+   ตึกที่ไม่มีผู้ลงโฆษณาจะไม่แสดงป้ายหรือข้อความเชิญ */
 const SHOP_ADS = [];           // เช่น ['ร้านก๋วยเตี๋ยวเรือป้านิด','คลินิกทันตกรรมยิ้มสวย'] — ผู้ใช้เติมเมื่อมีลูกค้า
 /* 🎖️ ใบอนุญาตนักบิน (รอบ 62): สตรีคประกอบคำโดยไม่ชนเลย → เข็มติดท้ายชื่อ (ได้แล้วไม่หาย) */
 const PILOT_TIERS=[[5,1,'🥉','ทองแดง'],[15,2,'🥈','เงิน'],[30,3,'🥇','ทอง']];
@@ -1695,10 +1695,9 @@ function buildDriveCity(sc){
       // 🚁 รอบ 816: ติด h = ความสูงจริงของตึก (รถไม่สนใจ · เฮลิฯ ใช้ตัดสินว่าบินสูงพ้นยอดตึกนี้แล้วหรือยัง)
       sAdd((x1+x2)/2,(z1+z2)/2,Math.hypot(x2-x1,z2-z1)/2+3,{t:1,x1,z1,x2,z2,h:h+1.4});
     }
-    // ชื่อบนตึก: ผู้ลงโฆษณาก่อน (เรียงลงตึกเว้นระยะ) · ไม่มี = ป้ายเชิญลงโฆษณาห่างๆ · ไม่โชว์ชื่อจริง OSM
+    // ชื่อบนตึก: โชว์เฉพาะผู้ลงโฆษณาจริง (เรียงลงตึกเว้นระยะ) · ไม่โชว์ชื่อจริง OSM
     let adName=null;
     if(SHOP_ADS.length && bi%4===0) adName=SHOP_ADS[((bi/4)|0)%SHOP_ADS.length];
-    if(!adName && bi%16===0) adName='📢 ลงโฆษณาที่นี่ ☎ 064-357 6645';
     if(adName){ const spr=makeNameSprite(adName); spr.position.set(cx,h+5,cz); sc.add(spr); }
   });
 
@@ -2611,7 +2610,9 @@ function buildScene(md){
       const faceW=toX?b.d:b.w;                          // ความกว้างผนังด้านนั้น
       const pw=Math.min(faceW-.8,11), ph=pw*3/8;
       const panel=new THREE.Mesh(new THREE.PlaneGeometry(pw,ph),
-        new THREE.MeshBasicMaterial({map:adBoardTexture(n),side:THREE.DoubleSide}));
+        new THREE.MeshBasicMaterial({transparent:true,side:THREE.DoubleSide}));
+      panel.visible=false;
+      panel.material.map=adBoardTexture(n,v=>{panel.visible=v;});
       panel.name='adpanel'+n;
       panel.position.set(b.x+sx*(b.w/2+.08), b.h-ph/2-.5, b.z+sz*(b.d/2+.08));
       panel.rotation.y=Math.atan2(sx,sz);               // normal ชี้ออกจากผนังเข้ากลางเมือง
@@ -2825,7 +2826,7 @@ function buildScene(md){
     }
     return;                                   // โลกโรงแรมไม่ใช้ป้ายโฆษณารอบสนาม
   }
-  ringAds(sc, 6, 44, 0, tr);                 // 📢 ป้าย "ติดต่อโฆษณา" รอบสนาม (adv)
+  ringAds(sc, 6, 44, 0, tr);                 // 📢 ป้ายจริงรอบสนาม (ป้ายว่างถูกซ่อนทั้งแผ่นและเสา)
   worlds[md]={scene:sc, trees:tr};
 }
 
