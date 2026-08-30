@@ -40,9 +40,6 @@
 - production build + regression ผ่าน; asset อยู่ใน dist, actions 52 จุดครบ; runtime admin mock เห็น R12 และ non-admin mock `homeVisible=false`/ไม่มี Home V2 root ทั้ง source และ production dist
 - ไฟล์หลัก: `js/home-v2.js`, `css/home-v2.css`, `img/home-v2/r1279_fantasy_world.webp`, `index_classic.html`, `tools/build_web.mjs`, `tools/test_home_v2_mobile_preview.js`; รอผู้ใช้ตรวจภาพจริงก่อนเปิดให้ทุกคน
 - **รอบ 1278 · อัปเกรด Firebase Admin SDK v14:** ติดตั้งจริง `firebase-admin` 13.10.0 (`^13.5.0`) → latest v14 14.3.0 (`^14.3.0`); Node 22 ตรงทั้ง package/Firebase manifests และ `firebase-functions` 7.3.2 รองรับ peer v14 (`functions/package.json`, `functions/package-lock.json`)
-- market settlement + cake refund ผ่าน baseline/final ทั้ง Node 22.23.2/24.19.0; clean Node 22 install + manifest 4 endpoints ผ่าน, ไม่เรียก production job/RTDB และไม่แตะ `cakeRefundLedger`; audit เหลือ moderate transitive 7 รายการโดยไม่มี non-breaking fix
-- **รอบ 1277 · อัปเกรด Cloud Functions SDK อย่างปลอดภัย:** `firebase-functions` จากติดตั้งจริง 6.6.0 (`^6.4.0`) เป็น stable 7.3.2; Node 22 + `firebase-admin` 13.10 peer compatible และไม่มี `functions.config()` (`functions/package.json`, `functions/package-lock.json`)
-- market settlement + cake refund ผ่านก่อน/หลังอัปเกรดทั้ง Node 22.23.2/24.19.0; local manifest โหลด 4 endpoints ครบ, ไม่เรียก migration/production DB และไม่แตะ `cakeRefundLedger`; audit เหลือ moderate transitive 8 รายการโดยไม่มี non-breaking fix
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`

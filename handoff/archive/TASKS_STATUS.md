@@ -5684,3 +5684,10 @@
 - Cloud Functions สแกน `giftBox` ที่รับแล้วและ `/gifts` ที่ยัง pending, คืนส่วนต่างให้ UID ผู้ส่งด้วย campaign marker + private ledger; ไม่รวมโรงงาน/ตลาดผู้เล่น และมี heal trigger กันเซฟเครื่องเก่าเขียนทับ (`functions/cake-price-refund.js`, `functions/index.js`)
 - ของขวัญ pending เก็บยอด escrow เดิมในเซฟผู้ส่ง: ราคาเดิมต่ำกว่า 3,000 ไม่คืนเกิน, ราคาเดิมสูงกว่า 5,000 ได้ส่วนต่างก่อนและคืนยอดคงเหลือเมื่อปฏิเสธ/หมดอายุ; ป้ายแจ้งยอดกดรับทราบครั้งเดียว (`state.js`, `online.js`, `main.js`)
 - syntax + policy 125/107 + refund idempotency + market regression + asset QA + production build + Edge 812×375 ผ่าน; live `.1148` + migration `completed`: 4 ผู้เล่น/9 เค้กรับแล้ว/คืน 105,000/escrow เดิม 1/ไม่ deferred (`runCakeGiftPriceRefund`, `healCakeGiftPriceRefund`)
+
+
+## ⏬ ย้ายเมื่อ 2026-08-30 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- market settlement + cake refund ผ่าน baseline/final ทั้ง Node 22.23.2/24.19.0; clean Node 22 install + manifest 4 endpoints ผ่าน, ไม่เรียก production job/RTDB และไม่แตะ `cakeRefundLedger`; audit เหลือ moderate transitive 7 รายการโดยไม่มี non-breaking fix
+- **รอบ 1277 · อัปเกรด Cloud Functions SDK อย่างปลอดภัย:** `firebase-functions` จากติดตั้งจริง 6.6.0 (`^6.4.0`) เป็น stable 7.3.2; Node 22 + `firebase-admin` 13.10 peer compatible และไม่มี `functions.config()` (`functions/package.json`, `functions/package-lock.json`)
+- market settlement + cake refund ผ่านก่อน/หลังอัปเกรดทั้ง Node 22.23.2/24.19.0; local manifest โหลด 4 endpoints ครบ, ไม่เรียก migration/production DB และไม่แตะ `cakeRefundLedger`; audit เหลือ moderate transitive 8 รายการโดยไม่มี non-breaking fix
