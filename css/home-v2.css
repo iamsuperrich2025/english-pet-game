@@ -1589,3 +1589,85 @@ body.vw2-pet-modal-open{overflow:hidden!important}
   .vw2-adventure-menu-panel>header{grid-template-columns:20px auto minmax(0,1fr) auto}.vw2-adventure-menu-panel>header>span{font-size:14px}.vw2-adventure-menu-panel>header>b{font-size:10.5px}.vw2-adventure-menu-panel>header>small{font-size:8px}
   .vw2-adventure-menu .vw2-mode{flex-basis:103px!important;padding-inline:4px!important}.vw2-adventure-menu .vw2-mode>span{width:28px!important;height:28px!important;flex-basis:28px!important}.vw2-adventure-menu .vw2-mode>b{font-size:9px!important}
 }
+
+/* ======================== R23 / รอบ 1291 — BRIGHT FANTASY PLAY DOCK ======================== */
+/* Child-facing toy materials replace the dark adult HUD. Text and icon own
+   separate grid columns so legacy 100%-width labels can never overlap art. */
+#vw-home-v2-root{--vw2-r1291-ready:1}
+.vw2-bottom{
+  padding:4px 6px!important;border:2px solid #ffe68a!important;border-radius:20px!important;
+  background:radial-gradient(circle at 10% 0,rgba(255,185,224,.58),transparent 30%),radial-gradient(circle at 88% 100%,rgba(143,222,255,.6),transparent 34%),linear-gradient(180deg,#fffdf7,#f5eaff)!important;
+  box-shadow:inset 0 3px 0 #fff,inset 0 -4px 0 rgba(191,145,224,.17),0 5px 12px rgba(91,53,137,.23)!important;
+}
+.vw2-adventure-hub{
+  --toy-top:#eafff5;--toy-bottom:#9debc9;--toy-border:#43bf91;--toy-ink:#24534c;--toy-accent:#168b6a;
+  padding:3px 10px 3px 5px!important;grid-template-columns:clamp(35px,3.5vw,45px) minmax(0,1fr) 14px!important;gap:7px!important;
+  border:3px solid var(--toy-border)!important;border-radius:18px 23px 18px 23px!important;color:var(--toy-ink)!important;
+  background:radial-gradient(circle at 23% 2%,rgba(255,255,255,.94),transparent 35%),linear-gradient(150deg,var(--toy-top),var(--toy-bottom))!important;
+  box-shadow:inset 0 3px 0 rgba(255,255,255,.92),inset 0 -4px 0 rgba(67,103,123,.12),0 3px 7px rgba(86,53,120,.2)!important;
+  text-shadow:0 1px 0 rgba(255,255,255,.95)!important;
+}
+.vw2-adventure-hub.training{--toy-top:#fff8cf;--toy-bottom:#ffc977;--toy-border:#f3a33d;--toy-ink:#704114;--toy-accent:#d67418}
+.vw2-adventure-hub.challenge{--toy-top:#fff0ff;--toy-bottom:#dcb5ff;--toy-border:#a86ce5;--toy-ink:#512a72;--toy-accent:#7f3fc0}
+.vw2-adventure-hub.worlds{--toy-top:#e9fbff;--toy-bottom:#91dcff;--toy-border:#3badd2;--toy-ink:#174f70;--toy-accent:#197fa7}
+.vw2-adventure-hub:before{inset:3px!important;border:1px dashed rgba(255,255,255,.78)!important;border-radius:13px 18px 13px 18px!important}
+.vw2-adventure-hub:after{content:"★"!important;right:18px!important;top:2px!important;color:#fff7a5!important;font-size:10px!important;text-shadow:0 1px 1px rgba(125,77,25,.22)!important}
+.vw2-adventure-hub:hover{filter:saturate(1.05) brightness(1.035)}
+.vw2-adventure-hub.is-active{filter:saturate(1.08) brightness(1.04);box-shadow:inset 0 3px 0 #fff,inset 0 -4px 0 rgba(67,103,123,.1),0 0 0 3px rgba(255,237,118,.78),0 5px 12px rgba(86,53,120,.28)!important}
+.vw2-adventure-landmark{width:clamp(34px,3.35vw,43px)!important;min-height:33px!important;border:3px solid rgba(255,255,255,.94)!important;background:radial-gradient(circle at 38% 26%,#fff,#e7fff6 47%,#84dabb 76%,#3aa486)!important;box-shadow:0 3px 6px rgba(76,55,113,.22)!important}
+.vw2-adventure-hub.training .vw2-adventure-landmark{background:radial-gradient(circle at 38% 26%,#fff,#fff3c8 47%,#ffc469 76%,#e38b29)!important}
+.vw2-adventure-hub.challenge .vw2-adventure-landmark{background:radial-gradient(circle at 38% 26%,#fff,#f8eaff 47%,#d19bf4 76%,#965dd1)!important}
+.vw2-adventure-hub.worlds .vw2-adventure-landmark{background:radial-gradient(circle at 38% 26%,#fff,#e8faff 47%,#7bd0f3 76%,#369dc5)!important}
+.vw2-adventure-landmark i{background:var(--toy-accent)!important;opacity:.28!important}
+.vw2-adventure-copy{min-width:0!important;gap:0!important;justify-content:center!important}
+.vw2-adventure-copy b{width:100%!important;color:var(--toy-ink)!important;font-size:clamp(12.5px,1.08vw,16px)!important;line-height:1.12!important;font-weight:1000!important;text-align:left!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:normal!important;text-shadow:0 1px #fff!important}
+.vw2-adventure-copy small{display:none!important}
+.vw2-adventure-hub>em{color:var(--toy-accent)!important;font-size:25px!important;text-shadow:0 1px #fff!important}
+
+.vw2-adventure-menu{
+  height:102px!important;padding:5px 7px!important;border:3px solid #ffd76b!important;border-radius:21px!important;
+  background:radial-gradient(circle at 12% 0,rgba(255,202,232,.55),transparent 32%),radial-gradient(circle at 86% 100%,rgba(141,222,255,.52),transparent 35%),linear-gradient(180deg,rgba(255,253,247,.995),rgba(242,229,255,.995))!important;
+  box-shadow:inset 0 3px 0 #fff,inset 0 -4px 0 rgba(177,130,212,.14),0 8px 18px rgba(70,43,116,.3)!important;
+}
+.vw2-adventure-menu-panel{grid-template-rows:28px minmax(0,1fr)!important;gap:4px!important}
+.vw2-adventure-menu-panel>header{grid-template-columns:25px auto minmax(0,1fr) auto!important;gap:7px!important;padding:0 4px!important;color:#55336e!important}
+.vw2-adventure-menu-panel>header>span{font-size:19px!important}
+.vw2-adventure-menu-panel>header>b{font-size:14px!important;color:#57306d!important;text-shadow:0 1px #fff!important}
+.vw2-adventure-menu-panel>header>small{font-size:10.5px!important;color:#745f82!important}
+.vw2-adventure-menu-panel>header>button{min-width:62px!important;height:25px!important;padding:3px 10px!important;border:2px solid #f39dc9!important;border-radius:999px!important;background:linear-gradient(180deg,#fff,#ffd7eb)!important;color:#71395e!important;font-size:11px!important;box-shadow:inset 0 2px #fff,0 2px 4px rgba(113,57,94,.14)!important}
+.vw2-adventure-menu-track{gap:7px!important}
+.vw2-adventure-menu .vw2-mode{
+  flex:0 0 clamp(138px,13.5vw,174px)!important;width:auto!important;min-width:0!important;height:100%!important;
+  padding:4px 9px!important;display:grid!important;grid-template-columns:36px minmax(0,1fr)!important;align-items:center!important;justify-content:stretch!important;gap:8px!important;
+  border:2px solid #ee9fc9!important;border-radius:16px 20px 16px 20px!important;background-image:none!important;background:linear-gradient(150deg,#fffafd,#ffd9ed)!important;color:#583552!important;
+  box-shadow:inset 0 3px 0 rgba(255,255,255,.96),inset 0 -3px 0 rgba(187,93,145,.1),0 3px 6px rgba(86,53,120,.16)!important;text-shadow:none!important;overflow:hidden!important;
+}
+.vw2-adventure-menu .vw2-mode.challenge,.vw2-adventure-menu .vw2-mode.violet{background:linear-gradient(150deg,#fffaff,#e7ceff)!important;border-color:#ba87e8!important}
+.vw2-adventure-menu .vw2-mode.gold,.vw2-adventure-menu .vw2-mode.orange{background:linear-gradient(150deg,#fffdf2,#ffe1a4)!important;border-color:#efb257!important}
+.vw2-adventure-menu .vw2-mode.green,.vw2-adventure-menu .vw2-mode.lime{background:linear-gradient(150deg,#f7fff9,#c8f1d7)!important;border-color:#70c993!important}
+.vw2-adventure-menu .vw2-mode.world,.vw2-adventure-menu .vw2-mode.blue{background:linear-gradient(150deg,#f8fdff,#cbeeff)!important;border-color:#6bc2e3!important}
+.vw2-adventure-menu .vw2-mode>span{grid-column:1!important;position:static!important;width:36px!important;height:36px!important;min-width:36px!important;max-width:36px!important;flex:0 0 36px!important;padding:4px!important;display:grid!important;place-items:center!important;border:2px solid rgba(255,255,255,.98)!important;border-radius:50%!important;background:rgba(255,255,255,.88)!important;box-shadow:0 2px 5px rgba(78,50,111,.14)!important;filter:none!important}
+.vw2-adventure-menu .vw2-mode>b{grid-column:2!important;position:static!important;width:auto!important;min-width:0!important;max-width:100%!important;display:block!important;color:#4f365f!important;font-size:clamp(11px,.9vw,13.5px)!important;line-height:1.12!important;font-weight:1000!important;text-align:left!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere!important;text-shadow:0 1px #fff!important}
+
+@media (max-width:1180px),(max-height:520px){
+  .vw2-adventure-menu{height:86px!important;padding:4px 6px!important}
+  .vw2-adventure-menu-panel{grid-template-rows:24px minmax(0,1fr)!important;gap:3px!important}
+  .vw2-adventure-hub{grid-template-columns:36px minmax(0,1fr) 11px!important;gap:5px!important}
+  .vw2-adventure-copy b{font-size:clamp(11.5px,1.35vw,14px)!important}
+  .vw2-adventure-menu .vw2-mode{flex-basis:134px!important;grid-template-columns:32px minmax(0,1fr)!important;gap:6px!important;padding:3px 7px!important}
+  .vw2-adventure-menu .vw2-mode>span{width:32px!important;height:32px!important;min-width:32px!important;max-width:32px!important;flex-basis:32px!important}
+  .vw2-adventure-menu .vw2-mode>b{font-size:11px!important}
+  .vw2-adventure-menu-panel>header>b{font-size:12.5px!important}.vw2-adventure-menu-panel>header>small{font-size:9.5px!important}
+}
+@media (max-width:760px),(max-height:390px){
+  .vw2-bottom{padding:3px 4px!important}.vw2-bottom-track{gap:4px!important}
+  .vw2-adventure-hub{grid-template-columns:32px minmax(0,1fr)!important;gap:4px!important;padding:2px 5px!important;border-width:2px!important}
+  .vw2-adventure-landmark{width:31px!important;min-height:30px!important;border-width:2px!important}.vw2-adventure-hub>em{display:none!important}
+  .vw2-adventure-copy b{font-size:11.5px!important;line-height:1.1!important}
+  .vw2-adventure-menu{height:78px!important;bottom:65px!important;border-radius:16px!important;border-width:2px!important}
+  .vw2-adventure-menu-panel{grid-template-rows:22px minmax(0,1fr)!important;gap:2px!important}
+  .vw2-adventure-menu-panel>header{grid-template-columns:20px auto minmax(0,1fr) auto!important;gap:4px!important}.vw2-adventure-menu-panel>header>span{font-size:15px!important}.vw2-adventure-menu-panel>header>b{font-size:11px!important}.vw2-adventure-menu-panel>header>small{display:none!important}.vw2-adventure-menu-panel>header>button{min-width:50px!important;height:21px!important;padding:2px 7px!important;font-size:9.5px!important}
+  .vw2-adventure-menu .vw2-mode{flex-basis:126px!important;grid-template-columns:29px minmax(0,1fr)!important;gap:5px!important;padding:3px 6px!important;border-radius:12px 15px 12px 15px!important}
+  .vw2-adventure-menu .vw2-mode>span{width:29px!important;height:29px!important;min-width:29px!important;max-width:29px!important;flex-basis:29px!important;padding:3px!important}
+  .vw2-adventure-menu .vw2-mode>b{font-size:10.5px!important;line-height:1.08!important}
+}

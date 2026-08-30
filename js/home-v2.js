@@ -8,6 +8,7 @@
    R20 / รอบ 1288 — Scrollable pet actions + mobile layout profiles
    R21 / รอบ 1289 — One-tap heal-all action in owned-pet sheet
    R22 / รอบ 1290 — Admin-only fantasy adventure dock
+   R23 / รอบ 1291 — Bright child-friendly fantasy play dock + readable flyouts
    ------------------------------------------------------------
    Additive UI shell only. It does NOT own economy, auth, quests,
    Firebase, purchases, or game routing. Existing Lobby DOM stays
@@ -398,7 +399,7 @@
     if(document.getElementById(STYLE_ID)) return;
     const style = document.createElement('style');
     style.id = STYLE_ID;
-    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1;--vw2-r1287-runtime-ready:1;--vw2-r1288-runtime-ready:1;--vw2-r1289-runtime-ready:1;--vw2-r1290-runtime-ready:1}';
+    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1;--vw2-r1287-runtime-ready:1;--vw2-r1288-runtime-ready:1;--vw2-r1289-runtime-ready:1;--vw2-r1290-runtime-ready:1;--vw2-r1291-runtime-ready:1}';
     document.head.appendChild(style);
   }
   function clickExisting(selector, opts){
@@ -985,7 +986,7 @@
         </div>
         <div class="vw2-adventure-menu" id="vw2-adventure-menu" role="region" aria-label="เมนูจุดหมายผจญภัย" aria-hidden="true" hidden>${adventureMenus}</div>
         <footer class="vw2-bottom" aria-label="จุดเดินทางใน Vocab World"><div class="vw2-bottom-scroll" role="region" aria-label="เลือกจุดหมายผจญภัย"><div class="vw2-bottom-track">${adventureDockButtons}</div></div></footer>
-        <div class="vw2-preview-mark">ADMIN PREVIEW · R22 FANTASY ADVENTURE DOCK</div>
+        <div class="vw2-preview-mark">ADMIN PREVIEW · R23 BRIGHT FANTASY PLAY DOCK</div>
       </div>
       <div class="vw2-online-modal" id="vw2-online-modal" role="dialog" aria-modal="true" aria-labelledby="vw2-online-modal-title" aria-hidden="true" hidden>
         <section class="vw2-online-modal-panel">

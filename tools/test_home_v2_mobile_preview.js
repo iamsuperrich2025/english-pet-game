@@ -45,8 +45,9 @@ must(home.includes("R18 / รอบ 1286") && css.includes("R18 / รอบ 1286
 must(home.includes("R19 / รอบ 1287") && css.includes("R19 / รอบ 1287") && css.includes("--vw2-r1287-ready:1") && home.includes("--vw2-r1287-runtime-ready:1"), "R19 / รอบ 1287 lineage markers missing");
 must(home.includes("R20 / รอบ 1288") && css.includes("R20 / รอบ 1288") && css.includes("--vw2-r1288-ready:1") && home.includes("--vw2-r1288-runtime-ready:1"), "R20 / รอบ 1288 lineage markers missing");
 must(home.includes("R21 / รอบ 1289") && css.includes("R21 / รอบ 1289") && css.includes("--vw2-r1289-ready:1") && home.includes("--vw2-r1289-runtime-ready:1"), "R21 / รอบ 1289 lineage markers missing");
-must(home.includes("ADMIN PREVIEW · R22 FANTASY ADVENTURE DOCK") && home.includes("R22 / รอบ 1290") && css.includes("R22 / รอบ 1290") && css.includes("--vw2-r1290-ready:1") && home.includes("--vw2-r1290-runtime-ready:1"), "R22 / รอบ 1290 lineage markers missing");
-must(indexClassic.includes("css/home-v2.css?v=1290") && indexClassic.includes("js/home-v2.js?v=1290"), "R22 cache-bust missing from index_classic.html");
+must(home.includes("R22 / รอบ 1290") && css.includes("R22 / รอบ 1290") && css.includes("--vw2-r1290-ready:1") && home.includes("--vw2-r1290-runtime-ready:1"), "R22 / รอบ 1290 lineage markers missing");
+must(home.includes("ADMIN PREVIEW · R23 BRIGHT FANTASY PLAY DOCK") && home.includes("R23 / รอบ 1291") && css.includes("R23 / รอบ 1291") && css.includes("--vw2-r1291-ready:1") && home.includes("--vw2-r1291-runtime-ready:1"), "R23 / รอบ 1291 lineage markers missing");
+must(indexClassic.includes("css/home-v2.css?v=1291") && indexClassic.includes("js/home-v2.js?v=1291"), "R23 cache-bust missing from index_classic.html");
 must(!home.includes("ADMIN PREVIEW · R21 HEAL ALL PETS"), "stale R21 preview badge remains");
 must(css.includes(".vw2-feature-title,.vw2-word-ribbon{top:-25px!important}"), "R17 complete New Word control was not moved into the upper HUD lane");
 must(css.includes(".vw2-feature{overflow:visible!important}") && css.includes("left:24%!important;right:24%!important;top:-25px!important"), "R18 New Word plaque is not fully visible in the safe HUD lane");
@@ -276,6 +277,7 @@ must(expectedDock.every(label=>home.includes(`'${label}'`)), "R22 four fantasy d
 must(home.includes("data-vw2-adventure-group") && home.includes("data-vw2-adventure-panel") && home.includes("function setAdventureMenu(group='')") && home.includes("function toggleAdventureMenu(group)"), "R22 adventure flyout behavior missing");
 must(home.includes("modeButtons('training')") && home.includes("modeButtons('challenge')") && home.includes("worldMenuButtons"), "R22 training/challenge/world route groups missing");
 must(css.includes("FANTASY ADVENTURE DOCK") && css.includes("grid-template-columns:repeat(4,minmax(0,1fr))!important") && css.includes(".vw2-adventure-menu[hidden]"), "R22 fantasy dock visual/responsive contract missing");
+must(css.includes("BRIGHT FANTASY PLAY DOCK") && css.includes("background-image:none!important") && css.includes("grid-template-columns:36px minmax(0,1fr)!important") && css.includes(".vw2-adventure-copy small{display:none!important}") && css.includes("width:auto!important;min-width:0!important;max-width:100%!important"), "R23 bright/readable child dock contract missing");
 must(home.includes("if(!showV2){ closeOwnedPetsModal(); setAdventureMenu(''); }") && home.includes("if(!allowed)") && home.includes("setAdventureMenu('');"), "R22 admin visibility/menu-close guard missing");
 must(css.includes("R11.5.3 BOTTOM RAIL GEOMETRY RESTORE + WRAPPER-ONLY SCROLL"), "R11.5.3 wrapper-only Bottom Rail architecture was lost");
 must(css.includes("R11.5.4 EVIDENCE-DRIVEN GEOMETRY CORRECTION"), "R11.5.4 geometry-correction marker missing");
@@ -315,5 +317,5 @@ if(fail.length){
   console.error("Home V2 R11.5.4 validation FAILED:\n- " + fail.join("\n- "));
   process.exit(1);
 }
-console.log("Home V2 R22 / รอบ 1290 validation PASS");
-console.log(`Checked fantasy adventure dock, grouped training/challenge/world routes, atomic one-tap heal-all, mobile profiles, ${expectedRail.length} left destinations, all ${expectedBottom.length} learning actions, and admin gate.`);
+console.log("Home V2 R23 / รอบ 1291 validation PASS");
+console.log(`Checked bright child-readable fantasy play dock, non-overlapping flyout labels, grouped training/challenge/world routes, atomic one-tap heal-all, mobile profiles, ${expectedRail.length} left destinations, all ${expectedBottom.length} learning actions, and admin gate.`);
