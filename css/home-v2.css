@@ -1882,7 +1882,7 @@ body.vw2-pet-modal-open{overflow:hidden!important}
    internally contained; the learning rail keeps R26 whole-card paging. */
 #vw-home-v2-root{--vw2-r1300-ready:1}
 .vw2-feature-title,.vw2-word-ribbon{top:54px!important}
-.vw2-profile-main{gap:2px!important;justify-content:flex-start!important}
+.vw2-profile-main{gap:2px!important;justify-content:space-between!important}
 .vw2-name-row{min-height:20px!important}
 .vw2-profile-meta{
   grid-template-columns:minmax(0,1fr) minmax(0,.9fr) minmax(48px,.62fr)!important;
@@ -1948,4 +1948,47 @@ body.vw2-pet-modal-open{overflow:hidden!important}
   .vw2-profile-meta-chip.date b{font-size:8.5px!important}
   .vw2-profile-chips{min-height:14px!important}.vw2-achievement-mark{width:16px!important;height:16px!important;flex-basis:16px!important}
   .vw2-rank{padding:1px 6px!important;font-size:8.5px!important}
+}
+/* ======================== R29 / รอบ 1305 — VISUAL HIERARCHY + TRUE-ASPECT FEED FRAME ======================== */
+/* The 340x352 source uses 70/32/30/82 slices. Render every border with one
+   uniform scale so artwork crossing a corner—especially the globe—stays round. */
+#vw-home-v2-root{--vw2-r1305-ready:1}
+.vw2-feed:after{border-width:58px 27px 25px 68px!important;border-image-width:58px 27px 25px 68px!important}
+.vw2-feed .vw2-section-head{margin-left:60px!important;margin-right:20px!important}
+
+/* R28 pushed New Word into the same vertical band as the stage speech. Keep
+   the elevated hero composition, but restore a clean top-to-bottom hierarchy. */
+.vw2-feature-title,.vw2-word-ribbon{top:15px!important}
+.vw2-speech{top:27%!important}
+
+/* A real photo should sit inside the ornamental portrait frame instead of
+   covering almost all of its gold/white rim. The camera remains outside. */
+.vw2-avatar{
+  width:84%!important;height:88%!important;border-radius:17px!important;
+  box-shadow:0 0 0 2px rgba(255,255,255,.96),0 0 0 4px rgba(214,164,65,.58),0 4px 9px rgba(63,35,92,.2)
+}
+.vw2-avatar img{border-radius:13px!important}
+
+/* The house artwork is self-explanatory. Remove its redundant live caption
+   and give the image the complete internal frame; the button keeps aria-label. */
+.vw2-house-preview-head{display:none!important}
+.vw2-house-backdrop{top:4px!important}
+
+/* At desktop acceptance widths all four pet actions fit as complete plaques.
+   Smaller landscape profiles retain the existing intentional scroll rail. */
+@media (min-width:1181px) and (min-height:521px){
+  .vw2-feature-action-scroll{overflow-x:hidden!important}
+  .vw2-feature-action-track{width:100%!important;gap:5px!important;padding-inline:2px!important}
+  .vw2-feature-action-track>button{flex:1 1 0!important}
+}
+@media (max-width:1180px),(max-height:520px){
+  .vw2-feed:after{border-width:52px 24px 22px 61px!important;border-image-width:52px 24px 22px 61px!important}
+  .vw2-feed .vw2-section-head{margin-left:54px!important;margin-right:17px!important}
+  .vw2-feature-title,.vw2-word-ribbon{top:12px!important}
+  .vw2-speech{top:29%!important}
+  .vw2-avatar{width:88%!important;height:91%!important}
+}
+@media (max-width:760px){
+  .vw2-feed:after{border-width:49px 22px 21px 57px!important;border-image-width:49px 22px 21px 57px!important}
+  .vw2-feed .vw2-section-head{margin-left:51px!important;margin-right:14px!important}
 }
