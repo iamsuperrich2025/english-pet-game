@@ -135,4 +135,16 @@ const ITEMS = [
   {id:'explorer_vest',   emoji:'🧭', img:'img/wear/premium/explorer_vest.png',   name:'เสื้อนักสำรวจตัวจิ๋ว',price:11000, slot:'body', rarity:'rare'},
   {id:'galaxy_pajamas',  emoji:'🌌', img:'img/wear/premium/galaxy_pajamas.png',  name:'ชุดนอนฝันกาแล็กซี',   price:15000, slot:'body', rarity:'epic'},
   {id:'royal_cape',      emoji:'🛡️', img:'img/wear/premium/royal_cape.png',      name:'ผ้าคลุมผู้พิทักษ์',   price:30000, slot:'body', rarity:'legendary'},
+  // ⚔️ คอลเลกชันนักรบ: ภาพการ์ด WebP 768px + ภาพน้องใส่จริงครบทุกชนิด/วัย
+  // knownWear บอกระบบภาพให้ลงทะเบียน URL ตอนใช้งาน แทนการ probe 180 ภาพตั้งแต่เข้าเกม
+  {id:'armor_ancient_guardian', emoji:'🗿', img:'img/AnimalWearItems/catalog/armor_ancient_guardian.webp', name:'เกราะผู้พิทักษ์โบราณ', price:32000, slot:'body', rarity:'legendary', knownWear:true},
+  {id:'armor_aqua_mage',        emoji:'💧', img:'img/AnimalWearItems/catalog/armor_aqua_mage.webp',        name:'เกราะจอมเวทวารี',       price:34000, slot:'body', rarity:'legendary', knownWear:true},
+  {id:'armor_arcane_royal',     emoji:'🔮', img:'img/AnimalWearItems/catalog/armor_arcane_royal.webp',     name:'เกราะราชันอาคม',        price:38000, slot:'body', rarity:'legendary', knownWear:true},
+  {id:'armor_desert_guardian',  emoji:'🏜️', img:'img/AnimalWearItems/catalog/armor_desert_guardian.webp',  name:'เกราะผู้พิทักษ์ทะเลทราย',price:36000, slot:'body', rarity:'legendary', knownWear:true},
+  {id:'armor_fire_emperor',     emoji:'🔥', img:'img/AnimalWearItems/catalog/armor_fire_emperor.webp',     name:'เกราะจักรพรรดิอัคคี',   price:50000, slot:'body', rarity:'legendary', knownWear:true},
+  {id:'armor_forest_guardian',  emoji:'🌿', img:'img/AnimalWearItems/catalog/armor_forest_guardian.webp',  name:'เกราะผู้พิทักษ์พงไพร',  price:35000, slot:'body', rarity:'legendary', knownWear:true},
+  {id:'armor_frost_knight',     emoji:'❄️', img:'img/AnimalWearItems/catalog/armor_frost_knight.webp',     name:'เกราะอัศวินน้ำแข็ง',     price:42000, slot:'body', rarity:'legendary', knownWear:true},
+  {id:'armor_royal_paladin',    emoji:'👑', img:'img/AnimalWearItems/catalog/armor_royal_paladin.webp',    name:'เกราะพาลาดินราชวงศ์',   price:48000, slot:'body', rarity:'legendary', knownWear:true},
+  {id:'armor_shadow_knight',    emoji:'🌑', img:'img/AnimalWearItems/catalog/armor_shadow_knight.webp',    name:'เกราะอัศวินเงา',         price:52000, slot:'body', rarity:'legendary', knownWear:true},
+  {id:'armor_solar_paladin',    emoji:'☀️', img:'img/AnimalWearItems/catalog/armor_solar_paladin.webp',    name:'เกราะพาลาดินสุริยะ',     price:56000, slot:'body', rarity:'legendary', knownWear:true},
 ];

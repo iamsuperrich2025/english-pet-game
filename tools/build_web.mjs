@@ -192,7 +192,7 @@ async function sourceFiles() {
 
       'js/data/petshopping.js', 'js/petpantry.js', 'js/petshopping3d.js',
 
-      'css/petpantry.css', 'css/petshopping3d.css',
+      'css/petpantry.css', 'css/petfashion.css', 'css/petshopping3d.css',
 
       'js/dailybox.js', 'css/dailybox.css',
 

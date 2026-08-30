@@ -6352,6 +6352,12 @@ function dressSlotLabel(slot){
   return ({head:'ศีรษะ',face:'ใบหน้า',neck:'คอ',body:'เสื้อผ้า'})[slot] || 'เครื่องแต่งกาย';
 }
 function openDressUpBoard(){
+  /* ⚔️ รอบ 1292: ตู้ใน Lobby และร้านแฟชั่น 3D ใช้แคตตาล็อกใหญ่ชุดเดียวกัน
+     ผู้เล่นจึงลากดู → ลองใส่ → กรอก PIN 6 หลักได้จากหน้าที่ผู้ใช้ชี้ในภาพทันที */
+  if(typeof PetPantry!=='undefined' && typeof PetPantry.openStore==='function'){
+    PetPantry.openStore('fashion',{closet:true});
+    return;
+  }
   closeDressUpBoard();   // กันซ้อนถ้าเผลอเปิดซ้ำ
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay dress-overlay';

@@ -27,7 +27,7 @@ function petImageKeys(pet){
   const keys = [startImgKey(pet)];
   for(const stage of ['baby','adult']){
     for(const m of MOODS) keys.push(`${pet}_${stage}_${m}`);
-    for(const it of ITEMS) keys.push(`${pet}_${stage}_${it.id}`);
+    for(const it of ITEMS) if(!it.knownWear) keys.push(`${pet}_${stage}_${it.id}`);
     keys.push(`${pet}_${stage}_normal_sleep`);   // 💤 ภาพหลับ (เฉพาะร่างเด็ก/โต — ไข่นอนไม่ได้)
   }
   // ข้อ 5.2: รูปร่างตามคุณภาพการกิน (เฉพาะโตเต็มวัย — prompt ใน PROMPTS_CHARACTERS.md)
@@ -45,6 +45,19 @@ function petAssetPath(key){
   if(!match) return null;
   const dir = PET_IMAGE_STATES.has(match[2]) ? 'animal' : 'AnimalWearItems';
   return `img/${dir}/${key}.webp`;
+}
+/* ชุดที่ทีมภาพยืนยันว่ามีครบทุกสัตว์/วัย: ลงทะเบียน URL เมื่อจะใช้จริง
+   ไม่ probe/download 180 ภาพตอน login — การ์ดร้านและหน้าลองใส่จึงยังเบา */
+function petWearImage(p, item){
+  p = p || activePet();
+  if(!p || !item) return null;
+  const stage = petStage(p);
+  if(stage === 'egg') return null;
+  const key = `${p.type}_${stage}_${item.id}`;
+  if(item.knownWear && IMG_FILES[key] === undefined){
+    IMG_FILES[key] = `img/AnimalWearItems/${key}.webp?v=${PET_ASSET_V}`;
+  }
+  return IMG_FILES[key] || null;
 }
 
 function probeImages(keys, dir='img', version=''){
@@ -179,7 +192,7 @@ function petStateImg(p){
   if(p.sleeping)   return IMG_FILES[`${pet}_${stage}_normal_sleep`] || null;
   if(petHungry(p)) return IMG_FILES[`${pet}_${stage}_hungry`] || null;
   const worn = equippedItem(p);
-  if(worn)         return IMG_FILES[`${pet}_${stage}_${worn.id}`] || null;
+  if(worn)         return petWearImage(p, worn);
   return null;
 }
 
@@ -254,6 +267,7 @@ function currentPetImg(p){
   if(stage === 'egg') return IMG_FILES[startImgKey(pet)] || null;
   const candidates = [];
   const worn = equippedItem(p);
+  if(worn) petWearImage(p, worn);
   const hasShape = stage === 'adult' && p.shape && p.shape !== 'normal';
   if(p.sick) candidates.push(`${pet}_${stage}_sick`);
   else if(p.sleeping) candidates.push(`${pet}_${stage}_normal_sleep`);

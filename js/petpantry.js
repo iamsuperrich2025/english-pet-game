@@ -74,9 +74,137 @@ const PetPantry = (()=>{
 ov.querySelectorAll('[data-shelf]').forEach(el=>el.addEventListener('click',()=>{const r=buyShelf(el.dataset.shelf);if(r.ok){toast(`🗄️ ได้${r.shelf.name}แล้ว — ชั้นใหม่ยังว่างนะ`,0);openPantry(options);}else if(r.code==='coins')toast(`🪙 ต้องมี ${fmtNum(r.cost)} เหรียญ`);else if(r.code==='downgrade')toast('ชั้นนี้เล็กกว่าชั้นที่ใช้อยู่ จึงเปลี่ยนไม่ได้');}));
     ov.querySelector('.pp-trip').addEventListener('click',()=>{ov.remove();enterPetShopping3D('food');});
   }
+  /* ============================================================
+     ⚔️🎀 ร้านแฟชั่นแบบลองใส่ — รอบ 1292
+     ภาพชุดนักรบ knownWear โหลดเฉพาะใบที่เห็น/ลอง ไม่ probe 180 ใบตอนบูต
+     ============================================================ */
+  function fashionPetImage(item){
+    const p=(typeof activePet==='function')?activePet():null;
+    if(!p||!item||petStage(p)==='egg')return null;
+    if(typeof petWearImage==='function')return petWearImage(p,item);
+    return IMG_FILES[`${p.type}_${petStage(p)}_${item.id}`]||null;
+  }
+  function wearFashionItem(item){
+    const p=(typeof activePet==='function')?activePet():null;
+    if(!p||!item||petStage(p)==='egg')return false;
+    p.equipped={};p.equipped[item.slot]=item.id;state.psDress=true;
+    saveState();if(typeof renderDashboard==='function')renderDashboard();return true;
+  }
+  function buyFashionItem(item){
+    if(!item)return {ok:false,code:'invalid'};
+    if(state.owned.includes(item.id))return {ok:false,code:'owned'};
+    if(cleanInt(state.coins)<item.price)return {ok:false,code:'coins',cost:item.price};
+    state.coins-=item.price;state.owned.push(item.id);
+    const p=(typeof activePet==='function')?activePet():null;
+    const equipped=!!(p&&petStage(p)!=='egg');
+    if(equipped){p.equipped={};p.equipped[item.slot]=item.id;state.psDress=true;}
+    if(typeof sellInc==='function')sellInc('item_'+item.id);
+    if(typeof sfx!=='undefined'&&sfx.buy)sfx.buy();done();
+    return {ok:true,item,equipped};
+  }
+  function bindFashionStrip(strip){
+    if(!strip||strip.dataset.dragBound)return;strip.dataset.dragBound='1';
+    let down=false,startX=0,startLeft=0,moved=false,suppress=false;
+    strip.addEventListener('pointerdown',e=>{
+      if(e.button!==undefined&&e.button!==0)return;
+      if(e.target.closest('button'))return;
+      down=true;moved=false;startX=e.clientX;startLeft=strip.scrollLeft;
+      strip.classList.add('dragging');try{strip.setPointerCapture(e.pointerId);}catch(err){}
+    });
+    strip.addEventListener('pointermove',e=>{
+      if(!down)return;const dx=e.clientX-startX;if(Math.abs(dx)>5)moved=true;
+      if(moved){e.preventDefault();strip.scrollLeft=startLeft-dx;}
+    });
+    const end=()=>{if(!down)return;down=false;strip.classList.remove('dragging');if(moved){suppress=true;setTimeout(()=>{suppress=false;},0);}};
+    strip.addEventListener('pointerup',end);strip.addEventListener('pointercancel',end);
+    strip.addEventListener('click',e=>{if(suppress){e.preventDefault();e.stopPropagation();}},true);
+  }
+  function fashionPinDialog(item,options={}){
+    const p=(typeof activePet==='function')?activePet():null;
+    const src=fashionPetImage(item)||item.img||'';
+    const code=Math.floor(Math.random()*1000000).toString().padStart(6,'0');
+    const ov=document.createElement('div');ov.className='levelup-overlay mkt-buy-overlay pp-fashion-pin-overlay';
+    let input='',processing=false;
+    ov.innerHTML=`<div class="levelup-box mkt-buy-box">
+      <div class="pp-pin-info"><h2>ยืนยันการซื้อ</h2><div class="mkt-buy-item">
+        <div class="mkt-buy-pic">${src?`<img class="mkt-buy-pic-img" src="${src}" alt="${escapeHTML(item.name)}">`:`<span class="mkt-buy-pic-emoji">${item.emoji}</span>`}</div>
+        <div class="mkt-buy-meta"><div class="mkt-buy-name">${escapeHTML(item.name)}</div><div class="mkt-buy-seller">ลองใส่กับ ${escapeHTML(p&&p.name||'น้อง')}</div><div class="mkt-buy-price">ราคา: 🪙${fmtNum(item.price)}</div><div class="mkt-buy-balance">เหรียญปัจจุบัน: 🪙${fmtNum(state.coins)}</div></div>
+      </div></div><div class="pp-pin-entry">
+        <div class="mkt-confirm-code-title">รหัสยืนยัน:</div><div class="mkt-code-target">${code}</div>
+        <div class="mkt-pin-note">กรุณากดตัวเลขด้านล่างให้ตรงกับรหัสด้านบน</div>
+        <div class="mkt-code-input"></div><div class="mkt-code-error"></div>
+        <div class="mkt-pin-grid">
+          <button class="mkt-pin-btn" data-d="1">1</button><button class="mkt-pin-btn" data-d="2">2</button><button class="mkt-pin-btn" data-d="3">3</button>
+          <button class="mkt-pin-btn" data-d="4">4</button><button class="mkt-pin-btn" data-d="5">5</button><button class="mkt-pin-btn" data-d="6">6</button>
+          <button class="mkt-pin-btn" data-d="7">7</button><button class="mkt-pin-btn" data-d="8">8</button><button class="mkt-pin-btn" data-d="9">9</button>
+          <button class="mkt-pin-btn" data-d="0">0</button><button class="mkt-pin-btn mkt-pin-del" data-act="del">⌫ ลบ</button><button class="mkt-pin-btn mkt-pin-clear" data-act="clear">ล้าง</button>
+        </div><div class="mkt-buy-actions"><button class="cf-no mkt-buy-cancel">ยกเลิก</button><button class="cf-ok mkt-buy-confirm" disabled>ยืนยันการซื้อ</button></div>
+      </div></div>`;
+    const inputEl=ov.querySelector('.mkt-code-input'),errEl=ov.querySelector('.mkt-code-error'),confirm=ov.querySelector('.mkt-buy-confirm');
+    const refresh=()=>{
+      const full=input.length===6;confirm.disabled=!full||input!==code;
+      errEl.textContent=full&&input!==code?'รหัสไม่ถูกต้อง กรุณาลองใหม่':'';
+      inputEl.textContent=(input+'_'.repeat(Math.max(0,6-input.length))).split('').join(' ');
+    };
+    ov.querySelectorAll('.mkt-pin-btn').forEach(btn=>btn.addEventListener('click',()=>{
+      if(processing)return;
+      if(btn.dataset.d&&input.length<6)input+=btn.dataset.d;
+      else if(btn.dataset.act==='del')input=input.slice(0,-1);
+      else if(btn.dataset.act==='clear')input='';
+      if(typeof sfx!=='undefined'&&sfx.select)sfx.select();refresh();
+    }));
+    ov.querySelector('.mkt-buy-cancel').addEventListener('click',()=>ov.remove());
+    confirm.addEventListener('click',()=>{
+      if(processing||input!==code)return;processing=true;confirm.disabled=true;
+      const r=buyFashionItem(item);
+      if(!r.ok){processing=false;errEl.textContent=r.code==='coins'?`เหรียญไม่พอ ต้องมี ${fmtNum(r.cost)} เหรียญ`:'ซื้อไม่ได้ในตอนนี้';return;}
+      ov.remove();toast(r.equipped?`⚔️ ซื้อ${item.name}สำเร็จ — ใส่ให้น้องแล้ว!`:`⚔️ ซื้อ${item.name}เข้าตู้แล้ว — น้องโตเมื่อไรค่อยใส่นะ`,2600);
+      if(typeof options.onSuccess==='function')options.onSuccess();
+    });
+    document.body.appendChild(ov);refresh();
+  }
+  function openFashionTry(item,options={}){
+    const old=document.querySelector('.pp-try-overlay');if(old)old.remove();
+    const p=(typeof activePet==='function')?activePet():null,stage=p?petStage(p):'egg';
+    const src=fashionPetImage(item),owned=state.owned.includes(item.id);
+    const ov=document.createElement('div');ov.className='pp-try-overlay';
+    ov.innerHTML=`<section class="pp-try-card">
+      <div class="pp-try-visual">${src?`<img src="${src}" alt="${escapeHTML(p.name)} ลองใส่ ${escapeHTML(item.name)}">`:(item.img?`<img src="${item.img}" alt="${escapeHTML(item.name)}">`:`<span>${item.emoji}</span>`)}</div>
+      <div class="pp-try-copy"><small>ลองใส่ก่อนซื้อ</small><h2>${item.emoji} ${escapeHTML(item.name)}</h2>
+        <p>${stage==='egg'?'น้องยังเป็นไข่ จึงแสดงภาพชุดตัวอย่างไว้ก่อน โตแล้วจะใส่ได้ทันที':`ตัวอย่าง ${escapeHTML(p.name)} ใส่ชุดนี้จริง`}</p>
+        <div class="pp-try-price">🪙 ${fmtNum(item.price)} ${owned?'· มีในตู้แล้ว':''}</div>
+        <div class="pp-try-actions"><button class="pp-try-back">กลับไปเลือก</button>${owned?`<button class="pp-try-confirm" ${stage==='egg'?'disabled':''}>✓ ใส่ชุดนี้</button>`:`<button class="pp-try-confirm">ยืนยันการซื้อ</button>`}</div>
+      </div></section>`;
+    ov.querySelector('.pp-try-back').addEventListener('click',()=>ov.remove());
+    const go=ov.querySelector('.pp-try-confirm');if(go)go.addEventListener('click',()=>{
+      if(owned){if(wearFashionItem(item)){ov.remove();toast(`✨ ใส่${item.name}ให้น้องแล้ว`);}return;}
+      fashionPinDialog(item,{onSuccess:()=>{ov.remove();openFashionStore(options);}});
+    });
+    document.body.appendChild(ov);
+  }
+  function openFashionStore(options={}){
+    const warriors=ITEMS.filter(x=>x.knownWear),others=ITEMS.filter(x=>!x.knownWear),list=warriors.concat(others);
+    const p=(typeof activePet==='function')?activePet():null;
+    const cards=list.map(x=>{
+      const owned=state.owned.includes(x.id),equipped=p&&Object.values(p.equipped||{}).includes(x.id);
+      const art=x.img?`<img src="${x.img}" alt="${escapeHTML(x.name)}" loading="lazy" decoding="async">`:`<span>${x.emoji}</span>`;
+      return `<article class="pp-fashion-card ${owned?'owned':''} ${equipped?'equipped':''}" data-id="${x.id}">
+        <div class="pp-fashion-top"><span>${x.knownWear?'⚔️ ชุดนักรบ':'🎀 แฟชั่น'}</span><em>${equipped?'ใส่อยู่':owned?'มีแล้ว':'ใหม่'}</em></div>
+        <div class="pp-fashion-art">${art}</div><b>${escapeHTML(x.name)}</b><small>🪙${fmtNum(x.price)}</small>
+        <button data-try="1">ลองใส่</button></article>`;
+    }).join('');
+    const title=options.closet?'🎀 ตู้เสื้อผ้าของน้อง':'🎀 Maison de Paws';
+    const ov=overlay('fashion',title,`<div class="pp-fashion-note"><b>⚔️ ชุดนักรบใหม่ 10 แบบ</b><span>ลากสินค้าไปทางซ้าย–ขวาเพื่อดูทั้งหมด</span></div>
+      <div class="pp-fashion-rail"><button class="pp-fashion-arrow pp-fa-prev" aria-label="เลื่อนซ้าย">❮</button><div class="pp-fashion-strip">${cards}</div><button class="pp-fashion-arrow pp-fa-next" aria-label="เลื่อนขวา">❯</button></div>`,options.onClose);
+    ov.classList.add('pp-fashion-overlay');const strip=ov.querySelector('.pp-fashion-strip');bindFashionStrip(strip);
+    ov.querySelector('.pp-fa-prev').addEventListener('click',()=>strip.scrollBy({left:-strip.clientWidth*.78,behavior:'smooth'}));
+    ov.querySelector('.pp-fa-next').addEventListener('click',()=>strip.scrollBy({left:strip.clientWidth*.78,behavior:'smooth'}));
+    ov.querySelectorAll('[data-try]').forEach(btn=>btn.addEventListener('click',()=>openFashionTry(ITEMS.find(x=>x.id===btn.closest('[data-id]').dataset.id),options)));
+  }
   function openStore(kind,options={}){
     kind=kind==='fashion'?'fashion':'food'; const isFood=kind==='food';
-    const list=isFood?catalogForPet((activePet&&activePet())?activePet().type:'dog'):ITEMS;
+    if(!isFood)return openFashionStore(options);
+    const list=catalogForPet((activePet&&activePet())?activePet().type:'dog');
     page[kind]=Math.min(page[kind],Math.max(0,Math.ceil(list.length/4)-1)); const pages=Math.max(1,Math.ceil(list.length/4)), slice=list.slice(page[kind]*4,page[kind]*4+4);
     const cards=slice.map(x=>{const owned=!isFood&&state.owned.includes(x.id);const amount=isFood?qty(x):0;return `<article class="pp-product ${owned?'owned':''}" data-id="${x.id}">${x.img?`<img src="${x.img}" alt="">`:`<span class="pp-prod-emoji">${x.emoji}</span>`}<b>${escapeHTML(x.name)}</b><small>${owned?'ซื้อแล้ว':`🪙${fmtNum(x.price)}`}${isFood?` · บนชั้น ×${amount}`:''}</small>${owned?'<button disabled>อยู่ในตู้แล้ว</button>':isFood?'<div><button data-n="1">+1</button><button data-n="5">+5</button></div>':'<button data-buy="1">ซื้อเข้าตู้</button>'}</article>`}).join('');
     const ov=overlay(kind,isFood?'🥫 Paws & Pantry Market':'🎀 Maison de Paws',`<div class="pp-store-scene" style="background-image:url('${isFood?'img/pet-shopping/food_window.webp':'img/pet-shopping/fashion_window.webp'}')"><span>${isFood?'อาหารสดใหม่สำหรับเพื่อนตัวน้อย':'แฟชั่นน่ารักที่ลองใส่ได้หลังกลับบ้าน'}</span></div><div class="pp-products">${cards}</div><nav><button class="pp-prev">‹</button><b>${page[kind]+1}/${pages}</b><button class="pp-next">›</button></nav>`,options.onClose);

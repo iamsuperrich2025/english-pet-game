@@ -16,6 +16,7 @@ async function main(){
   const sources = [];
   const sandbox = {
     console,
+    petStage(){ return 'adult'; },
     Image: class FakeImage {
       set src(value){ this._src=value; sources.push(value); if(this.onload) this.onload(); }
       get src(){ return this._src; }
@@ -42,6 +43,12 @@ async function main(){
   await vm.runInContext("probeImages(['sikaDeer_newborn','buffalo_adult_crown'])", sandbox);
   assert.equal(sources[0], 'img/animal/sikaDeer_newborn.webp?v=20260822-a');
   assert.equal(sources[1], 'img/AnimalWearItems/buffalo_adult_crown.webp?v=20260822-a');
+  const eagerKeys = JSON.parse(vm.runInContext("JSON.stringify(petImageKeys('cat'))", sandbox));
+  assert.ok(!eagerKeys.some(key=>key.includes('_armor_')), 'warrior outfits must not be probed at login');
+  const beforeKnownWear = sources.length;
+  assert.equal(vm.runInContext("petWearImage({type:'cat'}, ITEMS.find(i=>i.id==='armor_frost_knight'))", sandbox),
+    'img/AnimalWearItems/cat_adult_armor_frost_knight.webp?v=20260822-a');
+  assert.equal(sources.length, beforeKnownWear, 'knownWear must register URL without downloading it');
 
   const animalDir = path.join(ROOT, 'img/animal');
   const wearDir = path.join(ROOT, 'img/AnimalWearItems');

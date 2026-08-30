@@ -12,4 +12,9 @@ r=p.buyShelf('medium');assert(r.ok&&r.cost===3500&&p.capacity()===75,'upgrade mu
 ctx.state.petPantry.stock={apple:75};assert(p.buyFood('apple',1).code==='capacity','capacity limit missing');
 assert(p.stockId('favorite','cat')==='fav_cat'&&p.favoriteFor('dragon').id==='fav_dragon','favorite SKU alias broken');
 const css=read('css/petpantry.css');assert(css.includes('@media(max-height:430px)')&&css.includes('overflow:hidden'),'812x375/no-scroll CSS missing');
-console.log('PASS pet pantry: shelves, upgrade, capacity, stock-only feeding, favorites, compact UI');
+const fashionJs=read('js/petpantry.js'),fashionCss=read('css/petfashion.css');
+assert(fashionJs.includes('pp-fashion-strip')&&fashionJs.includes('bindFashionStrip'),'horizontal drag shop missing');
+assert(fashionJs.includes('ลองใส่')&&fashionJs.includes('fashionPetImage'),'try-on pet preview missing');
+assert(fashionJs.includes("padStart(6,'0')")&&fashionJs.includes('mkt-pin-grid'),'6-digit purchase confirmation missing');
+assert(fashionCss.includes('@media(max-height:430px)')&&fashionCss.includes('grid-template-columns:repeat(6'),'812x375 compact PIN layout missing');
+console.log('PASS pet pantry: shelves, stock, horizontal fashion strip, try-on preview, 6-digit confirmation');
