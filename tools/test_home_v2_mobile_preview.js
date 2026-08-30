@@ -7,6 +7,7 @@ const read = (...p) => fs.readFileSync(path.join(root, ...p), "utf8");
 const home = read("js", "home-v2.js");
 const ui = read("js", "ui.js");
 const css = read("css", "home-v2.css");
+const lobby3d = read("js", "lobby3d.js");
 const preview = read("tools", "VW_MOBILE_DEVICE_PREVIEW.html");
 const indexClassic = read("index_classic.html");
 const buildWeb = read("tools", "build_web.mjs");
@@ -51,7 +52,7 @@ must(home.includes("R24 / รอบ 1293") && css.includes("R24 / รอบ 1293
 must(home.includes("R25 / รอบ 1294") && css.includes("R25 / รอบ 1294") && css.includes("--vw2-r1294-ready:1") && home.includes("--vw2-r1294-runtime-ready:1"), "R25 / รอบ 1294 lineage markers missing");
 must(home.includes("R26 / รอบ 1295") && css.includes("R26 / รอบ 1295") && css.includes("--vw2-r1295-ready:1") && home.includes("--vw2-r1295-runtime-ready:1"), "R26 / รอบ 1295 lineage markers missing");
 must(home.includes("R27 / รอบ 1296") && css.includes("R27 / รอบ 1296") && css.includes("--vw2-r1296-ready:1") && home.includes("--vw2-r1296-runtime-ready:1"), "R27 / รอบ 1296 lineage markers missing");
-must(indexClassic.includes("css/home-v2.css?v=1309") && indexClassic.includes("js/home-v2.js?v=1309"), "R30 cache-bust missing from index_classic.html");
+must(indexClassic.includes("css/home-v2.css?v=1311") && indexClassic.includes("js/home-v2.js?v=1311"), "R31 cache-bust missing from index_classic.html");
 must(home.includes("R28 / รอบ 1300") && home.includes("--vw2-r1300-runtime-ready:1") && css.includes("R28 / รอบ 1300") && css.includes("--vw2-r1300-ready:1"), "R28 browser-verified visual contract missing");
 must(css.includes("grid-template-areas:\"class id time\" \"date date date\"") && css.includes("top:54px!important") && css.includes("--card-shadow:#075aa8"), "R28 HUD clearance/profile/date/premium rail rules missing");
 must(home.includes("R29 / รอบ 1305") && home.includes("--vw2-r1305-runtime-ready:1") && css.includes("R29 / รอบ 1305") && css.includes("--vw2-r1305-ready:1"), "R29 visual-hierarchy lineage markers missing");
@@ -66,6 +67,10 @@ must(css.includes("overflow-x:auto!important;scroll-snap-type:x proximity!import
 must(css.includes("border-image-slice:70 32 14 82!important") && css.includes("border-width:58px 27px 14px 68px!important"), "R30 bottom-aligned Global Feed frame missing");
 must(home.includes("VW2_FEED_STEP_MS = 6000") && home.includes("function advanceV2FeedAutoFlow(host)") && home.includes("host.__vw2FeedProgrammaticUntil"), "R30 Global Feed auto-flow contract missing");
 must(home.includes("ADMIN PREVIEW · R30 PROFILE QA · FEED FLOW"), "R30 preview badge missing");
+must(home.includes("R31 / รอบ 1311") && home.includes("--vw2-r1311-runtime-ready:1") && css.includes("R31 / รอบ 1311") && css.includes("--vw2-r1311-ready:1"), "R31 idle-thermal lineage markers missing");
+must(home.includes("function setClassicRuntimeSuspended(suspended)") && home.includes("Lobby3D.pause()") && home.includes("Lobby3D.resume()") && lobby3d.includes("function resume(){ if(spellActive) start(); }") && home.includes("video.pause()"), "R31 Classic runtime suspension guard missing");
+must(home.includes("ACTIVE_POLL_MS = 3000") && home.includes("IDLE_POLL_MS = 10000") && home.includes("function handlePageVisibility()") && !home.includes("setInterval(tick, 2000)"), "R31 adaptive visibility-aware polling guard missing");
+must(css.includes("#screen-dashboard.vw2-active>:not(script):not(style){display:none!important") && css.includes("vw2-home-low-power") && css.includes("vw2-page-hidden"), "R31 hidden Classic/low-power CSS guard missing");
 must(!home.includes("ADMIN PREVIEW · R21 HEAL ALL PETS"), "stale R21 preview badge remains");
 must(css.includes(".vw2-feature-title,.vw2-word-ribbon{top:-25px!important}"), "R17 complete New Word control was not moved into the upper HUD lane");
 must(css.includes(".vw2-feature{overflow:visible!important}") && css.includes("left:24%!important;right:24%!important;top:-25px!important"), "R18 New Word plaque is not fully visible in the safe HUD lane");
@@ -350,5 +355,5 @@ if(fail.length){
   console.error("Home V2 R11.5.4 validation FAILED:\n- " + fail.join("\n- "));
   process.exit(1);
 }
-console.log("Home V2 R30 / รอบ 1309 validation PASS");
-console.log(`Checked profile/feed edge alignment, enlarged rectangular portrait frame, wide swipeable pet actions, bottom-aligned and auto-flowing Global Feed, clean New Word/speech hierarchy, caption-free house art, ${expectedRail.length} left destinations, all ${expectedBottom.length} learning actions, and admin gate.`);
+console.log("Home V2 R31 / รอบ 1311 validation PASS");
+console.log(`Checked idle thermal guards, visibility-aware polling, suspended Classic runtime, profile/feed edge alignment, enlarged rectangular portrait frame, wide swipeable pet actions, bottom-aligned and auto-flowing Global Feed, clean New Word/speech hierarchy, caption-free house art, ${expectedRail.length} left destinations, all ${expectedBottom.length} learning actions, and admin gate.`);

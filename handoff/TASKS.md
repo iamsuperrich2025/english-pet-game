@@ -17,6 +17,9 @@
 ### 🔫 คิวงานปืน/โลกยานแม่/โลกใหม่ที่รออยู่ (ผู้ใช้อนุมัติล่วงหน้าแล้ว ทำได้เลยไม่ต้องถาม)
 > ⚖️ **กฎผู้ใช้ (22 ก.ค. 2026):** *ไอเดียต่อยอดใด ๆ ในโลก 3D ให้ไป **เปิด session ใหม่** ทำ ไม่ต้องต่อท้าย session เดิม (คุม token)* · อนุมัติทุกกรณีจนกว่าจะสั่งหยุด · จูนค่าปืนใช้ `tools/gunlab.js` เท่านั้น (ดู TUNE ZONE ใน `js/invasion3d.js`)
 
+- **รอบ 1311 · Home V2 idle thermal guard:** ต้นตอร้อนทันทีคือ Chrome QA เก่าค้างด้วย WARP software renderer; ปิดเฉพาะโปรไฟล์ QA แล้ว และแก้ runtime ไม่ให้ Classic ที่ถูกซ่อนยังทำงาน
+- Home V2 ใช้ adaptive timeout 3s/10s และหยุดเมื่อแท็บซ่อน, ตัด forced layout sync, pause/resume วิดีโอ+Lobby3D และลด filter/backdrop บนอุปกรณ์ low-power
+- syntax + Home V2 regression + production build/validate ผ่าน; scope css/home-v2.css, js/home-v2.js, js/lobby3d.js, index_classic.html, tools/test_home_v2_mobile_preview.js
 - **รอบ 1309 · Home V2 profile/feed polish:** ขอบแผงโปรไฟล์ผูกแนวเดียวกับ Global Feed, ขยายภาพจริงเป็นกรอบสี่เหลี่ยม jewel และบัง halo วงกลมเดิม
 - คืนปุ่มใต้สัตว์เป็นการ์ดกว้างแบบ swipe; จัด bottom slice ของกรอบ Global Feed ให้จบตรงฐาน และคืน auto-flow ทีละรายการพร้อมพัก 10 วินาทีเมื่อผู้ใช้เลื่อนเอง
 - `node --check`, Home V2 regression และ production build ผ่าน; browser visual QA ติด Windows ACL จึงคง regression geometry/cache/runtime markers ครบ

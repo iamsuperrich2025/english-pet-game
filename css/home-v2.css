@@ -37,7 +37,7 @@
 #screen-dashboard.vw2-active>.lobby-wrap,
 #screen-dashboard.vw2-active>#lobby,
 #screen-dashboard.vw2-active>.lobby,
-#screen-dashboard.vw2-active>.lobby-shell{visibility:hidden!important;pointer-events:none!important}
+#screen-dashboard.vw2-active>:not(script):not(style){display:none!important;pointer-events:none!important}
 
 #vw-home-v2-root,#vw-home-v2-root *{box-sizing:border-box}
 #vw-home-v2-root{
@@ -1992,6 +1992,18 @@ body.vw2-pet-modal-open{overflow:hidden!important}
   .vw2-feed:after{border-width:49px 22px 21px 57px!important;border-image-width:49px 22px 21px 57px!important}
   .vw2-feed .vw2-section-head{margin-left:51px!important;margin-right:14px!important}
 }
+/* ======================== R31 / รอบ 1311 — IDLE THERMAL GUARD ======================== */
+#vw-home-v2-root{--vw2-r1311-ready:1}
+body.vw2-home-active.vw2-home-low-power #vw-home-v2-root .vw2-left,
+body.vw2-home-active.vw2-home-low-power #vw-home-v2-root .vw2-online-modal,
+body.vw2-home-active.vw2-home-low-power #vw-home-v2-root .vw2-pet-modal{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+body.vw2-home-active.vw2-home-low-power #vw-home-v2-root .vw2-world-scene,
+body.vw2-home-active.vw2-home-low-power #vw-home-v2-root .vw2-feed:after,
+body.vw2-home-active.vw2-home-low-power #vw-home-v2-root .vw2-mission:after,
+body.vw2-home-active.vw2-home-low-power #vw-home-v2-root .vw2-online:after{filter:none!important}
+body.vw2-home-active.vw2-page-hidden #vw-home-v2-root *,
+body.vw2-home-active.vw2-page-hidden #vw-home-v2-root *:before,
+body.vw2-home-active.vw2-page-hidden #vw-home-v2-root *:after{animation-play-state:paused!important;transition:none!important}
 /* ======================== R30 / รอบ 1309 — ALIGNED IDENTITY + SWIPEABLE PET PLAQUES ======================== */
 /* Match the identity card edge to Global Feed: 10.5% rail + 4px gap + 19% feed. */
 #vw-home-v2-root{--vw2-r1309-ready:1}

@@ -16,6 +16,7 @@
    R28 / รอบ 1300 — Browser-verified HUD clearance + premium vivid learning rail
    R29 / รอบ 1305 — Clean visual hierarchy + true-aspect Global Feed frame
    R30 / รอบ 1309 — Aligned profile, framed portrait, swipe rail and restored Global Feed flow
+   R31 / รอบ 1311 — Idle thermal guard + suspended Classic runtime
    ------------------------------------------------------------
    Additive UI shell only. It does NOT own economy, auth, quests,
    Firebase, purchases, or game routing. Existing Lobby DOM stays
@@ -33,8 +34,11 @@
   let welcomeTimer = 0;
   let previewReportTimer = 0;
   let v2WasVisible = false;
+  let classicLobby3DWasRunning = false;
   let latestOnlineUsers = [];
   let latestOnlineConnected = false;
+  const ACTIVE_POLL_MS = 3000;
+  const IDLE_POLL_MS = 10000;
   function adminAllowed(){
     try{ return typeof isAdmin === 'function' && isAdmin() === true; }
     catch(_){ return false; }
@@ -53,6 +57,41 @@
     if(on) sessionStorage.removeItem(SESSION_KEY);
     else sessionStorage.setItem(SESSION_KEY, '1');
     syncVisibility();
+  }
+  function lowPowerDevice(){
+    try{
+      const memory = Number(navigator.deviceMemory) || Infinity;
+      const cores = Number(navigator.hardwareConcurrency) || Infinity;
+      const saveData = !!(navigator.connection && navigator.connection.saveData);
+      const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+      return saveData || reduceMotion || memory <= 4 || cores <= 4;
+    }catch(_){ return false; }
+  }
+  function setClassicRuntimeSuspended(suspended){
+    const dash = dashboard();
+    if(!dash) return;
+    if(suspended){
+      try{
+        const debug = typeof Lobby3D !== 'undefined' && Lobby3D && typeof Lobby3D._debug === 'function' ? Lobby3D._debug() : null;
+        classicLobby3DWasRunning = !!(debug && debug.running);
+        if(typeof Lobby3D !== 'undefined' && Lobby3D && typeof Lobby3D.pause === 'function') Lobby3D.pause();
+      }catch(_){ classicLobby3DWasRunning = false; }
+      dash.querySelectorAll('video').forEach(video=>{
+        if(video.paused) return;
+        video.dataset.vw2ResumeAfterHome = '1';
+        try{ video.pause(); }catch(_){ }
+      });
+      return;
+    }
+    try{
+      if(classicLobby3DWasRunning && typeof Lobby3D !== 'undefined' && Lobby3D && typeof Lobby3D.resume === 'function') Lobby3D.resume();
+    }catch(_){ }
+    classicLobby3DWasRunning = false;
+    dash.querySelectorAll('video[data-vw2-resume-after-home="1"]').forEach(video=>{
+      delete video.dataset.vw2ResumeAfterHome;
+      if(document.hidden || !dashboardActive()) return;
+      try{ const play = video.play(); if(play && typeof play.catch === 'function') play.catch(()=>{}); }catch(_){ }
+    });
   }
   function cleanText(text, max){
     const out = String(text || '').replace(/\s+/g,' ').trim();
@@ -413,7 +452,7 @@
     if(document.getElementById(STYLE_ID)) return;
     const style = document.createElement('style');
     style.id = STYLE_ID;
-    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1;--vw2-r1287-runtime-ready:1;--vw2-r1288-runtime-ready:1;--vw2-r1289-runtime-ready:1;--vw2-r1290-runtime-ready:1;--vw2-r1291-runtime-ready:1;--vw2-r1293-runtime-ready:1;--vw2-r1294-runtime-ready:1;--vw2-r1295-runtime-ready:1;--vw2-r1296-runtime-ready:1;--vw2-r1300-runtime-ready:1;--vw2-r1305-runtime-ready:1;--vw2-r1309-runtime-ready:1}';
+    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1;--vw2-r1287-runtime-ready:1;--vw2-r1288-runtime-ready:1;--vw2-r1289-runtime-ready:1;--vw2-r1290-runtime-ready:1;--vw2-r1291-runtime-ready:1;--vw2-r1293-runtime-ready:1;--vw2-r1294-runtime-ready:1;--vw2-r1295-runtime-ready:1;--vw2-r1296-runtime-ready:1;--vw2-r1300-runtime-ready:1;--vw2-r1305-runtime-ready:1;--vw2-r1309-runtime-ready:1;--vw2-r1311-runtime-ready:1}';
     document.head.appendChild(style);
   }
   function clickExisting(selector, opts){
@@ -1580,7 +1619,6 @@
     setText('vw2-online-name', onlineView.firstName || 'กำลังเชื่อมต่อ…');
     setText('vw2-online-text', onlineView.firstText || 'เล่นและเรียนไปพร้อมกัน');
     syncSourceParity();
-    syncLayoutProfile();
   }
   function localPreviewFrameActive(){
     if(window.parent === window) return false;
@@ -1809,11 +1847,14 @@
     const allowed = adminAllowed();
     const active = dashboardActive();
     if(!allowed){
+      if(v2WasVisible) setClassicRuntimeSuspended(false);
       dash.classList.remove(CLASS_ON);
       document.body.classList.remove('vw2-home-active');
+      document.body.classList.remove('vw2-home-low-power');
       closeOwnedPetsModal();
       if(root) root.hidden = true;
       if(classicToggle) classicToggle.hidden = true;
+      v2WasVisible = false;
       return;
     }
     ensureClassicToggle();
@@ -1825,13 +1866,16 @@
     dash.classList.toggle(CLASS_ON, showV2);
     // Scope presentation-only safety rules (including transient toasts) to Home V2.
     document.body.classList.toggle('vw2-home-active', showV2);
+    document.body.classList.toggle('vw2-home-low-power', showV2 && lowPowerDevice());
     if(root) root.hidden = !showV2;
     if(!showV2) closeOwnedPetsModal();
     if(classicToggle) classicToggle.hidden = !active || showV2;
     if(showV2 && !v2WasVisible){
+      setClassicRuntimeSuspended(true);
       scheduleSync();
       setTimeout(playPetWelcome, 40);
     }
+    if(!showV2 && v2WasVisible) setClassicRuntimeSuspended(false);
     v2WasVisible = showV2;
     scheduleLocalPreviewReport();
   }
@@ -1839,16 +1883,40 @@
     syncVisibility();
     if(root && adminAllowed() && dashboardActive() && previewWanted()) sync();
   }
+  function scheduleTick(delay){
+    clearTimeout(clockTimer);
+    clockTimer = 0;
+    if(document.hidden) return;
+    clockTimer = setTimeout(()=>{
+      clockTimer = 0;
+      tick();
+      const active = !!(root && !root.hidden && dashboardActive() && previewWanted());
+      scheduleTick(active ? ACTIVE_POLL_MS : IDLE_POLL_MS);
+    }, Math.max(0,delay));
+  }
+  function wakeTick(){
+    clearTimeout(clockTimer);
+    clockTimer = 0;
+    if(document.hidden) return;
+    tick();
+    const active = !!(root && !root.hidden && dashboardActive() && previewWanted());
+    scheduleTick(active ? ACTIVE_POLL_MS : IDLE_POLL_MS);
+  }
+  function handlePageVisibility(){
+    document.body.classList.toggle('vw2-page-hidden', document.hidden);
+    if(document.hidden){ clearTimeout(clockTimer); clockTimer = 0; return; }
+    wakeTick();
+  }
   function init(){
     // No MutationObserver on the classic Lobby. The existing Lobby has
     // animated/ticker DOM that changes frequently; observing its subtree can
-    // create a feedback-heavy main-thread workload. A slow, bounded poll is
-    // sufficient for this admin-only preview.
-    clearInterval(clockTimer);
-    clockTimer = setInterval(tick, 2000);
-    window.addEventListener('focus', tick);
+    // create a feedback-heavy main-thread workload. Adaptive timeouts pause
+    // completely in background tabs and poll slowly outside Home V2.
+    clearTimeout(clockTimer);
+    window.addEventListener('focus', wakeTick);
     window.addEventListener('resize', scheduleLocalPreviewReport);
-    setTimeout(tick, 250);
+    document.addEventListener('visibilitychange', handlePageVisibility);
+    scheduleTick(250);
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, {once:true});
   else init();

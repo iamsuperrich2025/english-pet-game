@@ -748,6 +748,7 @@ const Lobby3D = (function(){
 
   // ปิดชั่วคราวเมื่อออกจากหน้า (main.js/showScreen wrapper เรียกได้ถ้าต้องการ)
   function pause(){ stop(); }
+  function resume(){ if(spellActive) start(); }
 
   window.addEventListener('resize', ()=>{ if(running) resize(); });
 
@@ -763,7 +764,7 @@ const Lobby3D = (function(){
     });
   }
 
-  return { attach, launchSpell, pause, _stop:stop, spellStart, spellEnd, _spellLetters,
+  return { attach, launchSpell, pause, resume, _stop:stop, spellStart, spellEnd, _spellLetters,
     _debug:()=>({running, disabled, curKey, curGiant,
       ownerLoaded:!!(ownerRoot&&ownerRoot.userData.gltf), petLoaded:!!(petRoot&&petRoot.userData.gltf),
       triangles: renderer?renderer.info.render.triangles:0,
