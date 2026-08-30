@@ -28,18 +28,10 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (30 ส.ค.) — อ่านก่อน
-- **รอบ 1285 · ชวนเล่นเฉพาะออนไลน์พร้อมกัน:** ซ่อนปุ่มชวนในหน้าก่อนเข้าโลก/inbox/quick menu เมื่อไม่มีเพื่อนเป้าหมายออนไลน์ และ picker แสดงเฉพาะเพื่อนออนไลน์จริง
-- `js/online.js` ตรวจ presence + session ปัจจุบันก่อนส่ง/รับ; ฝ่ายใดหลุดหรือเปิด session ใหม่จะลบคำเชิญค้างทั้ง `/tinv` และ `state.tinvSent` โดยรอ presence/server time พร้อมก่อน cleanup กัน race ตอนเริ่มเกม
-- `tools/test_tinv_online_only.js`, test dismiss/Sky, syntax, production build + PWA validate และ hashed bundle ผ่าน; ไม่ต้องแก้ Firebase Rules
-- **รอบ 1284 · Home V2 R17 Direct Market + Online Players (Admin Preview เท่านั้น):** การ์ดสินค้า Global Feed เรียก `openMarketBuyDialog(listingKey)` ของตลาดเดิมตรงรายการ; ไม่พาไปค้นซ้ำในหน้าตลาดและไม่แตะ settlement/rules/economy
-- ย้าย New Word ทั้งป้าย/คำขึ้น HUD บน, ขยายและ wrap ข้อความ hero/สินค้า/ปุ่มโดยไม่ใช้ ellipsis; ปุ่มรักษาแดงพร้อมป้าย “ป่วย!” เมื่อ source/state พบสัตว์ป่วย และ Bottom Rail R16 ยังใช้กรอบเต็ม/snap เดิม
-- ปุ่ม “ดูผู้เล่นออนไลน์ทั้งหมด” เปิด modal แฟนตาซีจาก `Online.friends` + ตัวเอง แสดงชื่อ/ยศ/กิจกรรมเต็ม เลื่อนแนวตั้งแบบซ่อน scrollbar และมีปิดบน–ล่าง; row เดิมยังเปิด quick menu/player card
-- `tools/test_home_v2_mobile_preview.js`, production build/validate และ hashed assets ผ่าน; admin gate ยัง `isAdmin() === true` และต้องรอผู้ใช้ตรวจจริงก่อนเปิด Home V2 ให้ทุกคน
-- **รอบ 1279 · Home V2 R12 Visual Master Rebuild (Admin Preview เท่านั้น):** สร้างฉากแฟนตาซี WebP 1600×900/238KB และปรับ composition/material/readability ให้ใกล้ `references/HOME_V2_ULTIMATE_VISUAL_MASTER.png` โดยไม่แตะ Firebase/economy/routing/action bindings
-- Bottom Rail 13 ปุ่มคงลำดับ/handler เดิม เปลี่ยนเป็นแถบแนวนอนปุ่มกว้าง เลื่อนซ้าย–ขวาด้วย touch/trackpad/mouse wheel/keyboard; 4 viewport 667×375, 800×360, 844×390, 915×412 ไม่มี page overflow และ rail ไม่มี vertical overflow
-- production build + regression ผ่าน; asset อยู่ใน dist, actions 52 จุดครบ; runtime admin mock เห็น R12 และ non-admin mock `homeVisible=false`/ไม่มี Home V2 root ทั้ง source และ production dist
-- ไฟล์หลัก: `js/home-v2.js`, `css/home-v2.css`, `img/home-v2/r1279_fantasy_world.webp`, `index_classic.html`, `tools/build_web.mjs`, `tools/test_home_v2_mobile_preview.js`; รอผู้ใช้ตรวจภาพจริงก่อนเปิดให้ทุกคน
-- **รอบ 1278 · อัปเกรด Firebase Admin SDK v14:** ติดตั้งจริง `firebase-admin` 13.10.0 (`^13.5.0`) → latest v14 14.3.0 (`^14.3.0`); Node 22 ตรงทั้ง package/Firebase manifests และ `firebase-functions` 7.3.2 รองรับ peer v14 (`functions/package.json`, `functions/package-lock.json`)
+- **รอบ 1286 · Home V2 R18 (Admin Preview เท่านั้น):** แก้ New Word ให้เห็นเต็มและไม่ชน HUD, ยกข้อความรองที่มองเห็นเป็นอย่างน้อย 9px, ภารกิจ 2 บรรทัดไม่ตัดคำ และคง Bottom Rail 13 ปุ่มเต็มใบ/เลื่อนแนวนอนเดิม
+- คืนปุ่มโลกจาก Classic ให้ Home V2 ครบ 10 ปุ่ม: ผจญภัย, Sky, ผีสิง, เฮลิ, โดรน, ขับรถ, ฟุตบอล, มอไซค์, ยานแม่, หุ่นรบ; ทุกปุ่ม delegate ไป `#btn-world-*` เดิมและสะท้อนสถานะล็อก ไม่ข้ามค่าเข้า/สุขภาพ/beta permission
+- regression ผ่าน 29 ปุ่มซ้าย + 13 ปุ่มล่าง; runtime admin DOM มี world mapping ครบ, Sky/ผีสิงเปิดกล่องค่าเข้าเดิม; 1323×622, 915×412, 812×375, 667×375 ไม่มี page/text overflow, New Word ไม่ถูกตัด/ไม่ชน chip และ production hashed assets ผ่าน
+- **รอบ 1285/1284:** คำชวนเล่นใช้ presence/session จริงและ cleanup ข้าม session; Global Feed ซื้อรายการตรงด้วยรหัส 6 หลัก, ผู้เล่นออนไลน์เต็มหน้า, ปุ่มรักษาป่วยสีแดง; Home V2 ยัง gate ด้วย `isAdmin() === true` และห้ามเปิดสาธารณะจนผู้ใช้ตรวจผ่าน
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`

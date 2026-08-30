@@ -1256,3 +1256,68 @@ body.vw2-online-modal-open{overflow:hidden!important}
   .vw2-online-modal-foot{min-height:40px;padding:4px 8px 6px}
   .vw2-online-modal-close.bottom{min-height:29px;padding:4px 12px;font-size:11px}
 }
+
+/* ======================== R18 / รอบ 1286 — LEARNING READABILITY + SAFE HUD ======================== */
+#vw-home-v2-root{--vw2-r1286-ready:1}
+
+/* New Word is a primary learning control. Keep the complete plaque visible in
+   the open centre lane between the two secondary wallet chips. */
+.vw2-feature{overflow:visible!important}
+.vw2-feature-title,.vw2-word-ribbon{left:24%!important;right:24%!important;top:-25px!important}
+.vw2-word-kicker{font-size:clamp(9px,.68vw,10px)!important;line-height:1.05!important}
+.vw2-word-copy strong{line-height:1.08!important}
+.vw2-word-copy small{font-size:clamp(9.5px,.72vw,11.5px)!important;line-height:1.08!important}
+
+/* Readable Thai labels for primary and secondary pupils: headers keep their
+   full words and mission titles may use two tidy lines instead of ellipses. */
+.vw2-section-head strong{line-height:1.15!important;text-overflow:clip!important}
+.vw2-quest-row{flex-basis:47px!important;min-height:47px!important}
+.vw2-qbody b{
+  font-size:clamp(10.5px,.74vw,12px)!important;
+  line-height:1.15!important;
+  white-space:normal!important;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden!important;
+  text-overflow:clip!important;
+  overflow-wrap:anywhere;
+}
+.vw2-house-preview-head{font-size:max(9.5px,clamp(9px,.66vw,10.5px))!important}
+.vw2-feature-actions button,.vw2-feature-actions .vw2-enter{font-size:max(11.5px,clamp(11px,.82vw,13px))!important}
+.vw2-friends-btn{font-size:max(10.5px,clamp(10px,.74vw,12px))!important}
+
+/* Home V2 itself is admin-gated. Restore every authoritative Classic 3D-world
+   entry here and make the private/test state explicit without bypassing its
+   original click handler, fee dialog, health guard or beta permission. */
+.vw2-rail-btn[data-vw2-action^="world"]{position:relative;flex-basis:84px;min-height:84px}
+.vw2-rail-btn[data-vw2-action^="world"]:after{
+  content:"ADMIN";position:absolute;right:2px;top:2px;z-index:9;padding:2px 4px;
+  border-radius:999px;background:linear-gradient(180deg,#fff1a8,#e0a93d);color:#69400f;
+  border:1px solid #fff;font-size:7px;font-weight:1000;line-height:1;letter-spacing:.025em;
+  box-shadow:0 2px 5px rgba(94,57,30,.25)
+}
+.vw2-rail-btn[data-vw2-action^="world"].vw2-world-locked:after{content:"🔒";font-size:9px;padding:2px 5px}
+.vw2-rail-btn[data-vw2-action^="world"] .vw2-rail-label{font-size:clamp(10.5px,.79vw,12.5px)!important}
+
+@media (max-width:760px),(max-height:420px){
+  .vw2-feature-title,.vw2-word-ribbon{left:24%!important;right:24%!important;top:-23px!important}
+  .vw2-word-kicker{font-size:9px!important}
+  .vw2-word-copy strong{line-height:1.1!important}
+  .vw2-feed .vw2-section-head .vw2-head-icon{display:none!important}
+  .vw2-section-head strong{font-size:10.5px!important;white-space:nowrap!important}
+  .vw2-quest-row{flex-basis:46px!important;min-height:46px!important}
+  .vw2-qbody b{font-size:9.5px!important;line-height:1.14!important}
+  .vw2-speech span{font-size:11px!important}.vw2-speech small{font-size:9.5px!important}
+  .vw2-stage-copy span{font-size:9px!important}
+  .vw2-house-preview-head{font-size:9px!important}
+  .vw2-feature-actions button,.vw2-feature-actions .vw2-enter{font-size:11px!important}
+  .vw2-friends-btn{font-size:10.5px!important}
+  .vw2-rail-btn[data-vw2-action^="world"]{flex-basis:80px;min-height:80px}
+  .vw2-rail-btn[data-vw2-action^="world"] .vw2-rail-label{font-size:10.5px!important}
+}
+@media (max-width:700px){
+  /* The compact wallet leaves an off-centre safe gap: use it exactly so the
+     complete learning plaque stays readable without touching either chip. */
+  .vw2-feature-title,.vw2-word-ribbon{left:29.25%!important;right:22.5%!important}
+}

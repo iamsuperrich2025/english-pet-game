@@ -3,6 +3,7 @@
    Vocab World Home V2 — Admin Preview (R11.4 Visual Master Fidelity Reconstruction + Premium Depth / Composition Recovery)
    R12 / รอบ 1279 — Ultimate Visual Master scenic + composition rebuild
    R13 / รอบ 1280 — HUD, Bottom Rail and Left Navigation readability rebalance
+   R18 / รอบ 1286 — Learning readability + safe New Word HUD lane
    ------------------------------------------------------------
    Additive UI shell only. It does NOT own economy, auth, quests,
    Firebase, purchases, or game routing. Existing Lobby DOM stays
@@ -380,7 +381,7 @@
     if(document.getElementById(STYLE_ID)) return;
     const style = document.createElement('style');
     style.id = STYLE_ID;
-    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1}';
+    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1}';
     document.head.appendChild(style);
   }
   function clickExisting(selector, opts){
@@ -484,6 +485,10 @@
   function action(name){
     const direct = {
       city:'#btn-rail-city', cure:'#btn-rail-cure', wordsearch:'#btn-rail-wordsearch',
+      worldAdv:'#btn-world-adv', worldSky:'#btn-world-sky', worldHaunt:'#btn-world-haunt',
+      worldHeli:'#btn-world-heli', worldDrone:'#btn-world-drone', worldDrive:'#btn-world-drive',
+      worldSoccer:'#btn-world-soccer', worldMoto:'#btn-world-moto',
+      worldInvasion:'#btn-world-invasion', worldMecha:'#btn-world-mecha',
       typing:'#btn-rail-typing', bubble:'#btn-rail-bubble', shoot:'#btn-rail-shootword',
       cannon:'#btn-rail-lettercannon', examstd:'#btn-rail-examstd', onet:'#btn-rail-onet',
       rank:'#btn-rail-rank', stats:'#btn-stats', trophy:'#btn-rail-trophy', chat:'#btn-chat',
@@ -588,6 +593,16 @@
     ensureVisualStyles();
     const railButtons = [
       ['city','city','เมือง 3D','#btn-rail-city'],
+      ['worldAdv','globe','โลกผจญภัย','#btn-world-adv'],
+      ['worldSky','sparkle','Sky Playground','#btn-world-sky'],
+      ['worldHaunt','moon','โลกผีสิง','#btn-world-haunt'],
+      ['worldHeli','cannon','โลกเฮลิคอปเตอร์','#btn-world-heli'],
+      ['worldDrone','target','โลกโดรน FPV','#btn-world-drone'],
+      ['worldDrive','racecar','โลกขับรถ','#btn-world-drive'],
+      ['worldSoccer','star','โลกฟุตบอล','#btn-world-soccer'],
+      ['worldMoto','racecar','โลกมอเตอร์ไซค์','#btn-world-moto'],
+      ['worldInvasion','target','โลกยานแม่','#btn-world-invasion'],
+      ['worldMecha','controller','โลกหุ่นรบ','#btn-world-mecha'],
       ['cure','heart','รักษา','#btn-rail-cure'],
       ['home','home','บ้าน','.lobby-rail [data-panel="panel-home"]'],
       ['invest','invest','ลงทุน','.lobby-rail [data-panel="panel-farm"]'],
@@ -721,7 +736,7 @@
           </aside>
         </div>
         <footer class="vw2-bottom" aria-label="ทางลัดการเรียนและเกมทั้งหมด"><div class="vw2-bottom-scroll" tabindex="0" role="region" aria-label="เลื่อนทางลัดการเรียนและเกม"><div class="vw2-bottom-track">${modeButtons}</div></div></footer>
-        <div class="vw2-preview-mark">ADMIN PREVIEW · R17 DIRECT MARKET + ONLINE PLAYERS</div>
+        <div class="vw2-preview-mark">ADMIN PREVIEW · R18 ADMIN WORLDS + READABILITY</div>
       </div>
       <div class="vw2-online-modal" id="vw2-online-modal" role="dialog" aria-modal="true" aria-labelledby="vw2-online-modal-title" aria-hidden="true" hidden>
         <section class="vw2-online-modal-panel">
@@ -835,6 +850,11 @@
       if(btn.classList.contains('vw2-rail-btn')){
         const current = !!(source && (source.classList.contains('active') || source.classList.contains('on') || source.getAttribute('aria-current') === 'page' || source.getAttribute('aria-selected') === 'true' || source.getAttribute('aria-pressed') === 'true'));
         btn.classList.toggle('vw2-current', current);
+        if((btn.dataset.vw2Action || '').startsWith('world')){
+          const locked = !!(source && (source.classList.contains('locked') || source.classList.contains('soon-locked')));
+          btn.classList.toggle('vw2-world-locked', locked);
+          btn.title = locked ? (source.title || 'โลกนี้ยังล็อกอยู่') : btn.textContent.trim() + ' · ปุ่มสำหรับแอดมิน';
+        }
       }
       const badge = btn.querySelector('.vw2-source-badge');
       if(badge){

@@ -39,9 +39,12 @@ must(css.includes(".vw2-bottom-track .vw2-mode{") && css.includes('background:ur
 must(css.includes("container-type:inline-size") && css.includes("scroll-snap-type:x mandatory!important") && css.includes("scroll-snap-align:start") && css.includes("scroll-snap-stop:always"), "R16 whole-button snap geometry missing");
 must(css.includes("calc((100cqw - 64px)/7)") && css.includes("calc((100cqw - 56px)/6)") && css.includes("calc((100cqw - 48px)/5)") && css.includes("calc((100cqw - 40px)/4)"), "R16 full-page responsive button sizing missing");
 must(home.includes("R13 / รอบ 1280"), "R13 JS lineage marker missing");
-must(home.includes("ADMIN PREVIEW · R17 DIRECT MARKET + ONLINE PLAYERS") && css.includes("R17 / รอบ 1284") && css.includes("--vw2-r1284-ready:1") && home.includes("--vw2-r1284-runtime-ready:1"), "R17 / รอบ 1284 lineage markers missing");
-must(indexClassic.includes("css/home-v2.css?v=1284") && indexClassic.includes("js/home-v2.js?v=1284"), "R17 cache-bust missing from index_classic.html");
+must(css.includes("R17 / รอบ 1284") && css.includes("--vw2-r1284-ready:1") && home.includes("--vw2-r1284-runtime-ready:1"), "R17 / รอบ 1284 lineage markers missing");
+must(home.includes("ADMIN PREVIEW · R18 ADMIN WORLDS + READABILITY") && home.includes("R18 / รอบ 1286") && css.includes("R18 / รอบ 1286") && css.includes("--vw2-r1286-ready:1") && home.includes("--vw2-r1286-runtime-ready:1"), "R18 / รอบ 1286 lineage markers missing");
+must(indexClassic.includes("css/home-v2.css?v=1286") && indexClassic.includes("js/home-v2.js?v=1286"), "R18 cache-bust missing from index_classic.html");
 must(css.includes(".vw2-feature-title,.vw2-word-ribbon{top:-25px!important}"), "R17 complete New Word control was not moved into the upper HUD lane");
+must(css.includes(".vw2-feature{overflow:visible!important}") && css.includes("left:24%!important;right:24%!important;top:-25px!important"), "R18 New Word plaque is not fully visible in the safe HUD lane");
+must(css.includes("-webkit-line-clamp:2") && css.includes("font-size:clamp(10.5px,.74vw,12px)!important") && css.includes(".vw2-feed .vw2-section-head .vw2-head-icon{display:none!important}"), "R18 child-readable mission/feed typography guards missing");
 must(home.includes("const marketCard = e.target.closest") && home.includes("openMarketBuyDialog(key)") && home.includes("data-vw2-market-key"), "R17 Global Feed listing does not open the exact authoritative six-digit confirmation directly");
 must(home.includes("ดูผู้เล่นออนไลน์ทั้งหมด") && home.includes('data-vw2-action="onlinePlayers"') && home.includes('id="vw2-online-modal-list"') && home.includes("function openOnlinePlayersModal()"), "R17 online-player sheet/action missing");
 must(home.includes('class="vw2-online-modal-close top"') && home.includes('class="vw2-online-modal-close bottom"') && css.includes(".vw2-online-modal-list::-webkit-scrollbar{display:none"), "R17 online-player sheet close/hidden-scrollbar contract missing");
@@ -181,7 +184,13 @@ must(home.includes("ดาวเงิน · ประถม") && home.includes(
 
 /* Left destination inventory + Racing bottom-most. */
 const expectedRail = [
-  ["city","#btn-rail-city"], ["cure","#btn-rail-cure"],
+  ["city","#btn-rail-city"],
+  ["worldAdv","#btn-world-adv"], ["worldSky","#btn-world-sky"],
+  ["worldHaunt","#btn-world-haunt"], ["worldHeli","#btn-world-heli"],
+  ["worldDrone","#btn-world-drone"], ["worldDrive","#btn-world-drive"],
+  ["worldSoccer","#btn-world-soccer"], ["worldMoto","#btn-world-moto"],
+  ["worldInvasion","#btn-world-invasion"], ["worldMecha","#btn-world-mecha"],
+  ["cure","#btn-rail-cure"],
   ["home",'.lobby-rail [data-panel="panel-home"]'], ["invest",'.lobby-rail [data-panel="panel-farm"]'],
   ["factory",'.lobby-rail [data-panel="panel-factory"]'], ["wordsearch","#btn-rail-wordsearch"],
   ["typing","#btn-rail-typing"], ["bubble","#btn-rail-bubble"], ["shoot","#btn-rail-shootword"],
@@ -196,7 +205,8 @@ const tuplePattern = (action, source) => {
 };
 expectedRail.forEach(([action, source]) => must(tuplePattern(action, source).test(home), `left rail marker missing: ${action}`));
 const railOrder = expectedRail.map(([action]) => home.indexOf(`['${action}',`));
-must(expectedRail.length === 19 && railOrder.every((p, i) => p >= 0 && (!i || p > railOrder[i - 1])), "authoritative left rail order changed");
+must(expectedRail.length === 29 && railOrder.every((p, i) => p >= 0 && (!i || p > railOrder[i - 1])), "authoritative left rail order changed");
+must(home.includes("worldAdv:'#btn-world-adv'") && home.includes("worldSky:'#btn-world-sky'") && home.includes("startsWith('world')") && css.includes('data-vw2-action^="world"'), "R18 admin-only Classic world parity missing");
 must(expectedRail.at(-1)[0] === "racing" && home.includes("typeof enterF1_3D === 'function'") && home.includes("enterF1_3D();"), "Vocab World Racing is not bottom-most / authoritative entry is missing");
 must(css.includes('r111_cloud_pedestal.svg') && css.includes('.vw2-rail-art:after') && css.includes('scrollbar-width:none'), "premium cloud/pedestal left rail or hidden-scrollbar behavior missing");
 
@@ -265,5 +275,5 @@ if(fail.length){
   console.error("Home V2 R11.5.4 validation FAILED:\n- " + fail.join("\n- "));
   process.exit(1);
 }
-console.log("Home V2 R17 / รอบ 1284 validation PASS");
-console.log(`Checked R17 direct market confirmation, full online-player sheet/text, sick cure alert, lifted New Word, R16 Bottom Rail, ${expectedRail.length} left destinations, ${expectedBottom.length} bottom actions, admin gate, and mobile landscape guards.`);
+console.log("Home V2 R18 / รอบ 1286 validation PASS");
+console.log(`Checked R18 safe New Word HUD, child-readable Thai labels, R17 direct market confirmation, full online-player sheet/text, sick cure alert, R16 Bottom Rail, ${expectedRail.length} left destinations, ${expectedBottom.length} bottom actions, admin gate, and mobile landscape guards.`);
