@@ -5691,3 +5691,17 @@
 - market settlement + cake refund ผ่าน baseline/final ทั้ง Node 22.23.2/24.19.0; clean Node 22 install + manifest 4 endpoints ผ่าน, ไม่เรียก production job/RTDB และไม่แตะ `cakeRefundLedger`; audit เหลือ moderate transitive 7 รายการโดยไม่มี non-breaking fix
 - **รอบ 1277 · อัปเกรด Cloud Functions SDK อย่างปลอดภัย:** `firebase-functions` จากติดตั้งจริง 6.6.0 (`^6.4.0`) เป็น stable 7.3.2; Node 22 + `firebase-admin` 13.10 peer compatible และไม่มี `functions.config()` (`functions/package.json`, `functions/package-lock.json`)
 - market settlement + cake refund ผ่านก่อน/หลังอัปเกรดทั้ง Node 22.23.2/24.19.0; local manifest โหลด 4 endpoints ครบ, ไม่เรียก migration/production DB และไม่แตะ `cakeRefundLedger`; audit เหลือ moderate transitive 8 รายการโดยไม่มี non-breaking fix
+
+
+## ⏬ ย้ายเมื่อ 2026-08-30 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1295 · Home V2 R26 (Admin Preview เท่านั้น):** คงหน้าตาปุ่มของเล่น R24/R25 และแก้รางล่างจากความกว้างคงที่ที่เผยปุ่มถัดไปบางส่วน เป็น whole-card responsive paging
+- แยกลูกศรซ้าย–ขวาเป็นคอลัมน์นอกพื้นที่เลื่อน จึงไม่ทับ/บังปุ่ม; แสดงเต็มใบ 7/6/5/4 ปุ่มตามขนาดจอและใช้ mandatory snap ให้หยุดตรงต้นปุ่มเสมอ
+- ทั้ง 13 ปุ่มยังอยู่แถวเดียว, order/handler/source/admin gate เดิมไม่เปลี่ยน; แก้ `home-v2.js/css`, cache-bust และ regression โดยไม่แตะ `css/petshopping3d.css`
+- syntax/regression/build `.1165` ผ่าน; พรีวิว 1323×622 = 7 ปุ่มเต็ม, 812×375 = 5 ปุ่มเต็ม, ทั้งคู่ partialVisible=0, center error=0px และ verticalOverflow=0
+
+
+## ⏬ ย้ายเมื่อ 2026-08-30 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- แก้กรอบ Global Feed ที่ซ้อนป้ายหัวและบีบภาพ 340×352: ใช้ป้ายในกรอบจริงชั้นเดียว + responsive 9-slice และกักรายการ/ปุ่มตลาดไว้ในกรอบทุก breakpoint
+- แก้ `home-v2.js/css`, `index_classic.html`, regression test; syntax/regression/build ผ่าน (browser runtime ถูก ACL ปฏิเสธ จึงเก็บ geometry metrics ไว้ตรวจใน mobile preview)
