@@ -28,6 +28,9 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (30 ส.ค.) — อ่านก่อน
+- **รอบ 1285 · ชวนเล่นเฉพาะออนไลน์พร้อมกัน:** ซ่อนปุ่มชวนในหน้าก่อนเข้าโลก/inbox/quick menu เมื่อไม่มีเพื่อนเป้าหมายออนไลน์ และ picker แสดงเฉพาะเพื่อนออนไลน์จริง
+- `js/online.js` ตรวจ presence + session ปัจจุบันก่อนส่ง/รับ; ฝ่ายใดหลุดหรือเปิด session ใหม่จะลบคำเชิญค้างทั้ง `/tinv` และ `state.tinvSent` โดยรอ presence/server time พร้อมก่อน cleanup กัน race ตอนเริ่มเกม
+- `tools/test_tinv_online_only.js`, test dismiss/Sky, syntax, production build + PWA validate และ hashed bundle ผ่าน; ไม่ต้องแก้ Firebase Rules
 - **รอบ 1284 · Home V2 R17 Direct Market + Online Players (Admin Preview เท่านั้น):** การ์ดสินค้า Global Feed เรียก `openMarketBuyDialog(listingKey)` ของตลาดเดิมตรงรายการ; ไม่พาไปค้นซ้ำในหน้าตลาดและไม่แตะ settlement/rules/economy
 - ย้าย New Word ทั้งป้าย/คำขึ้น HUD บน, ขยายและ wrap ข้อความ hero/สินค้า/ปุ่มโดยไม่ใช้ ellipsis; ปุ่มรักษาแดงพร้อมป้าย “ป่วย!” เมื่อ source/state พบสัตว์ป่วย และ Bottom Rail R16 ยังใช้กรอบเต็ม/snap เดิม
 - ปุ่ม “ดูผู้เล่นออนไลน์ทั้งหมด” เปิด modal แฟนตาซีจาก `Online.friends` + ตัวเอง แสดงชื่อ/ยศ/กิจกรรมเต็ม เลื่อนแนวตั้งแบบซ่อน scrollbar และมีปิดบน–ล่าง; row เดิมยังเปิด quick menu/player card

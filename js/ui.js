@@ -1506,6 +1506,7 @@ function openFriendQuickMenu(uid, name, grade){
   sfx.select();
   document.querySelectorAll('.fq-overlay').forEach(o=>o.remove());   // เปิดซ้ำ = แทนที่อันเก่า
   const isFriend = (Online.myFriends || []).some(f=>f.uid === uid);
+  const canInvite = (typeof tinvPeerOnline === 'function') && tinvPeerOnline(uid);
   const sp = (typeof splitNameBadges === 'function') ? splitNameBadges(name) : {name, badges:''};
   const sent = state.tinvSent || {};
   const wbtn = (map, emo, lab)=>{
@@ -1514,13 +1515,14 @@ function openFriendQuickMenu(uid, name, grade){
   };
   const overlay = document.createElement('div');
   overlay.className = 'fq-overlay';
+  overlay.dataset.tinvUid = uid;
   overlay.innerHTML = `<div class="fq-box">
     <div class="fq-head">
       <span>🧑‍🤝‍🧑 ${escapeHTML(sp.name)}${escapeHTML(sp.badges)} <small>${idTag(uid)}</small>${gradeMark(gradeOf(uid, grade))}</span>
       <button class="fq-close" type="button">✕</button>
     </div>
-    <div class="fq-sec">🤝 ชวนเล่นด้วยกัน — เจอกันใน map รับคนละ 🪙${fmtNum(TINV_CASHBACK)}</div>
-    <div class="fq-worlds">${wbtn('adv','🌍','ผจญภัย')}${wbtn('haunt','👻','ผีสิง')}${wbtn('heli','🚁','เฮลิฯ')}</div>
+    ${canInvite ? `<div class="fq-sec">🤝 ชวนเล่นด้วยกัน — เจอกันใน map รับคนละ 🪙${fmtNum(TINV_CASHBACK)}</div>
+    <div class="fq-worlds">${wbtn('adv','🌍','ผจญภัย')}${wbtn('haunt','👻','ผีสิง')}${wbtn('heli','🚁','เฮลิฯ')}</div>` : ''}
     <div class="fq-acts">
       ${isFriend
         ? `<button class="fq-act" data-act="gift" type="button">🎁 ส่งของขวัญ</button>
@@ -3364,7 +3366,7 @@ function openChatInbox(){
           <span class="ib-ava${ph ? ' ib-ava-photo' : ''}">${face}${onlineIds.has(String(f.uid)) ? '<i class="ib-on"></i>' : ''}</span>
           <span class="ib-mid"><b class="ib-name">${escapeHTML(f.n)}</b><small class="ib-last">${escapeHTML(lastTxt)}</small></span>
           <span class="ib-meta"><small class="ib-time">${timeTxt}</small>${unread ? `<span class="ib-dot">${badgeTxt(unread)}</span>` : ''}</span>
-          <button class="ib-world" data-i="${i}" title="ชวนเล่นโลก 3D" type="button">🌍</button>
+          ${onlineIds.has(String(f.uid)) ? `<button class="ib-world" data-i="${i}" data-tinv-online-uid="${escapeHTML(f.uid)}" title="ชวนเล่นโลก 3D" type="button">🌍</button>` : ''}
         </div>`;
       }).join('');
       listEl.querySelectorAll('.ib-row').forEach(r=>r.addEventListener('click', ()=>{
@@ -7869,14 +7871,15 @@ function openWorldEntryDialog(w){
     ${skyPicker}
     <div class="${isSky?'sky-entry-actions':''}">
       <button class="big-btn green home-btn" id="we-enter" style="width:100%;margin:4px 0">${enterLabel}</button>
-      <button class="big-btn blue home-btn" id="we-invite" style="width:100%;margin:4px 0">📨 ชวนเพื่อนเล่นด้วยกัน (เงินคืนคนละ 🪙${fmtNum(TINV_CASHBACK)})</button>
+      ${tinvOnlineFriends().length ? `<button class="big-btn blue home-btn" id="we-invite" style="width:100%;margin:4px 0">📨 ชวนเพื่อนเล่นด้วยกัน (เงินคืนคนละ 🪙${fmtNum(TINV_CASHBACK)})</button>` : ''}
       <button class="big-btn" id="we-cancel" style="width:100%;font-size:14px;padding:8px;margin:4px 0 0">ยกเลิก</button>
     </div>
   </div>`;
   document.body.appendChild(overlay);
   overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.remove(); });
   overlay.querySelector('#we-cancel').addEventListener('click', ()=>overlay.remove());
-  overlay.querySelector('#we-invite').addEventListener('click', ()=>openTinvPicker(w.mode));
+  const inviteBtn = overlay.querySelector('#we-invite');
+  if(inviteBtn) inviteBtn.addEventListener('click', ()=>openTinvPicker(w.mode));
   const enterBtn = overlay.querySelector('#we-enter');
   if(isSky){
     const nameEl = overlay.querySelector('#we-sky-character-name');
@@ -8018,6 +8021,21 @@ function renderRailWorlds(){
 }
 
 /* ---------- คำเชิญเล่นด้วยกัน (เงินคืนคนละ TINV_CASHBACK เมื่อเจอกันใน map) ---------- */
+function tinvOnlineFriends(){
+  if(!(window.Online && Online.ready && Online.presenceReady)) return [];
+  return (Online.myFriends || []).filter(f=>typeof tinvPeerOnline === 'function' && tinvPeerOnline(f.uid));
+}
+function refreshTinvOnlineUI(){
+  const anyOnlineFriend = tinvOnlineFriends().length > 0;
+  document.querySelectorAll('#we-invite').forEach(btn=>{ btn.hidden = !anyOnlineFriend; });
+  document.querySelectorAll('[data-tinv-online-uid]').forEach(btn=>{
+    btn.hidden = !(typeof tinvPeerOnline === 'function' && tinvPeerOnline(btn.dataset.tinvOnlineUid));
+  });
+  document.querySelectorAll('.fq-overlay[data-tinv-uid]').forEach(overlay=>{
+    if(typeof tinvPeerOnline === 'function' && tinvPeerOnline(overlay.dataset.tinvUid)) return;
+    overlay.querySelectorAll('.fq-sec,.fq-worlds').forEach(el=>{ el.hidden = true; });
+  });
+}
 function tinvNoticeHTML(map){
   if(map === 'sky' && !ensureSkyBetaAccess()) return '';
   if(state.tinvClaimed && state.tinvClaimed[map]) return '';
@@ -8030,8 +8048,8 @@ function tinvNoticeHTML(map){
 function openTinvPicker(map){
   if(map === 'sky' && !ensureSkyBetaAccess()) return;
   if(!(window.Online && Online.ready)){ sfx.wrong(); toast('⚠️ ยังไม่ได้เชื่อมต่อออนไลน์ — ลองใหม่อีกครั้งนะ'); return; }
-  const friends = (Online.myFriends || []);
-  if(!friends.length){ sfx.wrong(); toast('ยังไม่มีเพื่อนเลย — ไปเพิ่มเพื่อนที่เมนู 🧑‍🤝‍🧑 ก่อนนะ'); return; }
+  const friends = tinvOnlineFriends();
+  if(!friends.length){ sfx.wrong(); toast('ตอนนี้ยังไม่มีเพื่อนออนไลน์พร้อมกัน — ปุ่มชวนจะปรากฏเมื่อเพื่อนออนไลน์นะ'); return; }
   const w = (typeof TINV_WORLD_LABEL !== 'undefined' && TINV_WORLD_LABEL[map]) || 'โลกผจญภัย 🌍';   // 🤝 รอบ 823: ป้ายชื่อรวมทุกโลกจาก js/online.js
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay';
@@ -8040,10 +8058,9 @@ function openTinvPicker(map){
     <p style="font-size:13px;margin:4px 0">เล่นจบด้วยกัน (อยู่ด้วยกันต่อเนื่อง) รับเงินคืน<b>คนละ 🪙${fmtNum(TINV_CASHBACK)}</b></p>
     <div style="max-height:44vh;overflow-y:auto;margin:8px 0">
       ${friends.map(f=>{
-        const on = Online.presenceMap && Online.presenceMap[f.uid];
         const sent = state.tinvSent[f.uid] && state.tinvSent[f.uid].map===map;
-        return `<button class="big-btn ${sent?'':'blue'}" data-uid="${f.uid}" data-n="${escapeHTML(f.n)}" ${sent?'disabled style="opacity:.55"':''}
-          style="width:100%;margin:3px 0;font-size:14px;padding:8px">${on?'🟢':'⚪'} ${escapeHTML(f.n)}${sent?' · ✅ ชวนแล้ว':''}</button>`;
+        return `<button class="big-btn ${sent?'':'blue'}" data-uid="${f.uid}" data-n="${escapeHTML(f.n)}" data-tinv-online-uid="${escapeHTML(f.uid)}" ${sent?'disabled style="opacity:.55"':''}
+          style="width:100%;margin:3px 0;font-size:14px;padding:8px">🟢 ${escapeHTML(f.n)}${sent?' · ✅ ชวนแล้ว':''}</button>`;
       }).join('')}
     </div>
     <button class="big-btn" id="tinv-close" style="width:100%;font-size:14px;padding:8px">ปิด</button>

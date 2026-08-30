@@ -29,8 +29,12 @@ function runCase(dismissed, invite){
   let saveCount = 0;
   const context = {
     window:{},
-    Online:{db:{ref:()=>({on:(_event, cb)=>{ watchCallback = cb; }})}, tinv:{}, tinvSeen:{}},
-    state:{tinvDismissed:dismissed || {}},
+    Online:{
+      db:{ref:()=>({on:(_event, cb)=>{ watchCallback = cb; }, remove:()=>Promise.resolve()})},
+      ready:true, presenceReady:true, presenceMap:{friend1:true}, sessionStartedAt:0,
+      serverTimeOffset:0, serverTimeReady:true, tinv:{}, tinvRaw:{}, tinvSeen:{}
+    },
+    state:{tinvDismissed:dismissed || {}, tinvSent:{}},
     TINV_WORLD_LABEL:{heli:"โลกเฮลิคอปเตอร์ 🚁"},
     TINV_CASHBACK:100,
     onlineKey:()=>"me",

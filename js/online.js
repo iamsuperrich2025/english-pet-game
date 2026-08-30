@@ -28,6 +28,10 @@ const Online = {
   /* ---- ระบบเพื่อน (ข้อ 0.3) ---- */
   myCode:'',        // รหัสเพื่อนของเรา (6 ตัว จาก uid — โชว์ให้เพื่อนค้นหา)
   presenceMap:{},   // uid → true ของทุกคนที่ออนไลน์สดตอนนี้ (ไว้ join สถานะเพื่อน)
+  presenceReady:false, // true หลังรับ snapshot /presence ของการเชื่อมต่อรอบปัจจุบันแล้ว
+  sessionStartedAt:0,  // เวลา local ที่ .info/connected เป็น true — คำเชิญเก่าข้าม session ใช้ไม่ได้
+  serverTimeOffset:0,  // ชดเชยเวลา server สำหรับเทียบ ts ที่ Firebase ประทับให้
+  serverTimeReady:false,
   reqs:[],          // คำขอเป็นเพื่อนที่ส่งมาหาเรา: [{uid,n,g,ts}]
   myFriends:[],     // เพื่อนของเรา: [{uid,n,g,ts}]
   chatUnread:{},    // uid เพื่อน → true ถ้ามีข้อความใหม่ที่ยังไม่ได้อ่าน (ข้อ 0.4)
@@ -38,6 +42,7 @@ const Online = {
   giftOutDone:{},   // key ของขวัญที่ประมวลผลผลลัพธ์แล้วในเซสชันนี้ (กันคืนของซ้ำจาก snapshot รัว)
   /* ---- คำเชิญเล่นโลก 3D ด้วยกัน (ส่วนลดคนละ 2,000 เมื่อเจอกันใน map) ---- */
   tinv:{},          // คำเชิญที่ส่งมาหาเรา: {fromUid:{map:'adv'|'haunt', n:ชื่อผู้ชวน, ts}}
+  tinvRaw:{},       // snapshot ดิบก่อนกรองว่า sender ยังออนไลน์ใน session นี้หรือไม่
   tinvSeen:{},      // fromUid → fingerprint คำเชิญที่เด้ง toast แล้วในเซสชันนี้ (คำเชิญใหม่จากคนเดิมยังเด้งได้)
   /* ---- ตลาดออนไลน์จริง (item 2) ---- */
   market:[],        // ประกาศขายทั้งเซิร์ฟเวอร์ (รวมของเรา): [{key,sid,sn,id,p,ts}]
@@ -206,6 +211,7 @@ function fetchPlayerStats(uid){
 
 /* วาดการ์ดที่เกี่ยวข้องใหม่ เฉพาะตอนเปิดหน้า Dashboard อยู่ */
 function onlineRerender(){
+  if(typeof refreshTinvOnlineUI === 'function') refreshTinvOnlineUI();
   const dash = document.getElementById('screen-dashboard');
   if(!dash || !dash.classList.contains('active')) return;
   if(typeof renderOnlineCard === 'function') renderOnlineCard();
@@ -923,6 +929,7 @@ function marketSoldWatch(){
    ============================================================ */
 function tinvSend(toUid, map){
   if(!Online.ready || !Online.db) return Promise.reject();
+  if(!tinvPeerOnline(toUid)) return Promise.reject(new Error('invitee-offline'));
   if(map === 'sky' && !(typeof canAccessSkyBeta === 'function' && canAccessSkyBeta())){
     const msg='Vocab Sky Playground กำลังเปิดแบบ Private Beta เฉพาะบัญชีที่ได้รับเชิญครับ';
     if(typeof toast === 'function') toast(`🔒 ${msg}`);
@@ -934,8 +941,8 @@ function tinvSend(toUid, map){
   });
 }
 function tinvClear(fromUid){
-  if(!Online.db) return;
-  Online.db.ref('tinv/' + onlineKey() + '/' + fromUid).remove().catch(()=>{});
+  if(!Online.db) return Promise.resolve();
+  return Online.db.ref('tinv/' + onlineKey() + '/' + fromUid).remove().catch(()=>{});
 }
 /* 🤝 รอบ 822 (ผู้ใช้สั่ง 30 ก.ค. 2026): ระบบคืนเงิน "เล่นจบด้วยกัน" รวมทุกโลก 3D (เดิมมีแค่ 4 โลกในตัว adventure3d.js)
    ต้องอยู่ด้วยกันต่อเนื่อง (ไม่หลุดจาก peers) ครบ TINV_TOGETHER_MS ก่อนถึงนับว่า "จบเกมด้วยกัน" — กันเทเลพอร์ตเข้า-ออกเก็บเงินไว
@@ -970,33 +977,90 @@ const TINV_WORLD_LABEL = {
 function tinvFingerprint(uid, invite){
   return `${uid}|${invite.map}|${Number(invite.ts) || 0}`;
 }
+const TINV_SESSION_GRACE_MS = 5000;
+function tinvPeerOnline(uid){
+  return !!(uid && Online.ready && Online.presenceReady && Online.presenceMap && Online.presenceMap[uid]);
+}
+function tinvInviteCurrent(invite){
+  if(!invite || typeof invite.ts !== 'number') return false;
+  if(!Online.serverTimeReady || !Online.sessionStartedAt) return true;
+  const sessionStartedAtServer = Online.sessionStartedAt + (Online.serverTimeOffset || 0);
+  return invite.ts >= sessionStartedAtServer - TINV_SESSION_GRACE_MS;
+}
+function tinvSentCurrent(invite){
+  return !!(invite && typeof invite.ts === 'number'
+    && (!Online.sessionStartedAt || invite.ts >= Online.sessionStartedAt - TINV_SESSION_GRACE_MS));
+}
+function tinvCancel(toUid){
+  if(!Online.db) return Promise.resolve();
+  return Online.db.ref('tinv/' + toUid + '/' + onlineKey()).remove().catch(()=>{});
+}
+/* รอบออนไลน์ปัจจุบันเท่านั้น: sender+receiver ต้องมี presence พร้อมกัน และ invite ต้องใหม่กว่า
+   การเชื่อมต่อรอบนี้ หากฝ่ายใดหลุด/ปิดเกมจะลบทั้ง DB และ state ฝั่งผู้ส่งทันทีที่เห็น snapshot ใหม่ */
+function tinvReconcile(render=true){
+  if(!Online.presenceReady || !Online.serverTimeReady){
+    Online.tinv = {};
+    if(render){
+      if(typeof renderRailWorlds === 'function') renderRailWorlds();
+      if(typeof onlineRerender === 'function') onlineRerender();
+    }
+    return;
+  }
+  const raw = Online.tinvRaw || {};
+  const live = {};
+  Object.keys(raw).forEach(uid=>{
+    if(tinvPeerOnline(uid) && tinvInviteCurrent(raw[uid])) live[uid] = raw[uid];
+    else{
+      delete raw[uid];
+      delete Online.tinvSeen[uid];
+      if(Online.tinvHidden) delete Online.tinvHidden[uid];
+      tinvClear(uid);
+    }
+  });
+  Online.tinvRaw = raw;
+  Online.tinv = live;
+
+  let sentDirty = false;
+  const sent = (state.tinvSent && typeof state.tinvSent === 'object') ? state.tinvSent : {};
+  Object.keys(sent).forEach(uid=>{
+    if(tinvPeerOnline(uid) && tinvSentCurrent(sent[uid])) return;
+    delete sent[uid];
+    tinvCancel(uid);
+    sentDirty = true;
+  });
+  if(sentDirty) saveState();
+
+  Object.keys(live).forEach(uid=>{
+    const fp = tinvFingerprint(uid, live[uid]);
+    if(state.tinvDismissed && state.tinvDismissed[uid] === fp){
+      Online.tinvSeen[uid] = fp;
+      return;
+    }
+    if(Online.tinvSeen[uid] === fp) return;
+    Online.tinvSeen[uid] = fp;
+    toast(`📨 ${live[uid].n} ชวนหนูไปเล่น${TINV_WORLD_LABEL[live[uid].map]}ด้วยกัน! เล่นจบด้วยกันรับเงินคืน 🪙${fmtNum(TINV_CASHBACK)}`, 0, ()=>{
+      if(!state.tinvDismissed || typeof state.tinvDismissed !== 'object') state.tinvDismissed = {};
+      state.tinvDismissed[uid] = fp;
+      saveState();
+    });
+    window.__invFlashPend = uid;
+  });
+  if(render){
+    if(typeof renderRailWorlds === 'function') renderRailWorlds();
+    if(typeof onlineRerender === 'function') onlineRerender();
+  }
+}
 function tinvWatch(){
   Online.db.ref('tinv/' + onlineKey()).on('value', (snap)=>{
-    const out = {};
+    const raw = {};
     snap.forEach(ch=>{
       const v = ch.val();
       if(v && TINV_WORLD_LABEL[v.map]
         && (v.map !== 'sky' || (typeof canAccessSkyBeta === 'function' && canAccessSkyBeta())))
-        out[ch.key] = {map: v.map, n: v.n || 'เพื่อน', ts: v.ts || 0};
+        raw[ch.key] = {map: v.map, n: v.n || 'เพื่อน', ts: v.ts || 0};
     });
-    Online.tinv = out;
-    Object.keys(out).forEach(uid=>{
-      const fp = tinvFingerprint(uid, out[uid]);
-      if(state.tinvDismissed && state.tinvDismissed[uid] === fp){
-        Online.tinvSeen[uid] = fp;
-        return;
-      }
-      if(Online.tinvSeen[uid] === fp) return;
-      Online.tinvSeen[uid] = fp;
-      toast(`📨 ${out[uid].n} ชวนหนูไปเล่น${TINV_WORLD_LABEL[out[uid].map]}ด้วยกัน! เล่นจบด้วยกันรับเงินคืน 🪙${fmtNum(TINV_CASHBACK)}`, 0, ()=>{
-        if(!state.tinvDismissed || typeof state.tinvDismissed !== 'object') state.tinvDismissed = {};
-        state.tinvDismissed[uid] = fp;
-        saveState();
-      });
-      window.__invFlashPend = uid;    // รอบ 154: การ์ดคำชวนในกล่องเพื่อน แฟลช+เด้งไปโชว์ (renderOnlineCard จัดการ)
-    });
-    if(typeof renderRailWorlds === 'function') renderRailWorlds();   // 🎫→💰 รอบ 822: การ์ดตั๋วเดิมถูกถอดออก — ป้ายคำเชิญอยู่ในหน้าจ่ายค่าเข้าแทน
-    if(typeof onlineRerender === 'function') onlineRerender();   // การ์ดคำชวนในกล่องเพื่อนโผล่/หายทันที
+    Online.tinvRaw = raw;
+    tinvReconcile();
   });
 }
 
@@ -2032,11 +2096,20 @@ function onlineStart(){
   const id = onlineKey();
   const presRef = Online.db.ref('presence/' + id);
 
+  Online.db.ref('.info/serverTimeOffset').on('value', (snap)=>{
+    const offset = Number(snap.val());
+    Online.serverTimeOffset = Number.isFinite(offset) ? offset : 0;
+    Online.serverTimeReady = true;
+    if(Online.presenceReady) tinvReconcile();
+  });
+
   // สถานะการเชื่อมต่อ: ต่อได้ → ลงทะเบียน onDisconnect (หลุดแล้วลบตัวเองออก)
   Online.db.ref('.info/connected').on('value', (snap)=>{
     const ok = snap.val() === true;
     Online.ready = ok;
     if(ok){
+      Online.sessionStartedAt = Date.now();
+      Online.presenceReady = false;
       presRef.onDisconnect().remove();
       onlinePushPresence();
       Online.lastCoins = null;       // ต่อใหม่ ส่งคะแนนรอบใหม่เสมอ
@@ -2049,6 +2122,11 @@ function onlineStart(){
       gfeedWatchStart();             // 📰 รอบ 701: ฟีดล็อบบี้ใช้ /gfeed แล้ว → เปิด watcher ค้างไว้เลย
       gnotifWatchStart();            // 🔔 รอบ 976: ดึงแจ้งเตือนย้อนหลังจาก /gnotif/<me> + ฟังใบใหม่
       if(typeof photoPullMine === 'function') photoPullMine();   // 📷 รอบ 709: ดึงรูปโปรไฟล์ของตัวเองลงเครื่องใหม่ (หรือส่งของเครื่องนี้ขึ้นถ้า DB ยังว่าง)
+    }else{
+      Online.presenceReady = false;
+      Online.presenceMap = {};
+      Online.friends = [];
+      Online.tinv = {};
     }
     onlineRerender();
   });
@@ -2066,6 +2144,8 @@ function onlineStart(){
     });
     Online.friends = out;
     Online.presenceMap = pmap;
+    Online.presenceReady = Online.ready;
+    if(Online.presenceReady) tinvReconcile(false);
     notifyFriendBadges(out);          // 🔔 เพื่อนเพิ่งได้เข็มใหม่ → เด้ง toast ให้กำลังใจแข่งสะสม
     onlineRerender();
     if(typeof renderFeedBoardLive === 'function') renderFeedBoardLive();   // 🌍 รอบ 639: หน้า Feed เปิดอยู่ → รีเฟรช "ใครทำอะไรอยู่"
