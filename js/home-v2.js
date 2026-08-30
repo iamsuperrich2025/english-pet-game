@@ -18,6 +18,7 @@
    R30 / รอบ 1309 — Aligned profile, framed portrait, swipe rail and restored Global Feed flow
    R31 / รอบ 1311 — Idle thermal guard + suspended Classic runtime
    R32 / รอบ 1313 — Royal jewel New Vocab frame + optically balanced content lanes
+   R33 / รอบ 1314 — Classic left rail skin + original Classic icon glyphs
    ------------------------------------------------------------
    Additive UI shell only. It does NOT own economy, auth, quests,
    Firebase, purchases, or game routing. Existing Lobby DOM stays
@@ -285,9 +286,24 @@
   const ADMIN_ONLY_WORLD_ACTIONS = new Set([
     'worldAdv','worldSky','worldDrive','worldMoto','worldInvasion','worldMecha'
   ]);
+  const CLASSIC_RAIL_GLYPHS = Object.freeze({
+    cure:'💊',city:'🏙️',worldAdv:'🌍',worldSky:'☁️',worldHaunt:'👻',worldHeli:'🚁',worldDrone:'🛸',
+    worldDrive:'🚗',worldSoccer:'⚽',worldMoto:'🏍️',worldInvasion:'🛸',worldMecha:'🤖',home:'🏠',
+    invest:'📈',factory:'🏭',wordsearch:'🔎',typing:'⌨️',bubble:'🫧',shoot:'🎯',cannon:'🔤💥',
+    examstd:'📋',onet:'🇹🇭',rank:'🥇',market:'🏪',friends:'👥',gifts:'🎁',stats:'📊',trophy:'🏆',racing:'🏎️'
+  });
+  function classicRailGlyph(actionName, sourceSelector){
+    let glyph = '';
+    if(sourceSelector){
+      try{ glyph = document.querySelector(sourceSelector)?.querySelector('.rail-ico')?.textContent?.trim() || ''; }
+      catch(_){ glyph = ''; }
+    }
+    glyph = glyph || CLASSIC_RAIL_GLYPHS[actionName] || '✦';
+    return `<span class="vw2-classic-rail-ico" aria-hidden="true">${htmlEscape(glyph)}</span>`;
+  }
   function navButton(actionName, iconName, label, sourceSelector=''){
     const adminOnly = ADMIN_ONLY_WORLD_ACTIONS.has(actionName);
-    return `<button class="vw2-rail-btn vw2-rail-${htmlEscape(actionName)}" data-vw2-action="${htmlEscape(actionName)}"${adminOnly ? ' data-vw2-admin-only-world="1"' : ''}${sourceAttrs(sourceSelector)}><span class="vw2-rail-art"><span class="vw2-rail-scene" aria-hidden="true"><i></i></span>${icon(iconName)}<span class="vw2-rail-scene-mark" aria-hidden="true"></span></span><b class="vw2-rail-label">${htmlEscape(label)}</b><i class="vw2-source-badge" hidden></i></button>`;
+    return `<button class="vw2-rail-btn vw2-rail-${htmlEscape(actionName)}" data-vw2-action="${htmlEscape(actionName)}"${adminOnly ? ' data-vw2-admin-only-world="1"' : ''}${sourceAttrs(sourceSelector)}><span class="vw2-rail-art">${classicRailGlyph(actionName, sourceSelector)}</span><b class="vw2-rail-label">${htmlEscape(label)}</b><i class="vw2-source-badge" hidden></i></button>`;
   }
   function bottomButton(actionName, iconName, label, tone='violet', sourceSelector=''){
     return `<button class="vw2-mode ${htmlEscape(tone)}" data-vw2-action="${htmlEscape(actionName)}"${sourceAttrs(sourceSelector)}><span>${icon(iconName)}</span><b>${htmlEscape(label)}</b><i class="vw2-source-badge" hidden></i></button>`;
@@ -453,7 +469,7 @@
     if(document.getElementById(STYLE_ID)) return;
     const style = document.createElement('style');
     style.id = STYLE_ID;
-    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1;--vw2-r1287-runtime-ready:1;--vw2-r1288-runtime-ready:1;--vw2-r1289-runtime-ready:1;--vw2-r1290-runtime-ready:1;--vw2-r1291-runtime-ready:1;--vw2-r1293-runtime-ready:1;--vw2-r1294-runtime-ready:1;--vw2-r1295-runtime-ready:1;--vw2-r1296-runtime-ready:1;--vw2-r1300-runtime-ready:1;--vw2-r1305-runtime-ready:1;--vw2-r1309-runtime-ready:1;--vw2-r1311-runtime-ready:1;--vw2-r1313-runtime-ready:1}';
+    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1;--vw2-r1287-runtime-ready:1;--vw2-r1288-runtime-ready:1;--vw2-r1289-runtime-ready:1;--vw2-r1290-runtime-ready:1;--vw2-r1291-runtime-ready:1;--vw2-r1293-runtime-ready:1;--vw2-r1294-runtime-ready:1;--vw2-r1295-runtime-ready:1;--vw2-r1296-runtime-ready:1;--vw2-r1300-runtime-ready:1;--vw2-r1305-runtime-ready:1;--vw2-r1309-runtime-ready:1;--vw2-r1311-runtime-ready:1;--vw2-r1313-runtime-ready:1;--vw2-r1314-runtime-ready:1}';
     document.head.appendChild(style);
   }
   function clickExisting(selector, opts){
@@ -777,11 +793,15 @@
   function updateLeftRailCue(){
     if(!root) return;
     const rail = root.querySelector('.vw2-left');
-    const cue = rail ? rail.querySelector('.vw2-left-scroll-cue') : null;
-    if(!rail || !cue) return;
+    const upCue = rail ? rail.querySelector('.vw2-left-scroll-cue.up') : null;
+    const downCue = rail ? rail.querySelector('.vw2-left-scroll-cue.down') : null;
+    if(!rail || !upCue || !downCue) return;
     const canScroll = rail.scrollHeight > rail.clientHeight + 2;
+    const hasUp = canScroll && rail.scrollTop > 2;
     const hasMore = canScroll && (rail.scrollTop + rail.clientHeight < rail.scrollHeight - 2);
-    cue.classList.toggle('is-visible', hasMore);
+    upCue.classList.toggle('is-visible', hasUp);
+    downCue.classList.toggle('is-visible', hasMore);
+    rail.dataset.vw2ScrollUp = hasUp ? '1' : '0';
     rail.dataset.vw2ScrollMore = hasMore ? '1' : '0';
   }
   function setupLeftRailCue(){
@@ -789,6 +809,9 @@
     const rail = root.querySelector('.vw2-left');
     if(!rail || rail.dataset.vw2CueReady === '1') return;
     rail.dataset.vw2CueReady = '1';
+    const glide = top=>rail.scrollTo({top, behavior:'smooth'});
+    rail.querySelector('.vw2-left-scroll-cue.up')?.addEventListener('click', ()=>glide(0));
+    rail.querySelector('.vw2-left-scroll-cue.down')?.addEventListener('click', ()=>glide(rail.scrollTop + Math.max(60, rail.clientHeight * .75)));
     rail.addEventListener('scroll', ()=>{
       updateLeftRailCue();
       scheduleLocalPreviewReport();
@@ -991,7 +1014,7 @@
           </section>
         </header>
         <div class="vw2-main-grid">
-          <nav class="vw2-left vw2-glass" aria-label="เมนูหลักทั้งหมด">${railButtons}<span class="vw2-left-scroll-cue" aria-hidden="true"><span>&#8964;</span></span></nav>
+          <nav class="vw2-left vw2-glass" aria-label="เมนูหลักทั้งหมด"><button type="button" class="vw2-left-scroll-cue up" aria-label="กลับไปเมนูบนสุด">▲ บนสุด</button>${railButtons}<button type="button" class="vw2-left-scroll-cue down" aria-label="เลื่อนดูเมนูถัดไป">▼ มีอีก</button></nav>
           <section class="vw2-feed vw2-glass">
             <div class="vw2-section-head"><span class="vw2-head-icon">${icon('globe')}</span><strong>Global Feed</strong><button class="vw2-feed-all" data-vw2-action="classic" title="ดู Global Feed ทั้งหมด" aria-label="ดู Global Feed ทั้งหมด">↗</button></div>
             <div id="vw2-feed-items" class="vw2-feed-items">
@@ -1054,7 +1077,7 @@
           </aside>
         </div>
         <footer class="vw2-bottom" aria-label="กิจกรรมภาษาอังกฤษ"><div class="vw2-bottom-scroll" role="region" aria-label="เลื่อนกิจกรรมภาษาอังกฤษซ้ายขวา"><div class="vw2-bottom-track">${learningModeButtons}</div></div></footer>
-        <div class="vw2-preview-mark">ADMIN PREVIEW · R32 NEW VOCAB · ROYAL BALANCE</div>
+        <div class="vw2-preview-mark">ADMIN PREVIEW · R33 CLASSIC RAIL · ORIGINAL ICONS</div>
       </div>
       <div class="vw2-online-modal" id="vw2-online-modal" role="dialog" aria-modal="true" aria-labelledby="vw2-online-modal-title" aria-hidden="true" hidden>
         <section class="vw2-online-modal-panel">
@@ -1647,7 +1670,8 @@
     const bottomTrack = r ? r.querySelector('.vw2-bottom-track') : null;
     const featureActionScroll = r ? r.querySelector('.vw2-feature-action-scroll') : null;
     const featureActionTrack = r ? r.querySelector('.vw2-feature-action-track') : null;
-    const leftCue = left ? left.querySelector('.vw2-left-scroll-cue') : null;
+    const leftUpCue = left ? left.querySelector('.vw2-left-scroll-cue.up') : null;
+    const leftDownCue = left ? left.querySelector('.vw2-left-scroll-cue.down') : null;
     const areas = r ? [
       ['left',r.querySelector('.vw2-left')],['feed',r.querySelector('.vw2-feed')],
       ['feature',r.querySelector('.vw2-feature')],['right',r.querySelector('.vw2-right')]
@@ -1798,7 +1822,7 @@
       rails:{
         leftScrollable:!!(left && leftStyle && ['auto','scroll'].includes(leftStyle.overflowY) && left.scrollHeight > left.clientHeight + 1),
         leftScrollbarHidden:!!(leftStyle && leftStyle.scrollbarWidth === 'none'),
-        leftCueCorrect:!!(left && leftCue && ((left.scrollHeight <= left.clientHeight + 2 && !leftCue.classList.contains('is-visible')) || (left.scrollHeight > left.clientHeight + 2 && (leftCue.classList.contains('is-visible') === (left.scrollTop + left.clientHeight < left.scrollHeight - 2))))),
+        leftCueCorrect:!!(left && leftUpCue && leftDownCue && ((left.scrollHeight <= left.clientHeight + 2 && !leftUpCue.classList.contains('is-visible') && !leftDownCue.classList.contains('is-visible')) || (left.scrollHeight > left.clientHeight + 2 && leftUpCue.classList.contains('is-visible') === (left.scrollTop > 2) && leftDownCue.classList.contains('is-visible') === (left.scrollTop + left.clientHeight < left.scrollHeight - 2)))),
         bottomScrollable:!!(bottomScroll && bottomScrollStyle && ['auto','scroll'].includes(bottomScrollStyle.overflowX) && bottomScroll.scrollWidth > bottomScroll.clientWidth + 1),
         bottomContained:!!(bottom && bottomStyle && !['auto','scroll'].includes(bottomStyle.overflowX) && bottom.scrollWidth <= bottom.clientWidth + 1 && bottom.scrollHeight <= bottom.clientHeight + 1),
         outerBottomRailContained:!!(bottom && bottomStyle && !['auto','scroll'].includes(bottomStyle.overflowX) && bottom.scrollWidth <= bottom.clientWidth + 1 && bottom.scrollHeight <= bottom.clientHeight + 1),

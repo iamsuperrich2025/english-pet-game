@@ -15,6 +15,9 @@
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
 ### 🔫 คิวงานปืน/โลกยานแม่/โลกใหม่ที่รออยู่ (ผู้ใช้อนุมัติล่วงหน้าแล้ว ทำได้เลยไม่ต้องถาม)
+- **รอบ 1314 · Home V2 Classic left rail:** คืนเฉพาะรางเมนูซ้ายเป็นปุ่มกรมท่าทรงมนแบบ Classic และอ่านไอคอนจริงจาก `.rail-ico` ของปุ่มต้นทาง พร้อม fallback ชุดเดิมครบ 29 ปลายทาง
+- คืนป้ายเลื่อน `▲ บนสุด` / `▼ มีอีก` แบบกดได้; Profile, Global Feed, stage, New Vocab และ Bottom Rail ไม่เปลี่ยน
+- syntax + Home V2 regression + production build ผ่าน; marker อยู่ทั้ง unhashed/hashed build, Browser runtime ถูก Windows ACL บล็อก
 - **รอบ 1313 · New Vocab royal balance:** ยกระดับกรอบเป็น jewel frame สีม่วง–ทองหลายชั้น พร้อมเหรียญอัญมณีซ้ายขวาโดยไม่เพิ่ม animation/asset ใหม่
 - แบ่ง badge/คำศัพท์/reward เป็น 3 lane ที่สองข้างกว้างเท่ากัน ทำให้คำศัพท์อยู่กึ่งกลางจริง; มี geometry แยก desktop/landscape จอเตี้ย/≤760px
 - syntax + Home V2 regression + production build ผ่าน; Browser runtime ถูก Windows ACL บล็อกจึงยืนยันด้วย geometry contract และ cache/runtime markers

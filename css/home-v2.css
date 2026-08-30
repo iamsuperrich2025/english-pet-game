@@ -2120,3 +2120,68 @@ body.vw2-home-active.vw2-page-hidden #vw-home-v2-root *:after{animation-play-sta
   .vw2-feature-title:before,.vw2-feature-title:after{width:22px!important;height:22px!important;font-size:11px}
   .vw2-feature-title:before{left:-12px!important}.vw2-feature-title:after{right:-12px!important}
 }
+
+/* ======================== R33 / รอบ 1314 — CLASSIC LEFT RAIL + ORIGINAL ICONS ======================== */
+#vw-home-v2-root{--vw2-r1314-ready:1}
+/* Scope this restoration to the left navigation only. Profile, Feed, centre
+   stage, New Vocab and the bottom learning rail keep their current skins. */
+#vw-home-v2-root .vw2-left{
+  padding:6px 4px 7px!important;gap:7px!important;border-radius:16px!important;
+  background:
+    repeating-linear-gradient(90deg,rgba(13,59,99,.22) 0 8px,rgba(94,159,208,.16) 8px 16px),
+    linear-gradient(180deg,rgba(119,188,232,.82),rgba(65,124,176,.88))!important;
+  border:1px solid rgba(203,235,255,.9)!important;
+  box-shadow:inset 0 0 0 1px rgba(21,71,117,.3),0 4px 10px rgba(23,48,84,.2)!important;
+  backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
+#vw-home-v2-root .vw2-left:before{display:none!important}
+#vw-home-v2-root .vw2-rail-btn,
+#vw-home-v2-root .vw2-rail-racing{
+  box-sizing:border-box!important;flex:0 0 auto!important;width:100%!important;
+  min-height:66px!important;height:auto!important;margin:0!important;padding:8px 2px 7px!important;
+  display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:2px!important;
+  overflow:visible!important;border:1px solid rgba(127,192,245,.48)!important;border-radius:15px!important;
+  background:rgba(7,33,63,.86)!important;background-image:none!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 2px 5px rgba(2,20,43,.26)!important;
+  color:#dceeff!important;filter:none!important;transition:background .15s,transform .12s!important;
+}
+#vw-home-v2-root .vw2-rail-btn:hover{background:rgba(27,95,168,.92)!important}
+#vw-home-v2-root .vw2-rail-btn:active{transform:scale(.96)!important}
+#vw-home-v2-root .vw2-rail-art{
+  flex:0 0 auto!important;width:auto!important;height:auto!important;min-height:25px!important;margin:0!important;
+  display:grid!important;place-items:center!important;transform:none!important;transition:none!important;
+}
+#vw-home-v2-root .vw2-rail-art:before,
+#vw-home-v2-root .vw2-rail-art:after,
+#vw-home-v2-root .vw2-rail-scene,
+#vw-home-v2-root .vw2-rail-scene-mark,
+#vw-home-v2-root .vw2-rail-art>.vw2-icon{display:none!important}
+#vw-home-v2-root .vw2-classic-rail-ico{
+  display:block!important;font-family:"Segoe UI Emoji","Apple Color Emoji",sans-serif!important;
+  font-size:24px!important;font-weight:400!important;line-height:1.08!important;filter:none!important;text-shadow:none!important;
+}
+#vw-home-v2-root .vw2-rail-label,
+#vw-home-v2-root .vw2-rail-racing .vw2-rail-label{
+  box-sizing:border-box!important;width:100%!important;min-height:0!important;height:auto!important;margin:0!important;padding:0 2px!important;
+  display:block!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;
+  color:#dceeff!important;text-shadow:0 1px 2px rgba(0,0,0,.65)!important;
+  font-size:clamp(10px,.78vw,12px)!important;font-weight:600!important;line-height:1.15!important;text-align:center!important;
+  white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere!important;
+}
+#vw-home-v2-root .vw2-left-scroll-cue{
+  position:sticky!important;left:50%!important;transform:translateX(-50%)!important;z-index:30!important;
+  width:58px!important;height:18px!important;min-height:18px!important;padding:0!important;
+  align-items:center!important;justify-content:center!important;border:1px solid #7fc0f5!important;border-radius:999px!important;
+  background:rgba(10,30,62,.96)!important;color:#ffd98a!important;box-shadow:0 2px 6px rgba(0,0,0,.4)!important;
+  font:800 9.5px/1 Kanit,system-ui,sans-serif!important;letter-spacing:.2px!important;pointer-events:auto!important;cursor:pointer!important;
+}
+#vw-home-v2-root .vw2-left-scroll-cue.up{top:0!important;margin-bottom:-25px!important}
+#vw-home-v2-root .vw2-left-scroll-cue.down{bottom:0!important;margin-top:-25px!important}
+#vw-home-v2-root .vw2-left-scroll-cue.is-visible{display:flex!important}
+#vw-home-v2-root .vw2-left-scroll-cue:hover{background:rgba(27,95,168,.98)!important;color:#fff!important}
+@media (max-width:760px),(max-height:420px){
+  #vw-home-v2-root .vw2-left{padding:5px 3px 6px!important;gap:5px!important}
+  #vw-home-v2-root .vw2-rail-btn,#vw-home-v2-root .vw2-rail-racing{min-height:58px!important;padding:5px 1px!important;border-radius:13px!important}
+  #vw-home-v2-root .vw2-classic-rail-ico{font-size:20px!important}
+  #vw-home-v2-root .vw2-rail-label,#vw-home-v2-root .vw2-rail-racing .vw2-rail-label{font-size:clamp(8.5px,.88vw,10.5px)!important}
+}
