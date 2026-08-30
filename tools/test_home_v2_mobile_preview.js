@@ -34,13 +34,19 @@ must(!home.includes("ตลาดผู้เล่นทั้งหมด ·")
 must(css.includes('r1282_bottom_frame.webp') && css.includes('r1282_filigree.webp') && css.includes(".vw2-mode>span{") && css.includes("display:grid!important"), "R15 generated fantasy buttons/decor are not integrated");
 must(css.includes("position:fixed!important") && css.includes("height:100dvh"), "R15 viewport lock is missing; Bottom Rail can be clipped by the dashboard offset");
 must(home.includes("document.body.appendChild(root)") && !home.includes("dash.appendChild(root)"), "R15 Home V2 root is still mounted inside the clipped Classic dashboard container");
-must(home.includes("ADMIN PREVIEW · R16 COMPLETE BOTTOM BUTTONS") && css.includes("R16 / รอบ 1283") && css.includes("--vw2-r1283-ready:1") && home.includes("--vw2-r1283-runtime-ready:1"), "R16 / รอบ 1283 lineage markers missing");
-must(indexClassic.includes("css/home-v2.css?v=1283") && indexClassic.includes("js/home-v2.js?v=1283"), "R16 cache-bust missing from index_classic.html");
+must(css.includes("R16 / รอบ 1283") && css.includes("--vw2-r1283-ready:1") && home.includes("--vw2-r1283-runtime-ready:1"), "R16 / รอบ 1283 lineage markers missing");
 must(css.includes(".vw2-bottom-track .vw2-mode{") && css.includes('background:url("../img/home-v2/r1282_bottom_frame.webp") center/100% 100% no-repeat!important'), "R16 complete frame does not override the higher-specificity legacy colour skins");
 must(css.includes("container-type:inline-size") && css.includes("scroll-snap-type:x mandatory!important") && css.includes("scroll-snap-align:start") && css.includes("scroll-snap-stop:always"), "R16 whole-button snap geometry missing");
 must(css.includes("calc((100cqw - 64px)/7)") && css.includes("calc((100cqw - 56px)/6)") && css.includes("calc((100cqw - 48px)/5)") && css.includes("calc((100cqw - 40px)/4)"), "R16 full-page responsive button sizing missing");
 must(home.includes("R13 / รอบ 1280"), "R13 JS lineage marker missing");
-must(indexClassic.includes("css/home-v2.css?v=1283") && indexClassic.includes("js/home-v2.js?v=1283"), "Home V2 current cache-bust missing from index_classic.html");
+must(home.includes("ADMIN PREVIEW · R17 DIRECT MARKET + ONLINE PLAYERS") && css.includes("R17 / รอบ 1284") && css.includes("--vw2-r1284-ready:1") && home.includes("--vw2-r1284-runtime-ready:1"), "R17 / รอบ 1284 lineage markers missing");
+must(indexClassic.includes("css/home-v2.css?v=1284") && indexClassic.includes("js/home-v2.js?v=1284"), "R17 cache-bust missing from index_classic.html");
+must(css.includes(".vw2-feature-title,.vw2-word-ribbon{top:-25px!important}"), "R17 complete New Word control was not moved into the upper HUD lane");
+must(home.includes("const marketCard = e.target.closest") && home.includes("openMarketBuyDialog(key)") && home.includes("data-vw2-market-key"), "R17 Global Feed listing does not open the exact authoritative six-digit confirmation directly");
+must(home.includes("ดูผู้เล่นออนไลน์ทั้งหมด") && home.includes('data-vw2-action="onlinePlayers"') && home.includes('id="vw2-online-modal-list"') && home.includes("function openOnlinePlayersModal()"), "R17 online-player sheet/action missing");
+must(home.includes('class="vw2-online-modal-close top"') && home.includes('class="vw2-online-modal-close bottom"') && css.includes(".vw2-online-modal-list::-webkit-scrollbar{display:none"), "R17 online-player sheet close/hidden-scrollbar contract missing");
+must(home.includes("function completeText(") && css.includes("text-overflow:clip!important") && css.includes(".vw2-online-name-line{"), "R17 complete player name/activity presentation missing");
+must(home.includes("btn.classList.toggle('is-pet-sick', sick)") && css.includes(".vw2-rail-cure.is-pet-sick"), "R17 sick-pet cure alert missing");
 must(css.includes("grid-template-columns:minmax(132px,1.08fr) repeat(2,minmax(112px,1fr))") && css.includes("grid-row:1/3"), "R13 two-row wallet hierarchy missing");
 must(css.includes("grid-template-columns:repeat(13,minmax(132px,9.4vw))") && css.includes("grid-template-columns:repeat(13,126px)"), "R13 Bottom Rail label-proportion geometry missing");
 must(css.includes("font-size:clamp(11.5px,.86vw,14px)!important") && css.includes("background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(246,231,255,.94))!important"), "R13 Left Navigation caption readability missing");
@@ -259,5 +265,5 @@ if(fail.length){
   console.error("Home V2 R11.5.4 validation FAILED:\n- " + fail.join("\n- "));
   process.exit(1);
 }
-console.log("Home V2 R16 / รอบ 1283 validation PASS");
-console.log(`Checked R16 complete Bottom Rail frame authority/snap geometry, ${expectedRail.length} left destinations, ${expectedBottom.length} bottom actions, authoritative bindings, admin gate, and mobile landscape guards.`);
+console.log("Home V2 R17 / รอบ 1284 validation PASS");
+console.log(`Checked R17 direct market confirmation, full online-player sheet/text, sick cure alert, lifted New Word, R16 Bottom Rail, ${expectedRail.length} left destinations, ${expectedBottom.length} bottom actions, admin gate, and mobile landscape guards.`);

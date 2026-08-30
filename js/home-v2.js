@@ -20,6 +20,8 @@
   let welcomeTimer = 0;
   let previewReportTimer = 0;
   let v2WasVisible = false;
+  let latestOnlineUsers = [];
+  let latestOnlineConnected = false;
   function adminAllowed(){
     try{ return typeof isAdmin === 'function' && isAdmin() === true; }
     catch(_){ return false; }
@@ -38,6 +40,9 @@
   function cleanText(text, max){
     const out = String(text || '').replace(/\s+/g,' ').trim();
     return out.length > max ? out.slice(0, max - 1).trimEnd() + '…' : out;
+  }
+  function completeText(text, fallback=''){
+    return String(text == null ? '' : text).replace(/\s+/g,' ').trim() || fallback;
   }
   function textOf(sel, fallback='—'){
     const el = document.querySelector(sel);
@@ -375,7 +380,7 @@
     if(document.getElementById(STYLE_ID)) return;
     const style = document.createElement('style');
     style.id = STYLE_ID;
-    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1}';
+    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1}';
     document.head.appendChild(style);
   }
   function clickExisting(selector, opts){
@@ -499,6 +504,7 @@
     if(name === 'profile'){ openUserProfile(); return; }
     if(name === 'avatarEdit'){ openAvatarEditor(); return; }
     if(name === 'newWord'){ clickExisting('#newword-banner'); return; }
+    if(name === 'onlinePlayers'){ openOnlinePlayersModal(); return; }
     if(name === 'racing'){ openRacing(); return; }
     if(panels[name]){ openPanelViaExisting(panels[name]); return; }
     if(standards[name]){ clickExisting(`.lobby-bottom [data-xstd="${standards[name]}"]`); return; }
@@ -710,12 +716,24 @@
               <div class="vw2-section-head"><span class="vw2-head-icon">${icon('friends')}</span><strong>ผู้เล่นออนไลน์</strong><b id="vw2-online-count">—</b></div>
               <div class="vw2-online-list" id="vw2-online-list" aria-live="polite"><div class="vw2-online-note">กำลังเชื่อมต่อรายชื่อออนไลน์จริง…</div></div>
               <span class="vw2-online-legacy" aria-hidden="true"><b id="vw2-online-name">กำลังเชื่อมต่อ…</b><small id="vw2-online-text">เล่นและเรียนไปพร้อมกัน</small></span>
-              <button class="vw2-friends-btn" data-vw2-action="friends" data-vw2-source=".lobby-rail [data-panel=&quot;panel-friends&quot;]">${icon('friends')} ดูเพื่อนทั้งหมด</button>
+              <button class="vw2-friends-btn" data-vw2-action="onlinePlayers">${icon('friends')} ดูผู้เล่นออนไลน์ทั้งหมด</button>
             </section>
           </aside>
         </div>
         <footer class="vw2-bottom" aria-label="ทางลัดการเรียนและเกมทั้งหมด"><div class="vw2-bottom-scroll" tabindex="0" role="region" aria-label="เลื่อนทางลัดการเรียนและเกม"><div class="vw2-bottom-track">${modeButtons}</div></div></footer>
-        <div class="vw2-preview-mark">ADMIN PREVIEW · R16 COMPLETE BOTTOM BUTTONS</div>
+        <div class="vw2-preview-mark">ADMIN PREVIEW · R17 DIRECT MARKET + ONLINE PLAYERS</div>
+      </div>
+      <div class="vw2-online-modal" id="vw2-online-modal" role="dialog" aria-modal="true" aria-labelledby="vw2-online-modal-title" aria-hidden="true" hidden>
+        <section class="vw2-online-modal-panel">
+          <header class="vw2-online-modal-head">
+            <span class="vw2-online-modal-emblem" aria-hidden="true">${icon('friends')}</span>
+            <span class="vw2-online-modal-heading"><strong id="vw2-online-modal-title">ผู้เล่นออนไลน์ทั้งหมด</strong><small>สถานะสดจาก Vocab World</small></span>
+            <b id="vw2-online-modal-count">—</b>
+            <button type="button" class="vw2-online-modal-close top" data-vw2-online-close aria-label="ปิดหน้าผู้เล่นออนไลน์">ปิด ✕</button>
+          </header>
+          <div class="vw2-online-modal-list" id="vw2-online-modal-list" tabindex="0"><div class="vw2-online-note">กำลังเชื่อมต่อรายชื่อออนไลน์จริง…</div></div>
+          <footer class="vw2-online-modal-foot"><button type="button" class="vw2-online-modal-close bottom" data-vw2-online-close>ปิดหน้าผู้เล่นออนไลน์</button></footer>
+        </section>
       </div>`;
     // Mount at body level so the fixed admin preview is not clipped by the
     // Classic dashboard's translated/scaled screen container.
@@ -723,6 +741,12 @@
     setupLeftRailCue();
     setupBottomRailScroll();
     root.addEventListener('click', e=>{
+      const closeOnline = e.target.closest && e.target.closest('[data-vw2-online-close]');
+      if(closeOnline || (e.target && e.target.id === 'vw2-online-modal')){
+        e.preventDefault();
+        closeOnlinePlayersModal();
+        return;
+      }
       const onlineRow = e.target.closest && e.target.closest('[data-vw2-online-fid]');
       if(onlineRow){
         e.preventDefault();
@@ -737,6 +761,18 @@
           if(typeof showPlayerCard === 'function'){ showPlayerCard(fid, fname, fgrade); return; }
         }catch(_){ }
       }
+      const marketCard = e.target.closest && e.target.closest('[data-vw2-market-key]');
+      if(marketCard){
+        e.preventDefault();
+        const key = marketCard.dataset.vw2MarketKey || '';
+        try{ if(typeof sfx !== 'undefined' && sfx && typeof sfx.select === 'function') sfx.select(); }catch(_){ }
+        if(key && typeof openMarketBuyDialog === 'function'){
+          openMarketBuyDialog(key);
+          return;
+        }
+        action('market');
+        return;
+      }
       const b = e.target.closest('[data-vw2-action]');
       if(!b || b.disabled) return;
       e.preventDefault();
@@ -744,6 +780,9 @@
       action(b.dataset.vw2Action);
     });
     root.addEventListener('keydown', e=>{
+      if(e.key === 'Escape' && document.getElementById('vw2-online-modal')?.hidden === false){
+        e.preventDefault(); closeOnlinePlayersModal(); return;
+      }
       if(e.key !== 'Enter' && e.key !== ' ') return;
       const profile = e.target.closest && e.target.closest('.vw2-profile-link');
       if(!profile || e.target.closest('button')) return;
@@ -804,6 +843,13 @@
         badge.hidden = !text;
       }
       if(btn.dataset.vw2MirrorVisibility === '1') btn.hidden = !sourceVisible(source);
+      if(btn.dataset.vw2Action === 'cure'){
+        let sick = !!(source && source.classList.contains('cure-alert'));
+        try{ sick = sick || !!(typeof state !== 'undefined' && state && Array.isArray(state.pets) && state.pets.some(p=>p && p.sick)); }catch(_){ }
+        btn.classList.toggle('is-pet-sick', sick);
+        btn.setAttribute('aria-label', sick ? 'รักษาสัตว์เลี้ยงที่กำลังป่วย' : 'รักษาสัตว์เลี้ยง');
+        btn.title = sick ? 'มีสัตว์เลี้ยงป่วย — แตะเพื่อรักษาทันที' : 'ยังไม่มีสัตว์เลี้ยงที่ต้องรักษา';
+      }
     });
     syncRuntimeActionParity();
   }
@@ -869,9 +915,9 @@
         const art = img
           ? `<img src="${htmlEscape(img)}" alt="" loading="lazy" decoding="async">`
           : `<span>${htmlEscape(c.emoji || '🎁')}</span>`;
-        html += `<button type="button" class="vw2-feed-card vw2-market-feed-card${own?' is-own':''}" data-vw2-action="market" data-vw2-market-key="${htmlEscape(item.key || '')}" aria-label="เปิดตลาด: ${htmlEscape(name)} ราคา ${htmlEscape(price)} เหรียญ">
+        html += `<button type="button" class="vw2-feed-card vw2-market-feed-card${own?' is-own':''}" data-vw2-action="market" data-vw2-market-key="${htmlEscape(item.key || '')}" aria-label="${own?'ดูประกาศของฉัน':'ซื้อ'} ${htmlEscape(name)} ราคา ${htmlEscape(price)} เหรียญ">
           <span class="vw2-feed-product">${art}</span>
-          <span class="vw2-feed-copy"><span class="vw2-feed-card-head"><b>${htmlEscape(name)}</b><small>🪙 ${htmlEscape(price)}</small></span><span class="vw2-market-seller">${own?'ร้านของฉัน':`ร้านของ ${htmlEscape(seller)}`}</span><span class="vw2-feed-reaction">${own?'โพสต์ขายแล้ว':'แตะเพื่อดูในตลาด'}</span></span>
+          <span class="vw2-feed-copy"><span class="vw2-feed-card-head"><b>${htmlEscape(name)}</b><small>🪙 ${htmlEscape(price)}</small></span><span class="vw2-market-seller">${own?'ร้านของฉัน':`ร้านของ ${htmlEscape(seller)}`}</span><span class="vw2-feed-reaction">${own?'ประกาศขายของฉัน':'แตะเพื่อซื้อ · กรอกรหัส 6 หลัก'}</span></span>
         </button>`;
       }catch(_){ }
     }
@@ -946,22 +992,54 @@
     try{
       if(typeof splitNameBadges === 'function'){
         const out = splitNameBadges(raw || '');
-        return {name:cleanText(out.name || raw || 'ผู้เล่น',30), badges:cleanText(out.badges || '',18)};
+        return {name:completeText(out.name || raw, 'ผู้เล่น'), badges:completeText(out.badges || '')};
       }
     }catch(_){ }
-    return {name:cleanText(raw || 'ผู้เล่น',30), badges:''};
+    return {name:completeText(raw, 'ผู้เล่น'), badges:''};
   }
   function onlineRowHTML(user, isSelf){
     const uid = String(user.id || '');
     const rawName = user.n || user.name || 'ผู้เล่น';
     const np = onlineNameParts(rawName);
     const grade = user.g || '';
-    const act = cleanText(user.act || (isSelf ? 'กำลังเล่นอยู่ตอนนี้' : 'กำลังเล่น Vocab World'),72);
+    const act = completeText(user.act, isSelf ? 'กำลังเล่นอยู่ตอนนี้' : 'กำลังเล่น Vocab World');
     const badge = np.badges ? `<span class="vw2-online-badges">${htmlEscape(np.badges)}</span>` : '';
     return `<button type="button" class="vw2-online-row${isSelf?' is-self':''}" data-vw2-online-fid="${htmlEscape(uid)}" data-vw2-online-name="${htmlEscape(rawName)}" data-vw2-online-grade="${htmlEscape(grade)}"${isSelf?' data-vw2-online-self="1"':''}>
       <span class="vw2-online-avatar-wrap">${onlineAvatarHTML(uid)}<i class="vw2-online-dot" aria-hidden="true"></i></span>
       <span class="vw2-online-copy"><span class="vw2-online-name-line"><b>${htmlEscape(np.name)}</b>${badge}${onlineGradeHTML(uid,grade)}</span><small>${htmlEscape(act)}</small></span>
     </button>`;
+  }
+  function renderOnlinePlayersModal(users, connected){
+    const host = document.getElementById('vw2-online-modal-list');
+    const count = document.getElementById('vw2-online-modal-count');
+    if(count) count.textContent = connected ? `${users.length} คน` : '—';
+    if(!host) return;
+    const signature = connected ? users.map(u=>[u.id,u.n,u.g,u.act,u.self?'1':'0']).join('|') : 'offline';
+    if(host.dataset.vw2Signature === signature) return;
+    host.dataset.vw2Signature = signature;
+    host.innerHTML = connected
+      ? (users.map(u=>onlineRowHTML(u,!!u.self)).join('') || '<div class="vw2-online-note">ยังไม่มีผู้เล่นออนไลน์</div>')
+      : '<div class="vw2-online-note"><b>กำลังเชื่อมต่อออนไลน์จริง…</b><span>รายชื่อจะปรากฏเมื่อ Firebase presence พร้อมใช้งาน</span></div>';
+  }
+  function openOnlinePlayersModal(){
+    syncOnlineUsers();
+    const modal = document.getElementById('vw2-online-modal');
+    if(!modal) return false;
+    renderOnlinePlayersModal(latestOnlineUsers, latestOnlineConnected);
+    modal.hidden = false;
+    modal.setAttribute('aria-hidden','false');
+    document.body.classList.add('vw2-online-modal-open');
+    setTimeout(()=>modal.querySelector('.vw2-online-modal-close.top')?.focus(),0);
+    return true;
+  }
+  function closeOnlinePlayersModal(){
+    const modal = document.getElementById('vw2-online-modal');
+    if(!modal) return false;
+    modal.hidden = true;
+    modal.setAttribute('aria-hidden','true');
+    document.body.classList.remove('vw2-online-modal-open');
+    root?.querySelector('[data-vw2-action="onlinePlayers"]')?.focus();
+    return true;
   }
   function syncOnlineUsers(){
     const host = document.getElementById('vw2-online-list');
@@ -983,6 +1061,9 @@
         for(const f of friends) users.push({id:f.id,n:f.n || f.name || 'ผู้เล่น',g:f.g || '',act:f.act || 'กำลังเล่น Vocab World',self:false});
       }
     }catch(_){ connected = false; users = []; }
+    latestOnlineUsers = users.slice();
+    latestOnlineConnected = connected;
+    renderOnlinePlayersModal(users, connected);
     const signature = connected ? users.map(u=>[u.id,u.n,u.g,u.act]).join('|') : 'offline';
     if(host.dataset.vw2Signature !== signature){
       host.dataset.vw2Signature = signature;

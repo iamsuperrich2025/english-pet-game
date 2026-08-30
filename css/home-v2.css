@@ -1164,3 +1164,95 @@ html.no-anim #vw-home-v2-root *,html.no-anim #vw-home-v2-root *:before,html.no-a
 @media (max-width:760px){
   .vw2-bottom-track{grid-template-columns:repeat(13,calc((100cqw - 40px)/4))!important}
 }
+
+/* ======================== R17 / รอบ 1284 — DIRECT MARKET + ONLINE PLAYERS ======================== */
+#vw-home-v2-root{--vw2-r1284-ready:1}
+
+/* Move the complete New Word control into the intentionally empty upper HUD lane. */
+.vw2-feature-title,.vw2-word-ribbon{top:-25px!important}
+
+/* Readability pass for every red-marked hero/feed label: wrap inside its frame; never ellipsize. */
+.vw2-speech{overflow:hidden}
+.vw2-speech span{font-size:clamp(12px,.92vw,15px)!important;line-height:1.12!important;white-space:normal;overflow-wrap:anywhere}
+.vw2-speech small{font-size:clamp(9.5px,.68vw,11px)!important;line-height:1.16!important;white-space:normal;overflow-wrap:anywhere}
+.vw2-stage-copy{left:23%!important;right:23%!important;min-height:42px!important;padding:5px 12px!important;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.vw2-stage-copy b{font-size:clamp(12.5px,.95vw,15px)!important;line-height:1.08!important;max-width:100%;white-space:normal;overflow-wrap:anywhere}
+.vw2-stage-copy span{font-size:clamp(9px,.64vw,10.5px)!important;line-height:1.1!important;max-width:100%;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere}
+.vw2-house-preview-head{height:auto!important;min-height:27px!important;padding-top:4px!important;padding-bottom:4px!important;font-size:clamp(9px,.66vw,10.5px)!important;line-height:1.05!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
+.vw2-house-preview-head span{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere}
+.vw2-house-backdrop{top:31px!important}
+.vw2-feature-actions button,.vw2-feature-actions .vw2-enter{padding:3px 8px!important;font-size:clamp(11px,.82vw,13px)!important;line-height:1.06!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;text-align:center;overflow-wrap:anywhere}
+
+.vw2-market-feed-card{min-height:72px!important;grid-template-columns:47px minmax(0,1fr)!important;align-items:center;overflow:visible!important}
+.vw2-market-feed-card .vw2-feed-card-head{display:grid!important;grid-template-columns:minmax(0,1fr);gap:2px;align-items:start}
+.vw2-market-feed-card .vw2-feed-card-head b{max-width:100%;font-size:clamp(10.5px,.78vw,12.5px)!important;line-height:1.12!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere}
+.vw2-market-feed-card .vw2-feed-card-head small{font-size:clamp(9px,.64vw,10.5px)!important;line-height:1.08!important;white-space:normal!important}
+.vw2-market-seller,.vw2-market-feed-card .vw2-feed-reaction{font-size:clamp(9px,.66vw,10.5px)!important;line-height:1.12!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere}
+
+/* The compact online panel now shows complete names, badges and activity text. */
+.vw2-online{padding-bottom:47px!important}
+.vw2-online-list{bottom:47px!important}
+.vw2-online-row{min-height:54px!important;height:auto!important;align-items:start!important;padding:6px!important;overflow:visible!important}
+.vw2-online-name-line{align-items:flex-start!important;flex-wrap:wrap!important;row-gap:2px!important;white-space:normal!important}
+.vw2-online-name-line>b{max-width:100%!important;flex:0 1 auto;font-size:clamp(10.5px,.78vw,12.5px)!important;line-height:1.12!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere}
+.vw2-online-badges{font-size:clamp(9px,.64vw,10.5px)!important;line-height:1.1!important;white-space:normal!important;overflow-wrap:anywhere}
+.vw2-online-copy small{font-size:clamp(9.5px,.7vw,11px)!important;line-height:1.16!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere}
+.vw2-friends-btn{height:36px!important;bottom:6px!important;padding:3px 8px!important;font-size:clamp(10px,.74vw,12px)!important;line-height:1.04!important;white-space:normal!important;text-align:center}
+
+/* A sick pet keeps the Classic cure route, but the Home V2 affordance turns unmistakably red. */
+.vw2-rail-cure.is-pet-sick{overflow:visible!important}
+.vw2-rail-cure.is-pet-sick .vw2-rail-art{filter:saturate(1.35) drop-shadow(0 0 7px rgba(228,44,70,.8))}
+.vw2-rail-cure.is-pet-sick .vw2-rail-label{border-color:#ffafaa!important;background:linear-gradient(180deg,#ff6d79,#c8173b)!important;color:#fff!important;text-shadow:0 1px 2px rgba(105,0,22,.55)!important;box-shadow:inset 0 1px rgba(255,255,255,.7),0 0 0 2px rgba(255,60,83,.22),0 3px 8px rgba(160,18,43,.4)!important}
+.vw2-rail-cure.is-pet-sick:after{content:"ป่วย!";position:absolute;right:1px;top:2px;z-index:8;padding:2px 5px;border-radius:999px;background:#d7193f;color:#fff;font-size:9px;font-weight:1000;line-height:1;border:1px solid #fff;box-shadow:0 2px 5px rgba(121,0,28,.36);animation:vw2-sick-pulse 1.25s ease-in-out infinite}
+@keyframes vw2-sick-pulse{50%{transform:scale(1.08);filter:brightness(1.13)}}
+
+/* Full online-player sheet. Only its list scrolls, and both close controls stay visible. */
+body.vw2-online-modal-open{overflow:hidden!important}
+.vw2-online-modal{position:fixed;inset:0;z-index:12000;display:grid;place-items:center;padding:10px;background:radial-gradient(circle at 50% 15%,rgba(255,235,179,.28),transparent 35%),rgba(43,22,76,.72);backdrop-filter:blur(4px)}
+.vw2-online-modal[hidden]{display:none!important}
+.vw2-online-modal-panel{position:relative;width:min(680px,96vw);height:min(570px,calc(100vh - 20px));min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr) auto;overflow:hidden;border-radius:25px;background:linear-gradient(180deg,#fffaf0,#f5e8ff 56%,#e8ddff);border:3px solid #f2cf72;box-shadow:inset 0 0 0 2px #fff,inset 0 0 0 5px rgba(137,84,183,.35),0 18px 48px rgba(30,12,55,.48)}
+.vw2-online-modal-panel:before{content:"";position:absolute;inset:4px;z-index:0;pointer-events:none;border-radius:19px;background:url("../img/home-v2/r1282_filigree.webp") center 8px/46% 18px no-repeat,url("../img/home-v2/r115_frame_online.webp") center/100% 100% no-repeat;opacity:.46}
+.vw2-online-modal-head,.vw2-online-modal-list,.vw2-online-modal-foot{position:relative;z-index:2}
+.vw2-online-modal-head{min-height:62px;padding:9px 12px;display:grid;grid-template-columns:42px minmax(0,1fr) auto auto;align-items:center;gap:9px;background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(249,230,255,.9));border-bottom:1px solid rgba(180,129,201,.3)}
+.vw2-online-modal-emblem{width:42px;height:42px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle at 35% 28%,#fff,#f5d5ff 45%,#9c63d3 72%);border:2px solid #f2cb6b;box-shadow:inset 0 0 0 2px rgba(255,255,255,.76),0 3px 8px rgba(77,41,111,.22)}
+.vw2-online-modal-emblem .vw2-icon{width:29px;height:29px}
+.vw2-online-modal-heading{min-width:0;display:flex;flex-direction:column;gap:2px}
+.vw2-online-modal-heading strong{font-size:clamp(17px,2.1vw,24px);line-height:1.05;color:#4b276a;white-space:normal}
+.vw2-online-modal-heading small{font-size:clamp(10px,1.25vw,13px);line-height:1.1;color:#795d86}
+.vw2-online-modal-head>b{padding:5px 9px;border-radius:999px;background:#fff0b7;border:1px solid #dfa83b;color:#6a4318;font-size:clamp(11px,1.35vw,14px);white-space:nowrap}
+.vw2-online-modal-close{font-weight:1000;border:1px solid rgba(255,255,255,.9)!important;color:#fff!important;background:linear-gradient(180deg,#a96edd,#6a37b2)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.44),0 3px 8px rgba(66,34,102,.25)!important}
+.vw2-online-modal-close.top{min-width:68px;height:34px;padding:4px 10px;border-radius:999px!important;font-size:12px}
+.vw2-online-modal-list{min-height:0;padding:10px 12px;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;overscroll-behavior:contain;touch-action:pan-y;scroll-behavior:smooth}
+.vw2-online-modal-list::-webkit-scrollbar{display:none;width:0;height:0}
+.vw2-online-modal-list .vw2-online-row{min-height:66px!important;grid-template-columns:48px minmax(0,1fr)!important;gap:10px!important;margin:0 0 8px!important;padding:8px 10px!important;border-radius:15px!important}
+.vw2-online-modal-list .vw2-online-avatar-wrap,.vw2-online-modal-list .vw2-online-avatar-wrap>.vw2-icon{width:48px;height:48px}
+.vw2-online-modal-list .vw2-online-avatar-wrap .pmini,.vw2-online-modal-list .vw2-online-avatar-wrap img{width:48px!important;height:48px!important}
+.vw2-online-modal-list .vw2-online-name-line>b{font-size:clamp(13px,1.55vw,16px)!important}
+.vw2-online-modal-list .vw2-online-badges,.vw2-online-modal-list .vw2-online-copy small{font-size:clamp(11px,1.35vw,14px)!important}
+.vw2-online-modal-foot{min-height:50px;padding:7px 12px 10px;display:flex;justify-content:center;align-items:center;background:linear-gradient(180deg,rgba(239,226,255,.82),rgba(223,207,249,.96));border-top:1px solid rgba(167,119,192,.25)}
+.vw2-online-modal-close.bottom{width:min(360px,88%);min-height:34px;padding:6px 16px;border-radius:999px!important;font-size:clamp(12px,1.45vw,15px)}
+
+@media (max-width:760px),(max-height:420px){
+  .vw2-feature-title,.vw2-word-ribbon{top:-23px!important}
+  .vw2-speech span{font-size:10.5px!important}.vw2-speech small{font-size:8.5px!important}
+  .vw2-stage-copy{min-height:34px!important;padding:3px 7px!important}.vw2-stage-copy b{font-size:11px!important}.vw2-stage-copy span{font-size:8px!important}
+  .vw2-house-preview-head{font-size:8px!important;padding-top:2px!important;padding-bottom:2px!important}.vw2-house-backdrop{top:27px!important}
+  .vw2-feature-actions button,.vw2-feature-actions .vw2-enter{font-size:10px!important;padding:2px 4px!important}
+  .vw2-online{padding-bottom:45px!important}.vw2-online-list{bottom:45px!important}
+  .vw2-friends-btn{height:35px!important;font-size:9.5px!important}
+  .vw2-online-modal{padding:5px}
+  .vw2-online-modal-panel{width:98vw;height:calc(100vh - 10px);border-radius:19px}
+  .vw2-online-modal-head{min-height:49px;padding:5px 7px;grid-template-columns:34px minmax(0,1fr) auto auto;gap:5px}
+  .vw2-online-modal-emblem{width:34px;height:34px}.vw2-online-modal-emblem .vw2-icon{width:23px;height:23px}
+  .vw2-online-modal-heading strong{font-size:14px}.vw2-online-modal-heading small{font-size:9px}
+  .vw2-online-modal-head>b{padding:3px 6px;font-size:10px}
+  .vw2-online-modal-close.top{min-width:54px;height:29px;padding:3px 6px;font-size:10px}
+  .vw2-online-modal-list{padding:6px 8px}
+  .vw2-online-modal-list .vw2-online-row{min-height:55px!important;grid-template-columns:38px minmax(0,1fr)!important;gap:7px!important;margin-bottom:5px!important;padding:5px 7px!important}
+  .vw2-online-modal-list .vw2-online-avatar-wrap,.vw2-online-modal-list .vw2-online-avatar-wrap>.vw2-icon{width:38px;height:38px}
+  .vw2-online-modal-list .vw2-online-avatar-wrap .pmini,.vw2-online-modal-list .vw2-online-avatar-wrap img{width:38px!important;height:38px!important}
+  .vw2-online-modal-list .vw2-online-name-line>b{font-size:12px!important}
+  .vw2-online-modal-list .vw2-online-badges,.vw2-online-modal-list .vw2-online-copy small{font-size:10.5px!important}
+  .vw2-online-modal-foot{min-height:40px;padding:4px 8px 6px}
+  .vw2-online-modal-close.bottom{min-height:29px;padding:4px 12px;font-size:11px}
+}

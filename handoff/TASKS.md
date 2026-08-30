@@ -28,10 +28,10 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (30 ส.ค.) — อ่านก่อน
-- **รอบ 1283 · Home V2 R16 Complete Bottom Buttons (Admin Preview เท่านั้น):** ต้นตอปุ่มตัดคือ selector สี R11.5 ที่ specificity สูงกว่าทับภาพกรอบเต็ม R1282; ให้ `.vw2-bottom-track .vw2-mode` ยึดกรอบเต็มเป็น authority จริงใน `css/home-v2.css`
-- Bottom Rail คำนวณหน้าเต็ม 7/6/5/4 ปุ่มตามความกว้างด้วย container units, padding=gap 8px และ mandatory snap; 880×418, 915×412, 812×375, 667×375 ไม่มี partial ที่ต้น/หลัง wheel/ปลายแถบ ไม่มี page/vertical overflow
-- source + production dist ผ่าน frame authority, 13 ปุ่ม, 55 actions/44 unique, source bindings, New Word, music toggle และ pet profile; admin เห็น R16 แต่ non-admin ไม่สร้าง root (`actions=0`)
-- ไฟล์หลัก `css/home-v2.css`, `js/home-v2.js`, `index_classic.html`, `tools/test_home_v2_mobile_preview.js`; Global Feed/route/admin gate เดิมไม่เปลี่ยน และยังรอผู้ใช้ตรวจจริงก่อนเปิดให้ทุกคน
+- **รอบ 1284 · Home V2 R17 Direct Market + Online Players (Admin Preview เท่านั้น):** การ์ดสินค้า Global Feed เรียก `openMarketBuyDialog(listingKey)` ของตลาดเดิมตรงรายการ; ไม่พาไปค้นซ้ำในหน้าตลาดและไม่แตะ settlement/rules/economy
+- ย้าย New Word ทั้งป้าย/คำขึ้น HUD บน, ขยายและ wrap ข้อความ hero/สินค้า/ปุ่มโดยไม่ใช้ ellipsis; ปุ่มรักษาแดงพร้อมป้าย “ป่วย!” เมื่อ source/state พบสัตว์ป่วย และ Bottom Rail R16 ยังใช้กรอบเต็ม/snap เดิม
+- ปุ่ม “ดูผู้เล่นออนไลน์ทั้งหมด” เปิด modal แฟนตาซีจาก `Online.friends` + ตัวเอง แสดงชื่อ/ยศ/กิจกรรมเต็ม เลื่อนแนวตั้งแบบซ่อน scrollbar และมีปิดบน–ล่าง; row เดิมยังเปิด quick menu/player card
+- `tools/test_home_v2_mobile_preview.js`, production build/validate และ hashed assets ผ่าน; admin gate ยัง `isAdmin() === true` และต้องรอผู้ใช้ตรวจจริงก่อนเปิด Home V2 ให้ทุกคน
 - **รอบ 1279 · Home V2 R12 Visual Master Rebuild (Admin Preview เท่านั้น):** สร้างฉากแฟนตาซี WebP 1600×900/238KB และปรับ composition/material/readability ให้ใกล้ `references/HOME_V2_ULTIMATE_VISUAL_MASTER.png` โดยไม่แตะ Firebase/economy/routing/action bindings
 - Bottom Rail 13 ปุ่มคงลำดับ/handler เดิม เปลี่ยนเป็นแถบแนวนอนปุ่มกว้าง เลื่อนซ้าย–ขวาด้วย touch/trackpad/mouse wheel/keyboard; 4 viewport 667×375, 800×360, 844×390, 915×412 ไม่มี page overflow และ rail ไม่มี vertical overflow
 - production build + regression ผ่าน; asset อยู่ใน dist, actions 52 จุดครบ; runtime admin mock เห็น R12 และ non-admin mock `homeVisible=false`/ไม่มี Home V2 root ทั้ง source และ production dist
