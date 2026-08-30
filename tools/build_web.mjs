@@ -204,7 +204,9 @@ async function sourceFiles() {
 
       'assets/images/letter_cannon/letter_cannon_gun_head.png',
 
-      'assets/images/letter_cannon/dragon_gunner_player.webp']) {
+      'assets/images/letter_cannon/dragon_gunner_player.webp',
+
+      'img/coins/coin_gold.webp']) {
 
       try {
 
