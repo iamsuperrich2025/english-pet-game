@@ -15,6 +15,7 @@
    R27 / รอบ 1296 — Expanded player identity + full Thai date + restored pet pat gestures
    R28 / รอบ 1300 — Browser-verified HUD clearance + premium vivid learning rail
    R29 / รอบ 1305 — Clean visual hierarchy + true-aspect Global Feed frame
+   R30 / รอบ 1309 — Aligned profile, framed portrait, swipe rail and restored Global Feed flow
    ------------------------------------------------------------
    Additive UI shell only. It does NOT own economy, auth, quests,
    Firebase, purchases, or game routing. Existing Lobby DOM stays
@@ -412,7 +413,7 @@
     if(document.getElementById(STYLE_ID)) return;
     const style = document.createElement('style');
     style.id = STYLE_ID;
-    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1;--vw2-r1287-runtime-ready:1;--vw2-r1288-runtime-ready:1;--vw2-r1289-runtime-ready:1;--vw2-r1290-runtime-ready:1;--vw2-r1291-runtime-ready:1;--vw2-r1293-runtime-ready:1;--vw2-r1294-runtime-ready:1;--vw2-r1295-runtime-ready:1;--vw2-r1296-runtime-ready:1;--vw2-r1300-runtime-ready:1;--vw2-r1305-runtime-ready:1}';
+    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1;--vw2-r1287-runtime-ready:1;--vw2-r1288-runtime-ready:1;--vw2-r1289-runtime-ready:1;--vw2-r1290-runtime-ready:1;--vw2-r1291-runtime-ready:1;--vw2-r1293-runtime-ready:1;--vw2-r1294-runtime-ready:1;--vw2-r1295-runtime-ready:1;--vw2-r1296-runtime-ready:1;--vw2-r1300-runtime-ready:1;--vw2-r1305-runtime-ready:1;--vw2-r1309-runtime-ready:1}';
     document.head.appendChild(style);
   }
   function clickExisting(selector, opts){
@@ -1013,7 +1014,7 @@
           </aside>
         </div>
         <footer class="vw2-bottom" aria-label="กิจกรรมภาษาอังกฤษ"><div class="vw2-bottom-scroll" role="region" aria-label="เลื่อนกิจกรรมภาษาอังกฤษซ้ายขวา"><div class="vw2-bottom-track">${learningModeButtons}</div></div></footer>
-        <div class="vw2-preview-mark">ADMIN PREVIEW · R29 MOBILE QA · PREMIUM RAIL</div>
+        <div class="vw2-preview-mark">ADMIN PREVIEW · R30 PROFILE QA · FEED FLOW</div>
       </div>
       <div class="vw2-online-modal" id="vw2-online-modal" role="dialog" aria-modal="true" aria-labelledby="vw2-online-modal-title" aria-hidden="true" hidden>
         <section class="vw2-online-modal-panel">
@@ -1267,6 +1268,41 @@
     }
     return html;
   }
+  const VW2_FEED_STEP_MS = 6000;
+  const VW2_FEED_RESUME_MS = 10000;
+  function bindV2FeedAutoFlow(host){
+    if(!host || host.dataset.vw2AutoFlowBound === '1') return;
+    host.dataset.vw2AutoFlowBound = '1';
+    const hold = ()=>{
+      const now = Date.now();
+      host.__vw2FeedHoldUntil = now + VW2_FEED_RESUME_MS;
+      host.__vw2FeedNextAt = host.__vw2FeedHoldUntil + VW2_FEED_STEP_MS;
+    };
+    host.addEventListener('pointerdown', hold, {passive:true});
+    host.addEventListener('touchstart', hold, {passive:true});
+    host.addEventListener('wheel', hold, {passive:true});
+    host.addEventListener('scroll', ()=>{
+      if(Date.now() > (host.__vw2FeedProgrammaticUntil || 0)) hold();
+    }, {passive:true});
+  }
+  function advanceV2FeedAutoFlow(host){
+    if(!host) return;
+    bindV2FeedAutoFlow(host);
+    const now = Date.now();
+    if(root?.hidden || !dashboardActive() || now < (host.__vw2FeedHoldUntil || 0)) return;
+    if(!host.__vw2FeedNextAt){ host.__vw2FeedNextAt = now + VW2_FEED_STEP_MS; return; }
+    if(now < host.__vw2FeedNextAt) return;
+    host.__vw2FeedNextAt = now + VW2_FEED_STEP_MS;
+    const maxTop = Math.max(0,host.scrollHeight-host.clientHeight);
+    if(maxTop < 4) return;
+    const current = host.scrollTop;
+    const stops = Array.from(host.children).map(el=>el.offsetTop).filter((top,index,list)=>top > 0 && (index === 0 || top !== list[index-1]));
+    const next = stops.find(top=>top > current + 8);
+    const target = next == null || current >= maxTop - 4 ? 0 : Math.min(next,maxTop);
+    host.__vw2FeedProgrammaticUntil = now + 1400;
+    try{ host.scrollTo({top:target,behavior:'smooth'}); }
+    catch(_){ host.scrollTop = target; }
+  }
   function feedCardsFromAuthoritativeSource(){
     const host = document.getElementById('vw2-feed-items');
     if(!host) return;
@@ -1294,7 +1330,12 @@
         html = `<div class="vw2-feed-card vw2-feed-card-empty"><div class="vw2-feed-avatar">${icon('sparkle')}</div><div class="vw2-feed-copy"><div class="vw2-feed-card-head"><b>กิจกรรมล่าสุด</b><small>ตอนนี้</small></div><p>${htmlEscape(fallback)}</p><span class="vw2-feed-reaction">♡ เพื่อน · 💬 ความคิดเห็น</span></div></div>`;
       }
       html = marketHtml + html;
-      if(host.dataset.vw2Html !== html){ host.innerHTML = html; host.dataset.vw2Html = html; }
+      if(host.dataset.vw2Html !== html){
+        host.innerHTML = html;
+        host.dataset.vw2Html = html;
+        host.__vw2FeedNextAt = Date.now() + VW2_FEED_STEP_MS;
+      }
+      advanceV2FeedAutoFlow(host);
     }catch(_){ }
   }
   function petStatusText(p){

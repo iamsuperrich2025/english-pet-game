@@ -17,6 +17,9 @@
 ### 🔫 คิวงานปืน/โลกยานแม่/โลกใหม่ที่รออยู่ (ผู้ใช้อนุมัติล่วงหน้าแล้ว ทำได้เลยไม่ต้องถาม)
 > ⚖️ **กฎผู้ใช้ (22 ก.ค. 2026):** *ไอเดียต่อยอดใด ๆ ในโลก 3D ให้ไป **เปิด session ใหม่** ทำ ไม่ต้องต่อท้าย session เดิม (คุม token)* · อนุมัติทุกกรณีจนกว่าจะสั่งหยุด · จูนค่าปืนใช้ `tools/gunlab.js` เท่านั้น (ดู TUNE ZONE ใน `js/invasion3d.js`)
 
+- **รอบ 1309 · Home V2 profile/feed polish:** ขอบแผงโปรไฟล์ผูกแนวเดียวกับ Global Feed, ขยายภาพจริงเป็นกรอบสี่เหลี่ยม jewel และบัง halo วงกลมเดิม
+- คืนปุ่มใต้สัตว์เป็นการ์ดกว้างแบบ swipe; จัด bottom slice ของกรอบ Global Feed ให้จบตรงฐาน และคืน auto-flow ทีละรายการพร้อมพัก 10 วินาทีเมื่อผู้ใช้เลื่อนเอง
+- `node --check`, Home V2 regression และ production build ผ่าน; browser visual QA ติด Windows ACL จึงคง regression geometry/cache/runtime markers ครบ
 - **รอบ 1307 · แก้ Dragon Sky Siege ค้าง/ไม่หมุนแนวตั้ง:** ย้าย `resetFrameClock()` ออกจาก scope ของ `queueCloudSave()` หลังรอบ 1306 วางผิดจน `startGame()` เกิด ReferenceError หลังสร้าง HUD
 - รีเซ็ต/เริ่ม frame clock จาก timestamp ของ rAF โดยตรงเพื่อกัน WebView คนละ time origin; ขอ fullscreen และลองล็อก `portrait-primary` → `portrait` ทุกอุปกรณ์ที่รองรับโดยไม่ตัดสินจาก coarse pointer
 - syntax + regression first-frame/portrait + production build/validate ผ่าน; scope `js/lettercannon.js`, `tools/test_letter_cannon.js`

@@ -51,7 +51,7 @@ must(home.includes("R24 / รอบ 1293") && css.includes("R24 / รอบ 1293
 must(home.includes("R25 / รอบ 1294") && css.includes("R25 / รอบ 1294") && css.includes("--vw2-r1294-ready:1") && home.includes("--vw2-r1294-runtime-ready:1"), "R25 / รอบ 1294 lineage markers missing");
 must(home.includes("R26 / รอบ 1295") && css.includes("R26 / รอบ 1295") && css.includes("--vw2-r1295-ready:1") && home.includes("--vw2-r1295-runtime-ready:1"), "R26 / รอบ 1295 lineage markers missing");
 must(home.includes("R27 / รอบ 1296") && css.includes("R27 / รอบ 1296") && css.includes("--vw2-r1296-ready:1") && home.includes("--vw2-r1296-runtime-ready:1"), "R27 / รอบ 1296 lineage markers missing");
-must(indexClassic.includes("css/home-v2.css?v=1305") && indexClassic.includes("js/home-v2.js?v=1305"), "R29 cache-bust missing from index_classic.html");
+must(indexClassic.includes("css/home-v2.css?v=1309") && indexClassic.includes("js/home-v2.js?v=1309"), "R30 cache-bust missing from index_classic.html");
 must(home.includes("R28 / รอบ 1300") && home.includes("--vw2-r1300-runtime-ready:1") && css.includes("R28 / รอบ 1300") && css.includes("--vw2-r1300-ready:1"), "R28 browser-verified visual contract missing");
 must(css.includes("grid-template-areas:\"class id time\" \"date date date\"") && css.includes("top:54px!important") && css.includes("--card-shadow:#075aa8"), "R28 HUD clearance/profile/date/premium rail rules missing");
 must(home.includes("R29 / รอบ 1305") && home.includes("--vw2-r1305-runtime-ready:1") && css.includes("R29 / รอบ 1305") && css.includes("--vw2-r1305-ready:1"), "R29 visual-hierarchy lineage markers missing");
@@ -59,6 +59,13 @@ must(css.includes("border-width:58px 27px 25px 68px!important") && css.includes(
 must(css.includes(".vw2-feature-title,.vw2-word-ribbon{top:15px!important}") && css.includes(".vw2-speech{top:27%!important}"), "R29 New Word/speech hierarchy correction missing");
 must(css.includes("width:84%!important;height:88%!important") && css.includes(".vw2-house-preview-head{display:none!important}") && css.includes(".vw2-house-backdrop{top:4px!important}"), "R29 portrait inset or redundant house caption removal missing");
 must(css.includes("@media (min-width:1181px) and (min-height:521px)") && css.includes(".vw2-feature-action-track>button{flex:1 1 0!important}"), "R29 complete desktop pet-action row missing");
+must(home.includes("R30 / รอบ 1309") && home.includes("--vw2-r1309-runtime-ready:1") && css.includes("R30 / รอบ 1309") && css.includes("--vw2-r1309-ready:1"), "R30 aligned-profile lineage markers missing");
+must(css.includes("grid-template-columns:calc(29.5% + 4px)") && css.includes("grid-template-columns:calc(29.5% + 3px)") && css.includes("grid-template-columns:calc(30% + 3px)"), "R30 profile/feed alignment guides missing");
+must(css.includes("grid-template-columns:clamp(106px,30%,118px)") && css.includes("background:linear-gradient(145deg,#fff9df") && css.includes("object-fit:cover!important;border-radius:12px"), "R30 enlarged rectangular profile portrait frame missing");
+must(css.includes("overflow-x:auto!important;scroll-snap-type:x proximity!important") && css.includes("flex:0 0 clamp(176px,15vw,205px)!important"), "R30 wide swipeable pet-action rail missing");
+must(css.includes("border-image-slice:70 32 14 82!important") && css.includes("border-width:58px 27px 14px 68px!important"), "R30 bottom-aligned Global Feed frame missing");
+must(home.includes("VW2_FEED_STEP_MS = 6000") && home.includes("function advanceV2FeedAutoFlow(host)") && home.includes("host.__vw2FeedProgrammaticUntil"), "R30 Global Feed auto-flow contract missing");
+must(home.includes("ADMIN PREVIEW · R30 PROFILE QA · FEED FLOW"), "R30 preview badge missing");
 must(!home.includes("ADMIN PREVIEW · R21 HEAL ALL PETS"), "stale R21 preview badge remains");
 must(css.includes(".vw2-feature-title,.vw2-word-ribbon{top:-25px!important}"), "R17 complete New Word control was not moved into the upper HUD lane");
 must(css.includes(".vw2-feature{overflow:visible!important}") && css.includes("left:24%!important;right:24%!important;top:-25px!important"), "R18 New Word plaque is not fully visible in the safe HUD lane");
@@ -343,5 +350,5 @@ if(fail.length){
   console.error("Home V2 R11.5.4 validation FAILED:\n- " + fail.join("\n- "));
   process.exit(1);
 }
-console.log("Home V2 R29 / รอบ 1305 validation PASS");
-console.log(`Checked clean New Word/speech hierarchy, inset profile portrait, caption-free house art, four complete desktop pet actions, true-aspect Global Feed globe, ${expectedRail.length} left destinations, all ${expectedBottom.length} learning actions, and admin gate.`);
+console.log("Home V2 R30 / รอบ 1309 validation PASS");
+console.log(`Checked profile/feed edge alignment, enlarged rectangular portrait frame, wide swipeable pet actions, bottom-aligned and auto-flowing Global Feed, clean New Word/speech hierarchy, caption-free house art, ${expectedRail.length} left destinations, all ${expectedBottom.length} learning actions, and admin gate.`);

@@ -1992,3 +1992,48 @@ body.vw2-pet-modal-open{overflow:hidden!important}
   .vw2-feed:after{border-width:49px 22px 21px 57px!important;border-image-width:49px 22px 21px 57px!important}
   .vw2-feed .vw2-section-head{margin-left:51px!important;margin-right:14px!important}
 }
+/* ======================== R30 / รอบ 1309 — ALIGNED IDENTITY + SWIPEABLE PET PLAQUES ======================== */
+/* Match the identity card edge to Global Feed: 10.5% rail + 4px gap + 19% feed. */
+#vw-home-v2-root{--vw2-r1309-ready:1}
+.vw2-top{grid-template-columns:calc(29.5% + 4px) minmax(0,1fr) clamp(164px,18.5vw,240px)!important}
+.vw2-profile{grid-template-columns:clamp(106px,30%,118px) minmax(0,1fr)!important;gap:3px 9px!important}
+
+/* The opaque rectangular jewel frame covers the baked circular portrait halo. */
+.vw2-avatar-frame{
+  padding:5px!important;box-sizing:border-box;
+  border:2px solid rgba(255,255,255,.98)!important;border-radius:19px!important;
+  background:linear-gradient(145deg,#fff9df 0%,#f6c85d 31%,#fff 46%,#d9c6ff 100%)!important;
+  box-shadow:inset 0 0 0 2px rgba(124,77,174,.24),inset 0 0 0 4px rgba(255,255,255,.48),0 4px 10px rgba(63,35,92,.28)!important;
+}
+.vw2-avatar{width:100%!important;height:100%!important;border-radius:13px!important;background:#fff!important;box-shadow:inset 0 0 0 1px rgba(98,58,139,.24)!important}
+.vw2-avatar img{width:100%!important;height:100%!important;object-fit:cover!important;border-radius:12px!important}
+.vw2-avatar .vw2-knight-art{object-fit:contain!important}
+.vw2-avatar-edit{right:-8px!important;bottom:-5px!important}
+
+/* Keep each pet label relaxed and use the existing horizontal swipe rail. */
+.vw2-feature-action-scroll{overflow-x:auto!important;scroll-snap-type:x proximity!important}
+.vw2-feature-action-track{width:max-content!important;min-width:100%!important;gap:8px!important;padding-inline:4px!important}
+.vw2-feature-action-track>button{flex:0 0 clamp(176px,15vw,205px)!important}
+.vw2-feature-action-track>button>span{max-width:86%!important}
+.vw2-feature-action-track>button>span>b{overflow-wrap:normal!important;word-break:normal!important}
+
+/* The original bottom slice included 16px of transparent tail. Slice at the
+   visible ornament so the frame finishes on the panel bottom. */
+.vw2-feed:after{border-image-slice:70 32 14 82!important;border-width:58px 27px 14px 68px!important;border-image-width:58px 27px 14px 68px!important}
+.vw2-feed-items{scroll-behavior:smooth;scroll-padding-top:34px}
+
+@media (max-width:1180px),(max-height:520px){
+  .vw2-top{grid-template-columns:calc(29.5% + 3px) minmax(0,1fr) clamp(145px,18vw,190px)!important}
+  .vw2-profile{grid-template-columns:clamp(92px,29%,106px) minmax(0,1fr)!important;gap:2px 7px!important}
+  .vw2-avatar-frame{padding:4px!important;border-radius:16px!important}
+  .vw2-avatar{width:100%!important;height:100%!important;border-radius:11px!important}
+  .vw2-avatar img{border-radius:10px!important}
+  .vw2-feature-action-track>button{flex-basis:clamp(164px,17vw,190px)!important}
+  .vw2-feed:after{border-width:52px 24px 13px 61px!important;border-image-width:52px 24px 13px 61px!important}
+}
+@media (max-width:760px){
+  .vw2-top{grid-template-columns:calc(30% + 3px) minmax(0,1fr) 145px!important}
+  .vw2-profile{grid-template-columns:82px minmax(0,1fr)!important}
+  .vw2-feature-action-track>button{flex-basis:156px!important}
+  .vw2-feed:after{border-width:49px 22px 12px 57px!important;border-image-width:49px 22px 12px 57px!important}
+}
