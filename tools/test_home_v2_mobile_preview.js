@@ -46,8 +46,9 @@ must(home.includes("R19 / รอบ 1287") && css.includes("R19 / รอบ 1287
 must(home.includes("R20 / รอบ 1288") && css.includes("R20 / รอบ 1288") && css.includes("--vw2-r1288-ready:1") && home.includes("--vw2-r1288-runtime-ready:1"), "R20 / รอบ 1288 lineage markers missing");
 must(home.includes("R21 / รอบ 1289") && css.includes("R21 / รอบ 1289") && css.includes("--vw2-r1289-ready:1") && home.includes("--vw2-r1289-runtime-ready:1"), "R21 / รอบ 1289 lineage markers missing");
 must(home.includes("R22 / รอบ 1290") && css.includes("R22 / รอบ 1290") && css.includes("--vw2-r1290-ready:1") && home.includes("--vw2-r1290-runtime-ready:1"), "R22 / รอบ 1290 lineage markers missing");
-must(home.includes("ADMIN PREVIEW · R23 BRIGHT FANTASY PLAY DOCK") && home.includes("R23 / รอบ 1291") && css.includes("R23 / รอบ 1291") && css.includes("--vw2-r1291-ready:1") && home.includes("--vw2-r1291-runtime-ready:1"), "R23 / รอบ 1291 lineage markers missing");
-must(indexClassic.includes("css/home-v2.css?v=1291") && indexClassic.includes("js/home-v2.js?v=1291"), "R23 cache-bust missing from index_classic.html");
+must(home.includes("R23 / รอบ 1291") && css.includes("R23 / รอบ 1291") && css.includes("--vw2-r1291-ready:1") && home.includes("--vw2-r1291-runtime-ready:1"), "R23 / รอบ 1291 lineage markers missing");
+must(home.includes("ADMIN PREVIEW · R24 CUTE SINGLE-ROW LEARNING RAIL") && home.includes("R24 / รอบ 1293") && css.includes("R24 / รอบ 1293") && css.includes("--vw2-r1293-ready:1") && home.includes("--vw2-r1293-runtime-ready:1"), "R24 / รอบ 1293 lineage markers missing");
+must(indexClassic.includes("css/home-v2.css?v=1293") && indexClassic.includes("js/home-v2.js?v=1293"), "R24 cache-bust missing from index_classic.html");
 must(!home.includes("ADMIN PREVIEW · R21 HEAL ALL PETS"), "stale R21 preview badge remains");
 must(css.includes(".vw2-feature-title,.vw2-word-ribbon{top:-25px!important}"), "R17 complete New Word control was not moved into the upper HUD lane");
 must(css.includes(".vw2-feature{overflow:visible!important}") && css.includes("left:24%!important;right:24%!important;top:-25px!important"), "R18 New Word plaque is not fully visible in the safe HUD lane");
@@ -268,17 +269,15 @@ must(!/firebase\s*\.\s*database\s*\(/.test(home) && !/\.ref\s*\(\s*['"]\/?presen
 must(home.includes("typeof questsToday === 'function'") && home.includes("state.quests"), "mission logic binding changed");
 must(home.includes("textOf('#clock-chip .ck-date'") && home.includes("textOf('#rank-tab'"), "Profile date/rank source binding changed");
 
-/* R22 fantasy dock groups the complete legacy inventory behind child-facing destinations. */
+/* R24 restores the complete legacy inventory to one cute horizontal row. */
 const expectedBottom = ["vocabbook","ielts","toeic","toefl","onetp6","onetm3","onetm6","cats","play","picmatch","picdict","picquiz","bandexam"];
 const bottomOrder = expectedBottom.map(action => home.indexOf(`['${action}',`));
 must(expectedBottom.length === 13 && bottomOrder.every((p, i) => p >= 0 && (!i || p > bottomOrder[i - 1])), "accepted bottom rail inventory/order changed");
-const expectedDock = ["สมุดนักผจญภัย","สนามฝึกคำศัพท์","หอคอยท้าทาย","แผนที่โลก"];
-must(expectedDock.every(label=>home.includes(`'${label}'`)), "R22 four fantasy destination labels missing");
-must(home.includes("data-vw2-adventure-group") && home.includes("data-vw2-adventure-panel") && home.includes("function setAdventureMenu(group='')") && home.includes("function toggleAdventureMenu(group)"), "R22 adventure flyout behavior missing");
-must(home.includes("modeButtons('training')") && home.includes("modeButtons('challenge')") && home.includes("worldMenuButtons"), "R22 training/challenge/world route groups missing");
-must(css.includes("FANTASY ADVENTURE DOCK") && css.includes("grid-template-columns:repeat(4,minmax(0,1fr))!important") && css.includes(".vw2-adventure-menu[hidden]"), "R22 fantasy dock visual/responsive contract missing");
-must(css.includes("BRIGHT FANTASY PLAY DOCK") && css.includes("background-image:none!important") && css.includes("grid-template-columns:36px minmax(0,1fr)!important") && css.includes(".vw2-adventure-copy small{display:none!important}") && css.includes("width:auto!important;min-width:0!important;max-width:100%!important"), "R23 bright/readable child dock contract missing");
-must(home.includes("if(!showV2){ closeOwnedPetsModal(); setAdventureMenu(''); }") && home.includes("if(!allowed)") && home.includes("setAdventureMenu('');"), "R22 admin visibility/menu-close guard missing");
+must(home.includes("const learningModeButtons = learningModes.map") && home.includes('class="vw2-bottom-track">${learningModeButtons}'), "R24 complete learning inventory is not rendered in the single row");
+must(!home.includes('id="vw2-adventure-menu"') && !home.includes("function setAdventureMenu") && !home.includes("function toggleAdventureMenu") && !home.includes("adventureDockButtons") && !home.includes("adventureMenus"), "R24 pet-obscuring flyout still exists in runtime");
+must(css.includes("CUTE SINGLE-ROW LEARNING RAIL") && css.includes("grid-template-columns:repeat(13,minmax(138px,9.7vw))!important") && css.includes("grid-template-rows:minmax(0,1fr)!important") && css.includes("grid-auto-flow:column!important"), "R24 cute single-row visual contract missing");
+must(css.includes(".vw2-adventure-menu{display:none!important}") && css.includes(".vw2-bottom-track .vw2-mode>span{") && css.includes("background-image:none!important"), "R24 no-flyout/new-button skin guard missing");
+must(home.includes("if(!allowed)") && home.includes("if(!showV2) closeOwnedPetsModal();"), "R24 admin visibility guard missing");
 must(css.includes("R11.5.3 BOTTOM RAIL GEOMETRY RESTORE + WRAPPER-ONLY SCROLL"), "R11.5.3 wrapper-only Bottom Rail architecture was lost");
 must(css.includes("R11.5.4 EVIDENCE-DRIVEN GEOMETRY CORRECTION"), "R11.5.4 geometry-correction marker missing");
 must(home.includes('class="vw2-bottom-scroll"') && home.includes('class="vw2-bottom-track"'), "static outer rail / inner scroll wrapper markup missing");
@@ -299,7 +298,7 @@ must(/\.vw2-mode\{[^}]*font-size:clamp\(8px/.test(css) && css.includes('font-siz
 ["915", "844", "800", "667"].forEach(w => must(preview.includes(w), `mobile preview device width missing: ${w}`));
 ["412", "390", "360", "375"].forEach(h => must(preview.includes(h), `mobile preview device height missing: ${h}`));
 must(css.includes("@media (max-width:1180px),(max-height:520px)") && css.includes("@media (max-width:760px)") && css.includes("@media (max-height:390px)"), "R11.4 mobile landscape breakpoints missing");
-must(home.includes("pageOverflow:") && home.includes("pageHorizontalOverflow:") && home.includes("outerBottomRailContained:") && home.includes("bottomScrollWrapperScrollable:") && home.includes("bottomScrollWrapperVerticalOverflow:") && home.includes("all4AdventureHubsPresent:") && home.includes("all13BottomActionsPresent:") && home.includes("adventureMenuActionCount:") && home.includes("bottomButtonGeometryStable"), "R22 local mobile adventure-dock metrics missing");
+must(home.includes("pageOverflow:") && home.includes("pageHorizontalOverflow:") && home.includes("outerBottomRailContained:") && home.includes("bottomScrollWrapperScrollable:") && home.includes("bottomScrollWrapperVerticalOverflow:") && home.includes("singleRowLearningModesPresent:") && home.includes("all13BottomActionsPresent:") && home.includes("adventureFlyoutPresent:") && home.includes("bottomButtonGeometryStable"), "R24 local single-row learning-rail metrics missing");
 must(home.includes("clippingOffenders:") && home.includes("bottomClipOffenders") && home.includes("bottomMinButtonHeightPx:") && home.includes("leftBottomCollision:") && home.includes("leftLastAction:") && home.includes("onlineFooterContained") && home.includes("importantTextBelow14:") && home.includes("extremeInteractiveAspectElements:") && home.includes("rewardPlaque:"), "R11.5.4 precise Geometry Guard evidence metrics missing");
 must(home.includes("minReadableFontPx:") && home.includes("importantValueClipped"), "R11.4 readability/value-clipping preview metrics missing");
 must(home.includes("width <= 700 || height <= 390") && home.includes("width <= 850 || height <= 430") && home.includes("width <= 960 || height <= 500") && home.includes("width <= 1180 || height <= 600"), "R20 device profile width/height coverage missing");
@@ -317,5 +316,5 @@ if(fail.length){
   console.error("Home V2 R11.5.4 validation FAILED:\n- " + fail.join("\n- "));
   process.exit(1);
 }
-console.log("Home V2 R23 / รอบ 1291 validation PASS");
-console.log(`Checked bright child-readable fantasy play dock, non-overlapping flyout labels, grouped training/challenge/world routes, atomic one-tap heal-all, mobile profiles, ${expectedRail.length} left destinations, all ${expectedBottom.length} learning actions, and admin gate.`);
+console.log("Home V2 R24 / รอบ 1293 validation PASS");
+console.log(`Checked cute single-row learning rail, zero flyout DOM, atomic one-tap heal-all, mobile profiles, ${expectedRail.length} left destinations, all ${expectedBottom.length} learning actions, and admin gate.`);
