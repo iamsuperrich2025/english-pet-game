@@ -28,6 +28,14 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (30 ส.ค.) — อ่านก่อน
+- **รอบ 1297 · Letter Cannon → Word Siege:** เปลี่ยนจาก endless/no-penalty เป็นภารกิจ 5 คำ 3 คลื่น มีโล่ฐาน 3 ชั้น อุกกาบาต และบอสคำสุดท้ายที่ต้องยิง 2 ครั้ง
+- ยิงตัวผิดทำสตรีคขาด/ลดคะแนนแต่ไม่หักเหรียญ; ยิงถูกต่อเนื่อง 6 ครั้งได้ homing อัตโนมัติ และคงรางวัลเดิม +1/ตัวอักษร +50/ครบคำ พร้อมหน้าผล S–D/เล่นใหม่
+- แก้ `js/lettercannon.js`, `css/lettercannon.css`, `tools/test_letter_cannon.js`, `docs/PROJECT_MAP.md`; ไม่แตะข้อมูลคำศัพท์/ระบบออนไลน์/ไฟล์งาน Home V2 คู่ขนาน
+- node syntax + regression ถึง boss/reset/reward/lifecycle ผ่าน; production build `.1166` ผ่าน · visual browser QA ติด Windows ACL ของ browser runtime (ไม่ใช่ error เกม)
+- **รอบ 1296 · Home V2 R27 (Admin Preview):** ย้ายพื้นที่ว่างจากการ์ด วันนี้/ออนไลน์ให้แถบผู้เล่นกว้างขึ้น แสดง Player ID 6 ตัวและวันที่ไทยแบบวัน–เดือนเต็ม–ปี
+- คืน interaction น้องกลางฉากผ่าน handler Classic: แตะสั้นร้อง/เด้ง/หัวใจแล้วเปิดโปรไฟล์ และกดค้าง 800 ms เพื่อลูบยาวรับ EXP วันละครั้ง
+- แก้กรอบ Global Feed ที่ซ้อนป้ายหัวและบีบภาพ 340×352: ใช้ป้ายในกรอบจริงชั้นเดียว + responsive 9-slice และกักรายการ/ปุ่มตลาดไว้ในกรอบทุก breakpoint
+- แก้ `home-v2.js/css`, `index_classic.html`, regression test; syntax/regression/build ผ่าน (browser runtime ถูก ACL ปฏิเสธ จึงเก็บ geometry metrics ไว้ตรวจใน mobile preview)
 - **รอบ 1295 · Home V2 R26 (Admin Preview เท่านั้น):** คงหน้าตาปุ่มของเล่น R24/R25 และแก้รางล่างจากความกว้างคงที่ที่เผยปุ่มถัดไปบางส่วน เป็น whole-card responsive paging
 - แยกลูกศรซ้าย–ขวาเป็นคอลัมน์นอกพื้นที่เลื่อน จึงไม่ทับ/บังปุ่ม; แสดงเต็มใบ 7/6/5/4 ปุ่มตามขนาดจอและใช้ mandatory snap ให้หยุดตรงต้นปุ่มเสมอ
 - ทั้ง 13 ปุ่มยังอยู่แถวเดียว, order/handler/source/admin gate เดิมไม่เปลี่ยน; แก้ `home-v2.js/css`, cache-bust และ regression โดยไม่แตะ `css/petshopping3d.css`

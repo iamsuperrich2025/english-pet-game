@@ -18,11 +18,14 @@ const Music = (function(){
   const LOBBY_NAMES = ['lobby_01','lobby_02','lobby_03','lobby_04','lobby_05','lobby_06'];   // 🎀 รอบ 746
   const MODES = ['all','one','shuffle'];
   const BG_VOL = 0.30, CAR_VOL = 0.62;
+  const OFFLINE_CACHE = 'vw-assets-content-v1';
+  const OFFLINE_META_KEY = 'vwMusicOfflinePack_v1';
 
   let carTracks = [], bgTracks = [], sceneTracks = [], probed = false;   // bgTracks = ชุดเพลงล็อบบี้ที่หมุนเล่น · sceneTracks = ทุกไฟล์ใน sound/bgm/ (ให้เพลงตามฉากค้นชื่อ)
   let bg = null, bgIdx = 0, bgUrl = '', bgStarted = false, bgSuspended = false;
   let car = null, carIdx = 0, carOn = false;
   let audioCtx = null, analyser = null, srcNode = null, freq = null;
+  let probePromise = null, offlineDownload = null;
 
   function soundOn(){ return typeof state === 'undefined' || state.sound; }
   function musicOn(){ return !(typeof state !== 'undefined' && state.musicOff); }   // 🎵 รอบ 184: ปุ่มปิดเพลงแยก
@@ -37,12 +40,124 @@ const Music = (function(){
     for(const n of names){
       const url = dir + n + '.mp3';
       // eslint-disable-next-line no-await-in-loop
-      const ok = await fetch(url, {method:'HEAD'}).then(r=>r.ok).catch(()=>false);
-      if(ok) out.push({name:n, url});
+      const res = await fetch(url, {method:'HEAD'}).catch(()=>null);
+      if(res && res.ok) out.push({name:n, url, bytes:Number(res.headers.get('content-length')) || 0});
       else if(out.length) break;    // เลขหยุดต่อเนื่อง = หมดชุด (ไฟล์ตั้งชื่อเรียงเลข)
     }
     return out;
   }
+
+  /* ---------- ชุดเพลงออฟไลน์ ----------
+     ไม่ใส่เพลงใน SW PRECACHE เพราะ install ของ Service Worker เกิดทุก deploy ไม่ใช่เฉพาะตอนติดตั้ง PWA
+     เก็บด้วย content hash เดียวกับ sw.js: เพลงเดิมอยู่ข้ามเวอร์ชัน · เพลงที่เปลี่ยนเท่านั้นจึงดาวน์โหลดใหม่ */
+  function offlineSupported(){
+    return /^https?:$/.test(location.protocol) && typeof caches !== 'undefined' && typeof fetch === 'function';
+  }
+  function offlineTracks(){
+    const byUrl = new Map();
+    sceneTracks.concat(carTracks).forEach(t=>{ if(t && t.url) byUrl.set(t.url, t); });
+    if(!byUrl.size){
+      try{
+        const saved = JSON.parse(localStorage.getItem(OFFLINE_META_KEY) || 'null');
+        (saved && Array.isArray(saved.files) ? saved.files : []).forEach(f=>byUrl.set(f.url, f));
+      }catch(e){}
+    }
+    return Array.from(byUrl.values());
+  }
+  function offlineSavedMeta(){
+    try{ return JSON.parse(localStorage.getItem(OFFLINE_META_KEY) || 'null'); }catch(e){ return null; }
+  }
+  function offlineSaveMeta(files){
+    try{ localStorage.setItem(OFFLINE_META_KEY, JSON.stringify({at:Date.now(), files})); }catch(e){}
+  }
+  function offlinePath(url){ return new URL(url, location.href).pathname; }
+  function offlineKey(pathname, hash){
+    return new Request(`${location.origin}/__vw_asset__${pathname}?v=${encodeURIComponent(hash)}`);
+  }
+  async function offlineCatalog(){
+    if(probePromise) await probePromise.catch(()=>{});
+    const tracks = offlineTracks();
+    if(!tracks.length) throw new Error('ยังไม่พบไฟล์เพลงสำหรับดาวน์โหลด');
+    let manifest = null;
+    try{
+      const res = await fetch(`/asset-manifest.json?music-pack=${Date.now()}`, {cache:'no-store'});
+      if(res.ok) manifest = await res.json();
+    }catch(e){}
+    const saved = offlineSavedMeta();
+    const savedByPath = new Map((saved && Array.isArray(saved.files) ? saved.files : []).map(f=>[f.path, f]));
+    const files = tracks.map(track=>{
+      const path = offlinePath(track.url);
+      const live = manifest && manifest.files ? manifest.files[path] : null;
+      const old = savedByPath.get(path);
+      return {
+        name:track.name, url:track.url, path,
+        hash:(live && live.hash) || (old && old.hash) || '',
+        bytes:Number((live && live.bytes) || track.bytes || (old && old.bytes)) || 0,
+      };
+    }).filter(file=>file.hash);
+    if(!files.length) throw new Error('ยังอ่านรายการไฟล์เพลงไม่ได้ กรุณาเชื่อมต่ออินเทอร์เน็ตแล้วลองใหม่');
+    return files;
+  }
+  async function offlinePackInfo(){
+    if(!offlineSupported()) return {supported:false, reason:'อุปกรณ์นี้ยังไม่รองรับการเก็บเพลงออฟไลน์'};
+    let files;
+    try{ files = await offlineCatalog(); }
+    catch(error){ return {supported:true, ready:false, reason:error.message}; }
+    const cache = await caches.open(OFFLINE_CACHE);
+    let doneFiles = 0, doneBytes = 0;
+    for(const file of files){
+      // eslint-disable-next-line no-await-in-loop
+      if(await cache.match(offlineKey(file.path, file.hash))){ doneFiles++; doneBytes += file.bytes; }
+    }
+    const totalBytes = files.reduce((sum,file)=>sum + file.bytes, 0);
+    return {supported:true, ready:true, files, totalFiles:files.length, doneFiles, totalBytes, doneBytes,
+      complete:files.length > 0 && doneFiles === files.length};
+  }
+  async function offlinePackDownload(onProgress){
+    if(offlineDownload) return offlineDownload;
+    offlineDownload = (async()=>{
+      if(!offlineSupported()) throw new Error('อุปกรณ์นี้ยังไม่รองรับการเก็บเพลงออฟไลน์');
+      const files = await offlineCatalog();
+      offlineSaveMeta(files);
+      const cache = await caches.open(OFFLINE_CACHE);
+      const totalBytes = files.reduce((sum,file)=>sum + file.bytes, 0);
+      let doneFiles = 0, doneBytes = 0;
+      for(const file of files){
+        const key = offlineKey(file.path, file.hash);
+        // eslint-disable-next-line no-await-in-loop
+        const hit = await cache.match(key);
+        if(!hit){
+          // normal GET (ไม่มี Range) เพื่อให้ได้ไฟล์เต็มหนึ่งครั้ง แล้วเก็บด้วย hash ที่ข้าม deploy ได้
+          // eslint-disable-next-line no-await-in-loop
+          const response = await fetch(file.path, {cache:'no-cache'});
+          if(!response.ok) throw new Error(`ดาวน์โหลด ${file.name} ไม่สำเร็จ (${response.status})`);
+          // eslint-disable-next-line no-await-in-loop
+          const body = await response.arrayBuffer();
+          const headers = new Headers(response.headers);
+          headers.set('Content-Length', String(body.byteLength));
+          // eslint-disable-next-line no-await-in-loop
+          await cache.put(key, new Response(body, {status:200, headers}));
+        }
+        doneFiles++; doneBytes += file.bytes;
+        if(onProgress) onProgress({doneFiles, totalFiles:files.length, doneBytes, totalBytes, file:file.name});
+      }
+      if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>false);
+      offlineSaveMeta(files);
+      return offlinePackInfo();
+    })().finally(()=>{ offlineDownload = null; });
+    return offlineDownload;
+  }
+  async function offlinePackRemove(){
+    if(!offlineSupported()) return;
+    const cache = await caches.open(OFFLINE_CACHE);
+    const keys = await cache.keys();
+    await Promise.all(keys.filter(key=>{
+      const path = new URL(key.url).pathname;
+      return path.startsWith('/__vw_asset__/sound/bgm/') || path.startsWith('/__vw_asset__/sound/SongsInCar/');
+    }).map(key=>cache.delete(key)));
+    try{ localStorage.removeItem(OFFLINE_META_KEY); }catch(e){}
+  }
+
 
   // ---------- background ----------
   function bgSrc(url, loop){
@@ -179,7 +294,7 @@ const Music = (function(){
   function init(){
     if(probed) return;
     probed = true;
-    Promise.all([probeDir(CAR_DIR, CAR_NAMES), probeDir(BG_DIR, BG_NAMES), probeDir(BG_DIR, LOBBY_NAMES)]).then(([cars, bgm, lob])=>{
+    probePromise = Promise.all([probeDir(CAR_DIR, CAR_NAMES), probeDir(BG_DIR, BG_NAMES), probeDir(BG_DIR, LOBBY_NAMES)]).then(([cars, bgm, lob])=>{
       carTracks = cars;
       sceneTracks = lob.concat(bgm);                    // เพลงตามฉากค้นชื่อจากทุกไฟล์ใน sound/bgm/
       // 🎀 รอบ 746: มี lobby_*.mp3 = เพลงล็อบบี้ใหม่ (แทน bgm_* เดิม) · ไม่มี = พฤติกรรมเดิมทุกอย่าง
@@ -198,6 +313,7 @@ const Music = (function(){
     sceneBg, curScene:()=>sceneName,             // 🎬 รอบ 369: เพลงตามฉากโลก 3D
     bgReady:()=>bgTracks.length>0,
     setMusic, isMusicOn, toggleMusic:()=>setMusic(!musicOn()),   // 🎵 รอบ 184: ปุ่มเปิด/ปิดเพลง Lobby
+    offlinePackInfo, offlinePackDownload, offlinePackRemove,
     /* test hooks — ใช้เฉพาะตอนเทสต์ preview (🤫 รอบ 859: ตรวจการเฟดเพลงตอนเปิดหน้าสอบ) */
     _t:{ get ducked(){ return ducked; }, get vol(){ return bg ? bg.volume : null; },
          get paused(){ return bg ? bg.paused : null; }, get started(){ return bgStarted; }, duckTick },

@@ -49,8 +49,9 @@ must(home.includes("R22 / รอบ 1290") && css.includes("R22 / รอบ 1290
 must(home.includes("R23 / รอบ 1291") && css.includes("R23 / รอบ 1291") && css.includes("--vw2-r1291-ready:1") && home.includes("--vw2-r1291-runtime-ready:1"), "R23 / รอบ 1291 lineage markers missing");
 must(home.includes("R24 / รอบ 1293") && css.includes("R24 / รอบ 1293") && css.includes("--vw2-r1293-ready:1") && home.includes("--vw2-r1293-runtime-ready:1"), "R24 / รอบ 1293 lineage markers missing");
 must(home.includes("R25 / รอบ 1294") && css.includes("R25 / รอบ 1294") && css.includes("--vw2-r1294-ready:1") && home.includes("--vw2-r1294-runtime-ready:1"), "R25 / รอบ 1294 lineage markers missing");
-must(home.includes("ADMIN PREVIEW · R26 FULL-CARD PAGED LEARNING RAIL") && home.includes("R26 / รอบ 1295") && css.includes("R26 / รอบ 1295") && css.includes("--vw2-r1295-ready:1") && home.includes("--vw2-r1295-runtime-ready:1"), "R26 / รอบ 1295 lineage markers missing");
-must(indexClassic.includes("css/home-v2.css?v=1295") && indexClassic.includes("js/home-v2.js?v=1295"), "R26 cache-bust missing from index_classic.html");
+must(home.includes("R26 / รอบ 1295") && css.includes("R26 / รอบ 1295") && css.includes("--vw2-r1295-ready:1") && home.includes("--vw2-r1295-runtime-ready:1"), "R26 / รอบ 1295 lineage markers missing");
+must(home.includes("ADMIN PREVIEW · R27 FULL ID · LONG DATE · PET PAT") && home.includes("R27 / รอบ 1296") && css.includes("R27 / รอบ 1296") && css.includes("--vw2-r1296-ready:1") && home.includes("--vw2-r1296-runtime-ready:1"), "R27 / รอบ 1296 lineage markers missing");
+must(indexClassic.includes("css/home-v2.css?v=1296") && indexClassic.includes("js/home-v2.js?v=1296"), "R27 cache-bust missing from index_classic.html");
 must(!home.includes("ADMIN PREVIEW · R21 HEAL ALL PETS"), "stale R21 preview badge remains");
 must(css.includes(".vw2-feature-title,.vw2-word-ribbon{top:-25px!important}"), "R17 complete New Word control was not moved into the upper HUD lane");
 must(css.includes(".vw2-feature{overflow:visible!important}") && css.includes("left:24%!important;right:24%!important;top:-25px!important"), "R18 New Word plaque is not fully visible in the safe HUD lane");
@@ -65,6 +66,9 @@ must(css.includes("grid-template-columns:repeat(13,minmax(132px,9.4vw))") && css
 must(css.includes("font-size:clamp(11.5px,.86vw,14px)!important") && css.includes("background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(246,231,255,.94))!important"), "R13 Left Navigation caption readability missing");
 must(home.includes('data-vw2-action="petProfile"') && home.includes('function openActivePetProfile()') && home.includes("typeof openPetInfoOverlay === 'function'"), "R13 visible pet no longer delegates to the authoritative Classic pet profile");
 must(css.includes('.vw2-pet{') && css.includes('pointer-events:auto!important') && css.includes('.vw2-pet:focus-visible'), "R13 pet profile control is not pointer/keyboard accessible");
+must(home.includes('id="vw2-pet" data-vw2-pat') && home.includes("function bindVisiblePetPat()") && home.includes("typeof shortPatPet === 'function'") && home.includes("typeof longPatPet === 'function'") && home.includes("bindVisiblePetPat();"), "R27 visible pet pat/hold gestures are not restored through Classic handlers");
+must(home.includes("weekday:'short',day:'numeric',month:'long',year:'numeric'") && css.includes("grid-template-columns:clamp(360px,32vw,430px)") && css.includes(".vw2-profile-meta-chip.id b,.vw2-profile-meta-chip.date b"), "R27 full player ID / long Thai date space contract missing");
+must(css.includes("border-image-slice:70 32 30 82!important") && css.includes("border-image-source:url(\"../img/home-v2/r115_frame_feed.webp\")!important") && css.includes(".vw2-feed .vw2-head-icon{display:none!important}") && home.includes("feedFrameContained:") && home.includes("feedFrameNineSlice:"), "R27 responsive single-layer nine-slice Global Feed frame contract missing");
 must(home.includes('data-vw2-action="newWord"') && home.includes('function syncNewWordCard()') && home.includes("clickExisting('#newword-banner')"), "R13 New Word card is not visible/authoritatively bound");
 must(home.includes('id="vw2-newword-word"') && home.includes('id="vw2-newword-hint"') && css.includes('New Word is a primary learning card') && css.includes('.vw2-word-copy strong'), "R13 New Word hierarchy missing");
 must(home.includes("typeof renderPetShop === 'function' && typeof showScreen === 'function'") && home.includes("showScreen('screen-select')"), "R13 pet shop does not use the current authoritative route");
@@ -332,5 +336,5 @@ if(fail.length){
   console.error("Home V2 R11.5.4 validation FAILED:\n- " + fail.join("\n- "));
   process.exit(1);
 }
-console.log("Home V2 R26 / รอบ 1295 validation PASS");
-console.log(`Checked whole-card paged learning rail, zero clipped trailing buttons, aligned card content, semantic left icons, ${expectedRail.length} left destinations, all ${expectedBottom.length} learning actions, and admin gate.`);
+console.log("Home V2 R27 / รอบ 1296 validation PASS");
+console.log(`Checked full identity/date space, restored pet pat gestures, responsive Global Feed frame, whole-card learning rail, ${expectedRail.length} left destinations, all ${expectedBottom.length} learning actions, and admin gate.`);

@@ -119,12 +119,12 @@ DEPENDENCIES: Lazily loaded `THREE`, shared state/UI/audio.
 NOTES: Separate from Invasion combat.
 
 SYSTEM: Letter Cannon vocabulary minigame
-PURPOSE: Endless, penalty-free spelling practice by shooting falling letters in word order.
+PURPOSE: Short word-defense mission: spell five words, protect three base shields from meteors, then survive a two-hit boss wave.
 PRIMARY FILE: `js/lettercannon.js`
 RELATED FILES: `css/lettercannon.css`, `index_classic.html`, `js/city3d.js`, `js/main.js`
 PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.LetterCannon`, `open`, `close`
 DEPENDENCIES: `vocabForStudent`, shared state/rewards/audio, Canvas 2D.
-NOTES: Canvas 2D gameplay with two-layer PNG turret assets under `assets/images/letter_cannon/`; synthesized SFX and no WebGL lifecycle.
+NOTES: Canvas 2D solo gameplay with escalating waves, streak powers, retained coin rewards, synthesized SFX, and no WebGL lifecycle.
 
 ## Player, camera, collision, animation, and NPCs
 

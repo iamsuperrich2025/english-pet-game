@@ -1809,3 +1809,69 @@ body.vw2-pet-modal-open{overflow:hidden!important}
 @media (max-width:760px){
   .vw2-bottom-track{grid-template-columns:repeat(13,calc((100cqw - 12px)/4))!important;gap:4px!important}
 }
+
+/* ======================== R27 / รอบ 1296 — IDENTITY SPACE + PET PAT RESTORE ======================== */
+/* Reallocate the unused right side of the three primary stat cards to the
+   player card. The wallet keeps three complete cards while identity gains
+   enough room for the full six-character ID and a Thai day/month/year. */
+#vw-home-v2-root{--vw2-r1296-ready:1}
+.vw2-top{
+  grid-template-columns:clamp(360px,32vw,430px) minmax(0,1fr) clamp(164px,18.5vw,240px);
+}
+.vw2-profile-meta{grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr)}
+.vw2-profile-meta-chip.id b,.vw2-profile-meta-chip.date b{
+  overflow:visible;text-overflow:clip;letter-spacing:-.012em;
+}
+.vw2-profile-meta-chip.date b{font-size:clamp(9.5px,.72vw,11.5px)}
+.vw2-pet[data-vw2-pat]{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.vw2-pet[data-vw2-pat].is-patting{filter:drop-shadow(0 9px 6px rgba(49,34,65,.27)) brightness(1.08)}
+@media (max-width:1180px),(max-height:520px){
+  .vw2-top{grid-template-columns:clamp(292px,37vw,360px) minmax(0,1fr) clamp(145px,18vw,190px)}
+  .vw2-profile-meta-chip.id b{font-size:10.5px!important}
+  .vw2-profile-meta-chip.date b{font-size:9.5px!important}
+}
+@media (max-width:760px){
+  .vw2-top{grid-template-columns:270px minmax(0,1fr) 145px}
+  .vw2-profile-meta-chip.id b{font-size:10px!important}
+  .vw2-profile-meta-chip.date b{font-size:9px!important}
+}
+
+/* The source feed frame is 340x352. Stretching it to each narrow feed panel
+   distorted all four corners. Nine-slice keeps the corners intact and only
+   stretches the straight edges, so the frame remains correct at every size. */
+.vw2-feed{isolation:isolate}
+.vw2-feed:after{
+  inset:0!important;box-sizing:border-box;
+  border-style:solid!important;border-width:58px 22px 24px 58px!important;
+  border-image-source:url("../img/home-v2/r115_frame_feed.webp")!important;
+  border-image-slice:70 32 30 82!important;
+  border-image-width:58px 22px 24px 58px!important;
+  border-image-repeat:stretch!important;border-image-outset:0!important;
+  background:none!important;
+}
+.vw2-feed .vw2-section-head{
+  height:46px!important;min-height:46px!important;margin:7px 18px 0 50px!important;
+  padding:5px 4px!important;background:transparent!important;border:0!important;
+}
+.vw2-feed .vw2-head-icon{display:none!important}
+.vw2-feed-items{left:14px!important;right:14px!important;bottom:11px!important;padding-bottom:42px!important}
+.vw2-feed-coin{right:15px!important;bottom:14px!important}
+@media (max-width:1180px),(max-height:520px){
+  .vw2-feed:after{
+    border-width:52px 19px 22px 44px!important;
+    border-image-width:52px 19px 22px 44px!important;
+  }
+  .vw2-feed .vw2-section-head{height:41px!important;min-height:41px!important;margin:6px 15px 0 39px!important;padding:4px 3px!important}
+  .vw2-feed-items{left:12px!important;right:12px!important;bottom:9px!important;padding-bottom:39px!important}
+  .vw2-feed-coin{right:13px!important;bottom:12px!important}
+}
+@media (max-width:760px){
+  .vw2-feed:after{
+    border-width:49px 16px 20px 34px!important;
+    border-image-width:49px 16px 20px 34px!important;
+  }
+  .vw2-feed .vw2-section-head{height:38px!important;min-height:38px!important;margin:5px 11px 0 30px!important;padding:3px 2px!important;gap:2px!important}
+  .vw2-feed .vw2-section-head strong{font-size:10px!important}
+  .vw2-feed-items{left:10px!important;right:10px!important;bottom:8px!important;padding-bottom:36px!important}
+  .vw2-feed-coin{right:11px!important;bottom:10px!important}
+}

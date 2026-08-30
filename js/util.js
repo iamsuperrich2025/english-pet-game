@@ -1059,7 +1059,8 @@ const BLK_VOCAB = {
 };
 
 /* ---------- หน้าตั้งค่า (รวมสวิตช์ เสียง/สั่น/แอนิเมชัน + วิธีเล่น ไว้ที่เดียว) ---------- */
-function openSettings(){
+function openSettings(initialTab){
+  const startTab = ['general','avatar','feed','offline','account'].includes(initialTab) ? initialTab : 'general';
   const hapticSupported = ('vibrate' in navigator);   // แถวสั่นโผล่เฉพาะเครื่องที่รองรับ
   const attn = (typeof attentionSummaryData === 'function') ? attentionSummaryData() : {rows:[]};
   const attnFirst = attn.rows[0];
@@ -1075,10 +1076,11 @@ function openSettings(){
     <h2 style="margin:0 0 4px">⚙️ ตั้งค่า</h2>
     <p class="set-hint">แตะสวิตช์เพื่อสลับ — <b class="set-hint-on">เขียว = เปิดอยู่</b> · <b class="set-hint-off">เทา = ปิดอยู่</b></p>
     <div class="set-tabs">
-      <button class="lb-tab set-tab active" data-tab="general">🔊 ทั่วไป</button>
-      <button class="lb-tab set-tab" data-tab="avatar">🦸 ตัวละคร</button>
-      <button class="lb-tab set-tab" data-tab="feed">📰 เปิดเผย</button>
-      <button class="lb-tab set-tab" data-tab="account">🔐 บัญชี</button>
+      <button class="lb-tab set-tab${startTab==='general'?' active':''}" data-tab="general">🔊 ทั่วไป</button>
+      <button class="lb-tab set-tab${startTab==='avatar'?' active':''}" data-tab="avatar">🦸 ตัวละคร</button>
+      <button class="lb-tab set-tab${startTab==='feed'?' active':''}" data-tab="feed">📰 เปิดเผย</button>
+      <button class="lb-tab set-tab${startTab==='offline'?' active':''}" data-tab="offline">⬇️ ออฟไลน์</button>
+      <button class="lb-tab set-tab${startTab==='account'?' active':''}" data-tab="account">🔐 บัญชี</button>
     </div>
     ${attnFirst ? `<button class="set-attention-bar" type="button">
       <span class="set-attention-ico">${attnFirst.ico}</span>
@@ -1086,7 +1088,7 @@ function openSettings(){
       <span class="set-attention-go">ดู ›</span>
     </button>` : ''}
     <div class="set-panels">
-      <div class="set-panel active" data-panel="general">
+      <div class="set-panel${startTab==='general'?' active':''}" data-panel="general">
         <div class="set-row" id="set-sound">
           <span class="set-lwrap"><span class="set-label">🔊 เสียงในเกม</span>
             <span class="set-desc">เสียงเอฟเฟกต์ ปุ่มกด และอ่านออกเสียงคำศัพท์</span></span>
@@ -1122,7 +1124,7 @@ function openSettings(){
           <button class="ph-open" type="button" aria-label="เปลี่ยนรูปโปรไฟล์"></button>
         </div>
       </div>
-      <div class="set-panel" data-panel="avatar">
+      <div class="set-panel${startTab==='avatar'?' active':''}" data-panel="avatar">
         <div class="set-row set-blk-row" id="set-blk">
           <span class="set-label">🦸 ตัวละครของหนู<br><small class="set-sub2">แตะเลือกตัวที่จะยืนข้างน้อง · ใช้เป็นรูปโปรไฟล์เมื่อยังไม่ได้ใส่รูปจริง<br>
             มี ${blkAvCount} ตัวให้เลือก — กด ❯ ดูตัวถัดไป · 8 ตัวแรกเป็นตัวบล็อกที่ใช้ในโลก 3D ด้วย ตัวอื่นใช้ในล็อบบี้/โปรไฟล์ · <b>ใต้ตัวละครมีชื่อ EN + คำอ่าน + ไทย เสริมคำศัพท์ให้หนูด้วยนะ 📚</b></small></span>
@@ -1139,7 +1141,7 @@ function openSettings(){
           </div>
         </div>
       </div>
-      <div class="set-panel" data-panel="feed">
+      <div class="set-panel${startTab==='feed'?' active':''}" data-panel="feed">
         <div class="set-feed-head">📰 การเปิดเผยกิจกรรมในโปรไฟล์
           <span class="set-feed-sub">เลือกเองว่าให้เพื่อนเห็นอะไรบ้างในหน้าโปรไฟล์/ฟีด — ทุกหมวดเปิดมาตั้งแต่แรก ปิดเองได้ถ้าไม่อยากให้เห็น</span></div>
         ${Object.keys(FEED_CATS).map(k=>`
@@ -1149,7 +1151,22 @@ function openSettings(){
           <button class="set-switch" aria-label="สลับการเปิดเผย ${FEED_CATS[k].n}"></button>
         </div>`).join('')}
       </div>
-      <div class="set-panel set-account-panel" data-panel="account">
+      <div class="set-panel${startTab==='offline'?' active':''}" data-panel="offline">
+        <div class="set-offline-card" id="set-music-pack">
+          <div class="set-pack-icon" aria-hidden="true">🎵</div>
+          <div class="set-pack-copy">
+            <h3>ชุดเพลงออฟไลน์</h3>
+            <p class="set-pack-status">กำลังตรวจสอบเพลงในเครื่อง...</p>
+            <div class="set-pack-progress" role="progressbar" aria-label="ความคืบหน้าดาวน์โหลดเพลง" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i></div>
+            <small>ดาวน์โหลดครั้งเดียวแล้วเล่นจากเครื่อง · เพลงเดิมไม่โหลดซ้ำเมื่อเกมอัปเดต</small>
+          </div>
+          <div class="set-pack-actions">
+            <button class="set-pack-download" id="set-music-pack-download" type="button" disabled>กำลังตรวจสอบ...</button>
+            <button class="set-pack-remove" id="set-music-pack-remove" type="button" hidden>ลบชุดเพลง</button>
+          </div>
+        </div>
+      </div>
+      <div class="set-panel set-account-panel${startTab==='account'?' active':''}" data-panel="account">
         <div class="set-account-card">
           <div>
             <h3>🔐 บัญชีและความเป็นส่วนตัว · Account &amp; Privacy</h3>
@@ -1209,6 +1226,75 @@ function openSettings(){
       nightRow.querySelectorAll('.set-seg-btn').forEach(btn=>btn.classList.toggle('active', btn.dataset.mode===curMode));
     }
   };
+
+  const packCard = overlay.querySelector('#set-music-pack');
+  const packStatus = packCard && packCard.querySelector('.set-pack-status');
+  const packProgress = packCard && packCard.querySelector('.set-pack-progress');
+  const packBar = packProgress && packProgress.querySelector('i');
+  const packDownload = overlay.querySelector('#set-music-pack-download');
+  const packRemove = overlay.querySelector('#set-music-pack-remove');
+  let packBusy = false;
+  const packBytes = bytes=>{
+    if(!bytes) return 'กำลังคำนวณขนาด';
+    return bytes >= 1000000 ? (bytes / 1000000).toFixed(1) + ' MB' : Math.ceil(bytes / 1000) + ' KB';
+  };
+  const paintPack = info=>{
+    if(!packStatus || !packDownload) return;
+    if(!info || !info.supported || !info.ready){
+      packStatus.textContent = (info && info.reason) || 'ระบบเพลงออฟไลน์ยังไม่พร้อม';
+      packDownload.textContent = 'ตรวจสอบอีกครั้ง';
+      packDownload.disabled = packBusy || !(typeof Music!=='undefined' && Music.offlinePackInfo);
+      if(packRemove) packRemove.hidden = true;
+      return;
+    }
+    const pct = info.totalFiles ? Math.round(info.doneFiles * 100 / info.totalFiles) : 0;
+    if(packBar) packBar.style.width = pct + '%';
+    if(packProgress) packProgress.setAttribute('aria-valuenow', String(pct));
+    packStatus.textContent = info.complete
+      ? `✅ พร้อมเล่นจากเครื่องแล้ว ${info.doneFiles} เพลง · ${packBytes(info.totalBytes)}`
+      : `มีในเครื่อง ${info.doneFiles}/${info.totalFiles} เพลง · ต้องดาวน์โหลดรวม ${packBytes(info.totalBytes)}`;
+    packDownload.textContent = info.complete ? '🔄 ตรวจหาเพลงใหม่' : (info.doneFiles ? '⬇️ ดาวน์โหลดต่อ' : '⬇️ ดาวน์โหลดลงเครื่อง');
+    packDownload.disabled = packBusy;
+    if(packRemove) packRemove.hidden = info.doneFiles === 0 || packBusy;
+  };
+  const refreshPack = async()=>{
+    if(!(typeof Music!=='undefined' && Music.offlinePackInfo)){
+      paintPack({supported:false, reason:'ระบบเพลงยังโหลดไม่เสร็จ กรุณาลองใหม่'});
+      return;
+    }
+    packDownload.disabled = true;
+    const info = await Music.offlinePackInfo().catch(error=>({supported:true,ready:false,reason:error.message}));
+    paintPack(info);
+  };
+  if(packDownload) packDownload.addEventListener('click', async()=>{
+    if(packBusy) return;
+    packBusy = true; packDownload.disabled = true; if(packRemove) packRemove.hidden = true;
+    packDownload.textContent = 'กำลังดาวน์โหลด...';
+    try{
+      const info = await Music.offlinePackDownload(progress=>{
+        const pct = progress.totalFiles ? Math.round(progress.doneFiles * 100 / progress.totalFiles) : 0;
+        if(packBar) packBar.style.width = pct + '%';
+        if(packProgress) packProgress.setAttribute('aria-valuenow', String(pct));
+        if(packStatus) packStatus.textContent = `กำลังดาวน์โหลด ${progress.doneFiles}/${progress.totalFiles} เพลง · ${packBytes(progress.doneBytes)}/${packBytes(progress.totalBytes)}`;
+      });
+      toast('✅ ดาวน์โหลดชุดเพลงลงเครื่องเรียบร้อยแล้ว');
+      paintPack(info);
+    }catch(error){
+      toast('ดาวน์โหลดชุดเพลงไม่สำเร็จ: ' + error.message);
+    }finally{
+      packBusy = false;
+      refreshPack();
+    }
+  });
+  if(packRemove) packRemove.addEventListener('click', ()=>{
+    askConfirm('<h2>🗑️ ลบชุดเพลงออฟไลน์?</h2><p>เกมจะกลับไปเปิดเพลงจากอินเทอร์เน็ต และดาวน์โหลดใหม่ได้ทุกเมื่อ</p>', 'ลบชุดเพลง', async()=>{
+      packBusy = true; paintPack({supported:true,ready:false,reason:'กำลังลบชุดเพลงออกจากเครื่อง...'});
+      try{ await Music.offlinePackRemove(); toast('ลบชุดเพลงออฟไลน์แล้ว'); }
+      catch(error){ toast('ลบชุดเพลงไม่สำเร็จ: ' + error.message); }
+      packBusy = false; refreshPack();
+    });
+  });
+
   // 🧱 รอบ 238/245: เลือก "ตัวละครของหนู" = ยืนข้างน้องในล็อบบี้ + เป็นรูปโปรไฟล์ (เก็บใน state.profAv)
   // 🖼️ รอบ 751: blk1-8 มีโมเดลในโลก 3D ด้วย → ตั้ง state.blockAv ตามไปเลย (พฤติกรรมเดิม)
   //   blk9+ ไม่มีโมเดล 3D → ไม่แตะ blockAv ตัวบล็อกในโลกขับรถยังเป็นตัวเดิมที่เลือกไว้
@@ -1288,6 +1374,7 @@ function openSettings(){
   overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.remove(); });
   paint();
   document.body.appendChild(overlay);
+  refreshPack();
 }
 
 /* ---------- วิธีเล่นเกม (เปิดจากหน้าตั้งค่า) ---------- */

@@ -12,6 +12,7 @@
    R24 / รอบ 1293 — Cute single-row learning rail; no pet-obscuring flyout
    R25 / รอบ 1294 — Bottom-button geometry reset + honest scroll cues
    R26 / รอบ 1295 — Full-card responsive paging; no clipped trailing button
+   R27 / รอบ 1296 — Expanded player identity + full Thai date + restored pet pat gestures
    ------------------------------------------------------------
    Additive UI shell only. It does NOT own economy, auth, quests,
    Firebase, purchases, or game routing. Existing Lobby DOM stays
@@ -409,7 +410,7 @@
     if(document.getElementById(STYLE_ID)) return;
     const style = document.createElement('style');
     style.id = STYLE_ID;
-    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1;--vw2-r1287-runtime-ready:1;--vw2-r1288-runtime-ready:1;--vw2-r1289-runtime-ready:1;--vw2-r1290-runtime-ready:1;--vw2-r1291-runtime-ready:1;--vw2-r1293-runtime-ready:1;--vw2-r1294-runtime-ready:1;--vw2-r1295-runtime-ready:1}';
+    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1;--vw2-r1287-runtime-ready:1;--vw2-r1288-runtime-ready:1;--vw2-r1289-runtime-ready:1;--vw2-r1290-runtime-ready:1;--vw2-r1291-runtime-ready:1;--vw2-r1293-runtime-ready:1;--vw2-r1294-runtime-ready:1;--vw2-r1295-runtime-ready:1;--vw2-r1296-runtime-ready:1}';
     document.head.appendChild(style);
   }
   function clickExisting(selector, opts){
@@ -600,6 +601,67 @@
       setTimeout(()=>{ sync(); playPetWelcome(); }, 0);
       return true;
     }catch(_){ return false; }
+  }
+  /* R27: the large visible pet must keep the Classic lobby interaction contract.
+     A short pat reacts and then opens the profile; an 800 ms hold gives the
+     once-per-day long-pat EXP. The separate profile action remains available. */
+  function bindVisiblePetPat(){
+    const tap = document.getElementById('vw2-pet');
+    if(!tap || tap.dataset.vw2PatBound === '1') return;
+    tap.dataset.vw2PatBound = '1';
+    let timer = null;
+    let longDone = false;
+    let activePointer = null;
+    const cancel = ()=>{
+      if(timer){ clearTimeout(timer); timer = null; }
+      tap.classList.remove('is-patting');
+    };
+    const petNow = ()=>{
+      try{ return (typeof activePet === 'function') ? activePet() : null; }
+      catch(_){ return null; }
+    };
+    const visual = ()=>tap.firstElementChild || tap;
+    const runShort = ()=>{
+      const pet = petNow();
+      if(pet && typeof shortPatPet === 'function'){ shortPatPet(pet, visual()); return true; }
+      openActivePetProfile();
+      return false;
+    };
+    const runLong = ()=>{
+      const pet = petNow();
+      if(pet && typeof longPatPet === 'function'){ longPatPet(pet, visual()); return true; }
+      return false;
+    };
+    tap.addEventListener('pointerdown', e=>{
+      if(e.pointerType === 'mouse' && e.button !== 0) return;
+      longDone = false;
+      activePointer = e.pointerId;
+      cancel();
+      tap.classList.add('is-patting');
+      const holdMs = (typeof PAT_HOLD_MS === 'number') ? PAT_HOLD_MS : 800;
+      timer = setTimeout(()=>{
+        timer = null;
+        longDone = runLong();
+        tap.classList.remove('is-patting');
+      }, holdMs);
+    });
+    tap.addEventListener('pointerup', e=>{
+      if(activePointer !== null && e.pointerId !== activePointer) return;
+      const wasLong = longDone;
+      activePointer = null;
+      longDone = false;
+      cancel();
+      if(!wasLong) runShort();
+    });
+    tap.addEventListener('pointercancel', ()=>{ activePointer = null; longDone = false; cancel(); });
+    tap.addEventListener('pointerleave', ()=>{ activePointer = null; longDone = false; cancel(); });
+    tap.addEventListener('contextmenu', e=>e.preventDefault());
+    tap.addEventListener('click', e=>{
+      // Pointer input is handled above. Keyboard activation produces detail=0.
+      e.preventDefault();
+      e.stopPropagation();
+      if(e.detail === 0) runShort();
+    });
   }
   function openUserProfile(){
     // Delegate to the existing player-card/profile system instead of inventing a Home-V2-specific route.
@@ -914,7 +976,7 @@
               <div class="vw2-pet-halo" aria-hidden="true"></div>
               <div class="vw2-pedestal-aura" aria-hidden="true"></div>
               <div class="vw2-pet-platform" aria-hidden="true"></div>
-              <button type="button" class="vw2-pet" id="vw2-pet" data-vw2-action="petProfile" aria-label="เปิดโปรไฟล์สัตว์เลี้ยง">${mascotDragon()}</button>
+              <button type="button" class="vw2-pet" id="vw2-pet" data-vw2-pat aria-label="แตะเพื่อลูบสัตว์เลี้ยง กดค้างเพื่อลูบยาว" title="แตะสั้น: เล่นกับน้องและเปิดโปรไฟล์ · กดค้าง: ลูบยาวรับ EXP">${mascotDragon()}</button>
               <div class="vw2-pet-sparkles" aria-hidden="true"><i>♥</i><i>★</i><i>✦</i><i>♥</i></div>
               <button type="button" class="vw2-house-preview" data-vw2-action="home" data-vw2-source=".lobby-rail [data-panel=&quot;panel-home&quot;]" aria-label="เปิดบ้านที่เลือกอยู่">
                 <div class="vw2-house-preview-head">${icon('home')}<span id="vw2-house-label">ยังไม่มีบ้าน</span></div>
@@ -949,7 +1011,7 @@
           </aside>
         </div>
         <footer class="vw2-bottom" aria-label="กิจกรรมภาษาอังกฤษ"><div class="vw2-bottom-scroll" role="region" aria-label="เลื่อนกิจกรรมภาษาอังกฤษซ้ายขวา"><div class="vw2-bottom-track">${learningModeButtons}</div></div></footer>
-        <div class="vw2-preview-mark">ADMIN PREVIEW · R26 FULL-CARD PAGED LEARNING RAIL</div>
+        <div class="vw2-preview-mark">ADMIN PREVIEW · R27 FULL ID · LONG DATE · PET PAT</div>
       </div>
       <div class="vw2-online-modal" id="vw2-online-modal" role="dialog" aria-modal="true" aria-labelledby="vw2-online-modal-title" aria-hidden="true" hidden>
         <section class="vw2-online-modal-panel">
@@ -985,6 +1047,7 @@
     // Mount at body level so the fixed admin preview is not clipped by the
     // Classic dashboard's translated/scaled screen container.
     document.body.appendChild(root);
+    bindVisiblePetPat();
     setupLeftRailCue();
     setupBottomRailScroll();
     setupFeatureActionScroll();
@@ -1416,7 +1479,12 @@
         gradeHost.dataset.vw2GradeHtml = nextGrade;
       }
     }
-    setText('vw2-date', textOf('#clock-chip .ck-date','—'));
+    let fullDate = textOf('#clock-chip .ck-date','—');
+    try{
+      const dateOptions = {weekday:'short',day:'numeric',month:'long',year:'numeric'};
+      fullDate = new Date(Date.now()).toLocaleDateString('th-TH', typeof thLocaleOpt === 'function' ? thLocaleOpt(dateOptions) : dateOptions);
+    }catch(_){ }
+    setText('vw2-date', fullDate);
     setText('vw2-clock', textOf('#clock-chip .ck-time', textOf('#clock-chip','วันนี้')));
     const offlineSource = document.getElementById('offline-pill');
     const syncChip = document.getElementById('vw2-sync-state');
@@ -1552,6 +1620,11 @@
       const cs = getComputedStyle(el);
       return cs.textOverflow === 'ellipsis' || (cs.overflowX !== 'visible' && el.scrollWidth > el.clientWidth + 1);
     }).map(el=>el.id || el.closest('.vw2-wallet-pill')?.className || '?');
+    const identityTextClipped = ['vw2-id','vw2-date','vw2-clock'].filter(id=>{
+      const el = document.getElementById(id);
+      return !!(el && el.scrollWidth > el.clientWidth + 1);
+    });
+    const visiblePet = document.getElementById('vw2-pet');
     const evidenceToken = el => {
       if(!el) return '?';
       const action = el.dataset && el.dataset.vw2Action ? `[action=${el.dataset.vw2Action}]` : '';
@@ -1596,6 +1669,16 @@
     const onlineRect = visibleRect(onlinePanel);
     const friendsRect = visibleRect(friendsButton);
     const onlineFooterContained = !!(onlineRect && friendsRect && friendsRect.left >= onlineRect.left-1 && friendsRect.right <= onlineRect.right+1 && friendsRect.top >= onlineRect.top-1 && friendsRect.bottom <= onlineRect.bottom+1);
+    const feedPanel = r ? r.querySelector('.vw2-feed') : null;
+    const feedHead = feedPanel ? feedPanel.querySelector('.vw2-section-head') : null;
+    const feedItems = feedPanel ? feedPanel.querySelector('.vw2-feed-items') : null;
+    const feedCoin = feedPanel ? feedPanel.querySelector('.vw2-feed-coin') : null;
+    const feedRect = visibleRect(feedPanel);
+    const feedHeadRect = visibleRect(feedHead);
+    const feedItemsRect = visibleRect(feedItems);
+    const feedCoinRect = visibleRect(feedCoin);
+    const insideFeed = box=>!!(feedRect && box && box.left >= feedRect.left-1 && box.right <= feedRect.right+1 && box.top >= feedRect.top-1 && box.bottom <= feedRect.bottom+1);
+    const feedFrameStyle = feedPanel ? getComputedStyle(feedPanel,'::after') : null;
     const rewardCard = r ? r.querySelector('.vw2-reward-card') : null;
     const rewardInfo = r ? r.querySelector('#vw2-reward-info') : null;
     window.parent.postMessage({
@@ -1614,10 +1697,16 @@
         actionSources:{total:sourceNodes.length,missing:missingSources},
         minReadableFontPx:minReadableFontPx == null ? null : Math.round(minReadableFontPx * 10) / 10,
         importantValueClipped,
+        identityTextClipped,
+        fullPlayerIdVisible:!identityTextClipped.includes('vw2-id'),
+        fullDateVisible:!identityTextClipped.includes('vw2-date'),
+        petPatBound:!!(visiblePet && visiblePet.dataset.vw2PatBound === '1'),
         clippingOffenders:clippingOffenders.slice(0,18),
         importantTextBelow14:importantTextBelow14.slice(0,18),
         extremeInteractiveAspectElements:interactiveAspectOffenders.slice(0,18),
         onlineFooterContained,
+        feedFrameContained:insideFeed(feedHeadRect) && insideFeed(feedItemsRect) && insideFeed(feedCoinRect),
+        feedFrameNineSlice:!!(feedFrameStyle && feedFrameStyle.borderImageSource.includes('r115_frame_feed.webp') && feedFrameStyle.borderImageSlice !== '100%'),
         rewardPlaque:{
           authoritativeSource:rewardCard ? (rewardCard.dataset.vw2AuthoritativeInfo || 'pending') : 'missing',
           secondaryHidden:!!(rewardInfo && rewardInfo.hidden),

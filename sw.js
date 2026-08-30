@@ -139,6 +139,66 @@ async function previousAsset(pathname, cache) {
   return null;
 }
 
+
+
+function parseSingleRange(header, size) {
+  if (!header || header.includes(',')) return null;
+  const match = /^bytes=(\d*)-(\d*)$/i.exec(header.trim());
+  if (!match) return null;
+  let start;
+  let end;
+  if (!match[1]) {
+    const suffix = Number(match[2]);
+    if (!Number.isFinite(suffix) || suffix <= 0) return null;
+    start = Math.max(0, size - suffix);
+    end = size - 1;
+  } else {
+    start = Number(match[1]);
+    end = match[2] ? Math.min(Number(match[2]), size - 1) : size - 1;
+  }
+  if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || start >= size || end < start) return null;
+  return { start, end };
+}
+
+/* ไฟล์เพลงออฟไลน์เก็บเป็น response เต็มด้วย content hash แต่ <audio> มักขอเป็น Range
+   ตัดช่วงจากไฟล์ใน Cache Storage แล้วตอบ 206; ไม่มีไฟล์ในเครื่องจึงค่อยออกเครือข่ายตามปกติ */
+async function cachedRangeOrNetwork(request, url) {
+  const cache = await caches.open(ASSET_CACHE);
+  let cached = null;
+  try {
+    const manifest = await fetchAssetManifest();
+    const entry = manifest.files[url.pathname] || null;
+    if (entry && entry.hash) cached = await cache.match(versionedCacheKey(url.pathname, entry.hash));
+  } catch {
+    // Offline ยังใช้ไฟล์ hash รุ่นล่าสุดที่เหลืออยู่ได้
+  }
+  if (!cached) cached = await previousAsset(url.pathname, cache);
+  if (!cached) return fetch(request);
+
+  const blob = await cached.blob();
+  const range = parseSingleRange(request.headers.get('range'), blob.size);
+  if (!range) {
+    return new Response(null, {
+      status: 416,
+      headers: { 'Content-Range': `bytes */${blob.size}`, 'Accept-Ranges': 'bytes' },
+    });
+  }
+
+  const type = cached.headers.get('Content-Type') || blob.type || 'application/octet-stream';
+  const chunk = blob.slice(range.start, range.end + 1, type);
+  const headers = new Headers({
+    'Accept-Ranges': 'bytes',
+    'Content-Range': `bytes ${range.start}-${range.end}/${blob.size}`,
+    'Content-Length': String(chunk.size),
+    'Content-Type': type,
+  });
+  for (const name of ['Cache-Control', 'ETag', 'Last-Modified']) {
+    const value = cached.headers.get(name);
+    if (value) headers.set(name, value);
+  }
+  return new Response(chunk, { status: 206, statusText: 'Partial Content', headers });
+}
+
 async function contentHashCacheFirst(request, url) {
   const cache = await caches.open(ASSET_CACHE);
   let entry = null;
@@ -200,8 +260,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Range responses must remain browser-managed; caching a partial video corrupts later playback.
-  if (request.headers.has('range')) return;
+  // เล่น media จาก response เต็มใน Cache Storage; ถ้ายังไม่มีจึงปล่อย Range ไปเครือข่าย
+  if (request.headers.has('range')) {
+    event.respondWith(cachedRangeOrNetwork(request, url));
+    return;
+  }
 
   if (url.pathname.startsWith('/assets/build/')) {
     event.respondWith(cacheFirstImmutable(request));
