@@ -1,158 +1,187 @@
-# Vocab World: Frontline 1944 — Phase 1.1 Tank Runtime Correction Report
+# Vocab World: Frontline 1944 — Phase 1.2 Canonical Tank Controller & Unified Runtime Report
 
 Status: **ADMIN PREVIEW ONLY**  
-Scope: **Phase 1 acceptance correction — not Phase 2 visual reconstruction**  
-Current Task baseline: `VW-20260831-190731-3015dd`
+Scope: **Phase 1 Foundation acceptance — Phase 2 cosmetic reconstruction has NOT started**  
+Current Task baseline: `VW-20260831-194006-c1e049`
 
-## Current source inspected
+## Current source evidence used
 
-The correction is based only on the current files exported by VW Dev Studio after the Phase 1 patch:
+This Phase 1.2 patch was built only from the current files contained in the supplied VW Dev Studio Task ZIP. The SHA-256 hashes of every supplied context file were rechecked against `TASK_MANIFEST.json` before editing and matched.
+
+Modified current files:
 
 - `js/frontline1944.js`
 - `css/frontline1944.css`
 - `tools/test_frontline1944.js`
-- current Frontline report / architecture / code-map context supplied by the task
+- `docs/FRONTLINE1944_REPORT.md`
 
-No Home V2, Firebase, economy, vocabulary source, Adventure, Racing, or unrelated game source is rewritten.
+No older Frontline source was reconstructed or substituted.
 
-## Acceptance failures addressed
+## 1. One authoritative Tank Runtime
 
-The user reported seven concrete Phase 1 failures after browser/mobile testing:
+Phase 1.2 replaces the symptom-by-symptom player movement path with a canonical `TankRuntime`.
 
-1. Desktop showed the tank runtime, while mobile still showed the old infantry presentation and mobile controls did not react.
-2. Shell travel did not visually agree with the cannon barrel direction.
-3. The tank appeared able to slide sideways.
-4. Forward/reverse behavior was difficult to verify as hull-relative movement.
-5. The temporary tank model did not make front/rear orientation obvious.
-6. Some obstacle edges/corners could still be penetrated.
-7. The gameplay camera was too close to the tank.
+The authoritative runtime owns:
 
-Phase 1.1 corrects the runtime paths that are available in the current exported source and adds explicit diagnostics for the mobile/Desktop parity check.
+- world X/Z position
+- hull heading
+- signed tracked speed
+- turret heading / turret target heading
+- the last authoritative motion diagnostic
 
-## 1. Mobile/Desktop runtime and control parity
+Every player-tank tick follows the same non-holonomic rule in sub-steps:
 
-`bindStick()` now supports two input paths:
+`hullForward = forwardFromRotation(authoritativeHeading)`
 
-- Pointer Events when available
-- explicit `touchstart` / `touchmove` / `touchend` / `touchcancel` fallback
+`position += hullForward * signedSpeed * dt`
 
-Pointer capture loss and global pointer release are also handled, and blur/visibility changes reset all DRIVE/AIM/FIRE state cleanly.
+There is no input path that adds joystick X directly to world X/Z. DRIVE X is steering/yaw only; DRIVE Y is forward/reverse throttle only.
 
-The Frontline admin launch buttons are hidden and have pointer events disabled while the battlefield runtime is open. This prevents the visible `Frontline 1944 — ADMIN PREVIEW` launcher from overlapping/intercepting AIM/FIRE input on mobile landscape.
+Steering first updates the authoritative hull heading for the sub-step, and translation is then calculated from that new heading. Reverse uses a negative signed speed on the same forward vector.
 
-The current runtime exposes an explicit version marker:
+## 2. Physics, visual, collision and replication heading are unified
 
-- `Frontline1944.VERSION = P1.1-20260831`
-- the HUD shows `P1.1`
+`TankRuntime.heading` is the local-player authoritative heading. Runtime synchronization writes this same value to:
 
-This is intentionally visible during Admin Preview. If a phone still shows the old `PLAYER 100/100` infantry UI and does not show `P1.1`, that phone is not executing this current runtime source; the remaining problem would be outside the supplied Frontline JS/CSS (for example stale deployed/PWA asset loading) and must be investigated from a fresh current task containing the loader/service-worker source rather than guessed here.
+- the player entity hull rotation
+- the rendered hull rotation
+- the heading supplied to oriented-footprint collision
+- `tankStateSnapshot().hullRotation` for multiplayer-ready replication
 
-## 2. Shell / barrel direction
+The local replication snapshot explicitly reads the authoritative runtime pose rather than a separate stale visual transform.
 
-Player projectile direction is no longer reconstructed only from a stored turret angle.
+Sector streaming does not mutate hull heading.
 
-`cannonWorldDirection()` now derives the actual X/Z fire vector from the rendered barrel and cannon-tip world transforms. Shell spawn position is taken from the real muzzle tip and advanced slightly beyond the muzzle.
+## 3. Desktop and mobile are Input Adapters only
 
-Therefore the projectile contract follows the geometry that the player actually sees, even if the turret hierarchy or visual offset changes later.
+There is one gameplay runtime. Inputs are normalized before they reach it:
 
-## 3. No tank strafe / no collision-induced side slide
+- `DesktopTankInputAdapter` — keyboard + mouse aim/fire
+- `MobileTankInputAdapter` — DRIVE/AIM/FIRE pointer/touch state
+- `UnifiedTankInputAdapter` — merges normalized commands
+- `TankRuntime` — executes the command
 
-Tracked player movement now has a dedicated strict resolver:
+Desktop and mobile therefore do not have separate movement/gameplay implementations.
 
-`CollisionSystem.resolveVehicleMove()`
+The normalized command contract is:
 
-The player tank does not use axis-separated collision sliding. Once the intended forward/reverse path is blocked, movement stops at the obstacle instead of resolving X and Z independently and producing a sideways glide.
+- `throttle` ∈ [-1, 1]
+- `steering` ∈ [-1, 1]
+- optional absolute turret target heading
+- `fire` boolean
 
-Enemy movement retains the general circle resolver so this correction remains isolated to player tracked-vehicle behavior.
+## 4. Pointer capture and mobile gesture ownership
 
-## 4. Hull-relative forward / reverse
+DRIVE, AIM and FIRE explicitly use `touch-action:none`, non-passive control handlers and pointer capture when Pointer Events are available. Pointer cancel/lost-capture, blur and visibility changes clear active input state.
 
-The tank controller now centralizes its vehicle axis in:
+The legacy touch-event path remains only as an input fallback on browsers without Pointer Events; it does not contain gameplay execution.
 
-- `forwardFromRotation(hullRotation)`
-- `driveDelta(hullRotation, speed, dt)`
+## 5. Mobile infantry / stale-runtime investigation
 
-The movement vector is always:
+The current `js/frontline1944.js` module itself has no infantry fallback path. When this Phase 1.2 module opens it:
 
-`Hull Forward × signed speed`
+- renders the Frontline HUD as `TANK`
+- displays `P1.2`
+- publishes `window.__VW_FRONTLINE1944_RUNTIME__` with `kind: "tank"`
+- marks the root as a tank runtime
+- runs the same `TankRuntime` regardless of desktop/mobile input source
 
-DRIVE Y controls forward/reverse speed. DRIVE X changes hull heading. There is no direct world-X/world-Z strafe command.
+Therefore, **if a device is executing this current module, it cannot intentionally select an infantry player runtime from inside this file**.
 
-A negative speed uses exactly the opposite hull axis, so reverse remains vehicle-relative.
+However, the supplied current Task ZIP did **not** include the existing repository files that own the Frontline lazy loader / page shell / PWA update path, specifically the current contents of files such as `index_classic.html`, `sw.js` and `js/app-update.js`. The architecture map confirms those systems exist, but their current source was not exported as editable context. Under Source Context Guard rules this patch must not guess or rewrite those existing files.
 
-## 5. Clear front / rear diagnostic
+Consequently Phase 1.2 hardens runtime ownership and makes stale-loading immediately diagnosable, but a phone that still shows `PLAYER 100/100` and no `P1.2` after the patch is evidence that the phone never executed the supplied Phase 1.2 module. In that case the next Task ZIP must include the current loader/service-worker/update files so the stale mobile asset path can be corrected from evidence rather than reconstructed.
 
-The temporary Phase 1 tank now includes Admin Preview orientation markers:
+## 6. Barrel / muzzle / projectile agreement
 
-- **yellow front marker + yellow top stripe** = hull front
-- **red rear marker** = hull rear
+Player fire now uses `cannonWorldRay()`.
 
-These are diagnostic geometry for acceptance testing. They can be removed/replaced when Phase 2 introduces the final visual tank asset with an unmistakable glacis/front/rear silhouette.
+Before spawning a shell, the tank world matrix is updated and both the actual cannon-tip world position and actual barrel world position are read from the rendered hierarchy. The projectile origin comes from the real muzzle and its direction is the normalized barrel-to-muzzle world vector.
 
-## 6. Collision edge/corner hardening
+This keeps turret aim independent from the hull while making the shell agree with the barrel that is actually visible.
 
-Collision receives three additional protections:
+## 7. Swept oriented tank-footprint collision
 
-1. Player tracked movement uses finer strict swept steps and stops on the first blocked sub-step.
-2. Blocked terrain is sampled across the tank footprint, not only at the tank center. This reduces clipping into deep-water/fortification boundaries.
-3. Fortress perimeter collision uses continuous side/back proxies and continuous front segments around the intended gate instead of many small segment colliders with tiny seams.
+The local player no longer relies on a circular approximation for canonical tank movement.
 
-Rotated wall proxies also receive a small safety margin so visible wall endpoints/corners do not expose narrow penetration gaps.
+Phase 1.2 adds:
 
-## 7. Camera distance
+- oriented tank footprint dimensions
+- OBB-vs-AABB collision for houses, bunkers, walls and fortress geometry
+- OBB-vs-circle collision for tree trunks / circular blockers
+- rotated footprint terrain samples
+- sweep sub-steps for translation
+- sweep sub-steps for hull rotation
 
-The orthographic gameplay width is increased from `84` to `132` world units (about 1.57× wider). Camera offset/height is moved farther out and fog density is reduced so the expanded battlefield view remains useful.
+This prevents tunneling through thin walls, edges and corners and also prevents rotating the long hull through nearby solids.
 
-This is a gameplay/readability correction only; it does not attempt Visual Master reconstruction.
+Logical terrain priority remains intact. In particular, the ROAD bridge override remains traversable where it has higher priority than DEEP_WATER.
 
-## Preserved Phase 1 foundation
+## 8. Admin Preview orientation diagnostic
 
-The correction keeps the already-built foundation intact:
+The temporary tank keeps the yellow front stripe and red rear marker and adds:
 
-- 10 reusable visual-sector identities
-- Previous / Current / Next active streaming
-- bounded descriptor preload cache
-- logical world coordinates independent from art pixels
-- terrain types and bridge-over-deep-water priority
-- object pooling and projectile caps
-- hull/turret independent state
-- multiplayer-ready tank snapshot fields
-- vocabulary/economy/save integration points
+- a bright yellow forward-pointing nose arrow
+- two bright red rear lamps
+
+These are acceptance diagnostics only and may be replaced by final tank art in Phase 2.
+
+## 9. Battlefield camera coverage
+
+The orthographic world width is now `156`, compared with the original Phase 1 width of `84`, or about **1.86×** the earlier battlefield coverage. Camera offset/height are increased and fog density is reduced to retain useful landscape visibility.
+
+This remains a Foundation readability change, not a cosmetic reconstruction.
+
+## 10. Deterministic automated acceptance coverage
+
+`tools/test_frontline1944.js` now covers:
+
+- all 360 whole-degree hull headings
+- normalized forward/right axes
+- forward/reverse exact opposition at every tested heading
+- steering then forward movement
+- steering then reverse movement
+- zero instantaneous lateral velocity
+- equality of authoritative, entity, visual and replicated hull yaw
+- desktop/mobile normalized command parity
+- swept oriented-footprint collision against a thin wall
+- deep-water blocking and bridge priority
+- sector-transition heading stability
+- barrel/muzzle/projectile world-ray agreement
+- Pointer Events / pointer capture / touch-action ownership
+- explicit Phase 1.2 tank runtime identity
+- camera coverage target
+
+An isolated VM acceptance harness run against the returned source passed these deterministic Foundation checks. `node --check` also passes for both modified JavaScript files.
+
+## Preserved systems
+
+This patch does not rewrite unrelated systems and preserves the existing integration points for:
+
+- Sector Streamer and 10 reusable sector identities
+- vocabulary providers
+- coin/economy functions
+- save/cloud hooks
+- Firebase-ready snapshot contract
 - fail-closed Admin Preview access
+- projectile/object pooling
+- unrelated Vocab World games
 
-## Validation performed in the task environment
+## Required local acceptance after Import / Apply
 
-**PASS**
+Before Phase 2 begins, confirm on desktop and the real phone:
 
-- `node --check js/frontline1944.js`
-- `node --check tools/test_frontline1944.js`
-- isolated VM load of the patched runtime surface
-- hull rotation 0 -> forward world `-Z`
-- hull rotation +90° -> forward world `+X`
-- positive speed follows hull forward
-- negative speed follows the exact opposite hull axis
-- strict vehicle sweep stops at a solid wall without axis-slide resolution
-- tank-footprint terrain check blocks at a deep-water edge before the center enters it
-- bridge center remains traversable when ROAD priority overrides DEEP_WATER
-- runtime version marker is exported
+1. HUD says `TANK` and runtime marker says `P1.2`.
+2. Yellow arrow is always the tank front; red lamps are always the rear.
+3. DRIVE up moves toward the yellow front after any hull turn.
+4. DRIVE down reverses toward the red rear after any hull turn.
+5. DRIVE left/right changes hull heading and never strafes/slides sideways.
+6. AIM moves the turret independently of hull.
+7. FIRE shell follows the visible barrel exactly.
+8. Walls, tree trunks, houses, bunkers and fortress corners cannot be tunneled through.
+9. Bridge remains traversable and deep water remains blocked.
+10. Sector transitions do not rotate/reset the hull.
+11. Mobile DRIVE/AIM/FIRE respond with no browser scroll/gesture stealing.
+12. Camera shows roughly 1.86× the earlier Phase 1 world width.
 
-Full browser/build regression must still run in VW Dev Studio after Import because the ChatGPT Task ZIP is curated context and does not include the complete runnable repository/build tree.
-
-## Required local acceptance after Apply
-
-Before Phase 2 begins, verify on **both desktop and the actual phone**:
-
-1. HUD says `TANK` and displays `P1.1`.
-2. Yellow marker is visibly the hull front and red marker is the rear.
-3. DRIVE up moves toward the yellow front marker.
-4. DRIVE down reverses toward the red rear marker.
-5. DRIVE left/right rotates the hull and does not strafe the tank sideways.
-6. AIM rotates only the turret.
-7. FIRE sends the shell exactly along the visible barrel.
-8. Tree/house/bunker/wall/fortress/deep-water collisions cannot be penetrated at corners/endpoints.
-9. Bridge remains crossable.
-10. The camera shows materially more surrounding battlefield than the Phase 1 screenshot.
-11. Mobile DRIVE/AIM/FIRE all react to touch.
-12. The floating Frontline admin launcher is not visible over the controls while the runtime is open.
-
-If desktop shows `P1.1` but the phone still shows the old infantry `PLAYER 100/100` runtime, stop there: do not call Phase 1 accepted. Export a fresh VW Dev Task that explicitly includes the Frontline lazy loader and PWA/service-worker/update path so cache/deploy parity can be fixed from current source evidence.
+If the phone still displays old `PLAYER 100/100` and does not display `P1.2`, do not mark Phase 1 accepted: that specifically proves the phone is loading a different/stale Frontline execution path outside the source files supplied by this Task ZIP.
