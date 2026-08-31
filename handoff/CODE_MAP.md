@@ -315,7 +315,7 @@ xrkSubmit:714 · xrkMerge:744 · xrkAllRows:764 · xrkFetch:782 · xrkNote:808 �
 xrkAllRowHTML:828 · xrkBodyHTML:832 · xrkMount:847 · openExamStdRank:886 · examStdCardsHTML:903 · openExamStdBoard:938
 openOnetBoard:972
 
-## js/f1_3d.js (4,647 บรรทัด · 326 รายการ)
+## js/f1_3d.js (4,651 บรรทัด · 326 รายการ)
 ### 🗂️ สารบัญโซน js/f1_3d.js (Read/Edit เฉพาะช่วง)
 - 19-207 ⚙️ ค่าคงที่ (TUNE ZONE)
 - 208-255 📦 สถานะโลก
@@ -341,11 +341,11 @@ openOnetBoard:972
 - 3551-3603 🚧 เลนพิท — ผิวทางเต็มกริป + ลิมิตเตอร์ 80 กม./ชม.
 - 3604-3699 🔤 คำศัพท์บนแทร็ก (แบบเดียวกับโลกมอเตอร์ไซค์ — REWARD สูงกว่า)
 - 3700-3741 🏁 รอบ 1324 — R4 LIVE RACE POSITION (lap + track progress)
-- 3742-3997 🧑‍🤝‍🧑 เพื่อนร่วมสนาม (NetRoom map 'f1')
-- 3998-4084 📷 กล้องไล่หลัง + ลูปเกม
-- 4085-4202 🔢 รอบ 916 — จอบนพวงมาลัยเป็น "ของจริง"
-- 4203-4374 🚥 รอบ 918: แถบไฟ LED รอบเครื่องบนพวงมาลัย (เขียว → เหลือง → แดง ตอนใกล้เปลี่ยนเกียร์)
-- 4375-4647 🚪 เข้า/ออกโลก
+- 3742-4001 🧑‍🤝‍🧑 เพื่อนร่วมสนาม (NetRoom map 'f1')
+- 4002-4088 📷 กล้องไล่หลัง + ลูปเกม
+- 4089-4206 🔢 รอบ 916 — จอบนพวงมาลัยเป็น "ของจริง"
+- 4207-4378 🚥 รอบ 918: แถบไฟ LED รอบเครื่องบนพวงมาลัย (เขียว → เหลือง → แดง ตอนใกล้เปลี่ยนเกียร์)
+- 4379-4651 🚪 เข้า/ออกโลก
 ### รายการ js/f1_3d.js
 REWARD:22 · LETTER_COIN:23 · COLLECT_R:24 · DONE_KEY:25 · RECENT_KEY:26 · HALF_W:27
 KERB_W:28 · RUNOFF_W:29 · BARRIER_LAT:30 · BARRIER_BOUNCE:31 · CAR_HIT_PARTS:35 · CAR_HIT_RADIUS:44
@@ -396,12 +396,12 @@ racingLineLat:3607 · trackPointAhead:3615 · pickWord:3623 · spawnLetters:3638
 completeWord:3679 · relocTick:3696 · packetRaceLap:3703 · packetRaceProgress:3707 · racePositionSnapshot:3716 · updateRacePosition:3730
 netReady:3745 · netJoin:3750 · netSend:3763 · sendChat:3780 · peerColorIndex:3787 · packetCarColorIndex:3792
 peerColor:3802 · buildPeer:3805 · onPeer:3839 · showPeerBubble:3876 · removePeerBubble:3883 · dropPeer:3889
-peerTick:3910 · netLeave:3940 · layoutBoard:3946 · renderBoard:3965 · CAM_MODES:4003 · CAM_NEXT_LABEL:4004
-cycleCamMode:4005 · applyCamMode:4009 · cockpitBox:4020 · layoutWheel:4029 · wheelTick:4051 · DASH_FONT:4091
-positionQualityDash:4093 · layoutDash:4109 · dashRR:4119 · dashRpmTick:4126 · dashTick:4136 · drawDash:4151
-buildLeds:4208 · ledsOff:4216 · ledTick:4220 · camTick:4247 · hudTick:4298 · applyThermalPixelRatio:4309
-thermalGovernorTick:4315 · thermalRenderDue:4327 · frame:4337 · tick:4359 · fit:4366 · applyEnvironmentProfile:4378
-start:4422 · exitWorld:4493
+peerTick:3910 · netLeave:3940 · layoutBoard:3946 · renderBoard:3969 · CAM_MODES:4007 · CAM_NEXT_LABEL:4008
+cycleCamMode:4009 · applyCamMode:4013 · cockpitBox:4024 · layoutWheel:4033 · wheelTick:4055 · DASH_FONT:4095
+positionQualityDash:4097 · layoutDash:4113 · dashRR:4123 · dashRpmTick:4130 · dashTick:4140 · drawDash:4155
+buildLeds:4212 · ledsOff:4220 · ledTick:4224 · camTick:4251 · hudTick:4302 · applyThermalPixelRatio:4313
+thermalGovernorTick:4319 · thermalRenderDue:4331 · frame:4341 · tick:4363 · fit:4370 · applyEnvironmentProfile:4382
+start:4426 · exitWorld:4497
 
 ## js/f1_modes.js (125 บรรทัด · 14 รายการ)
 STORAGE_KEY:7 · DEFAULT_MODE:8 · ENTRY_MODE:9 · SELECTOR_ENABLED:10 · CONTRACT:11 · freezeProfile:13
@@ -410,27 +410,28 @@ removeSelector:60 · openSelector:66
 
 ## js/fpsweapon.js (194 บรรทัด · 0 รายการ)
 
-## js/frontline1944.js (1,590 บรรทัด · 118 รายการ)
-CFG:23 · LAYER:105 · TERRAIN:129 · SECTOR_TEMPLATES:151 · approach:207 · rotateToward:209
-listen:211 · hash32:213 · randFrom:215 · adminAllowed:219 · lockNotice:233 · syncAdminEntry:235
-claimTankRuntimeOwnership:253 · releaseTankRuntimeOwnership:267 · runtimeIdentity:277 · normalizeWord:281 · vocabPool:295 · auditVocabulary:311
-ensureProgress:325 · persist:343 · claim:361 · chooseWord:363 · pronounce:377 · awardLetter:379
-loadThree:407 · makeDom:421 · showToast:451 · sharedMesh:539 · addToLayer:541 · addToSector:543
-setWorldPos:545 · visualIdFor:735 · sectorDescriptor:737 · createSectorGroups:741 · removeSectorGroups:743 · registerOccluder:745
-updateOcclusionOrder:747 · addBaseSectorArt:759 · addFieldRows:781 · addCrater:783 · addMudPatch:785 · addTree:787
-addHouse:803 · addBunker:815 · addCampTent:817 · addWall:819 · addBridgeCrossing:831 · addSmoke:851
-makeSmokeTexture:859 · populateSector:867 · disposeSectorRuntime:909 · instantiateSector:919 · createProjectilePool:1007 · createFxPool:1023
-initPools:1029 · disposePools:1031 · makeTank:1035 · playerIdentity:1083 · makePlayer:1093 · authoritativeTankPose:1105
-syncTankVisual:1113 · tankStateSnapshot:1115 · interpolateRemoteTank:1121 · makeEnemyFigure:1127 · makeBossTank:1133 · spawnEnemy:1135
-registerFortressCollision:1143 · makeFortress:1163 · removeFortress:1177 · activateNextFortress:1179 · spawnDefenders:1193 · spawnBoss:1199
-recordDamage:1203 · damageEnemy:1205 · damagePlayer:1207 · destroyCore:1209 · cannonWorldPosition:1213 · cannonWorldRay:1215
-cannonWorldDirection:1223 · spawnProjectile:1225 · firePlayer:1227 · enemyFire:1239 · projectileImpact:1247 · tickProjectilePool:1249
-burst:1279 · tickFx:1287 · forwardFromRotation:1303 · rightFromRotation:1305 · rotationFromForward:1307 · driveDelta:1309
-normalizeTankCommand:1311 · desktopCommandFromState:1313 · mobileCommandFromState:1323 · mergeTankCommands:1331 · screenAimDirection:1337 · tickTank:1403
-tickFortress:1409 · tickEnemies:1415 · cameraTick:1425 · updateObjective:1433 · fortressStateText:1435 · updateHud:1437
-bindStick:1457 · bindPressControl:1487 · bindControls:1497 · pointerToGround:1511 · bindCanvasAim:1513 · resize:1521
-buildLayers:1523 · buildWorld:1525 · initThree:1535 · loop:1541 · clearScene:1549 · open:1555
-close:1567 · routeCheck:1573 · occlusionAcceptance:1577 · foundationDiagnostics:1579
+## js/frontline1944.js (2,451 บรรทัด · 123 รายการ)
+CFG:34 · LAYER:157 · TERRAIN:193 · SECTOR_TEMPLATES:226 · approach:310 · rotateToward:313
+listen:316 · hash32:319 · randFrom:322 · adminAllowed:328 · lockNotice:349 · syncAdminEntry:352
+claimTankRuntimeOwnership:379 · releaseTankRuntimeOwnership:400 · runtimeIdentity:415 · normalizeWord:421 · vocabPool:442 · auditVocabulary:466
+ensureProgress:487 · persist:514 · claim:541 · chooseWord:544 · pronounce:565 · awardLetter:568
+loadThree:610 · makeDom:631 · showToast:676 · sharedMesh:808 · addToLayer:811 · addToSector:814
+setWorldPos:817 · visualIdFor:1102 · sectorDescriptor:1105 · createSectorGroups:1111 · removeSectorGroups:1114 · registerOccluder:1117
+updateOcclusionOrder:1120 · addBaseSectorArt:1138 · addFieldRows:1171 · addCrater:1174 · addMudPatch:1177 · addTree:1180
+addHouse:1204 · addBunker:1222 · addCampTent:1225 · addWall:1228 · addBridgeCrossing:1246 · addSmoke:1276
+makeSmokeTexture:1288 · populateSector:1300 · disposeSectorRuntime:1363 · instantiateSector:1378 · createProjectilePool:1510 · createFxPool:1534
+initPools:1543 · disposePools:1546 · makeTank:1552 · playerIdentity:1624 · makePlayer:1639 · authoritativeTankPose:1657
+syncTankVisual:1669 · tankStateSnapshot:1672 · interpolateRemoteTank:1681 · makeEnemyFigure:1690 · makeBossTank:1699 · spawnEnemy:1702
+registerFortressCollision:1714 · makeFortress:1744 · removeFortress:1765 · activateNextFortress:1768 · spawnDefenders:1789 · spawnBoss:1798
+recordDamage:1804 · damageEnemy:1807 · damagePlayer:1810 · destroyCore:1813 · cannonWorldPosition:1819 · cannonWorldRay:1822
+cannonWorldDirection:1834 · spawnProjectile:1837 · firePlayer:1840 · enemyFire:1858 · projectileImpact:1870 · tickProjectilePool:1873
+burst:1918 · tickFx:1930 · forwardFromRotation:1954 · rightFromRotation:1957 · rotationFromForward:1960 · driveDelta:1963
+normalizeTankCommand:1966 · desktopCommandFromState:1969 · mobileCommandFromState:1984 · mergeTankCommands:1996 · screenAimDirection:2005 · tickTank:2104
+tickFortress:2113 · tickEnemies:2122 · cameraTick:2137 · updateObjective:2149 · fortressStateText:2152 · updateHud:2155
+inputNow:2188 · consumeControlEvent:2191 · stickVectorFromRect:2194 · resetStickState:2203 · bindStickElement:2212 · bindStick:2275
+bindPressControl:2278 · bindControls:2311 · pointerToGround:2332 · bindCanvasAim:2335 · resize:2347 · buildLayers:2350
+buildWorld:2353 · initThree:2368 · loop:2377 · clearScene:2389 · open:2398 · close:2416
+routeCheck:2425 · occlusionAcceptance:2431 · foundationDiagnostics:2434
 
 ## js/game.js (1,230 บรรทัด · 91 รายการ)
 ### 🗂️ สารบัญโซน js/game.js (Read/Edit เฉพาะช่วง)
@@ -1058,11 +1059,11 @@ vbRender:148 · vbCardHTML:194
 .xsp-foot:235 · .xsb-box:250,277 · .xsb-head:255,256 · .xsb-grid:257 · .xsb-card:258,262 · .xsb-emoji:263
 .xsb-name:264 · .xsb-info:265 · .xsb-done:266 · .onet-picker:270,271,272,273(+3) · .onet-board:278,279,280
 
-## css/frontline1944.css (32 บรรทัด · 20 selector)
-#vw-frontline1944:2,3,4,32 · .fl44-hud:5 · .fl44-top:6 · .fl44-panel:7 · .fl44-player:8 · .fl44-bar:9
-.fl44-word:10 · .fl44-coins:11 · .fl44-boss:12 · .fl44-objective:13 · .fl44-state:14 · .fl44-exit:15
-.fl44-controls:16 · .fl44-stick:17,18,19 · .fl44-knob:20 · .fl44-aim-knob:21 · .fl44-fire:22 · .fl44-toast:23
-.fl44-loading:24 · #btn-rail-frontline1944:25,26
+## css/frontline1944.css (64 บรรทัด · 20 selector)
+#vw-frontline1944:3,5,7,63 · .fl44-hud:9 · .fl44-top:11 · .fl44-panel:13 · .fl44-player:15 · .fl44-bar:17
+.fl44-word:19 · .fl44-coins:21 · .fl44-boss:23 · .fl44-objective:25 · .fl44-state:27 · .fl44-exit:29
+.fl44-controls:31 · .fl44-stick:33,35,37 · .fl44-knob:39 · .fl44-aim-knob:41 · .fl44-fire:43 · .fl44-toast:45
+.fl44-loading:47 · #btn-rail-frontline1944:49,51
 
 ## css/home-v2.css (2,479 บรรทัด · 136 selector)
 :root:9,2467 · #screen-dashboard:36,46 · #vw-home-v2-root:48,49,59,60(+112) · .vw2-screen-frame:81 · .vw2-sky:82,83,92,99(+1) · .vw2-shell:102,107,589
