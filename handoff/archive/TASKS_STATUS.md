@@ -5765,3 +5765,9 @@
 
 - ซ่อนชื่อบ้าน/ปราสาทตามผู้ใช้สั่งและขยายภาพเต็มช่อง; ต้นตอหลักคือ R28 `top:54px` ทับ stage กับ action rail กว้างเกินคอลัมน์กลาง
 - syntax + Home V2 regression + production build/validate ผ่าน; scope `css/home-v2.css`, `js/home-v2.js`, `index_classic.html`, `tools/test_home_v2_mobile_preview.js`
+
+
+## ⏬ ย้ายเมื่อ 2026-08-31 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- regression performance + production build .1176 + PWA validate ผ่าน; พิกเซลลด 43.75%, render high-Hz ลด 50–58%, trail ลด 68.73%; scope js/lettercannon.js, tools/test_letter_cannon.js
+- **รอบ 1305 · Home V2 visual cleanup:** แยก New Word ออกจาก speech, ใส่ภาพโปรไฟล์กลับในกรอบ, ทำปุ่มสัตว์ 4 ปุ่มเต็มใบ และคงสัดส่วนกรอบ Global Feed

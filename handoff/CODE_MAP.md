@@ -673,9 +673,9 @@ PANEL_TITLES:9 · openPanel:19 · closePanel:29
 
 ## js/lobby3d.js (811 บรรทัด · 0 รายการ)
 
-## js/main.js (557 บรรทัด · 10 รายการ)
-settingsButtonClick:103 · syncMusicBtn:119 · showPetShoppingGrantNotice:153 · showRankRewardNotice:190 · showQuizBackPay:240 · showGiantRefund:285
-showTicketRefund:326 · fitQbp:367 · bootGame:381 · showCakeGiftRefundNotice:407
+## js/main.js (584 บรรทัด · 11 รายการ)
+settingsButtonClick:103 · syncMusicBtn:119 · showPetShoppingGrantNotice:153 · showPetShoppingFineRefundNotice:186 · showRankRewardNotice:217 · showQuizBackPay:267
+showGiantRefund:312 · showTicketRefund:353 · fitQbp:394 · bootGame:408 · showCakeGiftRefundNotice:434
 
 ## js/moto3d.js (2,776 บรรทัด · 143 รายการ)
 ### 🗂️ สารบัญโซน js/moto3d.js (Read/Edit เฉพาะช่วง)
@@ -775,7 +775,7 @@ CALL_MAX_MS:1679 · CALL_MAX_PEERS:1680 · onlineStart:2096 · onlineLoadSDK:226
 
 ## js/petpantry.js (216 บรรทัด · 0 รายการ)
 
-## js/petshopping3d.js (581 บรรทัด · 0 รายการ)
+## js/petshopping3d.js (570 บรรทัด · 0 รายการ)
 
 ## js/photo.js (363 บรรทัด · 25 รายการ)
 PHOTO_LS_KEY:12 · PHOTO_MAX:13 · PHOTO_PREFIX:14 · PHOTO_SIZES:15 · PHOTO_QS:16 · PHOTO_ZMAX:17
@@ -800,34 +800,34 @@ openPhotoCrop:224
 
 ## js/skyplay3d.js (640 บรรทัด · 0 รายการ)
 
-## js/state.js (1,371 บรรทัด · 96 รายการ)
+## js/state.js (1,386 บรรทัด · 96 รายการ)
 ### 🗂️ สารบัญโซน js/state.js (Read/Edit เฉพาะช่วง)
-- 2-241 STATE + LocalStorage + กติกากลางของเกม
-- 242-298 🗄️🐾 ระบบชั้นอาหาร + เงินช่วยปรับตัว
-- 299-775 👍 รอบ 701: รีแอ็กชันฟีด (กดค้างปุ่มถูกใจแล้วเลือกได้เหมือน Facebook)
-- 776-831 Daily Quest (item 3 backlog): ภารกิจรายวัน 3 อย่าง สุ่มตามวันที่
-- 832-942 มูลค่าทรัพย์สินสุทธิ (net worth) — ฐานของระบบแรงค์
-- 943-992 🚫🍽️ สัตว์ป่วยเพราะหิว = ซื้อของกินไม่ได้ (รอบ 952)
-- 993-1086 เครื่องยนต์บิลรายเดือน (กลาง — ค่าบำรุงบ้านตอนนี้ / ค่าไฟ-น้ำ-เน็ต เสียบเพิ่มได้)
-- 1087-1211 🍖 เงินค่าอาหารสัตว์รายเดือน — ทุกวันที่ 1 ของเดือน จ่ายตามจำนวนสัตว์ที่เลี้ยงอยู่
-- 1212-1371 โรงงานผลิตสินค้า: จ่ายค่าผลิตด้วย "แต้มคำศัพท์"
+- 2-243 STATE + LocalStorage + กติกากลางของเกม
+- 244-300 🗄️🐾 ระบบชั้นอาหาร + เงินช่วยปรับตัว
+- 301-790 👍 รอบ 701: รีแอ็กชันฟีด (กดค้างปุ่มถูกใจแล้วเลือกได้เหมือน Facebook)
+- 791-846 Daily Quest (item 3 backlog): ภารกิจรายวัน 3 อย่าง สุ่มตามวันที่
+- 847-957 มูลค่าทรัพย์สินสุทธิ (net worth) — ฐานของระบบแรงค์
+- 958-1007 🚫🍽️ สัตว์ป่วยเพราะหิว = ซื้อของกินไม่ได้ (รอบ 952)
+- 1008-1101 เครื่องยนต์บิลรายเดือน (กลาง — ค่าบำรุงบ้านตอนนี้ / ค่าไฟ-น้ำ-เน็ต เสียบเพิ่มได้)
+- 1102-1226 🍖 เงินค่าอาหารสัตว์รายเดือน — ทุกวันที่ 1 ของเดือน จ่ายตามจำนวนสัตว์ที่เลี้ยงอยู่
+- 1227-1386 โรงงานผลิตสินค้า: จ่ายค่าผลิตด้วย "แต้มคำศัพท์"
 ### รายการ js/state.js
 STORAGE_KEY:6 · QUIZ_PASS_REWARD:11 · CURE_COST:13 · HUNGRY_SICK_MS:14 · MEAL_HOUR:16 · MEAL_FULL:17
 SLEEP_FROM_HOUR:18 · SLEEP_SICK_HOUR:19 · WAKE_HOUR:20 · DINNER_COST:21 · TOXIN_FULL:23 · DETOX_COST:24
 FOODQUIZ_Q:26 · FOODQUIZ_COIN:27 · FOODQUIZ_BONUS:28 · FOODQUIZ_MAX_PLAYS:29 · SHAPE_JUNK_MEALS:31 · SHAPE_CLEAN_MEALS:32
-SHAPE_MISS_MEALS:33 · SHAPE_EXP_BONUS:34 · HEAT_SICK_MS:35 · THIRST_SICK_MS:36 · DEFAULT_STATE:38 · migratePetShoppingState:247
-FEED_CATS:291 · FEED_REACTIONS:305 · feedRx:313 · FEED_QUICK_CM:315 · SLOT_MS:327 · currentSlotStart:328
-nextSlotStart:334 · mealDayKey:336 · nightKeyOf:338 · isNightNow:346 · newPet:351 · loadState:376
-saveState:733 · activePet:743 · petStage:744 · isAdult:749 · abilityOn:750 · hasPetType:751
-todayStr:754 · dailyTick:758 · addCoins:761 · QUEST_POOL:781 · QUEST_PER_DAY:790 · questsToday:791
-questTick:798 · questEvent:802 · assetValue:838 · netWorth:862 · assetCount:864 · grantRankPromotionRewards:882
-refreshRank:912 · heatProtected:930 · rainProtected:934 · petHungry:937 · petCanEat:941 · hungerSickLock:949
-hungerSickMsg:957 · petShapeOf:965 · updatePetShape:971 · shapeMealDone:978 · heatPct:988 · ymStr:997
-billOutstanding:1001 · UTILITIES:1008 · HOME_UTILITIES:1014 · homeDecayed:1016 · billTick:1019 · PET_FOOD_PER_PET:1091
-petFoodTick:1092 · myCar:1118 · carLoanDue:1123 · carLoanOverdue:1128 · carLoanPayable:1133 · carLoanPay:1140
-compTick:1153 · ONLINE_RATE:1167 · onlineEarnActive:1168 · onlineEarnTick:1172 · onlineEarnFlush:1183 · marketTick:1193
-addCraft:1217 · ORDER_MAX:1236 · ORDER_LIFE_MS:1237 · ORDER_GAP_MIN_MS:1238 · ORDER_GAP_SPAN_MS:1239 · ORDER_TIER_WEIGHT:1240
-newOrder:1241 · orderTick:1254 · careTick:1262 · expNeed:1342 · addExp:1347 · addRP:1367
+SHAPE_MISS_MEALS:33 · SHAPE_EXP_BONUS:34 · HEAT_SICK_MS:35 · THIRST_SICK_MS:36 · DEFAULT_STATE:38 · migratePetShoppingState:249
+FEED_CATS:293 · FEED_REACTIONS:307 · feedRx:315 · FEED_QUICK_CM:317 · SLOT_MS:329 · currentSlotStart:330
+nextSlotStart:336 · mealDayKey:338 · nightKeyOf:340 · isNightNow:348 · newPet:353 · loadState:378
+saveState:748 · activePet:758 · petStage:759 · isAdult:764 · abilityOn:765 · hasPetType:766
+todayStr:769 · dailyTick:773 · addCoins:776 · QUEST_POOL:796 · QUEST_PER_DAY:805 · questsToday:806
+questTick:813 · questEvent:817 · assetValue:853 · netWorth:877 · assetCount:879 · grantRankPromotionRewards:897
+refreshRank:927 · heatProtected:945 · rainProtected:949 · petHungry:952 · petCanEat:956 · hungerSickLock:964
+hungerSickMsg:972 · petShapeOf:980 · updatePetShape:986 · shapeMealDone:993 · heatPct:1003 · ymStr:1012
+billOutstanding:1016 · UTILITIES:1023 · HOME_UTILITIES:1029 · homeDecayed:1031 · billTick:1034 · PET_FOOD_PER_PET:1106
+petFoodTick:1107 · myCar:1133 · carLoanDue:1138 · carLoanOverdue:1143 · carLoanPayable:1148 · carLoanPay:1155
+compTick:1168 · ONLINE_RATE:1182 · onlineEarnActive:1183 · onlineEarnTick:1187 · onlineEarnFlush:1198 · marketTick:1208
+addCraft:1232 · ORDER_MAX:1251 · ORDER_LIFE_MS:1252 · ORDER_GAP_MIN_MS:1253 · ORDER_GAP_SPAN_MS:1254 · ORDER_TIER_WEIGHT:1255
+newOrder:1256 · orderTick:1269 · careTick:1277 · expNeed:1357 · addExp:1362 · addRP:1382
 
 ## js/thaitime.js (52 บรรทัด · 13 รายการ)
 TH_TZ_MIN:22 · TH_DAY_MS:23 · thShift:28 · thMs:30 · thDate:31 · thHour:32
