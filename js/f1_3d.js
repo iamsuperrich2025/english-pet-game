@@ -2170,7 +2170,7 @@ const CSS=`
 #f1-ban.show{opacity:1;transform:translate(-50%,0) scale(1)}
 #f1-ban .m-coin{color:#ffd12e}
 /* 🏆 รอบ 1222: scoreboard เหลือบรรทัดเดียว เลื่อนขวา→ซ้าย ไม่บังทางขับ */
-#f1-board{position:absolute;left:10px;top:64px;width:min(560px,calc(100% - 20px));height:38px;box-sizing:border-box;
+#f1-board{position:absolute;left:164px;top:8px;width:min(400px,calc(100% - 174px));height:38px;box-sizing:border-box;
   background:rgba(8,12,24,.78);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:0 6px;
   color:#dfe9ff;font-size:12.5px;display:none;align-items:center;gap:6px;overflow:hidden;z-index:6}
 #f1-board.on{display:flex}
@@ -3941,26 +3941,30 @@ function netLeave(){
   if(room){ room.leave(); room=null; }
   for(const uid in peers) dropPeer(uid);
 }
-/* 🛡️ รอบ 1217: แผง multiplayer ต้องอยู่ถัดจากกล่องรอบ/เวลา ไม่ใช้ top ตายตัว
-   จอแคบจนชนกล่องคำศัพท์ค่อยย้ายลงใต้ HUD ทั้งสอง โดยไม่วัด layout ทุก frame */
+/* 🏆 รอบ 1334: แผงอันดับอยู่ในช่องบนระหว่างการ์ดอันดับสดกับกล่องคำศัพท์
+   จอแคบที่ช่องนี้ไม่พอจึงค่อยย้ายลงใต้ HUD ด้านบน โดยยังหลบ minimap ทางซ้าย */
 function layoutBoard(){
-  if(!wrapEl||!lapEl||!boardEl||!boardEl.classList.contains('on')) return;
-  const wrap=wrapEl.getBoundingClientRect(),lap=lapEl.getBoundingClientRect();
-  const board=boardEl.getBoundingClientRect();
-  if(!board.width||!board.height) return;
-  const edge=8,gap=10,maxX=Math.max(edge,wrap.width-board.width-edge);
-  let x=clamp(lap.right-wrap.left+gap,edge,maxX);
-  let y=Math.max(edge,lap.top-wrap.top);
-  const word=wordEl&&wordEl.getBoundingClientRect();
-  const overlaps=(a,b,pad=6)=>b&&b.width&&b.height&&
-    a.left<b.right+pad&&a.right>b.left-pad&&a.top<b.bottom+pad&&a.bottom>b.top-pad;
-  const candidate=()=>({left:wrap.left+x,right:wrap.left+x+board.width,
-    top:wrap.top+y,bottom:wrap.top+y+board.height});
-  if(overlaps(candidate(),lap)||overlaps(candidate(),word)){
-    y=Math.max(lap.bottom,word&&word.height?word.bottom:wrap.top)-wrap.top+gap;
+  if(!wrapEl||!positionEl||!wordEl||!boardEl||!boardEl.classList.contains('on')) return;
+  const wrap=wrapEl.getBoundingClientRect(),pos=positionEl.getBoundingClientRect();
+  const word=wordEl.getBoundingClientRect(),lap=lapEl&&lapEl.getBoundingClientRect();
+  if(!wrap.width||!pos.width||!word.width) return;
+  const edge=8,gap=8,laneLeft=pos.right-wrap.left+gap,laneRight=word.left-wrap.left-gap;
+  const laneWidth=Math.floor(laneRight-laneLeft),minLane=Math.min(120,wrap.width*.18);
+  let x,y,width;
+  if(laneWidth>=minLane){
+    x=laneLeft;
+    y=Math.max(edge,pos.top-wrap.top);
+    width=Math.min(560,laneWidth);
+  }else{
+    x=Math.min(wrap.width-edge,pos.right-wrap.left+gap);
+    y=Math.max(pos.bottom,word.bottom,lap&&lap.height?lap.bottom:wrap.top)-wrap.top+gap;
+    width=Math.max(120,Math.min(560,wrap.width-x-edge));
   }
   boardEl.style.left=Math.round(x)+'px';
   boardEl.style.top=Math.round(y)+'px';
+  boardEl.style.width=Math.round(width)+'px';
+  const board=boardEl.getBoundingClientRect();
+  if(!board.width||!board.height) return;
 }
 function renderBoard(){
   if(!boardEl) return;
