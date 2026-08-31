@@ -2385,3 +2385,58 @@ body.vw2-home-active.vw2-page-hidden #vw-home-v2-root *:after{animation-play-sta
   white-space:nowrap!important;
   overflow:hidden!important;
   text-overflow:ellipsis!important;
+}
+
+/* ======================== R39 / รอบ 1325 — UNIFORM PET-ACTION GEOMETRY ======================== */
+#vw-home-v2-root{--vw2-r1325-ready:1;--vw2-action-gap:clamp(8px,.72vw,10px)}
+/* All plaques occupy one measured row. Artwork is drawn on a separate layer so
+   its unequal transparent source padding can be optically normalized without
+   changing the button hitbox, label lane, or authoritative click handler. */
+#vw-home-v2-root .vw2-feature-action-scroll{
+  height:100%!important;
+  box-sizing:border-box;
+  scroll-padding-inline:calc(var(--vw2-action-gap)/2);
+}
+#vw-home-v2-root .vw2-feature-action-track{
+  height:100%!important;
+  align-items:center!important;
+  gap:var(--vw2-action-gap)!important;
+  padding:0 calc(var(--vw2-action-gap)/2)!important;
+}
+#vw-home-v2-root .vw2-feature-action-track>button,
+#vw-home-v2-root[data-vw2-layout-profile] .vw2-feature-action-track>button{
+  position:relative;
+  isolation:isolate;
+  align-self:center!important;
+  height:100%!important;
+  min-height:100%!important;
+  max-height:100%!important;
+  margin:0!important;
+  padding:0!important;
+  background:none!important;
+}
+#vw-home-v2-root .vw2-feature-action-track>button::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  background:var(--vw2-action-art) center/100% 100% no-repeat!important;
+  transform-origin:center;
+  transform:translateY(var(--vw2-action-art-y,0)) scaleY(var(--vw2-action-art-scale-y,1));
+}
+#vw-home-v2-root .vw2-feature-action-track>button>span{position:relative;z-index:1}
+/* Alpha >= 192 source bounds: world 3..99/111, match 11..107/112,
+   pet 16..109/112. These offsets converge their visible top/bottom edges. */
+#vw-home-v2-root .vw2-feature-action-track>.vw2-enter{
+  --vw2-action-art:url("../img/home-v2/r115_hero_world.webp");
+  --vw2-action-art-y:6.7%;
+}
+#vw-home-v2-root .vw2-feature-action-track>.vw2-play{
+  --vw2-action-art:url("../img/home-v2/r115_hero_match.webp");
+}
+#vw-home-v2-root .vw2-feature-action-track>.vw2-shop-link{
+  --vw2-action-art:url("../img/home-v2/r115_hero_pet.webp");
+  --vw2-action-art-y:-3.3%;
+  --vw2-action-art-scale-y:1.033;
+}

@@ -22,6 +22,7 @@
    R34 / รอบ 1316 — Four-slot secondary HUD: computer, worth, graph and rankings
    R36 / รอบ 1319 — Swipeable seven-card HUD + raised New Word + wider pet actions
    R38 / รอบ 1323 — Specificity-safe pet plaques + measured live-label fitting
+   R39 / รอบ 1325 — Uniform pet-action hitboxes, optical frames and measured spacing
    ------------------------------------------------------------
    Additive UI shell only. It does NOT own economy, auth, quests,
    Firebase, purchases, or game routing. Existing Lobby DOM stays
@@ -474,7 +475,7 @@
     if(document.getElementById(STYLE_ID)) return;
     const style = document.createElement('style');
     style.id = STYLE_ID;
-    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1;--vw2-r1287-runtime-ready:1;--vw2-r1288-runtime-ready:1;--vw2-r1289-runtime-ready:1;--vw2-r1290-runtime-ready:1;--vw2-r1291-runtime-ready:1;--vw2-r1293-runtime-ready:1;--vw2-r1294-runtime-ready:1;--vw2-r1295-runtime-ready:1;--vw2-r1296-runtime-ready:1;--vw2-r1300-runtime-ready:1;--vw2-r1305-runtime-ready:1;--vw2-r1309-runtime-ready:1;--vw2-r1311-runtime-ready:1;--vw2-r1313-runtime-ready:1;--vw2-r1314-runtime-ready:1;--vw2-r1316-runtime-ready:1;--vw2-r1319-runtime-ready:1;--vw2-r1323-runtime-ready:1}';
+    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1;--vw2-r1287-runtime-ready:1;--vw2-r1288-runtime-ready:1;--vw2-r1289-runtime-ready:1;--vw2-r1290-runtime-ready:1;--vw2-r1291-runtime-ready:1;--vw2-r1293-runtime-ready:1;--vw2-r1294-runtime-ready:1;--vw2-r1295-runtime-ready:1;--vw2-r1296-runtime-ready:1;--vw2-r1300-runtime-ready:1;--vw2-r1305-runtime-ready:1;--vw2-r1309-runtime-ready:1;--vw2-r1311-runtime-ready:1;--vw2-r1313-runtime-ready:1;--vw2-r1314-runtime-ready:1;--vw2-r1316-runtime-ready:1;--vw2-r1319-runtime-ready:1;--vw2-r1323-runtime-ready:1;--vw2-r1325-runtime-ready:1}';
     document.head.appendChild(style);
   }
   function clickExisting(selector, opts){
@@ -1803,6 +1804,17 @@
       const targets = copy.children.length ? Array.from(copy.children) : [copy];
       return button.dataset.vw2TextFits !== '1' || targets.some(el=>el.scrollWidth > el.clientWidth + 1) || copyBox.top < buttonBox.top - 1 || copyBox.bottom > buttonBox.bottom + 1;
     }).map(button=>button.dataset.vw2Action || '?');
+    const featureActionBoxes = featureActionButtons.map(button=>button.getBoundingClientRect());
+    const featureActionHeights = featureActionBoxes.map(box=>box.height);
+    const featureActionTops = featureActionBoxes.map(box=>box.top);
+    const featureActionBottoms = featureActionBoxes.map(box=>box.bottom);
+    const featureActionGaps = featureActionBoxes.slice(1).map((box,index)=>box.left-featureActionBoxes[index].right);
+    const spread = values=>values.length ? Math.max(...values)-Math.min(...values) : null;
+    const featureActionHeightSpreadPx = spread(featureActionHeights);
+    const featureActionTopSpreadPx = spread(featureActionTops);
+    const featureActionBottomSpreadPx = spread(featureActionBottoms);
+    const featureActionGapSpreadPx = spread(featureActionGaps);
+    const featureActionGeometryStable = featureActionBoxes.length === 4 && featureActionHeightSpreadPx <= 1 && featureActionTopSpreadPx <= 1 && featureActionBottomSpreadPx <= 1;
     const bottomModes = bottomTrack ? Array.from(bottomTrack.querySelectorAll('.vw2-mode')) : [];
     const learningActions = ['vocabbook','ielts','toeic','toefl','onetp6','onetm3','onetm6','cats','play','picmatch','picdict','picquiz','bandexam'];
     const allLearningRoutesPresent = bottomModes.length === learningActions.length && learningActions.every(actionName=>bottomTrack?.querySelector(`[data-vw2-action="${actionName}"]`));
@@ -1968,7 +1980,13 @@
         featureActionScrollable:!!(featureActionScroll && featureActionScrollStyle && ['auto','scroll'].includes(featureActionScrollStyle.overflowX) && featureActionScroll.scrollWidth > featureActionScroll.clientWidth + 1),
         featureActionVerticalOverflow:!!(featureActionScroll && featureActionScroll.scrollHeight > featureActionScroll.clientHeight + 1),
         featureActionCanScrollRight:!!(featureActionScroll && featureActionScroll.scrollLeft + featureActionScroll.clientWidth < featureActionScroll.scrollWidth - 2),
-        featureActionTextOffenders
+        featureActionTextOffenders,
+        featureActionGeometryStable,
+        featureActionHeightSpreadPx:featureActionHeightSpreadPx == null ? null : Math.round(featureActionHeightSpreadPx*10)/10,
+        featureActionTopSpreadPx:featureActionTopSpreadPx == null ? null : Math.round(featureActionTopSpreadPx*10)/10,
+        featureActionBottomSpreadPx:featureActionBottomSpreadPx == null ? null : Math.round(featureActionBottomSpreadPx*10)/10,
+        featureActionGapPx:featureActionGaps.length ? Math.round(featureActionGaps[0]*10)/10 : null,
+        featureActionGapSpreadPx:featureActionGapSpreadPx == null ? null : Math.round(featureActionGapSpreadPx*10)/10
       }
     }, '*');
   }

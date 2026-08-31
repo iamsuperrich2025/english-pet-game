@@ -20,6 +20,8 @@
 - แก้ `css/home-v2.css`, `index_classic.html`, `tools/test_home_v2_mobile_preview.js`; syntax + Home V2 regression + production build ผ่าน; Browser visual QA ยังถูก Windows ACL บล็อก
 - **รอบ 1323 · Home V2 ปุ่มสัตว์ responsive จริง:** ต้นตอคือ device-profile selector เก่าบีบปุ่มกลับเหลือ 104–142px เพราะ specificity สูงกว่า; override ใหม่ชนะครบ desktop/tablet/phone และคง safe copy 76% บนปุ่ม 236–270px
 - ข้อความแต่ละชั้นเป็นบรรทัดเดียว พร้อม fit จาก `scrollWidth/getBoundingClientRect` หลัง resize/ชื่อ/จำนวนสัตว์/เว็บฟอนต์เปลี่ยน; syntax + regression 4 profiles ผ่าน, Browser QA ยังถูก Windows ACL บล็อก
+- **รอบ 1325 · Home V2 ปุ่มสัตว์สูงและวางแนวเท่ากัน:** ล็อก hitbox ทั้ง 4 ปุ่มให้สูง 100% ของรางและ center บนฐานเดียว ใช้ gap responsive 8–10px พร้อม scroll padding สมมาตร; แยกภาพกรอบเป็น pseudo-layer แล้วชดเชย alpha bounds ของกรอบม่วง/ส้ม/ชมพูให้ขอบที่มองเห็นตรงกัน
+- เพิ่ม metrics วัด height/top/bottom/gap spread จาก getBoundingClientRect; R39 regression + JS syntax + diff check ผ่าน และ full production build จาก clean snapshot ผ่านเป็น .1191; Browser visual QA ยังถูก Windows ACL บล็อก
 - **รอบ 1317 · Home V2 HUD + ตลาดสัตว์:** แถวรอง 4 ช่องสูงเท่าแถวหลัก 56px/49px และ New Word มี safe gap 5/7/6px ตาม desktop/compact/จอเตี้ย; ถอดปุ่มและ route Classic พร้อมจัดเครื่องมือ 6 ปุ่มเต็มกรอบ
 - ตลาดต่อท้ายหุ่นยนต์เพิ่มสัตว์ครบ 9 ชนิดจาก `PETS`; ร้านเดิมกับตลาดใช้ `openPetPurchase()` จุดเดียว จึงคงราคา/ห้ามชนิดซ้ำ/ตั้งชื่อ/ยอดขายเดิม
 - syntax + ตลาด/สัตว์/Home V2 + production build/validate ผ่าน; Browser visual QA ยังถูก Windows ACL บล็อก (`apply deny-read ACLs`)

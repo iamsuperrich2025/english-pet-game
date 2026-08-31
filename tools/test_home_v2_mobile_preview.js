@@ -52,7 +52,7 @@ must(home.includes("R24 / รอบ 1293") && css.includes("R24 / รอบ 1293
 must(home.includes("R25 / รอบ 1294") && css.includes("R25 / รอบ 1294") && css.includes("--vw2-r1294-ready:1") && home.includes("--vw2-r1294-runtime-ready:1"), "R25 / รอบ 1294 lineage markers missing");
 must(home.includes("R26 / รอบ 1295") && css.includes("R26 / รอบ 1295") && css.includes("--vw2-r1295-ready:1") && home.includes("--vw2-r1295-runtime-ready:1"), "R26 / รอบ 1295 lineage markers missing");
 must(home.includes("R27 / รอบ 1296") && css.includes("R27 / รอบ 1296") && css.includes("--vw2-r1296-ready:1") && home.includes("--vw2-r1296-runtime-ready:1"), "R27 / รอบ 1296 lineage markers missing");
-must(indexClassic.includes("css/home-v2.css?v=1323") && indexClassic.includes("js/home-v2.js?v=1323"), "R38 cache-bust missing from index_classic.html");
+must(indexClassic.includes("css/home-v2.css?v=1325") && indexClassic.includes("js/home-v2.js?v=1325"), "R39 cache-bust missing from index_classic.html");
 must(home.includes("R28 / รอบ 1300") && home.includes("--vw2-r1300-runtime-ready:1") && css.includes("R28 / รอบ 1300") && css.includes("--vw2-r1300-ready:1"), "R28 browser-verified visual contract missing");
 must(css.includes("grid-template-areas:\"class id time\" \"date date date\"") && css.includes("top:54px!important") && css.includes("--card-shadow:#075aa8"), "R28 HUD clearance/profile/date/premium rail rules missing");
 must(home.includes("R29 / รอบ 1305") && home.includes("--vw2-r1305-runtime-ready:1") && css.includes("R29 / รอบ 1305") && css.includes("--vw2-r1305-ready:1"), "R29 visual-hierarchy lineage markers missing");
@@ -398,12 +398,16 @@ must(css.includes("#vw-home-v2-root[data-vw2-layout-profile] .vw2-feature-action
 must(css.includes("width:76%!important") && css.includes("white-space:nowrap!important") && css.includes("--vw2-action-main-px") && 236*.76-10 >= 169, "R38 central safe-copy lane is too narrow");
 must(home.includes("function fitFeatureActionLabels()") && home.includes("function scheduleFeatureActionLabelFit()") && home.includes("function forceFeatureActionLabelRefit()") && home.includes("document.fonts.ready.then(forceFeatureActionLabelRefit)") && home.includes("el.scrollWidth <= el.clientWidth + .75") && home.includes("getBoundingClientRect()") && home.includes("featureActionTextOffenders"), "R38 measured live-label fitting or diagnostics missing");
 must(home.includes("scheduleFeatureActionLabelFit();") && home.indexOf("scheduleFeatureActionLabelFit();", home.indexOf("function syncLayoutProfile")) > 0, "R38 resize/profile fitting hook missing");
+must(css.includes("R39 / รอบ 1325") && css.includes("--vw2-r1325-ready:1") && home.includes("R39 / รอบ 1325") && home.includes("--vw2-r1325-runtime-ready:1"), "R39 uniform pet-action lineage markers missing");
+must(css.includes("--vw2-action-gap:clamp(8px,.72vw,10px)") && css.includes("align-items:center!important") && css.includes("min-height:100%!important") && css.includes("max-height:100%!important"), "R39 shared height/alignment/spacing contract missing");
+must(css.includes("--vw2-action-art-y:6.7%") && css.includes("--vw2-action-art-y:-3.3%") && css.includes("--vw2-action-art-scale-y:1.033") && css.includes("background:var(--vw2-action-art)"), "R39 alpha-bound optical normalization missing");
+must(home.includes("featureActionGeometryStable") && home.includes("featureActionHeightSpreadPx") && home.includes("featureActionTopSpreadPx") && home.includes("featureActionBottomSpreadPx") && home.includes("featureActionGapSpreadPx"), "R39 measured action geometry diagnostics missing");
 must(css.includes("Six current tools fill the panel exactly") && css.includes("grid-template-rows:repeat(2,minmax(0,1fr))!important"), "six-tool panel does not close the removed Classic row");
 
 if(fail.length){
-  console.error("Home V2 R38 validation FAILED:\n- " + fail.join("\n- "));
+  console.error("Home V2 R39 validation FAILED:\n- " + fail.join("\n- "));
   process.exit(1);
 }
 
-console.log("Home V2 R38 / รอบ 1323 validation PASS");
+console.log("Home V2 R39 / รอบ 1325 validation PASS");
 console.log(`Checked seven-card swipe HUD, raised New Word lane, wide high-contrast pet actions, authoritative graph/rank routes; ${expectedRail.length} left destinations; all ${expectedBottom.length} learning actions; and admin gate.`);
