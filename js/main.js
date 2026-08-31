@@ -57,7 +57,7 @@ document.getElementById('btn-register').addEventListener('click', ()=>{
   toast(`ยินดีต้อนรับ ${nick.name}! 🎉`);
   renderDashboard();
   showScreen('screen-dashboard');
-  setTimeout(()=>showPetShoppingGrantNotice(showRankRewardNotice), 700);
+  setTimeout(()=>showPetShoppingGrantNotice(()=>showPetShoppingFineRefundNotice(showRankRewardNotice)), 700);
   if(typeof dailyMysteryBoxSchedule === 'function') dailyMysteryBoxSchedule(1200);
 });
 
@@ -180,6 +180,33 @@ function showPetShoppingGrantNotice(next){
     if(typeof next === 'function') next();
   });
   document.body.appendChild(ov); // ไม่มี backdrop/Esc handler: ต้องกดรับทราบเท่านั้น
+  if(typeof fitQbp === 'function') fitQbp(ov.querySelector('.qbp'));
+}
+
+function showPetShoppingFineRefundNotice(next){
+  const b = state.petShoppingFineRefundNotice;
+  if(!b || !(Number(b.total)>0)){ if(typeof next === 'function') next(); return; }
+  if(document.querySelector('[data-pet-shopping-fine-refund]')) return;
+  if(typeof sfx !== 'undefined' && sfx.coinGet){ sfx.coinGet(); setTimeout(()=>sfx.coinGet(), 420); }
+  const ov = document.createElement('div');
+  ov.className = 'rankup-overlay pantry-grant-overlay';
+  ov.dataset.petShoppingFineRefund = '1';
+  ov.innerHTML = `<div class="rankup-rays" style="--rank-color:#70d7ff"></div>
+    <div class="rankup-content qbp pantry-grant-card">
+      <div class="rankup-title">🚗 ยกเลิกค่าปรับด่านซื้อของแล้ว — คืนเหรียญให้หนู!</div>
+      <div class="qbp-coin">🪙</div>
+      <div class="rankup-name pantry-grant-amount">+${fmtNum(b.total)} เหรียญ 🪙</div>
+      <p class="rankup-sub"><b>ด่านขับรถไปซื้ออาหารและเครื่องประดับสัตว์ไม่หักค่าปรับอีกแล้ว</b><br>
+        ขับเร็วหรือชนยังมีแรงเด้ง เสียง และคำเตือน แต่เหรียญจะไม่ลดลง<br>
+        <small>ชดเชยเซฟเดิมตามเพดานค่าปรับเดิมต่อรอบ · รับได้ครั้งเดียวต่อบัญชี</small></p>
+      <button class="rankup-btn">รับทราบและเก็บเหรียญ 🥳</button>
+    </div>`;
+  ov.querySelector('.rankup-btn').addEventListener('click', ()=>{
+    state.petShoppingFineRefundNotice = null; saveState(); ov.remove();
+    if(document.getElementById('screen-dashboard').classList.contains('active')) renderDashboard();
+    if(typeof next === 'function') next();
+  });
+  document.body.appendChild(ov);
   if(typeof fitQbp === 'function') fitQbp(ov.querySelector('.qbp'));
 }
 
@@ -398,7 +425,7 @@ function bootGame(){
     showScreen('screen-dashboard');
     if(typeof dailyMysteryBoxSchedule === 'function') dailyMysteryBoxSchedule(1200);
     // ผู้เล่นเดิมก่อนอัพเดทข้อ 0.2 ยังไม่มีชื่อในเกม → บังคับตั้งก่อนเล่นต่อ
-    if(authEnsureProfileName()) setTimeout(()=>showGameEntryRefundNotice(()=>showPetShoppingGrantNotice(showRankRewardNotice)), 700); // คืนค่าเข้า → เงินปรับตัว → รางวัลแรงค์
+    if(authEnsureProfileName()) setTimeout(()=>showGameEntryRefundNotice(()=>showPetShoppingGrantNotice(()=>showPetShoppingFineRefundNotice(showRankRewardNotice))), 700); // คืนค่าเข้า → เงินปรับตัว → รางวัลแรงค์
   }
 }
 

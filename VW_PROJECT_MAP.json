@@ -1,10 +1,10 @@
 {
   "schema_version": 4,
   "project": "english-pet-game",
-  "structure_signature": "2a43ae238e6e8676af1b552e6490595955296084c171eabdc3ff276fb5c8ad39",
-  "structure_entry_count": 2808,
+  "structure_signature": "07823ba25bf3070a8d9471a647dfb87abce55534930cb7436090b3090a2f36f1",
+  "structure_entry_count": 2824,
   "generated_by": "VW Dev Studio Local Token Saver",
-  "generated_at": "2026-08-28T17:36:12",
+  "generated_at": "2026-08-31T09:19:14",
   "generation_mode": "local_no_ai_no_api",
   "areas": {
     "main_world": [
@@ -49,6 +49,7 @@
     "mother_ship": [
       "ship.bat",
       "handoff/SHIP.round1060.codex-backup.txt",
+      "handoff/SHIP.txt",
       "tools/ship.sh",
       "tools/ship_entry.sh"
     ],
@@ -93,6 +94,7 @@
       ".claude/worktrees/ecstatic-hawking-466b9b/tools/retint_car.py"
     ],
     "pet_shopping": [
+      "css/petfashion.css",
       "css/petshopping3d.css",
       "js/petshopping3d.js",
       "tools/test_petshopping3d.js",
@@ -102,6 +104,7 @@
       "js/petbehavior.js",
       "js/petpantry.js",
       "tools/gen_animalgrade.py",
+      "tools/test_market_pet_catalog.js",
       "tools/test_pet_asset_catalog.js",
       "tools/test_pet_bond.js",
       "tools/test_petpantry.js",
@@ -110,9 +113,7 @@
       "img/anim/pet_dragon_idle.json",
       "img/home-v2/r10_pet_world.svg",
       "img/home-v2/r111_pet_world_scene.svg",
-      "img/home-v2/r11_pet_world.svg",
-      "img/home-v2/r9_pet_world.svg",
-      "js/data/animalgrade.js"
+      "img/home-v2/r11_pet_world.svg"
     ],
     "housing": [
       "js/data/band/b6_legal_inhousecounsel-mugshot.js",
@@ -232,11 +233,11 @@
       "tools/gen_word_audio.py",
       "tools/make_assetlinks.py",
       "tools/make_store_assets.py",
+      "tools/prepare_cake_assets.py",
       "tools/test_asset_leaderboard.js",
       "tools/test_f1_engine_audio.js",
       "tools/test_fps_weapon_assets.py",
-      "tools/test_matching_web_assets.py",
-      "tools/test_pet_asset_catalog.js"
+      "tools/test_matching_web_assets.py"
     ],
     "shared": [
       "js/util.js",

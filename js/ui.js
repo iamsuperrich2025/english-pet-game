@@ -7432,7 +7432,7 @@ async function enterPetShopping3D(target='food'){
     const ps3Css = document.querySelector('link[href*="css/petshopping3d.css"]');
     if(ps3Css && !ps3Css.href.includes('v=1168')) ps3Css.href='css/petshopping3d.css?v=1168';
     await loadScriptOnce('js/vendor/three.min.js');
-    await loadScriptOnce('js/petshopping3d.js?v=1169');
+    await loadScriptOnce('js/petshopping3d.js?v=1329');
     if(!window.PetShopping3D || typeof PetShopping3D.start !== 'function') throw new Error('PetShopping3D API ไม่พร้อม');
     const own = rental ? null : myCar();
     const started = PetShopping3D.start({target, carId:own ? own.id : 'car_01', rental});
