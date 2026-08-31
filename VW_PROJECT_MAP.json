@@ -1,10 +1,10 @@
 {
   "schema_version": 4,
   "project": "english-pet-game",
-  "structure_signature": "07823ba25bf3070a8d9471a647dfb87abce55534930cb7436090b3090a2f36f1",
+  "structure_signature": "cc98dd1488dc705aa083915f695195f270892820a1d0adffd588547aecf10218",
   "structure_entry_count": 2824,
   "generated_by": "VW Dev Studio Local Token Saver",
-  "generated_at": "2026-08-31T09:19:14",
+  "generated_at": "2026-08-31T14:55:44",
   "generation_mode": "local_no_ai_no_api",
   "areas": {
     "main_world": [
@@ -49,7 +49,6 @@
     "mother_ship": [
       "ship.bat",
       "handoff/SHIP.round1060.codex-backup.txt",
-      "handoff/SHIP.txt",
       "tools/ship.sh",
       "tools/ship_entry.sh"
     ],
