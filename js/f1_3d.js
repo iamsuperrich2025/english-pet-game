@@ -197,6 +197,12 @@ const LIGHT_STEP_S = 1.0;     // เว้นระยะไฟแต่ละ�
 const LIGHT_HOLD_MIN = 0.7;   // ไฟครบ 5 แล้วค้างสุ่ม 0.7-2.6 วิ (เหมือนจริง เดาไม่ได้)
 const LIGHT_HOLD_MAX = 2.6;
 const JUMP_PENALTY_S = 2.0;   // กดคันเร่ง "ใหม่" ตอนไฟครบ 5 = จั๊มพ์สตาร์ท โดนหน่วง
+/* 🎵 เพลงประจำ Vocab World Racing: build จะแทน token ด้วย URL แบบ content hash
+   HTMLAudioElement + preload=metadata ทำให้โหลดแบบ stream เมื่อเข้าโลก ไม่ดึง 3.9 MB ตอนเปิดเว็บ */
+const RACE_BGM_BUILD_URL='__VW_F1_RACE_BGM_URL__';
+const RACE_BGM_URL=RACE_BGM_BUILD_URL.startsWith('__VW_')?'sound/racing/Velocity_Vocabulary.mp3':RACE_BGM_BUILD_URL;
+const RACE_BGM_VOLUME=.42;
+const RACE_BGM_EXIT_FADE_MS=1100;
 /* 👻 รถเงา Best Lap (รอบ 902) */
 const GHOST_HZ     = 10;      // บันทึกเส้นทาง 10 จุด/วินาที
 const GHOST_MAX    = 3000;    // เพดานจุด (5 นาที) — ยาวกว่านี้ไม่บันทึก
@@ -223,6 +229,7 @@ let playerCarStyle=CAR_STYLES[0];
 let airborne=false,activeJump=null,jumpPrevD=-1,jumpImpact=0,jumpLandKickT=0,jumpMissed=false;
 let camPos=null, camInit=false, camYaw=0, shakeT=0;
 let camMode='cockpit', cockpitEl=null, cockpitTurnEl=null, cockpitTurnSrc='', camBtnEl=null;   // 🪖 รอบ 901 — มุมคนขับเป็นภาพหลัก
+let raceBgm=null,raceBgmBtn=null,raceBgmFadeTimer=0,raceBgmFadeToken=0,raceBgmPlayToken=0,raceBgmBlocked=false;
 let padRev=false, revNow=false, sandT=0, portalEl=null, portalViewCv=null, portalActive=false, portalT=0, portalJumped=false, portalTargetIdx=0, portalResumeSpeed=0;   // ⏪🏜️ รอบ 911
 let wheelEl=null, qualityWheelEl=null, wheelDeg=null, wheelSy=1; // 🎡 ชั้นพวงมาลัยแยก: Battery image + Quality procedural wheel
 let ledsEl=null, ledEls=[], ledN=-1, ledRpm=0, ledFlashT=0, ledFlash=false;  // 🚥 รอบ 918 — ชั้นดวงไฟ LED รอบเครื่อง
@@ -509,6 +516,86 @@ const Snd=(function(){
     get rpmActual(){return actualRpm;},get mode(){return engineMode;},get asset(){return ENGINE_URL;},
     get windHz(){return windLp?windLp.frequency.value:null;}};
 })();
+/* ============================================================
+   🎵 RACING BACKGROUND MUSIC — lazy stream + browser disk cache + fade on exit
+   ============================================================ */
+function raceMusicPreferenceOn(){
+  if(typeof Music!=='undefined'&&Music.isMusicOn)return Music.isMusicOn();
+  return !(typeof state!=='undefined'&&state.musicOff);
+}
+function raceMusicCanPlay(){
+  return raceMusicPreferenceOn()&&!(typeof state!=='undefined'&&state.sound===false);
+}
+function raceMusicSyncButton(){
+  if(!raceBgmBtn)return;
+  const on=raceMusicPreferenceOn(),masterOff=typeof state!=='undefined'&&state.sound===false;
+  raceBgmBtn.setAttribute('aria-pressed',on?'true':'false');
+  raceBgmBtn.classList.toggle('blocked',raceBgmBlocked);
+  raceBgmBtn.textContent=raceBgmBlocked?'⚠️ แตะเปิดเพลง':(on&&!masterOff?'🎵 เพลง เปิด':'🔇 เพลง ปิด');
+  raceBgmBtn.title=masterOff?'เสียงหลักของเกมถูกปิดอยู่':'Velocity Vocabulary — เปิด/ปิดเพลง Racing';
+}
+function raceMusicEnsure(){
+  if(raceBgm)return raceBgm;
+  const a=new Audio();
+  a.preload='metadata';
+  a.loop=true;
+  a.volume=RACE_BGM_VOLUME;
+  a.src=RACE_BGM_URL;
+  a.addEventListener('error',()=>{raceBgmBlocked=true;raceMusicSyncButton();});
+  raceBgm=a;
+  return a;
+}
+function raceMusicCancelFade(){
+  raceBgmFadeToken++;
+  if(raceBgmFadeTimer){clearTimeout(raceBgmFadeTimer);raceBgmFadeTimer=0;}
+}
+function raceMusicStart(){
+  raceMusicCancelFade();
+  raceBgmBlocked=false;
+  raceMusicSyncButton();
+  if(!raceMusicCanPlay())return Promise.resolve(false);
+  const a=raceMusicEnsure(),token=++raceBgmPlayToken;
+  a.volume=RACE_BGM_VOLUME;
+  const p=a.play();
+  if(!p||!p.then)return Promise.resolve(true);
+  return p.then(()=>{
+    if(token!==raceBgmPlayToken||!running){a.pause();return false;}
+    raceBgmBlocked=false;raceMusicSyncButton();return true;
+  }).catch(()=>{
+    if(token===raceBgmPlayToken){raceBgmBlocked=true;raceMusicSyncButton();}
+    return false;
+  });
+}
+function raceMusicStop(fadeMs=0,reset=false,done){
+  raceMusicCancelFade();
+  raceBgmPlayToken++;
+  const a=raceBgm;
+  const finish=()=>{
+    if(a){a.pause();a.volume=RACE_BGM_VOLUME;if(reset){try{a.currentTime=0;}catch(_){}}}
+    raceBgmFadeTimer=0;
+    if(done)done();
+  };
+  if(!a||a.paused||fadeMs<=0){finish();return;}
+  const startAt=performance.now(),startVol=a.volume,fadeToken=++raceBgmFadeToken;
+  const step=()=>{
+    if(fadeToken!==raceBgmFadeToken)return;
+    const k=Math.min(1,(performance.now()-startAt)/fadeMs);
+    a.volume=Math.max(0,startVol*(1-k));
+    if(k>=1)finish();else raceBgmFadeTimer=setTimeout(step,40);
+  };
+  step();
+}
+function raceMusicToggle(){
+  const next=!raceMusicPreferenceOn();
+  if(typeof Music!=='undefined'&&Music.setMusic)Music.setMusic(next);
+  else if(typeof state!=='undefined'){state.musicOff=!next;if(typeof saveState==='function')saveState();}
+  raceBgmBlocked=false;raceMusicSyncButton();
+  if(next)raceMusicStart();else raceMusicStop(320,false);
+}
+function raceMusicVisibilityChange(){
+  if(document.hidden)raceMusicStop(0,false);
+  else if(running)raceMusicStart();
+}
 const GEARS=[0,13,21,30,40,52,65,79,93];      // ขอบบนความเร็วแต่ละเกียร์ (m/s)
 function gearOf(v){ for(let i=1;i<GEARS.length;i++){ if(v<=GEARS[i]) return i; } return 8; }
 
@@ -2036,6 +2123,11 @@ const CSS=`
 #f1-exitbtn{background:rgba(216,26,26,.85);border-color:rgba(255,255,255,.25)}
 #f1-statusright{display:flex;flex-direction:column;align-items:stretch;gap:6px}
 #f1-topright #f1-coins{position:static;right:auto;top:auto;text-align:center}
+#f1-musicbtn{position:static;min-height:34px;padding:5px 9px;border-radius:11px;white-space:nowrap;cursor:pointer;
+  color:#dff9ff;font:800 12px/1.2 'Kanit','Segoe UI',sans-serif;background:linear-gradient(180deg,#194660,#07131f);
+  border:1px solid rgba(103,216,255,.68);box-shadow:inset 0 1px rgba(255,255,255,.18),0 3px 12px rgba(0,0,0,.38)}
+#f1-musicbtn[aria-pressed="false"]{color:#c7d1da;background:linear-gradient(180deg,#303942,#0b1015);border-color:rgba(190,205,216,.38)}
+#f1-musicbtn.blocked{color:#ffe39a;border-color:rgba(255,209,46,.72)}
 #f1-word{position:absolute;top:8px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;
   background:rgba(8,12,24,.72);border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:5px 12px;white-space:nowrap;z-index:6}
 #f1-word .f-chip{display:inline-block;min-width:24px;padding:2px 5px;margin:0 1px;border-radius:7px;background:#26304a;
@@ -2371,6 +2463,7 @@ const CSS=`
   .f1-pedal{width:58px;height:78px}.f1-pedal b{font-size:19px}.f1-pedal small{font-size:7px}
   #f1-reverse{width:50px;height:65px}#f1-throttle{width:63px;height:86px}
   #f1-cambtn,#f1-exitbtn{font-size:12px;padding:4px 8px;border-radius:10px}
+  #f1-musicbtn{min-height:29px;padding:4px 7px;font-size:10.5px;border-radius:9px}
   #f1-map{width:min(48vh,32vw);height:min(48vh,32vw)}
   #f1-drs{font-size:15px;padding:3px 9px}
   #f1-drs small{font-size:10px}
@@ -2391,7 +2484,7 @@ function buildDom(){
     <div id="f1-topright">
       <button id="f1-cambtn">📷 มุมรถ</button>
       <button id="f1-exitbtn">🏁 ออก</button>
-      <div id="f1-statusright"><div id="f1-coins">🪙 +0</div><div id="f1-laps"></div></div>
+      <div id="f1-statusright"><div id="f1-coins">🪙 +0</div><div id="f1-laps"></div><button id="f1-musicbtn" type="button" aria-pressed="true">🎵 เพลง เปิด</button></div>
     </div>
     <div id="f1-board"></div>
     <div id="f1-car-proof" aria-live="polite"></div>
@@ -2480,6 +2573,9 @@ function buildDom(){
   speedEl=wrapEl.querySelector('#f1-speed');
   gearEl=wrapEl.querySelector('#f1-gear');
   lapEl=wrapEl.querySelector('#f1-laps');
+  raceBgmBtn=wrapEl.querySelector('#f1-musicbtn');
+  raceBgmBtn.addEventListener('click',raceMusicToggle);
+  raceMusicSyncButton();
   wrongEl=wrapEl.querySelector('#f1-wrong');
   portalEl=wrapEl.querySelector('#f1-portal');
   portalViewCv=portalEl.querySelector('.destination');
@@ -2586,6 +2682,7 @@ function build(){
   playerCarStyle=storedCarStyle();
   built=true;
   buildDom();
+  document.addEventListener('visibilitychange',raceMusicVisibilityChange);
   buildLine();
   findDrsZones();          // 🪽 รอบ 904 — ต้องมาหลัง buildLine (ใช้ LINE.curv/cum)
   buildPitLine();          // 🛞 รอบ 905 — ต้องมาหลัง buildLine (ใช้ nearIdx หาฝั่งโรงรถ) และก่อน buildTrackScene
@@ -4491,11 +4588,16 @@ function start(options){
   window.addEventListener('keydown',keydownFn);
   window.addEventListener('keyup',keyupFn);
   window.addEventListener('resize',resizeFn);
-  running=true; lastT=performance.now();
+  running=true;
+  raceMusicStart();
+  lastT=performance.now();
   rafId=requestAnimationFrame(tick);
 }
 function exitWorld(){
   running=false;
+  raceMusicStop(RACE_BGM_EXIT_FADE_MS,true,()=>{
+    if(!running&&typeof Music!=='undefined'&&Music.resumeBg)Music.resumeBg();
+  });
   netLeave();
   cancelAnimationFrame(rafId);
   window.removeEventListener('keydown',keydownFn);
@@ -4513,7 +4615,6 @@ function exitWorld(){
   wrapEl.classList.remove('on');
   if(garageEl)garageEl.classList.remove('on');
   exitBox.classList.remove('on');
-  if(typeof Music!=='undefined'&&Music.resumeBg) Music.resumeBg();
   saveState();
   if(typeof renderDashboard==='function') renderDashboard();
   if(sessionWords>0||sessionCoins>0)
@@ -4536,6 +4637,9 @@ window.F1World={
     get carVisual(){return {kind:carGrp&&carGrp.userData.modelKind||'unknown',style:playerCarStyle.key,
       cockpit:cockpitAsset('center'),loading:false}},
     get racePosition(){return racePositionSnapshot()},
+    get raceMusic(){return {url:RACE_BGM_URL,preload:raceBgm?raceBgm.preload:null,loop:raceBgm?raceBgm.loop:null,
+      paused:raceBgm?raceBgm.paused:true,volume:raceBgm?raceBgm.volume:0,enabled:raceMusicPreferenceOn(),blocked:raceBgmBlocked}},
+    raceMusicStart,raceMusicStop,raceMusicToggle,
     /* 👥 รอบ 939 — เทสต์ปุ่ม "ไปหาเพื่อน" บนกระดาน (ยัด room ปลอมได้โดยไม่ต้องต่อ Firebase จริง) */
     get room(){return room}, set room(v){room=v}, renderBoard,
     /* 🏎️ รอบ 1208 — hook สำหรับยืนยันรถเพื่อน 3D จากมุม cockpit โดยไม่แตะ Firebase */

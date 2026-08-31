@@ -29,6 +29,9 @@
 - QA กดฟ้าจริง source+dist: cockpit/มุมรถเป็นฟ้า, `stored=blue`, hashed blue ถูกต้อง; F1 18/18 + build/PWA/assets ผ่าน และ manifest มีรถสีใหม่ 15/15, cockpit เก่า 0
 - **รอบ 1333 · hotfix ล้อ 3D ยักษ์ซ้อน cockpit:** ต้นตอคือชุด `F1_FP_WHEELS` เก่ายังถูกเปิดเฉพาะ Battery Saver จึงไม่ปรากฏในการ QA รอบ 1332 ที่บังคับ Quality; ถอดระบบล้อหน้าซ้อนนี้ออกจาก runtime ทุกโหมดและเพิ่ม regression ห้าม marker กลับมา
 - QA กดฟ้าจริงแล้วตรวจภาพด้วยตาก่อน deploy ครบ Source/Dist × Battery/Quality ทั้ง cockpit และมุมรถ: เป็น VR-X1 ฟ้า ไม่มีล้อ/รถรุ่นเก่าซ้อน; F1 18/18 + syntax + build/PWA validator ผ่าน
+- **รอบ 1335 · Racing เพลง Velocity Vocabulary แบบ lazy/cache:** เข้าโลก Racing จึงสร้าง `HTMLAudioElement` แบบ `preload=metadata` + loop; build ฉีด URL content hash และไม่ใส่เพลงใน SW precache
+- ปุ่ม `🎵 เพลง เปิด` / `🔇 เพลง ปิด` อยู่ใต้เวลาในคอลัมน์ขวา ใช้ preference เพลงเดิม; ออกโลกเฟด 1.1 วินาทีแล้ว pause+rewind ก่อนคืนเพลง Lobby
+- Regression เสียง/HUD/F1 + build `.1201` ผ่าน; Chrome QA 1365×610/812×375 ไม่ชน HUD, เปิดซ้ำได้ HTTP 206 จาก disk cache และ fade ลด 0.42→0 ก่อนหยุด
 - **รอบ 1334 · ย้ายแถบอันดับเข้ากรอบบน:** เปลี่ยนสมอจากกล่องรอบด้านขวาเป็นช่องระหว่างการ์ดอันดับสดกับกล่องคำศัพท์ พร้อมจำกัดความกว้างตามพื้นที่จริงและ fallback จอแคบ (`js/f1_3d.js`, `tools/test_f1_board_layout.js`)
 - Visual QA source/dist ที่ 1322×625 และ 812×375: แถบอยู่ช่องบน ไม่ชนอันดับ/คำศัพท์/เวลา; F1 regression ทั้งชุด + syntax + production build/PWA/assets ผ่าน
 - **รอบ 1317 · Home V2 HUD + ตลาดสัตว์:** แถวรอง 4 ช่องสูงเท่าแถวหลัก 56px/49px และ New Word มี safe gap 5/7/6px ตาม desktop/compact/จอเตี้ย; ถอดปุ่มและ route Classic พร้อมจัดเครื่องมือ 6 ปุ่มเต็มกรอบ

@@ -56,6 +56,8 @@ const TOKEN_UPDATED = /__VW_BUILD_UPDATED__/g;
 
 const TOKEN_F1_ENGINE = /__VW_F1_ENGINE_URL__/g;
 
+const TOKEN_F1_RACE_BGM = /__VW_F1_RACE_BGM_URL__/g;
+
 const F1_COCKPIT_ASSETS = ['red', 'blue', 'green', 'yellow', 'orange'].flatMap((color) =>
 
   ['center', 'left', 'right'].map((pose) =>
@@ -146,7 +148,7 @@ async function sourceFiles() {
 
       'js/data/f1_vocab.js',
 
-      'sound/racing/engineSound.mp3', ...F1_COCKPIT_ASSETS,
+      'sound/racing/engineSound.mp3', 'sound/racing/Velocity_Vocabulary.mp3', ...F1_COCKPIT_ASSETS,
 
       'img/f1/peer_car_25d.webp', 'img/f1/sky_racing_1024.webp', 'js/fpsweapon.js', 'js/coinaward.js', 'js/assetaward.js', 'js/onlinecoinaward.js',
 
@@ -634,6 +636,8 @@ async function main() {
 
   const f1PeerCarUrl = await makeImmutableAlias('img/f1/peer_car_25d.webp');
 
+  const f1RaceBgmUrl = await makeImmutableAlias('sound/racing/Velocity_Vocabulary.mp3');
+
   const f1File = path.join(OUT, 'js/f1_3d.js');
 
   let f1Text = await fs.readFile(f1File, 'utf8');
@@ -648,7 +652,7 @@ async function main() {
 
   }
 
-  await fs.writeFile(f1File, f1Text.replace(TOKEN_F1_PEER_CAR_ASSET, f1PeerCarUrl));
+  await fs.writeFile(f1File, f1Text.replace(TOKEN_F1_PEER_CAR_ASSET, f1PeerCarUrl).replace(TOKEN_F1_RACE_BGM, f1RaceBgmUrl));
 
 
 
