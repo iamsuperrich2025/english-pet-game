@@ -1,272 +1,158 @@
-# Vocab World: Frontline 1944 — Phase 1 Foundation Report
+# Vocab World: Frontline 1944 — Phase 1.1 Tank Runtime Correction Report
 
 Status: **ADMIN PREVIEW ONLY**  
-Scope: **Sector Streamer + Collision + Tank Runtime**  
-Baseline source: the current ChatGPT Task ZIP `VW-20260831-160051-a282d1`; no older Frontline source was substituted.
+Scope: **Phase 1 acceptance correction — not Phase 2 visual reconstruction**  
+Current Task baseline: `VW-20260831-190731-3015dd`
 
-## 1. Current source inspected
+## Current source inspected
 
-The Phase 1 implementation was based on the current exported source files, especially:
-
-- `js/frontline1944.js`
-- `css/frontline1944.css`
-- `tools/test_frontline1944.js`
-- `docs/FRONTLINE1944_REPORT.md`
-- `js/home-v2.js` was inspected as supplied context but is **not modified** by this patch.
-- Existing shared vocabulary/economy/admin interfaces are consumed rather than replaced.
-
-The prior Frontline implementation was a bounded single-map orthographic prototype with direct character-style movement. Phase 1 replaces the Frontline runtime foundation while preserving the established fortress -> boss -> core -> letter -> word loop and fail-closed admin gate.
-
-## 2. Files created
-
-No new production runtime path outside the existing Frontline area is required. The existing Frontline files are upgraded in place so the current lazy admin route remains authoritative.
-
-## 3. Files modified
+The correction is based only on the current files exported by VW Dev Studio after the Phase 1 patch:
 
 - `js/frontline1944.js`
 - `css/frontline1944.css`
 - `tools/test_frontline1944.js`
-- `docs/FRONTLINE1944_REPORT.md`
+- current Frontline report / architecture / code-map context supplied by the task
 
-No Home V2, Adventure, Racing, Picture Dictionary, Firebase, login, PWA, grade resolver, or shared economy file is modified.
+No Home V2, Firebase, economy, vocabulary source, Adventure, Racing, or unrelated game source is rewritten.
 
-## 4. Sector streamer implementation
+## Acceptance failures addressed
 
-`SectorStreamer` now maintains an endless logical strip while limiting full simulation/rendering to:
+The user reported seven concrete Phase 1 failures after browser/mobile testing:
 
-- Previous sector
-- Current sector
-- Next sector
+1. Desktop showed the tank runtime, while mobile still showed the old infantry presentation and mobile controls did not react.
+2. Shell travel did not visually agree with the cannon barrel direction.
+3. The tank appeared able to slide sideways.
+4. Forward/reverse behavior was difficult to verify as hull-relative movement.
+5. The temporary tank model did not make front/rear orientation obvious.
+6. Some obstacle edges/corners could still be penetrated.
+7. The gameplay camera was too close to the tank.
 
-Descriptors for the following neighbors are preloaded separately. The descriptor cache is bounded. When a sector leaves the active window, its groups are detached, sector terrain/collision data is removed, local smoke materials are disposed, and expensive entity simulation for that sector stops.
+Phase 1.1 corrects the runtime paths that are available in the current exported source and adds explicit diagnostics for the mobile/Desktop parity check.
 
-There are exactly **10 reusable visual-sector identities**:
+## 1. Mobile/Desktop runtime and control parity
 
-1. Farmland
-2. Wheat Fields
-3. Forest
-4. Village
-5. Ruined Village
-6. River Crossing
-7. Defensive Line
-8. Artillery Zone
-9. Military Camp
-10. Fortress Approach
+`bindStick()` now supports two input paths:
 
-A logical sector index is mapped deterministically to a reusable visual sector ID. The logical world can therefore continue indefinitely without retaining all previous sectors in memory.
+- Pointer Events when available
+- explicit `touchstart` / `touchmove` / `touchend` / `touchcancel` fallback
 
-## 5. World coordinate implementation
+Pointer capture loss and global pointer release are also handled, and blur/visibility changes reset all DRIVE/AIM/FIRE state cleanly.
 
-`WorldSpace` provides logical world coordinates independent of screen pixels and visual artwork. Tank, enemies, fortress, terrain, collision, projectiles, and future multiplayer state use world X/Z coordinates. The orthographic camera performs the World -> Screen projection.
+The Frontline admin launch buttons are hidden and have pointer events disabled while the battlefield runtime is open. This prevents the visible `Frontline 1944 — ADMIN PREVIEW` launcher from overlapping/intercepting AIM/FIRE input on mobile landscape.
 
-Logical sector numbers increase in the tank's default forward direction, so continuous forward travel progresses naturally from Sector 0 to Sector 1, Sector 2, and onward.
+The current runtime exposes an explicit version marker:
 
-## 6. Collision implementation
+- `Frontline1944.VERSION = P1.1-20260831`
+- the HUD shows `P1.1`
 
-`CollisionSystem` uses lightweight circle and AABB proxies. Visual meshes are not used as pixel-perfect collision masks.
+This is intentionally visible during Admin Preview. If a phone still shows the old `PLAYER 100/100` infantry UI and does not show `P1.1`, that phone is not executing this current runtime source; the remaining problem would be outside the supplied Frontline JS/CSS (for example stale deployed/PWA asset loading) and must be investigated from a fresh current task containing the loader/service-worker source rather than guessed here.
 
-Implemented solid examples include:
+## 2. Shell / barrel direction
 
-- tree trunks
-- houses / ruins
-- bunkers
-- walls / defensive structures
-- fortress walls and fortress core
-- bridge rails
+Player projectile direction is no longer reconstructed only from a stored turret angle.
 
-Tank movement uses sub-stepped circle resolution with axis sliding. The resolver advances from the last accepted position, preventing a fast vehicle from becoming blocked on one sub-step and then tunneling through a thin wall later in the same frame.
+`cannonWorldDirection()` now derives the actual X/Z fire vector from the rendered barrel and cannon-tip world transforms. Shell spawn position is taken from the real muzzle tip and advanced slightly beyond the muzzle.
 
-## 7. River / bridge implementation
+Therefore the projectile contract follows the geometry that the player actually sees, even if the turret hierarchy or visual offset changes later.
 
-River appearance and river blocking are separate data.
+## 3. No tank strafe / no collision-induced side slide
 
-- Deep river: `DEEP_WATER`, blocked
-- Bridge deck: higher-priority `ROAD`, crossing allowed
-- Ford: higher-priority `SHALLOW_WATER`, crossing allowed with slowdown
-- Bridge rails: physical AABB colliders
+Tracked player movement now has a dedicated strict resolver:
 
-This explicitly avoids the incorrect rule “visible water means every water pixel is solid.”
+`CollisionSystem.resolveVehicleMove()`
 
-## 8. Terrain type implementation
+The player tank does not use axis-separated collision sliding. Once the intended forward/reverse path is blocked, movement stops at the obstacle instead of resolving X and Z independently and producing a sideways glide.
 
-The extensible terrain table includes:
+Enemy movement retains the general circle resolver so this correction remains isolated to player tracked-vehicle behavior.
 
-- `ROAD` — 1.08x
-- `GRASS` — 1.00x
-- `MUD` — 0.58x
-- `DAMAGED_GROUND` — 0.78x
-- `SHALLOW_WATER` — 0.43x
-- `DEEP_WATER` — blocked
-- `FORTIFICATION` — blocked
+## 4. Hull-relative forward / reverse
 
-Terrain zones use priorities so a bridge or ford can safely override a deep-water river zone without coupling gameplay to art pixels.
+The tank controller now centralizes its vehicle axis in:
 
-## 9. Occlusion implementation
+- `forwardFromRotation(hullRotation)`
+- `driveDelta(hullRotation, speed, dt)`
 
-The scene now uses the requested ordered architecture:
+The movement vector is always:
 
-1. Background
-2. Terrain
-3. Roads / Water
-4. Ground Decoration
-5. Gameplay Props
-6. Actors
-7. Foreground Occluders
-8. Combat FX
-9. Atmosphere
+`Hull Forward × signed speed`
 
-Tree trunk and tree canopy are separate objects. Canopies carry a depth anchor and foreground priority. Actor and occluder render ordering is updated from world depth while normal WebGL depth testing remains available for the actual geometry relationship.
+DRIVE Y controls forward/reverse speed. DRIVE X changes hull heading. There is no direct world-X/world-Z strafe command.
 
-## 10. Tank runtime implementation
+A negative speed uses exactly the opposite hull axis, so reverse remains vehicle-relative.
 
-The player is now an armored vehicle runtime instead of an infantry-style character runtime.
+## 5. Clear front / rear diagnostic
 
-Movement includes:
+The temporary Phase 1 tank now includes Admin Preview orientation markers:
 
-- forward
-- reverse
-- acceleration
-- braking / coasting
-- vehicle turning
-- terrain speed modifiers
-- collision response
-- lateral world boundary protection while forward/back sector travel remains endless
+- **yellow front marker + yellow top stripe** = hull front
+- **red rear marker** = hull rear
 
-The tank has more weight than instant character-direction movement while remaining responsive for mobile controls.
+These are diagnostic geometry for acceptance testing. They can be removed/replaced when Phase 2 introduces the final visual tank asset with an unmistakable glacis/front/rear silhouette.
 
-## 11. Hull / turret implementation
+## 6. Collision edge/corner hardening
 
-Hull and turret are separate transform groups.
+Collision receives three additional protections:
 
-- Hull rotation follows driving/steering.
-- Turret rotation follows aim input.
-- The tank can drive in one direction while aiming/firing in another.
-- Mouse/pen ground aiming is supported for desktop testing.
-- Mobile has a separate AIM stick in addition to DRIVE and FIRE.
+1. Player tracked movement uses finer strict swept steps and stops on the first blocked sub-step.
+2. Blocked terrain is sampled across the tank footprint, not only at the tank center. This reduces clipping into deep-water/fortification boundaries.
+3. Fortress perimeter collision uses continuous side/back proxies and continuous front segments around the intended gate instead of many small segment colliders with tiny seams.
 
-Future UI anchors are already present for player name, HP, and floating damage.
+Rotated wall proxies also receive a small safety margin so visible wall endpoints/corners do not expose narrow penetration gaps.
 
-## 12. Projectile foundation
+## 7. Camera distance
 
-Player and enemy shell records contain:
+The orthographic gameplay width is increased from `84` to `132` world units (about 1.57× wider). Camera offset/height is moved farther out and fog density is reduced so the expanded battlefield view remains useful.
 
-- world position
-- direction
-- speed
-- damage
-- owner ID
-- weapon ID
-- impact event
-- lifetime
-- team
-- collision radius
+This is a gameplay/readability correction only; it does not attempt Visual Master reconstruction.
 
-Projectile travel is sub-stepped to reduce tunneling through actors/solids. Impact events feed lightweight pooled FX. This structure can later add tracer, muzzle flash, smoke trail, ballistic impression, recoil, sparks, dust, explosion, and transient light without replacing the projectile contract.
+## Preserved Phase 1 foundation
 
-## 13. Pooling implementation
+The correction keeps the already-built foundation intact:
 
-Bounded object pools are used for:
+- 10 reusable visual-sector identities
+- Previous / Current / Next active streaming
+- bounded descriptor preload cache
+- logical world coordinates independent from art pixels
+- terrain types and bridge-over-deep-water priority
+- object pooling and projectile caps
+- hull/turret independent state
+- multiplayer-ready tank snapshot fields
+- vocabulary/economy/save integration points
+- fail-closed Admin Preview access
 
-- player projectiles: max 40
-- enemy projectiles: max 24
-- transient impact FX: max 60
-
-Expired/impacted objects are released back to their pools instead of creating unlimited retained objects.
-
-## 14. Multiplayer-ready fields
-
-The local tank exposes a network-ready snapshot containing:
-
-- player ID
-- display name
-- position
-- hull rotation
-- turret rotation
-- HP / max HP
-- active weapon
-- fire event serial
-- visual upgrade tier
-- damage statistic
-- hull / armor / engine / turret tiers
-- main / special weapon IDs
-- skin ID
-
-`interpolateRemoteTank()` is provided for future remote-state smoothing. Phase 1 deliberately does **not** invent or modify Firebase room paths.
-
-Damage records contain source ID, target ID, value, kind, and timestamp, which keeps later Match Damage and Lifetime Damage ranking work attributable.
-
-## 15. Mobile optimizations
-
-- active sector count is bounded to 3
-- descriptor preload cache is bounded
-- inactive sector enemies/fortress simulation is skipped
-- shared geometry/material cache is reused across sectors
-- sector-specific smoke materials are disposed when sectors leave the active window
-- projectile and FX counts are capped
-- renderer DPR is capped at 1.35
-- antialiasing/shadows are reduced on lower-core devices
-- Three.js remains lazy-loaded only after admin access succeeds
-- landscape DRIVE / AIM / FIRE controls have short-screen CSS rules
-- no 4K map or giant uncompressed whole-world image is introduced
-
-## 16. Regression / acceptance test results
-
-### Server-side validation performed on the exported task context
+## Validation performed in the task environment
 
 **PASS**
 
-- `node --check` on patched `js/frontline1944.js`
-- `node --check` on patched `tools/test_frontline1944.js`
-- logical world coordinate round-trip
-- 10 visual sector IDs and reusable mapping range
-- bounded descriptor cache
-- Tank -> tree trunk = blocked
-- Tank -> house = blocked
-- Tank -> bunker = blocked
-- Tank -> fortress wall = blocked
-- Tank -> deep river = blocked
-- Tank -> bridge = allowed
-- Tank -> ford = shallow-water terrain
-- Tank -> mud = reduced speed
-- swept movement does not tunnel through tested fortress wall
-- foreground occluder ownership contract
-- independent hull/turret values in tank snapshot
-- remote interpolation contract
-- bounded/reusable object pool
-- explicit mobile object caps
-- future player name / HP / damage anchors
+- `node --check js/frontline1944.js`
+- `node --check tools/test_frontline1944.js`
+- isolated VM load of the patched runtime surface
+- hull rotation 0 -> forward world `-Z`
+- hull rotation +90° -> forward world `+X`
+- positive speed follows hull forward
+- negative speed follows the exact opposite hull axis
+- strict vehicle sweep stops at a solid wall without axis-slide resolution
+- tank-footprint terrain check blocks at a deep-water edge before the center enters it
+- bridge center remains traversable when ROAD priority overrides DEEP_WATER
+- runtime version marker is exported
 
-### Full repository regression to run after Import in VW Dev Studio
+Full browser/build regression must still run in VW Dev Studio after Import because the ChatGPT Task ZIP is curated context and does not include the complete runnable repository/build tree.
 
-The exported Task ZIP is a curated source-context package and does not contain the full runnable repository (`package.json`, `index_classic.html`, `js/data/f1_vocab.js`, vendored Three.js, and the full build tree are not all present). Therefore full browser/build claims are intentionally **not fabricated on the server**.
+## Required local acceptance after Apply
 
-The patched `tools/test_frontline1944.js` is prepared to validate the real repository after import, including the existing admin lazy route, shared P.1-P.6 vocabulary source, shared economy/save hooks, terrain/collision foundation, mobile controls, object caps, and multiplayer-ready tank state.
+Before Phase 2 begins, verify on **both desktop and the actual phone**:
 
-## 17. Build result
+1. HUD says `TANK` and displays `P1.1`.
+2. Yellow marker is visibly the hull front and red marker is the rear.
+3. DRIVE up moves toward the yellow front marker.
+4. DRIVE down reverses toward the red rear marker.
+5. DRIVE left/right rotates the hull and does not strafe the tank sideways.
+6. AIM rotates only the turret.
+7. FIRE sends the shell exactly along the visible barrel.
+8. Tree/house/bunker/wall/fortress/deep-water collisions cannot be penetrated at corners/endpoints.
+9. Bridge remains crossable.
+10. The camera shows materially more surrounding battlefield than the Phase 1 screenshot.
+11. Mobile DRIVE/AIM/FIRE all react to touch.
+12. The floating Frontline admin launcher is not visible over the controls while the runtime is open.
 
-- JavaScript syntax validation: **PASS**
-- Phase 1 isolated foundation unit validation: **PASS**
-- Full `npm run build`: **NOT EXECUTED in the curated ChatGPT Task ZIP environment** because the complete repository/package files were not exported. Run VW Dev Studio **Build** immediately after applying the patch.
-
-## 18. Known limitations
-
-- This is intentionally **Phase 1 Foundation**, not Visual Master convergence.
-- Sector visuals remain inexpensive procedural/primitive representations suitable for validating streaming/collision/depth. Phase 2 should replace the main presentation with authored/generated lightweight battlefield art while retaining these logical systems.
-- Enemy defender visuals are still lightweight placeholders; Phase 1 only requires the player runtime to become a tank.
-- Multiplayer networking is not activated yet; only the state contract and interpolation foundation are prepared.
-- Final realistic shell FX, recoil, tracer, smoke trail, explosions, transient lighting, ranking UI, garage/shop, and persistent upgrade purchase flow remain later phases.
-- Browser rendering/mobile FPS must be measured on the actual local project after import because this task export does not include a runnable complete web build.
-
-## 19. Exact next step — Phase 2
-
-**Phase 2 — Visual Reconstruction** should keep the Phase 1 world/terrain/collision/tank contracts unchanged and replace only the presentation layer with the planned lightweight high-quality battlefield pipeline:
-
-- approximately 10 authored/generated reusable sector art sets
-- farmland / wheat / forest / village / ruins / river / defense / artillery / camp / fortress-approach visual identities
-- optimized WebP/AVIF where appropriate
-- separate tree canopy / roof / arch foreground occluders
-- reusable props, decals, craters, debris, fog, smoke and atmosphere overlays
-- visual variation driven by logical sector seed so repeated sector art does not look like a direct loop
-- screenshot comparison against the supplied Frontline 1944 Visual Master at mobile landscape sizes
-
-The Phase 2 rule should be: **upgrade visuals without moving gameplay collision back into pixels and without increasing endless-world memory with distance traveled.**
+If desktop shows `P1.1` but the phone still shows the old infantry `PLAYER 100/100` runtime, stop there: do not call Phase 1 accepted. Export a fresh VW Dev Task that explicitly includes the Frontline lazy loader and PWA/service-worker/update path so cache/deploy parity can be fixed from current source evidence.

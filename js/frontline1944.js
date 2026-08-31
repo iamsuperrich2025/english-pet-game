@@ -1,5 +1,5 @@
 /* Vocab World: Frontline 1944 — ADMIN PREVIEW ONLY
- * Phase 1 Foundation: streamed battlefield sectors, logical world coordinates,
+ * Phase 1.1 Acceptance Correction: streamed battlefield sectors, logical world coordinates,
  * lightweight terrain/collision, 2.5D occlusion anchors, tank runtime,
  * pooled projectiles, and multiplayer-ready tank state.
  *
@@ -13,7 +13,11 @@ const CFG={
   letterCoins:1,
   wordBonus:50,
   dpr:1.35,
-  viewW:84,
+  viewW:132,
+  cameraOffsetX:50,
+  cameraHeight:70,
+  cameraOffsetZ:58,
+  runtimeVersion:'P1.1-20260831',
   sectorWidth:180,
   sectorLength:150,
   streamRadius:1,
@@ -85,7 +89,7 @@ const G={
   player:null,enemies:[],fortress:null,sectorStreamer:null,collision:null,terrain:null,pools:null,
   occluders:[],smoke:[],sun:null,sunTarget:null,word:null,pos:0,wordRunId:'',wordsDone:0,
   fortressSerial:0,objectiveSectorIndex:null,claimed:new Set(),audit:null,damageEvents:[],
-  fireEventSerial:0,resources:null,raycaster:null,groundPlane:null,progressHydrated:false
+  fireEventSerial:0,resources:null,raycaster:null,groundPlane:null,progressHydrated:false,lastControlInputAt:0,
 };
 
 const $=s=>G.root&&G.root.querySelector(s);
@@ -108,10 +112,10 @@ function adminAllowed(){
 }
 function lockNotice(){if(typeof toast==='function')toast('🔒 Vocab Frontline 1944 เป็น ADMIN PREVIEW เท่านั้น');}
 function syncAdminEntry(){
-  const ok=adminAllowed();
+  const ok=adminAllowed(),runtimeOpen=!!G.root;
   for(const id of ['btn-rail-frontline1944','btn-frontline1944-admin-launcher']){
     const b=document.getElementById(id);if(!b)continue;
-    b.hidden=!ok;b.setAttribute('aria-hidden',ok?'false':'true');
+    const hide=!ok||runtimeOpen;b.hidden=hide;b.setAttribute('aria-hidden',hide?'true':'false');b.style.pointerEvents=hide?'none':'';
     if(ok&&!b.dataset.bound){b.dataset.bound='1';b.addEventListener('click',()=>open());}
   }
 }
@@ -192,14 +196,14 @@ function makeDom(){
   <div class="fl44-hud"><div class="fl44-top">
     <div class="fl44-panel fl44-player"><div class="fl44-player-row"><b>TANK</b><span id="fl44-hptext">${CFG.playerHP}/${CFG.playerHP}</span></div><div class="fl44-bar"><i id="fl44-hp"></i></div><small id="fl44-terrain">GRASS · ×1.00</small></div>
     <div class="fl44-panel fl44-word"><small>TARGET WORD</small><b id="fl44-word">—</b><div class="fl44-slots" id="fl44-slots"></div></div>
-    <div class="fl44-panel fl44-coins"><span>เหรียญรวม</span><strong id="fl44-coins">0</strong><span id="fl44-grade"></span><small id="fl44-sector">Sector 0</small></div>
+    <div class="fl44-panel fl44-coins"><span>เหรียญรวม</span><strong id="fl44-coins">0</strong><span id="fl44-grade"></span><small id="fl44-sector">Sector 0</small><small id="fl44-runtime">P1.1</small></div>
   </div>
   <div class="fl44-panel fl44-boss" id="fl44-boss"><div class="fl44-boss-name" id="fl44-bossname">FORTRESS COMMANDER</div><div class="fl44-bar"><i id="fl44-bosshp"></i></div></div>
   <div class="fl44-panel fl44-objective"><b id="fl44-objective">ค้นหาฐานศัตรู</b><span id="fl44-distance">—</span><div class="fl44-arrow" id="fl44-arrow">➤</div></div>
   <div class="fl44-panel fl44-state" id="fl44-state">เดินทางไปยังฐานเป้าหมาย</div></div>
   <div class="fl44-controls"><div class="fl44-stick" id="fl44-stick"><i class="fl44-knob"></i><span>DRIVE</span></div><div class="fl44-aim-stick" id="fl44-aim-stick"><i class="fl44-aim-knob"></i><span>AIM</span></div><button class="fl44-fire" id="fl44-fire">FIRE</button></div>
   <button class="fl44-exit" id="fl44-exit">ออก</button><div class="fl44-toast" id="fl44-toast"><b></b><span></span></div>`;
-  document.body.appendChild(r);G.root=r;$('#fl44-exit').onclick=close;bindControls();
+  r.dataset.runtimeVersion=CFG.runtimeVersion;document.body.appendChild(r);G.root=r;syncAdminEntry();$('#fl44-exit').onclick=close;bindControls();
 }
 function showToast(a,b){if(!G.root)return;const t=$('#fl44-toast');t.querySelector('b').textContent=a;t.querySelector('span').textContent=b||'';t.classList.add('on');clearTimeout(G.toastTimer);G.toastTimer=setTimeout(()=>t&&t.classList.remove('on'),1700);}
 
@@ -275,35 +279,48 @@ class CollisionSystem{
   }
   removeOwner(ownerId){for(const [k,list] of this.bySector){const next=list.filter(c=>c.ownerId!==ownerId);if(next.length)this.bySector.set(k,next);else this.bySector.delete(k);}}
   collidersNear(x,z){const idx=WorldSpace.sectorIndexAtZ(z),out=[];for(const k of [idx-1,idx,idx+1]){const list=this.bySector.get(k);if(list)out.push(...list);}return out;}
+  blockedTerrainFootprint(x,z,radius){
+    const r=Math.max(0,Number(radius)||0)*.9,diag=r*.70710678,pts=[[0,0],[r,0],[-r,0],[0,r],[0,-r],[diag,diag],[diag,-diag],[-diag,diag],[-diag,-diag]];
+    for(const q of pts){const terrain=this.terrain.sample(x+q[0],z+q[1]);if(terrain.blocked)return terrain;}
+    return null;
+  }
   hitSolid(x,z,radius,ignoreOwner=''){
-    const terrain=this.terrain.sample(x,z);if(terrain.blocked)return {blocked:true,type:'terrain',terrain};
+    const blockedTerrain=this.blockedTerrainFootprint(x,z,radius);if(blockedTerrain)return {blocked:true,type:'terrain',terrain:blockedTerrain};
+    const terrain=this.terrain.sample(x,z);
     for(const c of this.collidersNear(x,z)){if(!c.solid||c.ownerId===ignoreOwner)continue;let hit=false;
-      if(c.shape==='circle'){const dx=x-c.x,dz=z-c.z,rr=radius+c.r;hit=dx*dx+dz*dz<rr*rr;}
-      else{const nx=clamp(x,c.x-c.w*.5,c.x+c.w*.5),nz=clamp(z,c.z-c.h*.5,c.z+c.h*.5),dx=x-nx,dz=z-nz;hit=dx*dx+dz*dz<radius*radius;}
+      if(c.shape==='circle'){const dx=x-c.x,dz=z-c.z,rr=radius+c.r;hit=dx*dx+dz*dz<=rr*rr;}
+      else{const nx=clamp(x,c.x-c.w*.5,c.x+c.w*.5),nz=clamp(z,c.z-c.h*.5,c.z+c.h*.5),dx=x-nx,dz=z-nz;hit=dx*dx+dz*dz<=radius*radius;}
       if(hit)return {blocked:true,type:'solid',collider:c,terrain};
     }
     return {blocked:false,terrain};
   }
   hitSolidOnly(x,z,radius,ignoreOwner=''){
     for(const c of this.collidersNear(x,z)){if(!c.solid||c.ownerId===ignoreOwner)continue;let hit=false;
-      if(c.shape==='circle'){const dx=x-c.x,dz=z-c.z,rr=radius+c.r;hit=dx*dx+dz*dz<rr*rr;}
-      else{const nx=clamp(x,c.x-c.w*.5,c.x+c.w*.5),nz=clamp(z,c.z-c.h*.5,c.z+c.h*.5),dx=x-nx,dz=z-nz;hit=dx*dx+dz*dz<radius*radius;}
+      if(c.shape==='circle'){const dx=x-c.x,dz=z-c.z,rr=radius+c.r;hit=dx*dx+dz*dz<=rr*rr;}
+      else{const nx=clamp(x,c.x-c.w*.5,c.x+c.w*.5),nz=clamp(z,c.z-c.h*.5,c.z+c.h*.5),dx=x-nx,dz=z-nz;hit=dx*dx+dz*dz<=radius*radius;}
       if(hit)return c;
     }return null;
   }
   resolveCircleMove(from,to,radius){
-    const dx=to.x-from.x,dz=to.z-from.z,len=Math.hypot(dx,dz),steps=Math.max(1,Math.ceil(len/Math.max(.75,radius*.55))),stepX=dx/steps,stepZ=dz/steps;let x=from.x,z=from.z,blocked=false,contact=null;
-    // Integrate from the last accepted position instead of sampling absolute interpolation points.
-    // This prevents a fast tank from becoming blocked for one sub-step and then jumping through a thin wall later in the same frame.
+    const dx=to.x-from.x,dz=to.z-from.z,len=Math.hypot(dx,dz),steps=Math.max(1,Math.ceil(len/Math.max(.55,radius*.38))),stepX=dx/steps,stepZ=dz/steps;let x=from.x,z=from.z,blocked=false,contact=null;
     for(let i=0;i<steps;i++){
       const tx=x+stepX;let h=this.hitSolid(tx,z,radius);if(!h.blocked)x=tx;else{blocked=true;contact=h;}
       const tz=z+stepZ;h=this.hitSolid(x,tz,radius);if(!h.blocked)z=tz;else{blocked=true;contact=h;}
     }
     return {x,z,blocked,contact,terrain:this.terrain.sample(x,z)};
   }
+  // Tank motion is intentionally non-sliding: a tracked vehicle may pivot, but it cannot strafe/glide sideways through collision response.
+  resolveVehicleMove(from,to,radius){
+    const dx=to.x-from.x,dz=to.z-from.z,len=Math.hypot(dx,dz),steps=Math.max(1,Math.ceil(len/Math.max(.28,radius*.18))),stepX=dx/steps,stepZ=dz/steps;let x=from.x,z=from.z,blocked=false,contact=null;
+    for(let i=0;i<steps;i++){
+      const nx=x+stepX,nz=z+stepZ,h=this.hitSolid(nx,nz,radius);
+      if(h.blocked){blocked=true;contact=h;break;}
+      x=nx;z=nz;
+    }
+    return {x,z,blocked,contact,terrain:this.terrain.sample(x,z)};
+  }
   stats(){let colliders=0;for(const v of this.bySector.values())colliders+=v.length;return {sectorBuckets:this.bySector.size,colliders};}
 }
-
 function visualIdFor(logicalIndex){return hash32((logicalIndex|0)*1103515245+12345)%SECTOR_TEMPLATES.length;}
 function sectorDescriptor(logicalIndex){return {logicalIndex,visualSectorId:visualIdFor(logicalIndex),seed:hash32(logicalIndex^0x1944),centerZ:WorldSpace.sectorCenterZ(logicalIndex)};}
 
@@ -350,7 +367,7 @@ function addWall(rt,x,z,w,h,rot=0,kind='stone_wall'){
   const m=sharedMesh('box',0x625e50,w,1.25,h);m.position.set(x,.62,z);m.rotation.y=rot;addToSector(rt,LAYER.GAMEPLAY_PROPS,m);
   // Collision proxies stay axis-aligned and lightweight. Art can rotate independently in later phases.
   const cw=Math.abs(Math.cos(rot))*w+Math.abs(Math.sin(rot))*h,ch=Math.abs(Math.sin(rot))*w+Math.abs(Math.cos(rot))*h;
-  G.collision.registerAABB(rt.index,x,z,cw,ch,{ownerId:rt.ownerId,kind});G.terrain.registerRect(rt.index,x,z,cw,ch,'FORTIFICATION',82,kind);
+  const margin=.45;G.collision.registerAABB(rt.index,x,z,cw+margin*2,ch+margin*2,{ownerId:rt.ownerId,kind});G.terrain.registerRect(rt.index,x,z,cw+margin*2,ch+margin*2,'FORTIFICATION',82,kind);
 }
 function addBridgeCrossing(rt){
   const riverZ=rt.desc.centerZ+6;
@@ -458,6 +475,10 @@ function makeTank(color=0x4e5f4a){
   const root=new THREE.Group(),hull=new THREE.Group(),turret=new THREE.Group();root.add(hull);root.add(turret);
   const chassis=sharedMesh('box',color,5.8,1.25,8.2);chassis.position.y=1.05;hull.add(chassis);
   const upper=sharedMesh('box',0x596b52,4.8,.9,5.2);upper.position.set(0,1.85,-.25);hull.add(upper);
+  // ADMIN PREVIEW orientation markers: yellow = HULL FRONT (-local Z), red = REAR. Keep until final tank art makes front/rear unmistakable.
+  const frontMarker=sharedMesh('box',0xffd84f,3.4,.22,.55,'standard');frontMarker.position.set(0,1.88,-4.18);hull.add(frontMarker);
+  const frontStripe=sharedMesh('box',0xffe889,.46,.12,2.45,'standard');frontStripe.position.set(0,2.36,-2.55);hull.add(frontStripe);
+  const rearMarker=sharedMesh('box',0xc94b3c,2.3,.18,.42,'standard');rearMarker.position.set(0,1.7,4.18);hull.add(rearMarker);
   for(const sx of [-2.75,2.75]){const track=sharedMesh('box',0x242926,.72,1.2,8.7);track.position.set(sx,.78,0);hull.add(track);for(let z=-3.1;z<=3.1;z+=1.55){const wheel=sharedMesh('cylinder',0x343a34,.48,.34,.48);wheel.rotation.z=Math.PI/2;wheel.position.set(sx,.78,z);hull.add(wheel);}}
   const turretBase=sharedMesh('cylinder',0x61725a,1.95,.9,1.95);turretBase.position.y=2.65;turret.add(turretBase);
   const turretBox=sharedMesh('box',0x596b52,3.5,1.15,3.8);turretBox.position.set(0,3.15,-.25);turret.add(turretBox);
@@ -468,7 +489,7 @@ function makeTank(color=0x4e5f4a){
   const hpAnchor=new THREE.Object3D();hpAnchor.position.set(0,5.18,0);root.add(hpAnchor);
   const damageAnchor=new THREE.Object3D();damageAnchor.position.set(0,6.05,0);root.add(damageAnchor);
   root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});root.renderOrder=5000;addToLayer(LAYER.ACTORS,root);
-  return {group:root,hull,turret,barrel,cannonTip,labelAnchor,nameAnchor,hpAnchor,damageAnchor,world:{x:0,z:0},speed:0,hullRotation:0,turretRotation:0,turretTargetRotation:0,hp:CFG.playerHP,maxHp:CFG.playerHP,invuln:0,radius:CFG.tankRadius,
+  return {group:root,hull,turret,barrel,cannonTip,frontMarker,frontStripe,rearMarker,labelAnchor,nameAnchor,hpAnchor,damageAnchor,world:{x:0,z:0},speed:0,hullRotation:0,turretRotation:0,turretTargetRotation:0,hp:CFG.playerHP,maxHp:CFG.playerHP,invuln:0,radius:CFG.tankRadius,
     playerId:'local',displayName:'Player',activeWeapon:'main_cannon',fireEvent:0,visualUpgradeTier:0,damageStatistic:{match:0,lifetime:0},
     hullVisualTier:0,armorTier:0,engineTier:0,turretTier:0,mainWeaponId:'main_cannon',specialWeaponId:'',skinId:'default'};
 }
@@ -501,11 +522,13 @@ function spawnEnemy(x,z,boss){
 
 function registerFortressCollision(f){
   const id=f.ownerId,idx=f.sectorIndex,x=f.world.x,z=f.world.z;
-  for(let i=-3;i<=3;i++){
-    const px=x+i*2.7;G.collision.registerAABB(idx,px,z-10,2.5,1.7,{ownerId:id,kind:'fortress_wall'});if(Math.abs(i)>1)G.collision.registerAABB(idx,px,z+10,2.5,1.7,{ownerId:id,kind:'fortress_wall'});
-    const pz=z+i*2.7;G.collision.registerAABB(idx,x-10,pz,1.7,2.5,{ownerId:id,kind:'fortress_wall'});G.collision.registerAABB(idx,x+10,pz,1.7,2.5,{ownerId:id,kind:'fortress_wall'});
-  }
-  G.collision.registerAABB(idx,x,z,5.8,5.8,{ownerId:id,kind:'fortress_core'});
+  // Continuous proxies remove the tiny segment seams that a tank could previously penetrate at corners/endpoints.
+  G.collision.registerAABB(idx,x,z-10,20.2,2.25,{ownerId:id,kind:'fortress_wall'});
+  G.collision.registerAABB(idx,x-10,z,2.25,20.2,{ownerId:id,kind:'fortress_wall'});
+  G.collision.registerAABB(idx,x+10,z,2.25,20.2,{ownerId:id,kind:'fortress_wall'});
+  G.collision.registerAABB(idx,x-6.8,z+10,6.0,2.25,{ownerId:id,kind:'fortress_wall'});
+  G.collision.registerAABB(idx,x+6.8,z+10,6.0,2.25,{ownerId:id,kind:'fortress_wall'});
+  G.collision.registerAABB(idx,x,z,6.4,6.4,{ownerId:id,kind:'fortress_core'});
 }
 function makeFortress(sectorIndex,serial){
   const desc=sectorDescriptor(sectorIndex),side=serial%2===0?-1:1,x=side*(34+(hash32(serial)%15)),z=desc.centerZ+28,ownerId='fortress:'+serial;
@@ -533,11 +556,15 @@ function damagePlayer(d,projectile){if(!G.player||G.player.invuln>0)return;G.pla
 function destroyCore(){const f=G.fortress;if(!f||f.state!=='core')return;f.state='destroyed';burst(f.world,0xffb351,32);showToast('FORTRESS DESTROYED','กำลังยึดตัวอักษรจากฐาน');const id=f.id;setTimeout(()=>{if(G.running)awardLetter(id);},620);updateHud();}
 
 function cannonWorldPosition(t){const v=new THREE.Vector3();t.cannonTip.getWorldPosition(v);return v;}
+function cannonWorldDirection(t){
+  const tip=cannonWorldPosition(t),base=new THREE.Vector3();t.barrel.getWorldPosition(base);let dx=tip.x-base.x,dz=tip.z-base.z,L=Math.hypot(dx,dz);
+  if(L<1e-5){const f=forwardFromRotation(t.turretRotation);return {x:f.x,z:f.z};}return {x:dx/L,z:dz/L};
+}
 function spawnProjectile(pool,spec){const p=pool.acquire(spec);if(!p)return null;p.impactEvent='';return p;}
 function firePlayer(){
   if(!G.running||!G.player)return;const now=performance.now();if(now<G.fireAt)return;G.fireAt=now+190;
-  const t=G.player,tip=cannonWorldPosition(t),dx=Math.sin(t.turretRotation),dz=-Math.cos(t.turretRotation);G.fireEventSerial++;t.fireEvent=G.fireEventSerial;
-  spawnProjectile(G.pools.playerProjectiles,{x:tip.x,z:tip.z,y:tip.y,dx,dz,speed:CFG.shotSpeed,damage:CFG.shotDamage,ownerId:t.playerId,weaponId:t.mainWeaponId,impactEvent:'pending',lifetime:CFG.shotLife,team:'player',collisionRadius:.22});
+  const t=G.player,tip=cannonWorldPosition(t),dir=cannonWorldDirection(t);G.fireEventSerial++;t.fireEvent=G.fireEventSerial;
+  spawnProjectile(G.pools.playerProjectiles,{x:tip.x+dir.x*.2,z:tip.z+dir.z*.2,y:tip.y,dx:dir.x,dz:dir.z,speed:CFG.shotSpeed,damage:CFG.shotDamage,ownerId:t.playerId,weaponId:t.mainWeaponId,impactEvent:'pending',lifetime:CFG.shotLife,team:'player',collisionRadius:.22});
   burst({x:tip.x,z:tip.z},0xffdc80,3);
 }
 function enemyFire(e){
@@ -569,6 +596,12 @@ function tickFx(dt,now){
   if(!G.lowFx)for(const s of G.smoke){if(!s.sprite.parent)continue;s.sprite.position.y=s.baseY+Math.sin(now*.00045+s.phase)*1.3;}
 }
 
+function forwardFromRotation(rotation){return {x:Math.sin(rotation),z:-Math.cos(rotation)};}
+function driveDelta(rotation,speed,dt){const f=forwardFromRotation(rotation);return {x:f.x*speed*dt,z:f.z*speed*dt};}
+function screenAimDirection(x,y){
+  if(!G.camera||!G.camera.matrixWorld)return {x,z:-y};
+  if(G.camera.updateMatrixWorld)G.camera.updateMatrixWorld();const e=G.camera.matrixWorld.elements,rx=e[0],rz=e[2],ux=e[4],uz=e[6],wx=rx*x-ux*y,wz=rz*x-uz*y,L=Math.hypot(wx,wz)||1;return {x:wx/L,z:wz/L};
+}
 function readDriveInput(){
   const keyThrottle=(G.keys.has('ArrowUp')||G.keys.has('KeyW')?1:0)-(G.keys.has('ArrowDown')||G.keys.has('KeyS')?1:0),keySteer=(G.keys.has('ArrowRight')||G.keys.has('KeyD')?1:0)-(G.keys.has('ArrowLeft')||G.keys.has('KeyA')?1:0);
   let throttle=keyThrottle,steer=keySteer;if(Math.abs(G.joy.y)>.08)throttle=-G.joy.y;if(Math.abs(G.joy.x)>.08)steer=G.joy.x;return {throttle:clamp(throttle,-1,1),steer:clamp(steer,-1,1)};
@@ -577,11 +610,11 @@ function tickTank(dt){
   const t=G.player;if(!t)return;const input=readDriveInput(),terrain=G.terrain.sample(t.world.x,t.world.z),maxForward=CFG.tankForwardSpeed*terrain.speed,maxReverse=CFG.tankReverseSpeed*terrain.speed,target=input.throttle>=0?input.throttle*maxForward:input.throttle*maxReverse;
   const accel=Math.abs(target)>Math.abs(t.speed)?CFG.tankAcceleration:CFG.tankBrake;if(Math.abs(input.throttle)>.02)t.speed=approach(t.speed,target,accel*dt);else t.speed=approach(t.speed,0,CFG.tankCoast*dt);
   if(Math.abs(input.steer)>.02){const movingFactor=.32+.68*clamp(Math.abs(t.speed)/CFG.tankForwardSpeed,0,1),reverse=t.speed<-.15?-.72:1;t.hullRotation=wrapPi(t.hullRotation+input.steer*CFG.tankTurnRate*movingFactor*reverse*dt);}
-  const dx=Math.sin(t.hullRotation)*t.speed*dt,dz=-Math.cos(t.hullRotation)*t.speed*dt,from={x:t.world.x,z:t.world.z},to={x:from.x+dx,z:from.z+dz},moved=G.collision.resolveCircleMove(from,to,t.radius);
-  t.world.x=moved.x;t.world.z=moved.z;if(moved.blocked)t.speed*=.24;
-  // Soft lateral world boundary per streamed strip; forward/back remain endless through sector indices.
-  const edge=CFG.sectorWidth*.5-t.radius-1;if(Math.abs(t.world.x)>edge){t.world.x=clamp(t.world.x,-edge,edge);t.speed*=.55;}
-  if(G.aim.active&&Math.hypot(G.aim.x,G.aim.y)>.12)t.turretTargetRotation=Math.atan2(G.aim.x,-G.aim.y);
+  // Translation is always along the hull's local forward axis. Joystick X only steers; there is no world-X strafe path.
+  const d=driveDelta(t.hullRotation,t.speed,dt),from={x:t.world.x,z:t.world.z},to={x:from.x+d.x,z:from.z+d.z},moved=G.collision.resolveVehicleMove(from,to,t.radius);
+  t.world.x=moved.x;t.world.z=moved.z;if(moved.blocked)t.speed=0;
+  const edge=CFG.sectorWidth*.5-t.radius-1;if(Math.abs(t.world.x)>edge){t.world.x=clamp(t.world.x,-edge,edge);t.speed=0;}
+  if(G.aim.active&&Math.hypot(G.aim.x,G.aim.y)>.12){const a=screenAimDirection(G.aim.x,G.aim.y);t.turretTargetRotation=Math.atan2(a.x,-a.z);}
   if(G.pointerAim){const ax=G.pointerAim.x-t.world.x,az=G.pointerAim.z-t.world.z;if(ax*ax+az*az>1)t.turretTargetRotation=Math.atan2(ax,-az);}
   t.turretRotation=wrapPi(rotateToward(t.turretRotation,t.turretTargetRotation,CFG.turretTurnRate*dt));
   t.invuln=Math.max(0,t.invuln-dt);t.group.visible=t.invuln<=0||Math.floor(t.invuln*18)%2===0;syncTankVisual(t);
@@ -596,7 +629,7 @@ function tickEnemies(dt,now){
 }
 
 function cameraTick(dt){
-  if(!G.player)return;const p=G.player.world,target=new THREE.Vector3(p.x+34,47,p.z+40);G.camera.position.lerp(target,1-Math.pow(.003,dt));G.camera.lookAt(p.x,0,p.z);
+  if(!G.player)return;const p=G.player.world,target=new THREE.Vector3(p.x+CFG.cameraOffsetX,CFG.cameraHeight,p.z+CFG.cameraOffsetZ);G.camera.position.lerp(target,1-Math.pow(.003,dt));G.camera.lookAt(p.x,0,p.z);
   if(G.sun&&G.sunTarget){G.sun.position.set(p.x-55,78,p.z+40);G.sunTarget.position.set(p.x,0,p.z);G.sun.target=G.sunTarget;}
 }
 function updateObjective(){if(!G.fortress||!G.player)return;const a=G.player.world,b=G.fortress.world,dx=b.x-a.x,dz=b.z-a.z,ang=Math.atan2(dx,-dz)*180/Math.PI,meters=Math.round(Math.hypot(dx,dz)*4);const ar=$('#fl44-arrow');if(ar)ar.style.transform='rotate('+ang+'deg)';const ds=$('#fl44-distance');if(ds)ds.textContent=meters+' m';}
@@ -612,14 +645,31 @@ function updateHud(){
 }
 
 function bindStick(stickSel,knobSel,target,isAim){
-  const stick=$(stickSel),knob=$(knobSel);if(!stick||!knob)return;function move(e){const r=stick.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dx=e.clientX-cx,dy=e.clientY-cy,m=r.width*.36,L=Math.hypot(dx,dy)||1,k=Math.min(1,m/L);dx*=k;dy*=k;target.x=dx/m;target.y=dy/m;if(isAim)target.active=true;knob.style.transform='translate('+dx+'px,'+dy+'px)';}
-  listen(stick,'pointerdown',e=>{target.id=e.pointerId;stick.setPointerCapture(e.pointerId);move(e);e.preventDefault();},{passive:false});listen(stick,'pointermove',e=>{if(e.pointerId===target.id){move(e);e.preventDefault();}},{passive:false});const end=e=>{if(e.pointerId!==target.id)return;target.id=null;if(isAim){target.active=false;}else{target.x=target.y=0;}knob.style.transform='translate(0,0)';};listen(stick,'pointerup',end);listen(stick,'pointercancel',end);
+  const stick=$(stickSel),knob=$(knobSel);if(!stick||!knob)return;
+  const apply=(clientX,clientY)=>{const r=stick.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dx=clientX-cx,dy=clientY-cy,m=Math.max(1,r.width*.36),L=Math.hypot(dx,dy)||1,k=Math.min(1,m/L);dx*=k;dy*=k;target.x=dx/m;target.y=dy/m;if(isAim)target.active=true;G.lastControlInputAt=performance.now();knob.style.transform='translate('+dx+'px,'+dy+'px)';};
+  const reset=()=>{target.id=null;target.x=0;target.y=0;if(isAim)target.active=false;knob.style.transform='translate(0,0)';};
+  if('PointerEvent' in window){
+    listen(stick,'pointerdown',e=>{target.id=e.pointerId;try{stick.setPointerCapture(e.pointerId);}catch(_){}apply(e.clientX,e.clientY);e.preventDefault();},{passive:false});
+    listen(stick,'pointermove',e=>{if(e.pointerId===target.id){apply(e.clientX,e.clientY);e.preventDefault();}},{passive:false});
+    const end=e=>{if(e.pointerId===target.id){reset();e.preventDefault();}};listen(stick,'pointerup',end,{passive:false});listen(stick,'pointercancel',end,{passive:false});listen(stick,'lostpointercapture',e=>{if(e.pointerId===target.id)reset();});listen(window,'pointerup',end,{passive:false});
+  }else{
+    const findTouch=e=>{const all=[...(e.touches||[]),...(e.changedTouches||[])];return all.find(t=>t.identifier===target.id)||null;};
+    listen(stick,'touchstart',e=>{const t=e.changedTouches&&e.changedTouches[0];if(!t)return;target.id=t.identifier;apply(t.clientX,t.clientY);e.preventDefault();},{passive:false});
+    listen(stick,'touchmove',e=>{const t=findTouch(e);if(t){apply(t.clientX,t.clientY);e.preventDefault();}},{passive:false});
+    const end=e=>{const t=[...(e.changedTouches||[])].find(q=>q.identifier===target.id);if(t){reset();e.preventDefault();}};listen(stick,'touchend',end,{passive:false});listen(stick,'touchcancel',end,{passive:false});
+  }
+}
+function bindPressControl(el,onDown,onUp){
+  if(!el)return;const down=e=>{onDown();G.lastControlInputAt=performance.now();if(e.pointerId!=null&&el.setPointerCapture)try{el.setPointerCapture(e.pointerId);}catch(_){}e.preventDefault();},up=e=>{onUp();e.preventDefault();};
+  if('PointerEvent' in window){listen(el,'pointerdown',down,{passive:false});listen(el,'pointerup',up,{passive:false});listen(el,'pointercancel',up,{passive:false});listen(el,'lostpointercapture',()=>onUp());}
+  else{listen(el,'touchstart',down,{passive:false});listen(el,'touchend',up,{passive:false});listen(el,'touchcancel',up,{passive:false});}
 }
 function bindControls(){
-  const down=e=>{G.keys.add(e.code);if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();},up=e=>G.keys.delete(e.code);listen(window,'keydown',down,{passive:false});listen(window,'keyup',up);
+  const down=e=>{G.keys.add(e.code);G.lastControlInputAt=performance.now();if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();},up=e=>G.keys.delete(e.code);listen(window,'keydown',down,{passive:false});listen(window,'keyup',up);
   bindStick('#fl44-stick','.fl44-knob',G.joy,false);bindStick('#fl44-aim-stick','.fl44-aim-knob',G.aim,true);
-  const fire=$('#fl44-fire'),fd=e=>{G.firing=true;fire.classList.add('on');fire.setPointerCapture&&fire.setPointerCapture(e.pointerId);e.preventDefault();},fu=e=>{G.firing=false;fire.classList.remove('on');e.preventDefault();};listen(fire,'pointerdown',fd,{passive:false});listen(fire,'pointerup',fu,{passive:false});listen(fire,'pointercancel',fu,{passive:false});
-  listen(window,'blur',()=>{G.keys.clear();G.firing=false;G.joy.x=G.joy.y=0;G.aim.active=false;});listen(document,'visibilitychange',()=>{if(document.hidden){G.keys.clear();G.firing=false;}});
+  const fire=$('#fl44-fire');bindPressControl(fire,()=>{G.firing=true;fire.classList.add('on');},()=>{G.firing=false;fire.classList.remove('on');});
+  listen(G.root,'contextmenu',e=>e.preventDefault(),{passive:false});
+  const reset=()=>{G.keys.clear();G.firing=false;G.joy.x=G.joy.y=0;G.joy.id=null;G.aim.x=G.aim.y=0;G.aim.id=null;G.aim.active=false;};listen(window,'blur',reset);listen(document,'visibilitychange',()=>{if(document.hidden)reset();});
 }
 function pointerToGround(e){if(!G.camera||!G.canvas||!G.raycaster)return null;const r=G.canvas.getBoundingClientRect(),x=((e.clientX-r.left)/r.width)*2-1,y=-((e.clientY-r.top)/r.height)*2+1;G.raycaster.setFromCamera({x,y},G.camera);const hit=new THREE.Vector3();return G.raycaster.ray.intersectPlane(G.groundPlane,hit)?{x:hit.x,z:hit.z}:null;}
 function bindCanvasAim(){
@@ -629,12 +679,12 @@ function bindCanvasAim(){
 function resize(){if(!G.renderer||!G.camera)return;const w=innerWidth,h=innerHeight,aspect=w/Math.max(1,h),vw=CFG.viewW,vh=vw/aspect;G.camera.left=-vw/2;G.camera.right=vw/2;G.camera.top=vh/2;G.camera.bottom=-vh/2;G.camera.updateProjectionMatrix();G.renderer.setSize(w,h,false);}
 function buildLayers(){for(const [name,i] of Object.entries(LAYER)){const g=new THREE.Group();g.name='FrontlineLayer_'+name;g.renderOrder=i*1000;G.scene.add(g);G.layers[i]=g;}}
 function buildWorld(){
-  G.scene=new THREE.Scene();G.scene.background=new THREE.Color(0x8f9c88);G.scene.fog=new THREE.FogExp2(0xa5aa97,.0078);buildLayers();
+  G.scene=new THREE.Scene();G.scene.background=new THREE.Color(0x8f9c88);G.scene.fog=new THREE.FogExp2(0xa5aa97,.0054);buildLayers();
   const amb=new THREE.HemisphereLight(0xdde3cf,0x4a4638,1.32);G.scene.add(amb);G.sun=new THREE.DirectionalLight(0xffedc7,1.42);G.sun.position.set(-55,78,40);G.sun.castShadow=!G.lowFx;G.sun.shadow.mapSize.set(G.lowFx?512:1024,G.lowFx?512:1024);G.sun.shadow.camera.left=-70;G.sun.shadow.camera.right=70;G.sun.shadow.camera.top=70;G.sun.shadow.camera.bottom=-70;G.sun.shadow.camera.far=180;G.sunTarget=new THREE.Object3D();G.scene.add(G.sunTarget);G.sun.target=G.sunTarget;G.scene.add(G.sun);
   G.terrain=new TerrainSystem();G.collision=new CollisionSystem(G.terrain);G.sectorStreamer=new SectorStreamer();initPools();makePlayer();G.sectorStreamer.currentIndex=WorldSpace.sectorIndexAtZ(G.player.world.z);G.sectorStreamer.update(G.player.world.z,true);activateNextFortress(true);
 }
 function initThree(){
-  G.canvas=document.createElement('canvas');G.root.insertBefore(G.canvas,G.root.firstChild);G.renderer=new THREE.WebGLRenderer({canvas:G.canvas,antialias:!(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4),alpha:false,powerPreference:'high-performance'});G.renderer.setPixelRatio(Math.min(devicePixelRatio||1,CFG.dpr));G.renderer.shadowMap.enabled=!G.lowFx;G.renderer.shadowMap.type=THREE.PCFSoftShadowMap;if('outputEncoding' in G.renderer&&THREE.sRGBEncoding)G.renderer.outputEncoding=THREE.sRGBEncoding;G.camera=new THREE.OrthographicCamera(-42,42,24,-24,.1,320);G.camera.position.set(34,47,40);G.camera.lookAt(0,0,0);G.resources=new ResourceCache();G.raycaster=new THREE.Raycaster();G.groundPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);resize();listen(window,'resize',resize);listen(window,'orientationchange',()=>setTimeout(resize,120));buildWorld();bindCanvasAim();
+  G.canvas=document.createElement('canvas');G.root.insertBefore(G.canvas,G.root.firstChild);G.renderer=new THREE.WebGLRenderer({canvas:G.canvas,antialias:!(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4),alpha:false,powerPreference:'high-performance'});G.renderer.setPixelRatio(Math.min(devicePixelRatio||1,CFG.dpr));G.renderer.shadowMap.enabled=!G.lowFx;G.renderer.shadowMap.type=THREE.PCFSoftShadowMap;if('outputEncoding' in G.renderer&&THREE.sRGBEncoding)G.renderer.outputEncoding=THREE.sRGBEncoding;G.camera=new THREE.OrthographicCamera(-CFG.viewW/2,CFG.viewW/2,CFG.viewW/3,-CFG.viewW/3,.1,420);G.camera.position.set(CFG.cameraOffsetX,CFG.cameraHeight,CFG.cameraOffsetZ);G.camera.lookAt(0,0,0);G.resources=new ResourceCache();G.raycaster=new THREE.Raycaster();G.groundPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);resize();listen(window,'resize',resize);listen(window,'orientationchange',()=>setTimeout(resize,120));buildWorld();bindCanvasAim();
 }
 function loop(now){
   if(!G.running)return;const dt=Math.min(.034,G.last?(now-G.last)/1000:.016);G.last=now;tickTank(dt);tickFortress();tickEnemies(dt,now);tickProjectilePool(G.pools.playerProjectiles,dt,true);tickProjectilePool(G.pools.enemyProjectiles,dt,false);tickFx(dt,now);cameraTick(dt);updateOcclusionOrder();updateObjective();if((now|0)%220<34)updateHud();G.renderer.render(G.scene,G.camera);G.raf=requestAnimationFrame(loop);
@@ -645,19 +695,19 @@ function clearScene(){
 }
 async function open(){
   if(!adminAllowed()){lockNotice();return false;}if(G.running||G.starting)return true;G.starting=true;G.progressHydrated=false;makeDom();
-  try{await loadThree();ensureProgress();G.lowFx=!!(window.state&&state.noAnim)||(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4);auditVocabulary();if(!chooseWord(false))throw new Error('Vocabulary source unavailable');initThree();G.running=true;G.last=0;const l=$('.fl44-loading');if(l)l.remove();if(typeof Music!=='undefined'&&Music.suspendBg)Music.suspendBg();G.raf=requestAnimationFrame(loop);showToast('Phase 1 Foundation','Tank + 3-sector streaming + collision พร้อมทดสอบ');return true;}
+  try{await loadThree();ensureProgress();G.lowFx=!!(window.state&&state.noAnim)||(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4);auditVocabulary();if(!chooseWord(false))throw new Error('Vocabulary source unavailable');initThree();G.running=true;G.last=0;const l=$('.fl44-loading');if(l)l.remove();if(typeof Music!=='undefined'&&Music.suspendBg)Music.suspendBg();G.raf=requestAnimationFrame(loop);showToast('Phase 1.1 Runtime '+CFG.runtimeVersion,'Tank controls + muzzle alignment + strict collision พร้อมทดสอบ');return true;}
   catch(e){console.error('[Frontline1944]',e);const l=$('.fl44-loading');if(l)l.innerHTML='<div><b>เปิด Frontline ไม่สำเร็จ</b><small>'+String(e&&e.message||e)+'</small></div>';setTimeout(close,2200);return false;}
   finally{G.starting=false;}
 }
 function close(){
-  if(!G.root&&!G.running)return;G.running=false;G.starting=false;cancelAnimationFrame(G.raf);G.raf=0;clearTimeout(G.toastTimer);G.listeners.splice(0).forEach(f=>{try{f();}catch(e){}});G.keys.clear();try{persist();}catch(e){};try{if(typeof speechSynthesis!=='undefined')speechSynthesis.cancel();}catch(e){};try{clearScene();}catch(e){console.warn('[Frontline1944] cleanup',e);}if(G.renderer){G.renderer.dispose();G.renderer.forceContextLoss&&G.renderer.forceContextLoss();}if(G.root)G.root.remove();if(typeof Music!=='undefined'&&Music.resumeBg)Music.resumeBg();Object.assign(G,{root:null,canvas:null,renderer:null,scene:null,camera:null,layers:{},sectorStreamer:null,collision:null,terrain:null,pools:null,fortress:null,enemies:[],last:0,firing:false,pointerAim:null,raycaster:null,groundPlane:null,sun:null,sunTarget:null,progressHydrated:false});if(typeof renderDashboard==='function')try{renderDashboard();}catch(e){}
+  if(!G.root&&!G.running)return;G.running=false;G.starting=false;cancelAnimationFrame(G.raf);G.raf=0;clearTimeout(G.toastTimer);G.listeners.splice(0).forEach(f=>{try{f();}catch(e){}});G.keys.clear();try{persist();}catch(e){};try{if(typeof speechSynthesis!=='undefined')speechSynthesis.cancel();}catch(e){};try{clearScene();}catch(e){console.warn('[Frontline1944] cleanup',e);}if(G.renderer){G.renderer.dispose();G.renderer.forceContextLoss&&G.renderer.forceContextLoss();}if(G.root)G.root.remove();if(typeof Music!=='undefined'&&Music.resumeBg)Music.resumeBg();Object.assign(G,{root:null,canvas:null,renderer:null,scene:null,camera:null,layers:{},sectorStreamer:null,collision:null,terrain:null,pools:null,fortress:null,enemies:[],last:0,firing:false,pointerAim:null,raycaster:null,groundPlane:null,sun:null,sunTarget:null,progressHydrated:false});syncAdminEntry();if(typeof renderDashboard==='function')try{renderDashboard();}catch(e){}
 }
 function routeCheck(){syncAdminEntry();let requested=window.__VW_FRONTLINE1944_ROUTE__===true;try{requested=requested||new URLSearchParams(location.search).get('go')==='frontline1944';}catch(e){}if(!requested)return;if(adminAllowed()){if(!G.routeTried){G.routeTried=true;open();}}else if(!G.routeDenied){G.routeDenied=true;lockNotice();}}
 
 function occlusionAcceptance(){const tree=G.occluders.find(x=>x.userData&&x.userData.occluder);return {pass:!!(tree&&tree.userData.depthAnchor&&tree.userData.depthAnchor.foreground&&G.player&&G.player.group.renderOrder<tree.renderOrder),playerOrder:G.player&&G.player.group.renderOrder,canopyOrder:tree&&tree.renderOrder,foreground:!!(tree&&tree.userData&&tree.userData.depthAnchor&&tree.userData.depthAnchor.foreground)};}
-function foundationDiagnostics(){return {sectorStreamer:G.sectorStreamer&&G.sectorStreamer.stats(),terrain:G.terrain&&G.terrain.stats(),collision:G.collision&&G.collision.stats(),pools:G.pools&&Object.fromEntries(Object.entries(G.pools).map(([k,p])=>[k,p.stats()])),tank:tankStateSnapshot(),occlusion:occlusionAcceptance(),damageEvents:G.damageEvents.length,visualSectorCount:SECTOR_TEMPLATES.length};}
+function foundationDiagnostics(){return {runtimeVersion:CFG.runtimeVersion,sectorStreamer:G.sectorStreamer&&G.sectorStreamer.stats(),terrain:G.terrain&&G.terrain.stats(),collision:G.collision&&G.collision.stats(),pools:G.pools&&Object.fromEntries(Object.entries(G.pools).map(([k,p])=>[k,p.stats()])),tank:tankStateSnapshot(),controls:{lastInputAt:G.lastControlInputAt,pointerEvents:('PointerEvent' in window)},occlusion:occlusionAcceptance(),damageEvents:G.damageEvents.length,visualSectorCount:SECTOR_TEMPLATES.length};}
 
-window.Frontline1944={open,close,auditVocabulary,adminAllowed,_t:{CFG,G,TERRAIN,LAYER,SECTOR_TEMPLATES,WorldSpace,TerrainSystem,CollisionSystem,SectorStreamer,ObjectPool,visualIdFor,sectorDescriptor,chooseWord,awardLetter,activateNextFortress,tankStateSnapshot,interpolateRemoteTank,occlusionAcceptance,foundationDiagnostics,updateHud}};
+window.Frontline1944={VERSION:CFG.runtimeVersion,open,close,auditVocabulary,adminAllowed,_t:{CFG,G,TERRAIN,LAYER,SECTOR_TEMPLATES,WorldSpace,TerrainSystem,CollisionSystem,SectorStreamer,ObjectPool,visualIdFor,sectorDescriptor,chooseWord,awardLetter,activateNextFortress,tankStateSnapshot,interpolateRemoteTank,forwardFromRotation,driveDelta,cannonWorldDirection,occlusionAcceptance,foundationDiagnostics,updateHud}};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',routeCheck,{once:true});else routeCheck();
 let polls=0;const poll=setInterval(()=>{syncAdminEntry();routeCheck();if(++polls>90||document.getElementById('btn-rail-frontline1944')&&!document.getElementById('btn-rail-frontline1944').hidden)clearInterval(poll);},500);
 })();

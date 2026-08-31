@@ -24,11 +24,13 @@ const sb={console,window:null,document:{readyState:'loading',addEventListener(){
 sb.window=sb;vm.createContext(sb);vm.runInContext(code,sb);
 const T=sb.Frontline1944&&sb.Frontline1944._t;
 assert(T,'Frontline test surface must be exported');
-const {CFG,LAYER,TERRAIN,SECTOR_TEMPLATES,WorldSpace,TerrainSystem,CollisionSystem,SectorStreamer,ObjectPool,visualIdFor,tankStateSnapshot,interpolateRemoteTank,occlusionAcceptance,G}=T;
+const {CFG,LAYER,TERRAIN,SECTOR_TEMPLATES,WorldSpace,TerrainSystem,CollisionSystem,SectorStreamer,ObjectPool,visualIdFor,tankStateSnapshot,interpolateRemoteTank,forwardFromRotation,driveDelta,occlusionAcceptance,G}=T;
 
 // World / sector streaming foundation.
 assert.strictEqual(SECTOR_TEMPLATES.length,10,'exactly 10 reusable visual sector identities are defined');
-assert(CFG.sectorWidth>CFG.viewW*2,'logical battlefield is materially wider than the viewport');
+assert(CFG.sectorWidth>CFG.viewW,'logical battlefield remains wider than the zoomed-out viewport');
+assert(CFG.viewW>=126,'Phase 1.1 camera is zoomed materially farther out');
+assert.strictEqual(sb.Frontline1944.VERSION,CFG.runtimeVersion,'runtime exposes an explicit Phase 1.1 version marker for desktop/mobile parity checks');
 assert.strictEqual(WorldSpace.sectorCenterZ(0),0,'sector 0 world center');
 assert.strictEqual(WorldSpace.sectorCenterZ(1),-CFG.sectorLength,'logical sector numbers increase in the default tank-forward direction');
 assert.strictEqual(WorldSpace.sectorIndexAtZ(-CFG.sectorLength),1,'world position resolves to logical sector independent of pixels');
@@ -63,6 +65,8 @@ assert(collision.hitSolid(0,45,1.5).blocked,'Tank -> fortress wall is blocked');
 assert(collision.hitSolid(25,0,1.5).blocked,'Tank -> deep river is blocked');
 assert(!collision.hitSolid(0,0,1.5).blocked,'Tank -> bridge crossing is allowed');
 const moved=collision.resolveCircleMove({x:-8,z:45},{x:8,z:45},1.5);assert(moved.blocked&&moved.x<0,'swept circle movement does not tunnel through a fortress wall');
+const vehicleMoved=collision.resolveVehicleMove({x:-8,z:45},{x:8,z:45},1.5);assert(vehicleMoved.blocked&&vehicleMoved.x<0,'strict tank resolver stops at collision instead of axis-sliding through/along the obstacle');
+terrain.registerRect(0,55,0,10,20,'DEEP_WATER',70,'footprint-water');assert(collision.hitSolid(49.8,0,2.45).blocked,'tank footprint blocks at deep-water edge before its center enters');
 
 // 2.5D layer/depth foundation.
 for(const k of ['BACKGROUND','TERRAIN','ROADS_WATER','GROUND_DECOR','GAMEPLAY_PROPS','ACTORS','FOREGROUND_OCCLUDERS','COMBAT_FX','ATMOSPHERE'])assert(Number.isInteger(LAYER[k]),k+' layer exists');
@@ -76,6 +80,18 @@ for(const key of ['playerId','displayName','position','hp','maxHp','activeWeapon
 const remote={world:{x:0,z:0},hullRotation:0,turretRotation:0,group:{position:{set(x,y,z){this.x=x;this.y=y;this.z=z;}}},hull:{rotation:{y:0}},turret:{rotation:{y:0}}};
 interpolateRemoteTank(remote,{position:{x:10,z:-20},hullRotation:1,turretRotation:-1},.1);assert(remote.world.x>0&&remote.world.x<10&&remote.world.z<0&&remote.world.z>-20,'remote tank interpolation moves toward replicated state without snapping');
 assert(code.includes('nameAnchor')&&code.includes('hpAnchor')&&code.includes('damageAnchor'),'future player-name / HP / floating-damage anchors are present');
+
+
+// Phase 1.1 tracked-vehicle control contract: no strafe; translation is hull-forward only.
+let fwd=forwardFromRotation(0);assert(Math.abs(fwd.x)<1e-9&&Math.abs(fwd.z+1)<1e-9,'hull rotation 0 faces world -Z');
+fwd=forwardFromRotation(Math.PI/2);assert(Math.abs(fwd.x-1)<1e-9&&Math.abs(fwd.z)<1e-9,'hull rotation +90deg faces world +X');
+let dd=driveDelta(Math.PI/2,10,1);assert(Math.abs(dd.x-10)<1e-8&&Math.abs(dd.z)<1e-8,'forward movement follows the hull forward axis');
+dd=driveDelta(Math.PI/2,-10,1);assert(Math.abs(dd.x+10)<1e-8&&Math.abs(dd.z)<1e-8,'reverse movement follows the exact opposite hull axis');
+assert(code.includes('resolveVehicleMove(from,to,t.radius)')&&code.includes('const d=driveDelta(t.hullRotation,t.speed,dt)'),'tank tick uses the strict hull-forward vehicle resolver');
+assert(code.includes("frontMarker=sharedMesh('box',0xffd84f")&&code.includes("rearMarker=sharedMesh('box',0xc94b3c"),'admin diagnostic front/rear hull markers are present');
+assert(code.includes('function cannonWorldDirection(t)')&&code.includes('t.barrel.getWorldPosition(base)')&&code.includes('dir=cannonWorldDirection(t)'),'shell direction is derived from the rendered barrel/muzzle transform');
+assert(code.includes("if('PointerEvent' in window)")&&code.includes("'touchstart'")&&code.includes("'touchmove'")&&code.includes("'touchend'"),'mobile controls have pointer events plus touch fallback');
+assert(code.includes('runtimeOpen=!!G.root')&&code.includes("b.style.pointerEvents=hide?'none':''"),'admin launcher is hidden/disabled while Frontline runtime is open so it cannot cover mobile controls');
 
 // Projectile / pooling / bounded-memory foundation.
 const pool=new ObjectPool('unit',2,()=>({group:{visible:false},active:false}),o=>{o.group.visible=true;});const a=pool.acquire({}),b=pool.acquire({});assert(a&&b&&!pool.acquire({}),'object pool enforces hard cap');pool.release(a);assert(pool.acquire({}),'released pooled object is reusable');assert.strictEqual(pool.stats().created,2,'pool does not allocate beyond cap');
@@ -92,4 +108,4 @@ assert.strictEqual(typeof vb.f1VocabForStudent,'function','authoritative shooter
 const grades=['ป.1','ป.2','ป.3','ป.4','ป.5','ป.6'],counts={};
 for(const grade of grades){vb.state.student.grade=grade;const raw=vb.f1VocabForStudent()||[];const words=raw.map(x=>Array.isArray(x)?x[0]:x&&(x.en||x.word||x.eng||x.english)).filter(Boolean).map(x=>String(x).trim().toUpperCase());counts[grade]={count:words.length,unique:new Set(words).size};assert(words.length>0,grade+' vocabulary source must not be empty');assert.strictEqual(counts[grade].count,counts[grade].unique,grade+' vocabulary must not duplicate English targets in the shooter pool');}
 console.log('Frontline vocabulary audit P.1-P.6:',JSON.stringify(counts));
-console.log('PASS Frontline 1944 Phase 1: streamed logical world, tank runtime, collision/terrain, bridge override, occlusion anchors, pooled projectiles, multiplayer-ready state, mobile caps, and shared-system guards');
+console.log('PASS Frontline 1944 Phase 1.1: mobile/desktop runtime controls, hull-forward tracked movement, muzzle-aligned shells, strict collision, zoomed camera, sector foundation, pooling, and shared-system guards');
