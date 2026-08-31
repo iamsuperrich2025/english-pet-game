@@ -27,6 +27,8 @@
 - QA กด UI จริง: เขียว→ยืนยัน→cockpit→มุมรถ ทั้ง source/dist ได้ `stored=green`, cockpit green hashed และ `kind=vrx1-faceted-low-poly`; F1 12 ชุด + build/PWA/assets ผ่าน
 - **รอบ 1332 · ถอด cockpit แดงรุ่นเก่าที่ทับสี:** ต้นตอภาพผู้ใช้ตรงกับ `cockpit.webp` fallback เป๊ะ และโหมดประหยัดยังใช้ `cockpit_body.webp`; ย้ายทุกโหมดไปชุด `cockpit_turn_*` WebP ตามสี พร้อมป้าย VR-X1/สีบนสนาม
 - QA กดฟ้าจริง source+dist: cockpit/มุมรถเป็นฟ้า, `stored=blue`, hashed blue ถูกต้อง; F1 18/18 + build/PWA/assets ผ่าน และ manifest มีรถสีใหม่ 15/15, cockpit เก่า 0
+- **รอบ 1333 · hotfix ล้อ 3D ยักษ์ซ้อน cockpit:** ต้นตอคือชุด `F1_FP_WHEELS` เก่ายังถูกเปิดเฉพาะ Battery Saver จึงไม่ปรากฏในการ QA รอบ 1332 ที่บังคับ Quality; ถอดระบบล้อหน้าซ้อนนี้ออกจาก runtime ทุกโหมดและเพิ่ม regression ห้าม marker กลับมา
+- QA กดฟ้าจริงแล้วตรวจภาพด้วยตาก่อน deploy ครบ Source/Dist × Battery/Quality ทั้ง cockpit และมุมรถ: เป็น VR-X1 ฟ้า ไม่มีล้อ/รถรุ่นเก่าซ้อน; F1 18/18 + syntax + build/PWA validator ผ่าน
 - **รอบ 1317 · Home V2 HUD + ตลาดสัตว์:** แถวรอง 4 ช่องสูงเท่าแถวหลัก 56px/49px และ New Word มี safe gap 5/7/6px ตาม desktop/compact/จอเตี้ย; ถอดปุ่มและ route Classic พร้อมจัดเครื่องมือ 6 ปุ่มเต็มกรอบ
 - ตลาดต่อท้ายหุ่นยนต์เพิ่มสัตว์ครบ 9 ชนิดจาก `PETS`; ร้านเดิมกับตลาดใช้ `openPetPurchase()` จุดเดียว จึงคงราคา/ห้ามชนิดซ้ำ/ตั้งชื่อ/ยอดขายเดิม
 - syntax + ตลาด/สัตว์/Home V2 + production build/validate ผ่าน; Browser visual QA ยังถูก Windows ACL บล็อก (`apply deny-read ACLs`)
