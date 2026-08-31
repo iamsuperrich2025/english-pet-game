@@ -1,6 +1,6 @@
 "use strict";
 /* ============================================================
-   Vocab World Home V2 — Admin Preview (R11.4 Visual Master Fidelity Reconstruction + Premium Depth / Composition Recovery)
+   Vocab World Home V2 — Primary Lobby (R11.4 Visual Master Fidelity Reconstruction + Premium Depth / Composition Recovery)
    R12 / รอบ 1279 — Ultimate Visual Master scenic + composition rebuild
    R13 / รอบ 1280 — HUD, Bottom Rail and Left Navigation readability rebalance
    R18 / รอบ 1286 — Learning readability + safe New Word HUD lane
@@ -23,6 +23,7 @@
    R36 / รอบ 1319 — Swipeable seven-card HUD + raised New Word + wider pet actions
    R38 / รอบ 1323 — Specificity-safe pet plaques + measured live-label fitting
    R39 / รอบ 1325 — Uniform pet-action hitboxes, optical frames and measured spacing
+   R40 / รอบ 1327 — Home V2 promoted to the primary Lobby; admin worlds stay role-gated
    ------------------------------------------------------------
    Additive UI shell only. It does NOT own economy, auth, quests,
    Firebase, purchases, or game routing. Existing Lobby DOM stays
@@ -31,10 +32,8 @@
 (function(){
   const ROOT_ID = 'vw-home-v2-root';
   const CLASS_ON = 'vw2-active';
-  const SESSION_KEY = 'vwHomeV2PreviewClassic';
   const STYLE_ID = 'vw-home-v2-r114-runtime-style';
   let root = null;
-  let classicToggle = null;
   let syncTimer = 0;
   let clockTimer = 0;
   let welcomeTimer = 0;
@@ -45,10 +44,6 @@
   let latestOnlineConnected = false;
   const ACTIVE_POLL_MS = 3000;
   const IDLE_POLL_MS = 10000;
-  function adminAllowed(){
-    try{ return typeof isAdmin === 'function' && isAdmin() === true; }
-    catch(_){ return false; }
-  }
   function adminWorldAllowed(){
     try{ return typeof isAdmin === 'function' && isAdmin() === true; }
     catch(_){ return false; }
@@ -57,12 +52,6 @@
   function dashboardActive(){
     const el = dashboard();
     return !!(el && el.classList.contains('active'));
-  }
-  function previewWanted(){ return sessionStorage.getItem(SESSION_KEY) !== '1'; }
-  function setPreviewWanted(on){
-    if(on) sessionStorage.removeItem(SESSION_KEY);
-    else sessionStorage.setItem(SESSION_KEY, '1');
-    syncVisibility();
   }
   function lowPowerDevice(){
     try{
@@ -307,7 +296,10 @@
   }
   function navButton(actionName, iconName, label, sourceSelector=''){
     const adminOnly = ADMIN_ONLY_WORLD_ACTIONS.has(actionName);
-    return `<button class="vw2-rail-btn vw2-rail-${htmlEscape(actionName)}" data-vw2-action="${htmlEscape(actionName)}"${adminOnly ? ' data-vw2-admin-only-world="1"' : ''}${sourceAttrs(sourceSelector)}><span class="vw2-rail-art">${classicRailGlyph(actionName, sourceSelector)}</span><b class="vw2-rail-label">${htmlEscape(label)}</b><i class="vw2-source-badge" hidden></i></button>`;
+    const adminBlocked = adminOnly && !adminWorldAllowed();
+    const roleAttrs = adminOnly ? ' data-vw2-admin-only-world="1"' : '';
+    const blockedAttrs = adminBlocked ? ' hidden disabled aria-hidden="true" aria-disabled="true" tabindex="-1"' : '';
+    return `<button class="vw2-rail-btn vw2-rail-${htmlEscape(actionName)}" data-vw2-action="${htmlEscape(actionName)}"${roleAttrs}${blockedAttrs}${sourceAttrs(sourceSelector)}><span class="vw2-rail-art">${classicRailGlyph(actionName, sourceSelector)}</span><b class="vw2-rail-label">${htmlEscape(label)}</b><i class="vw2-source-badge" hidden></i></button>`;
   }
   function bottomButton(actionName, iconName, label, tone='violet', sourceSelector=''){
     return `<button class="vw2-mode ${htmlEscape(tone)}" data-vw2-action="${htmlEscape(actionName)}"${sourceAttrs(sourceSelector)}><span>${icon(iconName)}</span><b>${htmlEscape(label)}</b><i class="vw2-source-badge" hidden></i></button>`;
@@ -476,18 +468,17 @@
     const style = document.createElement('style');
     style.id = STYLE_ID;
     style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1;--vw2-r1287-runtime-ready:1;--vw2-r1288-runtime-ready:1;--vw2-r1289-runtime-ready:1;--vw2-r1290-runtime-ready:1;--vw2-r1291-runtime-ready:1;--vw2-r1293-runtime-ready:1;--vw2-r1294-runtime-ready:1;--vw2-r1295-runtime-ready:1;--vw2-r1296-runtime-ready:1;--vw2-r1300-runtime-ready:1;--vw2-r1305-runtime-ready:1;--vw2-r1309-runtime-ready:1;--vw2-r1311-runtime-ready:1;--vw2-r1313-runtime-ready:1;--vw2-r1314-runtime-ready:1;--vw2-r1316-runtime-ready:1;--vw2-r1319-runtime-ready:1;--vw2-r1323-runtime-ready:1;--vw2-r1325-runtime-ready:1}';
+    style.textContent += '#vw-home-v2-root{--vw2-r1327-runtime-ready:1}';
     document.head.appendChild(style);
   }
-  function clickExisting(selector, opts){
-    opts = opts || {};
+  function clickExisting(selector){
     const el = document.querySelector(selector);
     if(!el || el.disabled) return false;
-    if(opts.classicFirst) setPreviewWanted(false);
     el.click();
     return true;
   }
   function openPanelViaExisting(panelId){
-    return clickExisting(`.lobby-rail [data-panel="${panelId}"]`, {classicFirst:true});
+    return clickExisting(`.lobby-rail [data-panel="${panelId}"]`);
   }
   function openPetShop(){
     // Same public route as Classic. The + tab is absent for players with no pet.
@@ -759,6 +750,10 @@
     }
   }
   function action(name){
+    if(ADMIN_ONLY_WORLD_ACTIONS.has(name) && !adminWorldAllowed()){
+      try{ if(typeof showToast === 'function') showToast('โลกนี้เปิดให้ผู้ดูแลระบบเท่านั้น'); }catch(_){ }
+      return false;
+    }
     const direct = {
       city:'#btn-rail-city', cure:'#btn-rail-cure', wordsearch:'#btn-rail-wordsearch',
       worldAdv:'#btn-world-adv', worldSky:'#btn-world-sky', worldHaunt:'#btn-world-haunt',
@@ -778,7 +773,6 @@
       market:'panel-market', friends:'panel-friends', gifts:'panel-gifts'
     };
     const standards = {ielts:'ielts',toeic:'toeic',toefl:'toefl',onetp6:'onetp6',onetm3:'onetm3',onetm6:'onetm6'};
-    if(name === 'v2'){ setPreviewWanted(true); return; }
     if(name === 'shop'){ openPetShop(); return; }
     if(name === 'petProfile'){ openActivePetProfile(); return; }
     if(name === 'petRename'){ renameActivePet(); return; }
@@ -796,7 +790,7 @@
     if(panels[name]){ openPanelViaExisting(panels[name]); return; }
     if(standards[name]){ clickExisting(`.lobby-bottom [data-xstd="${standards[name]}"]`); return; }
     if(direct[name]){
-      clickExisting(direct[name], {classicFirst:name === 'rank'});
+      clickExisting(direct[name]);
       if(name === 'music') setTimeout(syncMusicState, 0);
     }
   }
@@ -1072,7 +1066,7 @@
     const learningModeButtons = learningModes.map(x=>bottomButton(x[0],x[1],x[2],x[3],x[4])).join('');
     root = document.createElement('div');
     root.id = ROOT_ID;
-    root.setAttribute('aria-label','Vocab World Home V2 Admin Preview');
+    root.setAttribute('aria-label','Vocab World Home');
     root.innerHTML = `
       <div class="vw2-sky" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
       <div class="vw2-shell">
@@ -1175,7 +1169,6 @@
           </aside>
         </div>
         <footer class="vw2-bottom" aria-label="กิจกรรมภาษาอังกฤษ"><div class="vw2-bottom-scroll" role="region" aria-label="เลื่อนกิจกรรมภาษาอังกฤษซ้ายขวา"><div class="vw2-bottom-track">${learningModeButtons}</div></div></footer>
-        <div class="vw2-preview-mark">ADMIN PREVIEW · R34 HUD LINKS · GRAPH + RANKINGS</div>
       </div>
       <div class="vw2-online-modal" id="vw2-online-modal" role="dialog" aria-modal="true" aria-labelledby="vw2-online-modal-title" aria-hidden="true" hidden>
         <section class="vw2-online-modal-panel">
@@ -1290,16 +1283,6 @@
       action('profile');
     });
   }
-  function ensureClassicToggle(){
-    if(classicToggle) return;
-    classicToggle = document.createElement('button');
-    classicToggle.id = 'vw2-preview-switch';
-    classicToggle.type = 'button';
-    classicToggle.textContent = 'Home V2';
-    classicToggle.title = 'กลับไปดู Home V2 (Admin Preview)';
-    classicToggle.addEventListener('click', ()=>setPreviewWanted(true));
-    document.body.appendChild(classicToggle);
-  }
   function copyImage(srcSel, targetId, fallbackHTML){
     const src = document.querySelector(srcSel);
     const box = document.getElementById(targetId);
@@ -1329,7 +1312,8 @@
     root.querySelectorAll('[data-vw2-source]').forEach(btn=>{
       const selector = btn.dataset.vw2Source || '';
       const source = selector ? document.querySelector(selector) : null;
-      const disabled = !!(source && source.disabled);
+      const adminBlocked = btn.dataset.vw2AdminOnlyWorld === '1' && !adminWorldAllowed();
+      const disabled = !!(source && source.disabled) || adminBlocked;
       btn.disabled = disabled;
       btn.setAttribute('aria-disabled', disabled ? 'true' : 'false');
       if(btn.classList.contains('vw2-rail-btn')){
@@ -1339,7 +1323,10 @@
           const adminOnly = btn.dataset.vw2AdminOnlyWorld === '1';
           const locked = !!(source && (source.classList.contains('locked') || source.classList.contains('soon-locked')));
           btn.classList.toggle('vw2-world-locked', locked);
-          btn.hidden = adminOnly && !adminWorldAllowed();
+          btn.hidden = adminBlocked;
+          btn.setAttribute('aria-hidden', adminBlocked ? 'true' : 'false');
+          if(adminBlocked) btn.tabIndex = -1;
+          else btn.removeAttribute('tabindex');
           btn.title = locked ? (source.title || 'โลกนี้ยังล็อกอยู่')
             : btn.textContent.trim() + (adminOnly ? ' · เฉพาะแอดมิน' : ' · ผู้เล่นทุกคนเข้าได้');
         }
@@ -1645,7 +1632,7 @@
     card.dataset.vw2AuthoritativeInfo = rankText ? 'rank-tab' : 'collapsed';
   }
   function sync(){
-    if(!root || !adminAllowed()) return;
+    if(!root) return;
     const name = (typeof state !== 'undefined' && state && state.profileName) ? state.profileName : textOf('#student-chip','ผู้เล่น');
     const uid = (typeof onlineKey === 'function') ? onlineKey() : '';
     const id = (typeof idTag === 'function') ? idTag(uid) : '';
@@ -1915,7 +1902,7 @@
       type:'vw-mobile-device-preview-metrics',
       viewport:{width:window.innerWidth,height:window.innerHeight,dpr:window.devicePixelRatio || 1},
       homeV2:{
-        present:!!r,visible:!!(r && !r.hidden && dashboardActive()),adminAllowed:adminAllowed(),
+        present:!!r,visible:!!(r && !r.hidden && dashboardActive()),primaryLobby:true,adminWorldAllowed:adminWorldAllowed(),
         layoutProfile:r ? r.dataset.vw2LayoutProfile || '' : '',
         rootWidth:rootBox ? Math.round(rootBox.width) : null,rootHeight:rootBox ? Math.round(rootBox.height) : null,
         horizontalOverflow:r ? r.scrollWidth > r.clientWidth + 1 : null,
@@ -1998,30 +1985,17 @@
   function scheduleSync(){
     clearTimeout(syncTimer);
     syncTimer = setTimeout(()=>{
-      if(adminAllowed() && dashboardActive() && previewWanted()) sync();
+      if(dashboardActive()) sync();
     }, 120);
   }
   function syncVisibility(){
     const dash = dashboard();
     if(!dash) return;
-    const allowed = adminAllowed();
     const active = dashboardActive();
-    if(!allowed){
-      if(v2WasVisible) setClassicRuntimeSuspended(false);
-      dash.classList.remove(CLASS_ON);
-      document.body.classList.remove('vw2-home-active');
-      document.body.classList.remove('vw2-home-low-power');
-      closeOwnedPetsModal();
-      if(root) root.hidden = true;
-      if(classicToggle) classicToggle.hidden = true;
-      v2WasVisible = false;
-      return;
-    }
-    ensureClassicToggle();
-    const showV2 = active && previewWanted();
-    // Runtime-safety: build Home V2 lazily only after the real dashboard is
-    // active and admin authorization is already known. This keeps all Home
-    // V2 work off the startup/loading path.
+    const showV2 = active;
+    // Build lazily after the authoritative dashboard becomes active. The
+    // Classic DOM remains mounted but hidden so its state and handlers stay
+    // authoritative for both regular players and administrators.
     if(showV2 && !root) build();
     dash.classList.toggle(CLASS_ON, showV2);
     // Scope presentation-only safety rules (including transient toasts) to Home V2.
@@ -2029,7 +2003,6 @@
     document.body.classList.toggle('vw2-home-low-power', showV2 && lowPowerDevice());
     if(root) root.hidden = !showV2;
     if(!showV2) closeOwnedPetsModal();
-    if(classicToggle) classicToggle.hidden = !active || showV2;
     if(showV2 && !v2WasVisible){
       setClassicRuntimeSuspended(true);
       scheduleSync();
@@ -2041,7 +2014,7 @@
   }
   function tick(){
     syncVisibility();
-    if(root && adminAllowed() && dashboardActive() && previewWanted()) sync();
+    if(root && dashboardActive()) sync();
   }
   function scheduleTick(delay){
     clearTimeout(clockTimer);
@@ -2050,7 +2023,7 @@
     clockTimer = setTimeout(()=>{
       clockTimer = 0;
       tick();
-      const active = !!(root && !root.hidden && dashboardActive() && previewWanted());
+      const active = !!(root && !root.hidden && dashboardActive());
       scheduleTick(active ? ACTIVE_POLL_MS : IDLE_POLL_MS);
     }, Math.max(0,delay));
   }
@@ -2059,7 +2032,7 @@
     clockTimer = 0;
     if(document.hidden) return;
     tick();
-    const active = !!(root && !root.hidden && dashboardActive() && previewWanted());
+    const active = !!(root && !root.hidden && dashboardActive());
     scheduleTick(active ? ACTIVE_POLL_MS : IDLE_POLL_MS);
   }
   function handlePageVisibility(){
@@ -2076,7 +2049,7 @@
     window.addEventListener('focus', wakeTick);
     window.addEventListener('resize', scheduleLocalPreviewReport);
     document.addEventListener('visibilitychange', handlePageVisibility);
-    scheduleTick(250);
+    wakeTick();
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, {once:true});
   else init();

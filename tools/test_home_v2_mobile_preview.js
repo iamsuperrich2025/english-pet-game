@@ -52,7 +52,7 @@ must(home.includes("R24 / รอบ 1293") && css.includes("R24 / รอบ 1293
 must(home.includes("R25 / รอบ 1294") && css.includes("R25 / รอบ 1294") && css.includes("--vw2-r1294-ready:1") && home.includes("--vw2-r1294-runtime-ready:1"), "R25 / รอบ 1294 lineage markers missing");
 must(home.includes("R26 / รอบ 1295") && css.includes("R26 / รอบ 1295") && css.includes("--vw2-r1295-ready:1") && home.includes("--vw2-r1295-runtime-ready:1"), "R26 / รอบ 1295 lineage markers missing");
 must(home.includes("R27 / รอบ 1296") && css.includes("R27 / รอบ 1296") && css.includes("--vw2-r1296-ready:1") && home.includes("--vw2-r1296-runtime-ready:1"), "R27 / รอบ 1296 lineage markers missing");
-must(indexClassic.includes("css/home-v2.css?v=1325") && indexClassic.includes("js/home-v2.js?v=1325"), "R39 cache-bust missing from index_classic.html");
+must(indexClassic.includes("css/home-v2.css?v=1327") && indexClassic.includes("js/home-v2.js?v=1327"), "R40 cache-bust missing from index_classic.html");
 must(home.includes("R28 / รอบ 1300") && home.includes("--vw2-r1300-runtime-ready:1") && css.includes("R28 / รอบ 1300") && css.includes("--vw2-r1300-ready:1"), "R28 browser-verified visual contract missing");
 must(css.includes("grid-template-areas:\"class id time\" \"date date date\"") && css.includes("top:54px!important") && css.includes("--card-shadow:#075aa8"), "R28 HUD clearance/profile/date/premium rail rules missing");
 must(home.includes("R29 / รอบ 1305") && home.includes("--vw2-r1305-runtime-ready:1") && css.includes("R29 / รอบ 1305") && css.includes("--vw2-r1305-ready:1"), "R29 visual-hierarchy lineage markers missing");
@@ -66,11 +66,12 @@ must(css.includes("grid-template-columns:clamp(106px,30%,118px)") && css.include
 must(css.includes("overflow-x:auto!important;scroll-snap-type:x proximity!important") && css.includes("flex:0 0 clamp(176px,15vw,205px)!important"), "R30 wide swipeable pet-action rail missing");
 must(css.includes("border-image-slice:70 32 14 82!important") && css.includes("border-width:58px 27px 14px 68px!important"), "R30 bottom-aligned Global Feed frame missing");
 must(home.includes("VW2_FEED_STEP_MS = 6000") && home.includes("function advanceV2FeedAutoFlow(host)") && home.includes("host.__vw2FeedProgrammaticUntil"), "R30 Global Feed auto-flow contract missing");
-must(home.includes('class="vw2-preview-mark"'), "Home V2 preview badge container missing");
+must(!home.includes('class="vw2-preview-mark"'), "obsolete Home V2 preview badge container remains");
 must(home.includes("R31 / รอบ 1311") && home.includes("--vw2-r1311-runtime-ready:1") && css.includes("R31 / รอบ 1311") && css.includes("--vw2-r1311-ready:1"), "R31 idle-thermal lineage markers missing");
 must(home.includes("function setClassicRuntimeSuspended(suspended)") && home.includes("Lobby3D.pause()") && home.includes("Lobby3D.resume()") && lobby3d.includes("function resume(){ if(spellActive) start(); }") && home.includes("video.pause()"), "R31 Classic runtime suspension guard missing");
 must(home.includes("ACTIVE_POLL_MS = 3000") && home.includes("IDLE_POLL_MS = 10000") && home.includes("function handlePageVisibility()") && !home.includes("setInterval(tick, 2000)"), "R31 adaptive visibility-aware polling guard missing");
 must(css.includes("#screen-dashboard.vw2-active>:not(script):not(style){display:none!important") && css.includes("vw2-home-low-power") && css.includes("vw2-page-hidden"), "R31 hidden Classic/low-power CSS guard missing");
+must(css.includes("body.vw2-home-active #screen-dashboard.vw2-active>#panel-overlay.open") && css.includes("z-index:12050!important"), "R40 authoritative Classic panels cannot rise above Primary Home");
 must(home.includes("R32 / รอบ 1313") && home.includes("--vw2-r1313-runtime-ready:1") && css.includes("R32 / รอบ 1313") && css.includes("--vw2-r1313-ready:1"), "R32 New Vocab lineage markers missing");
 must(css.includes("grid-template-columns:minmax(70px,1fr) minmax(0,1.42fr) minmax(70px,1fr)!important") && css.includes("left:22%!important;right:22%!important;top:11px!important;height:56px!important"), "R32 optically balanced New Vocab geometry missing");
 must(css.includes("border:3px solid #f7d979!important") && css.includes("0 0 0 5px rgba(166,102,40,.52)") && css.includes("content:\"✦\"!important;position:absolute!important"), "R32 royal jewel frame layers missing");
@@ -89,7 +90,7 @@ must(home.includes('class="vw2-wallet-pill hud-link graph"') && home.includes('d
 must(home.includes('class="vw2-wallet-pill hud-link rank-shortcut"') && home.includes('data-vw2-source="#btn-rail-rank"') && home.includes('data-vw2-action="rank"'), "R34 combined-ranking shortcut does not reuse the original ranking page");
 must(home.indexOf('class="vw2-wallet-pill computer"') < home.indexOf('class="vw2-wallet-pill worth"') && home.indexOf('class="vw2-wallet-pill worth"') < home.indexOf('class="vw2-wallet-pill hud-link graph"') && home.indexOf('class="vw2-wallet-pill hud-link graph"') < home.indexOf('class="vw2-wallet-pill hud-link rank-shortcut"'), "R34 secondary HUD order changed");
 must(css.includes("FOUR-SLOT SECONDARY HUD") && css.includes("width:calc((100% - 15px)/4)!important") && css.includes("left:calc((100% + 5px)/4)!important") && css.includes("left:calc((100% + 5px)/2)!important") && css.includes("right:0!important"), "R34 four equal HUD slots missing");
-must(home.includes("ADMIN PREVIEW · R34 HUD LINKS · GRAPH + RANKINGS"), "R34 preview badge missing");
+must(!home.includes("ADMIN PREVIEW") && home.includes("root.setAttribute('aria-label','Vocab World Home')"), "production Home still exposes an Admin Preview label");
 must(!home.includes("ADMIN PREVIEW · R21 HEAL ALL PETS"), "stale R21 preview badge remains");
 must(css.includes(".vw2-feature-title,.vw2-word-ribbon{top:-25px!important}"), "R17 complete New Word control was not moved into the upper HUD lane");
 must(css.includes(".vw2-feature{overflow:visible!important}") && css.includes("left:24%!important;right:24%!important;top:-25px!important"), "R18 New Word plaque is not fully visible in the safe HUD lane");
@@ -267,8 +268,10 @@ const semanticRailIcons = [
 semanticRailIcons.forEach(([action, iconName])=>must(home.includes(`['${action}','${iconName}'`), `left rail icon does not explain its destination: ${action}`));
 const adminOnlyWorlds = ["worldAdv","worldSky","worldDrive","worldMoto","worldInvasion","worldMecha"];
 const publicWorlds = ["worldHaunt","worldHeli","worldDrone","worldSoccer"];
-must(home.includes("const ADMIN_ONLY_WORLD_ACTIONS = new Set") && adminOnlyWorlds.every(action=>home.includes(`'${action}'`)), "R19 exact six-world admin set missing");
-must(home.includes("btn.hidden = adminOnly && !adminWorldAllowed()") && home.includes("data-vw2-admin-only-world") && css.includes('data-vw2-admin-only-world="1"]:after'), "R19 future public-view admin hiding/badge guard missing");
+const adminWorldSetBlock = (home.match(/const ADMIN_ONLY_WORLD_ACTIONS = new Set\(\[([\s\S]*?)\]\)/) || [])[1] || "";
+const adminWorldSetNames = Array.from(adminWorldSetBlock.matchAll(/'([^']+)'/g), match=>match[1]);
+must(JSON.stringify(adminWorldSetNames) === JSON.stringify(adminOnlyWorlds), "R40 exact six-world admin set changed");
+must(home.includes("const adminBlocked = adminOnly && !adminWorldAllowed()") && home.includes("hidden disabled aria-hidden") && home.includes("btn.hidden = adminBlocked") && home.includes("btn.disabled = disabled") && home.includes("btn.tabIndex = -1") && home.includes("data-vw2-admin-only-world") && css.includes('data-vw2-admin-only-world="1"][hidden]'), "R40 first-paint/public-view admin hiding/disable/focus guard missing");
 must(publicWorlds.every(action=>home.includes(`['${action}',`)) && !publicWorlds.some(action=>adminOnlyWorlds.includes(action)), "R19 public world inventory changed");
 must(home.includes("worldAdv:'#btn-world-adv'") && home.includes("worldSky:'#btn-world-sky'") && home.includes("startsWith('world')") && css.includes('data-vw2-action^="world"'), "R19 Classic world parity missing");
 must(expectedRail.at(-1)[0] === "racing" && home.includes("typeof enterF1_3D === 'function'") && home.includes("enterF1_3D();"), "Vocab World Racing is not bottom-most / authoritative entry is missing");
@@ -328,7 +331,7 @@ must(home.includes("const learningModeButtons = learningModes.map") && home.incl
 must(!home.includes('id="vw2-adventure-menu"') && !home.includes("function setAdventureMenu") && !home.includes("function toggleAdventureMenu") && !home.includes("adventureDockButtons") && !home.includes("adventureMenus"), "R24 pet-obscuring flyout still exists in runtime");
 must(css.includes("CUTE SINGLE-ROW LEARNING RAIL") && css.includes("grid-template-columns:repeat(13,minmax(138px,9.7vw))!important") && css.includes("grid-template-rows:minmax(0,1fr)!important") && css.includes("grid-auto-flow:column!important"), "R24 cute single-row visual contract missing");
 must(css.includes(".vw2-adventure-menu{display:none!important}") && css.includes(".vw2-bottom-track .vw2-mode>span{") && css.includes("background-image:none!important"), "R24 no-flyout/new-button skin guard missing");
-must(home.includes("if(!allowed)") && home.includes("if(!showV2) closeOwnedPetsModal();"), "R24 admin visibility guard missing");
+must(home.includes("const showV2 = active;") && home.includes("if(!showV2) closeOwnedPetsModal();"), "R40 Primary Lobby visibility/modal-close guard missing");
 must(css.includes("BOTTOM GEOMETRY RESET") && css.includes("transform:none!important;translate:none!important") && css.includes("height:auto!important;min-height:0!important"), "R25 inherited icon/label geometry is not fully reset");
 must(home.includes("frame?.classList.toggle('can-scroll-right'") && css.includes(".vw2-bottom.can-scroll-left:before,.vw2-bottom.can-scroll-right:after"), "R25 horizontal scroll affordance missing");
 must(home.includes("bottomIconMaxCenterErrorPx:") && home.includes("bottomLabelMaxCenterErrorPx:") && home.includes("bottomScrollCueCorrect:"), "R25 alignment/cue preview metrics missing");
@@ -363,11 +366,18 @@ must(home.includes("width <= 700 || height <= 390") && home.includes("width <= 8
 must(css.includes("overflow:hidden") && css.includes("overscroll-behavior:contain"), "page/rail overflow containment missing");
 
 /* Transient notification safety. */
-must(home.includes("document.body.classList.toggle('vw2-home-active', showV2)") && home.includes("document.body.classList.remove('vw2-home-active')"), "Home V2 body-scope class for transient UI safety missing");
+must(home.includes("document.body.classList.toggle('vw2-home-active', showV2)") && home.includes("if(root) root.hidden = !showV2"), "Home V2 body-scope/root visibility guard missing");
 must(css.includes('body.vw2-home-active .toast') && css.includes('bottom:auto'), "compact safe-zone toast presentation missing");
 
-/* Admin-only safety. */
-must(home.includes("function adminAllowed()") && home.includes("typeof isAdmin === 'function' && isAdmin() === true"), "ADMIN PREVIEW gate changed/missing");
+/* Primary Lobby promotion + admin-only safety. */
+const syncVisibilityBlock = home.slice(home.indexOf("function syncVisibility()"), home.indexOf("function tick()"));
+const actionBlock = home.slice(home.indexOf("function action(name)"), home.indexOf("function updateLeftRailCue()"));
+must(syncVisibilityBlock.includes("const showV2 = active;") && !syncVisibilityBlock.includes("adminWorldAllowed()"), "R40 Primary Home still depends on admin authorization");
+must(!home.includes("SESSION_KEY") && !home.includes("previewWanted") && !home.includes("setPreviewWanted") && !home.includes("ensureClassicToggle") && !home.includes("vw2-preview-switch"), "R40 obsolete Classic/preview switch remains");
+must(home.slice(home.indexOf("function init()")).includes("wakeTick();") && !home.includes("scheduleTick(250)"), "R40 Primary Home still allows the old 250ms Classic first-paint flash");
+must(home.includes("function adminWorldAllowed()") && home.includes("typeof isAdmin === 'function' && isAdmin() === true"), "R40 admin role resolver changed/missing");
+must(actionBlock.includes("if(ADMIN_ONLY_WORLD_ACTIONS.has(name) && !adminWorldAllowed())") && actionBlock.indexOf("ADMIN_ONLY_WORLD_ACTIONS.has(name)") < actionBlock.indexOf("const direct ="), "R40 admin-world authorization does not run before route dispatch");
+must(actionBlock.includes("โลกนี้เปิดให้ผู้ดูแลระบบเท่านั้น") && actionBlock.includes("return false;"), "R40 denied admin-world route lacks explicit refusal");
 must(!home.includes("firebase deploy") && !home.includes("deploy production"), "Home V2 source contains unexpected deployment action");
 must(css.includes("R35 / รอบ 1317") && css.includes("--vw2-r1317-ready:1"), "R35 equal-height HUD lineage marker missing");
 must(css.includes("top:63px!important;height:56px!important") && css.includes("top:55px!important;height:49px!important"), "R35 secondary HUD does not match primary-card heights");
@@ -402,12 +412,15 @@ must(css.includes("R39 / รอบ 1325") && css.includes("--vw2-r1325-ready:1")
 must(css.includes("--vw2-action-gap:clamp(8px,.72vw,10px)") && css.includes("align-items:center!important") && css.includes("min-height:100%!important") && css.includes("max-height:100%!important"), "R39 shared height/alignment/spacing contract missing");
 must(css.includes("--vw2-action-art-y:6.7%") && css.includes("--vw2-action-art-y:-3.3%") && css.includes("--vw2-action-art-scale-y:1.033") && css.includes("background:var(--vw2-action-art)"), "R39 alpha-bound optical normalization missing");
 must(home.includes("featureActionGeometryStable") && home.includes("featureActionHeightSpreadPx") && home.includes("featureActionTopSpreadPx") && home.includes("featureActionBottomSpreadPx") && home.includes("featureActionGapSpreadPx"), "R39 measured action geometry diagnostics missing");
+must(css.includes("R40 / รอบ 1327") && css.includes("--vw2-r1327-ready:1") && home.includes("R40 / รอบ 1327") && home.includes("--vw2-r1327-runtime-ready:1"), "R40 Primary Lobby lineage markers missing");
+must(home.includes("primaryLobby:true") && home.includes("adminWorldAllowed:adminWorldAllowed()"), "R40 Primary Lobby/admin-role preview metrics missing");
+must(indexClassic.includes("Primary Home V2") && indexClassic.includes("preserves admin gates"), "R40 production loader comments missing");
 must(css.includes("Six current tools fill the panel exactly") && css.includes("grid-template-rows:repeat(2,minmax(0,1fr))!important"), "six-tool panel does not close the removed Classic row");
 
 if(fail.length){
-  console.error("Home V2 R39 validation FAILED:\n- " + fail.join("\n- "));
+  console.error("Home V2 R40 validation FAILED:\n- " + fail.join("\n- "));
   process.exit(1);
 }
 
-console.log("Home V2 R39 / รอบ 1325 validation PASS");
-console.log(`Checked seven-card swipe HUD, raised New Word lane, wide high-contrast pet actions, authoritative graph/rank routes; ${expectedRail.length} left destinations; all ${expectedBottom.length} learning actions; and admin gate.`);
+console.log("Home V2 R40 / รอบ 1327 validation PASS");
+console.log(`Checked Primary Lobby promotion, exact six-world admin gate, authoritative Classic routes; ${expectedRail.length} left destinations; and all ${expectedBottom.length} learning actions.`);

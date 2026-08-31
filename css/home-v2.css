@@ -1,7 +1,7 @@
 /* ============================================================
    Vocab World Home V2 — R11.5.1 Safe Lightweight Asset Bridge Rebase
    + Asset-Driven Visual Master Convergence / Premium Fantasy UI Refinement
-   ADMIN PREVIEW ONLY · R11.3 readability + authoritative handlers preserved
+   PRIMARY LOBBY · R11.3 readability + authoritative handlers preserved
    R11.4 Visual Master Fidelity Reconstruction baseline retained for compatibility guards.
    R12 / รอบ 1279 · Ultimate Visual Master scenic + composition rebuild.
    ============================================================ */
@@ -2439,4 +2439,20 @@ body.vw2-home-active.vw2-page-hidden #vw-home-v2-root *:after{animation-play-sta
   --vw2-action-art:url("../img/home-v2/r115_hero_pet.webp");
   --vw2-action-art-y:-3.3%;
   --vw2-action-art-scale-y:1.033;
+}
+
+/* ======================== R40 / รอบ 1327 — PRIMARY LOBBY + ROLE-SAFE ROUTES ======================== */
+#vw-home-v2-root{--vw2-r1327-ready:1}
+/* The main Home now serves every player. Classic stays mounted underneath as
+   the authoritative state/action source, while its full Lobby composition
+   remains hidden. Existing Classic panels may still open above Home V2. */
+body.vw2-home-active #screen-dashboard.vw2-active>#panel-overlay.open{
+  display:flex!important;
+  pointer-events:auto!important;
+  z-index:12050!important;
+}
+/* Role-hidden worlds must stay out of layout and keyboard navigation even
+   though the shared rail skin normally forces its buttons to display:flex. */
+#vw-home-v2-root .vw2-rail-btn[data-vw2-admin-only-world="1"][hidden]{
+  display:none!important;
 }
