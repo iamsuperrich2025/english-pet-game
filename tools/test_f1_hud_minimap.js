@@ -8,8 +8,10 @@ assert.match(f1,/#f1-statusright\{[^}]*flex-direction:column/,
   'coin and lap/time HUD must form one right-side vertical stack');
 assert.match(f1,/<div id="f1-statusright"><div id="f1-coins">[^<]+<\/div><div id="f1-laps"><\/div><\/div>/,
   'lap/time box must be directly below the coin box');
-assert.match(f1,/#f1-map\{[^}]*left:8px;top:8px[^}]*width:min\(48vh,32vw\)[^}]*height:min\(48vh,32vw\)/,
-  'minimap must begin at the former top-left lap box edge and be about half a landscape phone screen tall');
+assert.match(f1,/#f1-map\{[^}]*left:8px;top:96px[^}]*width:min\(48vh,32vw\)[^}]*height:min\(48vh,32vw\)/,
+  'minimap must sit below the large live-position card and remain about half a landscape phone screen tall');
+assert.match(f1,/@media \(max-height:430px\)\{[\s\S]*#f1-map\{top:80px;width:min\(33vh,26vw\);height:min\(33vh,26vw\)\}/,
+  'short landscape screens must clear both the position card and the steering control');
 assert.doesNotMatch(f1,/#f1-map\{width:96px;height:96px\}/,
   'short landscape screens must not shrink the minimap back to the old tiny size');
 

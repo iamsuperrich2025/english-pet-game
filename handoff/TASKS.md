@@ -64,7 +64,9 @@
 #### 🏍️ งานโลกใหม่: ขับมอเตอร์ไซค์/รถยนต์ (30 ก.ค.)
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
-### 📌 สรุปสถานะล่าสุด (30 ส.ค.) — อ่านก่อน
+### 📌 สรุปสถานะล่าสุด (31 ส.ค.) — อ่านก่อน
+- **รอบ 1324 · Racing R4 อันดับสด:** เพิ่ม timing-tower เลขใหญ่ `อันดับ/ผู้เล่นทั้งหมด` พร้อมธงตาหมากรุก; เรียงจริงจากจำนวนรอบ + ระยะบนแทร็ก และ fallback จากพิกัดสำหรับ client รุ่นเก่า
+- จอ 812×375 แยกการ์ดอันดับ/minimap/พวงมาลัยไม่ให้ชนกัน; F1 regression ทั้งชุด + syntax + production build `.1190` ผ่าน, Browser visual QA ถูก Windows ACL บล็อก
 - **รอบ 1306 · Dragon Sky Siege ลื่นขึ้น:** ต้นตอคือ render ตาม 120/144 Hz, DPR 2, trail/blur/audio buffer/HUD allocation ซ้ำทุกนัดและทุกเฟรม
 - ล็อก active 60 FPS, pause 10/countdown 30, DPR 1.5, trail อิงเวลา, particle ring 140, cache noise/gradient และไม่ rebuild HUD ตอน autofire; gameplay/อาวุธ/ฉาก/หางมังกรครบ
 - regression performance + production build .1176 + PWA validate ผ่าน; พิกเซลลด 43.75%, render high-Hz ลด 50–58%, trail ลด 68.73%; scope js/lettercannon.js, tools/test_letter_cannon.js

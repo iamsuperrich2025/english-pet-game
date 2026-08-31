@@ -246,7 +246,7 @@ let lapStartAt=0, lapNow=0, lapBest=0, lapCount=0, cpFlags=[false,false,false], 
 /* คำศัพท์ */
 let word=null, letters=[], sessionCoins=0, sessionWords=0;
 /* เพื่อน */
-let peers={}, room=null, lastNetSend=0, myChat=null, boardSig='';
+let peers={}, room=null, lastNetSend=0, myChat=null, boardSig='', positionSig='', positionEl=null;
 let gridSlot=0,gridRosterSig='';
 /* 🚦 ไฟสตาร์ท + 👻 รถเงา (รอบ 902) */
 let startLights=[], lightPhase='wait', lightT=0, lightsLit=-1, holdS=1.5, penaltyT=0, jumped=false;
@@ -2090,8 +2090,25 @@ const CSS=`
 #f1-laps b{color:#ffd12e}
 #f1-coins{position:absolute;right:10px;top:8px;background:rgba(8,12,24,.72);border:1px solid rgba(255,209,46,.35);
   border-radius:12px;padding:6px 12px;color:#ffd12e;font-weight:800;font-size:15px;z-index:6}
-#f1-map{position:absolute;left:8px;top:8px;width:min(48vh,32vw);height:min(48vh,32vw);z-index:6;opacity:.98;pointer-events:none;
+#f1-map{position:absolute;left:8px;top:96px;width:min(48vh,32vw);height:min(48vh,32vw);z-index:6;opacity:.98;pointer-events:none;
   filter:drop-shadow(0 5px 12px rgba(0,0,0,.62))}  /* 🧭 รอบ 1228 — ใหญ่ราวครึ่งจอมือถือแนวนอน + ขึ้นแทนขอบเดิมของกล่องเวลา */
+/* 🏁 รอบ 1324 — R4 LIVE POSITION: timing tower ตัวเลขใหญ่ อ่านได้ด้วยการเหลือบมองระหว่างขับ */
+#f1-position{position:absolute;left:10px;top:8px;z-index:7;min-width:142px;height:82px;box-sizing:border-box;
+  display:grid;grid-template-columns:auto auto 1fr;grid-template-rows:22px 1fr;align-items:end;column-gap:4px;
+  padding:7px 18px 8px 14px;color:#fff;overflow:hidden;pointer-events:none;
+  clip-path:polygon(0 0,88% 0,100% 18%,100% 100%,12% 100%,0 82%);
+  background:linear-gradient(112deg,rgba(5,9,15,.97),rgba(17,25,36,.94) 68%,rgba(43,50,59,.92));
+  border-left:4px solid #ff263f;filter:drop-shadow(0 7px 15px rgba(0,0,0,.68))}
+#f1-position:before{content:'';position:absolute;left:0;right:0;top:0;height:6px;opacity:.9;
+  background:repeating-conic-gradient(#f5f7fa 0 25%,#15191f 0 50%) 0/12px 12px}
+#f1-position:after{content:'';position:absolute;inset:6px 0 auto;height:2px;background:linear-gradient(90deg,#ff263f,#ffd12e 58%,transparent)}
+.f1-pos-label{grid-column:1/4;align-self:center;font:800 10px/1 'Kanit',sans-serif;letter-spacing:.18em;color:#b8c7d8;white-space:nowrap}
+.f1-pos-live{display:inline-block;width:6px;height:6px;margin-right:5px;border-radius:50%;background:#37f58a;box-shadow:0 0 8px #37f58a;vertical-align:1px}
+#f1-position.solo .f1-pos-live{background:#ffd12e;box-shadow:0 0 8px #ffd12e}
+.f1-pos-current{font:italic 950 52px/.82 'Arial Narrow','Kanit',sans-serif;letter-spacing:-.07em;
+  text-shadow:2px 2px 0 #ad1022,0 0 16px rgba(255,38,63,.42)}
+.f1-pos-slash{font:900 21px/1 'Arial Narrow','Kanit',sans-serif;color:#738397;padding-bottom:5px}
+.f1-pos-total{font:900 23px/1 'Arial Narrow','Kanit',sans-serif;color:#eef5ff;padding-bottom:4px}
 #f1-wrong{position:absolute;top:34%;left:50%;transform:translateX(-50%);background:rgba(216,26,26,.9);color:#fff;
   font-weight:900;font-size:20px;border-radius:12px;padding:8px 18px;display:none;z-index:7}
 /* 🌀 PORTAL DESTINATION VIEW — วง plasma 3D + ภาพโค้งจริงที่จุดกลับ (รอบ 1222) */
@@ -2376,6 +2393,9 @@ const CSS=`
 #f1-gear{clip-path:polygon(12% 0,88% 0,100% 25%,100% 75%,88% 100%,12% 100%,0 75%,0 25%);
   background:linear-gradient(180deg,#ff3145,#8d0712);border-radius:0;min-width:24px}
 @media (max-height:430px){
+  #f1-position{min-width:122px;height:68px;padding:7px 15px 7px 11px;grid-template-rows:18px 1fr}
+  .f1-pos-label{font-size:8px}.f1-pos-current{font-size:43px}.f1-pos-slash{font-size:18px}.f1-pos-total{font-size:20px}
+  #f1-map{top:80px;width:min(33vh,26vw);height:min(33vh,26vw)}
   #f1-speed{font-size:30px}
   /* 🧭 รอบ 914: จอเตี้ย — แถบเลี้ยวเตี้ยลงหน่อย แล้วยกมินิแมป/ปุ่มขวาบนให้พ้นกัน
      🎛️ รอบ 921: ความสูง/ตำแหน่งย้ายไปคุมด้วย --f1-sh/--f1-pedb แล้ว (เพดาน 44vh คุมจอเตี้ยให้เอง)
@@ -2403,6 +2423,7 @@ function buildDom(){
       <div id="f1-quality-wheel" aria-hidden="true"><i class="qw-grip l"></i><i class="qw-grip r"></i><i class="qw-led"></i></div>
       <img id="f1-cockpit-turn" alt="" aria-hidden="true">
       <canvas id="f1-dash"></canvas></div>
+    <div id="f1-position" class="solo" aria-live="polite"><span class="f1-pos-label"><i class="f1-pos-live"></i>อันดับสด</span><strong class="f1-pos-current">1</strong><span class="f1-pos-slash">/</span><span class="f1-pos-total">1</span></div>
     <div id="f1-word"></div>
     <div id="f1-topright">
       <button id="f1-cambtn">📷 มุมรถ</button>
@@ -2486,6 +2507,7 @@ function buildDom(){
   garageEl=wrapEl.querySelector('#f1-garage');
   exitBox=wrapEl.querySelector('#f1-exitbox');
   boardEl=wrapEl.querySelector('#f1-board');
+  positionEl=wrapEl.querySelector('#f1-position');
   /* 👥 รอบ 939: ปุ่ม "ไปหาเพื่อน" ที่ NetRoom ฝังมากับป้ายสถานะ — เดิม F1 วาดปุ่มแต่ไม่ได้ดักคลิก (กดแล้วเงียบ) */
   boardEl.addEventListener('click',e=>{ if(e.target.closest('.nr-go')&&room) room.openFriends(); });
   chatBarEl=wrapEl.querySelector('#f1-chatbar');
@@ -3719,6 +3741,48 @@ function relocTick(){
 }
 
 /* ============================================================
+   🏁 รอบ 1324 — R4 LIVE RACE POSITION (lap + track progress)
+   ============================================================ */
+function packetRaceLap(d,p){
+  const n=Number(d&&d.l);
+  return Number.isInteger(n)&&n>=0?n:Math.max(0,(p&&p.raceLap)||0);
+}
+function packetRaceProgress(d,p){
+  const q=Number(d&&d.q);
+  if(Number.isFinite(q))return clamp(q,0,TOTAL||q);
+  if(!LINE||!TOTAL||!d||typeof d.x!=='number'||typeof d.z!=='number')return Math.max(0,(p&&p.raceProg)||0);
+  const hint=p&&Number.isInteger(p.trackIdx)?p.trackIdx:undefined;
+  const idx=nearIdx(d.x,d.z,hint);
+  if(p)p.trackIdx=idx;
+  return ((LINE.cum[idx]-LINE.cum[sfIdx])%TOTAL+TOTAL)%TOTAL;
+}
+function racePositionSnapshot(){
+  const rows=[{uid:startGridUid(),me:true,lap:lapCount,prog:lastProg,slot:gridSlot}];
+  for(const uid in peers){
+    const p=peers[uid];
+    rows.push({uid,me:false,lap:p.raceLap||0,prog:p.raceProg||0,
+      slot:Number.isInteger(p.gridSlot)?p.gridSlot:GRID_N});
+  }
+  if(gridFormationActive())rows.sort((a,b)=>a.slot-b.slot||String(a.uid).localeCompare(String(b.uid)));
+  else rows.sort((a,b)=>{
+    const as=a.lap*TOTAL+a.prog,bs=b.lap*TOTAL+b.prog;
+    return bs-as||String(a.uid).localeCompare(String(b.uid));
+  });
+  return {position:Math.max(1,rows.findIndex(r=>r.me)+1),total:rows.length,rows};
+}
+function updateRacePosition(force){
+  if(!positionEl)return;
+  const snap=racePositionSnapshot(),solo=snap.total===1;
+  const sig=snap.position+'/'+snap.total+'/'+(solo?'solo':'live');
+  if(!force&&sig===positionSig)return;
+  positionSig=sig;
+  positionEl.classList.toggle('solo',solo);
+  positionEl.innerHTML='<span class="f1-pos-label"><i class="f1-pos-live"></i>'+
+    'อันดับสด</span><strong class="f1-pos-current">'+snap.position+
+    '</strong><span class="f1-pos-slash">/</span><span class="f1-pos-total">'+snap.total+'</span>';
+  positionEl.setAttribute('aria-label','อันดับสด '+snap.position+' จากผู้เล่น '+snap.total+' คน');
+}
+/* ============================================================
    🧑‍🤝‍🧑 เพื่อนร่วมสนาม (NetRoom map 'f1')
    ============================================================ */
 function netReady(){
@@ -3733,7 +3797,7 @@ function netJoin(){
     roomNoun:'สนาม', roomIcon:'🏁',
     push(){ lastNetSend=0; netSend(true); },
     onPeer:onPeer, onPeerGone:dropPeer,
-    onStatus(){ renderBoard(); },
+    onStatus(){ renderBoard(); updateRacePosition(true); },
     toast(html,ms){ banEl.innerHTML=html; banEl.classList.add('show');
       clearTimeout(banEl._nrTm); banEl._nrTm=setTimeout(()=>banEl.classList.remove('show'),ms||2200); },
   });
@@ -3750,7 +3814,8 @@ function netSend(force){
     cw:F1_COLOR_WIRE+playerCarStyle.key,
     vx:Math.round(vx*10)/10, vz:Math.round(vz*10)/10,
     vy:Math.round(vy*10)/10,
-    d:drsOn?1:0};   // 🪽 รอบ 907: สถานะ DRS — เพื่อนเห็นไฟเขียวท้ายรถตอนเราเปิดปีก
+    d:drsOn?1:0,
+    l:lapCount,q:Math.round(lastProg)}; // 🏁 รอบ 1324: อันดับสด = รอบที่จบ + ระยะปัจจุบันบนแทร็ก
   if(myChat&&Date.now()-myChat.ts<CHAT_MS+1000){ payload.c=myChat.text; payload.ct=myChat.ts; }
   else payload.c=F1_GRID_WIRE+gridSlot;
   room.send(payload,force);
@@ -3825,6 +3890,7 @@ function onPeer(uid,d){
       vxTgt:d.vx||0,vzTgt:d.vz||0,yCur:d.y||0,yTgt:d.y||0,vyCur:d.vy||0,vyTgt:d.vy||0,
       pitchCur:d.p||0,pitchTgt:d.p||0,rollCur:packetBodyRoll(d),rollTgt:packetBodyRoll(d),airborne:!!d.a,w:d.w||0,g:d.g,colorIdx:packetCarColorIndex(uid,d),gridSlot:packetGridSlot(d),lastCt:0,drsTgt:0,drsK:0,hitUntil:0};
     buildPeer(uid,p);
+    p.raceLap=0;p.raceProg=packetRaceProgress(d,p);
     renderBoard();
   }
   p.n=d.n||p.n;
@@ -3840,6 +3906,9 @@ function onPeer(uid,d){
   if(typeof d.vx==='number') p.vxTgt=d.vx;
   if(typeof d.vz==='number') p.vzTgt=d.vz;
   p.drsTgt=d.d?1:0;   // 🪽 รอบ 907 — เพื่อนที่ยังไม่อัปเดตโค้ด (d ไม่มีค่า) = ปิดเสมอ ไม่ throw
+  p.raceLap=packetRaceLap(d,p);
+  p.raceProg=packetRaceProgress(d,p);
+  updateRacePosition();
   if((d.w||0)!==p.w){ p.w=d.w||0; renderBoard(); }
   if(d.c&&d.ct&&d.ct!==p.lastCt){
     p.lastCt=d.ct;
@@ -3879,6 +3948,7 @@ function dropPeer(uid){
   delete peers[uid];
   settleStartGrid(false);
   renderBoard();
+  updateRacePosition(true);
 }
 function peerTick(dt){
   const k=clamp(dt*7,0,1);
@@ -4351,6 +4421,7 @@ function hudTick(){
   gearEl.textContent=g;
   /* 🚧 รอบ 905: ลิมิตเตอร์ทำงาน = เลขความเร็วเป็นสีเหลือง (บอกว่าไม่ใช่รถเสีย) */
   speedEl.style.color=pitLimited?'#ffd12e':'#fff';
+  updateRacePosition();
   drsHud();
 }
 let mapAt=0, relocAt=0;
@@ -4484,8 +4555,9 @@ function start(options){
   frMount();
   sessionCoins=0; sessionWords=0;
   coinsEl.textContent='🪙 +0';
-  myChat=null; boardSig='';
+  myChat=null; boardSig='';positionSig='';
   boardEl.classList.remove('on'); boardEl.innerHTML='';
+  updateRacePosition(true);
   chatBarEl.classList.remove('on'); selfMsgEl.classList.remove('on');
   /* เกิดบนกริด F1 แบบเหลื่อม: slot 0 ก่อน แล้ว roster multiplayer จัดเรียง UID ให้ไม่ซ้ำ */
   gridSlot=0;gridRosterSig='';
@@ -4578,6 +4650,7 @@ window.F1World={
     get line(){return LINE}, get total(){return TOTAL}, get sfIdx(){return sfIdx},
     get lap(){return {now:lapNow,best:lapBest,count:lapCount,cp:cpFlags.slice(),startAt:lapStartAt}},
     get letters(){return letters},
+    get racePosition(){return racePositionSnapshot()},
     /* 👥 รอบ 939 — เทสต์ปุ่ม "ไปหาเพื่อน" บนกระดาน (ยัด room ปลอมได้โดยไม่ต้องต่อ Firebase จริง) */
     get room(){return room}, set room(v){room=v}, renderBoard,
     /* 🏎️ รอบ 1208 — hook สำหรับยืนยันรถเพื่อน 3D จากมุม cockpit โดยไม่แตะ Firebase */
