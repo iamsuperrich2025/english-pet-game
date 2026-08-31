@@ -64,7 +64,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/dailybox.js** (142 บรรทัด) — 🎁🪙 กล่องสุ่มรายวัน — รอบ 1272 · 5 รางวัลสับด้วย crypto, ไม่ซ้ำตำแหน่งเดิมจากวันก่อน, รับได้วันละครั้ง · ใบยินดีไม่มี timer/Esc/backdrop close; ปิดได้เฉพาะปุ่มรับทราบ
 - **js/dictband.js** (410 บรรทัด) — DICT BAND — คลังศัพท์ใหญ่ตามระดับ (band 1-5) จาก js/data/dict_band/ · manifest.js โหลดตอนบูต (เบา) → ชิ้นข้อมูล db<band>_*.js โหลดขี้เกียจ · ตอนผู้เล่นกดเล่น แล้วต่อเข้าเครื่องยนต์เดิมทั้งคู่:
 - **js/examstd.js** (983 บรรทัด) — 📋 EXAM STD — ข้อสอบจริงแบบมาตรฐาน IELTS / TOEIC / TOEFL / O-NET (รอบ 812 · O-NET รอบ 1183) · คนละระบบกับ js/bandadv.js (คลังศัพท์ IELTS/TOEIC/TOEFL รอบ 807) ซึ่งเป็นการจับคู่ en↔th · ที่นี่ = โจทย์เลือกตอบแบบข้อสอบจริง 30 ข้อ/ชุด: ไวยากรณ์ + การอ่านจับใจความ (ไม่มีเรียงความ)
-- **js/f1_3d.js** (4,755 บรรทัด) — 🏎️ f1_3d.js — โลกแข่งรถ F1 "สนามซาเคียร์" Bahrain International Circuit (รอบ 896) · ───────────────────────────────────────────────────────────────────── · แทร็กจริงจาก OpenStreetMap (js/data/f1_bahrain.js — GP Circuit 5,400 ม. ครบ 15 โค้ง)
+- **js/f1_3d.js** (4,753 บรรทัด) — 🏎️ f1_3d.js — โลกแข่งรถ F1 "สนามซาเคียร์" Bahrain International Circuit (รอบ 896) · ───────────────────────────────────────────────────────────────────── · แทร็กจริงจาก OpenStreetMap (js/data/f1_bahrain.js — GP Circuit 5,400 ม. ครบ 15 โค้ง)
 - **js/f1_modes.js** (125 บรรทัด) — 🏁 F1 Racing Mode Select — local graphics preference + environment profile contract (Phase 1) · UI/preference live here; physics, gameplay, rewards and multiplayer remain owned by js/f1_3d.js. · Both profiles mutate one shared F1 scene. A second renderer/scene is never created for mode switching.
 - **js/fpsweapon.js** (194 บรรทัด) — 🔫 FPS WEAPON STATE MACHINE — local adapter for invasion3d · Owns only weapon presentation state. Gameplay, aiming, damage, · controls and world lifecycle remain in js/invasion3d.js.
 - **js/frontline1944.js** (3,356 บรรทัด) — Vocab World: Frontline 1944 — ADMIN PREVIEW ONLY · Phase 1.2.4 Global Mobile Touch Router: canonical tank controller, streamed battlefield sectors, logical world coordinates, · lightweight terrain/collision, 2.5D occlusion anchors, tank runtime,
@@ -78,7 +78,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/hotel3d.js** (1,526 บรรทัด) — hotel3d.js — 🏨 โรงแรมผีสิง 5 ชั้น (รอบ 684 · ยกบรรยากาศ/ภารกิจงานศพไทยรอบ 1060) · สร้าง "ตัวโรงแรม" ล้วน ๆ (โมเดล+ชนกำแพง+บันได+ลิฟต์+เฟอร์นิเจอร์+รูปตามอง) · ส่วน "การเล่น" (ผี/ไฟฉาย/ตัวอักษร/เสียง) อยู่ในโซน 🏨 ของ js/adventure3d.js
 - **js/images.js** (286 บรรทัด) — ระบบตรวจหาภาพเจนอัตโนมัติ (ใช้ new Image() probe — ใช้ได้ทั้ง · file:// และ http:// ต่างจาก fetch ที่ถูกบล็อกใน file://) · โฟลเดอร์ภาพ:
 - **js/invasion3d.js** (10,581 บรรทัด) — 🛸 invasion3d.js — โลก "ยานแม่บุกโลก" (Invasion · รอบ 413 · กติกาใหม่รอบ 556) · FPS สไตล์ Delta Force ในเมืองทะเลทรายตะวันออกกลาง — ยานแม่ลำมหึมาลอยเต็มท้องฟ้า (สไตล์ ID4) · 🔤 กติการอบ 556 (ผู้ใช้สั่ง — แทนระบบแผงตัวอักษร+แกนพลังงานเดิมทั้งหมด):
-- **js/lettercannon.js** (399 บรรทัด) — 🔤💥🏆 รางวัลรายเดือนของกระดาน Letter Cannon / Dragon Sky Siege
+- **js/lettercannon.js** (465 บรรทัด) — 🔤💥🏆 รางวัลรายเดือนของกระดาน Letter Cannon / Dragon Sky Siege
 - **js/lobby.js** (52 บรรทัด) — LOBBY แนวนอน — ระบบแผงรายละเอียดกลางจอ (อัพเดท 5725691826) · คลิกเมนูซ้าย → เปิดแผง (panel) ทับฉาก Lobby · เนื้อหา scroll ในแผง · การ์ดเดิมทั้งหมด (home/phone/computer/farm/collect/rank) ย้ายเข้าแผง
 - **js/lobby3d.js** (811 บรรทัด) — lobby3d.js — โมเดล 3D ตัวละครในหน้า Lobby (รอบ 114) · โหลด GLB ผู้เลี้ยง + น้อง (img/models/*.glb) · idle เบาๆ (หายใจ/โยกตัว) + เล่น animation clip จากไฟล์ (Tripo ชื่อ NlaTrack → ใช้ clip แรก)
 - **js/main.js** (584 บรรทัด) — ปุ่มหลัก + INIT
@@ -116,7 +116,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/exam.css** (377 บรรทัด) — 📋 exam.css — จอข้อสอบจริงแบบมาตรฐาน IELTS/TOEIC/TOEFL (รอบ 812 · js/examstd.js) · กฎทองข้อ 7: กล่องทั้งใบต้องอยู่ในจอ หน้าไม่เลื่อน — บทอ่านยาวจึงเลื่อน "ในกรอบตัวเอง" · (ข้อสอบการอ่านเลี่ยงไม่ได้ที่จะมีบทความยาว แต่กรอบนอกไม่มี scrollbar)
 - **css/frontline1944.css** (99 บรรทัด) — Vocab World: Frontline 1944 — ADMIN PREVIEW ONLY / Phase 1.2.4 Global Mobile Touch Router + Canonical Tank Runtime
 - **css/home-v2.css** (2,479 บรรทัด) — Vocab World Home V2 — R11.5.1 Safe Lightweight Asset Bridge Rebase · + Asset-Driven Visual Master Convergence / Premium Fantasy UI Refinement · PRIMARY LOBBY · R11.3 readability + authoritative handlers preserved
-- **css/lettercannon.css** (83 บรรทัด) — 🐉💥 Dragon Sky Siege (รอบ 1312) · Portrait 9:16 vertical shooter HUD. Desktop centers the flight lane; · touch devices use the full portrait viewport.
+- **css/lettercannon.css** (87 บรรทัด) — 🐉💥 Dragon Sky Siege (รอบ 1312) · Portrait 9:16 vertical shooter HUD. Desktop centers the flight lane; · touch devices use the full portrait viewport.
 - **css/lobby.css** (6,209 บรรทัด) — THEME 2.0 "เมืองทันสมัยโทนฟ้า" — LOBBY แนวนอน + UI ยุคหลังทั้งหมด (โหลดทับ style.css · cascade ทีหลังชนะ · เปลี่ยนเฉพาะหน้าตา ไม่แตะ logic) · ครอบคลุม: แถบบน/ราง rail/แผง panel (ตลาด-โรงงาน-บ้าน-เพื่อน) · โชว์รูมหุ่น .rs-* รถ .cs-* · Word Search .ws-* · ข้อมูลน้อง .pi-* · แชท+ธีมแชท · กระดานอันดับ/เข็ม · สไปรต์น้อง .pet-anim/ฉาก .stage-hero · โทนสี: น้ำเงินเ…
 - **css/onetpromo.css** (27 บรรทัด) — 🇹🇭 รอบ 1186: ป้าย O-NET เกือบเต็มจอ · พอดีจอแนวนอน 812×375
 - **css/petfashion.css** (32 บรรทัด) — ⚔️🎀 ร้านแฟชั่นแบบลากดู–ลองใส่–ยืนยันซื้อ — รอบ 1292
@@ -129,6 +129,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/style.css** (2,430 บรรทัด) — Pet Vocab Adventure — สไตล์พื้นฐานรุ่นแรกทั้งเกม (โดน lobby.css โหลดทับบางส่วน — แก้หน้าตาโซนล็อบบี้/UI ใหม่ให้ไปที่ lobby.css ก่อน) · ครอบคลุม: screens/login/dashboard · เกมจับคู่ .word-card + แบบทดสอบ .quiz-* · shop/ที่พัก/หมวดคำศัพท์ · หิว-ป่วย/สภาพอากาศ · ตั้งค่า/วิธีเล่น/level-up overlay · คลังของฉัน/กล่องขาย · เอฟเฟกต์ลอย/เหรียญ/rotate-overlay
 - **sw.js** (281 บรรทัด) — Vocab World service worker · Delivery contract: · - HTML navigations are network-first with the last valid shell as fallback.
 <!-- AUTO-FILES:END -->
+
 
 
 
