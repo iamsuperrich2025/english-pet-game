@@ -106,7 +106,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
     },
     "leaderboard": {
       ".read": true,
-      ".indexOn": ["coins", "bb", "oe"],
+      ".indexOn": ["coins", "bb", "oe", "lc"],
       "$uid": {
         ".write": "auth != null && auth.uid === $uid",
         ".validate": "newData.hasChildren(['n','g','coins','at'])",
@@ -125,6 +125,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         "pm":    { ".validate": "newData.isNumber() && newData.val() >= 0" },
         "bb":    { ".validate": "newData.isNumber() && newData.val() >= 0" },
         "oe":    { ".validate": "newData.isNumber() && newData.val() >= 0" },
+        "lc":    { ".validate": "newData.isNumber() && newData.val() >= 0" },
         "at":    { ".validate": "newData.isNumber()" },
         "$other": { ".validate": false }
       }
@@ -591,6 +592,27 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
       }
     },
     "pmAward": {
+      ".read": true,
+      "$m": {
+        ".write": "auth != null && !data.exists()",
+        ".validate": "$m.matches(/^[0-9]{4}-[0-9]{2}$/) && newData.hasChildren(['at','w'])",
+        "at": { ".validate": "newData.isNumber() && newData.val() <= now + 60000" },
+        "w": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && !newData.exists()",
+            ".validate": "newData.hasChildren(['r','p','n'])",
+            "r": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 10" },
+            "p": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000" },
+            "n": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+            "g": { ".validate": "newData.isString() && newData.val().length <= 20" },
+            "s": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+            "$other": { ".validate": false }
+          }
+        },
+        "$other": { ".validate": false }
+      }
+    },
+    "lcAward": {
       ".read": true,
       "$m": {
         ".write": "auth != null && !data.exists()",

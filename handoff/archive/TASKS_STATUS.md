@@ -5741,3 +5741,9 @@
 - **รอบ 1300 · Home V2 R28:** ย้าย New Word ลงพ้น HUD, จัดแถบผู้เล่นใหม่ให้ ID/วันที่เต็ม, และทำปุ่มเรียนสีสดพร้อมขอบทองสะท้อนแบบ premium
 - คง R27 ลูบสัตว์/กดค้างผ่าน Classic handler และกรอบ Global Feed nine-slice ทุกจอ; cache-bust Home V2 เป็น `v=1300`
 - Real Chromium QA ทั้ง source + production dist ที่ 1320×617, 1280×720, 1000×640, 812×375: overlap/profile clip/page overflow = 0 และตรวจภาพจอใหญ่+812×375 ด้วยตาแล้ว
+
+
+## ⏬ ย้ายเมื่อ 2026-08-31 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- ใช้ `stage.clientWidth` ซึ่งเป็นขนาด layout ก่อน transform แล้วคง bounding rect เป็น fallback; สูตร cover จึงวาดรูปเต็มช่องตั้งแต่เปิดกล่อง
+- syntax + regression ครอปรูป + Home V2 R29 + production build/validate ผ่าน; scope `js/photo.js`, `tools/test_photo_crop_viewport.js`
