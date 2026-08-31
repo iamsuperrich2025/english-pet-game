@@ -229,7 +229,7 @@ let playerCarStyle=CAR_STYLES[0];
 let airborne=false,activeJump=null,jumpPrevD=-1,jumpImpact=0,jumpLandKickT=0,jumpMissed=false;
 let camPos=null, camInit=false, camYaw=0, shakeT=0;
 let camMode='cockpit', cockpitEl=null, cockpitTurnEl=null, cockpitTurnSrc='', camBtnEl=null;   // 🪖 รอบ 901 — มุมคนขับเป็นภาพหลัก
-let raceBgm=null,raceBgmBtn=null,raceBgmFadeTimer=0,raceBgmFadeToken=0,raceBgmPlayToken=0,raceBgmBlocked=false;
+let raceBgm=null,raceBgmBtn=null,raceBgmFadeTimer=0,raceBgmFadeToken=0,raceBgmPlayToken=0,raceBgmBlocked=false,raceMusicEnabled=true;
 let padRev=false, revNow=false, sandT=0, portalEl=null, portalViewCv=null, portalActive=false, portalT=0, portalJumped=false, portalTargetIdx=0, portalResumeSpeed=0;   // ⏪🏜️ รอบ 911
 let wheelEl=null, qualityWheelEl=null, wheelDeg=null, wheelSy=1; // 🎡 ชั้นพวงมาลัยแยก: Battery image + Quality procedural wheel
 let ledsEl=null, ledEls=[], ledN=-1, ledRpm=0, ledFlashT=0, ledFlash=false;  // 🚥 รอบ 918 — ชั้นดวงไฟ LED รอบเครื่อง
@@ -519,13 +519,11 @@ const Snd=(function(){
 /* ============================================================
    🎵 RACING BACKGROUND MUSIC — lazy stream + browser disk cache + fade on exit
    ============================================================ */
-function raceMusicPreferenceOn(){
-  if(typeof Music!=='undefined'&&Music.isMusicOn)return Music.isMusicOn();
-  return !(typeof state!=='undefined'&&state.musicOff);
-}
+function raceMusicPreferenceOn(){return raceMusicEnabled;}
 function raceMusicCanPlay(){
-  return raceMusicPreferenceOn()&&!(typeof state!=='undefined'&&state.sound===false);
+  return raceMusicEnabled&&!(typeof state!=='undefined'&&state.sound===false);
 }
+function raceMusicUnlocked(){return running&&lightPhase==='go'&&penaltyT<=0;}
 function raceMusicSyncButton(){
   if(!raceBgmBtn)return;
   const on=raceMusicPreferenceOn(),masterOff=typeof state!=='undefined'&&state.sound===false;
@@ -553,7 +551,7 @@ function raceMusicStart(){
   raceMusicCancelFade();
   raceBgmBlocked=false;
   raceMusicSyncButton();
-  if(!raceMusicCanPlay())return Promise.resolve(false);
+  if(!raceMusicCanPlay()||!raceMusicUnlocked())return Promise.resolve(false);
   const a=raceMusicEnsure(),token=++raceBgmPlayToken;
   a.volume=RACE_BGM_VOLUME;
   const p=a.play();
@@ -586,15 +584,13 @@ function raceMusicStop(fadeMs=0,reset=false,done){
   step();
 }
 function raceMusicToggle(){
-  const next=!raceMusicPreferenceOn();
-  if(typeof Music!=='undefined'&&Music.setMusic)Music.setMusic(next);
-  else if(typeof state!=='undefined'){state.musicOff=!next;if(typeof saveState==='function')saveState();}
+  raceMusicEnabled=!raceMusicEnabled;
   raceBgmBlocked=false;raceMusicSyncButton();
-  if(next)raceMusicStart();else raceMusicStop(320,false);
+  if(raceMusicEnabled)raceMusicStart();else raceMusicStop(320,false);
 }
 function raceMusicVisibilityChange(){
   if(document.hidden)raceMusicStop(0,false);
-  else if(running)raceMusicStart();
+  else if(raceMusicUnlocked())raceMusicStart();
 }
 const GEARS=[0,13,21,30,40,52,65,79,93];      // ขอบบนความเร็วแต่ละเกียร์ (m/s)
 function gearOf(v){ for(let i=1;i<GEARS.length;i++){ if(v<=GEARS[i]) return i; } return 8; }
@@ -3528,7 +3524,7 @@ function lightsTick(dt){
       if(jumped){
         penaltyT=JUMP_PENALTY_S;
       }else{
-        setStartLights(false);
+        setStartLights(false); raceMusicStart();
         banEl.innerHTML='🟢 <b>ไฟดับ — ออกตัว!</b>';
         banEl.classList.add('show');
         setTimeout(()=>banEl.classList.remove('show'),1100);
@@ -3540,7 +3536,7 @@ function lightsTick(dt){
       lightNoteEl.textContent='⛔ จั๊มพ์สตาร์ท! รออีก '+Math.max(0,penaltyT).toFixed(1)+' วิ';
       if(penaltyT<=0){
         penaltyT=0; heldAtGo=thrNow; goAt=performance.now();
-        setStartLights(false); Snd.blip(true);
+        setStartLights(false); Snd.blip(true); raceMusicStart();
       }
     }else if(!reactDone&&goAt){
       /* เวลาปฏิกิริยา: ต้องเป็นการ "กดใหม่" หลังไฟดับ (กดค้างข้ามมาไม่นับ) */
@@ -4562,6 +4558,9 @@ function start(options){
   fit();
   pickWord();
   if(typeof Music!=='undefined'&&Music.suspendBg) Music.suspendBg();
+  /* ค่าเริ่มต้นทุก session = เปิด แต่เตรียมเพียง metadata; play จริงเมื่อไฟดับและรถปลดล็อก */
+  raceMusicEnabled=true; raceBgmBlocked=false;
+  raceMusicEnsure(); raceMusicStop(0,true); raceMusicSyncButton();
   keydownFn=e=>{
     if(e.repeat) return;
     const k=e.key.toLowerCase();
@@ -4589,7 +4588,6 @@ function start(options){
   window.addEventListener('keyup',keyupFn);
   window.addEventListener('resize',resizeFn);
   running=true;
-  raceMusicStart();
   lastT=performance.now();
   rafId=requestAnimationFrame(tick);
 }

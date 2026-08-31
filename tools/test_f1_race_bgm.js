@@ -19,7 +19,17 @@ assert.doesNotMatch(f1.slice(f1.indexOf('function raceMusicPreferenceOn'),f1.ind
 assert.match(f1,/id="f1-statusright"[\s\S]*?id="f1-laps"[\s\S]*?id="f1-musicbtn"/,
   'music button must live in the non-overlapping top-right status column');
 assert.match(f1,/id="f1-musicbtn"[^>]*aria-pressed="true"/,'music button must expose its state accessibly');
-assert.match(f1,/running=true;\s*raceMusicStart\(\)/,'Racing entry must start BGM only after the world is active');
+assert.match(f1,/raceMusicEnabled=true; raceBgmBlocked=false;\s*raceMusicEnsure\(\); raceMusicStop\(0,true\); raceMusicSyncButton\(\)/,
+  'every Racing session must default to music on and only prime metadata before the start');
+assert.doesNotMatch(
+  f1.slice(f1.indexOf('function start(options)'),f1.indexOf('function exitWorld()')),
+  /running=true;\s*raceMusicStart\(\)/,
+  'entering Racing must not play music before the red-light sequence finishes'
+);
+assert.match(f1,/setStartLights\(false\); raceMusicStart\(\);\s*banEl\.innerHTML='🟢/,
+  'normal GO must start music exactly when the car unlocks');
+assert.match(f1,/penaltyT=0;[\s\S]{0,160}setStartLights\(false\); Snd\.blip\(true\); raceMusicStart\(\)/,
+  'a jump start must delay music until its movement penalty ends');
 assert.match(f1,/function exitWorld\(\)\{\s*running=false;\s*raceMusicStop\(RACE_BGM_EXIT_FADE_MS,true/,
   'Racing exit must fade, stop, and rewind the BGM');
 assert.doesNotMatch(f1,/exitBox\.classList\.remove\('on'\);\s*if\(typeof Music[\s\S]{0,80}resumeBg/,
@@ -35,7 +45,7 @@ const en=f1.indexOf('const GEARS=',st);
 assert.ok(st>=0&&en>st,'cannot isolate Racing BGM module');
 const moduleSource=f1.slice(st,en);
 
-let now=0,created=0,musicOn=true,resumeCalls=0;
+let now=0,created=0,resumeCalls=0;
 class FakeAudio {
   constructor(){created++;this.preload='auto';this.loop=false;this.volume=1;this.src='';this.paused=true;this.currentTime=17;this.listeners={};}
   addEventListener(name,fn){this.listeners[name]=fn;}
@@ -51,24 +61,33 @@ const context={
   clearTimeout(){},
   document:{hidden:false},
   state:{sound:true,musicOff:false},
-  Music:{isMusicOn:()=>musicOn,setMusic(v){musicOn=v;},resumeBg(){resumeCalls++;}},
-  saveState(){},
+  Music:{resumeBg(){resumeCalls++;}},
   running:true,
 };
 vm.createContext(context);
 vm.runInContext([
   "const RACE_BGM_URL='sound/racing/Velocity_Vocabulary.mp3';",
   'const RACE_BGM_VOLUME=.42;',
-  'let raceBgm=null,raceBgmBtn=this.__button,raceBgmFadeTimer=0,raceBgmFadeToken=0,raceBgmPlayToken=0,raceBgmBlocked=false;',
+  "let raceBgm=null,raceBgmBtn=this.__button,raceBgmFadeTimer=0,raceBgmFadeToken=0,raceBgmPlayToken=0,raceBgmBlocked=false;",
+  "let raceMusicEnabled=true,lightPhase='wait',penaltyT=0;",
   moduleSource,
-  'this.__api={start:raceMusicStart,stop:raceMusicStop,toggle:raceMusicToggle,get audio(){return raceBgm;}};',
+  'this.__api={start:raceMusicStart,stop:raceMusicStop,toggle:raceMusicToggle,get audio(){return raceBgm;},get enabled(){return raceMusicEnabled;},set gate(v){lightPhase=v.phase;penaltyT=v.penalty||0;}};',
 ].join('\n'),Object.assign(context,{__button:button}),{filename:'f1_race_bgm.vm.js'});
 
 (async()=>{
   const api=context.__api;
   assert.strictEqual(created,0,'MP3 must not be requested when the website loads');
+
   await api.start();
-  assert.strictEqual(created,1,'first Racing entry must create exactly one media element');
+  assert.strictEqual(created,0,'red lights must keep the Racing song silent and unloaded');
+
+  api.gate={phase:'go',penalty:2};
+  await api.start();
+  assert.strictEqual(created,0,'jump-start penalty must keep the Racing song silent and unloaded');
+
+  api.gate={phase:'go',penalty:0};
+  await api.start();
+  assert.strictEqual(created,1,'GO must create exactly one media element when the car unlocks');
   assert.strictEqual(api.audio.preload,'metadata');
   assert.strictEqual(api.audio.loop,true);
   assert.strictEqual(api.audio.src,'sound/racing/Velocity_Vocabulary.mp3');
@@ -76,12 +95,12 @@ vm.runInContext([
   assert.strictEqual(api.audio.volume,.42);
 
   api.toggle();
-  assert.strictEqual(musicOn,false,'off button must persist through the existing global music preference');
+  assert.strictEqual(api.enabled,false,'off button must disable music for this Racing session');
   assert.strictEqual(api.audio.paused,true,'off button must fade to a paused media element');
   assert.strictEqual(created,1,'toggle must reuse the locally cached media element');
 
   await api.toggle();
-  assert.strictEqual(musicOn,true);
+  assert.strictEqual(api.enabled,true,'on button must re-enable music for this Racing session');
   assert.strictEqual(api.audio.paused,false);
   let faded=false;
   api.stop(1100,true,()=>{faded=true;});
@@ -91,5 +110,5 @@ vm.runInContext([
   assert.strictEqual(api.audio.volume,.42,'fade must restore configured volume for the next entry');
   assert.strictEqual(resumeCalls,0,'isolated BGM module must not resume lobby music itself');
 
-  console.log('PASS f1_race_bgm: lazy stream, loop, accessible toggle, reuse, fade/stop/rewind, immutable build URL');
+  console.log('PASS f1_race_bgm: default on, GO/penalty gate, lazy stream, toggle, reuse, fade/stop/rewind, immutable URL');
 })().catch((error)=>{console.error(error);process.exitCode=1;});
