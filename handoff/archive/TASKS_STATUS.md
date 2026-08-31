@@ -5747,3 +5747,9 @@
 
 - ใช้ `stage.clientWidth` ซึ่งเป็นขนาด layout ก่อน transform แล้วคง bounding rect เป็น fallback; สูตร cover จึงวาดรูปเต็มช่องตั้งแต่เปิดกล่อง
 - syntax + regression ครอปรูป + Home V2 R29 + production build/validate ผ่าน; scope `js/photo.js`, `tools/test_photo_crop_viewport.js`
+
+
+## ⏬ ย้ายเมื่อ 2026-08-31 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- syntax + regression + production build .1174 + validate ผ่าน; scope js/lettercannon.js, css/lettercannon.css, tools/test_letter_cannon.js
+- **รอบ 1302 · Home V2 ครอปรูปเต็มช่อง:** แก้ภาพหดติดมุมซ้ายบน เพราะวัด `getBoundingClientRect()` ตอนกล่อง `popIn scale(.4)`
