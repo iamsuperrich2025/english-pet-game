@@ -223,7 +223,7 @@ let scene, camera, renderer;
 let racingSkyTex=null,racingSkyLoading=false;
 let envLights=null, activeGraphicsMode='battery', activeEnvironmentProfile=null;
 let realisticRoot=null, legacyArchitectureRoot=null, realisticTier='off', realisticStats=null;
-let wrapEl, screenEl, hudEl, wordEl, coinsEl, banEl, introEl, garageEl, exitBox, boardEl, chatBarEl, selfMsgEl;
+let wrapEl, screenEl, hudEl, wordEl, coinsEl, banEl, introEl, garageEl, exitBox, boardEl, chatBarEl, selfMsgEl, carProofEl;
 let speedEl, gearEl, lapEl, bestEl, mapCv, mapCtx, mapBase=null, wrongEl, drsEl;
 let knobEl, padThr=0, padBr=false, steerCtl=0, kL=false, kR=false, kThr=false, kBack=false;
 let keydownFn, keyupFn, resizeFn;
@@ -1958,6 +1958,10 @@ function paintPlayerStyle(key){
       b.setAttribute('aria-checked',on?'true':'false');
     });
     const name=wrapEl.querySelector('#f1-garage-color-name');if(name)name.textContent='VR-X1 รุ่นใหม่ · '+playerCarStyle.label;
+    if(carProofEl){
+      carProofEl.textContent='🏎️ VR-X1 รุ่นใหม่ · '+playerCarStyle.label;
+      carProofEl.title=cockpitAsset('center');
+    }
     cockpitTurnSrc='';if(cockpitTurnEl){cockpitTurnEl.src='';cockpitTurnEl.style.opacity='0';}
   }
   replacePlayerCar();
@@ -1975,21 +1979,20 @@ const CSS=`
   -webkit-user-select:none;user-select:none;touch-action:none}
 #f1-wrap.on{display:block}
 #f1-cv{position:absolute;inset:0;width:100%;height:100%}
-/* 🪖 รอบ 901: ภาพห้องคนขับทับ canvas (ช่องมองโปร่งใส — เห็นโลก 3D ทะลุ) + ปุ่มสลับมุมมอง */
-#f1-cockpit{position:absolute;inset:0 0 -8% 0;z-index:5;pointer-events:none;display:none;overflow:hidden;
-  background:url('img/f1/cockpit_body.webp') center bottom/cover no-repeat}   /* bottom -8% = จมูกรถจมลงใต้จอ เปิดมุมมองแทร็กกว้างขึ้น */
+/* 🪖 รอบ 1332: ทุกโหมดใช้ cockpit WebP รุ่นใหม่ตามสีโดยตรง ห้ามฐาน/fallback รถแดงรุ่นเก่าทับ */
+#f1-cockpit{position:absolute;inset:0;z-index:5;pointer-events:none;display:none;overflow:hidden;
+  background-image:var(--f1-cockpit-center);background-size:100% auto;
+  background-position:center calc(100% + 1vh);background-repeat:no-repeat}
 #f1-wrap.fp #f1-cockpit{display:block}
 /* Realistic Circuit ต้องเห็น halo/จมูก/พวงมาลัย แต่ไม่ให้ภาพค็อกพิทปิดถนนเกือบทั้งจอ */
-#f1-wrap.realistic.fp #f1-cockpit{inset:0;background-image:var(--f1-cockpit-center);
-  background-size:100% auto;background-position:center calc(100% + 1vh)}
-/* Realistic uses one coherent helmet-eye plate. The legacy 1536x1024 wheel layers
-   belong to Battery Saver and would otherwise create a second, misaligned photo. */
-#f1-wrap.realistic.fp #f1-wheel,#f1-wrap.realistic.fp #f1-leds,#f1-wrap.realistic.fp #f1-quality-wheel{display:none!important}
+#f1-wrap.realistic.fp #f1-cockpit{inset:0}
+/* ชุดสีใหม่เป็นภาพ cockpit+มือ+พวงมาลัยที่สมบูรณ์ในตัว จึงห้ามชั้นภาพรถรุ่นเก่าซ้อนทุกโหมด */
+#f1-wrap.fp #f1-wheel,#f1-wrap.fp #f1-leds,#f1-wrap.fp #f1-quality-wheel{display:none!important}
 /* ภาพเลี้ยวทับเฉพาะตอนมีมุมพวงมาลัย: car/halo เหมือนเฟรมกลางและ opacity ไล่ตาม steer
    ทำให้มือทั้งสองข้างหมุนตามจริงโดยใช้เพียง overlay เดียวบนมือถือ */
 #f1-cockpit-turn{display:none!important;left:0!important;right:0;top:auto!important;bottom:-1vh;width:100%;height:auto;
   z-index:0;opacity:0;transform:none!important;will-change:opacity}
-#f1-wrap.realistic.fp #f1-cockpit-turn{display:block!important}
+#f1-wrap.fp #f1-cockpit-turn{display:block!important}
 /* Quality cockpit ใช้พวงมาลัยแยกชั้นแบบ procedural — บังพวงมาลัยที่ติดตายใน plate และหมุนตามฟิสิกส์จริง */
 #f1-quality-wheel{position:absolute;left:40.1vw;bottom:-1.5vh;width:19.8vw;height:17.5vw;z-index:1;display:none;
   transform-origin:50% 62%;will-change:transform;clip-path:polygon(15% 10%,85% 10%,100% 34%,92% 92%,68% 100%,32% 100%,8% 92%,0 34%);
@@ -2008,7 +2011,7 @@ const CSS=`
 #f1-quality-wheel .qw-led{position:absolute;left:31%;right:31%;top:19%;height:4%;border-radius:999px;
   background:linear-gradient(90deg,#28ef7b 0 32%,#ffd12e 33% 65%,#ff3548 66%);box-shadow:0 0 8px rgba(103,216,255,.6)}
 /* JS anchors the live display to measured locations in all three steering plates. */
-#f1-wrap.realistic.fp #f1-dash{display:block!important}
+#f1-wrap.fp #f1-dash{display:block!important}
 /* 🎡 รอบ 913: ชั้นพวงมาลัยแยก — ขนาด/ตำแหน่งคำนวณจาก JS ให้ทับ "กรอบภาพจริง" ของ background ด้านบนเป๊ะ
    (overflow:hidden ข้างบน = ตัดส่วนเกินเหมือน background cover ทำ) */
 #f1-cockpit img,#f1-cockpit canvas{position:absolute;left:0;top:0;display:block;will-change:transform}
@@ -2025,11 +2028,15 @@ const CSS=`
 /* จอกว้างเตี้ย (มือถือแนวนอน) — cover จะเอาค็อกพิทบังเต็มจอ: ตรึงขอบบน (halo อยู่ครบ) + สูง 128%
    ตัดหน้าปัด/ขอบล่างทิ้งใต้จอแทน · บีบแนวตั้ง ~10% ตามองไม่ออก แต่เปิดพื้นที่เห็นแทร็กเพิ่มมาก */
 @media (min-aspect-ratio: 9/5){
-  #f1-wrap.fp #f1-cockpit{inset:0;background-size:100% 128%;background-position:center top}
+  #f1-wrap.fp #f1-cockpit{inset:0;background-size:100% auto;background-position:center calc(100% + 1vh)}
   /* The wide plate already matches a landscape driver view; keep its sides at the
      viewport edges so bodywork never terminates as a visible rectangular cutout. */
   #f1-wrap.realistic.fp #f1-cockpit{background-size:100% auto;background-position:center calc(100% + 1vh)}
 }
+/* ป้ายหลักฐานจาก runtime: ถ้าเครื่องใดเห็นสีไม่ตรง ภาพหน้าจอจะบอก model/style ที่เลือกจริงทันที */
+#f1-car-proof{position:absolute;left:50%;bottom:6px;z-index:6;transform:translateX(-50%);pointer-events:none;
+  padding:3px 9px;border:1px solid rgba(97,213,255,.42);border-radius:999px;background:rgba(4,12,24,.68);
+  color:#dff8ff;font:800 10px/1.2 'Kanit','Segoe UI',sans-serif;letter-spacing:.02em;white-space:nowrap}
 /* 🧭 รอบ 914: ย้ายปุ่ม "มุมกล้อง" + "ออก" ขึ้นแถวขวาบน เรียงก่อนถึงเหรียญ (เดิมอยู่ซ้ายล่าง ทับที่ของแถบเลี้ยว)
    เหรียญย้ายเข้ามาเป็นลูกของแถวนี้ด้วย จึงไม่ต้องเดาความกว้างเหรียญเวลาเลขยาว */
 #f1-topright{position:absolute;right:10px;top:8px;z-index:7;display:flex;align-items:flex-start;gap:6px}
@@ -2397,6 +2404,7 @@ function buildDom(){
       <div id="f1-statusright"><div id="f1-coins">🪙 +0</div><div id="f1-laps"></div></div>
     </div>
     <div id="f1-board"></div>
+    <div id="f1-car-proof" aria-live="polite"></div>
     <canvas id="f1-map" width="260" height="260"></canvas>
     <div id="f1-hud"><div id="f1-speed">0<small> กม./ชม.</small></div><span id="f1-gear">N</span></div>
     <div id="f1-drs"></div>
@@ -2473,6 +2481,7 @@ function buildDom(){
   garageEl=wrapEl.querySelector('#f1-garage');
   exitBox=wrapEl.querySelector('#f1-exitbox');
   boardEl=wrapEl.querySelector('#f1-board');
+  carProofEl=wrapEl.querySelector('#f1-car-proof');
   positionEl=wrapEl.querySelector('#f1-position');
   /* 👥 รอบ 939: ปุ่ม "ไปหาเพื่อน" ที่ NetRoom ฝังมากับป้ายสถานะ — เดิม F1 วาดปุ่มแต่ไม่ได้ดักคลิก (กดแล้วเงียบ) */
   boardEl.addEventListener('click',e=>{ if(e.target.closest('.nr-go')&&room) room.openFriends(); });
@@ -2509,17 +2518,10 @@ function buildDom(){
   cockpitTurnEl=wrapEl.querySelector('#f1-cockpit-turn');
   qualityWheelEl=wrapEl.querySelector('#f1-quality-wheel');
   camBtnEl=wrapEl.querySelector('#f1-cambtn');
-  /* 🎡 รอบ 913: ชั้นพวงมาลัย — โหลดไม่ได้ = ถอยไปใช้ภาพเดิมที่มีพวงมาลัยติดมาในตัว (ไม่ให้เหลือค็อกพิทไม่มีพวงมาลัย) */
+  /* รอบ 1332: ชุด cockpit สีใหม่มีพวงมาลัย/มือครบแล้ว ไม่โหลดหรือ fallback ภาพแดงรุ่นเก่าอีก */
   wheelEl=wrapEl.querySelector('#f1-wheel');
-  wheelEl.addEventListener('error',()=>{
-    /* 🚥 รอบ 918: ภาพไฟดับโหลดไม่ได้ → ถอยไป wheel.webp (ไฟติดตายในภาพ) แล้วเลิกวาดดวงไฟ */
-    if(wheelEl.src.indexOf('wheel_body')>=0){ ledsOff(); wheelEl.src='img/f1/wheel.webp'; return; }
-    wheelEl.style.display='none'; wheelEl=null; ledsOff();
-    cockpitEl.style.backgroundImage="url('img/f1/cockpit.webp')";
-  });
-  wheelEl.addEventListener('load',layoutWheel);
-  buildLeds();                         // 🚥 รอบ 918 — สร้างดวงไฟก่อนโหลดภาพ
-  wheelEl.src='img/f1/wheel_body.webp';   // 🚥 รอบ 918 — ภาพที่ไฟดับหมด (ไฟจริงเกมวาดเอง)
+  wheelEl.style.display='none';
+  buildLeds(); ledsOff();
   /* โหลดซ้าย/ขวาเฉพาะสีที่ยืนยัน ไม่ preload รถทุกสีเข้า RAM มือถือ */
   paintPlayerStyle(playerCarStyle.key);
   /* 🔢 รอบ 916: จอตัวเลขจริงบนพวงมาลัย — เครื่องที่ไม่มี canvas 2d ก็ปล่อยจอในภาพไปตามเดิม ไม่ให้ทั้งโลกพัง */
@@ -4077,24 +4079,11 @@ function fpWheelTick(dt){
 function cockpitBox(){
   if(!cockpitEl) return null;
   const bw=cockpitEl.clientWidth, bh=cockpitEl.clientHeight;
-  const quality=activeGraphicsMode==='quality';
-  const iw=quality?QUALITY_PLATE_W:WHEEL_IMG_W, ih=quality?QUALITY_PLATE_H:WHEEL_IMG_H;
+  const iw=QUALITY_PLATE_W, ih=QUALITY_PLATE_H;
   if(!bw||!bh) return null;
-  /* The quality plate is CSS width:100%/height:auto and its image bottom is 1vh
-     below the cockpit. Return those exact painted bounds for the measured anchors. */
-  if(quality){
-    const w=bw,h=bw*ih/iw;
-    return {w,h,left:0,top:bh+bh*.01-h,sy:1};
-  }
-  const cs=getComputedStyle(cockpitEl);
-  let w,h;
-  const pc=cs.backgroundSize.match(/(-?[\d.]+)%\s+(-?[\d.]+)%/);
-  if(pc){ w=bw*parseFloat(pc[1])/100; h=bh*parseFloat(pc[2])/100; }
-  else { const k=Math.max(bw/iw,bh/ih); w=iw*k; h=ih*k; }        // cover
-  const kw={left:0,top:0,center:50,right:100,bottom:100};
-  const at=t=>t==null?50:(t in kw?kw[t]:(t.slice(-1)==='%'?parseFloat(t):50));
-  const bp=cs.backgroundPosition.trim().split(/\s+/);
-  return {w,h,left:(bw-w)*at(bp[0])/100,top:(bh-h)*at(bp[1])/100,sy:h/(w*ih/iw)};
+  /* รถสีใหม่ทุกโหมดใช้ plate 1672×941 และตรึงขอบล่างแบบเดียวกัน */
+  const w=bw,h=bw*ih/iw;
+  return {w,h,left:0,top:bh+bh*.01-h,sy:1};
 }
 function layoutWheel(){
   const b=cockpitBox(); if(!b) return;
@@ -4119,14 +4108,14 @@ function layoutWheel(){
    🫨 รอบ 914: บวกอาการมือสั่นบน kerb/ทราย — ใช้ shakeT/SHAKE_HZ ตัวเดียวกับกล้อง (รอบ 907, อัปเดตใน camTick ก่อนหน้านี้แล้วในเฟรมเดียวกัน)
    จึงสั่นจังหวะเดียวกับที่กล้อง/โลกสั่น ไม่ใช่คนละจังหวะที่ดูหลอน */
 function wheelTick(){
-  if(!wheelEl||camMode!=='cockpit') return;
+  if(camMode!=='cockpit') return;
   const deg=clamp(steer*(180/Math.PI)*WHEEL_RATIO,-WHEEL_MAX_DEG,WHEEL_MAX_DEG);
   const shakeAmp=surfNow==='kerb'?WHEEL_SHAKE_KERB_PX:(surfNow==='sand'?WHEEL_SHAKE_SAND_PX:0);
   const shaking=shakeAmp>0;
   if(!shaking&&!wheelShakeOn&&wheelDeg!==null&&Math.abs(deg-wheelDeg)<0.05) return;
   wheelShakeOn=shaking;
   wheelDeg=deg;
-  const quality=activeGraphicsMode==='quality';
+  const quality=true; // cockpit WebP รุ่นใหม่ใช้เฟรมมือซ้าย/กลาง/ขวาในทุก graphics mode
   const handDeg=clamp(deg,-QUALITY_HAND_MAX_DEG,QUALITY_HAND_MAX_DEG);
   let sx=0, sy2=0;
   if(shaking){
@@ -4137,7 +4126,7 @@ function wheelTick(){
   const r=(shaking?'translate('+sx.toFixed(2)+'px,'+sy2.toFixed(2)+'px) ':'')+'rotate('+deg.toFixed(2)+'deg)';
   const tr=Math.abs(wheelSy-1)<0.01?r
     :'scaleY('+wheelSy.toFixed(4)+') '+r+' scaleY('+(1/wheelSy).toFixed(4)+')';
-  wheelEl.style.transform=tr;
+  if(wheelEl) wheelEl.style.transform=tr;
   if(cockpitTurnEl){
     if(quality&&Math.abs(handDeg)>.05){
       const src=cockpitAsset(handDeg<0?'left':'right');
@@ -4178,28 +4167,13 @@ function positionQualityDash(handDeg,shakeX=0,shakeY=0){
 }
 function layoutDash(b){
   if(!dashEl||!dashCtx) return;
-  if(activeGraphicsMode==='quality'){
-    qualityDashBox=b;
-    positionQualityDash(0);
-    const w=QUALITY_DASH_POSE.center.w*b.w/QUALITY_PLATE_W*QUALITY_DASH_SCALE;
-    const k=Math.min(2.5,Math.max(1.5,window.devicePixelRatio||1))*w/DASH_PX.w;
-    const cw=Math.max(1,Math.round(DASH_PX.w*k)),ch=Math.max(1,Math.round(DASH_PX.h*k));
-    if(dashEl.width!==cw||dashEl.height!==ch){dashEl.width=cw;dashEl.height=ch;}
-    dashK=k;dashSig='';
-    return;
-  }
-  qualityDashBox=null;
-  const sx=b.w/WHEEL_IMG_W, sy=b.h/WHEEL_IMG_H;     // ภาพถูกย่อ/ยืดเท่าไหร่บนจอจริง (จอกว้างเตี้ยยืดแนวตั้ง)
-  const w=DASH_PX.w*sx, h=DASH_PX.h*sy;
-  dashEl.style.width=w+'px';  dashEl.style.height=h+'px';
-  dashEl.style.left=(b.left+DASH_PX.x*sx)+'px';
-  dashEl.style.top =(b.top +DASH_PX.y*sy)+'px';
-  /* หมุนรอบแกนพวงมาลัยจุดเดียวกับชั้นภาพ — origin ของ canvas นับจากมุมซ้ายบนของตัวเอง จึงลบระยะเยื้องออก */
-  dashEl.style.transformOrigin=(b.w*WHEEL_HUB_X/100-DASH_PX.x*sx)+'px '+(b.h*WHEEL_HUB_Y/100-DASH_PX.y*sy)+'px';
+  qualityDashBox=b;
+  positionQualityDash(0);
+  const w=QUALITY_DASH_POSE.center.w*b.w/QUALITY_PLATE_W*QUALITY_DASH_SCALE;
   const k=Math.min(2.5,Math.max(1.5,window.devicePixelRatio||1))*w/DASH_PX.w;  // วาดละเอียดกว่าจอจริง 1.5 เท่าเป็นอย่างน้อย = ตัวเลขคมไม่ฟุ้ง
-  const cw=Math.max(1,Math.round(DASH_PX.w*k)), ch=Math.max(1,Math.round(DASH_PX.h*k));
-  if(dashEl.width!==cw||dashEl.height!==ch){ dashEl.width=cw; dashEl.height=ch; }
-  dashK=k; dashSig='';        // ขนาดเปลี่ยน = ภาพในบัฟเฟอร์หาย ต้องวาดใหม่รอบหน้า
+  const cw=Math.max(1,Math.round(DASH_PX.w*k)),ch=Math.max(1,Math.round(DASH_PX.h*k));
+  if(dashEl.width!==cw||dashEl.height!==ch){dashEl.width=cw;dashEl.height=ch;}
+  dashK=k;dashSig='';
 }
 function dashRR(c,x,y,w,h,r){                       // สี่เหลี่ยมมุมมน (ไม่พึ่ง ctx.roundRect ที่เครื่องเก่าไม่มี)
   c.beginPath();

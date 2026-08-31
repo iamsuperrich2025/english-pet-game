@@ -220,11 +220,11 @@ assert.ok(/QUALITY_DASH_SCALE=\.82/.test(f1)&&/p\.w\*sx\*QUALITY_DASH_SCALE/.tes
   'quality dashboard must shrink uniformly around its measured center so it stays inside the real LCD bezel');
 assert.ok(/#f1-wrap\.fp #f1-hud\{display:none\}/.test(f1),
   'cockpit must hide the duplicate floating gear/speed HUD while leaving non-cockpit views unchanged');
-assert.ok(/#f1-wrap\.realistic\.fp #f1-dash\{display:block!important\}/.test(f1)&&
-  !/#f1-wrap\.realistic\.fp #f1-dash\{[^}]*left:44vw/.test(f1),
-  'quality dashboard placement must come from measured image coordinates, never fixed viewport offsets');
-assert.ok(/#f1-wrap\.realistic\.fp #f1-wheel[^\n]*#f1-quality-wheel\{display:none!important\}/.test(f1),
-  'quality cockpit must not render a duplicate procedural wheel over the photographed hands');
+assert.ok(/#f1-wrap\.fp #f1-dash\{display:block!important\}/.test(f1)&&
+  !/#f1-wrap\.fp #f1-dash\{[^}]*left:44vw/.test(f1),
+  'every selected-color cockpit must place the dashboard from measured image coordinates, never fixed viewport offsets');
+assert.ok(/#f1-wrap\.fp #f1-wheel[^\n]*#f1-quality-wheel\{display:none!important\}/.test(f1),
+  'no graphics mode may render a duplicate legacy wheel over the selected-color cockpit hands');
 
 /* Exact Phase-1 Battery Saver profile guard: this visual upgrade must not trade its quality away. */
 for(const token of [
