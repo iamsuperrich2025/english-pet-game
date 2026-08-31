@@ -32,12 +32,8 @@ assert.doesNotMatch(src,/#f1-wrap\.realistic\.fp #f1-dash\{[^}]*left:44vw/,
   'Realistic dashboard must not drift from a viewport-relative hard-coded offset');
 assert.match(src,/#f1-wrap\.fp #f1-hud\{display:none\}/,
   'Cockpit must not show the duplicate floating speed and gear box');
-assert.match(src,/g\.name=['"]F1_FP_WHEELS['"]/,
-  'The separate first-person wheel group must remain identifiable for visual QA');
-assert.match(src,/fpWheels\.visible=fp&&activeGraphicsMode!==['"]quality['"]/,
-  'Realistic must not render a second 3D wheel layer over its cockpit asset');
-assert.match(src,/fpWheels\.visible=camMode===['"]cockpit['"]&&!realistic/,
-  'Switching into Realistic must immediately hide first-person 3D wheels');
+assert.doesNotMatch(src,/F1_FP_WHEELS|function buildFpWheels\(|function fpWheelTick\(|\bfpWheels\b/,
+  'The retired 3D first-person wheel overlay must not exist in any graphics mode');
 assert.match(src,/carGrp\.visible=\(camMode===['"]chase['"]\)/,
   'The complete car, including rear wheels/bodywork, must stay hidden in cockpit view');
 assert.match(src,/camera\.near=realistic\?\.14:\.3/,'Realistic near plane regression');

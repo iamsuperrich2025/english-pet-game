@@ -64,20 +64,10 @@ const RFP_FOV  = 66;
 const ROAD_EYE  = 1.45;
 const ROAD_DROP = 1.5;
 const ROAD_FOV  = 74;
-/* ⏪🏜️🛞 รอบ 911 — เกียร์ถอย + เกิดใหม่เมื่อหลุดสนาม + ล้อหน้ามุมคนขับ */
+/* ⏪🏜️ รอบ 911 — เกียร์ถอย + เกิดใหม่เมื่อหลุดสนาม */
 const REV_A      = 7;    // ⏪ อัตราเร่งถอยหลัง (m/s²)
 const REV_MAX    = 8;    // ความเร็วถอยสูงสุด (m/s ≈ 29 กม./ชม.)
 const OFFTRACK_S = 0;    // 🌀 รอบ 1210: พ้นผิวถนน = เปิดประตูมิติทันทีในเฟรมนั้น ไม่หน่วงเวลา
-const FPW_F      = 1.35; // 🛞 ล้อหน้ามุมคนขับ: เยื้องไปหน้ารถ (ม.) — 1.35 ให้ล้อฉาย ~44° โผล่ช่องโปร่งริมจอ (1.58 จะโดนแขนคาร์บอนของภาพบังมิด)
-const FPW_S      = 0.87; //    เยื้องข้าง (ม.)
-const FPW_R      = 0.34; //    รัศมีล้อ (ม.)
-const FPW_H      = 0.80; //    ความสูงจุดกลางล้อ (ม.) — สูงกว่าจริง (0.34) จงใจ: ภาพอาร์ตวาดยางไว้ระดับข้างกระจก
-                         //    ยกให้ตรงช่องโปร่งของภาพ (จุดสัมผัสพื้นโดนบอดี้อาร์ตทึบบัง มองไม่เห็นว่าลอย)
-/* Realistic: cue ล้อหน้าเล็กที่ขอบภาพ — ดันไปข้างหน้า/ออกด้านข้างและย่อ mesh กันล้อกินถนน */
-const RFPW_F     = 2.90;
-const RFPW_S     = 0.63;
-const RFPW_H     = -1.10;
-const RFPW_SCALE = 0.25;
 /* 🎡 พวงมาลัยหมุนตามการเลี้ยวจริง (รอบ 913) — ภาพแยกเป็น 2 ชั้น: cockpit_body.webp (ไม่มีพวงมาลัย) + wheel.webp */
 const WHEEL_HUB_X  = 49.41;  // แกนหมุน (ปุ่มกลมกลางพวงมาลัย) คิดเป็น % ของภาพ — ได้จาก tools/f1_split_wheel.py
 const WHEEL_HUB_Y  = 63.96;  // ⚠️ แก้ภาพใหม่เมื่อไหร่ ต้องเอาค่า hub pct จากสคริปต์มาใส่ตรงนี้ด้วย
@@ -233,7 +223,7 @@ let playerCarStyle=CAR_STYLES[0];
 let airborne=false,activeJump=null,jumpPrevD=-1,jumpImpact=0,jumpLandKickT=0,jumpMissed=false;
 let camPos=null, camInit=false, camYaw=0, shakeT=0;
 let camMode='cockpit', cockpitEl=null, cockpitTurnEl=null, cockpitTurnSrc='', camBtnEl=null;   // 🪖 รอบ 901 — มุมคนขับเป็นภาพหลัก
-let padRev=false, revNow=false, sandT=0, portalEl=null, portalViewCv=null, portalActive=false, portalT=0, portalJumped=false, portalTargetIdx=0, portalResumeSpeed=0, fpWheels=null;   // ⏪🏜️🛞 รอบ 911
+let padRev=false, revNow=false, sandT=0, portalEl=null, portalViewCv=null, portalActive=false, portalT=0, portalJumped=false, portalTargetIdx=0, portalResumeSpeed=0;   // ⏪🏜️ รอบ 911
 let wheelEl=null, qualityWheelEl=null, wheelDeg=null, wheelSy=1; // 🎡 ชั้นพวงมาลัยแยก: Battery image + Quality procedural wheel
 let ledsEl=null, ledEls=[], ledN=-1, ledRpm=0, ledFlashT=0, ledFlash=false;  // 🚥 รอบ 918 — ชั้นดวงไฟ LED รอบเครื่อง
 let dashEl=null, dashCtx=null, dashK=1, dashRpm=0, dashSig='';   // 🔢 รอบ 916 — จอตัวเลขจริงบนพวงมาลัย (K = พิกเซลภาพ→พิกเซล canvas)
@@ -2652,7 +2642,6 @@ function build(){
   buildDrsBoards();      // 🪽 รอบ 908 — ป้ายเสา DRS (ต้องมาหลัง TexLib.glow + findDrsZones + มี scene แล้ว)
   /* รถเรา: VR-X1 faceted รุ่นใหม่ชุดเดียวกับระบบเลือกสีรอบ 1216 */
   replacePlayerCar();
-  fpWheels=buildFpWheels(); scene.add(fpWheels);   // 🛞 รอบ 911 — ล้อหน้ามุมคนขับ
   /* minimap พื้นหลัง */
   const mc=document.createElement('canvas'); mc.width=mc.height=260;
   const mg=mc.getContext('2d');
@@ -4022,56 +4011,8 @@ function applyCamMode(){
   wrapEl.classList.toggle('fp',fp);
   if(camBtnEl) camBtnEl.textContent=CAM_NEXT_LABEL[camMode]||'📷 มุมรถ';
   if(carGrp) carGrp.visible=(camMode==='chase');   // 🛣️ มุมถนนก็ซ่อนรถ (นั่งในรถเหมือนกัน)
-  if(fpWheels) fpWheels.visible=fp&&activeGraphicsMode!=='quality';
   camInit=false;
   if(fp) layoutWheel();   // 🎡 รอบ 913 — ตอนซ่อนอยู่วัดขนาดไม่ได้ (0×0) ต้องวัดใหม่ทุกครั้งที่กลับมามุมคนขับ
-}
-/* 🛞🪖 รอบ 911: ล้อหน้าจริงในมุมคนขับ — carGrp ถูกซ่อน แต่คนขับ F1 ต้องเห็นล้อหน้าดำ ๆ หมุน/เลี้ยวข้างตัว
-   (กลุ่มแยกในฉาก โชว์เฉพาะโหมด fp · ตำแหน่ง/มุมตามรถทุกเฟรม · ซี่ล้อสว่างให้ตาจับการหมุนได้) */
-function buildFpWheels(){
-  const g=new THREE.Group();
-  g.name='F1_FP_WHEELS';
-  /* 🛞 รอบ 912: เปลี่ยนเป็น MeshBasic (ไม่พึ่งแสง) — เดิม Lambert โดนไฟสนามข้างเดียว
-     หน้าล้อฝั่งซ้ายมืดจนก้าน/แถบเหลืองจมหาย (ผู้ใช้เห็นจากเครื่องจริง) · Basic = สองฝั่งชัดเท่ากันเสมอ */
-  const tyreM=new THREE.MeshBasicMaterial({color:0x101216});
-  const rimM=new THREE.MeshBasicMaterial({color:0x33383f});
-  const spokeM=new THREE.MeshBasicMaterial({color:0x99a2ac});
-  const bandM=new THREE.MeshBasicMaterial({color:0xd9c400});   // แถบเหลืองแก้มยางแบบ soft
-  g.userData.spin=[];
-  for(const side of [-1,1]){
-    const wg=new THREE.Group(), sg=new THREE.Group();
-    /* ฝาทรงกระบอกเป็น "แผ่นเต็ม" — ซ้อนรัศมีลดหลั่น (กว้างขึ้นทีละนิดกัน z-fight) ให้หน้าล้ออ่านเป็น:
-       ยางดำหนา → แถบเหลืองบางขอบนอก (แบบยาง soft) → แก้มดำ → ดุมเทาเข้ม + ซี่ */
-    const ty=new THREE.Mesh(new THREE.CylinderGeometry(FPW_R,FPW_R,0.38,18),tyreM);
-    ty.rotation.z=Math.PI/2; sg.add(ty);
-    const band=new THREE.Mesh(new THREE.CylinderGeometry(0.322,0.322,0.384,18),bandM);
-    band.rotation.z=Math.PI/2; sg.add(band);
-    const wall=new THREE.Mesh(new THREE.CylinderGeometry(0.285,0.285,0.388,18),tyreM);
-    wall.rotation.z=Math.PI/2; sg.add(wall);
-    const rim=new THREE.Mesh(new THREE.CylinderGeometry(0.185,0.185,0.392,12),rimM);
-    rim.rotation.z=Math.PI/2; sg.add(rim);
-    for(let k=0;k<3;k++){                     // แท่งซี่พาดหน้าดุม 3 แนว = 6 ซี่ (สีเข้ม แค่พอให้ตาจับการหมุน)
-      const sp=new THREE.Mesh(new THREE.BoxGeometry(0.40,0.34,0.04),spokeM);
-      sp.rotation.x=k*Math.PI/3; sg.add(sp);
-    }
-    wg.add(sg); g.add(wg);
-    g.userData.spin.push({wg,sg,side});
-  }
-  g.visible=false;
-  return g;
-}
-function fpWheelTick(dt){
-  if(!fpWheels||!fpWheels.visible) return;
-  const fx=Math.sin(yaw), fz=Math.cos(yaw);              // ขวามือรถ = (-fz, fx)
-  const vF=vx*fx+vz*fz, rollD=vF*dt/FPW_R, sv=-steer*1.15;
-  const realistic=activeGraphicsMode==='quality';
-  const wheelF=realistic?RFPW_F:FPW_F, wheelS=realistic?RFPW_S:FPW_S, wheelH=realistic?RFPW_H:FPW_H;
-  for(const o of fpWheels.userData.spin){
-    o.wg.position.set(px+fx*wheelF-fz*wheelS*o.side, py+wheelH, pz+fz*wheelF+fx*wheelS*o.side);
-    o.wg.scale.setScalar(realistic?RFPW_SCALE:1);
-    o.wg.rotation.y=yaw+sv;                              // ล้อหน้าหักตามพวงมาลัย
-    o.sg.rotation.x+=rollD;                              // หมุนตามความเร็วจริง (ถอย = หมุนกลับ)
-  }
 }
 /* 🎡 รอบ 913: วาง <img> พวงมาลัยให้ทับ "กรอบภาพจริง" ของ background-image ใน #f1-cockpit เป๊ะ
    — อ่าน background-size/position ที่เบราว์เซอร์คำนวณแล้วมาใช้ตรง ๆ จึงเปลี่ยนตาม @media เองโดยไม่ต้องเขียนสูตรซ้ำ
@@ -4402,7 +4343,6 @@ function frame(dt,now){
   ghostTick(dt);           // 👻 รอบ 902
   collectTick();
   smokeTick(dt);
-  if(visualDue) fpWheelTick(dt); // 🛞 visual-only: เฟรมที่ไม่ render ไม่ต้องขยับ mesh/DOM ซ้ำ
   camTick(dt);
   if(visualDue){
     wheelTick();           // 🎡 รอบ 913 — พวงมาลัยหมุนตาม steer
@@ -4453,7 +4393,6 @@ function applyEnvironmentProfile(profile,mode){
      ทั้งกลุ่มเพื่อไม่ให้ก้อนอาคารจากผังจริงซ้อน/ขวางถนน ส่วน Battery Saver ยังเก็บของเดิมไว้ */
   if(legacyArchitectureRoot) legacyArchitectureRoot.visible=!realistic;
   if(wrapEl) wrapEl.classList.toggle('realistic',realistic);
-  if(fpWheels) fpWheels.visible=camMode==='cockpit'&&!realistic;
   if(camMode==='cockpit'&&cockpitEl) requestAnimationFrame(layoutWheel);
   const tierCap=realisticTier==='low'?1.35:(realisticTier==='medium'?1.65:Number(r.pixelRatioCap)||2.35);
   thermalMobile=isThermalMobile();
