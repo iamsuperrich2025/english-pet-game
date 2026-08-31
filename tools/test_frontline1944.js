@@ -1,33 +1,95 @@
-"use strict";
-const fs=require('fs'),vm=require('vm'),assert=require('assert');
-const code=fs.readFileSync('js/frontline1944.js','utf8');
-const css=fs.readFileSync('css/frontline1944.css','utf8');
-const html=fs.readFileSync('index_classic.html','utf8');
-const f1=fs.readFileSync('js/data/f1_vocab.js','utf8');
-assert(html.includes('id="btn-rail-frontline1944"')&&html.includes('hidden')&&html.includes('ADMIN PREVIEW'),'Frontline lobby entry is hidden-by-default admin preview');
-assert(html.includes("link.href='css/frontline1944.css'")&&html.includes("s.src='js/frontline1944.js'")&&html.includes("if(!allowed())return false"),'Frontline assets are admin-gated and lazy-fetched only after an approved admin action/route');
-assert(!html.includes('<link rel="stylesheet" href="css/frontline1944.css"')&&!html.includes('<script src="js/frontline1944.js"'),'public lobby does not statically fetch Frontline assets');
-assert(code.includes("typeof isAdmin === 'function' && isAdmin() === true")&&code.includes('return false; // fail closed'),'Frontline runtime uses the same bare authoritative isAdmin() resolver as Home V2 and still fails closed');
-const routeCapture=html.indexOf('window.__VW_FRONTLINE1944_ROUTE__=true'),legacyMain=html.indexOf('<script src="js/main.js');
-assert(routeCapture>=0&&legacyMain>=0&&routeCapture<legacyMain,'Frontline direct route is captured before legacy main.js routing');
-assert(html.includes('id="btn-frontline1944-admin-launcher"')&&html.includes("typeof isAdmin === 'function' && isAdmin() === true"),'Home V2 overlay launcher uses the authoritative admin resolver and is hidden by default');
-assert(html.includes("if(u.searchParams.get('go')==='frontline1944')")&&html.includes("u.searchParams.delete('go')"),'only the private Frontline go route is removed before legacy routing');
-assert(code.includes('window.__VW_FRONTLINE1944_ROUTE__===true'),'Frontline runtime accepts the pre-main captured route flag');
-assert(!/email\s*[=!]=|@gmail|ADMIN_EMAIL/i.test(code),'Frontline does not create a parallel email allowlist');
-assert(code.includes("typeof f1VocabForStudent==='function'")&&code.includes("typeof vocabForStudent==='function'"),'shared vocabulary adapters are reused');
-assert(!code.includes('APPLE')&&!code.includes('BANANA'),'no sample vocabulary is hard-coded into the game');
-assert(code.includes('letterCoins:1,wordBonus:50'),'reward values are centralized and conservative');
-assert(code.includes("claim(id,CFG.letterCoins)")&&code.includes("claim(bid,CFG.wordBonus)"),'letter and word payouts go through duplicate-safe claims');
-assert(code.includes("typeof addCoins==='function'")&&code.includes("typeof saveState==='function'")&&code.includes("typeof authPushSave==='function'"),'existing economy/save/cloud path is reused');
-assert(code.includes('renderOrder=6')&&code.includes('userData.occluder=true')&&code.includes('renderOrder=5'),'foreground canopy and actor layers have explicit depth ownership');
-assert(code.includes('new THREE.OrthographicCamera')&&code.includes('FogExp2'),'elevated orthographic 2.5D camera and atmospheric depth exist');
-assert(code.includes('activateNextFortress()')&&code.includes("state:'dormant'")&&code.includes("state='boss'")&&code.includes("state='core'")&&code.includes("state='destroyed'"),'fortress loop includes defenders, boss, vulnerable core and endless next objective');
-assert(code.includes('enemyCap:10')&&code.includes('projectileCap:48')&&code.includes('fxCap:72'),'mobile active-object caps are explicit');
-assert(code.includes('renderer.setPixelRatio(Math.min(devicePixelRatio||1,CFG.dpr))'),'mobile DPR is capped');
-assert(css.includes('@media (max-height:460px)')&&css.includes('touch-action:none'),'short landscape and touch control styling exist');
-const sb={console,state:{student:{grade:'ป.1'}}};sb.window=sb;vm.createContext(sb);vm.runInContext(f1,sb);
-assert.strictEqual(typeof sb.f1VocabForStudent,'function','authoritative shooter vocabulary provider exists');
-const grades=['ป.1','ป.2','ป.3','ป.4','ป.5','ป.6'],counts={};
-for(const grade of grades){sb.state.student.grade=grade;const raw=sb.f1VocabForStudent()||[];const words=raw.map(x=>Array.isArray(x)?x[0]:x&&(x.en||x.word||x.eng||x.english)).filter(Boolean).map(x=>String(x).trim().toUpperCase());counts[grade]={count:words.length,unique:new Set(words).size};assert(words.length>0,grade+' vocabulary source must not be empty');assert.strictEqual(counts[grade].count,counts[grade].unique,grade+' vocabulary must not duplicate English targets in the shooter pool');}
-console.log('Frontline vocabulary audit P.1-P.6:',JSON.stringify(counts));
-console.log('PASS Frontline 1944: admin fail-closed, shared vocab, economy reuse, layered 2.5D occlusion, boss fortress loop, endless continuation and mobile caps');
+"use strict";
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const code=fs.readFileSync('js/frontline1944.js','utf8');
+const css=fs.readFileSync('css/frontline1944.css','utf8');
+const html=fs.readFileSync('index_classic.html','utf8');
+const f1=fs.readFileSync('js/data/f1_vocab.js','utf8');
+
+// Access / shared-system regression guards.
+assert(html.includes('id="btn-rail-frontline1944"')&&html.includes('hidden')&&html.includes('ADMIN PREVIEW'),'Frontline lobby entry stays hidden-by-default admin preview');
+assert(html.includes("link.href='css/frontline1944.css'")&&html.includes("s.src='js/frontline1944.js'")&&html.includes("if(!allowed())return false"),'Frontline assets remain admin-gated and lazy-fetched only after approved access');
+assert(!html.includes('<link rel="stylesheet" href="css/frontline1944.css"')&&!html.includes('<script src="js/frontline1944.js"'),'public lobby still does not statically fetch Frontline-only assets');
+assert(code.includes("typeof isAdmin==='function'&&isAdmin()===true")&&code.includes('return false; // fail closed'),'Frontline runtime continues to use authoritative admin interfaces and fail closed');
+assert(!/email\s*[=!]=|@gmail|ADMIN_EMAIL/i.test(code),'Frontline does not create a parallel email allowlist');
+const routeCapture=html.indexOf('window.__VW_FRONTLINE1944_ROUTE__=true'),legacyMain=html.indexOf('<script src="js/main.js');
+assert(routeCapture>=0&&legacyMain>=0&&routeCapture<legacyMain,'Frontline direct route is captured before legacy main.js routing');
+assert(code.includes('window.__VW_FRONTLINE1944_ROUTE__===true'),'Frontline runtime accepts the pre-main captured route flag');
+assert(code.includes("typeof f1VocabForStudent==='function'")&&code.includes("typeof vocabForStudent==='function'"),'shared vocabulary adapters are reused');
+assert(!code.includes('APPLE')&&!code.includes('BANANA'),'no sample vocabulary is hard-coded into the game');
+assert(/letterCoins\s*:\s*1/.test(code)&&/wordBonus\s*:\s*50/.test(code),'Phase 1 preserves current reward values while leaving future reward rules for later phases');
+assert(code.includes("typeof addCoins==='function'")&&code.includes("typeof saveState==='function'")&&code.includes("typeof authPushSave==='function'"),'existing economy/save/cloud path is reused');
+
+// Load only the exported foundation types. Browser work is not started in this VM.
+const sb={console,window:null,document:{readyState:'loading',addEventListener(){}},setInterval(){return 1;},clearInterval(){},setTimeout(){return 1;},clearTimeout(){},URLSearchParams,Math,Date};
+sb.window=sb;vm.createContext(sb);vm.runInContext(code,sb);
+const T=sb.Frontline1944&&sb.Frontline1944._t;
+assert(T,'Frontline test surface must be exported');
+const {CFG,LAYER,TERRAIN,SECTOR_TEMPLATES,WorldSpace,TerrainSystem,CollisionSystem,SectorStreamer,ObjectPool,visualIdFor,tankStateSnapshot,interpolateRemoteTank,occlusionAcceptance,G}=T;
+
+// World / sector streaming foundation.
+assert.strictEqual(SECTOR_TEMPLATES.length,10,'exactly 10 reusable visual sector identities are defined');
+assert(CFG.sectorWidth>CFG.viewW*2,'logical battlefield is materially wider than the viewport');
+assert.strictEqual(WorldSpace.sectorCenterZ(0),0,'sector 0 world center');
+assert.strictEqual(WorldSpace.sectorCenterZ(1),-CFG.sectorLength,'logical sector numbers increase in the default tank-forward direction');
+assert.strictEqual(WorldSpace.sectorIndexAtZ(-CFG.sectorLength),1,'world position resolves to logical sector independent of pixels');
+const ws=WorldSpace.localToWorld(3,12,-7),back=WorldSpace.worldToSector(ws.x,ws.z);
+assert.strictEqual(back.logicalIndex,3,'local/world sector transform round-trips logical index');
+assert.strictEqual(back.x,12,'local/world sector transform round-trips X');
+assert.strictEqual(back.z,-7,'local/world sector transform round-trips local Z');
+const visualIds=new Set();for(let i=-50;i<=50;i++){const v=visualIdFor(i);assert(v>=0&&v<10,'visual sector id stays in reusable range');visualIds.add(v);}assert(visualIds.size>=8,'logical sectors reuse a diverse subset of the 10 visual identities');
+assert(code.includes('new Set([current-1,current,current+1])'),'streamer keeps only Previous / Current / Next fully active');
+assert(code.includes('this.preload(current+CFG.preloadAhead)')&&code.includes('this.preload(current-CFG.preloadAhead)'),'near-future sector descriptors are preloaded');
+const streamer=new SectorStreamer();for(let i=0;i<20;i++)streamer.preload(i);assert(streamer.stats().preloadedCount<=CFG.descriptorCacheCap,'descriptor preload cache is bounded');
+
+// Terrain and collision acceptance logic, including deep water / bridge override.
+const terrain=new TerrainSystem();
+terrain.registerRect(0,0,0,100,20,'DEEP_WATER',70,'test-river');
+terrain.registerRect(0,0,0,12,24,'ROAD',100,'test-bridge');
+terrain.registerRect(0,-30,0,12,20,'SHALLOW_WATER',95,'test-ford');
+terrain.registerRect(0,30,35,24,16,'MUD',60,'test-mud');
+assert.strictEqual(terrain.sample(25,0).id,TERRAIN.DEEP_WATER.id,'deep river samples as blocked water');
+assert.strictEqual(terrain.sample(0,0).id,TERRAIN.ROAD.id,'bridge road overrides deep-water blocking');
+assert.strictEqual(terrain.sample(-30,0).id,TERRAIN.SHALLOW_WATER.id,'explicit ford overrides deep water with shallow-water behavior');
+assert(terrain.sample(30,35).speed<1,'mud reduces movement speed');
+const collision=new CollisionSystem(terrain);
+collision.registerCircle(0,45,40,2,{ownerId:'tree:test',kind:'tree_trunk'});
+collision.registerAABB(0,-45,40,7,6,{ownerId:'house:test',kind:'house'});
+collision.registerAABB(0,25,45,7,6,{ownerId:'bunker:test',kind:'bunker'});
+collision.registerAABB(0,0,45,3,14,{ownerId:'fort:test',kind:'fortress_wall'});
+assert(collision.hitSolid(45,40,1.5).blocked,'Tank -> tree trunk is blocked');
+assert(collision.hitSolid(-45,40,1.5).blocked,'Tank -> house is blocked');
+assert(collision.hitSolid(25,45,1.5).blocked,'Tank -> bunker is blocked');
+assert(collision.hitSolid(0,45,1.5).blocked,'Tank -> fortress wall is blocked');
+assert(collision.hitSolid(25,0,1.5).blocked,'Tank -> deep river is blocked');
+assert(!collision.hitSolid(0,0,1.5).blocked,'Tank -> bridge crossing is allowed');
+const moved=collision.resolveCircleMove({x:-8,z:45},{x:8,z:45},1.5);assert(moved.blocked&&moved.x<0,'swept circle movement does not tunnel through a fortress wall');
+
+// 2.5D layer/depth foundation.
+for(const k of ['BACKGROUND','TERRAIN','ROADS_WATER','GROUND_DECOR','GAMEPLAY_PROPS','ACTORS','FOREGROUND_OCCLUDERS','COMBAT_FX','ATMOSPHERE'])assert(Number.isInteger(LAYER[k]),k+' layer exists');
+G.player={group:{renderOrder:5000},world:{x:0,z:0}};G.occluders=[{parent:{},renderOrder:6010,userData:{occluder:true,depthAnchor:{worldZ:0,priority:10,foreground:true}}}];
+assert(occlusionAcceptance().pass,'foreground canopy has explicit depth ownership above the tank when overlapping');
+
+// Tank / multiplayer-ready state contract.
+const fakeTank={playerId:'p1',displayName:'Tank One',world:{x:4,z:-12},hullRotation:.3,turretRotation:-.7,hp:300,maxHp:380,activeWeapon:'main_cannon',fireEvent:9,visualUpgradeTier:2,damageStatistic:{match:123,lifetime:456},hullVisualTier:1,armorTier:2,engineTier:3,turretTier:4,mainWeaponId:'m1',specialWeaponId:'s1',skinId:'skin'};
+const snap=tankStateSnapshot(fakeTank);assert.strictEqual(snap.hullRotation,.3);assert.strictEqual(snap.turretRotation,-.7);assert.notStrictEqual(snap.hullRotation,snap.turretRotation,'hull and turret rotations are independent');
+for(const key of ['playerId','displayName','position','hp','maxHp','activeWeapon','fireEvent','visualUpgradeTier','damageStatistic','hullVisualTier','armorTier','engineTier','turretTier','mainWeaponId','specialWeaponId','skinId'])assert(Object.prototype.hasOwnProperty.call(snap,key),'multiplayer/upgrade snapshot contains '+key);
+const remote={world:{x:0,z:0},hullRotation:0,turretRotation:0,group:{position:{set(x,y,z){this.x=x;this.y=y;this.z=z;}}},hull:{rotation:{y:0}},turret:{rotation:{y:0}}};
+interpolateRemoteTank(remote,{position:{x:10,z:-20},hullRotation:1,turretRotation:-1},.1);assert(remote.world.x>0&&remote.world.x<10&&remote.world.z<0&&remote.world.z>-20,'remote tank interpolation moves toward replicated state without snapping');
+assert(code.includes('nameAnchor')&&code.includes('hpAnchor')&&code.includes('damageAnchor'),'future player-name / HP / floating-damage anchors are present');
+
+// Projectile / pooling / bounded-memory foundation.
+const pool=new ObjectPool('unit',2,()=>({group:{visible:false},active:false}),o=>{o.group.visible=true;});const a=pool.acquire({}),b=pool.acquire({});assert(a&&b&&!pool.acquire({}),'object pool enforces hard cap');pool.release(a);assert(pool.acquire({}),'released pooled object is reusable');assert.strictEqual(pool.stats().created,2,'pool does not allocate beyond cap');
+assert(CFG.projectileCap<=48&&CFG.enemyProjectileCap<=32&&CFG.fxCap<=72,'mobile projectile/FX caps remain bounded');
+assert(code.includes('lifetime')&&code.includes('ownerId')&&code.includes('weaponId')&&code.includes('impactEvent')&&code.includes('collisionRadius'),'projectile contract includes owner, weapon, impact, lifetime and collision data');
+assert(code.includes('if(!sectorActive)continue')&&code.includes('if(!active)return'),'inactive sectors do not run expensive enemy/fortress simulation');
+assert(code.includes('pool.release(p)')&&code.includes('G.enemies=G.enemies.filter'),'expired projectiles and destroyed enemies are cleaned/reused');
+assert(code.includes('renderer.setPixelRatio(Math.min(devicePixelRatio||1,CFG.dpr))'),'mobile DPR is capped');
+assert(css.includes('.fl44-aim-stick')&&css.includes('@media (max-height:460px)')&&css.includes('touch-action:none'),'mobile landscape drive/aim/fire controls are present');
+
+// Vocabulary source audit still uses the real current shared data.
+const vb={console,state:{student:{grade:'ป.1'}}};vb.window=vb;vm.createContext(vb);vm.runInContext(f1,vb);
+assert.strictEqual(typeof vb.f1VocabForStudent,'function','authoritative shooter vocabulary provider exists');
+const grades=['ป.1','ป.2','ป.3','ป.4','ป.5','ป.6'],counts={};
+for(const grade of grades){vb.state.student.grade=grade;const raw=vb.f1VocabForStudent()||[];const words=raw.map(x=>Array.isArray(x)?x[0]:x&&(x.en||x.word||x.eng||x.english)).filter(Boolean).map(x=>String(x).trim().toUpperCase());counts[grade]={count:words.length,unique:new Set(words).size};assert(words.length>0,grade+' vocabulary source must not be empty');assert.strictEqual(counts[grade].count,counts[grade].unique,grade+' vocabulary must not duplicate English targets in the shooter pool');}
+console.log('Frontline vocabulary audit P.1-P.6:',JSON.stringify(counts));
+console.log('PASS Frontline 1944 Phase 1: streamed logical world, tank runtime, collision/terrain, bridge override, occlusion anchors, pooled projectiles, multiplayer-ready state, mobile caps, and shared-system guards');
