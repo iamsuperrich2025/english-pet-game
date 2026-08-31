@@ -79,8 +79,6 @@
 - ล็อก active 60 FPS, pause 10/countdown 30, DPR 1.5, trail อิงเวลา, particle ring 140, cache noise/gradient และไม่ rebuild HUD ตอน autofire; gameplay/อาวุธ/ฉาก/หางมังกรครบ
 - regression performance + production build .1176 + PWA validate ผ่าน; พิกเซลลด 43.75%, render high-Hz ลด 50–58%, trail ลด 68.73%; scope js/lettercannon.js, tools/test_letter_cannon.js
 - **รอบ 1305 · Home V2 visual cleanup:** แยก New Word ออกจาก speech, ใส่ภาพโปรไฟล์กลับในกรอบ, ทำปุ่มสัตว์ 4 ปุ่มเต็มใบ และคงสัดส่วนกรอบ Global Feed
-- ซ่อนชื่อบ้าน/ปราสาทตามผู้ใช้สั่งและขยายภาพเต็มช่อง; ต้นตอหลักคือ R28 `top:54px` ทับ stage กับ action rail กว้างเกินคอลัมน์กลาง
-- syntax + Home V2 regression + production build/validate ผ่าน; scope `css/home-v2.css`, `js/home-v2.js`, `index_classic.html`, `tools/test_home_v2_mobile_preview.js`
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`

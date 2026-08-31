@@ -5759,3 +5759,9 @@
 
 - **รอบ 1304 · Dragon Sky Siege ยิงอัตโนมัติ:** ถอดปุ่มยิงซ้าย–ขวาและ state/event ของปุ่มกับ Space ออกจาก HUD ทั้งหมด
 - ปืนหลักยิงตาม cadence ของ TRACER/HEAVY/PIERCER อัตโนมัติทุกช่วง active play; ยังหยุดตอน countdown/pause/result และคงปุ่ม Missile เป็นอาวุธพิเศษ
+
+
+## ⏬ ย้ายเมื่อ 2026-08-31 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- ซ่อนชื่อบ้าน/ปราสาทตามผู้ใช้สั่งและขยายภาพเต็มช่อง; ต้นตอหลักคือ R28 `top:54px` ทับ stage กับ action rail กว้างเกินคอลัมน์กลาง
+- syntax + Home V2 regression + production build/validate ผ่าน; scope `css/home-v2.css`, `js/home-v2.js`, `index_classic.html`, `tools/test_home_v2_mobile_preview.js`
