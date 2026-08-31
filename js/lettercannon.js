@@ -42,6 +42,13 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
   const BOSS_INTERVAL=30,MAX_ENEMIES=3;
   const MOVE_SPEED_CAP=1500, MOVE_SPEED_FACTOR=1.5, MOVE_ACCEL=34, MOVE_BRAKE=42;
   const COIN_IMAGE='img/coins/coin_gold.webp';
+  /* เพลงสร้างเมื่อเข้าเกมเท่านั้น; production build จะแทน token ด้วย URL ที่มี content hash
+     จึง stream เท่าที่เล่นและใช้ browser disk cache เดิมข้าม deploy เมื่อไฟล์เพลงไม่เปลี่ยน */
+  const LC_BGM_BUILD_URL='__VW_LC_BGM_URL__';
+  const LC_BGM_URL=LC_BGM_BUILD_URL.startsWith('__VW_')?'sound/letter_cannon/Wordflight_Beyond_the_Stars.mp3':LC_BGM_BUILD_URL;
+  const LC_BGM_VOLUME=.4,LC_BGM_EXIT_FADE_MS=1100;
+  const LC_BACKGROUND_URLS=[1,2,3].map(n=>'img/letter_cannon/letter_cannon_bg'+n+'.avif');
+  const LC_BACKGROUND_SCENE_S=18,LC_BACKGROUND_FADE_S=3;
   const FALLBACK=[['CAT','แมว'],['DOG','สุนัข'],['BOOK','หนังสือ'],['APPLE','แอปเปิล'],['WATER','น้ำ']];
   const PLAYER={size:1254,url:'assets/images/letter_cannon/dragon_gunner_player.webp'};
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -49,6 +56,7 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
   const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
   const ANNOUNCEMENT_KEY='vwLetterCannonAnnouncement1152';
   let root=null,canvas=null,ctx=null,raf=0,abort=null,audio=null,opening=false,saveTimer=0;
+  let lcBgm=null,lcBgmBtn=null,lcBgmFadeTimer=0,lcBgmFadeToken=0,lcBgmPlayToken=0,lcBgmBlocked=false;
   let W=0,H=0,dpr=1,last=0,frameAt=0,elapsed=0,running=false,paused=false,counting=false;
   let word=null,pos=0,queue=[],queueGrade='',lastWord='',vocabSize=0,score=0,scoreSettled=false,combo=0,wordsDone=0,setWordsDone=0,coinsRun=0;
   let shield=MAX_SHIELD,wave=1,bossMode=false,boss=null,bossesDefeated=0,missionEnded=false,threatsStopped=0,misses=0;
@@ -58,6 +66,7 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
   let dragPointer=null,dragX=0,dragY=0,keyLeft=false,keyRight=false,keyUp=false,keyDown=false;
   let letters=[],bullets=[],particles=[],shockwaves=[],stars=[],clouds=[],letterSeq=0,wordSeq=0,particleCursor=0,rewardedLetters=new Set(),rewardedWords=new Set();
   let hud={},timers=new Set(),playerImage=null,playerLoad=null,orientationLocked=false,gameFullscreen=false,skyGradient=null,noiseBuffers=Object.create(null);
+  let backgroundImages=Array(LC_BACKGROUND_URLS.length).fill(null),backgroundLoads=Array(LC_BACKGROUND_URLS.length).fill(null);
   function later(fn,ms){const id=setTimeout(()=>{timers.delete(id);fn();},ms);timers.add(id);return id;}
   function clearTimers(){timers.forEach(clearTimeout);timers.clear();}
   function resetFrameClock(){last=frameAt=0;}
@@ -75,6 +84,13 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
     const load=src=>new Promise((resolve,reject)=>{const img=new Image();img.decoding='async';img.onload=()=>resolve(img);img.onerror=()=>reject(new Error('โหลดภาพมังกรนักบินไม่สำเร็จ: '+src));img.src=src;});
     playerLoad=load(PLAYER.url).then(img=>{playerImage=img;return img;}).catch(err=>{playerLoad=null;throw err;});
     return playerLoad;
+  }
+  function loadBackgroundAsset(index){
+    if(backgroundImages[index])return Promise.resolve(backgroundImages[index]);
+    if(backgroundLoads[index])return backgroundLoads[index];
+    const src=LC_BACKGROUND_URLS[index];if(!src)return Promise.resolve(null);
+    backgroundLoads[index]=new Promise(resolve=>{const img=new Image();img.decoding='async';img.onload=()=>{backgroundImages[index]=img;resolve(img);};img.onerror=()=>{backgroundLoads[index]=null;resolve(null);};img.src=src;});
+    return backgroundLoads[index];
   }
 
   function grade(){return typeof state!=='undefined'&&state.student&&state.student.grade||'ป.1';}
@@ -262,6 +278,46 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
   function lightning(x1,y1,x2,y2){for(let i=0;i<12;i++){const k=i/11,px=x1+(x2-x1)*k+(Math.random()-.5)*15,py=y1+(y2-y1)*k+(Math.random()-.5)*15;particle(px,py,'#d7b8ff',0,0,.25);}}
   function toast(text,color){if(!root)return;const e=document.createElement('div');e.className='lc-toast';e.style.color=color||'#fff';e.textContent=text;root.appendChild(e);later(()=>e.remove(),950);}
 
+  /* ============================================================
+     🎵 LETTER CANNON BACKGROUND MUSIC — lazy stream + disk cache + exit fade
+     ============================================================ */
+  function lcMusicPreferenceOn(){
+    if(typeof Music!=='undefined'&&Music.isMusicOn)return Music.isMusicOn();
+    return !(typeof state!=='undefined'&&state.musicOff);
+  }
+  function lcMusicCanPlay(){return lcMusicPreferenceOn()&&!(typeof state!=='undefined'&&state.sound===false);}
+  function lcMusicSyncButton(){
+    if(!lcBgmBtn)return;
+    const on=lcMusicPreferenceOn(),masterOff=typeof state!=='undefined'&&state.sound===false;
+    lcBgmBtn.setAttribute('aria-pressed',on&&!masterOff?'true':'false');
+    lcBgmBtn.classList.toggle('blocked',lcBgmBlocked);
+    lcBgmBtn.textContent=lcBgmBlocked?'⚠️ แตะเปิดเพลง':(on&&!masterOff?'🎵 เพลง เปิด':'🔇 เพลง ปิด');
+    lcBgmBtn.title=masterOff?'เสียงหลักของเกมถูกปิดอยู่':'Beyond the Stars — เปิด/ปิดเพลง Letter Cannon';
+  }
+  function lcMusicEnsure(){
+    if(lcBgm)return lcBgm;
+    const a=new Audio();a.preload='metadata';a.loop=true;a.volume=LC_BGM_VOLUME;a.src=LC_BGM_URL;
+    a.addEventListener('error',()=>{lcBgmBlocked=true;lcMusicSyncButton();});lcBgm=a;return a;
+  }
+  function lcMusicCancelFade(){lcBgmFadeToken++;if(lcBgmFadeTimer){clearTimeout(lcBgmFadeTimer);lcBgmFadeTimer=0;}}
+  function lcMusicStart(){
+    lcMusicCancelFade();lcBgmBlocked=false;lcMusicSyncButton();if(!lcMusicCanPlay())return Promise.resolve(false);
+    const a=lcMusicEnsure(),token=++lcBgmPlayToken;a.volume=LC_BGM_VOLUME;const p=a.play();
+    if(!p||!p.then)return Promise.resolve(true);
+    return p.then(()=>{if(token!==lcBgmPlayToken||!running){a.pause();return false;}lcBgmBlocked=false;lcMusicSyncButton();return true;}).catch(()=>{if(token===lcBgmPlayToken){lcBgmBlocked=true;lcMusicSyncButton();}return false;});
+  }
+  function lcMusicStop(fadeMs=0,reset=false,done){
+    lcMusicCancelFade();lcBgmPlayToken++;const a=lcBgm;
+    const finish=()=>{if(a){a.pause();a.volume=LC_BGM_VOLUME;if(reset){try{a.currentTime=0;}catch(_e){}}}lcBgmFadeTimer=0;if(done)done();};
+    if(!a||a.paused||fadeMs<=0){finish();return;}
+    const startAt=performance.now(),startVol=a.volume,fadeToken=++lcBgmFadeToken;
+    const step=()=>{if(fadeToken!==lcBgmFadeToken)return;const k=Math.min(1,(performance.now()-startAt)/fadeMs);a.volume=Math.max(0,startVol*(1-k));if(k>=1)finish();else lcBgmFadeTimer=setTimeout(step,40);};step();
+  }
+  function lcMusicToggle(){
+    const next=!lcMusicPreferenceOn();if(typeof Music!=='undefined'&&Music.setMusic)Music.setMusic(next);else if(typeof state!=='undefined'){state.musicOff=!next;if(typeof saveState==='function')saveState();}
+    lcBgmBlocked=false;lcMusicSyncButton();if(next)lcMusicStart();else lcMusicStop(320,false);
+  }
+
   function noiseBurst(type,t){
     if(!audio||!['shot','heavy','pierce','missile','explode','enemy'].includes(type))return;
     const dur=type==='explode'?.42:type==='missile'?.28:type==='heavy'?.16:.085,len=Math.max(1,(audio.sampleRate*dur)|0);let buf=noiseBuffers[type];if(!buf){buf=audio.createBuffer(1,len,audio.sampleRate);const d=buf.getChannelData(0);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,type==='explode'?.75:1.8);noiseBuffers[type]=buf;}
@@ -275,7 +331,7 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
   function renderHud(){
     if(!root||!word)return;hud.target.textContent=word.en;hud.meaning.textContent=(word.th||'คำศัพท์ระดับ '+grade())+' · '+grade()+' · คลัง '+vocabSize+' คำ';hud.progress.innerHTML=word.en.split('').map((c,i)=>'<span class="lc-slot '+(i<pos?'done':'')+'">'+(i<pos?c:'•')+'</span>').join('');hud.coins.textContent=coinsRun.toLocaleString();hud.combo.textContent=combo.toLocaleString();hud.words.textContent='ชุด '+(bossesDefeated+1)+' · '+setWordsDone;hud.stopped.textContent=threatsStopped.toLocaleString();
     hud.shield.innerHTML=Array.from({length:MAX_SHIELD},(_v,i)=>'<i class="'+(i<shield?'on':'')+'">❤</i>').join('');hud.shield.setAttribute('aria-label','พลังมังกรเหลือ '+shield+' จาก '+MAX_SHIELD+' ดวง');hud.wave.textContent=bossMode&&boss?'BOSS '+boss.hp+'/'+boss.maxHp:'คลื่น '+wave;root.classList.toggle('boss',bossMode);
-    hud.powerName.textContent=activePower?activePower.icon+' '+activePower.name:'กระสุน '+currentAmmo.name;hud.powerFill.style.width=activePower?(powerLeft/powerTotal*100)+'%':'0%';hud.missile.textContent='🚀 '+missiles;hud.missile.disabled=missiles<=0;hud.sound.textContent=typeof state==='undefined'||state.sound?'🔊':'🔇';
+    hud.powerName.textContent=activePower?activePower.icon+' '+activePower.name:'กระสุน '+currentAmmo.name;hud.powerFill.style.width=activePower?(powerLeft/powerTotal*100)+'%':'0%';hud.missile.textContent='🚀 '+missiles;hud.missile.disabled=missiles<=0;hud.sound.textContent=typeof state==='undefined'||state.sound?'🔊':'🔇';lcMusicSyncButton();
   }
   function layout(){if(!canvas)return;const r=canvas.getBoundingClientRect();dpr=Math.min(DPR_CAP,window.devicePixelRatio||1);W=Math.max(280,r.width);H=Math.max(480,r.height);canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);skyGradient=ctx.createLinearGradient(0,0,0,H);skyGradient.addColorStop(0,'#315b68');skyGradient.addColorStop(.46,'#24505b');skyGradient.addColorStop(1,'#102f45');if(playerX){const p=playerLimits();playerX=clamp(playerX,p.minX,p.maxX);playerY=clamp(playerY||H*.76,p.minY,p.maxY);}initSky();}
   function initSky(){stars=Array.from({length:8},(_,i)=>({x:.1+((i*37)%80)/100,y:i*.15,s:.45+(i%3)*.15,p:i*1.7}));clouds=Array.from({length:9},(_,i)=>({x:.08+((i*29)%84)/100,y:i*.14,s:.5+(i%4)*.2,v:34+(i%3)*17,h:i%2}));}
@@ -286,7 +342,16 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
     ctx.save();ctx.translate(x,y);ctx.rotate(.18*Math.sin(x));ctx.globalAlpha=.52;ctx.fillStyle='#173f39';ctx.beginPath();ctx.ellipse(0,0,72*s,25*s,0,0,7);ctx.fill();ctx.fillStyle='#47663c';ctx.beginPath();ctx.ellipse(-7*s,-3*s,58*s,18*s,0,0,7);ctx.fill();
     ctx.strokeStyle='rgba(229,207,138,.45)';ctx.lineWidth=Math.max(1,3*s);ctx.beginPath();ctx.moveTo(-50*s,6*s);ctx.bezierCurveTo(-15*s,-18*s,18*s,18*s,48*s,-7*s);ctx.stroke();ctx.restore();
   }
+  function drawBackgroundPanel(img,phase,alpha){
+    if(!img||alpha<=0)return;const iw=img.naturalWidth||941,ih=img.naturalHeight||1672,scale=Math.max(W/iw,H/ih)*1.045,dw=iw*scale,dh=ih*scale,maxX=Math.max(0,(dw-W)/2),maxY=Math.max(0,dh-H),x=(W-dw)/2+Math.sin(phase*Math.PI*2)*maxX*.22,y=-maxY*(.84-.72*phase);
+    ctx.save();ctx.globalAlpha=alpha;ctx.drawImage(img,x,y,dw,dh);ctx.restore();
+  }
   function drawBackground(t){
+    if(backgroundImages[0]){
+      const scene=Math.floor(t/LC_BACKGROUND_SCENE_S),phase=(t%LC_BACKGROUND_SCENE_S)/LC_BACKGROUND_SCENE_S,index=scene%LC_BACKGROUND_URLS.length,current=backgroundImages[index]||backgroundImages[0],next=backgroundImages[(index+1)%LC_BACKGROUND_URLS.length]||current,fadeStart=1-LC_BACKGROUND_FADE_S/LC_BACKGROUND_SCENE_S;
+      let blend=next!==current&&phase>fadeStart?(phase-fadeStart)/(1-fadeStart):0;blend=blend*blend*(3-2*blend);
+      drawBackgroundPanel(current,phase,1-blend);drawBackgroundPanel(next,0,blend);ctx.fillStyle='rgba(3,20,37,.18)';ctx.fillRect(0,0,W,H);return;
+    }
     const scroll=(t*78)%(H+160);ctx.fillStyle=skyGradient||'#24505b';ctx.fillRect(0,0,W,H);
     ctx.strokeStyle='rgba(191,235,227,.09)';ctx.lineWidth=1;for(let i=0;i<15;i++){const y=(i*72+scroll)%(H+72)-36;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y+18);ctx.stroke();}
     for(let i=0;i<7;i++){const y=(i*173+scroll*1.12)%(H+220)-110,x=W*(.18+((i*43)%67)/100);drawIsland(x,y,.48+(i%3)*.17);}
@@ -345,7 +410,7 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
     particles.forEach(p=>{if(!p.alive)return;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=90*dt;p.life-=dt;if(p.life<=0)p.alive=false;});
     shockwaves.forEach(o=>{if(o.alive&&(o.life-=dt)<=0)o.alive=false;});
   }
-  function draw(t){ctx.save();if(shake)ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);drawBackground(t);drawBase();letters.forEach(o=>{if(o.alive)(o.kind==='power'?drawPower(o,t):o.kind==='meteor'?drawMeteor(o,t):o.kind==='enemy'?drawEnemy(o,t):drawLetter(o,t));});drawBoss(t);ctx.globalCompositeOperation='source-over';bullets.forEach(b=>{if(b.alive)drawProjectile(b);});ctx.globalCompositeOperation='lighter';ctx.shadowBlur=0;particles.forEach(p=>{if(!p.alive)return;ctx.globalAlpha=clamp(p.life/p.max,0,1);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();});shockwaves.forEach(o=>{if(!o.alive)return;const k=1-o.life/o.max,r=o.start+(o.end-o.start)*k;ctx.globalAlpha=(1-k)*.82;ctx.strokeStyle=o.color;ctx.lineWidth=5*(1-k)+1;ctx.shadowColor=o.color;ctx.shadowBlur=18;ctx.beginPath();ctx.arc(o.x,o.y,r,0,7);ctx.stroke();});ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;ctx.shadowBlur=0;drawDragonGunner(t);ctx.restore();}
+  function draw(t){ctx.save();if(shake)ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);drawBackground(elapsed);drawBase();letters.forEach(o=>{if(o.alive)(o.kind==='power'?drawPower(o,t):o.kind==='meteor'?drawMeteor(o,t):o.kind==='enemy'?drawEnemy(o,t):drawLetter(o,t));});drawBoss(t);ctx.globalCompositeOperation='source-over';bullets.forEach(b=>{if(b.alive)drawProjectile(b);});ctx.globalCompositeOperation='lighter';ctx.shadowBlur=0;particles.forEach(p=>{if(!p.alive)return;ctx.globalAlpha=clamp(p.life/p.max,0,1);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();});shockwaves.forEach(o=>{if(!o.alive)return;const k=1-o.life/o.max,r=o.start+(o.end-o.start)*k;ctx.globalAlpha=(1-k)*.82;ctx.strokeStyle=o.color;ctx.lineWidth=5*(1-k)+1;ctx.shadowColor=o.color;ctx.shadowBlur=18;ctx.beginPath();ctx.arc(o.x,o.y,r,0,7);ctx.stroke();});ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;ctx.shadowBlur=0;drawDragonGunner(t);ctx.restore();}
   function frame(now){if(!running)return;raf=requestAnimationFrame(frame);if(!frameAt){frameAt=now-FRAME_MS;last=now-FRAME_MS;}const since=now-frameAt;if(paused||counting){const gap=paused?100:33;if(since<gap)return;frameAt=now;last=now;draw(now/1000);return;}if(since<FRAME_MS*.9)return;frameAt=now-(since%FRAME_MS);const dt=Math.min(.033,Math.max(0,(now-last)/1000||.016));last=now;update(dt);draw(now/1000);if(((now/250)|0)!==(((now-dt*1000)/250)|0))renderHud();}
   function bind(){
     abort=new AbortController();const s={signal:abort.signal};
@@ -357,18 +422,18 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
     window.addEventListener('pointerup',releaseDrag,s);window.addEventListener('pointercancel',releaseDrag,s);window.addEventListener('blur',()=>{resetInput();pause(true);},s);
     window.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A'){e.preventDefault();keyLeft=true;}if(e.key==='ArrowRight'||e.key==='d'||e.key==='D'){e.preventDefault();keyRight=true;}if(e.key==='ArrowUp'||e.key==='w'||e.key==='W'){e.preventDefault();keyUp=true;}if(e.key==='ArrowDown'||e.key==='s'||e.key==='S'){e.preventDefault();keyDown=true;}if(e.key==='m'||e.key==='M'){e.preventDefault();fireMissile();}if(e.key==='Escape')pause();},s);
     window.addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A')keyLeft=false;if(e.key==='ArrowRight'||e.key==='d'||e.key==='D')keyRight=false;if(e.key==='ArrowUp'||e.key==='w'||e.key==='W')keyUp=false;if(e.key==='ArrowDown'||e.key==='s'||e.key==='S')keyDown=false;},s);
-    window.addEventListener('resize',layout,s);window.addEventListener('orientationchange',layout,s);document.addEventListener('visibilitychange',()=>{if(document.hidden){resetInput();pause(true);}},s);
-    hud.pause.addEventListener('click',()=>{resetInput();pause();},s);hud.exit.addEventListener('click',close,s);hud.sound.addEventListener('click',toggleSound,s);hud.missile.addEventListener('click',fireMissile,s);
+    window.addEventListener('resize',layout,s);window.addEventListener('orientationchange',layout,s);document.addEventListener('visibilitychange',()=>{if(document.hidden){resetInput();pause(true);lcMusicStop(0,false);}else if(running)lcMusicStart();},s);
+    hud.pause.addEventListener('click',()=>{resetInput();pause();},s);hud.exit.addEventListener('click',close,s);hud.sound.addEventListener('click',toggleSound,s);hud.music.addEventListener('click',lcMusicToggle,s);hud.missile.addEventListener('click',fireMissile,s);
   }
-  function toggleSound(){if(typeof state!=='undefined'){state.sound=!state.sound;if(typeof saveState==='function')saveState();if(typeof Music!=='undefined'&&Music.onSound)Music.onSound();}renderHud();sound('correct');}
+  function toggleSound(){if(typeof state!=='undefined'){state.sound=!state.sound;if(typeof saveState==='function')saveState();if(typeof Music!=='undefined'&&Music.onSound)Music.onSound();if(state.sound)lcMusicStart();else lcMusicStop(250,false);}renderHud();sound('correct');}
   function pause(force){if(!root||counting||missionEnded)return;paused=force===true?true:!paused;dragPointer=null;keyLeft=keyRight=keyUp=keyDown=false;playerVX=playerVY=0;let m=root.querySelector('#lc-pause');if(paused&&!m){m=document.createElement('div');m.id='lc-pause';m.className='lc-modal';m.innerHTML='<div class="lc-card"><h2>⏸ พักภารกิจ</h2><p>คลื่นศัตรูและพลังมังกรหยุดรออยู่ตรงนี้ครับ</p><div class="lc-buttons"><button class="lc-btn primary" data-a="go">▶ เล่นต่อ</button><button class="lc-btn" data-a="exit">🚪 กลับ Lobby</button></div></div>';root.appendChild(m);m.querySelector('[data-a=go]').onclick=()=>pause();m.querySelector('[data-a=exit]').onclick=close;}else if(!paused&&m){m.remove();resetFrameClock();}}
   function tutorial(){
     if(localStorage.getItem('vwDragonSkyIntro2')==='1'){countdown();return;}const m=document.createElement('div');m.className='lc-modal';m.innerHTML='<div class="lc-card"><h2>🐉 Dragon Sky Siege</h2><p><b>ลากนิ้วบนสนามเพื่อบินอิสระ</b> · ปืนยิงอัตโนมัติและสลับกระสุนให้เอง</p><p>เครื่องบินศัตรูจะยิงกระสุนแดงสวนกลับ หลบหรือยิงทำลายก่อนถึงฐาน<br><b>ทุก 30 วินาทีบอสจะออกมา</b> พร้อมยิงกระจายและแถบ HP</p><p>ทำลายบอสเพื่อขึ้นคลื่นใหม่และเปลี่ยนชุดคำศัพท์จากคลัง <b>500 คำตามระดับชั้น</b><br>กด <b>M</b> หรือ 🚀 เพื่อปล่อย Missile ล็อกเป้า</p><div class="lc-buttons"><button class="lc-btn primary" data-a="start">🚀 ทะยานขึ้นฟ้า</button><button class="lc-btn" data-a="exit">🚪 ออกจากเกม</button></div></div>';root.appendChild(m);m.querySelector('[data-a=start]').onclick=()=>{localStorage.setItem('vwDragonSkyIntro2','1');m.remove();countdown();};m.querySelector('[data-a=exit]').onclick=close;
   }
   function countdown(){counting=true;const m=document.createElement('div');m.className='lc-modal lc-countdown';root.appendChild(m);let n=3;const step=()=>{if(!running||!m.isConnected)return;m.innerHTML='<div class="lc-count">'+(n?n:'GO!')+'</div><button class="lc-btn lc-count-exit">🚪 ออกจากเกม</button>';m.querySelector('button').onclick=close;sound('correct');if(n--){later(step,650);}else later(()=>{m.remove();counting=false;resetFrameClock();},520);};step();}
   function buildDom(){
-    root=document.createElement('div');root.id='lc-game';root.innerHTML='<canvas class="lc-game-canvas" aria-label="สนาม Dragon Sky Siege — ลากนิ้วเพื่อบิน หลบกระสุนศัตรู และจัดแนวยิงอัตโนมัติให้ตรงเป้าหมาย"></canvas><div class="lc-hud"><div class="lc-stats lc-glass"><div class="lc-stat lc-coin-stat"><span>เหรียญ</span><b id="lc-coins">0</b></div><div class="lc-stat"><span>สตรีค</span><b id="lc-combo">0</b></div><div class="lc-stat lc-shield-stat"><span>พลังมังกร</span><b id="lc-shield" aria-label="พลังมังกร 10 ดวง"></b></div><div class="lc-stat"><span>คำศัพท์</span><b id="lc-words">ชุด 1 · 0</b></div><div class="lc-stat"><span>สถานะ</span><b id="lc-wave">คลื่น 1</b></div><div class="lc-stat"><span>ทำลาย</span><b id="lc-stopped">0</b></div></div><div class="lc-wordbox lc-glass"><div class="lc-target" id="lc-target"></div><div class="lc-meaning" id="lc-meaning"></div><div class="lc-progress" id="lc-progress"></div></div><div class="lc-actions"><button class="lc-iconbtn" id="lc-sound" title="เปิด/ปิดเสียง">🔊</button><button class="lc-iconbtn lc-missilebtn" id="lc-missile" title="ยิง Missile (M)">🚀 3</button><button class="lc-iconbtn" id="lc-pause-btn" title="พัก">⏸</button><button class="lc-iconbtn lc-exitwide" id="lc-exit" title="ออกจากเกมกลับ Lobby">🚪 ออก</button></div><div class="lc-power lc-glass"><div class="lc-power-name" id="lc-power-name">กระสุน TRACER</div><div class="lc-power-bar"><div class="lc-power-fill" id="lc-power-fill"></div></div></div><div class="lc-hint lc-glass"><b>AUTO FIRE</b> · หลบกระสุนแดง · M Missile</div></div>';
-    document.body.appendChild(root);canvas=root.querySelector('canvas');ctx=canvas.getContext('2d',{alpha:false});['coins','combo','shield','words','wave','stopped','target','meaning','progress','power-name','power-fill','pause-btn','exit','sound','missile'].forEach(k=>hud[k.replace(/-([a-z])/g,(_m,c)=>c.toUpperCase())]=root.querySelector('#lc-'+k));hud.powerName=root.querySelector('#lc-power-name');hud.powerFill=root.querySelector('#lc-power-fill');hud.pause=root.querySelector('#lc-pause-btn');const coinStat=hud.coins.parentElement;coinStat.insertAdjacentHTML('beforeend','<img src="'+COIN_IMAGE+'" alt="เหรียญทอง">');
+    root=document.createElement('div');root.id='lc-game';root.innerHTML='<canvas class="lc-game-canvas" aria-label="สนาม Dragon Sky Siege — ลากนิ้วเพื่อบิน หลบกระสุนศัตรู และจัดแนวยิงอัตโนมัติให้ตรงเป้าหมาย"></canvas><div class="lc-hud"><div class="lc-stats lc-glass"><div class="lc-stat lc-coin-stat"><span>เหรียญ</span><b id="lc-coins">0</b></div><div class="lc-stat"><span>สตรีค</span><b id="lc-combo">0</b></div><div class="lc-stat lc-shield-stat"><span>พลังมังกร</span><b id="lc-shield" aria-label="พลังมังกร 10 ดวง"></b></div><div class="lc-stat"><span>คำศัพท์</span><b id="lc-words">ชุด 1 · 0</b></div><div class="lc-stat"><span>สถานะ</span><b id="lc-wave">คลื่น 1</b></div><div class="lc-stat"><span>ทำลาย</span><b id="lc-stopped">0</b></div></div><div class="lc-wordbox lc-glass"><div class="lc-target" id="lc-target"></div><div class="lc-meaning" id="lc-meaning"></div><div class="lc-progress" id="lc-progress"></div></div><button class="lc-musicbtn" id="lc-music" type="button" aria-pressed="true" title="Beyond the Stars — เปิด/ปิดเพลง Letter Cannon">🎵 เพลง เปิด</button><div class="lc-actions"><button class="lc-iconbtn" id="lc-sound" title="เปิด/ปิดเสียงเอฟเฟกต์">🔊</button><button class="lc-iconbtn lc-missilebtn" id="lc-missile" title="ยิง Missile (M)">🚀 3</button><button class="lc-iconbtn" id="lc-pause-btn" title="พัก">⏸</button><button class="lc-iconbtn lc-exitwide" id="lc-exit" title="ออกจากเกมกลับ Lobby">🚪 ออก</button></div><div class="lc-power lc-glass"><div class="lc-power-name" id="lc-power-name">กระสุน TRACER</div><div class="lc-power-bar"><div class="lc-power-fill" id="lc-power-fill"></div></div></div><div class="lc-hint lc-glass"><b>AUTO FIRE</b> · หลบกระสุนแดง · M Missile</div></div>';
+    document.body.appendChild(root);canvas=root.querySelector('canvas');ctx=canvas.getContext('2d',{alpha:false});['coins','combo','shield','words','wave','stopped','target','meaning','progress','power-name','power-fill','pause-btn','exit','sound','music','missile'].forEach(k=>hud[k.replace(/-([a-z])/g,(_m,c)=>c.toUpperCase())]=root.querySelector('#lc-'+k));hud.powerName=root.querySelector('#lc-power-name');hud.powerFill=root.querySelector('#lc-power-fill');hud.pause=root.querySelector('#lc-pause-btn');lcBgmBtn=hud.music;lcMusicSyncButton();const coinStat=hud.coins.parentElement;coinStat.insertAdjacentHTML('beforeend','<img src="'+COIN_IMAGE+'" alt="เหรียญทอง">');
   }
   async function lockPortrait(){
     if(!screen.orientation||!screen.orientation.lock)return false;
@@ -380,9 +445,9 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
     await lockPortrait();
   }
   function releasePortrait(){try{if(orientationLocked&&screen.orientation&&screen.orientation.unlock)screen.orientation.unlock();}catch(_e){}orientationLocked=false;if(gameFullscreen&&document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(()=>{});gameFullscreen=false;}
-  function startGame(){if(!opening||running)return;opening=false;buildDom();layout();playerX=W*.5;playerY=H*.76;playerVX=playerVY=0;bind();running=true;resetMission();if(typeof Music!=='undefined'&&Music.suspendBg)Music.suspendBg();resetFrameClock();raf=requestAnimationFrame(frame);tutorial();}
-  function open(){if(running||opening)return;opening=true;requestPortrait();loadPlayerAssets().then(startGame).catch(err=>{opening=false;console.error(err);releasePortrait();if(typeof toast==='function')toast('⚠️ โหลดภาพมังกรนักบินไม่สำเร็จ กรุณารีเฟรชแล้วลองใหม่');});}
-  function close(){opening=false;if(running)settleScoreRun();running=false;frameAt=0;dragPointer=null;keyLeft=keyRight=keyUp=keyDown=false;playerVX=playerVY=0;flushCloudSave();clearTimers();cancelAnimationFrame(raf);if(abort)abort.abort();abort=null;letters.length=bullets.length=particles.length=shockwaves.length=0;try{if(audio&&audio.state==='running')audio.suspend();}catch(e){}if(root)root.remove();root=canvas=ctx=null;releasePortrait();if(typeof Music!=='undefined'&&Music.resumeBg)Music.resumeBg();if(typeof renderDashboard==='function')renderDashboard();}
+  function startGame(){if(!opening||running)return;opening=false;buildDom();layout();playerX=W*.5;playerY=H*.76;playerVX=playerVY=0;bind();running=true;resetMission();if(typeof Music!=='undefined'&&Music.suspendBg)Music.suspendBg();lcMusicStart();later(()=>loadBackgroundAsset(1),1800);later(()=>loadBackgroundAsset(2),5200);resetFrameClock();raf=requestAnimationFrame(frame);tutorial();}
+  function open(){if(running||opening)return;opening=true;requestPortrait();Promise.all([loadPlayerAssets(),loadBackgroundAsset(0)]).then(startGame).catch(err=>{opening=false;console.error(err);releasePortrait();if(typeof toast==='function')toast('⚠️ โหลดภาพมังกรนักบินไม่สำเร็จ กรุณารีเฟรชแล้วลองใหม่');});}
+  function close(){opening=false;if(running)settleScoreRun();running=false;lcMusicStop(LC_BGM_EXIT_FADE_MS,true,()=>{if(!running&&typeof Music!=='undefined'&&Music.resumeBg)Music.resumeBg();});frameAt=0;dragPointer=null;keyLeft=keyRight=keyUp=keyDown=false;playerVX=playerVY=0;flushCloudSave();clearTimers();cancelAnimationFrame(raf);if(abort)abort.abort();abort=null;letters.length=bullets.length=particles.length=shockwaves.length=0;try{if(audio&&audio.state==='running')audio.suspend();}catch(e){}if(root)root.remove();root=canvas=ctx=null;lcBgmBtn=null;releasePortrait();if(typeof renderDashboard==='function')renderDashboard();}
   function announcementSeen(){try{return !!(typeof state!=='undefined'&&state.letterCannonAnnouncementSeen)||localStorage.getItem(ANNOUNCEMENT_KEY)==='1';}catch(e){return false;}}
   function rememberAnnouncement(){try{localStorage.setItem(ANNOUNCEMENT_KEY,'1');}catch(e){}if(typeof state!=='undefined'){state.letterCannonAnnouncementSeen=true;if(typeof saveState==='function')saveState();if(typeof authPushSave==='function')authPushSave(false);}}
   function guideToMenu(){if(typeof closePanel==='function')closePanel();const b=document.getElementById('btn-rail-lettercannon');if(!b)return;setTimeout(()=>{b.scrollIntoView({behavior:'smooth',block:'center'});b.classList.add('lc-menu-highlight');try{b.focus({preventScroll:true});}catch(e){b.focus();}setTimeout(()=>b.classList.remove('lc-menu-highlight'),5200);},120);}
@@ -396,4 +461,5 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
   function bindRail(){const b=document.getElementById('btn-rail-lettercannon');if(b)b.addEventListener('click',()=>{if(typeof closePanel==='function')closePanel();open();});watchAnnouncement();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bindRail);else bindRail();
   window.LetterCannon={open,close,maybeShowAnnouncement,guideToMenu,_t:{wordPool,nextWord,ensureNeeded,spawnLetter,spawnPower,spawnMeteor,spawnEnemy,fireEnemyShot,hitEnemy,spawnBoss,hitBoss,completeBossCycle,bullet,fire,spawnMissile,fireMissile,explodeMissile,tickBullet,hit,activate,damageBase,resetMission,settleScoreRun,awardLetterCoin,awardWordBonus,playerGeometry,playerSize,playerLimits,turretGeometry,turretSize,cannonLimits,get word(){return word;},get pos(){return pos;},get score(){return score;},get combo(){return combo;},get wordsDone(){return wordsDone;},get setWordsDone(){return setWordsDone;},get coinsRun(){return coinsRun;},get shield(){return shield;},get wave(){return wave;},get boss(){return boss;},get bossesDefeated(){return bossesDefeated;},get bossMode(){return bossMode;},get threatsStopped(){return threatsStopped;},get misses(){return misses;},get missiles(){return missiles;},get currentAmmo(){return currentAmmo;},get running(){return running;},get paused(){return paused;},get playerX(){return playerX;},get playerY(){return playerY;},get playerVX(){return playerVX;},get playerVY(){return playerVY;},get letters(){return letters;},get bullets(){return bullets;},get particles(){return particles;},get shockwaves(){return shockwaves;},get activePower(){return activePower;},setPlayer(x,y){const p=playerLimits();playerX=clamp(x,p.minX,p.maxX);playerY=clamp(y,p.minY,p.maxY);playerVX=playerVY=0;},setPlayerX(x){playerX=clamp(x,cannonLimits().min,cannonLimits().max);playerVX=0;},setMove(left,right,up,down){keyLeft=!!left;keyRight=!!right;keyUp=!!up;keyDown=!!down;},setViewport(w,h){W=w;H=h;if(!playerX)playerX=W*.5;if(!playerY)playerY=H*.76;},step(dt){update(dt||.016);},PLAYER,AMMO,MAX_MISSILES,MISSILE_BLAST,SHOT_ANGLE,POWER,MAX_LETTERS,MAX_BULLETS,MAX_PARTICLES,WORD_BONUS,MISSION_WORDS,BOSS_INTERVAL,MAX_ENEMIES,MAX_SHIELD,BASE_LINE,MOVE_SPEED_CAP,MOVE_SPEED_FACTOR,MOVE_ACCEL,MOVE_BRAKE,FRAME_MS,DPR_CAP,MUZZLE_PARTICLES,ROUND_TRAIL_STEP,MISSILE_TRAIL_STEP,COIN_IMAGE}};
+  Object.assign(window.LetterCannon._t,{lcMusicStart,lcMusicStop,lcMusicToggle,getMusicState:()=>({url:LC_BGM_URL,preload:lcBgm?lcBgm.preload:null,loop:lcBgm?lcBgm.loop:null,paused:lcBgm?lcBgm.paused:true,volume:lcBgm?lcBgm.volume:0,enabled:lcMusicPreferenceOn(),blocked:lcBgmBlocked}),LC_BGM_VOLUME,LC_BGM_EXIT_FADE_MS});
 })();

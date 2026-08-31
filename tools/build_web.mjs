@@ -57,6 +57,7 @@ const TOKEN_UPDATED = /__VW_BUILD_UPDATED__/g;
 const TOKEN_F1_ENGINE = /__VW_F1_ENGINE_URL__/g;
 
 const TOKEN_F1_RACE_BGM = /__VW_F1_RACE_BGM_URL__/g;
+const TOKEN_LC_BGM = /__VW_LC_BGM_URL__/g;
 
 const F1_COCKPIT_ASSETS = ['red', 'blue', 'green', 'yellow', 'orange'].flatMap((color) =>
 
@@ -152,7 +153,9 @@ async function sourceFiles() {
 
       'img/f1/peer_car_25d.webp', 'img/f1/sky_racing_1024.webp', 'js/fpsweapon.js', 'js/coinaward.js', 'js/assetaward.js', 'js/onlinecoinaward.js',
 
-      'js/lettercannon.js', 'css/lettercannon.css', 'js/skyplay3d.js', 'css/skyplay3d.css',
+      'js/lettercannon.js', 'css/lettercannon.css', 'sound/letter_cannon/Wordflight_Beyond_the_Stars.mp3',
+      'img/letter_cannon/letter_cannon_bg1.avif', 'img/letter_cannon/letter_cannon_bg2.avif', 'img/letter_cannon/letter_cannon_bg3.avif',
+      'js/skyplay3d.js', 'css/skyplay3d.css',
 
       'img/characters/sky_soft_cuboid_chibi_8dir.webp',
 
@@ -653,6 +656,13 @@ async function main() {
   }
 
   await fs.writeFile(f1File, f1Text.replace(TOKEN_F1_PEER_CAR_ASSET, f1PeerCarUrl).replace(TOKEN_F1_RACE_BGM, f1RaceBgmUrl));
+
+  /* Letter Cannon ใช้ media streaming เช่นเดียวกับ Racing แต่ชี้ชื่อไฟล์แบบ content hash
+     เพื่อให้ browser disk cache ใช้เพลงเดิมได้ข้าม deploy จนกว่าเนื้อไฟล์จะเปลี่ยนจริง */
+  const lcBgmUrl = await makeImmutableAlias('sound/letter_cannon/Wordflight_Beyond_the_Stars.mp3');
+  const lcFile = path.join(OUT, 'js/lettercannon.js');
+  const lcText = await fs.readFile(lcFile, 'utf8');
+  await fs.writeFile(lcFile, lcText.replace(TOKEN_LC_BGM, lcBgmUrl));
 
 
 
