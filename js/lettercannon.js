@@ -48,7 +48,7 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
   const LC_BGM_URL=LC_BGM_BUILD_URL.startsWith('__VW_')?'sound/letter_cannon/Wordflight_Beyond_the_Stars.mp3':LC_BGM_BUILD_URL;
   const LC_BGM_VOLUME=.4,LC_BGM_EXIT_FADE_MS=1100;
   const LC_BACKGROUND_URLS=[1,2,3].map(n=>'img/letter_cannon/letter_cannon_bg'+n+'.avif');
-  const LC_BACKGROUND_SCENE_S=18,LC_BACKGROUND_FADE_S=3;
+  const LC_BACKGROUND_SCENE_S=12,LC_BACKGROUND_FADE_S=2;
   const FALLBACK=[['CAT','แมว'],['DOG','สุนัข'],['BOOK','หนังสือ'],['APPLE','แอปเปิล'],['WATER','น้ำ']];
   const PLAYER={size:1254,url:'assets/images/letter_cannon/dragon_gunner_player.webp'};
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -343,7 +343,7 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
     ctx.strokeStyle='rgba(229,207,138,.45)';ctx.lineWidth=Math.max(1,3*s);ctx.beginPath();ctx.moveTo(-50*s,6*s);ctx.bezierCurveTo(-15*s,-18*s,18*s,18*s,48*s,-7*s);ctx.stroke();ctx.restore();
   }
   function drawBackgroundPanel(img,phase,alpha){
-    if(!img||alpha<=0)return;const iw=img.naturalWidth||941,ih=img.naturalHeight||1672,scale=Math.max(W/iw,H/ih)*1.045,dw=iw*scale,dh=ih*scale,maxX=Math.max(0,(dw-W)/2),maxY=Math.max(0,dh-H),x=(W-dw)/2+Math.sin(phase*Math.PI*2)*maxX*.22,y=-maxY*(.84-.72*phase);
+    if(!img||alpha<=0)return;const iw=img.naturalWidth||941,ih=img.naturalHeight||1672,scale=Math.max(W/iw,H/ih)*1.28,dw=iw*scale,dh=ih*scale,maxY=Math.max(0,dh-H),x=(W-dw)/2,y=-maxY*(1-phase);
     ctx.save();ctx.globalAlpha=alpha;ctx.drawImage(img,x,y,dw,dh);ctx.restore();
   }
   function drawBackground(t){
@@ -410,7 +410,7 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
     particles.forEach(p=>{if(!p.alive)return;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=90*dt;p.life-=dt;if(p.life<=0)p.alive=false;});
     shockwaves.forEach(o=>{if(o.alive&&(o.life-=dt)<=0)o.alive=false;});
   }
-  function draw(t){ctx.save();if(shake)ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);drawBackground(elapsed);drawBase();letters.forEach(o=>{if(o.alive)(o.kind==='power'?drawPower(o,t):o.kind==='meteor'?drawMeteor(o,t):o.kind==='enemy'?drawEnemy(o,t):drawLetter(o,t));});drawBoss(t);ctx.globalCompositeOperation='source-over';bullets.forEach(b=>{if(b.alive)drawProjectile(b);});ctx.globalCompositeOperation='lighter';ctx.shadowBlur=0;particles.forEach(p=>{if(!p.alive)return;ctx.globalAlpha=clamp(p.life/p.max,0,1);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();});shockwaves.forEach(o=>{if(!o.alive)return;const k=1-o.life/o.max,r=o.start+(o.end-o.start)*k;ctx.globalAlpha=(1-k)*.82;ctx.strokeStyle=o.color;ctx.lineWidth=5*(1-k)+1;ctx.shadowColor=o.color;ctx.shadowBlur=18;ctx.beginPath();ctx.arc(o.x,o.y,r,0,7);ctx.stroke();});ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;ctx.shadowBlur=0;drawDragonGunner(t);ctx.restore();}
+  function draw(t){ctx.save();drawBackground(elapsed);if(shake)ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);drawBase();letters.forEach(o=>{if(o.alive)(o.kind==='power'?drawPower(o,t):o.kind==='meteor'?drawMeteor(o,t):o.kind==='enemy'?drawEnemy(o,t):drawLetter(o,t));});drawBoss(t);ctx.globalCompositeOperation='source-over';bullets.forEach(b=>{if(b.alive)drawProjectile(b);});ctx.globalCompositeOperation='lighter';ctx.shadowBlur=0;particles.forEach(p=>{if(!p.alive)return;ctx.globalAlpha=clamp(p.life/p.max,0,1);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();});shockwaves.forEach(o=>{if(!o.alive)return;const k=1-o.life/o.max,r=o.start+(o.end-o.start)*k;ctx.globalAlpha=(1-k)*.82;ctx.strokeStyle=o.color;ctx.lineWidth=5*(1-k)+1;ctx.shadowColor=o.color;ctx.shadowBlur=18;ctx.beginPath();ctx.arc(o.x,o.y,r,0,7);ctx.stroke();});ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;ctx.shadowBlur=0;drawDragonGunner(t);ctx.restore();}
   function frame(now){if(!running)return;raf=requestAnimationFrame(frame);if(!frameAt){frameAt=now-FRAME_MS;last=now-FRAME_MS;}const since=now-frameAt;if(paused||counting){const gap=paused?100:33;if(since<gap)return;frameAt=now;last=now;draw(now/1000);return;}if(since<FRAME_MS*.9)return;frameAt=now-(since%FRAME_MS);const dt=Math.min(.033,Math.max(0,(now-last)/1000||.016));last=now;update(dt);draw(now/1000);if(((now/250)|0)!==(((now-dt*1000)/250)|0))renderHud();}
   function bind(){
     abort=new AbortController();const s={signal:abort.signal};

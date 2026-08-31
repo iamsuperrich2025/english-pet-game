@@ -18,6 +18,9 @@
 - **รอบ 1337 · Racing เพลงเริ่มเมื่อ GO:** ตั้งเพลง Racing เป็นเปิดทุกครั้งที่เข้าโลก แต่ระหว่างเลือกรถ/ไฟแดงยัง pause; เริ่มเล่นตรงจังหวะไฟดับและรถปลดล็อกเท่านั้น กรณีจั๊มพ์สตาร์ทรอจนโทษหมด
 - ปุ่มเพลงเป็นสถานะเฉพาะ session Racing ไม่เขียนทับ preference เพลง Lobby; lazy metadata, content-hash disk cache และ fade 1.1 วินาทีตอนออกยังคงเดิม
 - แก้ `js/f1_3d.js`, `tools/test_f1_race_bgm.js`; F1 regression ทั้งชุด + syntax/diff + production build และ Chrome QA source/dist ยืนยัน wait/red=paused+locked, GO=playing+unlocked
+- **รอบ 1338 · Letter Cannon hotfix ฉากหลังเลื่อนลงไม่สั่น:** ต้นตอคือ pan เดิมซูมเพียง 4.5% พร้อม `sin()` แกว่งข้าง และ screen shake ครอบทั้ง canvas จึงเห็นสั่นมากกว่าเลื่อน
+- เปลี่ยนเป็นเลื่อนแนวดิ่งลง 28% ต่อ 12 วินาที, cross-fade 2 วินาที และวาดฉากหลังก่อน gameplay shake; แก้ `js/lettercannon.js` + regression ใน `tools/test_letter_cannon.js`
+- syntax/Letter Cannon/BGM/diff + production build `.1204` และ PWA/cache/TWA validator ผ่าน; built asset ยืนยันไม่มี horizontal sway และฉากหลังไม่รับ screen shake
 - **รอบ 1319 · Home V2 swipe HUD + raised New Word:** รวม เหรียญ/วันนี้/ออนไลน์/จากคอม/มูลค่ารวม/กราฟอันดับ/อันดับ เป็นราง 7 การ์ดที่ปัดซ้ายขวาและ snap ได้ โดยเปิดมาเห็น 3 การ์ดหลักก่อน; route กราฟ/อันดับยังใช้ระบบเดิม
 - ยก New Word ไปแทนช่องแถวรองเดิมตาม desktop/compact/จอเตี้ย และขยายปุ่มสัตว์เป็นรางกว้างพร้อม safe area/ตัวอักษรสีขาว contrast สูง; syntax + Home V2 regression + production build + PWA/cache/TWA validator ผ่าน
 - **รอบ 1320 · ซ่อนป้ายติดต่อโฆษณาทุกโลก:** ป้ายว่างไม่วาดข้อความและซ่อนทั้งแผ่น/เสา รวมป้ายผนังโลกเฮลิฯ กับป้ายชื่อเชิญบนตึก; ป้ายผู้เช่าหรือภาพผู้สนับสนุนจริงยังแสดงตามเดิม
