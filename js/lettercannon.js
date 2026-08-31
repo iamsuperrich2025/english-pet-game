@@ -1,4 +1,19 @@
 "use strict";
+"use strict";
+/* 🔤💥🏆 รางวัลรายเดือนของกระดาน Letter Cannon / Dragon Sky Siege */
+if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthAward({
+  id:'lc', path:'lcAward', field:'lc',
+  boardOf:()=> (typeof Online!=='undefined' ? Online.lcBoard : []),
+  scoreOf:()=> (typeof state!=='undefined' ? (state.lcScore||0) : 0),
+  seenK:'lcAwardSeen', paidK:'lcAwardPaid', logK:'lcAwardLog',
+  emoji:'🔤💥', unit:'แต้ม', game:'🔤💥 Letter Cannon',
+  empty:'ยังไม่มีใครมีแต้มเลย — เล่น Letter Cannon เป็นคนแรกสิ!',
+  rules:[
+    'คะแนนทุกภารกิจที่จบหรือออกจากเกมจะรวมเป็น <b>คะแนนสะสมตลอดกาล</b>',
+    '<b>คะแนนไม่รีเซ็ตรายเดือน</b> — เล่นต่อเนื่องเพื่อไต่อันดับ Top 100',
+    'ตัดสินอันดับ <b>วันที่ 1 เวลา 00:01 น.</b> · Top 10 รับ 10,000–1,000 เหรียญอัตโนมัติ',
+  ],
+});
 /* ============================================================
   🐉💥 Dragon Sky Siege (รอบ 1315)
    Portrait shooter: free flight, graded 500-word loops, return fire and timed bosses.
@@ -35,7 +50,7 @@
   const ANNOUNCEMENT_KEY='vwLetterCannonAnnouncement1152';
   let root=null,canvas=null,ctx=null,raf=0,abort=null,audio=null,opening=false,saveTimer=0;
   let W=0,H=0,dpr=1,last=0,frameAt=0,elapsed=0,running=false,paused=false,counting=false;
-  let word=null,pos=0,queue=[],queueGrade='',lastWord='',vocabSize=0,score=0,combo=0,wordsDone=0,setWordsDone=0,coinsRun=0;
+  let word=null,pos=0,queue=[],queueGrade='',lastWord='',vocabSize=0,score=0,scoreSettled=false,combo=0,wordsDone=0,setWordsDone=0,coinsRun=0;
   let shield=MAX_SHIELD,wave=1,bossMode=false,boss=null,bossesDefeated=0,missionEnded=false,threatsStopped=0,misses=0;
   let fireAt=0,spawnAt=0,threatAt=0,enemyAt=0,bossAt=0,powerAt=0,playerX=0,playerY=0,playerVX=0,playerVY=0;
   let activePower=null,powerLeft=0,powerTotal=0,shake=0,flash=0,flashSide=0,barrelCycle=0;
@@ -152,14 +167,20 @@
     impact(x||W*.5,H*BASE_LINE,'#ff5f70',34,42);toast('💔 '+reason+' · โล่เหลือ '+shield,'#ff9caa');sound('damage');renderHud();
     if(shield<=0)later(()=>finishMission(false),520);return true;
   }
+  function settleScoreRun(){
+    if(scoreSettled)return 0;scoreSettled=true;const earned=Math.max(0,Math.round(score||0));
+    if(typeof state!=='undefined'){state.lcScore=Math.max(0,Math.round(state.lcScore||0))+earned;if(typeof saveState==='function')saveState();if(typeof onlinePushScore==='function')onlinePushScore();queueCloudSave();}
+    return earned;
+  }
   function finishMission(won){
     if(missionEnded||!root)return;missionEnded=true;paused=true;dragPointer=null;keyLeft=keyRight=keyUp=keyDown=false;playerVX=playerVY=0;
+    settleScoreRun();
     const rank=bossesDefeated>=3?'S':bossesDefeated>=2?'A':bossesDefeated>=1?'B':wordsDone>=3?'C':'D',m=document.createElement('div');m.id='lc-result';m.className='lc-modal';
     m.innerHTML='<div class="lc-card lc-result-card"><div class="lc-rank lost">'+rank+'</div><h2>💥 ฐานเสียหาย</h2><p>ต้านได้ '+wave+' คลื่น · สะกด '+wordsDone+' คำจากคลังระดับ '+grade()+'</p><div class="lc-result-grid"><span class="lc-result-coins"><img src="'+COIN_IMAGE+'" alt="เหรียญทอง"><em>เหรียญเข้ากระเป๋า</em><b>+'+coinsRun.toLocaleString()+'</b></span><span>บอสที่ชนะ<b>'+bossesDefeated+'</b></span><span>คำศัพท์<b>'+wordsDone+'</b></span><span>ยิงพลาด<b>'+misses+'</b></span></div><div class="lc-buttons"><button class="lc-btn primary" data-a="retry">↻ เล่นภารกิจใหม่</button><button class="lc-btn" data-a="exit">🚪 กลับ Lobby</button></div></div>';
     root.appendChild(m);m.querySelector('[data-a=retry]').onclick=()=>{m.remove();resetMission();countdown();};m.querySelector('[data-a=exit]').onclick=close;sound(won?'win':'damage');if(coinsRun>0)later(()=>sound('coinBig'),260);
   }
   function resetMission(){
-    clearTimers();score=combo=wordsDone=setWordsDone=coinsRun=pos=0;shield=MAX_SHIELD;wave=1;bossMode=missionEnded=false;boss=null;bossesDefeated=0;threatsStopped=misses=0;elapsed=0;spawnAt=.35;threatAt=2.4;enemyAt=4;bossAt=BOSS_INTERVAL;powerAt=8;queue=[];queueGrade='';lastWord='';vocabSize=0;
+    clearTimers();score=combo=wordsDone=setWordsDone=coinsRun=pos=0;scoreSettled=false;shield=MAX_SHIELD;wave=1;bossMode=missionEnded=false;boss=null;bossesDefeated=0;threatsStopped=misses=0;elapsed=0;spawnAt=.35;threatAt=2.4;enemyAt=4;bossAt=BOSS_INTERVAL;powerAt=8;queue=[];queueGrade='';lastWord='';vocabSize=0;
     letters=[];bullets=[];particles=[];shockwaves=[];particleCursor=0;rewardedLetters.clear();rewardedWords.clear();activePower=null;powerLeft=powerTotal=0;missiles=MAX_MISSILES;shotSeq=0;currentAmmo=AMMO[0];barrelCycle=flashSide=0;paused=false;nextWord();renderHud();
   }
   function bullet(angle,side,muzzleIndex,ammo){
@@ -361,7 +382,7 @@
   function releasePortrait(){try{if(orientationLocked&&screen.orientation&&screen.orientation.unlock)screen.orientation.unlock();}catch(_e){}orientationLocked=false;if(gameFullscreen&&document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(()=>{});gameFullscreen=false;}
   function startGame(){if(!opening||running)return;opening=false;buildDom();layout();playerX=W*.5;playerY=H*.76;playerVX=playerVY=0;bind();running=true;resetMission();if(typeof Music!=='undefined'&&Music.suspendBg)Music.suspendBg();resetFrameClock();raf=requestAnimationFrame(frame);tutorial();}
   function open(){if(running||opening)return;opening=true;requestPortrait();loadPlayerAssets().then(startGame).catch(err=>{opening=false;console.error(err);releasePortrait();if(typeof toast==='function')toast('⚠️ โหลดภาพมังกรนักบินไม่สำเร็จ กรุณารีเฟรชแล้วลองใหม่');});}
-  function close(){opening=false;running=false;frameAt=0;dragPointer=null;keyLeft=keyRight=keyUp=keyDown=false;playerVX=playerVY=0;flushCloudSave();clearTimers();cancelAnimationFrame(raf);if(abort)abort.abort();abort=null;letters.length=bullets.length=particles.length=shockwaves.length=0;try{if(audio&&audio.state==='running')audio.suspend();}catch(e){}if(root)root.remove();root=canvas=ctx=null;releasePortrait();if(typeof Music!=='undefined'&&Music.resumeBg)Music.resumeBg();if(typeof renderDashboard==='function')renderDashboard();}
+  function close(){opening=false;if(running)settleScoreRun();running=false;frameAt=0;dragPointer=null;keyLeft=keyRight=keyUp=keyDown=false;playerVX=playerVY=0;flushCloudSave();clearTimers();cancelAnimationFrame(raf);if(abort)abort.abort();abort=null;letters.length=bullets.length=particles.length=shockwaves.length=0;try{if(audio&&audio.state==='running')audio.suspend();}catch(e){}if(root)root.remove();root=canvas=ctx=null;releasePortrait();if(typeof Music!=='undefined'&&Music.resumeBg)Music.resumeBg();if(typeof renderDashboard==='function')renderDashboard();}
   function announcementSeen(){try{return !!(typeof state!=='undefined'&&state.letterCannonAnnouncementSeen)||localStorage.getItem(ANNOUNCEMENT_KEY)==='1';}catch(e){return false;}}
   function rememberAnnouncement(){try{localStorage.setItem(ANNOUNCEMENT_KEY,'1');}catch(e){}if(typeof state!=='undefined'){state.letterCannonAnnouncementSeen=true;if(typeof saveState==='function')saveState();if(typeof authPushSave==='function')authPushSave(false);}}
   function guideToMenu(){if(typeof closePanel==='function')closePanel();const b=document.getElementById('btn-rail-lettercannon');if(!b)return;setTimeout(()=>{b.scrollIntoView({behavior:'smooth',block:'center'});b.classList.add('lc-menu-highlight');try{b.focus({preventScroll:true});}catch(e){b.focus();}setTimeout(()=>b.classList.remove('lc-menu-highlight'),5200);},120);}
@@ -374,5 +395,5 @@
   function watchAnnouncement(){if(maybeShowAnnouncement()||typeof MutationObserver==='undefined')return;const ob=new MutationObserver(()=>{if(maybeShowAnnouncement())ob.disconnect();});ob.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});}
   function bindRail(){const b=document.getElementById('btn-rail-lettercannon');if(b)b.addEventListener('click',()=>{if(typeof closePanel==='function')closePanel();open();});watchAnnouncement();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bindRail);else bindRail();
-  window.LetterCannon={open,close,maybeShowAnnouncement,guideToMenu,_t:{wordPool,nextWord,ensureNeeded,spawnLetter,spawnPower,spawnMeteor,spawnEnemy,fireEnemyShot,hitEnemy,spawnBoss,hitBoss,completeBossCycle,bullet,fire,spawnMissile,fireMissile,explodeMissile,tickBullet,hit,activate,damageBase,resetMission,awardLetterCoin,awardWordBonus,playerGeometry,playerSize,playerLimits,turretGeometry,turretSize,cannonLimits,get word(){return word;},get pos(){return pos;},get score(){return score;},get combo(){return combo;},get wordsDone(){return wordsDone;},get setWordsDone(){return setWordsDone;},get coinsRun(){return coinsRun;},get shield(){return shield;},get wave(){return wave;},get boss(){return boss;},get bossesDefeated(){return bossesDefeated;},get bossMode(){return bossMode;},get threatsStopped(){return threatsStopped;},get misses(){return misses;},get missiles(){return missiles;},get currentAmmo(){return currentAmmo;},get running(){return running;},get paused(){return paused;},get playerX(){return playerX;},get playerY(){return playerY;},get playerVX(){return playerVX;},get playerVY(){return playerVY;},get letters(){return letters;},get bullets(){return bullets;},get particles(){return particles;},get shockwaves(){return shockwaves;},get activePower(){return activePower;},setPlayer(x,y){const p=playerLimits();playerX=clamp(x,p.minX,p.maxX);playerY=clamp(y,p.minY,p.maxY);playerVX=playerVY=0;},setPlayerX(x){playerX=clamp(x,cannonLimits().min,cannonLimits().max);playerVX=0;},setMove(left,right,up,down){keyLeft=!!left;keyRight=!!right;keyUp=!!up;keyDown=!!down;},setViewport(w,h){W=w;H=h;if(!playerX)playerX=W*.5;if(!playerY)playerY=H*.76;},step(dt){update(dt||.016);},PLAYER,AMMO,MAX_MISSILES,MISSILE_BLAST,SHOT_ANGLE,POWER,MAX_LETTERS,MAX_BULLETS,MAX_PARTICLES,WORD_BONUS,MISSION_WORDS,BOSS_INTERVAL,MAX_ENEMIES,MAX_SHIELD,BASE_LINE,MOVE_SPEED_CAP,MOVE_SPEED_FACTOR,MOVE_ACCEL,MOVE_BRAKE,FRAME_MS,DPR_CAP,MUZZLE_PARTICLES,ROUND_TRAIL_STEP,MISSILE_TRAIL_STEP,COIN_IMAGE}};
+  window.LetterCannon={open,close,maybeShowAnnouncement,guideToMenu,_t:{wordPool,nextWord,ensureNeeded,spawnLetter,spawnPower,spawnMeteor,spawnEnemy,fireEnemyShot,hitEnemy,spawnBoss,hitBoss,completeBossCycle,bullet,fire,spawnMissile,fireMissile,explodeMissile,tickBullet,hit,activate,damageBase,resetMission,settleScoreRun,awardLetterCoin,awardWordBonus,playerGeometry,playerSize,playerLimits,turretGeometry,turretSize,cannonLimits,get word(){return word;},get pos(){return pos;},get score(){return score;},get combo(){return combo;},get wordsDone(){return wordsDone;},get setWordsDone(){return setWordsDone;},get coinsRun(){return coinsRun;},get shield(){return shield;},get wave(){return wave;},get boss(){return boss;},get bossesDefeated(){return bossesDefeated;},get bossMode(){return bossMode;},get threatsStopped(){return threatsStopped;},get misses(){return misses;},get missiles(){return missiles;},get currentAmmo(){return currentAmmo;},get running(){return running;},get paused(){return paused;},get playerX(){return playerX;},get playerY(){return playerY;},get playerVX(){return playerVX;},get playerVY(){return playerVY;},get letters(){return letters;},get bullets(){return bullets;},get particles(){return particles;},get shockwaves(){return shockwaves;},get activePower(){return activePower;},setPlayer(x,y){const p=playerLimits();playerX=clamp(x,p.minX,p.maxX);playerY=clamp(y,p.minY,p.maxY);playerVX=playerVY=0;},setPlayerX(x){playerX=clamp(x,cannonLimits().min,cannonLimits().max);playerVX=0;},setMove(left,right,up,down){keyLeft=!!left;keyRight=!!right;keyUp=!!up;keyDown=!!down;},setViewport(w,h){W=w;H=h;if(!playerX)playerX=W*.5;if(!playerY)playerY=H*.76;},step(dt){update(dt||.016);},PLAYER,AMMO,MAX_MISSILES,MISSILE_BLAST,SHOT_ANGLE,POWER,MAX_LETTERS,MAX_BULLETS,MAX_PARTICLES,WORD_BONUS,MISSION_WORDS,BOSS_INTERVAL,MAX_ENEMIES,MAX_SHIELD,BASE_LINE,MOVE_SPEED_CAP,MOVE_SPEED_FACTOR,MOVE_ACCEL,MOVE_BRAKE,FRAME_MS,DPR_CAP,MUZZLE_PARTICLES,ROUND_TRAIL_STEP,MISSILE_TRAIL_STEP,COIN_IMAGE}};
 })();

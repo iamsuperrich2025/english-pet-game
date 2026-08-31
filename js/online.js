@@ -24,6 +24,7 @@ const Online = {
   board:[],         // Leaderboard Top 100 (เรียงมาก→น้อยแล้ว): [{id,n,g,coins}]
   bbBoard:[],       // 🫧 กระดานเกมฟองเฉพาะ (ดึงด้วย field bb จึงไม่ตกหล่นเพราะเหรียญรวมน้อย)
   onlineCoinBoard:[], // 🌐 กระดานเหรียญออนไลน์เฉพาะ (ดึงด้วย field oe โดยตรง)
+  lcBoard:[],       // 🔤💥 กระดาน Letter Cannon เฉพาะ (ดึงด้วย field lc โดยตรง)
   lastScoreSig:null, // ลายเซ็น coins|av|ni ล่าสุดที่ส่งขึ้น leaderboard (กันเขียนซ้ำ)
   /* ---- ระบบเพื่อน (ข้อ 0.3) ---- */
   myCode:'',        // รหัสเพื่อนของเรา (6 ตัว จาก uid — โชว์ให้เพื่อนค้นหา)
@@ -93,6 +94,7 @@ function onlineDisplayName(){
 
 /* ผู้เล่นกำลังทำอะไรอยู่ (ดูจากหน้าจอที่เปิด) — โชว์ในการ์ดเพื่อน */
 function onlineActivity(){
+  if(document.getElementById('lc-game')) return 'กำลังเล่น Letter Cannon 🔤💥';
   const bb=document.getElementById('bb-overlay');
   if(bb&&bb.style.display==='flex') return 'กำลังเล่นฟองคำศัพท์ 🫧';
   const map = {
@@ -157,15 +159,17 @@ function onlinePushScore(){
   const sg    = Math.round(state.sgScore || 0);                            // 🎯 รอบ 917: แต้มสะสมเกมยิงเป้าคำศัพท์ (กระดานแท็บยิงเป้าคำ)
   const pm    = Math.round(state.pmScore || 0);                            // 🖼️ รอบ 979: แต้มสะสมเกมจับคู่ภาพ (กระดานแท็บจับคู่ภาพ)
   const bb    = Math.round(state.bbScore || 0);                            // 🫧 คะแนนสะสมตลอดกาลเกมฟอง
-  const oe    = Math.round(state.onlineEarned || 0);                       // 🌐 เหรียญที่ได้จากการเปิดเกมออนไลน์สะสมตลอดกาล
-  const sig   = coins + '|' + av + '|' + ni + '|' + bs + '|' + bk + '|' + ba + '|' + hs + '|' + ws + '|' + tp + '|' + tw + '|' + sg + '|' + pm + '|' + bb + '|' + oe;   // ค่าใดเปลี่ยน = re-push
+  const oe    = Math.round(state.onlineEarned || 0);                       // 🌐 เหรียญออนไลน์สะสมตลอดกาล
+  const lc    = Math.round(state.lcScore || 0);                            // 🔤💥 คะแนน Letter Cannon สะสมตลอดกาล
+  const sig   = coins + '|' + av + '|' + ni + '|' + bs + '|' + bk + '|' + ba + '|' + hs + '|' + ws + '|' + tp + '|' + tw + '|' + sg + '|' + pm + '|' + bb + '|' + oe + '|' + lc;   // ค่าใดเปลี่ยน = re-push
   if(Online.lastScoreSig === sig) return;   // เงิน/ทรัพย์สิน/เข็ม/บอส/ค้นหาคำ/พิมพ์คำ/ยิงเป้าคำ/จับคู่ภาพไม่ขยับ ไม่ต้องเขียนซ้ำ
   Online.lastScoreSig = sig;
   const base = { n: onlineDisplayName() + bs, g: state.student.grade, coins,
                  at: firebase.database.ServerValue.TIMESTAMP };
   // เผื่อ rules ยังไม่รองรับฟิลด์ใหม่ (ช่วงอัปเดต) → ถอยทีละขั้น ไม่ให้ leaderboard พัง
   // oe เป็น field ใหม่สุด: ถ้า rules ยังไม่ publish ให้ถอยกลับก้อนเดิมที่มี bb เพื่อไม่ให้กระดานอื่นพัง
-  Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw, sg, pm, bb, oe}, base)).catch(()=>{
+  Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw, sg, pm, bb, oe, lc}, base)).catch(()=>{
+   Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw, sg, pm, bb, oe}, base)).catch(()=>{
    Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw, sg, pm, bb}, base)).catch(()=>{
     Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw, sg, pm}, base)).catch(()=>{
     Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw, sg}, base)).catch(()=>{
@@ -180,6 +184,7 @@ function onlinePushScore(){
      });
     });
     });
+   });
    });
   });
   if(typeof feedPushAssets === 'function') feedPushAssets();   // 📰 ทรัพย์สินเปลี่ยน → อัปเดตคลังที่เปิดเผย (มี sig กันเขียนซ้ำ)
@@ -2210,6 +2215,15 @@ function onlineStart(){
       if(typeof rankUserExcluded==='function'&&rankUserExcluded(ch.key,v.n))return;
       out.push({id:ch.key,n:v.n,g:v.g||'',bb:v.bb}); });
     out.sort((a,b)=>b.bb-a.bb); Online.bbBoard=out.slice(0,LEADERBOARD_SIZE); Online.bbBoardReady=true; onlineRerender();
+  });
+
+  // 🔤💥 อันดับ Letter Cannon ต้องดึงด้วย lc โดยตรง เพื่อให้เป็น Top 100 จริง
+  Online.db.ref('leaderboard').orderByChild('lc').limitToLast(LEADERBOARD_QUERY_SIZE).on('value',(snap)=>{
+    const out=[];
+    snap.forEach(ch=>{ const v=ch.val(); if(!v||typeof v.n!=='string'||typeof v.lc!=='number'||v.lc<=0)return;
+      if(typeof rankUserExcluded==='function'&&rankUserExcluded(ch.key,v.n))return;
+      out.push({id:ch.key,n:v.n,g:v.g||'',lc:v.lc}); });
+    out.sort((a,b)=>b.lc-a.lc); Online.lcBoard=out.slice(0,LEADERBOARD_SIZE); Online.lcBoardReady=true; onlineRerender();
   });
 
   // 🌐 อันดับเหรียญออนไลน์ต้องดึงด้วย oe โดยตรง ไม่อิง Top เหรียญคงเหลือ

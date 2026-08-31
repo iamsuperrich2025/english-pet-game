@@ -1566,7 +1566,7 @@ function openFriendQuickMenu(uid, name, grade){
    ⌨️ พิมพ์คำ (รอบ 649 — แต้มสะสมตลอดกาล Top 10 · กติกา/รางวัลเหมือน 🔎 เป๊ะ)
    ข้อมูลจริงจาก Firebase — ออฟไลน์โชว์ข้อความเชิญชวนแทน
    ============================================================ */
-const LB_TABS = ['coins','assets','online','badges','boss','ws','pm','tp','bb','sg','bx','xr'];
+const LB_TABS = ['coins','assets','online','badges','boss','ws','pm','tp','bb','sg','lc','bx','xr'];
 const LB_ASSET_TOP = 100;                              // 🏆 ทรัพย์สินรวมโชว์ Top 100 · รางวัลรายเดือนยังเฉพาะ Top 10
 const LB_ONLINE_TOP = 100;                             // 🌐 เหรียญออนไลน์สะสมตลอดกาล Top 100 · รางวัลเฉพาะ Top 10
 const LB_WS_TOP = 10;                                  // 🔎 Top 10 ที่ได้รับรางวัลรายเดือน
@@ -1579,6 +1579,7 @@ const LB_BB_TOP = 10;                                  // 🫧 Top 10 ที่�
 const LB_BB_DISPLAY = 100;                             // 🫧 กระดานเต็มจอโชว์อันดับที่เหลือทั้งหมดเหมือนหมวดเหรียญ
 const LB_SG_TOP = 10;                                  // 🎯 Top 10 ที่ได้รับรางวัลรายเดือน
 const LB_SG_DISPLAY = 100;                             // 🎯 กระดานเต็มจอโชว์อันดับที่เหลือทั้งหมดเหมือนหมวดเหรียญ
+const LB_LC_DISPLAY = 100;                             // 🔤💥 Letter Cannon Top 100 · รางวัลเฉพาะ Top 10
 let lbTab = 'coins';                                   // แท็บกระดานที่เปิดอยู่
 function bindLbTabs(){
   if(window.__lbTabBound) return;                      // ผูก listener ครั้งเดียว (การ์ด re-render บ่อย)
@@ -1613,6 +1614,11 @@ function bindLbTabs(){
     if(e.target.closest('.pma-open')){
       e.stopPropagation();
       if(typeof PmAward !== 'undefined') PmAward.open();
+      return;
+    }
+    if(e.target.closest('.lca-open')){
+      e.stopPropagation();
+      if(typeof LcAward !== 'undefined') LcAward.open();
       return;
     }
     if(e.target.closest('.asa-open')){
@@ -1735,7 +1741,7 @@ let __lbGroupBound = false;
 function bindLbGroupOpen(){
   if(__lbGroupBound) return; __lbGroupBound = true;
   // 🏆 รอบ 592: .wsa-open (แถบรางวัล) มี handler ของตัวเอง — ไม่ให้เปิดกระดานเต็มจอทับ
-  const open = (e)=>{ if(e.target.closest('.pl-click') || e.target.closest('.lb-tab') || e.target.closest('.wsa-open') || e.target.closest('.tpa-open') || e.target.closest('.bba-open') || e.target.closest('.sga-open') || e.target.closest('.coa-open') || e.target.closest('.asa-open') || e.target.closest('.oca-open')) return; openLeaderboardFull(); };
+  const open = (e)=>{ if(e.target.closest('.pl-click') || e.target.closest('.lb-tab') || e.target.closest('.wsa-open') || e.target.closest('.tpa-open') || e.target.closest('.bba-open') || e.target.closest('.sga-open') || e.target.closest('.coa-open') || e.target.closest('.asa-open') || e.target.closest('.oca-open') || e.target.closest('.pma-open') || e.target.closest('.lca-open')) return; openLeaderboardFull(); };
   const label = document.getElementById('lb-label');
   const card = document.getElementById('leaderboard-card');
   if(label){ label.style.cursor = 'pointer'; label.addEventListener('click', open); }
@@ -1813,6 +1819,13 @@ function lbRankRows(tab){
     return rows.map((r,i)=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🎯 ${fmtNum(r.sg)}`, val:r.sg,
       pz:(typeof SgAward !== 'undefined') ? SgAward.prizeFor(i+1) : 0, me:r.id===myId}));
   }
+  if(tab === 'lc'){   // 🔤💥 คะแนนสะสมตลอดกาล Letter Cannon — ดึงจากกระดาน lc โดยตรง
+    const map = {}; (Online.lcBoard || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g, lc:r.lc||0}; });
+    if(includeMe) map[myId] = {id:myId, n:meName, g:meG, lc:Math.round(state.lcScore||0)};
+    const rows = Object.values(map).filter(r=>r.lc > 0).sort((a,b)=> b.lc - a.lc).slice(0, LB_LC_DISPLAY);
+    return rows.map((r,i)=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🔤💥 ${fmtNum(r.lc)}`, val:r.lc,
+      pz:(typeof LcAward !== 'undefined') ? LcAward.prizeFor(i+1) : 0, me:r.id===myId}));
+  }
   if(tab === 'pm'){   // 🖼️ แต้มสะสมตลอดกาลเกมจับคู่ภาพ (field pm) — แสดงครบ Top 100; รางวัลยังเฉพาะ Top 10
     const map = {}; (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g, pm:r.pm||0}; });
     if(includeMe) map[myId] = {id:myId, n:meName, g:meG, pm:Math.round(state.pmScore||0)};
@@ -1845,7 +1858,8 @@ const RANK_MOVE_TOPICS = [
   {key:'pm',     ico:'🖼️', label:'จับคู่ภาพ'},
   {key:'tp',     ico:'⌨️', label:'พิมพ์คำ'},
   {key:'bb',     ico:'🫧', label:'ฟอง'},
-  {key:'sg',     ico:'🎯', label:'ยิงเป้าคำ'}
+  {key:'sg',     ico:'🎯', label:'ยิงเป้าคำ'},
+  {key:'lc',     ico:'🔤💥', label:'Letter Cannon'}
 ];
 const RANK_MOVE_MAX = 36;
 const RANK_MOVE_REWARD = 1000;
@@ -1933,6 +1947,7 @@ function rankMoveFeedCheck(){
   RANK_MOVE_TOPICS.forEach(topic=>{
     if(topic.key === 'bb' && !Online.bbBoardReady) return;
     if(topic.key === 'online' && !Online.onlineCoinBoardReady) return;
+    if(topic.key === 'lc' && !Online.lcBoardReady) return;
     const rows = lbRankRows(topic.key);
     const now = {};
     rows.forEach((row, i)=>{ if(row.uid) now[row.uid] = {rank:i+1, name:row.name || 'ผู้เล่น'}; });
@@ -2030,9 +2045,10 @@ function lbfAwardBarHtml(tab){
           : tab === 'tp' ? (typeof TpAward !== 'undefined' ? TpAward : null)
           : tab === 'bb' ? (typeof BbAward !== 'undefined' ? BbAward : null)
           : tab === 'sg' ? (typeof SgAward !== 'undefined' ? SgAward : null)
-          : tab === 'pm' ? (typeof PmAward !== 'undefined' ? PmAward : null) : null;
+          : tab === 'pm' ? (typeof PmAward !== 'undefined' ? PmAward : null)
+          : tab === 'lc' ? (typeof LcAward !== 'undefined' ? LcAward : null) : null;
   if(!A) return '';
-  const cls = tab === 'coins' ? 'coa-open' : tab === 'assets' ? 'asa-open' : tab === 'online' ? 'oca-open' : tab === 'tp' ? 'tpa-open' : tab === 'bb' ? 'bba-open' : tab === 'sg' ? 'sga-open' : tab === 'pm' ? 'pma-open' : 'wsa-open';
+  const cls = tab === 'coins' ? 'coa-open' : tab === 'assets' ? 'asa-open' : tab === 'online' ? 'oca-open' : tab === 'tp' ? 'tpa-open' : tab === 'bb' ? 'bba-open' : tab === 'sg' ? 'sga-open' : tab === 'pm' ? 'pma-open' : tab === 'lc' ? 'lca-open' : 'wsa-open';
   return `<div class="lbf-award ${cls}" role="button" tabindex="0">
     ⏰ ตัดสินอันดับ <b>ทุกวันที่ 1 ของเดือน เวลา 00:01 น. เท่านั้น</b> · ครั้งถัดไป ${A.fmtLeft(A.nextCutDate() - Date.now())}
     · 🎁 อันดับ 1 ได้ ${fmtNum(A.PRIZES[0])} เหรียญ ลดหลั่นถึงอันดับ ${A.TOP} ได้ ${fmtNum(A.PRIZES[A.TOP-1])} เหรียญ
@@ -2061,6 +2077,7 @@ function openLeaderboardFull(){
           <button class="lb-tab${__lbfTab==='tp'?' active':''}" data-t="tp">⌨️ พิมพ์คำ</button>
           <button class="lb-tab${__lbfTab==='bb'?' active':''}" data-t="bb">🫧 ฟอง</button>
           <button class="lb-tab${__lbfTab==='sg'?' active':''}" data-t="sg">🎯 ยิงเป้าคำ</button>
+          <button class="lb-tab${__lbfTab==='lc'?' active':''}" data-t="lc">🔤💥 Letter Cannon</button>
           <button class="lb-tab${__lbfTab==='bx'?' active':''}" data-t="bx">🏁 สอบใหญ่</button>
           <button class="lb-tab${__lbfTab==='xr'?' active':''}" data-t="xr">🏁 ข้อสอบมาตรฐาน</button>`;
   const closeHeadHtml = (title)=> `<div class="lbf-head">
@@ -2124,7 +2141,7 @@ function openLeaderboardFull(){
       return;
     }
 
-    const cap = __lbfTab === 'assets' ? LB_ASSET_TOP : __lbfTab === 'online' ? LB_ONLINE_TOP : __lbfTab === 'ws' ? LB_WS_DISPLAY : __lbfTab === 'pm' ? LB_PM_DISPLAY : __lbfTab === 'tp' ? LB_TP_DISPLAY : __lbfTab === 'bb' ? LB_BB_DISPLAY : __lbfTab === 'sg' ? LB_SG_DISPLAY : 100;
+    const cap = __lbfTab === 'assets' ? LB_ASSET_TOP : __lbfTab === 'online' ? LB_ONLINE_TOP : __lbfTab === 'ws' ? LB_WS_DISPLAY : __lbfTab === 'pm' ? LB_PM_DISPLAY : __lbfTab === 'tp' ? LB_TP_DISPLAY : __lbfTab === 'bb' ? LB_BB_DISPLAY : __lbfTab === 'sg' ? LB_SG_DISPLAY : __lbfTab === 'lc' ? LB_LC_DISPLAY : 100;
     const all = lbRankRows(__lbfTab).slice(0, cap);
     const top = all.slice(0, 5);          // 🏆 โพเดียม (ตัวละครยืนลดหลั่น)
     const rest = all.slice(5);            // ที่เหลือ → กริด 5 คอลัมน์เหมือนเดิม
@@ -2157,8 +2174,8 @@ function openLeaderboardFull(){
                 : __lbfTab === 'online' ? '🌐 อันดับเหรียญออนไลน์'
                 : __lbfTab === 'boss' ? '🤖 อันดับล้มบอส'
                 : __lbfTab === 'ws' ? '🔎 อันดับค้นหาคำ' : __lbfTab === 'pm' ? '🖼️ อันดับจับคู่ภาพ' : __lbfTab === 'tp' ? '⌨️ อันดับพิมพ์คำ' : __lbfTab === 'bb' ? '🫧 อันดับฟอง'
-                : __lbfTab === 'sg' ? '🎯 อันดับยิงเป้าคำ' : '🪙 อันดับเหรียญ';
-    const allTime = (__lbfTab === 'online' || __lbfTab === 'ws' || __lbfTab === 'pm' || __lbfTab === 'tp' || __lbfTab === 'bb' || __lbfTab === 'sg') ? ' (all time)' : '';
+                : __lbfTab === 'sg' ? '🎯 อันดับยิงเป้าคำ' : __lbfTab === 'lc' ? '🔤💥 อันดับ Letter Cannon' : '🪙 อันดับเหรียญ';
+    const allTime = (__lbfTab === 'online' || __lbfTab === 'ws' || __lbfTab === 'pm' || __lbfTab === 'tp' || __lbfTab === 'bb' || __lbfTab === 'sg' || __lbfTab === 'lc') ? ' (all time)' : '';
     ov.innerHTML = `<div class="lbf-box">
       ${closeHeadHtml(`${title} · Top ${cap}${allTime}`)}
       <div class="lbf-scroll" tabindex="0" aria-label="เลื่อนดูอันดับผู้เล่นทั้งหมด">

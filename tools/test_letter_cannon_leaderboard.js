@@ -1,0 +1,21 @@
+"use strict";
+const assert=require('assert'),fs=require('fs'),path=require('path'),vm=require('vm');
+const root=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8');
+const ui=read('js/ui.js'),online=read('js/online.js'),state=read('js/state.js'),letter=read('js/lettercannon.js'),rules=read('handoff/RULES.md');
+assert(ui.includes('data-t="lc">🔤💥 Letter Cannon'));
+assert(ui.includes('Online.lcBoard || []')&&ui.includes('LcAward.prizeFor(i+1)'));
+assert(ui.includes('LB_LC_DISPLAY = 100')&&ui.includes("topic.key === 'lc' && !Online.lcBoardReady"));
+assert(online.includes("orderByChild('lc').limitToLast(LEADERBOARD_QUERY_SIZE)"));
+assert(online.includes('oe, lc}, base')&&online.includes('bb, oe}, base'));
+assert(state.includes('lcScore:0')&&state.includes("lcAwardSeen:''")&&state.includes('lcAwardPaid:[]')&&state.includes('lcAwardLog:[]'));
+assert(letter.includes('function settleScoreRun()')&&letter.includes('if(running)settleScoreRun()')&&letter.includes('scoreSettled=false'));
+const fence='`'.repeat(3),start=rules.indexOf(fence+'json'),end=rules.indexOf(fence,start+7); assert(start>=0&&end>start); const json=JSON.parse(rules.slice(start+7,end).trim());
+assert(json.rules.leaderboard.$uid.lc); assert(json.rules.leaderboard['.indexOn'].includes('lc')); assert(json.rules.lcAward&&json.rules.lcAward.$m);
+let captured; const head=letter.slice(0,letter.indexOf('(function(){')); vm.runInNewContext(head,{window:{makeMonthAward:c=>(captured=c,{})},Online:{lcBoard:[]},state:{lcScore:0}});
+assert.strictEqual(captured.path,'lcAward'); assert.strictEqual(captured.field,'lc'); assert.strictEqual(captured.scoreOf(),0);
+assert.deepStrictEqual(captured.rules.length,3);
+function el(){return {style:{},classList:{add(){},remove(){}},appendChild(){},remove(){},addEventListener(){},querySelector(){return el();},querySelectorAll(){return[];},getBoundingClientRect(){return{width:540,height:960}},getContext(){return null}};}
+let pushes=0,saves=0;
+const box={console,performance:{now:()=>1000},Math,setTimeout:()=>0,clearTimeout(){},requestAnimationFrame:()=>1,cancelAnimationFrame(){},localStorage:{getItem:()=>null,setItem(){}},window:{},document:{readyState:'complete',addEventListener(){},getElementById(){return null},createElement:el,body:el()},state:{student:{grade:'ป.1'},sound:false,lcScore:0},vocabForStudent:()=>[['CAT','แมว'],['DOG','สุนัข']],saveState(){saves++;},onlinePushScore(){pushes++;}};
+box.window=box;vm.createContext(box);vm.runInContext(letter,box);const T=box.LetterCannon._t;T.resetMission();const enemy=T.spawnEnemy();T.hitEnemy(enemy,999);const runScore=T.score;assert(runScore>0);assert.strictEqual(T.settleScoreRun(),runScore);assert.strictEqual(box.state.lcScore,runScore);assert.strictEqual(T.settleScoreRun(),0);assert.strictEqual(box.state.lcScore,runScore,'same run is never counted twice');assert.strictEqual(pushes,1);assert(saves>=1);
+console.log('PASS Letter Cannon Top 100 + monthly Top 10 award integration');

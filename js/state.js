@@ -112,6 +112,10 @@ const DEFAULT_STATE = {
   sgAwardSeen:'',                     // 🏆 รอบ 917: เหมือน wsAward* ทุกอย่าง แต่ของกระดาน 🎯 ยิงเป้าคำ
   sgAwardPaid:[],
   sgAwardLog:[],
+  lcScore:0,                          // 🔤💥 คะแนนสะสมตลอดกาล Letter Cannon / Dragon Sky Siege
+  lcAwardSeen:'',                     // 🔤💥🏆 รางวัลรายเดือนกระดาน Letter Cannon
+  lcAwardPaid:[],
+  lcAwardLog:[],
   rankSeen:0,                         // 🥇 รอบ 599: อันดับเหรียญที่เห็นล่าสุด (0=ยังไม่เคยติดกระดาน) — เลขใหม่น้อยกว่า = ไต่ขึ้น → ป้ายบนปุ่มรางเด้งฉลอง
   rankBest:0,                         // 🏅 รอบ 602: อันดับดีที่สุดที่เคยทำได้ (เลขน้อยสุด · 0=ยังไม่เคยติด) — โชว์ในหน้าสถิติ ไม่ลดลงเมื่ออันดับตก
   rankMoveBest:{},                    // 📈 อันดับดีที่สุดแยกรายกระดาน — ใช้จ่ายรางวัลไต่อันดับโดยไม่จ่ายซ้ำหลังอันดับตก
@@ -579,6 +583,10 @@ function loadState(){
       if(typeof s.sgAwardSeen !== 'string') s.sgAwardSeen = '';   // 🏆 รอบ 917: รางวัลรายเดือนแท็บยิงเป้าคำ
       if(!Array.isArray(s.sgAwardPaid)) s.sgAwardPaid = [];
       if(!Array.isArray(s.sgAwardLog)) s.sgAwardLog = [];
+      if(typeof s.lcScore !== 'number' || s.lcScore < 0) s.lcScore = 0;
+      if(typeof s.lcAwardSeen !== 'string') s.lcAwardSeen = '';
+      if(!Array.isArray(s.lcAwardPaid)) s.lcAwardPaid = [];
+      if(!Array.isArray(s.lcAwardLog)) s.lcAwardLog = [];
       /* 🎁 รอบ 593 (ผู้ใช้สั่ง): รางวัลสอบผ่าน 10 ข้อ 100 → 500 + "จ่ายย้อนหลัง" ให้คนที่สอบผ่านไปก่อนประกาศใหม่
          นับเฉพาะ id ที่เคยได้รางวัลเต็มเรตนี้จริง = หมวดคำศัพท์ตามชั้น (ALL_CATS) + ชุดคลังศัพท์ bandXsY
          (ตัด vbreview รางวัล 50 และสอบซ่อมรวม bandXretake รางวัล 0 ออก — คนละเรต ไม่ต้องชดเชย) */
