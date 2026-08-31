@@ -135,7 +135,7 @@ assert.ok(peer.includes('attachDrsGlow(car)')&&peer.includes('drsFlap'),
   'remote 3D cars must retain their DRS visual state');
 
 /* Round 1209-1210 mobile thermal budget: a visibly coherent shape without extra render work. */
-const peerModel=f1.slice(f1.indexOf('SEMI-REALISTIC LOW-POLY PEER F1'),f1.indexOf('function makeCar'));
+const peerModel=f1.slice(f1.indexOf('SEMI-REALISTIC LOW-POLY PEER F1'),f1.indexOf('function replacePlayerCar'));
 assert.ok(/function buildPeerF1Car\(color\)/.test(peerModel)&&/peerF1MergedGeometry/.test(peerModel),
   'peer racers must use their dedicated semi-realistic merged low-poly builder');
 assert.ok(/peerF1LoftGeometry/.test(peerModel)&&/const body=peerF1CombineGeometry\(\[bodyShell,cockpitCowl\]\)/.test(peerModel),
@@ -146,7 +146,7 @@ assert.ok((peerModel.match(/new THREE\.InstancedMesh/g)||[]).length===2,
   'four tyres and four rims must be batched into exactly two instanced draw calls');
 assert.ok(/if\(peerF1Kit\) return peerF1Kit/.test(peerModel)&&/sharedGeometry:true/.test(peerModel),
   'all peer cars must share cached geometry instead of rebuilding GPU buffers per player');
-const peerBuilder=f1.slice(f1.indexOf('function buildPeerF1Car'),f1.indexOf('function makeCar'));
+const peerBuilder=f1.slice(f1.indexOf('function buildPeerF1Car'),f1.indexOf('function replacePlayerCar'));
 assert.ok(!/new THREE\.(?:Box|Sphere|Torus|Cylinder|Circle)Geometry/.test(peerBuilder),
   'joining peers must never allocate fresh geometry on the GPU');
 assert.ok(/drawCalls:8,textures:0,pbr:0,dynamicShadows:0/.test(peerModel),
@@ -157,8 +157,8 @@ assert.ok(!/MeshStandardMaterial|MeshPhysicalMaterial|TextureLoader|castShadow\s
   'peer cars must not introduce PBR, textures or dynamic shadows');
 assert.ok(/function dropPeer[\s\S]*disposePeer[\s\S]*drsGlow[\s\S]*nameSprite\.material\.map\.dispose/.test(f1),
   'leaving peers must release their unique color, glow and name-tag GPU resources');
-assert.ok(/f1_car_lite\.glb/.test(f1)&&/cockpit_turn_center\.webp/.test(f1),
-  'player realistic car/cockpit assets must remain untouched');
+assert.ok(!/f1_car(?:_lite)?\.glb/.test(f1)&&/cockpit_turn_center\.webp/.test(f1),
+  'the cancelled old GLB must stay out while the selected-color cockpit remains');
 
 /* Round 1210: long tangent-aligned wall boxes must not swing onto the racing surface. */
 const circuit=f1.slice(f1.indexOf('function buildRealisticCircuit'),f1.indexOf('function buildLegacyArchitecture'));

@@ -64,8 +64,6 @@ const F1_COCKPIT_ASSETS = ['red', 'blue', 'green', 'yellow', 'orange'].flatMap((
 
 const TOKEN_F1_COCKPIT_ASSET = /img\/f1\/cockpit_turn_(?:center|left|right)(?:_(?:blue|green|yellow|orange))?\.webp/g;
 
-const TOKEN_F1_PLAYER_MODEL_ASSET = /img\/models\/f1_car(?:_lite)?\.glb/g;
-
 const TOKEN_F1_PEER_CAR_ASSET = /img\/f1\/peer_car_25d\.webp/g;
 
 const LOCAL_PREVIEW_BLOCK = /<!-- VW_LOCAL_PREVIEW_ONLY_START -->[\s\S]*?<!-- VW_LOCAL_PREVIEW_ONLY_END -->\s*/g;
@@ -149,8 +147,6 @@ async function sourceFiles() {
       'js/data/f1_vocab.js',
 
       'sound/racing/engineSound.mp3', ...F1_COCKPIT_ASSETS,
-
-      'img/models/f1_car_lite.glb', 'img/models/f1_car.glb',
 
       'img/f1/peer_car_25d.webp', 'img/f1/sky_racing_1024.webp', 'js/fpsweapon.js', 'js/coinaward.js', 'js/assetaward.js', 'js/onlinecoinaward.js',
 
@@ -645,16 +641,6 @@ async function main() {
   const cockpitRefs = [...new Set(f1Text.match(TOKEN_F1_COCKPIT_ASSET) || [])];
 
   for (const asset of cockpitRefs) {
-
-    const immutableUrl = await makeImmutableAlias(asset);
-
-    f1Text = f1Text.replaceAll(asset, immutableUrl);
-
-  }
-
-  const playerModelRefs = [...new Set(f1Text.match(TOKEN_F1_PLAYER_MODEL_ASSET) || [])];
-
-  for (const asset of playerModelRefs) {
 
     const immutableUrl = await makeImmutableAlias(asset);
 

@@ -49,12 +49,12 @@ assert.match(src,/VIP PIT GARAGE[\s\S]*data-car-color/,'A premium pre-race color
 assert.match(src,/localStorage\.setItem\(CAR_COLOR_KEY,playerCarStyle\.key\)/,'Selected car color must persist locally');
 assert.match(src,/cw:F1_COLOR_WIRE\+playerCarStyle\.key/,
   'Multiplayer payload must carry the selected car color through the NetRoom-safe wire field');
-assert.match(src,/PLAYER_CAR_MODEL_URLS=Object\.freeze\(\['img\/models\/f1_car_lite\.glb','img\/models\/f1_car\.glb'\]\)/,
-  'The local player must prefer the detailed GLB model with a full-model fallback');
-assert.match(src,/function replacePlayerCar\(\)[\s\S]*makeCar\(playerCarStyle,g=>installPlayerCar\(g,token\)\)/,
-  'The local player must asynchronously upgrade from its lightweight placeholder to the detailed GLB');
-assert.match(src,/function applyPlayerGlbStyle\([\s\S]*f1BodyTint[\s\S]*f1BodyMask/,
-  'The selected exterior color must tint only body paint while preserving the GLB texture details');
+assert.doesNotMatch(src,/PLAYER_CAR_MODEL_URLS|function glbEnsure\(|function makeCar\(/,
+  'The cancelled round-898 GLB model must not remain reachable from the player runtime');
+assert.match(src,/function replacePlayerCar\(\)[\s\S]*buildPeerF1Car\(playerCarStyle\.value\)[\s\S]*modelKind='vrx1-faceted-low-poly'/,
+  'The local player must use the selected-color VR-X1 faceted model introduced in rounds 1210/1216');
+assert.match(src,/function paintPlayerStyle\(key\)[\s\S]*playerCarStyle=carStyleByKey\(key\);[\s\S]*saveCarStyle\(\);[\s\S]*replacePlayerCar\(\)/,
+  'A swatch click must persist the selected color immediately and repaint the local VR-X1');
 assert.match(src,/wrapEl\.style\.setProperty\('--f1-cockpit-center'[\s\S]*cockpitAsset\('center'\)/,
   'The same selected style must update the matching cockpit interior');
 assert.match(src,/function buildPeer\(uid,p\)[\s\S]*buildPeerF1Car\(col\)/,
@@ -63,12 +63,10 @@ assert.match(build,/const F1_COCKPIT_ASSETS[\s\S]*\['red', 'blue', 'green', 'yel
   'Build must enumerate every supported cockpit color');
 assert.match(build,/for \(const asset of cockpitRefs\)[\s\S]*makeImmutableAlias\(asset\)/,
   'Every referenced cockpit variant must receive an immutable build alias');
-assert.match(build,/TOKEN_F1_PLAYER_MODEL_ASSET[\s\S]*for \(const asset of playerModelRefs\)[\s\S]*makeImmutableAlias\(asset\)/,
-  'Player GLB URLs must receive immutable build aliases so a deploy cannot revive a cached old model');
-for(const asset of ['img/models/f1_car_lite.glb','img/models/f1_car.glb']){
-  assert.ok(preflight.includes(`"${asset}"`),`Deploy preflight must require ${asset}`);
-  assert.ok(fs.existsSync(asset),`${asset} must exist`);
-}
+assert.doesNotMatch(build,/TOKEN_F1_PLAYER_MODEL_ASSET|playerModelRefs/,
+  'The build must not reintroduce immutable URLs for the cancelled GLB player model');
+assert.doesNotMatch(preflight,/img\/models\/f1_car(?:_lite)?\.glb/,
+  'Deploy preflight must not require the cancelled GLB player model');
 for(const color of ['red','blue','green','yellow','orange']){
   for(const name of ['center','left','right']){
     const suffix=color==='red'?'':`_${color}`;

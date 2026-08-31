@@ -9,7 +9,7 @@
    · 🚦 ออกสตาร์ทจริง (รอบ 902): ไฟแดง 5 ดวงบนซุ้มติดทีละดวง → ดับพร้อมกัน = ออกตัว (ล็อกคันเร่งก่อนไฟดับ)
    · 👻 รถเงา (รอบ 902): บันทึกเส้นทาง Best Lap ลง localStorage แล้วปล่อยรถโปร่งแสงวิ่งซ้ำให้ไล่แข่งกับตัวเอง
    · multiplayer ผ่าน NetRoom map 'f1' (สนามละ 10 คน) — เห็นรถเพื่อน+ชื่อ+แชท+กระดานคำ
-   · โมเดลรถ: โหลด img/models/f1_car.glb ถ้ามี (ผู้ใช้จะหามาวาง) — ไม่มี = รถ F1 ประกอบเอง (nose/ปีก/halo/ล้อหมุน)
+   · รถผู้เล่น/รถออนไลน์: VR-X1 faceted รุ่นรอบ 1210/1216 สีตรง cockpit; ไม่ใช้ GLB เก่ารอบ 898
    · สิ่งปลูกสร้างเป็น modular 3D + clean material; ไม่ใช้ภาพถ่าย facade/crowd/pit/tower แปะบนโมเดล
    · เข้าโลก: js/ui.js enterF1_3D (WORLD3D แถว f1) · ห้ามแตะไฟล์นี้จาก moto3d (คนละ engine)
    ───────────────────────────────────────────────────────────────────── */
@@ -193,9 +193,6 @@ const COCKPIT_ASSETS=Object.freeze({
   yellow:{center:'img/f1/cockpit_turn_center_yellow.webp',left:'img/f1/cockpit_turn_left_yellow.webp',right:'img/f1/cockpit_turn_right_yellow.webp'},
   orange:{center:'img/f1/cockpit_turn_center_orange.webp',left:'img/f1/cockpit_turn_left_orange.webp',right:'img/f1/cockpit_turn_right_orange.webp'},
 });
-/* รถผู้เล่นใช้โมเดลรายละเอียดสูงเพียงคันเดียว ส่วนรถออนไลน์ยังใช้ low-poly kit ร่วมกัน
-   URL ทั้งคู่จะถูก production build แปลงเป็น immutable hash เพื่อไม่ให้ cache ดึงรถรุ่นเก่ากลับมา */
-const PLAYER_CAR_MODEL_URLS=Object.freeze(['img/models/f1_car_lite.glb','img/models/f1_car.glb']);
 const PEER_COLORS=CAR_STYLES.map(s=>s.hex);
 const GRID_N       = 20;      // ช่องกริดสตาร์ท
 /* 🏁 รอบ 1219 — เว้นรถให้เห็นช่องว่างชัด และกัน client เก่าที่ไม่รายงาน slot */
@@ -260,7 +257,6 @@ let ghostLast=null, ghostShown=false;
 let PITL=null, inPit=false, pitLaneNow=false, pitLimited=false, lapPitted=false;
 /* เอฟเฟกต์ */
 let smokes=[], sparks=[];
-let glbSrc=null, glbTried=false, playerCarSwapToken=0;
 /* 🌡️ รอบ 1210: mobile thermal governor — ฟิสิกส์/เน็ตยัง tick ตาม RAF แต่ GPU render ตามความจำเป็น */
 let thermalMobile=false,thermalLevel=0,thermalAvgMs=16.7,thermalSlowT=0,thermalCoolT=0;
 let thermalBasePR=1,thermalTargetFps=60,thermalRenderAt=0,thermalRendered=0,thermalSkipped=0;
@@ -1695,22 +1691,8 @@ function buildTrackScene(){
 }
 
 /* ============================================================
-   🏎️ โมเดลรถ: GLB ผู้ใช้ (img/models/f1_car.glb) → ไม่มี = ประกอบเอง
+   🏎️ รถประกอบ procedural สำหรับ Best-Lap ghost/fallback (รถผู้เล่นจริงใช้ VR-X1 ด้านล่าง)
    ============================================================ */
-function glbEnsure(cb){
-  if(glbSrc) return cb(glbSrc);
-  if(glbTried||typeof THREE.GLTFLoader==='undefined') return cb(null);
-  glbTried=true;
-  try{
-    const ld=new THREE.GLTFLoader();
-    /* รอบ 898: โหลดตัว lite ก่อน (1.7MB · tex 1K — gltf-transform weld+simplify .5+resize จากไฟล์ผู้ใช้)
-       ไม่มี/พัง → ตัวเต็ม f1_car.glb (3.4MB) → ไม่มีอีก = รถประกอบเอง */
-    ld.load(PLAYER_CAR_MODEL_URLS[0],
-      g=>{ glbSrc=g.scene; cb(glbSrc); }, undefined,
-      ()=>ld.load(PLAYER_CAR_MODEL_URLS[1],
-        g=>{ glbSrc=g.scene; cb(glbSrc); }, undefined, ()=>cb(null)));
-  }catch(e){ cb(null); }
-}
 function buildF1Car(color){
   /* รถ F1 ประกอบเอง: โมโนค็อก+จมูก+ปีกหน้า/หลัง+sidepod+halo+ล้อ — แกน +Z = หน้า */
   const g=new THREE.Group();
@@ -1947,94 +1929,27 @@ function buildPeerF1Car(color){
   g.userData.disposePeer=()=>bodyMat.dispose();
   return g;
 }
-/* เปลี่ยนเฉพาะสีแดงของสีตัวถังใน texture เป็นสีที่เลือก โดยรักษาคาร์บอน ยาง โลหะ
-   และรายละเอียด baked เดิมไว้ครบ การ clone material กันสีของผู้เล่นหนึ่งคนไหลไปหา source/รถอื่น */
-function applyPlayerGlbStyle(root,style){
-  const cloned=new Map(),owned=[];
-  root.traverse(o=>{
-    if(!o||!o.isMesh||!o.material)return;
-    const src=Array.isArray(o.material)?o.material:[o.material];
-    const next=src.map(base=>{
-      if(cloned.has(base))return cloned.get(base);
-      const mat=base.clone(),tint=new THREE.Color(style.value);
-      if(mat.color)mat.color.setHex(0xffffff);
-      mat.userData=Object.assign({},mat.userData,{f1BodyTint:style.hex,f1PlayerPaint:true});
-      mat.onBeforeCompile=shader=>{
-        shader.uniforms.f1BodyTint={value:tint};
-        shader.fragmentShader='uniform vec3 f1BodyTint;\n'+shader.fragmentShader;
-        shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>',`#include <map_fragment>
-          float f1Other=max(diffuseColor.g,diffuseColor.b);
-          float f1BodyMask=smoothstep(0.045,0.24,diffuseColor.r-f1Other)*smoothstep(0.13,0.48,diffuseColor.r);
-          float f1Shade=clamp(dot(diffuseColor.rgb,vec3(0.299,0.587,0.114))*1.72,0.18,1.18);
-          diffuseColor.rgb=mix(diffuseColor.rgb,f1BodyTint*f1Shade,f1BodyMask*0.97);`);
-        mat.userData.f1Shader=shader;
-      };
-      mat.customProgramCacheKey=()=>`f1-player-paint-${style.key}`;
-      mat.needsUpdate=true;cloned.set(base,mat);owned.push(mat);return mat;
-    });
-    o.material=Array.isArray(o.material)?next:next[0];
-    o.castShadow=false;o.receiveShadow=false;
-  });
-  root.userData.playerStyle=style.key;
-  root.userData.disposePlayer=()=>owned.forEach(m=>m.dispose());
-}
-function makeCar(style,cb){
-  glbEnsure(src=>{
-    if(!src){
-      const fallback=buildPeerF1Car(style.value);
-      fallback.userData.modelKind='shared-low-poly-fallback';fallback.userData.playerStyle=style.key;
-      cb(fallback);return;
-    }
-    const g=new THREE.Group();
-    const m=src.clone(true);
-    applyPlayerGlbStyle(m,style);
-    /* จัดสเกล GLB อัตโนมัติ: รถ F1 ยาว ~5.6 ม. */
-    const box=new THREE.Box3().setFromObject(m);
-    const size=box.getSize(new THREE.Vector3());
-    const L=Math.max(size.x,size.z)||1;
-    const k=5.4/L; m.scale.setScalar(k);
-    const b2=new THREE.Box3().setFromObject(m);
-    m.position.y-=b2.min.y;
-    /* ทิศหัวรถ: Tripo หันหน้า +Z ตรงกับแกนเกมอยู่แล้ว (พิสูจน์ด้วยภาพรอบ 898 — เดิมหมุน PI แล้วรถวิ่งถอยหลัง)
-       โมเดลที่ยาวตามแกน X (นอน横) ค่อยหมุนตั้งให้ */
-    if(size.x>size.z) m.rotation.y=Math.PI/2;
-    g.add(m);
-    g.userData.wheels=[]; g.userData.front=[];
-    g.userData.modelKind='premium-glb-vrx1';g.userData.playerStyle=style.key;
-    g.userData.disposePlayer=m.userData.disposePlayer;
-    cb(g);
-  });
-}
-
-function disposePlayerCar(g){
-  if(!g||!g.userData)return;
-  if(g.userData.drsGlow&&g.userData.drsGlow.material)g.userData.drsGlow.material.dispose();
-  if(g.userData.disposePlayer)g.userData.disposePlayer();
-  else if(g.userData.disposePeer)g.userData.disposePeer();
-}
-function installPlayerCar(g,token){
-  if(!g)return;
-  if(token!==playerCarSwapToken||!scene){disposePlayerCar(g);return;}
-  const old=carGrp,oldVisible=old?old.visible:(camMode==='chase');
-  addPlayerContactShadow(g);attachDrsGlow(g);
-  g.position.set(px,py,pz);g.rotation.set(-pitch,yaw,bodyRoll);g.visible=oldVisible;
-  scene.add(g);carGrp=g;wheels=g.userData.wheels||[];steerParts=g.userData.front||[];
-  if(old){scene.remove(old);disposePlayerCar(old);}
-}
-/* รถผู้เล่น = GLB รายละเอียดสูงหนึ่งคัน; ระหว่างโหลดใช้ low-poly ปัจจุบันเป็น placeholder
-   รถเพื่อนยังคง buildPeerF1Car() จึงไม่เพิ่ม texture/PBR ตามจำนวนผู้เล่น */
+/* VR-X1 รุ่นใหม่รอบ 1210/1216 = faceted low-poly ที่สี cockpit/รถเรา/รถเพื่อนตรงกัน
+   ห้ามย้อนกลับไปใช้ GLB รอบ 898: texture เก่าล็อกสีแดงและเป็นรถรุ่นที่ผู้ใช้ยกเลิกแล้ว */
 function replacePlayerCar(){
   if(!scene) return;
-  const token=++playerCarSwapToken;
-  if(!carGrp){
-    const placeholder=buildPeerF1Car(playerCarStyle.value);
-    placeholder.userData.modelKind='shared-low-poly-loading';placeholder.userData.playerStyle=playerCarStyle.key;
-    installPlayerCar(placeholder,token);
+  const old=carGrp,oldVisible=old?old.visible:(camMode==='chase');
+  const g=buildPeerF1Car(playerCarStyle.value);
+  g.userData.modelKind='vrx1-faceted-low-poly';g.userData.playerStyle=playerCarStyle.key;
+  addPlayerContactShadow(g);attachDrsGlow(g);
+  g.position.set(px,py,pz);g.rotation.set(old?old.rotation.x:0,yaw,old?old.rotation.z:0);
+  g.visible=oldVisible;scene.add(g);carGrp=g;
+  wheels=g.userData.wheels||[];steerParts=g.userData.front||[];
+  if(old){
+    scene.remove(old);
+    if(old.userData&&old.userData.drsGlow&&old.userData.drsGlow.material)old.userData.drsGlow.material.dispose();
+    if(old.userData&&old.userData.disposePeer)old.userData.disposePeer();
   }
-  makeCar(playerCarStyle,g=>installPlayerCar(g,token));
 }
 function paintPlayerStyle(key){
   playerCarStyle=carStyleByKey(key);
+  /* บันทึกทันทีที่แตะสี ไม่รอปุ่มยืนยัน—กัน touch/webview ปิดหรือสลับหน้าก่อน click ยืนยัน */
+  saveCarStyle();
   if(wrapEl){
     wrapEl.style.setProperty('--f1-cockpit-center',"url('"+cockpitAsset('center')+"')");
     wrapEl.style.setProperty('--f1-car-color',playerCarStyle.hex);
@@ -2042,7 +1957,7 @@ function paintPlayerStyle(key){
       const on=b.dataset.carColor===playerCarStyle.key;b.classList.toggle('sel',on);
       b.setAttribute('aria-checked',on?'true':'false');
     });
-    const name=wrapEl.querySelector('#f1-garage-color-name');if(name)name.textContent=playerCarStyle.label;
+    const name=wrapEl.querySelector('#f1-garage-color-name');if(name)name.textContent='VR-X1 รุ่นใหม่ · '+playerCarStyle.label;
     cockpitTurnSrc='';if(cockpitTurnEl){cockpitTurnEl.src='';cockpitTurnEl.style.opacity='0';}
   }
   replacePlayerCar();
@@ -2502,7 +2417,7 @@ function buildDom(){
     <div id="f1-garage" role="dialog" aria-modal="true" aria-labelledby="f1-garage-title"><div class="garage-card">
       <div class="garage-kicker">Vocab Motors · Private Selection</div>
       <h2 id="f1-garage-title">VIP PIT GARAGE</h2>
-      <div class="garage-sub">เลือกสีประจำรถก่อนลงสนาม · cockpit และรถออนไลน์จะใช้สีเดียวกัน</div>
+      <div class="garage-sub">VR-X1 รุ่นใหม่ · เลือกสีประจำรถก่อนลงสนาม · ภายนอก ภายใน และรถออนไลน์ใช้สีเดียวกัน</div>
       <div class="garage-stage" aria-hidden="true"><div class="garage-car">
         <i class="body"></i><i class="nose"></i><i class="wing"></i><i class="halo"></i><i class="wheel l"></i><i class="wheel r"></i>
       </div></div>
@@ -2733,7 +2648,7 @@ function build(){
   TexLib.adSpeed=adTex('WORDPOWER','#0af','#0c1220');
   buildTrackScene();
   buildDrsBoards();      // 🪽 รอบ 908 — ป้ายเสา DRS (ต้องมาหลัง TexLib.glow + findDrsZones + มี scene แล้ว)
-  /* รถเรา: placeholder low-poly ขึ้นทันที แล้วสลับเป็น GLB รายละเอียดสูงหนึ่งคันเมื่อโหลดเสร็จ */
+  /* รถเรา: VR-X1 faceted รุ่นใหม่ชุดเดียวกับระบบเลือกสีรอบ 1216 */
   replacePlayerCar();
   fpWheels=buildFpWheels(); scene.add(fpWheels);   // 🛞 รอบ 911 — ล้อหน้ามุมคนขับ
   /* minimap พื้นหลัง */
@@ -4702,7 +4617,7 @@ window.F1World={
     get lap(){return {now:lapNow,best:lapBest,count:lapCount,cp:cpFlags.slice(),startAt:lapStartAt}},
     get letters(){return letters},
     get carVisual(){return {kind:carGrp&&carGrp.userData.modelKind||'unknown',style:playerCarStyle.key,
-      cockpit:cockpitAsset('center'),loading:!!(carGrp&&carGrp.userData.modelKind==='shared-low-poly-loading')}},
+      cockpit:cockpitAsset('center'),loading:false}},
     get racePosition(){return racePositionSnapshot()},
     /* 👥 รอบ 939 — เทสต์ปุ่ม "ไปหาเพื่อน" บนกระดาน (ยัด room ปลอมได้โดยไม่ต้องต่อ Firebase จริง) */
     get room(){return room}, set room(v){room=v}, renderBoard,
