@@ -2352,3 +2352,36 @@ body.vw2-home-active.vw2-page-hidden #vw-home-v2-root *:after{animation-play-sta
   #vw-home-v2-root .vw2-feature-action-track>button{flex-basis:236px!important}
   #vw-home-v2-root .vw2-pet{bottom:9%!important}
 }
+/* ======================== R38 / รอบ 1323 — RESPONSIVE PET-ACTION COPY CONTRACT ======================== */
+#vw-home-v2-root{--vw2-r1323-ready:1}
+/* R20's device-profile selectors carry more specificity than the later generic
+   width rules. Override both forms explicitly so no profile can collapse a
+   plaque back to 104–142px, then keep each live label inside one safe line. */
+#vw-home-v2-root .vw2-feature-action-track>button,
+#vw-home-v2-root[data-vw2-layout-profile] .vw2-feature-action-track>button{
+  flex:0 0 clamp(236px,19vw,270px)!important;
+  overflow:hidden!important;
+}
+#vw-home-v2-root .vw2-feature-action-track>button>span,
+#vw-home-v2-root[data-vw2-layout-profile] .vw2-feature-action-track>button>span{
+  width:76%!important;
+  max-width:76%!important;
+  height:100%!important;
+  min-height:0!important;
+  padding:0 5px!important;
+  box-sizing:border-box;
+  gap:1px!important;
+  overflow:hidden!important;
+  white-space:nowrap!important;
+  overflow-wrap:normal!important;
+  word-break:keep-all!important;
+  font-size:var(--vw2-action-main-px,12.5px)!important;
+  line-height:1.02!important;
+}
+#vw-home-v2-root .vw2-feature-action-track>button>span>small,
+#vw-home-v2-root .vw2-feature-action-track>button>span>b{
+  display:block;
+  width:100%;max-width:100%;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;

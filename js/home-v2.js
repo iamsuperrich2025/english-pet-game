@@ -21,6 +21,7 @@
    R33 / รอบ 1314 — Classic left rail skin + original Classic icon glyphs
    R34 / รอบ 1316 — Four-slot secondary HUD: computer, worth, graph and rankings
    R36 / รอบ 1319 — Swipeable seven-card HUD + raised New Word + wider pet actions
+   R38 / รอบ 1323 — Specificity-safe pet plaques + measured live-label fitting
    ------------------------------------------------------------
    Additive UI shell only. It does NOT own economy, auth, quests,
    Firebase, purchases, or game routing. Existing Lobby DOM stays
@@ -473,7 +474,7 @@
     if(document.getElementById(STYLE_ID)) return;
     const style = document.createElement('style');
     style.id = STYLE_ID;
-    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1;--vw2-r1287-runtime-ready:1;--vw2-r1288-runtime-ready:1;--vw2-r1289-runtime-ready:1;--vw2-r1290-runtime-ready:1;--vw2-r1291-runtime-ready:1;--vw2-r1293-runtime-ready:1;--vw2-r1294-runtime-ready:1;--vw2-r1295-runtime-ready:1;--vw2-r1296-runtime-ready:1;--vw2-r1300-runtime-ready:1;--vw2-r1305-runtime-ready:1;--vw2-r1309-runtime-ready:1;--vw2-r1311-runtime-ready:1;--vw2-r1313-runtime-ready:1;--vw2-r1314-runtime-ready:1;--vw2-r1316-runtime-ready:1;--vw2-r1319-runtime-ready:1}';
+    style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1;--vw2-r1287-runtime-ready:1;--vw2-r1288-runtime-ready:1;--vw2-r1289-runtime-ready:1;--vw2-r1290-runtime-ready:1;--vw2-r1291-runtime-ready:1;--vw2-r1293-runtime-ready:1;--vw2-r1294-runtime-ready:1;--vw2-r1295-runtime-ready:1;--vw2-r1296-runtime-ready:1;--vw2-r1300-runtime-ready:1;--vw2-r1305-runtime-ready:1;--vw2-r1309-runtime-ready:1;--vw2-r1311-runtime-ready:1;--vw2-r1313-runtime-ready:1;--vw2-r1314-runtime-ready:1;--vw2-r1316-runtime-ready:1;--vw2-r1319-runtime-ready:1;--vw2-r1323-runtime-ready:1}';
     document.head.appendChild(style);
   }
   function clickExisting(selector, opts){
@@ -962,6 +963,46 @@
     window.addEventListener('resize', updateFeatureActionScrollState, {passive:true});
     setTimeout(updateFeatureActionScrollState, 0);
   }
+  let featureActionFitFrame = 0;
+  function fitFeatureActionLabels(){
+    featureActionFitFrame = 0;
+    if(!root || root.hidden) return;
+    const buttons = Array.from(root.querySelectorAll('.vw2-feature-action-track>button'));
+    buttons.forEach(button=>{
+      const copy = button.querySelector(':scope>span');
+      if(!copy) return;
+      const box = button.getBoundingClientRect();
+      const signature = `${Math.round(box.width*2)/2}x${Math.round(box.height*2)/2}|${cleanText(copy.textContent || '',80)}`;
+      if(button.dataset.vw2FitSignature === signature) return;
+      button.dataset.vw2FitSignature = signature;
+      let main = Math.min(13, Math.max(10, box.height * .31));
+      let small = Math.min(9.5, Math.max(8, main * .74));
+      const targets = copy.children.length ? Array.from(copy.children) : [copy];
+      let fits = false;
+      for(let step=0; step<18; step++){
+        button.style.setProperty('--vw2-action-main-px', `${main.toFixed(2)}px`);
+        button.style.setProperty('--vw2-action-small-px', `${small.toFixed(2)}px`);
+        const copyBox = copy.getBoundingClientRect();
+        const widthFits = targets.every(el=>el.scrollWidth <= el.clientWidth + .75);
+        const heightFits = copyBox.top >= box.top - .75 && copyBox.bottom <= box.bottom + .75 && copy.scrollHeight <= copy.clientHeight + .75;
+        fits = widthFits && heightFits;
+        if(fits || main <= 9) break;
+        main = Math.max(9, main - .25);
+        small = Math.max(7.5, Math.min(9.5, main * .74));
+      }
+      button.dataset.vw2TextFits = fits ? '1' : '0';
+    });
+    updateFeatureActionScrollState();
+    scheduleLocalPreviewReport();
+  }
+  function scheduleFeatureActionLabelFit(){
+    if(featureActionFitFrame) cancelAnimationFrame(featureActionFitFrame);
+    featureActionFitFrame = requestAnimationFrame(fitFeatureActionLabels);
+  }
+  function forceFeatureActionLabelRefit(){
+    root?.querySelectorAll('.vw2-feature-action-track>button').forEach(button=>delete button.dataset.vw2FitSignature);
+    scheduleFeatureActionLabelFit();
+  }
   function syncLayoutProfile(){
     if(!root) return;
     const width = Math.max(window.innerWidth || 0, document.documentElement.clientWidth || 0);
@@ -975,6 +1016,7 @@
     root.style.setProperty('--vw2-screen-ratio', (width / Math.max(1,height)).toFixed(3));
     updateWalletScrollState();
     updateFeatureActionScrollState();
+    scheduleFeatureActionLabelFit();
   }
   function build(){
     const dash = dashboard();
@@ -1175,6 +1217,7 @@
     setupFeatureActionScroll();
     syncLayoutProfile();
     window.addEventListener('resize', syncLayoutProfile, {passive:true});
+    if(document.fonts && document.fonts.ready) document.fonts.ready.then(forceFeatureActionLabelRefit).catch(()=>{});
     root.addEventListener('click', e=>{
       const healAllPetsButton = e.target.closest && e.target.closest('[data-vw2-heal-all]');
       if(healAllPetsButton){
@@ -1684,6 +1727,7 @@
       ownedButton.title = petCount ? `ดูสัตว์เลี้ยงที่ซื้อไว้ ${petCount} ตัว` : 'ไปเลือกรับสัตว์เลี้ยงตัวแรก';
       ownedButton.setAttribute('aria-label', ownedButton.title);
     }
+    scheduleFeatureActionLabelFit();
     if(document.getElementById('vw2-pet-modal')?.hidden === false) syncOwnedPetsModal();
     feedCardsFromAuthoritativeSource();
     const likes = (typeof state !== 'undefined' && state && state.feedLikes != null) ? fmt(state.feedLikes) : 'เพื่อน';
@@ -1750,6 +1794,15 @@
     const bottomScrollStyle = bottomScroll ? getComputedStyle(bottomScroll) : null;
     const walletStyle = wallet ? getComputedStyle(wallet) : null;
     const featureActionScrollStyle = featureActionScroll ? getComputedStyle(featureActionScroll) : null;
+    const featureActionButtons = featureActionTrack ? Array.from(featureActionTrack.querySelectorAll(':scope>button')) : [];
+    const featureActionTextOffenders = featureActionButtons.filter(button=>{
+      const copy = button.querySelector(':scope>span');
+      if(!copy) return false;
+      const buttonBox = button.getBoundingClientRect();
+      const copyBox = copy.getBoundingClientRect();
+      const targets = copy.children.length ? Array.from(copy.children) : [copy];
+      return button.dataset.vw2TextFits !== '1' || targets.some(el=>el.scrollWidth > el.clientWidth + 1) || copyBox.top < buttonBox.top - 1 || copyBox.bottom > buttonBox.bottom + 1;
+    }).map(button=>button.dataset.vw2Action || '?');
     const bottomModes = bottomTrack ? Array.from(bottomTrack.querySelectorAll('.vw2-mode')) : [];
     const learningActions = ['vocabbook','ielts','toeic','toefl','onetp6','onetm3','onetm6','cats','play','picmatch','picdict','picquiz','bandexam'];
     const allLearningRoutesPresent = bottomModes.length === learningActions.length && learningActions.every(actionName=>bottomTrack?.querySelector(`[data-vw2-action="${actionName}"]`));
@@ -1914,7 +1967,8 @@
         featureActionCount:featureActionTrack ? featureActionTrack.querySelectorAll('[data-vw2-action]').length : 0,
         featureActionScrollable:!!(featureActionScroll && featureActionScrollStyle && ['auto','scroll'].includes(featureActionScrollStyle.overflowX) && featureActionScroll.scrollWidth > featureActionScroll.clientWidth + 1),
         featureActionVerticalOverflow:!!(featureActionScroll && featureActionScroll.scrollHeight > featureActionScroll.clientHeight + 1),
-        featureActionCanScrollRight:!!(featureActionScroll && featureActionScroll.scrollLeft + featureActionScroll.clientWidth < featureActionScroll.scrollWidth - 2)
+        featureActionCanScrollRight:!!(featureActionScroll && featureActionScroll.scrollLeft + featureActionScroll.clientWidth < featureActionScroll.scrollWidth - 2),
+        featureActionTextOffenders
       }
     }, '*');
   }

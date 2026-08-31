@@ -52,7 +52,7 @@ must(home.includes("R24 / รอบ 1293") && css.includes("R24 / รอบ 1293
 must(home.includes("R25 / รอบ 1294") && css.includes("R25 / รอบ 1294") && css.includes("--vw2-r1294-ready:1") && home.includes("--vw2-r1294-runtime-ready:1"), "R25 / รอบ 1294 lineage markers missing");
 must(home.includes("R26 / รอบ 1295") && css.includes("R26 / รอบ 1295") && css.includes("--vw2-r1295-ready:1") && home.includes("--vw2-r1295-runtime-ready:1"), "R26 / รอบ 1295 lineage markers missing");
 must(home.includes("R27 / รอบ 1296") && css.includes("R27 / รอบ 1296") && css.includes("--vw2-r1296-ready:1") && home.includes("--vw2-r1296-runtime-ready:1"), "R27 / รอบ 1296 lineage markers missing");
-must(indexClassic.includes("css/home-v2.css?v=1322") && indexClassic.includes("js/home-v2.js?v=1322"), "R37 cache-bust missing from index_classic.html");
+must(indexClassic.includes("css/home-v2.css?v=1323") && indexClassic.includes("js/home-v2.js?v=1323"), "R38 cache-bust missing from index_classic.html");
 must(home.includes("R28 / รอบ 1300") && home.includes("--vw2-r1300-runtime-ready:1") && css.includes("R28 / รอบ 1300") && css.includes("--vw2-r1300-ready:1"), "R28 browser-verified visual contract missing");
 must(css.includes("grid-template-areas:\"class id time\" \"date date date\"") && css.includes("top:54px!important") && css.includes("--card-shadow:#075aa8"), "R28 HUD clearance/profile/date/premium rail rules missing");
 must(home.includes("R29 / รอบ 1305") && home.includes("--vw2-r1305-runtime-ready:1") && css.includes("R29 / รอบ 1305") && css.includes("--vw2-r1305-ready:1"), "R29 visual-hierarchy lineage markers missing");
@@ -388,12 +388,22 @@ must(home.indexOf('class="vw2-wallet-pill coin"') < home.indexOf('class="vw2-wal
 must(css.includes(".vw2-word-ribbon{top:-9px!important}") && css.includes("top:calc(95px - clamp(102px,25.5vh,108px))!important") && css.includes(".vw2-word-ribbon{top:-7px!important}"), "R36 New Word does not occupy the former secondary-HUD lane responsively");
 must(css.includes("flex:0 0 clamp(212px,18vw,248px)!important") && css.includes("flex-basis:clamp(190px,22vw,224px)!important") && css.includes("max-width:72%!important") && css.includes("color:#fff!important"), "R36 pet actions lack wide safe-copy area or contrast");
 must(css.includes("R37 / รอบ 1322") && css.includes("--vw2-r1322-ready:1") && css.includes("flex-basis:clamp(236px,26vw,264px)!important") && css.includes("flex-basis:244px!important") && css.includes("flex-basis:236px!important") && css.includes(".vw2-pet{bottom:9%!important}"), "R37 grounded-pet and long-action geometry missing");
+must(css.includes("R38 / รอบ 1323") && css.includes("--vw2-r1323-ready:1") && home.includes("R38 / รอบ 1323") && home.includes("--vw2-r1323-runtime-ready:1"), "R38 responsive pet-action lineage markers missing");
+const r38OverrideIndex = css.indexOf("R38 / รอบ 1323");
+["tablet-landscape","phone-wide","phone-standard","phone-compact"].forEach(profile=>{
+  const legacyIndex = css.indexOf(`[data-vw2-layout-profile="${profile}"] .vw2-feature-action-track>button{flex-basis:`);
+  must(legacyIndex >= 0 && r38OverrideIndex > legacyIndex, `R38 does not override legacy ${profile} pet-action width`);
+});
+must(css.includes("#vw-home-v2-root[data-vw2-layout-profile] .vw2-feature-action-track>button") && css.includes("flex:0 0 clamp(236px,19vw,270px)!important"), "R38 specificity-safe width contract missing");
+must(css.includes("width:76%!important") && css.includes("white-space:nowrap!important") && css.includes("--vw2-action-main-px") && 236*.76-10 >= 169, "R38 central safe-copy lane is too narrow");
+must(home.includes("function fitFeatureActionLabels()") && home.includes("function scheduleFeatureActionLabelFit()") && home.includes("function forceFeatureActionLabelRefit()") && home.includes("document.fonts.ready.then(forceFeatureActionLabelRefit)") && home.includes("el.scrollWidth <= el.clientWidth + .75") && home.includes("getBoundingClientRect()") && home.includes("featureActionTextOffenders"), "R38 measured live-label fitting or diagnostics missing");
+must(home.includes("scheduleFeatureActionLabelFit();") && home.indexOf("scheduleFeatureActionLabelFit();", home.indexOf("function syncLayoutProfile")) > 0, "R38 resize/profile fitting hook missing");
 must(css.includes("Six current tools fill the panel exactly") && css.includes("grid-template-rows:repeat(2,minmax(0,1fr))!important"), "six-tool panel does not close the removed Classic row");
 
 if(fail.length){
-  console.error("Home V2 R37 validation FAILED:\n- " + fail.join("\n- "));
+  console.error("Home V2 R38 validation FAILED:\n- " + fail.join("\n- "));
   process.exit(1);
 }
 
-console.log("Home V2 R37 / รอบ 1322 validation PASS");
+console.log("Home V2 R38 / รอบ 1323 validation PASS");
 console.log(`Checked seven-card swipe HUD, raised New Word lane, wide high-contrast pet actions, authoritative graph/rank routes; ${expectedRail.length} left destinations; all ${expectedBottom.length} learning actions; and admin gate.`);
