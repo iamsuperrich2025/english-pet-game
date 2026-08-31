@@ -32,7 +32,13 @@
   --vw2-rim:rgba(255,255,255,.96);
 }
 
+#screen-dashboard.vw2-primary.active,
 #screen-dashboard.vw2-active{position:relative;overflow:hidden!important;background:#6eafe9!important}
+#screen-dashboard.vw2-primary.active>#lobby-bg,
+#screen-dashboard.vw2-primary.active>.lobby-wrap,
+#screen-dashboard.vw2-primary.active>#lobby,
+#screen-dashboard.vw2-primary.active>.lobby,
+#screen-dashboard.vw2-primary.active>:not(script):not(style),
 #screen-dashboard.vw2-active>#lobby-bg,
 #screen-dashboard.vw2-active>.lobby-wrap,
 #screen-dashboard.vw2-active>#lobby,
@@ -2455,4 +2461,19 @@ body.vw2-home-active #screen-dashboard.vw2-active>#panel-overlay.open{
    though the shared rail skin normally forces its buttons to display:flex. */
 #vw-home-v2-root .vw2-rail-btn[data-vw2-admin-only-world="1"][hidden]{
   display:none!important;
+}
+
+/* ======================== R41 / รอบ 1328 — ZERO-FLASH PRIMARY HOME ======================== */
+:root{--vw2-r1328-ready:1}
+/* `vw2-primary` is present in the source HTML, so Classic is suppressed as
+   soon as the dashboard becomes active—even before runtime observers run. */
+#vw-home-v2-root .vw2-rail-price{
+  display:block;min-height:10px;margin:0;color:#ffd98a;
+  font:800 clamp(9px,.7vw,10.5px)/1 "Kanit","Noto Sans Thai",system-ui,sans-serif;
+  white-space:nowrap;text-shadow:0 1px 2px rgba(0,0,0,.72);
+}
+#vw-home-v2-root .vw2-rail-price.afford{color:#7df0a0;text-shadow:0 0 6px rgba(90,230,140,.55)}
+#vw-home-v2-root .vw2-rail-price[hidden]{display:none!important}
+@media (max-width:760px),(max-height:420px){
+  #vw-home-v2-root .vw2-rail-price{font-size:8.5px;min-height:9px}
 }

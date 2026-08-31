@@ -67,6 +67,8 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (31 ส.ค.) — อ่านก่อน
+- **รอบ 1328 · Home V2 zero-flash + ราคาโลกเดิม:** preload/runtime ใช้ hashed URL เดียว, prebuild ก่อน dashboard active และ class-only observer สลับใน microtask; source HTML ซ่อน Classic ตั้งแต่เฟรมแรก จึงไม่รอ polling 0–10 วินาที
+- ปุ่มโลกแนวตั้งอ่าน `worldEntryInfo()`/`.rail-price` เดิม (ปกติ 🪙500 รวมวันลด/ฟรี/ส่วนลดเจ้าของ) โดยคง admin gate 6 โลก; R41 regression + price probe + syntax + production build `.1194` + PWA/cache/TWA validator ผ่าน, Browser QA ยังถูก Windows ACL บล็อก
 - **รอบ 1327 · Home V2 เป็น Lobby หลัก:** เปิด Home V2 ให้ผู้เล่นทุกคนทันทีเมื่อ dashboard active, ลบ Admin Preview/ทางสลับกลับ Classic และเก็บ Classic DOM ซ่อนไว้เป็น state/action source; panel เดิมเปิดทับ Home ได้
 - โลก admin 6 รายการ render เป็น hidden+disabled ตั้งแต่เฟรมแรก, ตัด tab focus และมี action guard ก่อน dispatch; R40 regression 29 เมนู/13 เกม + syntax + production build .1193 + PWA/cache/TWA validator ผ่าน (Browser QA ยังถูก Windows ACL บล็อก)
 - **รอบ 1326 · Letter Cannon Top 100 + รางวัลรายเดือน:** สะสมคะแนนทุกภารกิจครั้งเดียวเมื่อจบ/ออก → `/leaderboard.lc`, query แยก Top 100 จริง, เพิ่มแท็บ/โพเดียม/รางวัล 10,000–1,000 และฟีดอันดับดีขึ้น

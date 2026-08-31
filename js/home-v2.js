@@ -24,6 +24,7 @@
    R38 / รอบ 1323 — Specificity-safe pet plaques + measured live-label fitting
    R39 / รอบ 1325 — Uniform pet-action hitboxes, optical frames and measured spacing
    R40 / รอบ 1327 — Home V2 promoted to the primary Lobby; admin worlds stay role-gated
+   R41 / รอบ 1328 — Prebuilt Home + class-only activation observer; no Classic first paint
    ------------------------------------------------------------
    Additive UI shell only. It does NOT own economy, auth, quests,
    Firebase, purchases, or game routing. Existing Lobby DOM stays
@@ -38,6 +39,7 @@
   let clockTimer = 0;
   let welcomeTimer = 0;
   let previewReportTimer = 0;
+  let dashboardClassObserver = null;
   let v2WasVisible = false;
   let classicLobby3DWasRunning = false;
   let latestOnlineUsers = [];
@@ -108,6 +110,18 @@
   function fmt(v){
     try{ return typeof fmtNum === 'function' ? fmtNum(v) : Number(v || 0).toLocaleString('th-TH'); }
     catch(_){ return String(v || 0); }
+  }
+  function worldPriceText(sourceSelector){
+    const match = String(sourceSelector || '').match(/^#btn-world-([a-z0-9_-]+)$/i);
+    if(!match) return '';
+    try{
+      if(typeof worldEntryInfo === 'function'){
+        const info = worldEntryInfo(match[1]);
+        if(info) return info.free ? '🎉 ฟรี!' : `🪙${fmt(info.fee)}`;
+      }
+    }catch(_){ }
+    try{ return typeof WORLD_ENTRY_FEE !== 'undefined' ? `🪙${fmt(WORLD_ENTRY_FEE)}` : ''; }
+    catch(_){ return ''; }
   }
   function fmtTopValue(v){
     const n = Number(v);
@@ -299,7 +313,11 @@
     const adminBlocked = adminOnly && !adminWorldAllowed();
     const roleAttrs = adminOnly ? ' data-vw2-admin-only-world="1"' : '';
     const blockedAttrs = adminBlocked ? ' hidden disabled aria-hidden="true" aria-disabled="true" tabindex="-1"' : '';
-    return `<button class="vw2-rail-btn vw2-rail-${htmlEscape(actionName)}" data-vw2-action="${htmlEscape(actionName)}"${roleAttrs}${blockedAttrs}${sourceAttrs(sourceSelector)}><span class="vw2-rail-art">${classicRailGlyph(actionName, sourceSelector)}</span><b class="vw2-rail-label">${htmlEscape(label)}</b><i class="vw2-source-badge" hidden></i></button>`;
+    const priceText = worldPriceText(sourceSelector);
+    const priceHTML = /^#btn-world-/i.test(sourceSelector)
+      ? `<small class="vw2-rail-price"${priceText?'':' hidden'}>${htmlEscape(priceText)}</small>`
+      : '';
+    return `<button class="vw2-rail-btn vw2-rail-${htmlEscape(actionName)}" data-vw2-action="${htmlEscape(actionName)}"${roleAttrs}${blockedAttrs}${sourceAttrs(sourceSelector)}><span class="vw2-rail-art">${classicRailGlyph(actionName, sourceSelector)}</span><b class="vw2-rail-label">${htmlEscape(label)}</b>${priceHTML}<i class="vw2-source-badge" hidden></i></button>`;
   }
   function bottomButton(actionName, iconName, label, tone='violet', sourceSelector=''){
     return `<button class="vw2-mode ${htmlEscape(tone)}" data-vw2-action="${htmlEscape(actionName)}"${sourceAttrs(sourceSelector)}><span>${icon(iconName)}</span><b>${htmlEscape(label)}</b><i class="vw2-source-badge" hidden></i></button>`;
@@ -468,7 +486,7 @@
     const style = document.createElement('style');
     style.id = STYLE_ID;
     style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1;--vw2-r1287-runtime-ready:1;--vw2-r1288-runtime-ready:1;--vw2-r1289-runtime-ready:1;--vw2-r1290-runtime-ready:1;--vw2-r1291-runtime-ready:1;--vw2-r1293-runtime-ready:1;--vw2-r1294-runtime-ready:1;--vw2-r1295-runtime-ready:1;--vw2-r1296-runtime-ready:1;--vw2-r1300-runtime-ready:1;--vw2-r1305-runtime-ready:1;--vw2-r1309-runtime-ready:1;--vw2-r1311-runtime-ready:1;--vw2-r1313-runtime-ready:1;--vw2-r1314-runtime-ready:1;--vw2-r1316-runtime-ready:1;--vw2-r1319-runtime-ready:1;--vw2-r1323-runtime-ready:1;--vw2-r1325-runtime-ready:1}';
-    style.textContent += '#vw-home-v2-root{--vw2-r1327-runtime-ready:1}';
+    style.textContent += '#vw-home-v2-root{--vw2-r1327-runtime-ready:1;--vw2-r1328-runtime-ready:1}';
     document.head.appendChild(style);
   }
   function clickExisting(selector){
@@ -1067,6 +1085,7 @@
     root = document.createElement('div');
     root.id = ROOT_ID;
     root.setAttribute('aria-label','Vocab World Home');
+    root.hidden = !dashboardActive();
     root.innerHTML = `
       <div class="vw2-sky" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
       <div class="vw2-shell">
@@ -1329,6 +1348,15 @@
           else btn.removeAttribute('tabindex');
           btn.title = locked ? (source.title || 'โลกนี้ยังล็อกอยู่')
             : btn.textContent.trim() + (adminOnly ? ' · เฉพาะแอดมิน' : ' · ผู้เล่นทุกคนเข้าได้');
+          const price = btn.querySelector('.vw2-rail-price');
+          if(price){
+            const sourcePrice = source && source.querySelector ? source.querySelector('.rail-price') : null;
+            const sourcePriceText = sourcePrice && sourceVisible(sourcePrice) ? completeText(sourcePrice.textContent) : '';
+            const priceText = locked ? '' : (sourcePriceText || worldPriceText(selector));
+            price.textContent = priceText;
+            price.hidden = !priceText;
+            price.classList.toggle('afford', !!(sourcePrice && sourcePrice.classList.contains('afford')));
+          }
         }
       }
       const badge = btn.querySelector('.vw2-source-badge');
@@ -1993,10 +2021,10 @@
     if(!dash) return;
     const active = dashboardActive();
     const showV2 = active;
-    // Build lazily after the authoritative dashboard becomes active. The
-    // Classic DOM remains mounted but hidden so its state and handlers stay
-    // authoritative for both regular players and administrators.
-    if(showV2 && !root) build();
+    // Home is prebuilt before dashboard activation. Classic remains mounted
+    // only as the authoritative state/action source and never gets a first
+    // paint while the class-only observer promotes Home in the same microtask.
+    if(!root) build();
     dash.classList.toggle(CLASS_ON, showV2);
     // Scope presentation-only safety rules (including transient toasts) to Home V2.
     document.body.classList.toggle('vw2-home-active', showV2);
@@ -2040,17 +2068,30 @@
     if(document.hidden){ clearTimeout(clockTimer); clockTimer = 0; return; }
     wakeTick();
   }
+  function observeDashboardActivation(){
+    const dash = dashboard();
+    if(!dash || dashboardClassObserver || typeof MutationObserver !== 'function') return;
+    dashboardClassObserver = new MutationObserver(records=>{
+      if(records.some(record=>record.attributeName === 'class')) wakeTick();
+    });
+    dashboardClassObserver.observe(dash,{attributes:true,attributeFilter:['class']});
+  }
   function init(){
     // No MutationObserver on the classic Lobby. The existing Lobby has
     // animated/ticker DOM that changes frequently; observing its subtree can
     // create a feedback-heavy main-thread workload. Adaptive timeouts pause
     // completely in background tabs and poll slowly outside Home V2.
     clearTimeout(clockTimer);
+    build();
+    observeDashboardActivation();
     window.addEventListener('focus', wakeTick);
     window.addEventListener('resize', scheduleLocalPreviewReport);
     document.addEventListener('visibilitychange', handlePageVisibility);
     wakeTick();
   }
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, {once:true});
+  // The dashboard markup is already parsed before this script tag. Initialize
+  // now instead of waiting for DOMContentLoaded and its remaining scripts.
+  if(dashboard()) init();
+  else if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, {once:true});
   else init();
 })();

@@ -91,6 +91,10 @@ for (const [name, text] of [['index.html', index], ['index_classic.html', classi
   if (!text.includes('manifest.webmanifest')) failures.push(`${name} does not reference manifest.webmanifest`);
   if (!text.includes('/assets/build/')) failures.push(`${name} does not use immutable startup assets`);
 }
+const homeV2Script = classic.match(/<script\b[^>]*\bsrc=["']([^"']*home-v2[^"']*\.js)["']/i)?.[1] || '';
+const homeV2Preload = classic.match(/<link\b(?=[^>]*\brel=["'][^"']*preload[^"']*["'])(?=[^>]*\bas=["']script["'])[^>]*\bhref=["']([^"']*home-v2[^"']*\.js)["']/i)?.[1] || '';
+if (!homeV2Script || !homeV2Preload) failures.push('index_classic.html must preload the Home V2 runtime');
+else if (homeV2Script !== homeV2Preload || !homeV2Preload.startsWith('/assets/build/')) failures.push('Home V2 preload must match its immutable runtime asset');
 if (/caches\.keys\(\).*caches\.delete|unregister\(\)/s.test(index + classic)) {
   failures.push('HTML still contains destructive cache/service-worker clearing');
 }

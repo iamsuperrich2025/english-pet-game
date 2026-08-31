@@ -476,6 +476,8 @@ async function fingerprintHtml(file) {
 
     /(<link\b(?=[^>]*\brel=["'][^"']*stylesheet[^"']*["'])[^>]*\bhref=["'])([^"']+)(["'][^>]*>)/gi,
 
+    /(<link\b(?=[^>]*\brel=["'][^"']*preload[^"']*["'])(?=[^>]*\bas=["']script["'])[^>]*\bhref=["'])([^"']+)(["'][^>]*>)/gi,
+
   ];
 
   for (const pattern of patterns) {
