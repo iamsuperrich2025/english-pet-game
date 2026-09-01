@@ -14,8 +14,11 @@
 
 - **รอบ 1341 · Home V2 portrait lower HUD:** ย้าย New Word + wallet 7 ใบจากด้านบนลง dock สองแถวเหนือ Bottom Rail เฉพาะจอแนวตั้ง ≤700px; หมุนแนวนอนแล้วคืน DOM เดิมอัตโนมัติ
 - จอง shell row แยกให้ dock/Bottom Rail จึงไม่ทับกัน, แถบสถิติยังปัดแนวนอนและเปิดมาเห็น 3 ใบ; บีบ top controls เป็นไอคอนกะทัดรัด
-- แก้ `js/home-v2.js`, `css/home-v2.css`, `tools/test_home_v2_mobile_preview.js`; syntax/regression/production build `.1207`/PWA-cache-TWA validator/diff ผ่าน
-- Visual Browser QA ถูก Windows ACL (`apply deny-read ACLs`) บล็อก; geometry contract ยืนยัน row 47+4+50px อยู่ใน dock 101px และ Bottom Rail อยู่ row ถัดไป
+- **แก้ไขรอบ 1342:** รอบ 1341 จับเป้าหมายผิดหน้าจอ จึงย้อน Home V2 lower HUD ออกทั้งหมดและแก้ Dragon Sky Siege (`lc-wordbox` + `lc-stats`) ตามภาพจริง
+- ย้ายแผงคำศัพท์/สถานะจาก `top:55/132px` ลง dock ล่างสูง 110px แยก 60px + 46px มี gap 4px; ปุ่มเพลง/เสียง/Missile/พัก/ออกยังอยู่ด้านบน
+- ขยับ AUTO FIRE และแถบกระสุนขึ้นเหนือ dock ไม่ให้ UI ทับกัน; เพิ่ม geometry regression และผ่าน `test_letter_cannon`, Home V2 regression, syntax และ production build
+- การตรวจภาพผ่าน in-app browser ถูก Windows sandbox ปฏิเสธก่อนเปิดหน้า จึงยังต้องยืนยันภาพบนเครื่องจริงหลัง deploy
+
 
 - **รอบ 1340 · ShootWord เพลง Fairgame Fun แบบ lazy Range/cache:** เข้าเกมจึงสร้าง Audio `preload=metadata` เล่นวน มีปุ่มเพลงมุมขวาบนแยกจาก Exit และออกเกมเฟด 1.1 วินาทีก่อน pause+rewind/คืนเพลง Lobby
 - ปุ่มเปิด–ปิดสี/ข้อความ/ARIA ชัดและ touch target 42px/34px; Chrome QA source+dist ที่ 1365×610/812×375 ยืนยัน HUD overlap 0, toggle ใช้ Audio/request เดิม และ fade ลดเสียงก่อนหยุด

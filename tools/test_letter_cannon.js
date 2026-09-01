@@ -71,6 +71,9 @@ assert(stateCode.includes('letterCannonAnnouncementSeen:false')&&code.includes('
 assert(code.includes('drawImage(playerImage')&&code.includes('sway=Math.sin')&&code.includes("iw*.35,ih*.48"),'runtime renders the generated dragon with a separately animated tail layer');
 assert(/ensureNeeded\(false\);\s*fire\(\);/.test(code)&&!code.includes('firePointers')&&!code.includes('keyFire')&&!code.includes("e.code==='Space'"),'primary guns fire automatically during every active update without button or Space input state');
 assert(code.includes('id="lc-missile"')&&!code.includes('id="lc-fire-left"')&&!code.includes('id="lc-fire-right"')&&code.includes('<b>AUTO FIRE</b>'),'portrait HUD removes both shoot buttons, labels autofire and keeps the tactical Missile control');
+assert(code.includes('class="lc-info-dock"')&&code.indexOf('class="lc-wordbox')<code.indexOf('class="lc-stats'),'word and stats panels share one ordered lower HUD dock');
+assert(css.includes('.lc-info-dock{position:absolute')&&css.includes('bottom:calc(7px + env(safe-area-inset-bottom))')&&css.includes('grid-template-rows:60px 46px')&&!css.includes('.lc-stats{position:absolute;z-index:2;left:7px;right:7px;top:'),'portrait word and stats HUD is anchored to two non-overlapping bottom rows instead of the top');
+assert(css.includes('.lc-power{left:7px;bottom:calc(153px')&&css.includes('.lc-hint{position:absolute;z-index:2;top:auto')&&css.includes('bottom:calc(123px'),'power and hint controls are cleared above the relocated bottom HUD');
 assert(!code.includes('NetRoom.create')&&!code.includes('netJoin()')&&!code.includes('drawPeerCannon'),'Letter Cannon is solo-only with no multiplayer runtime');
 assert(code.includes('function shockwave')&&code.includes('function impact')&&code.includes("globalCompositeOperation='lighter'"),'projectile and target impact spectacle included');
 assert(!code.includes('registerTap(now)')&&!code.includes('tapPointers.set'),'obsolete double-tap firing removed');

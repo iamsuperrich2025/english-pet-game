@@ -63,14 +63,15 @@
 #lc-game .lc-game-canvas:active{cursor:grabbing}
 #lc-game .lc-hud{display:block;padding:0}
 #lc-game .lc-glass{border-radius:12px;background:linear-gradient(145deg,rgba(5,24,50,.74),rgba(35,27,77,.62));backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
-#lc-game .lc-stats{position:absolute;z-index:2;left:7px;right:7px;top:132px;padding:5px 8px;display:grid;grid-template-columns:repeat(3,1fr);gap:3px 7px;font-size:10px}
+#lc-game .lc-info-dock{position:absolute;z-index:2;left:7px;right:7px;bottom:calc(7px + env(safe-area-inset-bottom));height:110px;display:grid;grid-template-rows:60px 46px;gap:4px;pointer-events:none}
+#lc-game .lc-stats{position:relative;inset:auto;height:46px;box-sizing:border-box;padding:4px 8px;display:grid;grid-template-columns:repeat(3,1fr);gap:1px 7px;font-size:9px;overflow:hidden}
 #lc-game .lc-stat b{font-size:12px;line-height:1.05}
 #lc-game .lc-shield-stat b{width:55px;grid-template-columns:repeat(5,1fr)}
-#lc-game .lc-wordbox{position:absolute;z-index:2;left:7px;right:7px;top:55px;min-width:0;max-width:none;padding:6px 9px}
-#lc-game .lc-target{font-size:clamp(21px,4vh,31px)}
-#lc-game .lc-meaning{font-size:10px}
-#lc-game .lc-progress{gap:3px}
-#lc-game .lc-slot{width:clamp(19px,5vw,31px);height:24px;font-size:16px}
+#lc-game .lc-wordbox{position:relative;inset:auto;min-width:0;max-width:none;height:60px;box-sizing:border-box;padding:4px 9px;overflow:hidden}
+#lc-game .lc-target{font-size:clamp(18px,3.2vh,24px)}
+#lc-game .lc-meaning{font-size:9px;line-height:1.05}
+#lc-game .lc-progress{gap:3px;margin-top:2px}
+#lc-game .lc-slot{width:clamp(17px,4.6vw,28px);height:18px;font-size:14px}
 #lc-game .lc-actions{position:absolute;z-index:5;top:7px;right:7px;display:flex;gap:4px}
 #lc-game .lc-musicbtn{position:absolute;z-index:5;top:7px;left:7px;width:88px;height:38px;padding:0 7px;border:1px solid rgba(174,246,255,.82);border-radius:10px;background:linear-gradient(#1889a7,#164f7c);box-shadow:0 4px 12px rgba(0,0,0,.28),inset 0 0 10px rgba(91,238,255,.12);color:#fff;font:900 10px Kanit,system-ui,sans-serif;white-space:nowrap;pointer-events:auto;cursor:pointer}
 #lc-game .lc-musicbtn[aria-pressed="false"]{border-color:rgba(255,174,215,.78);background:linear-gradient(#854367,#532d5d);color:#ffe8f5}
@@ -80,8 +81,8 @@
 #lc-game .lc-missilebtn{width:55px;font:900 12px Kanit;background:linear-gradient(#d77724,#8c3140);border-color:#ffd36f}
 #lc-game .lc-missilebtn:disabled{opacity:.4;filter:grayscale(.7);cursor:not-allowed}
 #lc-game .lc-exitwide{min-width:54px;width:54px;padding:0 4px;font-size:11px}
-#lc-game .lc-power{left:7px;bottom:73px;width:145px;padding:6px 8px;font-size:10px}
-#lc-game .lc-hint{position:absolute;z-index:2;top:205px;left:50%;bottom:auto;width:max-content;max-width:calc(100% - 14px);transform:translateX(-50%);padding:4px 8px;font-size:9px;white-space:nowrap}
+#lc-game .lc-power{left:7px;bottom:calc(153px + env(safe-area-inset-bottom));width:145px;padding:6px 8px;font-size:10px}
+#lc-game .lc-hint{position:absolute;z-index:2;top:auto;left:50%;bottom:calc(123px + env(safe-area-inset-bottom));width:max-content;max-width:calc(100% - 14px);transform:translateX(-50%);padding:4px 8px;font-size:9px;white-space:nowrap}
 #lc-game .lc-card{width:min(420px,calc(100vw - 24px));max-height:calc(100vh - 28px);overflow:auto}
 #lc-game .lc-toast{top:34%;width:min(90%,390px);font-size:clamp(18px,4vh,32px)}
-@media(max-width:360px){#lc-game .lc-stats{top:125px}#lc-game .lc-hint{display:none}#lc-game .lc-actions{gap:2px}#lc-game .lc-musicbtn{width:82px;height:35px;padding:0 4px;font-size:9px}#lc-game .lc-iconbtn{width:35px;height:35px}#lc-game .lc-missilebtn{width:49px}#lc-game .lc-exitwide{width:48px;min-width:48px}}
+@media(max-width:360px){#lc-game .lc-hint{display:none}#lc-game .lc-actions{gap:2px}#lc-game .lc-musicbtn{width:82px;height:35px;padding:0 4px;font-size:9px}#lc-game .lc-iconbtn{width:35px;height:35px}#lc-game .lc-missilebtn{width:49px}#lc-game .lc-exitwide{width:48px;min-width:48px}}
