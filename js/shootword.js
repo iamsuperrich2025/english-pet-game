@@ -44,6 +44,11 @@
   ];
   const AZ='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const PASTEL=['#ff8a80','#ffd180','#ffff8d','#ccff90','#80d8ff','#b388ff','#ff80ab','#a7ffeb'];
+  /* เพลงสร้างเมื่อเข้าเกมเท่านั้น; production build จะแทน token ด้วย URL ที่มี content hash
+     เพื่อ stream เท่าที่เล่นและใช้ browser disk cache เดิมข้าม deploy เมื่อไฟล์ไม่เปลี่ยน */
+  const SG_BGM_BUILD_URL='__VW_SG_BGM_URL__';
+  const SG_BGM_URL=SG_BGM_BUILD_URL.startsWith('__VW_')?'sound/shootWord/Fairgame_Fun.mp3':SG_BGM_BUILD_URL;
+  const SG_BGM_VOLUME=.4, SG_BGM_EXIT_FADE_MS=1100;
 
   /* ---------- สถานะเกม ---------- */
   let three=false, built=false, running=false, opening=false;
@@ -59,7 +64,8 @@
   let queue=[], qGrade=null;                   // คิวคำไม่ซ้ำจนหมดคลัง (สูตรเดียวกับ ws)
   let plates=[], ducks=[], balloons=[], clouds=[], bulbs=[], tickers=[];
   let wheelGrp=null, raycaster=null, texCache={};
-  let hudCoins=null, hudRoundCoins=null, hudChip=null, wordBar=null, fxEl=null, hintEl=null, streakEl=null;
+  let hudCoins=null, hudRoundCoins=null, hudChip=null, wordBar=null, fxEl=null, hintEl=null, streakEl=null, sgBgmBtn=null;
+  let sgBgm=null, sgBgmFadeTimer=0, sgBgmFadeToken=0, sgBgmPlayToken=0, sgBgmBlocked=false, sgMusicEnabled=true;
 
   const grade=()=> (typeof state!=='undefined'&&state.student)?state.student.grade:'ป.1';
   const shuffle=a=>{ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
@@ -156,6 +162,82 @@
     },
     fly(){ const c=ac(); if(!c)return; tone(c,c.currentTime,0.16,'sine',620,1400,0.09); },  // ตัวอักษรลอยเข้าช่อง
   };
+
+  /* ============================================================
+     🎵 FAIRGAME FUN — lazy stream + browser disk cache + exit fade
+     ============================================================ */
+  function sgMusicCanPlay(){
+    return sgMusicEnabled && !(typeof state!=='undefined' && state.sound===false);
+  }
+  function sgMusicSyncButton(){
+    if(!sgBgmBtn) return;
+    const masterOff=typeof state!=='undefined' && state.sound===false;
+    sgBgmBtn.setAttribute('aria-pressed',sgMusicEnabled&&!masterOff?'true':'false');
+    sgBgmBtn.classList.toggle('blocked',sgBgmBlocked);
+    sgBgmBtn.textContent=sgBgmBlocked?'⚠️ แตะเปิดเพลง':(sgMusicEnabled&&!masterOff?'🎵 เพลง เปิด':'🔇 เพลง ปิด');
+    sgBgmBtn.title=masterOff?'เสียงหลักของเกมถูกปิดอยู่':'Fairgame Fun — เปิด/ปิดเพลงยิงเป้าคำ';
+  }
+  function sgMusicEnsure(){
+    if(sgBgm) return sgBgm;
+    const a=new Audio();
+    a.preload='metadata';
+    a.loop=true;
+    a.volume=SG_BGM_VOLUME;
+    a.src=SG_BGM_URL;
+    a.addEventListener('error',()=>{ sgBgmBlocked=true; sgMusicSyncButton(); });
+    sgBgm=a;
+    return a;
+  }
+  function sgMusicCancelFade(){
+    sgBgmFadeToken++;
+    if(sgBgmFadeTimer){ clearTimeout(sgBgmFadeTimer); sgBgmFadeTimer=0; }
+  }
+  function sgMusicStart(){
+    sgMusicCancelFade();
+    sgBgmBlocked=false;
+    sgMusicSyncButton();
+    if(!sgMusicCanPlay()) return Promise.resolve(false);
+    const a=sgMusicEnsure(), token=++sgBgmPlayToken;
+    a.volume=SG_BGM_VOLUME;
+    const p=a.play();
+    if(!p || !p.then) return Promise.resolve(true);
+    return p.then(()=>{
+      if(token!==sgBgmPlayToken || !running){ a.pause(); return false; }
+      sgBgmBlocked=false; sgMusicSyncButton(); return true;
+    }).catch(()=>{
+      if(token===sgBgmPlayToken){ sgBgmBlocked=true; sgMusicSyncButton(); }
+      return false;
+    });
+  }
+  function sgMusicStop(fadeMs=0,reset=false,done){
+    sgMusicCancelFade();
+    sgBgmPlayToken++;
+    const a=sgBgm;
+    const finish=()=>{
+      if(a){ a.pause(); a.volume=SG_BGM_VOLUME; if(reset){ try{ a.currentTime=0; }catch(_e){} } }
+      sgBgmFadeTimer=0;
+      if(done) done();
+    };
+    if(!a || a.paused || fadeMs<=0){ finish(); return; }
+    const startAt=performance.now(), startVol=a.volume, fadeToken=++sgBgmFadeToken;
+    const step=()=>{
+      if(fadeToken!==sgBgmFadeToken) return;
+      const k=Math.min(1,(performance.now()-startAt)/fadeMs);
+      a.volume=Math.max(0,startVol*(1-k));
+      if(k>=1) finish(); else sgBgmFadeTimer=setTimeout(step,40);
+    };
+    step();
+  }
+  function sgMusicToggle(){
+    sgMusicEnabled=sgBgmBlocked?true:!sgMusicEnabled;
+    sgBgmBlocked=false;
+    sgMusicSyncButton();
+    if(sgMusicEnabled) sgMusicStart(); else sgMusicStop(320,false);
+  }
+  function sgMusicVisibilityChange(){
+    if(document.hidden) sgMusicStop(0,false);
+    else if(running) sgMusicStart();
+  }
 
   /* ============================================================
      🖼️ Canvas textures — ทุกลายวาดเอง (ธีมสวนสนุกพาสเทล)
@@ -750,6 +832,12 @@
 #sg-chip{pointer-events:auto;cursor:pointer;color:#fff6c8}
 #sg-exit{position:absolute;top:1vh;right:1vh;background:linear-gradient(180deg,#ff849b,#ed4d72);color:#fff;border:3px solid #fff0c8;
   border-radius:999px;padding:.55vh 14px;font:800 clamp(11px,2.8vh,15px) Kanit,system-ui;cursor:pointer;box-shadow:0 3px 0 #b83259,0 5px 12px rgba(126,37,78,.25)}
+#sg-music{position:absolute;top:clamp(54px,13vh,82px);right:1vh;z-index:6;min-width:clamp(106px,18vh,132px);min-height:clamp(34px,7vh,42px);
+  border:3px solid #fff0c8;border-radius:999px;padding:.62vh 12px;color:#fff;cursor:pointer;
+  background:linear-gradient(180deg,#36c9a1,#168a78);box-shadow:0 3px 0 #096554,0 5px 12px rgba(19,87,78,.28);
+  font:800 clamp(11px,2.65vh,15px) Kanit,system-ui;white-space:nowrap}
+#sg-music[aria-pressed="false"]{background:linear-gradient(180deg,#8f83b5,#655985);box-shadow:0 3px 0 #4b4169,0 5px 12px rgba(49,40,76,.28)}
+#sg-music.blocked{background:linear-gradient(180deg,#ffb64c,#e87d25);box-shadow:0 3px 0 #a95517,0 5px 12px rgba(114,63,24,.3)}
 /* 🔫 รอบ 923: ปุ่มยิงเฉพาะ 2 ตำแหน่งซ้าย-ขวาล่างจอ (ผู้ใช้ขอ — เดิมมีแค่แตะจอสั้นๆ = ยิง)
    ยิงตรงกึ่งกลางจอเสมอ (จุดเดียวกับรูศูนย์เล็ง) · ต่อมารอบ 926: ผู้ใช้ส่งภาพวงกลม 1/2 — ย้ายขึ้นมากลางจอ
    (เดิมชิดขอบล่างสุด) top:40% translateY กึ่งกลางแนวตั้ง เว้นระยะพ้นปุ่ม 🎯 เล็งด้านล่าง · โปร่งใส 50% (.85→.5) */
@@ -834,6 +922,7 @@
         <div id="sg-word"></div>
         <div id="sg-tl"><b id="sg-coins"></b><b id="sg-round-coins" aria-live="polite"></b><span id="sg-chip" class="sga-open" role="button" title="ดูอันดับ Top 10 / รางวัลรายเดือน"></span></div>
         <button id="sg-exit" type="button">✕ ออก</button>
+        <button id="sg-music" type="button" aria-pressed="true" title="Fairgame Fun — เปิด/ปิดเพลงยิงเป้าคำ">🎵 เพลง เปิด</button>
         <button id="sg-shoot-l" class="sg-shoot" type="button"><span class="ic">⭐</span>ยิง</button>
         <button id="sg-shoot-r" class="sg-shoot" type="button"><span class="ic">⭐</span>ยิง</button>
         <div id="sg-streak"></div>
@@ -849,7 +938,11 @@
     fxEl=overlay.querySelector('#sg-fx');
     hintEl=overlay.querySelector('#sg-hint');
     streakEl=overlay.querySelector('#sg-streak');
+    sgBgmBtn=overlay.querySelector('#sg-music');
+    sgMusicSyncButton();
     overlay.querySelector('#sg-exit').addEventListener('click', close);
+    sgBgmBtn.addEventListener('click', sgMusicToggle);
+    document.addEventListener('visibilitychange', sgMusicVisibilityChange);
     bindShootBtns();
     /* 🏆 กดแต้ม → กระดานประกาศรางวัล (ผูกเองแบบ typing.js — เผื่อยังไม่เคยเปิดกระดานอันดับ) */
     hudChip.addEventListener('click', ()=>{ if(typeof SgAward!=='undefined') SgAward.open(); });
@@ -1119,6 +1212,8 @@
       }
       overlay.style.display='block';
       running=true; lastT=performance.now();
+      if(typeof Music!=='undefined'&&Music.suspendBg) Music.suspendBg();
+      sgMusicStart();
       requestAnimationFrame(loop);
       renderWordBar(); renderTopHud();
       showIntro();
@@ -1133,6 +1228,9 @@
   }
   function close(){
     running=false;
+    sgMusicStop(SG_BGM_EXIT_FADE_MS,true,()=>{
+      if(!running&&typeof Music!=='undefined'&&Music.resumeBg) Music.resumeBg();
+    });
     if(overlay) overlay.style.display='none';
     if(typeof saveState==='function') saveState();
     try{ if(AC && AC.state==='running') AC.suspend(); }catch(e){}
@@ -1160,6 +1258,9 @@
     step(dt){ tick(dt||0.016); if(renderer)renderer.render(scene,camera); },
     shoot, hitPlate, hitDuck, nextWord, dealBoard, ensureRemainingLetters, pool, takeWord,
     setView(y,p){ yaw=y; pitch=p; },
-    TUNE, ROWS, PT_PER_LETTER, PERFECT_BONUS, DUCK_COIN, COOLDOWN,
+    sgMusicStart, sgMusicStop, sgMusicToggle,
+    getMusicState:()=>({url:SG_BGM_URL,preload:sgBgm?sgBgm.preload:null,loop:sgBgm?sgBgm.loop:null,
+      paused:sgBgm?sgBgm.paused:true,volume:sgBgm?sgBgm.volume:0,enabled:sgMusicEnabled,blocked:sgBgmBlocked}),
+    TUNE, ROWS, PT_PER_LETTER, PERFECT_BONUS, DUCK_COIN, COOLDOWN, SG_BGM_VOLUME, SG_BGM_EXIT_FADE_MS,
   }};
 })();

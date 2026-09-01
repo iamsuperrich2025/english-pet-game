@@ -12,6 +12,10 @@
 > ผู้ใช้เริ่มใช้ Codex ช่วยงานคู่ขนานกับ session Claude (4 ส.ค. 2026 เหตุ: Claude ติด rate limit) — Codex ไม่เห็น `img/`/`sound/` (ไม่อยู่ใน git) และ **deploy Firebase เองไม่ได้** ต้องรอผู้ใช้รันบนเครื่องเอง
 - **10 ส.ค. 2026 — รอบ 1096 Account deletion ผ่าน production แล้ว:** Rules ใหม่ publish/ตรวจสดตรง source และบัญชีทดสอบ `parkerhulk2020@gmail.com` ถูกลบสำเร็จ; รอ COMMIT_DEPLOY ส่ง client fix ที่ตัดพาธ reaction ว่างขึ้นเว็บ
 
+- **รอบ 1340 · ShootWord เพลง Fairgame Fun แบบ lazy Range/cache:** เข้าเกมจึงสร้าง Audio `preload=metadata` เล่นวน มีปุ่มเพลงมุมขวาบนแยกจาก Exit และออกเกมเฟด 1.1 วินาทีก่อน pause+rewind/คืนเพลง Lobby
+- ปุ่มเปิด–ปิดสี/ข้อความ/ARIA ชัดและ touch target 42px/34px; Chrome QA source+dist ที่ 1365×610/812×375 ยืนยัน HUD overlap 0, toggle ใช้ Audio/request เดิม และ fade ลดเสียงก่อนหยุด
+- build ฉีด hashed URL `Fairgame_Fun.503ec17b85a7e6c3.mp3` โดยไม่ใส่ SW precache; Range test ได้ 206/1,024 bytes จาก 1,833,726 bytes พร้อม immutable disk cache
+- แก้ `js/shootword.js`, `tools/build_web.mjs`, เพิ่ม `tools/test_shootword_bgm.js` + เพลง; syntax/ShootWord regressions/production build/PWA/cache/TWA validator ผ่าน
 - **รอบ 1339 · โลกฟุตบอล Match-day + Stadium Celebration:** เปลี่ยนท้องฟ้าเมฆ/อัฒจันทร์คนดูเต็มสนาม/ไฟส่อง/ป้าย/สีหญ้า/มุมกล้องให้ใกล้ภาพต้นแบบ โดย runtime ใช้ AVIF จริง 10-bit (sky 27KB + crowd 498KB) ไม่มี PNG ใหม่
 - เพลง `sound/football/Stadium_Celebration.mp3` เริ่มหลังแตะลงสนามเท่านั้น วนซ้ำ มีปุ่มเปิด–ปิดชัดเจน และออกโลกเฟด 1.1 วินาทีแล้ว pause+rewind ก่อนคืนเพลง Lobby
 - ประหยัดข้อมูลด้วย `preload=metadata` + HTTP Range + hashed immutable URL/disk cache; ทดสอบขอ 1KB ได้ 206/1,024 bytes จาก 4,123,363 bytes และ toggle ใช้ Audio/request เดิม
