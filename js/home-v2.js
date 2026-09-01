@@ -812,6 +812,45 @@
       if(name === 'music') setTimeout(syncMusicState, 0);
     }
   }
+  /* Mobile portrait keeps the centre pet scene clear: move the complete New
+     Word control and the seven-card wallet into one reserved lower dock.
+     Comment anchors restore the exact desktop DOM order after rotation. */
+  function setupPortraitLowerHud(){
+    if(!root || root.dataset.vw2LowerHudReady === '1') return;
+    const shell = root.querySelector('.vw2-shell');
+    const bottom = root.querySelector('.vw2-bottom');
+    const wallet = root.querySelector('.vw2-wallet');
+    const word = root.querySelector('.vw2-word-ribbon');
+    if(!shell || !bottom || !wallet || !word) return;
+    root.dataset.vw2LowerHudReady = '1';
+    const walletAnchor = document.createComment('vw2-wallet-home');
+    const wordAnchor = document.createComment('vw2-word-home');
+    wallet.parentNode.insertBefore(walletAnchor, wallet);
+    word.parentNode.insertBefore(wordAnchor, word);
+    const dock = document.createElement('section');
+    dock.className = 'vw2-lower-hud';
+    dock.setAttribute('aria-label','คำศัพท์ใหม่และข้อมูลผู้เล่น');
+    shell.insertBefore(dock, bottom);
+    const query = window.matchMedia('(orientation: portrait) and (max-width: 700px)');
+    const sync = ()=>{
+      const compact = query.matches;
+      root.classList.toggle('vw2-portrait-lower-hud', compact);
+      if(compact){
+        dock.append(word, wallet);
+      }else{
+        if(wordAnchor.parentNode) wordAnchor.parentNode.insertBefore(word, wordAnchor.nextSibling);
+        if(walletAnchor.parentNode) walletAnchor.parentNode.insertBefore(wallet, walletAnchor.nextSibling);
+      }
+      requestAnimationFrame(()=>{
+        updateWalletScrollState();
+        updateBottomRailScrollState();
+        scheduleLocalPreviewReport();
+      });
+    };
+    if(typeof query.addEventListener === 'function') query.addEventListener('change', sync);
+    else if(typeof query.addListener === 'function') query.addListener(sync);
+    sync();
+  }
   function updateLeftRailCue(){
     if(!root) return;
     const rail = root.querySelector('.vw2-left');
@@ -1224,6 +1263,7 @@
     // Classic dashboard's translated/scaled screen container.
     document.body.appendChild(root);
     bindVisiblePetPat();
+    setupPortraitLowerHud();
     setupLeftRailCue();
     setupWalletScroll();
     setupBottomRailScroll();

@@ -12,6 +12,11 @@
 > ผู้ใช้เริ่มใช้ Codex ช่วยงานคู่ขนานกับ session Claude (4 ส.ค. 2026 เหตุ: Claude ติด rate limit) — Codex ไม่เห็น `img/`/`sound/` (ไม่อยู่ใน git) และ **deploy Firebase เองไม่ได้** ต้องรอผู้ใช้รันบนเครื่องเอง
 - **10 ส.ค. 2026 — รอบ 1096 Account deletion ผ่าน production แล้ว:** Rules ใหม่ publish/ตรวจสดตรง source และบัญชีทดสอบ `parkerhulk2020@gmail.com` ถูกลบสำเร็จ; รอ COMMIT_DEPLOY ส่ง client fix ที่ตัดพาธ reaction ว่างขึ้นเว็บ
 
+- **รอบ 1341 · Home V2 portrait lower HUD:** ย้าย New Word + wallet 7 ใบจากด้านบนลง dock สองแถวเหนือ Bottom Rail เฉพาะจอแนวตั้ง ≤700px; หมุนแนวนอนแล้วคืน DOM เดิมอัตโนมัติ
+- จอง shell row แยกให้ dock/Bottom Rail จึงไม่ทับกัน, แถบสถิติยังปัดแนวนอนและเปิดมาเห็น 3 ใบ; บีบ top controls เป็นไอคอนกะทัดรัด
+- แก้ `js/home-v2.js`, `css/home-v2.css`, `tools/test_home_v2_mobile_preview.js`; syntax/regression/production build `.1207`/PWA-cache-TWA validator/diff ผ่าน
+- Visual Browser QA ถูก Windows ACL (`apply deny-read ACLs`) บล็อก; geometry contract ยืนยัน row 47+4+50px อยู่ใน dock 101px และ Bottom Rail อยู่ row ถัดไป
+
 - **รอบ 1340 · ShootWord เพลง Fairgame Fun แบบ lazy Range/cache:** เข้าเกมจึงสร้าง Audio `preload=metadata` เล่นวน มีปุ่มเพลงมุมขวาบนแยกจาก Exit และออกเกมเฟด 1.1 วินาทีก่อน pause+rewind/คืนเพลง Lobby
 - ปุ่มเปิด–ปิดสี/ข้อความ/ARIA ชัดและ touch target 42px/34px; Chrome QA source+dist ที่ 1365×610/812×375 ยืนยัน HUD overlap 0, toggle ใช้ Audio/request เดิม และ fade ลดเสียงก่อนหยุด
 - build ฉีด hashed URL `Fairgame_Fun.503ec17b85a7e6c3.mp3` โดยไม่ใส่ SW precache; Range test ได้ 206/1,024 bytes จาก 1,833,726 bytes พร้อม immutable disk cache

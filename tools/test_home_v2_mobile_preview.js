@@ -367,6 +367,13 @@ must(home.includes("minReadableFontPx:") && home.includes("importantValueClipped
 must(home.includes("width <= 700 || height <= 390") && home.includes("width <= 850 || height <= 430") && home.includes("width <= 960 || height <= 500") && home.includes("width <= 1180 || height <= 600"), "R20 device profile width/height coverage missing");
 must(css.includes("overflow:hidden") && css.includes("overscroll-behavior:contain"), "page/rail overflow containment missing");
 
+/* R42 relocates the marked upper HUD into reserved portrait rows. */
+must(home.includes("function setupPortraitLowerHud()") && home.includes("document.createComment('vw2-wallet-home')") && home.includes("document.createComment('vw2-word-home')"), "R42 reversible portrait HUD relocation missing");
+must(home.includes("shell.insertBefore(dock, bottom)") && home.includes("dock.append(word, wallet)") && home.includes("setupPortraitLowerHud();"), "R42 lower HUD dock lifecycle is not mounted before rail setup");
+must(css.includes("R42 — PORTRAIT LOWER HUD DOCK") && css.includes("(orientation:portrait) and (max-width:700px)"), "R42 portrait-only styling guard missing");
+must(css.includes("grid-template-rows:clamp(68px,11.5vh,78px) minmax(0,1fr) 101px clamp(44px,7.5vh,50px)") && css.includes("grid-template-rows:47px 50px"), "R42 shell/dock rows do not reserve non-overlapping vertical space");
+must(css.includes(".vw2-lower-hud>.vw2-word-ribbon") && css.includes(".vw2-lower-hud>.vw2-wallet") && css.includes(".vw2-bottom{grid-row:4!important"), "R42 word/wallet/activity rail row separation missing");
+
 /* Transient notification safety. */
 must(home.includes("document.body.classList.toggle('vw2-home-active', showV2)") && home.includes("if(root) root.hidden = !showV2"), "Home V2 body-scope/root visibility guard missing");
 must(css.includes('body.vw2-home-active .toast') && css.includes('bottom:auto'), "compact safe-zone toast presentation missing");
