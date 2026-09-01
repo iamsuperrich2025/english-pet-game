@@ -18,6 +18,10 @@
 - ย้ายแผงคำศัพท์/สถานะจาก `top:55/132px` ลง dock ล่างสูง 110px แยก 60px + 46px มี gap 4px; ปุ่มเพลง/เสียง/Missile/พัก/ออกยังอยู่ด้านบน
 - ขยับ AUTO FIRE และแถบกระสุนขึ้นเหนือ dock ไม่ให้ UI ทับกัน; เพิ่ม geometry regression และผ่าน `test_letter_cannon`, Home V2 regression, syntax และ production build
 - การตรวจภาพผ่าน in-app browser ถูก Windows sandbox ปฏิเสธก่อนเปิดหน้า จึงยังต้องยืนยันภาพบนเครื่องจริงหลัง deploy
+- **รอบ 1343 · Dragon Sky Siege HUD auditor hotfix:** ตามคำสั่งล่าสุดคืนเฉพาะคำเป้าหมาย+คำแปล+ช่องตัวอักษรไว้ด้านบน และคงสถานะ 6 ช่องไว้ด้านล่าง
+- ต้นเหตุภาพแหว่ง/คำหายคือ inherited grid row ชนกัน + fixed 46/60px พร้อม overflow hidden; เปลี่ยนสถานะเป็น auto height/ไม่ตัด และคำแปลยาวขึ้นบรรทัดได้
+- ResizeObserver วัดความสูงสถานะจริงเพื่อยก AUTO FIRE/แถบกระสุนให้พ้นอัตโนมัติ; ยกชั้นเกมเหนือปุ่ม Frontline admin ซึ่งไม่ควรลอยทับเกมอื่น
+- `test_letter_cannon`, syntax, Home V2 regression, production build และ source/dist contract ผ่าน; Browser/Computer Use visual QA ยังถูก Windows ACL บล็อก ต้องยืนยันภาพจริงหลัง deploy
 
 
 - **รอบ 1340 · ShootWord เพลง Fairgame Fun แบบ lazy Range/cache:** เข้าเกมจึงสร้าง Audio `preload=metadata` เล่นวน มีปุ่มเพลงมุมขวาบนแยกจาก Exit และออกเกมเฟด 1.1 วินาทีก่อน pause+rewind/คืนเพลง Lobby
