@@ -1,10 +1,10 @@
 {
   "schema_version": 4,
   "project": "english-pet-game",
-  "structure_signature": "6076c3aa94d0d79cae78163c057d5f3e27456f4ce50f41485f8cf15aea5cdc84",
-  "structure_entry_count": 2828,
+  "structure_signature": "3b8fa7ba5e9eeb527c09bf08ba83aae62985b8ec34f2ee3cdd1136292284f5b3",
+  "structure_entry_count": 2833,
   "generated_by": "VW Dev Studio Local Token Saver",
-  "generated_at": "2026-08-31T15:36:30",
+  "generated_at": "2026-09-01T17:58:36",
   "generation_mode": "local_no_ai_no_api",
   "areas": {
     "main_world": [
@@ -49,6 +49,7 @@
     "mother_ship": [
       "ship.bat",
       "handoff/SHIP.round1060.codex-backup.txt",
+      "handoff/SHIP.txt",
       "tools/ship.sh",
       "tools/ship_entry.sh"
     ],
@@ -79,6 +80,7 @@
       "PROMPTS_CARS.md",
       "PROMPTS_CARS_INTERIOR.md",
       "tools/retint_car.py",
+      "tools/test_f1_race_bgm.js",
       ".claude/worktrees/busy-robinson-b9aaa3/PROMPTS_CAR.md",
       ".claude/worktrees/busy-robinson-b9aaa3/PROMPTS_CARS.md",
       ".claude/worktrees/busy-robinson-b9aaa3/PROMPTS_CARS_INTERIOR.md",
