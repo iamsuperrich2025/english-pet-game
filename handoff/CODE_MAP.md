@@ -474,7 +474,7 @@ gradeChangeTo:64 · gradeLockNote:91 · openGradeChange:100
 
 ## js/hauntedhotelsession.js (255 บรรทัด · 0 รายการ)
 
-## js/home-v2.js (2,097 บรรทัด · 0 รายการ)
+## js/home-v2.js (2,137 บรรทัด · 0 รายการ)
 
 ## js/hotel3d.js (1,526 บรรทัด · 62 รายการ)
 ### 🗂️ สารบัญโซน js/hotel3d.js (Read/Edit เฉพาะช่วง)
@@ -1081,7 +1081,7 @@ vbRender:148 · vbCardHTML:194
 .fl44-controls:46 · .fl44-stick:49,52,55 · .fl44-knob:58 · .fl44-aim-knob:61 · .fl44-fire:64 · .fl44-input-diag:67
 .fl44-toast:70 · .fl44-loading:73 · #btn-rail-frontline1944:76,79
 
-## css/home-v2.css (2,479 บรรทัด · 136 selector)
+## css/home-v2.css (2,533 บรรทัด · 137 selector)
 :root:9,2467 · #screen-dashboard:36,46 · #vw-home-v2-root:48,49,59,60(+112) · .vw2-screen-frame:81 · .vw2-sky:82,83,92,99(+1) · .vw2-shell:102,107,589
 .vw2-glass:111 · .vw2-top:124,639,786,975(+2) · .vw2-profile:129,143,147,289(+3) · .vw2-kanok-corner:148 · .vw2-profile-crown:149 · .vw2-profile-kicker:150,151
 .vw2-avatar-frame:152,157,295,296(+1) · .vw2-avatar:158,159,1972,1976(+3) · .vw2-avatar-edit:160,2029 · .vw2-profile-main:161,1891 · .vw2-name-row:162,163,1892 · .vw2-pencil:164
@@ -1104,7 +1104,7 @@ vbRender:148 · vbCardHTML:194
 .vw2-pet-modal:1437,1438 · .vw2-pet-modal-panel:1439,1440,1501 · .vw2-pet-modal-head:1441,1442,1445,1446(+3) · .vw2-pet-modal-emblem:1443,1444 · .vw2-pet-modal-close:1449,1450,1465 · .vw2-pet-modal-list:1451,1452
 .vw2-owned-pet-card:1453,1454,1455,1462 · .vw2-owned-pet-thumb:1456,1457,1458 · .vw2-owned-pet-copy:1459,1460,1461 · .vw2-pet-modal-empty:1463 · .vw2-pet-modal-foot:1464 · .vw2-pet-modal-healbar:1503
 .vw2-heal-all:1504,1505,1506,1511(+3) · .vw2-heal-all-icon:1507 · .vw2-heal-all-copy:1508,1509,1510 · .vw2-adventure-hub:1537,1543,1544,1545(+22) · .vw2-adventure-landmark:1551,1555,1556,1623(+1) · .vw2-adventure-copy:1557,1558,1559,1628(+2)
-.vw2-adventure-menu:1563,1564,1574,1575(+15) · .vw2-adventure-menu-panel:1565,1566,1567,1568(+8) · .vw2-adventure-menu-scroll:1571,1572 · .vw2-adventure-menu-track:1573,1644
+.vw2-adventure-menu:1563,1564,1574,1575(+15) · .vw2-adventure-menu-panel:1565,1566,1567,1568(+8) · .vw2-adventure-menu-scroll:1571,1572 · .vw2-adventure-menu-track:1573,1644 · .vw2-lower-hud:2485
 
 ## css/lettercannon.css (87 บรรทัด · 30 selector)
 #lc-game:6,7,13,14(+28) · .lc-hud:8 · .lc-glass:9 · .lc-stats:10 · .lc-stat:11,12 · .lc-coin-stat:15
