@@ -58,6 +58,7 @@ const TOKEN_F1_ENGINE = /__VW_F1_ENGINE_URL__/g;
 
 const TOKEN_F1_RACE_BGM = /__VW_F1_RACE_BGM_URL__/g;
 const TOKEN_LC_BGM = /__VW_LC_BGM_URL__/g;
+const TOKEN_SOCCER_BGM = /__VW_SOCCER_BGM_URL__/g;
 
 const F1_COCKPIT_ASSETS = ['red', 'blue', 'green', 'yellow', 'orange'].flatMap((color) =>
 
@@ -155,6 +156,7 @@ async function sourceFiles() {
 
       'js/lettercannon.js', 'css/lettercannon.css', 'sound/letter_cannon/Wordflight_Beyond_the_Stars.mp3',
       'img/letter_cannon/letter_cannon_bg1.avif', 'img/letter_cannon/letter_cannon_bg2.avif', 'img/letter_cannon/letter_cannon_bg3.avif',
+      'sound/football/Stadium_Celebration.mp3', 'img/sky/sky_soccer_day.avif', 'img/tex/soccer_crowd_matchday.avif',
       'js/skyplay3d.js', 'css/skyplay3d.css',
 
       'img/characters/sky_soft_cuboid_chibi_8dir.webp',
@@ -663,6 +665,13 @@ async function main() {
   const lcFile = path.join(OUT, 'js/lettercannon.js');
   const lcText = await fs.readFile(lcFile, 'utf8');
   await fs.writeFile(lcFile, lcText.replace(TOKEN_LC_BGM, lcBgmUrl));
+
+  /* โลกฟุตบอลสร้าง Audio หลังผู้ใช้กดลงสนามเท่านั้น และอ้าง URL content hash
+     เพื่อให้ browser disk cache ใช้ไฟล์ 4 MB เดิมซ้ำข้าม deploy โดยไม่บังคับเข้า SW precache */
+  const soccerBgmUrl = await makeImmutableAlias('sound/football/Stadium_Celebration.mp3');
+  const adventureFile = path.join(OUT, 'js/adventure3d.js');
+  const adventureText = await fs.readFile(adventureFile, 'utf8');
+  await fs.writeFile(adventureFile, adventureText.replace(TOKEN_SOCCER_BGM, soccerBgmUrl));
 
 
 

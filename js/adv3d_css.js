@@ -1008,6 +1008,10 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
     .adv-soccer #adv-spinpad{top:60px}
     .adv-soccer #adv-joy{width:84px;height:84px;bottom:8px}
     .adv-soccer #adv-joy-dot{width:34px;height:34px}
+    .adv-soccer #adv-words{bottom:18px;padding:3px 8px;border-radius:11px}
+    .adv-soccer #adv-words .adv-fword{gap:3px}
+    .adv-soccer #adv-words .adv-fch{font-size:13px;min-width:14px;padding:1px 3px;border-radius:5px;line-height:1.25}
+    .adv-soccer #adv-words .adv-fth{font-size:10px;margin-top:1px;line-height:1.2}
   }
   /* 🌀 รอบ 400: ป้ายความโค้ง — ลอยเหนือปุ่มเตะ (โผล่เฉพาะตอนตั้งโค้งไว้) */
   #adv-curl{position:absolute;display:none;right:22px;bottom:120px;width:88px;z-index:6;pointer-events:none;
@@ -1037,6 +1041,18 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
   .adv-soccer #adv-aura{display:block}
   #adv-aura.on{background:rgba(0,150,210,.9);color:#fff;border-color:#bdeeff;
     box-shadow:0 0 12px rgba(90,220,255,.7)}
+  /* 🎵 รอบ 1339: ต่อท้ายคอลัมน์โหมดฟุตบอล — พ้นปุ่มพลังด้านบนและปุ่มเตะด้านล่างที่ 812×375 */
+  #adv-soccer-music{position:absolute;display:none;top:208px;right:8px;z-index:6;pointer-events:auto;
+    min-width:112px;padding:6px 10px;border:1px solid rgba(155,240,255,.85);border-radius:10px;
+    background:linear-gradient(180deg,rgba(19,145,174,.94),rgba(10,73,112,.94));color:#fff;
+    box-shadow:0 4px 12px rgba(0,0,0,.35),inset 0 0 10px rgba(120,240,255,.14);
+    font:800 12px system-ui;white-space:nowrap;cursor:pointer}
+  .adv-soccer #adv-soccer-music{display:block}
+  #adv-soccer-music[aria-pressed="false"]{color:#d9e0e7;border-color:rgba(210,220,230,.45);
+    background:linear-gradient(180deg,rgba(55,65,74,.94),rgba(15,23,31,.94))}
+  #adv-soccer-music.blocked{color:#fff3b0;border-color:#ffe275;
+    background:linear-gradient(180deg,rgba(175,109,31,.95),rgba(112,55,40,.95))}
+  #adv-soccer-music:active{transform:translateY(2px)}
   #adv-aurabar{position:absolute;display:none;top:34px;left:50%;transform:translateX(-50%);z-index:6;
     width:190px;height:17px;border-radius:9px;pointer-events:none;overflow:hidden;
     background:rgba(4,26,38,.72);border:1px solid rgba(120,220,255,.6)}
@@ -1046,7 +1062,19 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
   #adv-aurabar .ab-txt{position:absolute;inset:0;text-align:center;line-height:17px;
     color:#eaffff;font:800 11px system-ui;text-shadow:0 1px 2px #000}
   /* ⚠️ media query ของปุ่มพลังต้องอยู่ "หลัง" การประกาศด้านบน ไม่งั้นโดน top เขียนทับ (specificity เท่ากัน = ตัวหลังชนะ) */
-  @media (max-height:400px){ #adv-aura{padding:4px 8px;font-size:11px} }
+  @media (max-height:400px){
+    #adv-aura{padding:4px 8px;font-size:11px}
+    #adv-soccer-music{top:207px;min-width:104px;padding:5px 8px;font-size:10.5px}
+  }
+  /* รอบ 1339 visual gate: จออ้างอิง ~608×283 มีปุ่มเตะสูงถึง y=257 — ย้ายเพลงไปช่องซ้ายของแถบพลัง ไม่ซ้อนวงเตะ */
+  @media (max-height:330px){
+    #adv-aura{top:168px;right:170px}
+    #adv-soccer-music{top:auto;right:152px;bottom:26px;min-width:84px;padding:5px 6px;font-size:10px}
+  }
+  @media (max-height:290px){
+    .adv-soccer #adv-joy{width:56px;height:56px;bottom:8px}
+    .adv-soccer #adv-joy-dot{width:24px;height:24px}
+  }
   /* 🧹 รอบ 851 (ผู้ใช้ส่งภาพปุ่มทับกันมั่ว): จัดฝั่งขวาโลกฟุตบอลใหม่ทั้งชุด
      เดิม exit(118)/แชท(160)/ไมค์(202..282) ตำแหน่ง global ทับ จุดโทษ(100)/ฟรีคิก(138)/พลัง(176) + แถบชาร์จกลางขวา
      ใหม่: แถวบน = ปุ่มระบบ (ออก/?/แชท/ไมค์/ลำโพง/ทุกคน) แบบเดียวกับโลกขับรถ · คอลัมน์ขวา = ปุ่มโหมดฟุตบอลล้วน
