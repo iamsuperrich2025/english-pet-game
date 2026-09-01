@@ -12,6 +12,11 @@
 > ผู้ใช้เริ่มใช้ Codex ช่วยงานคู่ขนานกับ session Claude (4 ส.ค. 2026 เหตุ: Claude ติด rate limit) — Codex ไม่เห็น `img/`/`sound/` (ไม่อยู่ใน git) และ **deploy Firebase เองไม่ได้** ต้องรอผู้ใช้รันบนเครื่องเอง
 - **10 ส.ค. 2026 — รอบ 1096 Account deletion ผ่าน production แล้ว:** Rules ใหม่ publish/ตรวจสดตรง source และบัญชีทดสอบ `parkerhulk2020@gmail.com` ถูกลบสำเร็จ; รอ COMMIT_DEPLOY ส่ง client fix ที่ตัดพาธ reaction ว่างขึ้นเว็บ
 
+- **รอบ 1339 · โลกฟุตบอล Match-day + Stadium Celebration:** เปลี่ยนท้องฟ้าเมฆ/อัฒจันทร์คนดูเต็มสนาม/ไฟส่อง/ป้าย/สีหญ้า/มุมกล้องให้ใกล้ภาพต้นแบบ โดย runtime ใช้ AVIF จริง 10-bit (sky 27KB + crowd 498KB) ไม่มี PNG ใหม่
+- เพลง `sound/football/Stadium_Celebration.mp3` เริ่มหลังแตะลงสนามเท่านั้น วนซ้ำ มีปุ่มเปิด–ปิดชัดเจน และออกโลกเฟด 1.1 วินาทีแล้ว pause+rewind ก่อนคืนเพลง Lobby
+- ประหยัดข้อมูลด้วย `preload=metadata` + HTTP Range + hashed immutable URL/disk cache; ทดสอบขอ 1KB ได้ 206/1,024 bytes จาก 4,123,363 bytes และ toggle ใช้ Audio/request เดิม
+- Visual QA ด้วยตา source+dist แบบ touch ที่ 1365×610 / 812×375 / 608×283: ภาพได้สัดส่วนต้นแบบ, asset 200/206, HUD overlap 0; soccer regression + syntax/diff + production build/PWA/cache/TWA validator ผ่าน
+
 - **รอบ 1336 · Letter Cannon เพลง + seamless sky:** เพิ่ม Beyond the Stars แบบ lazy stream/loop ใช้ content-hash disk cache ปุ่มเพลงมุมซ้าย และ fade 1.1 วินาทีก่อนคืนเพลง Lobby
 - ฉากเกาะลอยฟ้า 3 ภาพ pan/cross-fade A→B→C→A ไม่มีขอบ tile; ทยอยโหลด 1→2→3 หลังเข้าเกม และใช้ AVIF 10-bit 200,441 bytes แทน PNG 5,282,145 bytes (ลด 96.21%)
 - แก้ `js/lettercannon.js`, `css/lettercannon.css`, `tools/build_web.mjs` + regression; syntax/เกม/เสียง/geometry/AVIF และ production build/PWA/cache/TWA validator ผ่าน

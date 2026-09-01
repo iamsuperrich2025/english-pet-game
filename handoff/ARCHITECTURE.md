@@ -44,12 +44,12 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 
 
 <!-- AUTO-FILES:BEGIN -->
-### 🤖 ไฟล์ไหนทำอะไร — เจนอัตโนมัติจาก comment หัวไฟล์ (`tools/gen_code_map.py` · **ห้ามแก้มือในบล็อกนี้**) · อัปเดต 2026-08-31
+### 🤖 ไฟล์ไหนทำอะไร — เจนอัตโนมัติจาก comment หัวไฟล์ (`tools/gen_code_map.py` · **ห้ามแก้มือในบล็อกนี้**) · อัปเดต 2026-09-01
 - **js/account-deletion.js** (235 บรรทัด) — Account deletion — protected, re-authenticated, multi-path cleanup · Destructive writes begin only after typed confirmation + recent Google auth.
-- **js/adv3d_css.js** (1,272 บรรทัด) — adv3d_css.js — CSS ของ DOM overlay โลก 3D ทุกโหมด (adv/haunt/heli/drone/ · drive/soccer/mecha) — 🪓 รอบ 544 เฟส 1: ผ่าออกจาก js/adventure3d.js · ไฟล์นี้เป็น "ข้อมูลล้วน" ห้ามมี logic — ประกาศ window.ADV3D_CSS อย่างเดียว
+- **js/adv3d_css.js** (1,300 บรรทัด) — adv3d_css.js — CSS ของ DOM overlay โลก 3D ทุกโหมด (adv/haunt/heli/drone/ · drive/soccer/mecha) — 🪓 รอบ 544 เฟส 1: ผ่าออกจาก js/adventure3d.js · ไฟล์นี้เป็น "ข้อมูลล้วน" ห้ามมี logic — ประกาศ window.ADV3D_CSS อย่างเดียว
 - **js/adv3d_intro.js** (86 บรรทัด) — ❓ ADV3D_INTRO — data การ์ด "วิธีเล่น" ทุกโลก (ผ่าจาก js/adventure3d.js เฟส 2 รอบ 545) · data ล้วน ไม่มี logic · โหลดผ่าน loadAdv3d() ใน js/ui.js ก่อนไฟล์หลักเสมอ
 - **js/adv3d_tex.js** (250 บรรทัด) — adv3d_tex.js — 🪓 เฟส 3 (รอบ 546): ผ่าจาก js/adventure3d.js โซน "Texture ตัวอักษร / emoji / ป้ายชื่อผู้เล่น (canvas → sprite)" · IIFE จบในตัว expose window.Adv3dTex — ไฟล์หลักคง alias ชื่อเดิม จุดเรียกทั้งไฟล์ไม่ต้องแก้ · โหลดก่อนไฟล์หลักใน loadAdv3d() (js/ui.js) · deps ตอนรัน: THREE (global) · ค่าจาก closure ไฟล์หลัก inject ผ่าน Adv3dTex.bind({adRenterActive…
-- **js/adventure3d.js** (13,402 บรรทัด) — adventure3d.js — โลก 3D First-person 2 โหมด (คิว 7725691507 ข้อ 8 + ต่อยอด) · 🌍 adv   = โลกผจญภัยกลางวัน: เก็บตัวอักษรประกอบคำ 15🪙/คำ · monster ยิงสู้ได้ · 👻 haunt = โรงแรมผีสิง: 25🪙/คำ · ผี PNG ไล่ผู้เล่นใกล้สุดหลังไฟดับ
+- **js/adventure3d.js** (13,506 บรรทัด) — adventure3d.js — โลก 3D First-person 2 โหมด (คิว 7725691507 ข้อ 8 + ต่อยอด) · 🌍 adv   = โลกผจญภัยกลางวัน: เก็บตัวอักษรประกอบคำ 15🪙/คำ · monster ยิงสู้ได้ · 👻 haunt = โรงแรมผีสิง: 25🪙/คำ · ผี PNG ไล่ผู้เล่นใกล้สุดหลังไฟดับ
 - **js/app-update.js** (214 บรรทัด) — (ไม่มี comment หัวไฟล์)
 - **js/arena3d.js** (724 บรรทัด) — 🌀🔤 รอบ 1045 — VOCAB ARENA · โลกผจญภัย PvE มุมกล้อง MOBA-inspired ที่ออกแบบใหม่สำหรับ Vocab World · - ไม่ใช้แผนที่/ฮีโร่/ไอคอน/เอฟเฟกต์/เสียงจากเกมอื่น
 - **js/assetaward.js** (21 บรรทัด) — 🏆 รางวัลรายเดือน Top 10 กระดานมูลค่าทรัพย์สินรวม — ใช้โรงงานกลางใน award.js
@@ -98,7 +98,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/pmaward.js** (28 บรรทัด) — 🏆 pmaward.js — รางวัลรายเดือนของกระดานอันดับ 🖼️ จับคู่ภาพ (รอบ 979) · ผู้ใช้สั่ง 3 ส.ค. 2026: ทำแท็บ+รางวัลรายเดือน Top 10 ให้เกมจับคู่ภาพ · ใช้กติกา/โครงเดียวกับ 🔎 ค้นหาคำ (js/wsaward.js) ทุกประการ — ต่างแค่ field/ชื่อเกม
 - **js/rankgraph.js** (147 บรรทัด) — 📈 กราฟอันดับ Top 30 — โหลด snapshot เมื่อเปิดเท่านั้น · แต่ละหมวดใช้สีประจำตัวไม่ซ้ำ และชื่อผู้เล่นติดอยู่กับทุกจุด
 - **js/sgaward.js** (28 บรรทัด) — 🏆 sgaward.js — รางวัลรายเดือนของกระดานอันดับ 🎯 ยิงเป้าคำศัพท์ (รอบ 917) · ผู้ใช้สั่ง 2 ส.ค. 2026: "เก็บคะแนนให้หน้าอันดับ มีเงินรางวัล 10,000 - 1,000 · เหมือนกับเกมค้นหาคำ" → ใช้โรงงานกลาง makeMonthAward (js/award.js) ตัวเดียวกัน
-- **js/shootword.js** (1,165 บรรทัด) — 🎯 shootword.js — เกม "ยิงเป้าคำศัพท์" (Carnival Word Shooting) รอบ 917 · ผู้ใช้สั่ง 2 ส.ค. 2026 (อนุมัติทำเป็นโลก 3D เต็มรูปแบบ): · ① โลก 3D มุมมองบุคคลที่หนึ่ง — ยืนในซุ้มยิงปืนของสวนสนุก สีสันสดใสน่ารัก
+- **js/shootword.js** (1,266 บรรทัด) — 🎯 shootword.js — เกม "ยิงเป้าคำศัพท์" (Carnival Word Shooting) รอบ 917 · ผู้ใช้สั่ง 2 ส.ค. 2026 (อนุมัติทำเป็นโลก 3D เต็มรูปแบบ): · ① โลก 3D มุมมองบุคคลที่หนึ่ง — ยืนในซุ้มยิงปืนของสวนสนุก สีสันสดใสน่ารัก
 - **js/skyplay3d.js** (640 บรรทัด) — ☁️📚 รอบ 1235 — VOCAB SKY PLAYGROUND · PHASE 5 · Bright Fantasy Social World + Obby ของ Vocab World · - standalone Three.js engine: ไม่แตะ Adventure World / Invasion
 - **js/state.js** (1,386 บรรทัด) — STATE + LocalStorage + กติกากลางของเกม · (แยกจากไฟล์ data — อัปเกรดคำศัพท์/สัตว์/ไอเทมได้โดยไม่กระทบเซฟ)
 - **js/thaitime.js** (52 บรรทัด) — 🇹🇭 js/thaitime.js — "เวลาไทย" กลางของทั้งเกม (รอบ 988) · ปัญหาที่แก้: ทุกจุดในเกมอ่านเวลาจาก `new Date().getHours()` = **นาฬิกาของเครื่องผู้เล่น · เครื่องที่ตั้งไทม์โซนเป็นต่างประเทศ (หรือ tablet/PC ที่ตั้งเวลาไม่ตรง) จะได้ชั่วโมงผิด
@@ -129,6 +129,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/style.css** (2,430 บรรทัด) — Pet Vocab Adventure — สไตล์พื้นฐานรุ่นแรกทั้งเกม (โดน lobby.css โหลดทับบางส่วน — แก้หน้าตาโซนล็อบบี้/UI ใหม่ให้ไปที่ lobby.css ก่อน) · ครอบคลุม: screens/login/dashboard · เกมจับคู่ .word-card + แบบทดสอบ .quiz-* · shop/ที่พัก/หมวดคำศัพท์ · หิว-ป่วย/สภาพอากาศ · ตั้งค่า/วิธีเล่น/level-up overlay · คลังของฉัน/กล่องขาย · เอฟเฟกต์ลอย/เหรียญ/rotate-overlay
 - **sw.js** (281 บรรทัด) — Vocab World service worker · Delivery contract: · - HTML navigations are network-first with the last valid shell as fallback.
 <!-- AUTO-FILES:END -->
+
 
 
 
