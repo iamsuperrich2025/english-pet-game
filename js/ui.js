@@ -5454,7 +5454,7 @@ function renderDashboard(){
       ${p.sick ? `<div class="sick-banner">🤒 <b>${escapeHTML(p.name)}ป่วยแล้ว!</b> ${sickCauseText}<br>ตอนป่วยจะไม่ได้ EXP และใช้ความสามารถพิเศษไม่ได้<br>พาไปหาหมอเพื่อรักษาให้หายก่อนนะ</div>` : ''}
       ${sleepHintHTML(p, now)}
       <div class="care-row">
-        <button class="care-btn btn-feed" id="btn-feed" ${(p.sick || p.sleeping)?'disabled':''}>🍽️ ให้อาหาร</button>
+        <button class="care-btn btn-feed btn-feed-all" id="btn-feed">🍽️ ให้อาหารสัตว์ทุกตัวที่เลี้ยงอยู่</button>
         ${sleepBtnHTML(p, now)}
         ${p.sick ? `<button class="care-btn btn-cure" id="btn-cure">💊 รักษา 🪙${fmtNum(CURE_COST)}</button>` : ''}
       </div>
@@ -5751,157 +5751,202 @@ function wakeAllPets(){
 /* ============================================================
    ให้อาหาร (ระบบมื้อเย็น 18:00 + ความอิ่มสะสม — ข้อ 2+3)
    ============================================================ */
+/* ============================================================
+   🐾🍽️ แผงให้อาหารสัตว์ทุกตัวในคราวเดียว — รอบ 1345
+   เห็นสัตว์ที่เลี้ยงครบ เลือกเมนูรายตัว แล้วหัก stock ทั้งชุดแบบ atomic
+   ============================================================ */
 function feedPet(){
-  const p = activePet();
-  if(!p) return;
-  if(p.sick){ alertBox('<div class="ab-emoji">🤒</div><div class="ab-title" style="color:#b23a48">น้องป่วยอยู่นะ</div><div class="ab-desc">กินไม่ลงเลย... ต้องพาไป <b>รักษา</b> ก่อน น้องถึงจะหายแล้วกลับมากินได้ 🩺</div>', 'ไว้ก่อน',
-      {text:`🩺 รักษาเลย (🪙${fmtNum(CURE_COST)})`, onClick:curePet}); return; }
-  if(p.sleeping){ sfx.wrong(); toast('😴 น้องหลับอยู่ อย่าเพิ่งปลุกมากินข้าวเลยนะ'); return; }
-  const canEat = petCanEat(p);          // 🍽️ รอบ 1008: ดูหลอดความอิ่มจริง ไม่ใช่ petHungry อย่างเดียว
-  const canFeast = p.fedUpTo < nextSlotStart(Date.now());
-  if(!canEat && !canFeast){
-    sfx.select(); toast('😋 น้องอิ่มแปล้ถึงมื้อหน้าแล้ว ไว้ค่อยกินใหม่นะ'); return;
-  }
-  const shelf = state.petPantry && state.petPantry.shelfId;
-  const stockTotal = state.petPantry && state.petPantry.stock
-    ? Object.values(state.petPantry.stock).reduce((sum,n)=>sum+Math.max(0,Number(n)||0),0) : 0;
-  if(!shelf){
-    alertBox('<div class="ab-emoji">🗄️</div><div class="ab-title">ยังไม่มีชั้นเก็บอาหาร</div><div class="ab-desc">ซื้อชั้นเปล่าก่อน แล้วค่อยขับรถพาน้องไปซื้ออาหารมาตุนไว้นะ</div>', 'ไว้ก่อน',
-      {text:'เลือกซื้อชั้น', onClick:()=>PetPantry.openPantry()});
-    return;
-  }
-  if(stockTotal <= 0){
-    alertBox('<div class="ab-emoji">🥫</div><div class="ab-title">ชั้นยังว่างอยู่</div><div class="ab-desc">ให้อาหารไม่ได้จนกว่าจะมีอาหารบนชั้น — พาน้องนั่งรถไปเลือกซื้อของมาตุนกัน!</div>', 'ไว้ก่อน',
-      {text:'🚗 ออกไปซื้ออาหาร', onClick:()=>enterPetShopping3D('food')});
-    return;
-  }
+  const p=activePet();
+  if(!p || !Array.isArray(state.pets) || !state.pets.length) return;
   openFoodMenu(p);
 }
 
-function openFoodMenu(p){
-  /* 🚫 รอบ 952: กันทุกทางเข้า — น้องป่วยอยู่ห้ามเปิดเมนูซื้ออาหาร */
-  if(p.sick){ sfx.wrong(); toast(hungerSickMsg('ของกิน') || '🤒 น้องป่วยอยู่ ต้องรักษาก่อนถึงจะซื้อของกินได้นะ'); return; }
+function feedFoodsForPet(p){
+  const favId=`fav_${p.type}`;
+  const fav=Object.assign({id:favId,stockId:favId},PETS[p.type].favFood);
+  return [fav,...FOODS.map(f=>Object.assign({stockId:f.id},f))];
+}
+function feedFoodById(p,id){ return feedFoodsForPet(p).find(f=>f.id===id)||null; }
+function feedFoodCanUse(p,food,now=Date.now()){
+  if(!p || !food || p.sick || p.sleeping) return false;
+  if(petCanEat(p)) return true;
+  return !!food.skipNext && p.fedUpTo < nextSlotStart(now);
+}
+function feedPetBlockText(p,now=Date.now()){
+  if(p.sick) return '🤒 ต้องรักษาก่อน';
+  if(p.sleeping) return '💤 กำลังหลับ';
+  if(petCanEat(p)) return '';
+  if(p.fedUpTo < nextSlotStart(now)) return '🍱 เลือกได้เฉพาะชุดข้ามมื้อ';
+  return `😋 อิ่มถึง ${mealLabel(nextSlotStart(now))}`;
+}
+function feedPetThumbHTML(p){
+  const src=typeof currentPetImg==='function'?currentPetImg(p):null;
+  const stage=petStage(p),fallback=(PETS[p.type]&&PETS[p.type][stage])||'🐾';
+  return src?`<img src="${src}" alt="${escapeHTML(p.name)}" loading="lazy" decoding="async">`:`<span class="feed-all-pet-fallback">${fallback}</span>`;
+}
+
+function openFoodMenu(seedPet){
+  if(!Array.isArray(state.pets) || !state.pets.length) return;
   sfx.select();
-  /* 🍽️ รอบ 1008: กินอาหารธรรมดาได้ไหม = หลอดความอิ่มของมื้อนี้ยังไม่เต็ม (petCanEat)
-     ของเดิมใช้ petHungry ซึ่งเป็น false ตลอดตอน level 1 → ทั้งเมนูล็อก เหลือแต่ชุด 1,000
-     ถ้าล็อกจริง (อิ่มเต็มหลอดแล้ว) ต้องบอกบนการ์ดทุกใบว่าล็อกเพราะอะไร + กินได้อีกทีเมื่อไหร่ (กฎทองข้อ 1) */
-  const canEat = petCanEat(p);
-  const nowTs = Date.now();
-  const nextMeal = p.fedUpTo > currentSlotStart(nowTs) ? nextSlotStart(nowTs) + SLOT_MS : nextSlotStart(nowTs);
-  const favId = `fav_${p.type}`;
-  const fav = Object.assign({id:favId, stockId:favId}, PETS[p.type].favFood);
-  /* ข้อ 5.1: แยกเมนู 2 ชุด — ชุดอาหารสัตว์ (fav+ปลอดภัย) กับชุดอาหารคน (บางอย่างเป็นโทษ) */
-  const petFoods = [fav, ...FOODS.filter(f=>!f.human).map(f=>Object.assign({stockId:f.id},f))];
-  const humanFoods = FOODS.filter(f=>f.human).map(f=>Object.assign({stockId:f.id},f));
-  const menuFoods = [...petFoods, ...humanFoods];
-  const itemHTML = f=>{
-    const qty = (typeof PetPantry !== 'undefined') ? PetPantry.qty(f.stockId||f.id) : 0;
-    const usable = (canEat || f.skipNext) && qty > 0;
-    const bad = foodBadFor(f, p.type);
-    /* 🔒 รอบ 1033: ป้ายล็อกเดิมอยู่หัวการ์ดใบเดียว พอเมนูเลื่อนแล้วหลุดจอ
-       → ผู้เล่นเห็นแค่ "ปลา 300 กดได้ แต่แอปเปิ้ล 150 เทา" นึกว่าเกมบังคับซื้อของแพง
-       เลยย้ำเหตุผล+เวลากินได้อีกทีไว้ท้ายการ์ดทุกใบ และติดป้ายให้ใบที่กดได้จริงด้วย */
-    return `
-        <div class="food-item ${f.exp ? 'food-fav' : ''} ${f.special ? 'food-special' : ''} ${bad ? 'food-bad' : ''} ${!usable ? 'food-locked' : ''} ${qty<=0 ? 'food-out' : ''}" data-food="${f.id}">
-          ${qty<=0 ? `<span class="fd-lock">ชั้นว่าง</span>` : (!usable ? `<span class="fd-lock">🔒 อิ่มแล้ว</span>` : '')}
-          ${f.exp ? `<span class="fav-tag">💖 เมนูโปรดของ${escapeHTML(p.name)}!</span>` : ''}
-          ${bad ? `<span class="bad-tag">⚠️ เป็นโทษกับน้อง!</span>` : ''}
-          <span class="fd-emoji">${f.emoji}</span>
-          <span class="fd-en">${f.en}</span>
-          <span class="fd-name">${f.name}</span>
-          <span class="fd-info">บนชั้น ×${qty} · อิ่ม +${f.fill}</span>
-          ${f.exp ? `<span class="fd-exp">✨ ได้ EXP แถม +${f.exp}!</span>` : ''}
-          ${f.skipNext ? `<span class="fd-exp">⏳ เต็มหลอดทันที + ตุนข้ามมื้อพรุ่งนี้!</span>` : ''}
-          ${qty<=0 ? `<span class="fd-lock-when">🚗 หมดแล้ว — ไปซื้อมาเติมชั้นก่อน</span>`
-                   : usable ? (canEat ? '' : `<span class="fd-nowok">✅ กินตุนล่วงหน้าได้</span>`)
-                   : `<span class="fd-lock-when">🔒 น้องอิ่มเต็มหลอด — กินได้อีกทีตอน ${mealLabel(nextMeal)}</span>`}
-          ${bad ? `<span class="fd-toxin">☠️ พิษสะสม +${f.toxin}</span>`
-                : f.human ? `<span class="fd-safe">✅ ${p.type==='dragon' ? 'มังกรกินได้' : 'น้องกินได้'}</span>` : ''}
-        </div>`;
+  const pets=state.pets;
+  let selectedIndex=Math.max(0,pets.indexOf(seedPet));
+  let plan=Object.create(null),notice='';
+  const overlay=document.createElement('div');
+  overlay.className='levelup-overlay feed-all-overlay';
+
+  const stockQty=food=>typeof PetPantry!=='undefined'?PetPantry.qty(food.stockId||food.id):0;
+  const reserved=(stockId,except=-1)=>Object.keys(plan).reduce((n,key)=>{
+    const i=Number(key),food=feedFoodById(pets[i],plan[key]);
+    return n+(i!==except&&food&&(food.stockId||food.id)===stockId?1:0);
+  },0);
+  const shelfInfo=()=>{
+    const shelf=typeof PetPantry!=='undefined'&&typeof PET_PANTRY_SHELVES!=='undefined'
+      ? PET_PANTRY_SHELVES.find(x=>x.id===(state.petPantry&&state.petPantry.shelfId)):null;
+    return {shelf,used:typeof PetPantry!=='undefined'?PetPantry.total():0,cap:shelf?shelf.capacity:0};
   };
-  /* 📊 รอบ 1009: หลอดความอิ่มจริงบนหัวเมนู (เดิมมีแต่ตัวเลข X/100 อ่านยากกว่ากราฟ) — ใช้คลาส hunger-bar/hunger-fill ชุดเดียวกับแดชบอร์ด */
-  const fullPct = Math.min(100, p.fullness||0);
-  const overlay = document.createElement('div');
-  overlay.className = 'levelup-overlay';
-  overlay.innerHTML = `<div class="levelup-box food-box">
-    <!-- ❌ รอบ 1034: ปุ่มปิดด้านบน (ติดหนึบตอนเลื่อน) — เดิมมีแต่ปุ่ม "ไว้ก่อน" ล่างสุด ต้องเลื่อนหาทุกครั้ง -->
-    <button class="food-x" aria-label="ปิดเมนูอาหาร" title="ปิด">✕</button>
-    <h2>🍽️ เลือกเมนูให้น้องกิน</h2>
-    <div class="hunger-bar food-hunger-bar"><div class="hunger-fill ${canEat ? '' : 'buffed'}" style="width:${fullPct}%"></div></div>
-    ${canEat
-      ? `<p style="margin:4px 0;font-size:13.5px;color:#9a8aac">ความอิ่มตอนนี้ <b>${fullPct}/${MEAL_FULL}</b> — เลือกกินหลายอย่างให้เต็มหลอดนะ</p>`
-      : `<p style="margin:4px 0;font-size:13.5px;color:#9a8aac">น้องอิ่มเต็มหลอดแล้ว (<b>${MEAL_FULL}/${MEAL_FULL}</b>) — เมนูอื่นจะกดได้อีกทีตอน <b>${mealLabel(nextMeal)}</b><br>ตอนนี้มีแต่ 🍱 ชุดอาหารวิเศษที่กินตุนล่วงหน้าได้ (ไม่จำเป็นต้องซื้อ รอมื้อหน้าก็ได้นะ)</p>`}
-    <div class="food-grid">
-      <div class="food-sec">🐾 ชุดอาหารสัตว์ (ปลอดภัย)</div>
-      ${petFoods.map(itemHTML).join('')}
-      <div class="food-sec food-sec-human">🧑 ชุดอาหารคน — ⚠️ บางอย่างเป็นโทษกับสัตว์</div>
-      ${humanFoods.map(itemHTML).join('')}
-    </div>
-    <button class="food-cancel">ไว้ก่อน</button>
-  </div>`;
-  overlay.querySelector('.food-cancel').addEventListener('click', ()=>overlay.remove());
-  overlay.querySelector('.food-x').addEventListener('click', ()=>{ sfx.select(); overlay.remove(); });
-  overlay.querySelectorAll('.food-item').forEach(el=>{
-    el.addEventListener('click', ()=>{
-      const food = menuFoods.find(f=>f.id===el.dataset.food);
-      if((typeof PetPantry === 'undefined') || PetPantry.qty(food.stockId||food.id) <= 0){
-        sfx.wrong();
-        toast('🥫 อาหารชนิดนี้หมดจากชั้นแล้ว — ขับรถไปซื้อมาเติมก่อนนะ');
-        return;
+  const goShop=()=>{
+    const info=shelfInfo(); overlay.remove();
+    if(!info.shelf && typeof PetPantry!=='undefined') PetPantry.openPantry();
+    else enterPetShopping3D('food');
+  };
+  const autoPlan=()=>{
+    plan=Object.create(null);
+    const left=Object.create(null),now=Date.now();
+    pets.forEach((p,i)=>{
+      const candidates=feedFoodsForPet(p).filter(f=>!f.human&&!foodBadFor(f,p.type)&&feedFoodCanUse(p,f,now));
+      for(const food of candidates){
+        const sid=food.stockId||food.id;
+        if(left[sid]===undefined) left[sid]=stockQty(food);
+        if(left[sid]>0){ plan[i]=food.id;left[sid]--;break; }
       }
-      if(!canEat && !food.skipNext){
-        sfx.wrong(); toast(`😊 น้องอิ่มเต็มหลอดแล้ว เมนูนี้กินได้อีกทีตอน ${mealLabel(nextMeal)}`); return;
-      }
-      overlay.remove();
-      /* ข้อ 5.1: อาหารโทษ → ป๊อปอัพเตือนก่อน กดรับทราบแล้วถึงป้อนได้ (กินอิ่มจริงแต่พิษสะสม) */
-      if(foodBadFor(food, p.type)){
-        const toxAfter = Math.min(TOXIN_FULL, (p.toxin||0) + (food.toxin||0));
-        sfx.wrong();
-        askConfirm(`<div style="font-size:56px;line-height:1">${food.emoji}⚠️</div>
-          <div style="font-size:20px;font-weight:bold;margin-top:8px;color:#b23a48">${food.name}เป็นโทษกับ${escapeHTML(p.name)}นะ!</div>
-          <div style="margin-top:8px;color:#6a5a78;line-height:1.5">${escapeHTML(foodWhy(food, p.type))}<br><br>
-          กินแล้วอิ่มได้ (+${food.fill}) แต่ <b style="color:#7a3ab0">พิษจะสะสม +${food.toxin}</b><br>
-          บาร์พิษ: <b>${p.toxin||0} → ${toxAfter}/${TOXIN_FULL}</b>${toxAfter >= TOXIN_FULL ? ' — <b style="color:#b23a48">เต็มแล้วน้องจะป่วยทันที!</b>' : ''}<br>
-          <small>พิษไม่ลดเอง ต้องจ่ายค่าขับพิษ 🪙${fmtNum(DETOX_COST)}</small></div>`,
-          'เข้าใจแล้ว ให้กินเลย', ()=>feedWith(p, food));
-        return;
-      }
-      feedWith(p, food);
     });
-  });
-  document.body.appendChild(overlay);
+  };
+
+  const render=()=>{
+    if(!overlay.isConnected && document.body.contains(overlay)===false && overlay.dataset.mounted==='1') return;
+    const now=Date.now(),info=shelfInfo(),selectedPet=pets[selectedIndex]||pets[0];
+    if(!selectedPet){overlay.remove();return;}
+    const petCards=pets.map((p,i)=>{
+      const food=plan[i]?feedFoodById(p,plan[i]):null;
+      const blocked=feedPetBlockText(p,now);
+      const status=blocked||(food?food.name:'ยังไม่เลือกเมนู');
+      const full=Math.min(MEAL_FULL,Math.max(0,p.fullness||0));
+      return `<button class="feed-all-pet ${i===selectedIndex?'selected':''} ${blocked?'blocked':''}" data-pet-index="${i}" title="${escapeHTML(status)}">
+        <span class="feed-all-pet-art">${feedPetThumbHTML(p)}${food?foodSpriteHTML(food,'feed-all-plan-art'):''}</span>
+        <b>${escapeHTML(p.name)}</b><small>${full}% · ${escapeHTML(status)}</small>
+      </button>`;
+    }).join('');
+    const foods=feedFoodsForPet(selectedPet);
+    const foodCards=foods.map(food=>{
+      const sid=food.stockId||food.id,qty=stockQty(food),other=reserved(sid,selectedIndex);
+      const selected=plan[selectedIndex]===food.id;
+      const canUse=feedFoodCanUse(selectedPet,food,now);
+      const bad=foodBadFor(food,selectedPet.type);
+      const noFree=!selected&&qty-other<=0;
+      const disabled=!canUse||noFree;
+      const badge=bad?'⚠️ เป็นโทษ':food.safeNote?(food.id==='chicken'?'✅ ไร้กระดูก':'✅ ไม่ใช่กระดูกไก่'):food.exp?'💖 เมนูโปรด':food.skipNext?'⏳ ข้ามมื้อ':food.human?'🧑 อาหารคน':'🐾 ปลอดภัย';
+      const stockText=qty<=0?'🚗 หมด — ไปซื้อ':noFree?'⏳ จองให้ตัวอื่นแล้ว':`บนชั้น ×${qty}`;
+      return `<button class="feed-all-food ${selected?'selected':''} ${bad?'bad':''} ${disabled?'disabled':''} ${qty<=0?'out':''}" data-food="${food.id}" title="${escapeHTML(food.safeNote||foodWhy(food,selectedPet.type)||food.name)}">
+        <span class="feed-all-food-stock">${stockText}</span>${foodSpriteHTML(food,'feed-all-food-art')}
+        <span class="feed-all-food-copy"><b>${escapeHTML(food.en)}</b><small>${escapeHTML(food.name)}</small></span>
+        <span class="feed-all-food-badge">${badge}</span><span class="feed-all-food-fill">อิ่ม +${food.fill}</span>
+        ${food.safeNote?`<span class="feed-all-food-note">${escapeHTML(food.safeNote)}</span>`:''}
+      </button>`;
+    }).join('');
+    const planCount=Object.keys(plan).filter(key=>{
+      const i=Number(key),food=feedFoodById(pets[i],plan[key]);return food&&feedFoodCanUse(pets[i],food,now);
+    }).length;
+    const selectedFull=Math.min(MEAL_FULL,Math.max(0,selectedPet.fullness||0));
+    const selectedBlock=feedPetBlockText(selectedPet,now);
+    const summary=notice||(planCount?`พร้อมให้อาหาร ${planCount}/${pets.length} ตัว — ตัวที่ป่วย หลับ หรืออิ่มแล้วจะไม่ถูกหักอาหาร`:'แตะรูปสัตว์ แล้วเลือกอาหารให้แต่ละตัว หรือใช้เมนูอัตโนมัติ');
+    overlay.innerHTML=`<section class="feed-all-box" role="dialog" aria-modal="true" aria-label="ให้อาหารสัตว์ทุกตัว">
+      <header class="feed-all-head"><div><h2>🍽️ ให้อาหารสัตว์ทุกตัวที่เลี้ยงอยู่</h2><p>เลือกเมนูรายตัว แล้วกดให้อาหารพร้อมกันครั้งเดียว</p></div>
+        <span class="feed-all-shelf">🗄️ ${info.shelf?`${escapeHTML(info.shelf.name)} ${info.used}/${info.cap} ช่อง`:'ยังไม่มีชั้นเก็บอาหาร'}</span>
+        <button class="feed-all-close" aria-label="ปิด">✕</button></header>
+      <div class="feed-all-pets" style="--pet-count:${Math.max(1,pets.length)}">${petCards}</div>
+      <div class="feed-all-menu">
+        <div class="feed-all-selected-head"><span><b>เลือกเมนูให้ ${escapeHTML(selectedPet.name)}</b><small>${selectedBlock||`ความอิ่ม ${selectedFull}/${MEAL_FULL}`}</small></span>
+          <span class="feed-all-mini-bar"><i style="width:${selectedFull}%"></i></span></div>
+        <div class="feed-all-foods">${foodCards}</div>
+      </div>
+      <footer class="feed-all-actions"><button class="feed-all-auto">✨ จัดเมนูปลอดภัยอัตโนมัติ</button><span class="feed-all-summary">${escapeHTML(summary)}</span>
+        <button class="feed-all-shop">${info.shelf?'🚗 ซื้ออาหารเติมชั้น':'🗄️ เลือกซื้อชั้น'}</button>
+        <button class="feed-all-confirm" ${planCount?'':'disabled'}>🍽️ ให้อาหารพร้อมกัน ${planCount} ตัว</button></footer>
+    </section>`;
+    overlay.querySelector('.feed-all-close').addEventListener('click',()=>{sfx.select();overlay.remove();});
+    overlay.querySelectorAll('[data-pet-index]').forEach(btn=>btn.addEventListener('click',()=>{selectedIndex=Number(btn.dataset.petIndex);notice='';render();}));
+    overlay.querySelectorAll('[data-food]').forEach(btn=>btn.addEventListener('click',()=>{
+      const p=pets[selectedIndex],food=feedFoodById(p,btn.dataset.food),qty=food?stockQty(food):0;
+      if(!food)return;
+      if(plan[selectedIndex]===food.id){delete plan[selectedIndex];notice='';render();return;}
+      if(qty<=0){sfx.select();goShop();return;}
+      const blocked=feedPetBlockText(p,Date.now());
+      if(!feedFoodCanUse(p,food)){sfx.wrong();toast(blocked||'เมนูนี้ยังกินไม่ได้ในตอนนี้');return;}
+      if(qty-reserved(food.stockId||food.id,selectedIndex)<=0){sfx.wrong();toast('อาหารชนิดนี้ถูกจัดให้สัตว์ตัวอื่นครบตามจำนวนบนชั้นแล้ว');return;}
+      const choose=()=>{plan[selectedIndex]=food.id;notice='';render();};
+      if(foodBadFor(food,p.type)){
+        sfx.wrong();askConfirm(`<div style="font-size:48px">${food.emoji}⚠️</div><b>${escapeHTML(food.name)}เป็นโทษกับ${escapeHTML(p.name)}</b><br><small>${escapeHTML(foodWhy(food,p.type))} · พิษ +${food.toxin||0}</small>`,'เลือกเมนูนี้',choose);
+      }else choose();
+    }));
+    overlay.querySelector('.feed-all-auto').addEventListener('click',()=>{autoPlan();notice='จัดเมนูปลอดภัยจากของที่มีบนชั้นให้แล้ว';render();});
+    overlay.querySelector('.feed-all-shop').addEventListener('click',goShop);
+    const confirm=overlay.querySelector('.feed-all-confirm');
+    confirm.addEventListener('click',()=>{
+      const rows=Object.keys(plan).sort((a,b)=>Number(a)-Number(b)).map(key=>{
+        const i=Number(key);return {p:pets[i],food:feedFoodById(pets[i],plan[key])};
+      }).filter(row=>row.p&&row.food&&feedFoodCanUse(row.p,row.food));
+      if(!rows.length){sfx.wrong();notice='ยังไม่มีสัตว์ที่พร้อมกินและมีเมนูที่เลือก';render();return;}
+      if(typeof PetPantry==='undefined'||typeof PetPantry.takeMany!=='function'||!PetPantry.takeMany(rows.map(row=>({food:row.food})))){
+        sfx.wrong();autoPlan();notice='จำนวนอาหารบนชั้นเปลี่ยนไป จัดเมนูใหม่ให้แล้วโดยยังไม่ได้ป้อนตัวใด';render();return;
+      }
+      let full=0,toxic=0,shapeChanged=0;
+      rows.forEach(row=>{
+        const result=applyFoodToPet(row.p,row.food,Date.now());
+        if(result.full){full++;questEvent('feed');}
+        if(result.bad)toxic++;
+        if(result.shapeChange)shapeChanged++;
+        if(row.food.exp)addExp(row.food.exp,row.p);
+      });
+      sfx.buy();saveState();makeHappy(4000);
+      notice=`✅ ให้อาหารพร้อมกัน ${rows.length} ตัวแล้ว${full?` · อิ่มเต็ม ${full} ตัว`:''}${toxic?` · มีอาหารเป็นโทษ ${toxic} ตัว`:''}${shapeChanged?` · รูปร่างเปลี่ยน ${shapeChanged} ตัว`:''}`;
+      autoPlan();render();heartsFx(overlay.querySelector('.feed-all-pets'),Math.min(16,rows.length*2));
+    });
+  };
+
+  autoPlan();render();overlay.dataset.mounted='1';document.body.appendChild(overlay);
+  overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove();});
+}
+
+function applyFoodToPet(p,food,now=Date.now()){
+  p.mealSlot=currentSlotStart(now);
+  if(food.skipNext){p.fullness=MEAL_FULL;p.fedUpTo=nextSlotStart(now);}
+  else{
+    p.fullness=Math.min(MEAL_FULL,(p.fullness||0)+(food.fill||0));
+    if(p.fullness>=MEAL_FULL&&p.fedUpTo<currentSlotStart(now))p.fedUpTo=currentSlotStart(now);
+  }
+  const bad=foodBadFor(food,p.type);
+  if(bad){
+    p.toxin=Math.min(TOXIN_FULL,(p.toxin||0)+(food.toxin||0));
+    if(p.toxin>=TOXIN_FULL&&!p.sick){p.sick=true;p.sickCause='toxin';sfx.siren();}
+    p.mealJunk=true;
+  }
+  const shapeChange=p.fullness>=MEAL_FULL?shapeMealDone(p,now):null;
+  return {shapeChange,full:p.fullness>=MEAL_FULL,bad,toxinSick:p.sick&&p.sickCause==='toxin'};
 }
 
 function feedWith(p, food){
-  const now = Date.now();
   if(typeof PetPantry === 'undefined' || !PetPantry.take(food.stockId||food.id, 1)){
     sfx.wrong();
     toast('🥫 อาหารชิ้นนี้หมดจากชั้นแล้ว — ยังไม่ได้ให้น้องกินนะ');
     return;
   }
-  // ข้อ 3: สะสมความอิ่ม — ครบ 100 ถึงนับว่าอิ่มมื้อนี้ (feast เต็มหลอด + ตุนข้ามมื้อพรุ่งนี้)
-  p.mealSlot = currentSlotStart(now);
-  if(food.skipNext){
-    p.fullness = MEAL_FULL;
-    p.fedUpTo = nextSlotStart(now);
-  }else{
-    p.fullness = Math.min(MEAL_FULL, (p.fullness||0) + (food.fill||0));
-    if(p.fullness >= MEAL_FULL && p.fedUpTo < currentSlotStart(now)) p.fedUpTo = currentSlotStart(now);
-  }
-  /* ข้อ 5.1: อาหารโทษ → พิษสะสม (ไม่ลดเอง) ครบ 100 → ป่วยทันที cause 'toxin' */
-  if(foodBadFor(food, p.type)){
-    p.toxin = Math.min(TOXIN_FULL, (p.toxin||0) + (food.toxin||0));
-    if(p.toxin >= TOXIN_FULL && !p.sick){ p.sick = true; p.sickCause = 'toxin'; sfx.siren(); }   // 🚨 ล้มป่วยคามือ
-    p.mealJunk = true;                 // ข้อ 5.2: มื้อนี้มีอาหารโทษปน
-  }
-  /* ข้อ 5.2: กินจนเต็มหลอด = จบมื้อ → นับมื้อสะอาด/มื้อโทษ อัปเดตรูปร่าง */
-  const shapeChange = p.fullness >= MEAL_FULL ? shapeMealDone(p, now) : null;
-  if(p.fullness >= MEAL_FULL) questEvent('feed');   // 🎯 Daily Quest: ป้อนน้องจนอิ่มเต็มหลอด
+  const result=applyFoodToPet(p,food,Date.now());
+  if(result.full) questEvent('feed');
   sfx.buy();
-  if(food.exp) addExp(food.exp, p);   // เมนูโปรด: ได้ EXP แถม (อาจเลเวลอัพได้เลย)
+  if(food.exp) addExp(food.exp, p);
   saveState();
   makeHappy(4000);
-  showFeedResult(p, food, shapeChange);
+  showFeedResult(p, food, result.shapeChange);
 }
 
 /* ตัวละครผู้เลี้ยง (ข้อ 4): มีภาพ player_male/female.png ใช้ภาพ ไม่มีใช้อีโมจิแทน

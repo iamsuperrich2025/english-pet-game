@@ -58,6 +58,22 @@ const PetPantry = (()=>{
     const left=have-amount; if(left)p.stock[sid]=left; else delete p.stock[sid];
     if(target===state)saveState(); return true;
   }
+  /* หักหลาย SKU แบบ atomic: เช็กยอดรวมครบก่อน จึงไม่มีกรณีสัตว์ชุดแรกได้กินแต่ชุดท้ายอดเพราะ stock หมดกลางทาง */
+  function takeMany(entries,target=state){
+    const need={};
+    for(const entry of Array.isArray(entries)?entries:[]){
+      const item=entry&&entry.food!==undefined?entry.food:entry;
+      const amount=cleanInt(entry&&entry.amount!==undefined?entry.amount:1);
+      const sid=stockId(item,entry&&entry.type);
+      if(!sid||amount<1)return false;
+      need[sid]=(need[sid]||0)+amount;
+    }
+    const ids=Object.keys(need); if(!ids.length)return false;
+    if(ids.some(sid=>qty(sid,null,target)<need[sid]))return false;
+    const p=ensureState(target);
+    ids.forEach(sid=>{const left=qty(sid,null,target)-need[sid];if(left)p.stock[sid]=left;else delete p.stock[sid];});
+    if(target===state)saveState(); return true;
+  }
   function overlay(kind,title,body,onClose){
     const old=document.querySelector('.petpantry-overlay'); if(old)old.remove();
     const ov=document.createElement('div'); ov.className=`petpantry-overlay pp-${kind}`;
@@ -206,11 +222,11 @@ ov.querySelectorAll('[data-shelf]').forEach(el=>el.addEventListener('click',()=>
     if(!isFood)return openFashionStore(options);
     const list=catalogForPet((activePet&&activePet())?activePet().type:'dog');
     page[kind]=Math.min(page[kind],Math.max(0,Math.ceil(list.length/4)-1)); const pages=Math.max(1,Math.ceil(list.length/4)), slice=list.slice(page[kind]*4,page[kind]*4+4);
-    const cards=slice.map(x=>{const owned=!isFood&&state.owned.includes(x.id);const amount=isFood?qty(x):0;return `<article class="pp-product ${owned?'owned':''}" data-id="${x.id}">${x.img?`<img src="${x.img}" alt="">`:`<span class="pp-prod-emoji">${x.emoji}</span>`}<b>${escapeHTML(x.name)}</b><small>${owned?'ซื้อแล้ว':`🪙${fmtNum(x.price)}`}${isFood?` · บนชั้น ×${amount}`:''}</small>${owned?'<button disabled>อยู่ในตู้แล้ว</button>':isFood?'<div><button data-n="1">+1</button><button data-n="5">+5</button></div>':'<button data-buy="1">ซื้อเข้าตู้</button>'}</article>`}).join('');
+    const cards=slice.map(x=>{const owned=!isFood&&state.owned.includes(x.id),amount=isFood?qty(x):0;const art=isFood&&typeof foodSpriteHTML==='function'?foodSpriteHTML(x,'pp-prod-art'):(x.img?`<img src="${x.img}" alt="">`:`<span class="pp-prod-emoji">${x.emoji}</span>`);return `<article class="pp-product ${owned?'owned':''}" data-id="${x.id}">${art}<b>${escapeHTML(x.name)}</b><small>${owned?'ซื้อแล้ว':`🪙${fmtNum(x.price)}`}${isFood?` · บนชั้น ×${amount}`:''}</small>${owned?'<button disabled>อยู่ในตู้แล้ว</button>':isFood?'<div><button data-n="1">+1</button><button data-n="5">+5</button></div>':'<button data-buy="1">ซื้อเข้าตู้</button>'}</article>`}).join('');
     const ov=overlay(kind,isFood?'🥫 Paws & Pantry Market':'🎀 Maison de Paws',`<div class="pp-store-scene" style="background-image:url('${isFood?'img/pet-shopping/food_window.webp':'img/pet-shopping/fashion_window.webp'}')"><span>${isFood?'อาหารสดใหม่สำหรับเพื่อนตัวน้อย':'แฟชั่นน่ารักที่ลองใส่ได้หลังกลับบ้าน'}</span></div><div class="pp-products">${cards}</div><nav><button class="pp-prev">‹</button><b>${page[kind]+1}/${pages}</b><button class="pp-next">›</button></nav>`,options.onClose);
     ov.querySelectorAll('.pp-product button:not([disabled])').forEach(btn=>btn.addEventListener('click',()=>{const id=btn.closest('.pp-product').dataset.id;let r;if(isFood)r=buyFood(id,btn.dataset.n);else{const item=ITEMS.find(i=>i.id===id);if(!item)r={ok:false,code:'invalid'};else if(state.coins<item.price)r={ok:false,code:'coins',cost:item.price};else{state.coins-=item.price;state.owned.push(item.id);if(typeof sellInc==='function')sellInc('item_'+item.id);if(typeof sfx!=='undefined'&&sfx.buy)sfx.buy();done();r={ok:true,item};}}if(r.ok){toast(isFood?`🥫 เติมอาหาร ${r.amount} ชิ้นแล้ว`:`🎀 ซื้อ${r.item.name}เข้าตู้แล้ว`);openStore(kind,options);}else if(r.code==='capacity')toast(`🗄️ ชั้นเหลือเพียง ${r.room} ช่อง`);else if(r.code==='coins')toast(`🪙 เหรียญไม่พอ ต้องมี ${fmtNum(r.cost)} เหรียญ`);else toast('ซื้อไม่ได้ในตอนนี้');}));
     ov.querySelector('.pp-prev').addEventListener('click',()=>{page[kind]=(page[kind]-1+pages)%pages;openStore(kind,options);}); ov.querySelector('.pp-next').addEventListener('click',()=>{page[kind]=(page[kind]+1)%pages;openStore(kind,options);});
   }
-  return {ensureState,capacity,total,qty,shelfValue,stockValue,buyShelf,buyFood,take,foodById,foodCatalog,favoriteFor,stockId,catalogForPet,openPantry,openStore};
+  return {ensureState,capacity,total,qty,shelfValue,stockValue,buyShelf,buyFood,take,takeMany,foodById,foodCatalog,favoriteFor,stockId,catalogForPet,openPantry,openStore};
 })();
 window.PetPantry=PetPantry;

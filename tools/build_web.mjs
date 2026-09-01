@@ -206,6 +206,7 @@ async function sourceFiles() {
       'js/dailybox.js', 'css/dailybox.css',
 
       'img/pet-shopping/food_window.webp', 'img/pet-shopping/fashion_window.webp', 'img/pet-shopping/pantry_grant.webp',
+      'img/pet-food/food-sprite.webp',
 
       'img/pet-shopping/cute_town_mural_v2.webp',
 

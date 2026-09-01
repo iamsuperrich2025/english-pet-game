@@ -13,14 +13,15 @@ const PETS = {
     startKey:'newborn', eggName:'ลูกหมาแรกเกิด', eggClass:'basket-dog',
     eggDesc:'หลับปุ๋ยในตะกร้าผ้าห่มสีฟ้า', decals:[],
     baby:'🐶', adult:'🐕',    ability:'⏰ โฮ่งพลังเวลา: เพิ่มเวลาในเกม +20 วินาที',
-    favFood:{emoji:'🦴', en:'Bone', name:'กระดูกยักษ์', price:300, fill:45, exp:15},
+    favFood:{emoji:'🦴', en:'Dog Treat', name:'ขนมสุนัขรูปกระดูก', price:300, fill:45, exp:15, art:[0,0],
+      safeNote:'ขนมสุนัข ไม่ใช่กระดูกไก่'},
   },
   cat:{
     name:'น้องแมว', price:3000,
     startKey:'newborn', eggName:'ลูกแมวแรกเกิด', eggClass:'basket-cat',
     eggDesc:'หลับปุ๋ยในตะกร้าผ้าห่มสีส้ม', decals:[],
     baby:'🐱', adult:'🐈',    ability:'💡 เหมียวรู้ใจ: ช่วยตัดช้อยส์ใบ้คำตอบ 1 ครั้งต่อรอบ',
-    favFood:{emoji:'🐟', en:'Fish', name:'ปลาย่างหอมกรุ่น', price:300, fill:45, exp:15},
+    favFood:{emoji:'🐟', en:'Fish', name:'ปลาย่างหอมกรุ่น', price:300, fill:45, exp:15, art:[1,0]},
   },
   dragon:{
     // มังกรเป็นสัตว์ในนิทาน จึงยังฟักจากไข่ได้ (ต่างจากหมา/แมวที่เกิดเป็นตัว)
@@ -28,7 +29,7 @@ const PETS = {
     startKey:'egg', eggName:'ไข่มังกร', eggClass:'egg-dragon',
     eggDesc:'ไข่ลายเกล็ดมีออร่าไฟ', decals:[],
     baby:'🐲', adult:'🐉',    ability:'🔥 ลมหายใจไฟ: คอมโบ ×3 ขึ้นไป ได้เหรียญ ×2 · ไม่ป่วยจากอากาศร้อน',
-    favFood:{emoji:'🌶️', en:'Chili', name:'พริกไฟลุกโชน', price:300, fill:45, exp:15},
+    favFood:{emoji:'🌶️', en:'Chili', name:'พริกไฟลุกโชน', price:300, fill:45, exp:15, art:[2,0]},
   },
   elephant:{
     name:'น้องช้าง', price:2000000,
@@ -36,7 +37,7 @@ const PETS = {
     eggDesc:'ลูกช้างตัวน้อยหลับสบายอยู่ในตะกร้า', decals:[],
     baby:'🐘', adult:'🐘',
     ability:'🐾 เพื่อนร่วมทาง: เติบโต ฝึกคำศัพท์ และร่วมผจญภัยไปกับผู้เล่น',
-    favFood:{emoji:'🍌', en:'Banana', name:'กล้วยหอม', price:300, fill:45, exp:15},
+    favFood:{emoji:'🍌', en:'Banana', name:'กล้วยหอม', price:300, fill:45, exp:15, art:[3,0]},
   },
   meerkat:{
     name:'น้องเมียร์แคต', price:70000,
@@ -44,7 +45,7 @@ const PETS = {
     eggDesc:'ลูกเมียร์แคตจิ๋วขดตัวหลับในตะกร้า', decals:[],
     baby:'🐾', adult:'🐾',
     ability:'🐾 เพื่อนร่วมทาง: เติบโต ฝึกคำศัพท์ และร่วมผจญภัยไปกับผู้เล่น',
-    favFood:{emoji:'🪱', en:'Mealworm', name:'หนอนนก', price:300, fill:45, exp:15},
+    favFood:{emoji:'🪱', en:'Mealworm', name:'หนอนนก', price:300, fill:45, exp:15, art:[4,0]},
   },
   tyrannosaurusRex:{
     name:'น้องไทแรนโนซอรัส เร็กซ์', price:80000,
@@ -52,7 +53,7 @@ const PETS = {
     eggDesc:'ลูกทีเร็กซ์เพิ่งฟักจากไข่และกำลังหลับปุ๋ย', decals:[],
     baby:'🦖', adult:'🦖',
     ability:'🐾 เพื่อนร่วมทาง: เติบโต ฝึกคำศัพท์ และร่วมผจญภัยไปกับผู้เล่น',
-    favFood:{emoji:'🍖', en:'Meat', name:'เนื้อชิ้นโต', price:300, fill:45, exp:15},
+    favFood:{emoji:'🍖', en:'Meat', name:'เนื้อชิ้นโต', price:300, fill:45, exp:15, art:[5,0]},
   },
   toucan:{
     name:'น้องทูแคน', price:480000,
@@ -60,7 +61,7 @@ const PETS = {
     eggDesc:'ลูกทูแคนปากสีรุ้งนอนอุ่นอยู่ในรัง', decals:[],
     baby:'🐦', adult:'🐦',
     ability:'🐾 เพื่อนร่วมทาง: เติบโต ฝึกคำศัพท์ และร่วมผจญภัยไปกับผู้เล่น',
-    favFood:{emoji:'🥭', en:'Mango', name:'มะม่วงสุก', price:300, fill:45, exp:15},
+    favFood:{emoji:'🥭', en:'Mango', name:'มะม่วงสุก', price:300, fill:45, exp:15, art:[0,1]},
   },
   buffalo:{
     name:'น้องควาย', price:100000,
@@ -68,7 +69,7 @@ const PETS = {
     eggDesc:'ลูกควายตัวน้อยหลับปุ๋ยในตะกร้าสาน', decals:[],
     baby:'🐃', adult:'🐃',
     ability:'🐾 เพื่อนร่วมทาง: เติบโต ฝึกคำศัพท์ และร่วมผจญภัยไปกับผู้เล่น',
-    favFood:{emoji:'🌾', en:'Grass', name:'หญ้าอ่อน', price:300, fill:45, exp:15},
+    favFood:{emoji:'🌾', en:'Grass', name:'หญ้าอ่อน', price:300, fill:45, exp:15, art:[1,1]},
   },
   sikaDeer:{
     name:'น้องกวางซีกา', price:70000,
@@ -76,7 +77,7 @@ const PETS = {
     eggDesc:'ลูกกวางลายจุดนอนหลับอย่างอบอุ่นในตะกร้า', decals:[],
     baby:'🦌', adult:'🦌',
     ability:'🐾 เพื่อนร่วมทาง: เติบโต ฝึกคำศัพท์ และร่วมผจญภัยไปกับผู้เล่น',
-    favFood:{emoji:'🍃', en:'Leaves', name:'ใบไม้อ่อน', price:300, fill:45, exp:15},
+    favFood:{emoji:'🍃', en:'Leaves', name:'ใบไม้อ่อน', price:300, fill:45, exp:15, art:[2,1]},
   },
 };
 
@@ -90,26 +91,37 @@ const PETS = {
    มังกร (สัตว์ในนิทาน — วิเคราะห์ตามความน่าจะเป็น): สัตว์ไฟกินเนื้อ/ของเผ็ดได้ แต่ขนมหวาน+นมเป็นโทษ */
 const FOODS = [
   /* ---- ชุดอาหารสัตว์ (ปลอดภัยทุกชนิด) ---- */
-  {id:'apple',   emoji:'🍎', en:'Apple',   name:'แอปเปิ้ล',   price:150, fill:25},
-  {id:'chicken', emoji:'🍗', en:'Chicken', name:'น่องไก่',    price:250, fill:40},
+  {id:'apple',   emoji:'🍎', en:'Apple',   name:'แอปเปิ้ล',   price:150, fill:25, art:[3,1]},
+  /* คง id chicken เพื่อรักษาสต็อกเซฟเดิม แต่ห้ามใช้เนื้อไก่ติดกระดูก: กระดูกไก่อาจทิ่มลำไส้สัตว์ได้ */
+  {id:'chicken', emoji:'🍗', en:'Boneless Chicken', name:'อกไก่ต้มสุกไร้กระดูก', price:250, fill:40, art:[4,1],
+   safeNote:'ไม่มีกระดูก — กระดูกไก่อาจทิ่มลำไส้สัตว์ได้'},
   /* อาหารวิเศษ: เต็มหลอดทันที + อิ่มตุนข้ามมื้อพรุ่งนี้ได้เลย ไม่ต้องกลับมาป้อน */
-  {id:'feast',   emoji:'🍱', en:'Feast',   name:'ชุดอาหารวิเศษ', price:1000, fill:100, skipNext:true, special:true},
+  {id:'feast',   emoji:'🍱', en:'Feast',   name:'ชุดอาหารวิเศษ', price:1000, fill:100, skipNext:true, special:true, art:[5,1]},
   /* ---- ชุดอาหารคน (คนกินได้ แต่บางอย่างเป็นโทษกับสัตว์) ---- */
-  {id:'cookie',  emoji:'🍪', en:'Cookie',  name:'คุกกี้',     price:100, fill:20, human:true,
+  {id:'cookie',  emoji:'🍪', en:'Cookie',  name:'คุกกี้',     price:100, fill:20, human:true, art:[0,2],
    toxin:25, badFor:['dog','cat','dragon'], why:'ขนมหวานของคน น้ำตาลเยอะเกินไปสำหรับสัตว์ทุกชนิด'},
-  {id:'noodles', emoji:'🍜', en:'Noodles', name:'ก๋วยเตี๋ยว', price:350, fill:50, human:true,
+  {id:'noodles', emoji:'🍜', en:'Noodles', name:'ก๋วยเตี๋ยว', price:350, fill:50, human:true, art:[1,2],
    toxin:20, badFor:['dog','cat'], why:'อาหารปรุงรสของคน มีหอม กระเทียม และเค็มเกินไปสำหรับหมาแมว (มังกรชอบของเผ็ดร้อน กินได้)'},
-  {id:'cake',    emoji:'🍰', en:'Cake',    name:'เค้ก',       price:500, fill:65, human:true,
+  {id:'cake',    emoji:'🍰', en:'Cake',    name:'เค้ก',       price:500, fill:65, human:true, art:[2,2],
    toxin:30, badFor:['dog','cat','dragon'], why:'หวานจัด มีเนย ครีม และน้ำตาลเยอะมาก สัตว์กินแล้วป่วยง่าย'},
-  {id:'choco',   emoji:'🍫', en:'Chocolate', name:'ช็อกโกแลต', price:200, fill:30, human:true,
+  {id:'choco',   emoji:'🍫', en:'Chocolate', name:'ช็อกโกแลต', price:200, fill:30, human:true, art:[3,2],
    toxin:40, badFor:['dog','cat','dragon'], why:'ช็อกโกแลตมีสารธีโอโบรมีน เป็นพิษจริงกับหมาและแมว อันตรายมาก!',
    whyDragon:'มังกรเป็นสัตว์ไฟชอบของเผ็ดร้อน ขนมหวานเข้มข้นอย่างช็อกโกแลตไม่ดีกับท้องมังกรเลย'},
-  {id:'grapes',  emoji:'🍇', en:'Grapes',  name:'องุ่น',      price:150, fill:25, human:true,
+  {id:'grapes',  emoji:'🍇', en:'Grapes',  name:'องุ่น',      price:150, fill:25, human:true, art:[4,2],
    toxin:35, badFor:['dog','cat'], why:'องุ่นเป็นพิษกับไตของหมาและแมวจริงๆ แม้กินแค่ไม่กี่ลูก (มังกรตัวใหญ่ กินผลไม้ได้)'},
-  {id:'milk',    emoji:'🥛', en:'Milk',    name:'นมวัว',      price:120, fill:20, human:true,
+  {id:'milk',    emoji:'🥛', en:'Milk',    name:'นมวัว',      price:120, fill:20, human:true, art:[5,2],
    toxin:20, badFor:['dog','cat','dragon'], why:'หมาแมวโตแล้วย่อยนมวัวไม่ได้ กินแล้วท้องเสีย',
    whyDragon:'มังกรเป็นสัตว์ไฟ ท้องรับนมวัวเย็นๆ ไม่ได้ กินแล้วท้องเสียเหมือนกัน'},
 ];
+
+/* ภาพอาหารรวม 18 ช่องใน WebP เดียว (6×3): เบากว่าโหลดภาพแยก และทุกจุดใช้แผนที่เดียวกัน */
+const FOOD_SPRITE_URL = 'img/pet-food/food-sprite.webp';
+function foodSpriteHTML(food, cls='food-art'){
+  if(!food || !Array.isArray(food.art)) return `<span class="${cls} food-art-fallback" aria-hidden="true">${food&&food.emoji||'🍽️'}</span>`;
+  const col=Math.max(0,Math.min(5,Number(food.art[0])||0));
+  const row=Math.max(0,Math.min(2,Number(food.art[1])||0));
+  return `<span class="${cls} food-sprite" style="--food-x:${col*20}%;--food-y:${row*50}%" aria-hidden="true"></span>`;
+}
 
 /* สัตว์ป่า/สัตว์พิเศษควรกินอาหารเฉพาะชนิด ไม่สอนเด็กให้นำอาหารคนไปป้อนจริง */
 const SPECIAL_DIET_PETS = new Set(['elephant','meerkat','tyrannosaurusRex','toucan','buffalo','sikaDeer']);

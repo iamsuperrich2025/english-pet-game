@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8"><title>Bulk feeding preview</title>
+<style>html,body,#game{width:100%;height:100%;margin:0;border:0;overflow:hidden;background:#102b49}#metrics{position:fixed;left:-9999px}</style></head>
+<body><iframe id="game" src="../index_classic.html?bulk-feeding-preview=1"></iframe><pre id="metrics">BOOT</pre>
+<script>
+'use strict';
+const frame=document.getElementById('game'),metrics=document.getElementById('metrics');
+const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+async function ready(){
+  const w=frame.contentWindow,d=frame.contentDocument;
+  for(let i=0;i<160;i++){
+    if(typeof w.openFoodMenu==='function'&&typeof w.PetPantry!=='undefined'&&d.body)break;
+    await wait(50);
+  }
+  const setup=w.eval(`(()=>{
+    document.querySelectorAll('#consent-gate,.pantry-grant-overlay,.levelup-overlay,.rankup-overlay').forEach(el=>el.remove());
+    state=structuredClone(DEFAULT_STATE);
+    state.coins=999999;state.petShoppingGrantVer=PET_SHOPPING_GRANT_VERSION;state.petShoppingGrantNotice=null;state.petPantry={shelfId:'large',stock:{}};
+    state.pets=Object.keys(PETS).map((type,i)=>{const p=newPet(type,PETS[type].name);p.level=i%3+1;p.fullness=i*7;return p;});
+    state.active=0;
+    PET_SHOP_FOODS.forEach(food=>state.petPantry.stock[food.stockId]=10);
+    state.pets[6].sick=true;state.pets[6].sickCause='hunger';
+    state.pets[7].sleeping=true;
+    state.pets[8].fullness=100;state.pets[8].fedUpTo=currentSlotStart(Date.now());
+    openFoodMenu(state.pets[0]);
+    return {before:PetPantry.total(),pets:state.pets.length};
+  })()`);
+  await wait(700);
+  const action=new URLSearchParams(location.search).get('action');
+  if(action==='confirm'){
+    d.querySelector('.feed-all-confirm')?.click();
+    await wait(500);
+  }
+  const box=d.querySelector('.feed-all-box'),menu=d.querySelector('.feed-all-menu'),foods=[...d.querySelectorAll('.feed-all-food')],pets=[...d.querySelectorAll('.feed-all-pet')];
+  const r=box.getBoundingClientRect(),vr={width:w.innerWidth,height:w.innerHeight};
+  const inside=[...foods,...pets].every(el=>{const x=el.getBoundingClientRect();return x.left>=r.left-1&&x.top>=r.top-1&&x.right<=r.right+1&&x.bottom<=r.bottom+1;});
+  const after=w.eval('PetPantry.total()');
+  const spriteEl=foods[0].querySelector('.food-sprite'),spriteStyle=getComputedStyle(spriteEl);
+  const result={viewport:vr,box:{left:r.left,top:r.top,right:r.right,bottom:r.bottom,width:r.width,height:r.height,scrollHeight:box.scrollHeight,clientHeight:box.clientHeight},foodCards:foods.length,petCards:pets.length,noScroll:box.scrollHeight<=box.clientHeight+1&&menu.scrollHeight<=menu.clientHeight+1,inside,sprite:spriteStyle.getPropertyValue('--food-x')!==''&&spriteStyle.backgroundImage.includes('food-sprite'),stockDelta:setup.before-after,action:action||'preview'};
+  result.pass=result.foodCards===10&&result.petCards===9&&result.noScroll&&result.inside&&result.sprite&&(action!=='confirm'||result.stockDelta===7);
+  metrics.textContent=JSON.stringify(result);document.body.dataset.pass=String(result.pass);document.title=(result.pass?'PASS':'FAIL')+' bulk feeding '+result.viewport.width+'x'+result.viewport.height;
+  if(new URLSearchParams(location.search).get('report')==='1'){
+    document.body.innerHTML=`<pre style="box-sizing:border-box;width:100vw;height:100vh;margin:0;padding:14px;white-space:pre-wrap;overflow:hidden;background:${result.pass?'#e9f9ef':'#ffeaea'};color:#183e45;font:700 12px/1.25 monospace">${JSON.stringify(result,null,2)}</pre>`;
+  }
+}
+frame.addEventListener('load',()=>ready().catch(error=>{metrics.textContent=String(error.stack||error);document.body.dataset.pass='false';document.title='FAIL bulk feeding';}));
+</script></body></html>
