@@ -285,14 +285,14 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
     if(typeof Music!=='undefined'&&Music.isMusicOn)return Music.isMusicOn();
     return !(typeof state!=='undefined'&&state.musicOff);
   }
-  function lcMusicCanPlay(){return lcMusicPreferenceOn()&&!(typeof state!=='undefined'&&state.sound===false);}
+  function lcMusicCanPlay(){return lcMusicPreferenceOn();}
   function lcMusicSyncButton(){
     if(!lcBgmBtn)return;
-    const on=lcMusicPreferenceOn(),masterOff=typeof state!=='undefined'&&state.sound===false;
-    lcBgmBtn.setAttribute('aria-pressed',on&&!masterOff?'true':'false');
+    const on=lcMusicPreferenceOn();
+    lcBgmBtn.setAttribute('aria-pressed',on?'true':'false');
     lcBgmBtn.classList.toggle('blocked',lcBgmBlocked);
-    lcBgmBtn.textContent=lcBgmBlocked?'⚠️ แตะเปิดเพลง':(on&&!masterOff?'🎵 เพลง เปิด':'🔇 เพลง ปิด');
-    lcBgmBtn.title=masterOff?'เสียงหลักของเกมถูกปิดอยู่':'Beyond the Stars — เปิด/ปิดเพลง Letter Cannon';
+    lcBgmBtn.textContent=lcBgmBlocked?'⚠️ แตะเปิดเพลง':(on?'🎵 เพลง เปิด':'🔇 เพลง ปิด');
+    lcBgmBtn.title='Beyond the Stars — เปิด/ปิดเพลง Letter Cannon';
   }
   function lcMusicEnsure(){
     if(lcBgm)return lcBgm;
@@ -314,6 +314,7 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
     const step=()=>{if(fadeToken!==lcBgmFadeToken)return;const k=Math.min(1,(performance.now()-startAt)/fadeMs);a.volume=Math.max(0,startVol*(1-k));if(k>=1)finish();else lcBgmFadeTimer=setTimeout(step,40);};step();
   }
   function lcMusicToggle(){
+    if(lcBgmBlocked&&lcMusicPreferenceOn()){lcBgmBlocked=false;lcMusicSyncButton();lcMusicStart();return;}
     const next=!lcMusicPreferenceOn();if(typeof Music!=='undefined'&&Music.setMusic)Music.setMusic(next);else if(typeof state!=='undefined'){state.musicOff=!next;if(typeof saveState==='function')saveState();}
     lcBgmBlocked=false;lcMusicSyncButton();if(next)lcMusicStart();else lcMusicStop(320,false);
   }
@@ -425,7 +426,7 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
     window.addEventListener('resize',layout,s);window.addEventListener('orientationchange',layout,s);document.addEventListener('visibilitychange',()=>{if(document.hidden){resetInput();pause(true);lcMusicStop(0,false);}else if(running)lcMusicStart();},s);
     hud.pause.addEventListener('click',()=>{resetInput();pause();},s);hud.exit.addEventListener('click',close,s);hud.sound.addEventListener('click',toggleSound,s);hud.music.addEventListener('click',lcMusicToggle,s);hud.missile.addEventListener('click',fireMissile,s);
   }
-  function toggleSound(){if(typeof state!=='undefined'){state.sound=!state.sound;if(typeof saveState==='function')saveState();if(typeof Music!=='undefined'&&Music.onSound)Music.onSound();if(state.sound)lcMusicStart();else lcMusicStop(250,false);}renderHud();sound('correct');}
+  function toggleSound(){if(typeof state!=='undefined'){state.sound=!state.sound;if(typeof saveState==='function')saveState();if(typeof Music!=='undefined'&&Music.onSound)Music.onSound();}renderHud();sound('correct');}
   function pause(force){if(!root||counting||missionEnded)return;paused=force===true?true:!paused;dragPointer=null;keyLeft=keyRight=keyUp=keyDown=false;playerVX=playerVY=0;let m=root.querySelector('#lc-pause');if(paused&&!m){m=document.createElement('div');m.id='lc-pause';m.className='lc-modal';m.innerHTML='<div class="lc-card"><h2>⏸ พักภารกิจ</h2><p>คลื่นศัตรูและพลังมังกรหยุดรออยู่ตรงนี้ครับ</p><div class="lc-buttons"><button class="lc-btn primary" data-a="go">▶ เล่นต่อ</button><button class="lc-btn" data-a="exit">🚪 กลับ Lobby</button></div></div>';root.appendChild(m);m.querySelector('[data-a=go]').onclick=()=>pause();m.querySelector('[data-a=exit]').onclick=close;}else if(!paused&&m){m.remove();resetFrameClock();}}
   function tutorial(){
     if(localStorage.getItem('vwDragonSkyIntro2')==='1'){countdown();return;}const m=document.createElement('div');m.className='lc-modal';m.innerHTML='<div class="lc-card"><h2>🐉 Dragon Sky Siege</h2><p><b>ลากนิ้วบนสนามเพื่อบินอิสระ</b> · ปืนยิงอัตโนมัติและสลับกระสุนให้เอง</p><p>เครื่องบินศัตรูจะยิงกระสุนแดงสวนกลับ หลบหรือยิงทำลายก่อนถึงฐาน<br><b>ทุก 30 วินาทีบอสจะออกมา</b> พร้อมยิงกระจายและแถบ HP</p><p>ทำลายบอสเพื่อขึ้นคลื่นใหม่และเปลี่ยนชุดคำศัพท์จากคลัง <b>500 คำตามระดับชั้น</b><br>กด <b>M</b> หรือ 🚀 เพื่อปล่อย Missile ล็อกเป้า</p><div class="lc-buttons"><button class="lc-btn primary" data-a="start">🚀 ทะยานขึ้นฟ้า</button><button class="lc-btn" data-a="exit">🚪 ออกจากเกม</button></div></div>';root.appendChild(m);m.querySelector('[data-a=start]').onclick=()=>{localStorage.setItem('vwDragonSkyIntro2','1');m.remove();countdown();};m.querySelector('[data-a=exit]').onclick=close;

@@ -29,6 +29,10 @@ assert.doesNotMatch(code,/releasePortrait\(\);if\(typeof Music[\s\S]{0,80}resume
 assert.match(build,/sound\/letter_cannon\/Wordflight_Beyond_the_Stars\.mp3/,'production build must include the requested MP3');
 assert.match(build,/makeImmutableAlias\('sound\/letter_cannon\/Wordflight_Beyond_the_Stars\.mp3'\)/,'build must fingerprint the MP3 for immutable disk caching');
 assert.match(build,/replace\(TOKEN_LC_BGM, lcBgmUrl\)/,'build must inject the fingerprinted URL into Letter Cannon');
+const toggleSoundSource=code.slice(code.indexOf('function toggleSound(){'),code.indexOf('function pause(',code.indexOf('function toggleSound(){')));
+assert.doesNotMatch(toggleSoundSource,/lcMusicStart|lcMusicStop/,'sound-effects toggle must never start or stop the independent BGM');
+const precacheSource=build.slice(build.indexOf('const precache ='),build.indexOf('const swPath',build.indexOf('const precache =')));
+assert.doesNotMatch(precacheSource,/lcBgmUrl|Wordflight_Beyond_the_Stars/,'large BGM must stay out of Service Worker precache');
 
 let now=0,created=0,musicOn=true,resumeCalls=0;
 class FakeAudio{
@@ -41,7 +45,7 @@ const button={attrs:{},textContent:'',title:'',setAttribute(k,v){this.attrs[k]=v
 const context={
   Audio:FakeAudio,Promise,performance:{now:()=>now},
   setTimeout(fn,ms){now+=Math.min(40,Number(ms)||0);fn();return 1;},clearTimeout(){},
-  state:{sound:true,musicOff:false},Music:{isMusicOn:()=>musicOn,setMusic(v){musicOn=v;},resumeBg(){resumeCalls++;}},
+  state:{sound:false,musicOff:false},Music:{isMusicOn:()=>musicOn,setMusic(v){musicOn=v;},resumeBg(){resumeCalls++;}},
   saveState(){},running:true,
 };
 vm.createContext(context);
@@ -63,6 +67,9 @@ vm.runInContext([
   assert.strictEqual(api.audio.src,'sound/letter_cannon/Wordflight_Beyond_the_Stars.mp3');
   assert.strictEqual(api.audio.paused,false);
   assert.strictEqual(api.audio.volume,.4);
+  assert.strictEqual(button.textContent,'🎵 เพลง เปิด','background music stays on when only sound effects are muted');
+  assert.match(moduleSource,/function lcMusicCanPlay\(\)\{return lcMusicPreferenceOn\(\);\}/,'BGM preference must be independent from the sound-effects switch');
+  assert.doesNotMatch(moduleSource,/masterOff|state\.sound/,'BGM module must not inherit the sound-effects mute state');
   api.toggle();
   assert.strictEqual(musicOn,false,'off button persists through the global music preference');
   assert.strictEqual(api.audio.paused,true,'off button fades to a paused media element');
@@ -70,11 +77,12 @@ vm.runInContext([
   await api.toggle();
   assert.strictEqual(musicOn,true);
   assert.strictEqual(api.audio.paused,false);
+  api.audio.pause();api.audio.listeners.error();assert.strictEqual(button.textContent,'⚠️ แตะเปิดเพลง');await api.toggle();assert.strictEqual(musicOn,true,'blocked retry must keep the music preference enabled');assert.strictEqual(api.audio.paused,false,'tap on the blocked state retries playback from a user gesture');
   let faded=false;api.stop(1100,true,()=>{faded=true;});
   assert.strictEqual(faded,true,'exit callback runs after fade completion');
   assert.strictEqual(api.audio.paused,true);
   assert.strictEqual(api.audio.currentTime,0,'exit rewinds for the next session');
   assert.strictEqual(api.audio.volume,.4,'fade restores configured volume');
   assert.strictEqual(resumeCalls,0,'isolated BGM module never resumes Lobby itself');
-  console.log('PASS letter_cannon_bgm: lazy stream, loop, visible toggle, reuse, fade/stop/rewind, immutable build URL');
+  console.log('PASS letter_cannon_bgm: SFX-independent lazy stream, blocked retry, loop, reuse, fade/stop/rewind, immutable build URL');
 })().catch(error=>{console.error(error);process.exitCode=1;});

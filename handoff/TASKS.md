@@ -22,6 +22,10 @@
 - ต้นเหตุภาพแหว่ง/คำหายคือ inherited grid row ชนกัน + fixed 46/60px พร้อม overflow hidden; เปลี่ยนสถานะเป็น auto height/ไม่ตัด และคำแปลยาวขึ้นบรรทัดได้
 - ResizeObserver วัดความสูงสถานะจริงเพื่อยก AUTO FIRE/แถบกระสุนให้พ้นอัตโนมัติ; ยกชั้นเกมเหนือปุ่ม Frontline admin ซึ่งไม่ควรลอยทับเกมอื่น
 - `test_letter_cannon`, syntax, Home V2 regression, production build และ source/dist contract ผ่าน; Browser/Computer Use visual QA ยังถูก Windows ACL บล็อก ต้องยืนยันภาพจริงหลัง deploy
+- **รอบ 1344 · คืนเพลง Beyond the Stars:** ต้นเหตุ BGM ถูกผูกผิดกับ `state.sound`; ปิดเสียงยิงจึงทำให้ปุ่มขึ้น “เพลง ปิด” และเพลงหยุดทั้งที่ music preference ยังเปิด
+- แยก BGM จาก SFX สมบูรณ์, ปุ่ม autoplay-blocked แตะแล้ว retry โดยไม่สลับ preference เป็นปิด; ยัง lazy `preload=metadata`, ใช้ Audio เดิม, loop และ fade/rewind ตอนออก
+- production ใช้ content-hash `.a114de51abfe93d1.mp3`, ไม่เข้า SW precache; live Range 0–1023 ตอบ 206/1,024 bytes จาก 3,788,707 พร้อม cache 1 ปี immutable
+- BGM regression (รวม SFX-off/retry/no-precache), เกม regression, syntax, build/PWA/cache/TWA validator และ diff ผ่าน
 
 
 - **รอบ 1340 · ShootWord เพลง Fairgame Fun แบบ lazy Range/cache:** เข้าเกมจึงสร้าง Audio `preload=metadata` เล่นวน มีปุ่มเพลงมุมขวาบนแยกจาก Exit และออกเกมเฟด 1.1 วินาทีก่อน pause+rewind/คืนเพลง Lobby
