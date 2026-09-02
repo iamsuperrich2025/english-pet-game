@@ -291,11 +291,12 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
   function lcMusicCanPlay(){return lcMusicPreferenceOn();}
   function lcMusicSyncButton(){
     if(!lcBgmBtn)return;
-    const on=lcMusicPreferenceOn();
-    lcBgmBtn.setAttribute('aria-pressed',on?'true':'false');
-    lcBgmBtn.classList.toggle('blocked',lcBgmBlocked);
-    lcBgmBtn.textContent=lcBgmBlocked?'⚠️ แตะเปิดเพลง':(on?'🎵 เพลง เปิด':'🔇 เพลง ปิด');
-    lcBgmBtn.title='Beyond the Stars — เปิด/ปิดเพลง Letter Cannon';
+    const on=lcMusicPreferenceOn(),waiting=on&&(!lcBgm||lcBgm.paused||lcBgmBlocked),status=on?(waiting?'waiting':'on'):'off';
+    lcBgmBtn.setAttribute('aria-pressed',on?'true':'false');lcBgmBtn.setAttribute('data-state',status);
+    lcBgmBtn.classList.toggle('blocked',waiting);
+    lcBgmBtn.textContent=status==='on'?'🎵 เปิดอยู่':status==='off'?'🔇 ปิดอยู่':'▶ รอแตะจอ';
+    lcBgmBtn.setAttribute('aria-label',status==='on'?'เพลง Beyond the Stars เปิดอยู่ กดเพื่อปิด':status==='off'?'เพลง Beyond the Stars ปิดอยู่ กดเพื่อเปิด':'เพลง Beyond the Stars รอการแตะหน้าจอเพื่อเริ่มเล่น');
+    lcBgmBtn.title=status==='on'?'เพลงเปิดอยู่ — กดเพื่อปิด':status==='off'?'เพลงปิดอยู่ — กดเพื่อเปิด':'แตะบริเวณเกมหนึ่งครั้ง เพลงจะเริ่มเอง';
   }
   function lcMusicEnsure(){
     if(lcBgm)return lcBgm;
@@ -306,7 +307,7 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
   function lcMusicStart(){
     lcMusicCancelFade();lcBgmBlocked=false;lcMusicSyncButton();if(!lcMusicCanPlay())return Promise.resolve(false);
     const a=lcMusicEnsure(),token=++lcBgmPlayToken;a.volume=LC_BGM_VOLUME;const p=a.play();
-    if(!p||!p.then)return Promise.resolve(true);
+    if(!p||!p.then){lcBgmBlocked=false;lcMusicSyncButton();return Promise.resolve(true);}
     return p.then(()=>{if(token!==lcBgmPlayToken||(!running&&!opening)){a.pause();return false;}lcBgmBlocked=false;lcMusicSyncButton();return true;}).catch(()=>{if(token===lcBgmPlayToken){lcBgmBlocked=true;lcMusicSyncButton();}return false;});
   }
   function lcMusicStop(fadeMs=0,reset=false,done){
@@ -320,6 +321,11 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
     if(lcBgmBlocked&&lcMusicPreferenceOn()){lcBgmBlocked=false;lcMusicSyncButton();lcMusicStart();return;}
     lcMusicEnabled=!lcMusicEnabled;
     lcBgmBlocked=false;lcMusicSyncButton();if(lcMusicEnabled)lcMusicStart();else lcMusicStop(320,false);
+  }
+  function lcMusicUserGesture(e){
+    if(!lcMusicEnabled)return Promise.resolve(false);
+    if(e&&e.target&&e.target.closest&&e.target.closest('#lc-music'))return Promise.resolve(false);
+    return !lcBgm||lcBgm.paused||lcBgmBlocked?lcMusicStart():Promise.resolve(false);
   }
 
   function noiseBurst(type,t){
@@ -418,6 +424,7 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
   function frame(now){if(!running)return;raf=requestAnimationFrame(frame);if(!frameAt){frameAt=now-FRAME_MS;last=now-FRAME_MS;}const since=now-frameAt;if(paused||counting){const gap=paused?100:33;if(since<gap)return;frameAt=now;last=now;draw(now/1000);return;}if(since<FRAME_MS*.9)return;frameAt=now-(since%FRAME_MS);const dt=Math.min(.033,Math.max(0,(now-last)/1000||.016));last=now;update(dt);draw(now/1000);if(((now/250)|0)!==(((now-dt*1000)/250)|0))renderHud();}
   function bind(){
     abort=new AbortController();const s={signal:abort.signal};
+    root.addEventListener('pointerdown',lcMusicUserGesture,{capture:true,passive:true,signal:abort.signal});root.addEventListener('click',lcMusicUserGesture,{capture:true,passive:true,signal:abort.signal});window.addEventListener('keydown',lcMusicUserGesture,{capture:true,signal:abort.signal});
     const point=e=>{const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height};};
     const drag=e=>{if(e.pointerId!==dragPointer)return;e.preventDefault();const p=point(e),lim=playerLimits();dragX=clamp(p.x,lim.minX,lim.maxX);dragY=clamp(p.y,lim.minY,lim.maxY);};
     const releaseDrag=e=>{if(e.pointerId===dragPointer)dragPointer=null;};
@@ -436,7 +443,7 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
   }
   function countdown(){counting=true;const m=document.createElement('div');m.className='lc-modal lc-countdown';root.appendChild(m);let n=3;const step=()=>{if(!running||!m.isConnected)return;m.innerHTML='<div class="lc-count">'+(n?n:'GO!')+'</div><button class="lc-btn lc-count-exit">🚪 ออกจากเกม</button>';m.querySelector('button').onclick=close;sound('correct');if(n--){later(step,650);}else later(()=>{m.remove();counting=false;resetFrameClock();},520);};step();}
   function buildDom(){
-    root=document.createElement('div');root.id='lc-game';root.innerHTML='<canvas class="lc-game-canvas" aria-label="สนาม Dragon Sky Siege — ลากนิ้วเพื่อบิน หลบกระสุนศัตรู และจัดแนวยิงอัตโนมัติให้ตรงเป้าหมาย"></canvas><div class="lc-hud"><div class="lc-info-dock"><div class="lc-wordbox lc-glass"><div class="lc-target" id="lc-target"></div><div class="lc-meaning" id="lc-meaning"></div><div class="lc-progress" id="lc-progress"></div></div><div class="lc-stats lc-glass"><div class="lc-stat lc-coin-stat"><span>เหรียญ</span><b id="lc-coins">0</b></div><div class="lc-stat"><span>สตรีค</span><b id="lc-combo">0</b></div><div class="lc-stat lc-shield-stat"><span>พลังมังกร</span><b id="lc-shield" aria-label="พลังมังกร 10 ดวง"></b></div><div class="lc-stat"><span>คำศัพท์</span><b id="lc-words">ชุด 1 · 0</b></div><div class="lc-stat"><span>สถานะ</span><b id="lc-wave">คลื่น 1</b></div><div class="lc-stat"><span>ทำลาย</span><b id="lc-stopped">0</b></div></div></div><button class="lc-musicbtn" id="lc-music" type="button" aria-pressed="true" title="Beyond the Stars — เปิด/ปิดเพลง Letter Cannon">🎵 เพลง เปิด</button><div class="lc-actions"><button class="lc-iconbtn" id="lc-sound" title="เปิด/ปิดเสียงเอฟเฟกต์">🔊</button><button class="lc-iconbtn lc-missilebtn" id="lc-missile" title="ยิง Missile (M)">🚀 3</button><button class="lc-iconbtn" id="lc-pause-btn" title="พัก">⏸</button><button class="lc-iconbtn lc-exitwide" id="lc-exit" title="ออกจากเกมกลับ Lobby">🚪 ออก</button></div><div class="lc-power lc-glass"><div class="lc-power-name" id="lc-power-name">กระสุน TRACER</div><div class="lc-power-bar"><div class="lc-power-fill" id="lc-power-fill"></div></div></div><div class="lc-hint lc-glass"><b>AUTO FIRE</b> · เก็บ 🔥/🚀 เพื่อยิงเพิ่ม · M Missile</div></div>';
+    root=document.createElement('div');root.id='lc-game';root.innerHTML='<canvas class="lc-game-canvas" aria-label="สนาม Dragon Sky Siege — ลากนิ้วเพื่อบิน หลบกระสุนศัตรู และจัดแนวยิงอัตโนมัติให้ตรงเป้าหมาย"></canvas><div class="lc-hud"><div class="lc-info-dock"><div class="lc-wordbox lc-glass"><div class="lc-target" id="lc-target"></div><div class="lc-meaning" id="lc-meaning"></div><div class="lc-progress" id="lc-progress"></div></div><div class="lc-stats lc-glass"><div class="lc-stat lc-coin-stat"><span>เหรียญ</span><b id="lc-coins">0</b></div><div class="lc-stat"><span>สตรีค</span><b id="lc-combo">0</b></div><div class="lc-stat lc-shield-stat"><span>พลังมังกร</span><b id="lc-shield" aria-label="พลังมังกร 10 ดวง"></b></div><div class="lc-stat"><span>คำศัพท์</span><b id="lc-words">ชุด 1 · 0</b></div><div class="lc-stat"><span>สถานะ</span><b id="lc-wave">คลื่น 1</b></div><div class="lc-stat"><span>ทำลาย</span><b id="lc-stopped">0</b></div></div></div><button class="lc-musicbtn" id="lc-music" type="button" aria-pressed="true" data-state="waiting" aria-label="เพลง Beyond the Stars รอการแตะหน้าจอเพื่อเริ่มเล่น" title="แตะบริเวณเกมหนึ่งครั้ง เพลงจะเริ่มเอง">▶ รอแตะจอ</button><div class="lc-actions"><button class="lc-iconbtn" id="lc-sound" title="เปิด/ปิดเสียงเอฟเฟกต์">🔊</button><button class="lc-iconbtn lc-missilebtn" id="lc-missile" title="ยิง Missile (M)">🚀 3</button><button class="lc-iconbtn" id="lc-pause-btn" title="พัก">⏸</button><button class="lc-iconbtn lc-exitwide" id="lc-exit" title="ออกจากเกมกลับ Lobby">🚪 ออก</button></div><div class="lc-power lc-glass"><div class="lc-power-name" id="lc-power-name">กระสุน TRACER</div><div class="lc-power-bar"><div class="lc-power-fill" id="lc-power-fill"></div></div></div><div class="lc-hint lc-glass"><b>AUTO FIRE</b> · เก็บ 🔥/🚀 เพื่อยิงเพิ่ม · M Missile</div></div>';
     document.body.appendChild(root);canvas=root.querySelector('canvas');ctx=canvas.getContext('2d',{alpha:false});['coins','combo','shield','words','wave','stopped','target','meaning','progress','power-name','power-fill','pause-btn','exit','sound','music','missile'].forEach(k=>hud[k.replace(/-([a-z])/g,(_m,c)=>c.toUpperCase())]=root.querySelector('#lc-'+k));hud.powerName=root.querySelector('#lc-power-name');hud.powerFill=root.querySelector('#lc-power-fill');hud.pause=root.querySelector('#lc-pause-btn');lcBgmBtn=hud.music;lcMusicSyncButton();const coinStat=hud.coins.parentElement;coinStat.insertAdjacentHTML('beforeend','<img src="'+COIN_IMAGE+'" alt="เหรียญทอง">');
     const statsPanel=root.querySelector('.lc-stats'),syncStatsHeight=()=>{if(root&&statsPanel&&statsPanel.isConnected)root.style.setProperty('--lc-stats-height',Math.ceil(statsPanel.getBoundingClientRect().height)+'px');};requestAnimationFrame(syncStatsHeight);if(typeof ResizeObserver==='function'){dockObserver=new ResizeObserver(syncStatsHeight);dockObserver.observe(statsPanel);}
   }

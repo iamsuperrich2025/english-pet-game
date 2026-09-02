@@ -19,7 +19,10 @@ const moduleEnd=code.indexOf('function noiseBurst',moduleStart);
 assert.ok(moduleStart>=0&&moduleEnd>moduleStart,'cannot isolate Letter Cannon BGM module');
 const moduleSource=code.slice(moduleStart,moduleEnd);
 assert.doesNotMatch(moduleSource,/fetch\(|arrayBuffer\(|decodeAudioData/,'BGM must not force an eager full-file download');
-assert.match(code,/id="lc-music"[^>]*aria-pressed="true"/,'visible music button must expose state accessibly');
+assert.match(code,/id="lc-music"[^>]*aria-pressed="true"[^>]*data-state="waiting"[^>]*aria-label=/,'visible music button must expose its initial waiting state accessibly');
+assert.match(css,/\.lc-musicbtn\[data-state="on"\][^}]*#158d66/,'playing state must be visibly green');
+assert.match(css,/\.lc-musicbtn\[data-state="off"\][^}]*#a83c52/,'off state must be visibly red');
+assert.match(css,/\.lc-musicbtn\[data-state="waiting"\][^}]*#ffe283/,'waiting-for-gesture state must be visibly amber');
 assert.ok(code.indexOf('id="lc-music"')<code.indexOf('class="lc-actions"'),'music button must be separate from the crowded right action row');
 assert.match(css,/#lc-game \.lc-musicbtn\{[^}]*top:7px;left:7px;[^}]*pointer-events:auto/,'music button must occupy the free top-left HUD area');
 for(const width of [280,301,360,361,540]){const compact=width<=360,musicWidth=compact?82:88,actionsWidth=compact?173:197,gap=(width-7-actionsWidth)-(7+musicWidth);assert(gap>=10,'music/actions gap must stay >=10px at '+width+'px, got '+gap);const height=compact?35:38;assert(7+height<=55,'music button must end before the word HUD at '+width+'px');}
@@ -27,6 +30,7 @@ assert.match(code,/function lcMusicPreferenceOn\(\)\{return lcMusicEnabled;\}/,'
 assert.match(code,/function open\(\)\{[^}]*opening=true;lcMusicEnabled=true;lcBgmBlocked=false;if\(typeof Music[^}]*suspendBg\)Music\.suspendBg\(\);lcMusicStart\(\);requestPortrait\(\);Promise\.all/,'entry must request BGM playback synchronously inside the menu click gesture');
 assert.match(code,/token!==lcBgmPlayToken\|\|\(!running&&!opening\)/,'gesture-started BGM must remain active while game assets finish loading');
 assert.match(code,/running=true;resetMission\(\);if\(typeof Music[\s\S]{0,120}lcMusicStart\(\)/,'active game start must reaffirm BGM playback');
+assert.match(code,/root\.addEventListener\('pointerdown',lcMusicUserGesture,[\s\S]{0,180}root\.addEventListener\('click',lcMusicUserGesture,[\s\S]{0,180}window\.addEventListener\('keydown',lcMusicUserGesture/,'any touch, click, or key inside the game must retry blocked BGM');
 assert.match(code,/running=false;lcMusicStop\(LC_BGM_EXIT_FADE_MS,true/,'exit must fade, stop, and rewind the BGM');
 assert.doesNotMatch(code,/releasePortrait\(\);if\(typeof Music[\s\S]{0,80}resumeBg/,'Lobby music must wait for the Letter Cannon fade callback');
 assert.match(build,/sound\/letter_cannon\/Wordflight_Beyond_the_Stars\.mp3/,'production build must include the requested MP3');
@@ -37,14 +41,14 @@ assert.doesNotMatch(toggleSoundSource,/lcMusicStart|lcMusicStop/,'sound-effects 
 const precacheSource=build.slice(build.indexOf('const precache ='),build.indexOf('const swPath',build.indexOf('const precache =')));
 assert.doesNotMatch(precacheSource,/lcBgmUrl|Wordflight_Beyond_the_Stars/,'large BGM must stay out of Service Worker precache');
 
-let now=0,created=0,resumeCalls=0;
+let now=0,created=0,resumeCalls=0,blockNext=false,playCalls=0;
 class FakeAudio{
   constructor(){created++;this.preload='auto';this.loop=false;this.volume=1;this.src='';this.paused=true;this.currentTime=19;this.listeners={};}
   addEventListener(name,fn){this.listeners[name]=fn;}
-  play(){this.paused=false;return Promise.resolve();}
+  play(){playCalls++;if(blockNext){blockNext=false;this.paused=true;return Promise.reject(new Error('NotAllowedError'));}this.paused=false;return Promise.resolve();}
   pause(){this.paused=true;}
 }
-const button={attrs:{},textContent:'',title:'',setAttribute(k,v){this.attrs[k]=v;},classList:{toggle(){}}};
+const button={attrs:{},dataset:{},textContent:'',title:'',setAttribute(k,v){this.attrs[k]=v;if(k==='data-state')this.dataset.state=v;},classList:{toggle(){}}};
 const context={
   Audio:FakeAudio,Promise,performance:{now:()=>now},
   setTimeout(fn,ms){now+=Math.min(40,Number(ms)||0);fn();return 1;},clearTimeout(){},
@@ -57,7 +61,7 @@ vm.runInContext([
   'const LC_BGM_VOLUME=.4;',
   'let lcBgm=null,lcBgmBtn=this.__button,lcBgmFadeTimer=0,lcBgmFadeToken=0,lcBgmPlayToken=0,lcBgmBlocked=false,lcMusicEnabled=true;',
   moduleSource,
-  'this.__api={start:lcMusicStart,stop:lcMusicStop,toggle:lcMusicToggle,get audio(){return lcBgm;},get enabled(){return lcMusicEnabled;}};',
+  'this.__api={start:lcMusicStart,stop:lcMusicStop,toggle:lcMusicToggle,gesture:lcMusicUserGesture,get audio(){return lcBgm;},get enabled(){return lcMusicEnabled;}};',
 ].join('\n'),Object.assign(context,{__button:button}),{filename:'letter_cannon_bgm.vm.js'});
 
 (async()=>{
@@ -70,22 +74,32 @@ vm.runInContext([
   assert.strictEqual(api.audio.src,'sound/letter_cannon/Wordflight_Beyond_the_Stars.mp3');
   assert.strictEqual(api.audio.paused,false);
   assert.strictEqual(api.audio.volume,.4);
-  assert.strictEqual(button.textContent,'🎵 เพลง เปิด','Dragon music defaults on despite persisted Lobby music-off and muted effects');
+  assert.strictEqual(button.textContent,'🎵 เปิดอยู่','Dragon music defaults on despite persisted Lobby music-off and muted effects');
+  assert.strictEqual(button.dataset.state,'on','playing state is explicit');
   assert.match(moduleSource,/function lcMusicCanPlay\(\)\{return lcMusicPreferenceOn\(\);\}/,'BGM preference must be independent from the sound-effects switch');
   assert.doesNotMatch(moduleSource,/masterOff|state\.sound|state\.musicOff|Music\.isMusicOn|Music\.setMusic/,'BGM module must not inherit or mutate global audio preferences');
   api.toggle();
   assert.strictEqual(api.enabled,false,'off button controls only this Dragon session');
   assert.strictEqual(api.audio.paused,true,'off button fades to a paused media element');
+  assert.strictEqual(button.textContent,'🔇 ปิดอยู่','off state is explicit instead of an ambiguous action label');
+  assert.strictEqual(button.dataset.state,'off');
   assert.strictEqual(created,1,'toggle reuses the same locally cached media element');
   await api.toggle();
   assert.strictEqual(api.enabled,true);
   assert.strictEqual(api.audio.paused,false);
-  api.audio.pause();api.audio.listeners.error();assert.strictEqual(button.textContent,'⚠️ แตะเปิดเพลง');await api.toggle();assert.strictEqual(api.enabled,true,'blocked retry must keep the session music enabled');assert.strictEqual(api.audio.paused,false,'tap on the blocked state retries playback from a user gesture');
+  blockNext=true;api.audio.pause();await api.start();
+  assert.strictEqual(button.textContent,'▶ รอแตะจอ','blocked state clearly says any screen tap will start music');
+  assert.strictEqual(button.dataset.state,'waiting');
+  const callsBeforeGesture=playCalls;await api.gesture({target:{closest(){return null;}}});
+  assert.strictEqual(playCalls,callsBeforeGesture+1,'first ordinary game touch retries playback automatically');
+  assert.strictEqual(api.enabled,true,'automatic retry keeps the session music enabled');
+  assert.strictEqual(api.audio.paused,false,'ordinary game touch starts the music without pressing the music button');
+  assert.strictEqual(button.textContent,'🎵 เปิดอยู่');assert.strictEqual(button.dataset.state,'on');
   let faded=false;api.stop(1100,true,()=>{faded=true;});
   assert.strictEqual(faded,true,'exit callback runs after fade completion');
   assert.strictEqual(api.audio.paused,true);
   assert.strictEqual(api.audio.currentTime,0,'exit rewinds for the next session');
   assert.strictEqual(api.audio.volume,.4,'fade restores configured volume');
   assert.strictEqual(resumeCalls,0,'isolated BGM module never resumes Lobby itself');
-  console.log('PASS letter_cannon_bgm: gesture-safe session-on music, SFX/global-preference independence, lazy loop/reuse, fade/stop/rewind, immutable build URL');
+  console.log('PASS letter_cannon_bgm: any-screen-touch autoplay retry, explicit on/off/waiting UI, session-on independence, lazy loop/reuse, fade/rewind/cache');
 })().catch(error=>{console.error(error);process.exitCode=1;});

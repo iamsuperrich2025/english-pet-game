@@ -10,6 +10,9 @@
 
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 > ผู้ใช้เริ่มใช้ Codex ช่วยงานคู่ขนานกับ session Claude (4 ส.ค. 2026 เหตุ: Claude ติด rate limit) — Codex ไม่เห็น `img/`/`sound/` (ไม่อยู่ใน git) และ **deploy Firebase เองไม่ได้** ต้องรอผู้ใช้รันบนเครื่องเอง
+- **รอบ 1348 · Dragon Sky Siege แตะจอแล้วเพลงดังอัตโนมัติ:** หาก browser บล็อก play แรก การแตะ/คลิกที่ใดก็ได้ในเกมหรือกดคีย์จะ retry ทันที ไม่ต้องแตะปุ่มเพลง; ปุ่มเพลงไม่ถูก gesture handler แย่ง event
+- ปุ่มแสดงสามสถานะไม่กำกวม: `🎵 เปิดอยู่` สีเขียว, `🔇 ปิดอยู่` สีแดง, `▶ รอแตะจอ` สีเหลือง พร้อม ARIA/คำอธิบาย; คงขนาดเดิมและ geometry gap เดิม
+- เพิ่ม regression จำลอง NotAllowedError→แตะพื้นที่เกม→เล่นสำเร็จ; BGM/Dragon/syntax/diff, built JS/CSS contract และ production build/PWA/cache/TWA ผ่าน (browser audio QA ถูก Windows sandbox บล็อก)
 - **รอบ 1347 · Dragon Sky Siege แก้เพลงไม่ดังจริง:** ต้นเหตุอ่าน `state.musicOff` ที่บันทึกค้างและเรียก `Audio.play()` หลังรอภาพจนพ้น user gesture; เปลี่ยนเป็นเปิดเพลงใหม่ทุก session และสั่งเล่นทันทีจากคลิกเข้าเกม
 - ปุ่มเพลงควบคุมเฉพาะ Dragon session ไม่แก้ค่า Lobby/SFX; ยังคง Audio เดิม, lazy `preload=metadata`, loop, immutable disk cache และ fade 1.1 วินาทีเมื่อออก
 - MP3 ยาว 154.6 วินาที/peak -1.3 dB; BGM+Dragon regression, syntax, production build 9,384 ไฟล์ และ PWA/cache/TWA validator ผ่าน (browser audio QA ถูก Windows sandbox บล็อก)

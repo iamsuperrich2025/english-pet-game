@@ -73,9 +73,10 @@
 #lc-game .lc-progress{gap:3px;margin-top:2px}
 #lc-game .lc-slot{width:clamp(17px,4.6vw,28px);height:18px;font-size:14px}
 #lc-game .lc-actions{position:absolute;z-index:5;top:7px;right:7px;display:flex;gap:4px}
-#lc-game .lc-musicbtn{position:absolute;z-index:5;top:7px;left:7px;width:88px;height:38px;padding:0 7px;border:1px solid rgba(174,246,255,.82);border-radius:10px;background:linear-gradient(#1889a7,#164f7c);box-shadow:0 4px 12px rgba(0,0,0,.28),inset 0 0 10px rgba(91,238,255,.12);color:#fff;font:900 10px Kanit,system-ui,sans-serif;white-space:nowrap;pointer-events:auto;cursor:pointer}
-#lc-game .lc-musicbtn[aria-pressed="false"]{border-color:rgba(255,174,215,.78);background:linear-gradient(#854367,#532d5d);color:#ffe8f5}
-#lc-game .lc-musicbtn.blocked{border-color:#ffe283;background:linear-gradient(#ad6c28,#743c39);color:#fff6b7}
+#lc-game .lc-musicbtn{position:absolute;z-index:5;top:7px;left:7px;width:88px;height:38px;padding:0 7px;border:2px solid #8cffcf;border-radius:10px;background:linear-gradient(#158d66,#0a5447);box-shadow:0 4px 12px rgba(0,0,0,.32),0 0 10px rgba(68,255,190,.25);color:#fff;font:900 10px Kanit,system-ui,sans-serif;white-space:nowrap;pointer-events:auto;cursor:pointer;transition:background .16s,border-color .16s,box-shadow .16s}
+#lc-game .lc-musicbtn[data-state="on"]{border-color:#8cffcf;background:linear-gradient(#158d66,#0a5447);box-shadow:0 4px 12px rgba(0,0,0,.32),0 0 10px rgba(68,255,190,.3);color:#f2fff9}
+#lc-game .lc-musicbtn[data-state="off"]{border-color:#ff9aa8;background:linear-gradient(#a83c52,#61283a);box-shadow:0 4px 12px rgba(0,0,0,.32);color:#fff2f4}
+#lc-game .lc-musicbtn[data-state="waiting"]{border-color:#ffe283;background:linear-gradient(#ad6c28,#743c39);box-shadow:0 4px 12px rgba(0,0,0,.32),0 0 10px rgba(255,212,83,.3);color:#fff6b7}
 #lc-game .lc-musicbtn:active{transform:translateY(2px)}
 #lc-game .lc-iconbtn{width:38px;height:38px;border-radius:10px;font-size:17px}
 #lc-game .lc-missilebtn{width:55px;font:900 12px Kanit;background:linear-gradient(#d77724,#8c3140);border-color:#ffd36f}
