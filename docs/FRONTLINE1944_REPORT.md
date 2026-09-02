@@ -1,4 +1,4 @@
-# Vocab World: Frontline 1944 — Phase 1.2.5 Mobile Aim Latch + Floating Controls Report
+# Vocab World: Frontline 1944 — Phase 1.2.6 Movable FIRE + Global Double-Tap FIRE Report
 
 
 
@@ -14,7 +14,7 @@ Scope: **Phase 1 Foundation acceptance — Phase 2 cosmetic reconstruction has N
 
 
 
-Current Task baseline: `VW-20260901-174504-a432bb`
+Current Task baseline: `VW-20260901-190151-e90b9c`
 
 
 
@@ -30,49 +30,16 @@ Current Task baseline: `VW-20260901-174504-a432bb`
 
 
 
-This Phase 1.2.5 patch was built only from the current files contained in the supplied VW Dev Studio Task ZIP. The SHA-256 hashes of every supplied context file were rechecked against `TASK_MANIFEST.json` before editing and matched.
-
-
-
-
-
-
+This Phase 1.2.6 patch was built only from the current files contained in the supplied VW Dev Studio Task ZIP. The SHA-256 hashes of every supplied context file were rechecked against `TASK_MANIFEST.json` before editing and matched.
 
 Modified current files:
 
-
-
-
-
-
-
 - `js/frontline1944.js`
-
-
-
 - `css/frontline1944.css`
-
-
-
-- `index_classic.html`
-
-
-
 - `tools/test_frontline1944.js`
-
-
-
 - `docs/FRONTLINE1944_REPORT.md`
 
-- `handoff/ARCHITECTURE.md`
-
-
-
-
-
-
-
-No older Frontline source was reconstructed or substituted.
+No loader/PWA file was supplied in this Task context, so none is modified. No older Frontline source was reconstructed or substituted.
 
 
 
@@ -1119,5 +1086,40 @@ The supplied Task ZIP does not contain the existing `js/data/f1_vocab.js` file r
 
 This remains **Phase 1 — Foundation Acceptance**. Phase 2 has not started.
 
+## Phase 1.2.6 — Movable FIRE + Global Double-Tap FIRE (2026-09-01)
+
+### Accepted runtime lock
+
+The user real-device verified DRIVE forward/reverse, left/right steering, hull-forward movement, zero strafe, mobile AIM/heading retention, normal FIRE and barrel-aligned projectile direction before this phase. Phase 1.2.6 therefore changes only mobile input/UI ergonomics around FIRE.
+
+A source-level lock comparison against the supplied Phase 1.2.5 baseline confirms the authoritative `TankRuntime`, `DesktopTankInputAdapter`, `UnifiedTankInputAdapter`, `forwardFromRotation`, `rightFromRotation`, `driveDelta`, `tickTank`, `cannonWorldPosition`, `cannonWorldDirection`, `cannonWorldRay`, and `firePlayer` blocks are byte-identical.
+
+### Movable FIRE control
+
+- A quick tap on the visible FIRE button queues exactly one mobile FIRE pulse.
+- Hold + intentional drag crosses both a movement threshold and a short hold threshold before entering reposition mode, preventing tiny finger jitter from moving the control.
+- Repositioning follows the pointer and clamps against the actual viewport, safe-area insets, current DOM rectangles for protected Frontline UI, and the current visible DRIVE/AIM controls.
+- The selected FIRE position is stored in `localStorage` as normalized coordinates, independently for landscape and portrait.
+- A saved position is recovered through the same clamp/avoidance solver when viewport geometry changes or when a stale stored value is invalid.
+- A long stationary FIRE hold retains the existing continuous-fire behavior; once reposition mode begins, continuous fire is stopped and no release pulse is emitted.
+
+### Global deterministic double-tap FIRE
+
+`GlobalMobileTouchRouter` remains the single mobile pointer-ownership router. It now tracks short tap candidates separately from DRIVE/AIM/FIRE ownership and recognizes a double tap using explicit time, distance and per-tap movement thresholds. It does not depend on browser `dblclick`.
+
+A valid double tap emits a queued mobile FIRE pulse through `MobileTankInputAdapter`; it does not create a second Tank Runtime and does not mutate hull heading, turret heading, joystick state, or another pointer's ownership. A third finger can therefore double-tap a safe battlefield region while DRIVE and AIM remain owned by the first two fingers.
+
+Critical UI is excluded using live DOM geometry/targets, including Exit, top HUD/Target Word, objective/fortress navigation, boss/state panels, visible diagnostics/loading/toasts, modal/menu/button-style interactive targets, and the visible DRIVE/AIM/FIRE controls where a tap would conflict with their direct interaction.
+
+### Automated acceptance
+
+The isolated Task-ZIP harness passes all 57 Phase 1.2.6 deterministic checks covering accepted DRIVE/AIM behavior, normal/quick FIRE, reposition suppression, clamping, protected-UI avoidance, local persistence/recovery, deterministic double-tap recognition/rejection, protected-area rejection, DRIVE+AIM+double-tap concurrency, projectile/barrel alignment, unchanged desktop behavior, and the one-TankRuntime architecture.
+
+The supplied Task ZIP does not contain `js/data/f1_vocab.js`, so the vocabulary-source portion of the repository-wide test is skipped only in the isolated harness. It must run after the patch is imported into the full project.
+
+### Source-context limitation
+
+The Phase 1.2.6 Task ZIP did not include the current `index_classic.html`, service worker, app-update loader, or other runtime-loader/versioning source. Under the Source Context Guard, this patch does **not** fabricate or modify those existing files. The full-project loader/cache-bust must therefore remain untouched in this patch; if local/mobile preview serves stale cached Phase 1.2.5 after Apply + Build, export a fresh ChatGPT Task ZIP that includes the current loader/PWA files before changing cache/version references.
 
 
+This remains **Phase 1 — Foundation Acceptance**. Phase 2 has not started.
