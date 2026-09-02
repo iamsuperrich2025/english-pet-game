@@ -11,6 +11,10 @@
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 > ผู้ใช้เริ่มใช้ Codex ช่วยงานคู่ขนานกับ session Claude (4 ส.ค. 2026 เหตุ: Claude ติด rate limit) — Codex ไม่เห็น `img/`/`sound/` (ไม่อยู่ใน git) และ **deploy Firebase เองไม่ได้** ต้องรอผู้ใช้รันบนเครื่องเอง
 - **10 ส.ค. 2026 — รอบ 1096 Account deletion ผ่าน production แล้ว:** Rules ใหม่ publish/ตรวจสดตรง source และบัญชีทดสอบ `parkerhulk2020@gmail.com` ถูกลบสำเร็จ; รอ COMMIT_DEPLOY ส่ง client fix ที่ตัดพาธ reaction ว่างขึ้นเว็บ
+- **รอบ 1346 · เมนูสัตว์ปลอดภัย + Dragon Sky Siege:** ใช้ `foodSafeForPetMenu` ตัดอาหารคน/`badFor` จากแผงให้อาหารและร้านทุกชนิด; ของอันตรายจากเซฟเก่าเฉื่อยและ `feedWith` ปฏิเสธก่อนหัก stock
+- ปุ่ม Lobby เปลี่ยนจาก Letter Cannon เป็น `🐉🔥 Dragon Sky Siege`; Home V2/Classic ใช้ชื่อและสัญลักษณ์มังกรตรงกับเกม
+- เพิ่มไอเท็มบินเก็บ `DRAGON BARRAGE` ยิง 5 สาย และ `MISSILE RAIN` เติมจรวด +4/ยิง salvo 3 ลูก; จรวดโบนัสคงอยู่จนใช้และจำกัด 12 ลูก
+- pantry/bulk/Dragon regressions + syntax/undefined + production build/PWA ผ่าน; Chrome 812×375 ได้ 9 pets/4 safe foods, harmful cards=0, noScroll+inside=true, stockDelta=7
 - **รอบ 1345 · ให้อาหารสัตว์ทุกตัวในคราวเดียว:** เปลี่ยนปุ่มรายตัวเป็นแผงวางแผนรวม เห็นสัตว์ที่เลี้ยงครบ เลือกเมนูรายตัว/จัดปลอดภัยอัตโนมัติ แล้วหัก stock ทั้งชุดแบบ atomic
 - อาหาร 18 เมนูใช้ WebP sprite RGBA 1080×540 ไฟล์เดียว 175,920 bytes; ทุกการ์ดบอก `บนชั้น ×จำนวน` และของหมดพาไปเลือกซื้อชั้น/ขับรถซื้อเติม
 - ถอดน่องไก่ติดกระดูก: คง stock id `chicken` แต่เปลี่ยนเป็นอกไก่ต้มสุกไร้กระดูก พร้อมข้อความ “กระดูกไก่อาจทิ่มลำไส้สัตว์ได้” ใน data/UI/GAME_RULES

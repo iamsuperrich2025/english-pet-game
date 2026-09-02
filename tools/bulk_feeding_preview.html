@@ -37,7 +37,7 @@ async function ready(){
   const after=w.eval('PetPantry.total()');
   const spriteEl=foods[0].querySelector('.food-sprite'),spriteStyle=getComputedStyle(spriteEl);
   const result={viewport:vr,box:{left:r.left,top:r.top,right:r.right,bottom:r.bottom,width:r.width,height:r.height,scrollHeight:box.scrollHeight,clientHeight:box.clientHeight},foodCards:foods.length,petCards:pets.length,noScroll:box.scrollHeight<=box.clientHeight+1&&menu.scrollHeight<=menu.clientHeight+1,inside,sprite:spriteStyle.getPropertyValue('--food-x')!==''&&spriteStyle.backgroundImage.includes('food-sprite'),stockDelta:setup.before-after,action:action||'preview'};
-  result.pass=result.foodCards===10&&result.petCards===9&&result.noScroll&&result.inside&&result.sprite&&(action!=='confirm'||result.stockDelta===7);
+  result.pass=result.foodCards===4&&result.petCards===9&&result.noScroll&&result.inside&&result.sprite&&(action!=='confirm'||result.stockDelta===7);
   metrics.textContent=JSON.stringify(result);document.body.dataset.pass=String(result.pass);document.title=(result.pass?'PASS':'FAIL')+' bulk feeding '+result.viewport.width+'x'+result.viewport.height;
   if(new URLSearchParams(location.search).get('report')==='1'){
     document.body.innerHTML=`<pre style="box-sizing:border-box;width:100vw;height:100vh;margin:0;padding:14px;white-space:pre-wrap;overflow:hidden;background:${result.pass?'#e9f9ef':'#ffeaea'};color:#183e45;font:700 12px/1.25 monospace">${JSON.stringify(result,null,2)}</pre>`;

@@ -2,12 +2,13 @@
 const fs=require('fs'),path=require('path'),vm=require('vm');
 const root=path.resolve(__dirname,'..'),read=r=>fs.readFileSync(path.join(root,r),'utf8');
 const assert=(x,m)=>{if(!x)throw new Error(m)};
-const ctx={console,window:{},structuredClone,saveState(){},renderDashboard(){},syncHeader(){},state:{coins:20000,petPantry:{shelfId:null,stock:{}},owned:[]},sfx:{buy(){}},activePet(){return {type:'cat'}},PETS:{dog:{favFood:{emoji:'🦴',name:'กระดูก',price:300}},cat:{favFood:{emoji:'🐟',name:'ปลา',price:300}},dragon:{favFood:{emoji:'🌶️',name:'พริก',price:300}}},FOODS:[{id:'apple',name:'แอปเปิ้ล',emoji:'🍎',price:150},{id:'feast',name:'ชุดอาหาร',emoji:'🍱',price:1000}],ITEMS:[]};
+const ctx={console,window:{},structuredClone,saveState(){},renderDashboard(){},syncHeader(){},state:{coins:20000,petPantry:{shelfId:null,stock:{}},owned:[]},sfx:{buy(){}},activePet(){return {type:'cat'}},foodSafeForPetMenu:f=>!!f&&!f.human&&!(Array.isArray(f.badFor)&&f.badFor.length),PETS:{dog:{favFood:{emoji:'🦴',name:'ขนมสุนัข',price:300}},cat:{favFood:{emoji:'🐟',name:'ปลา',price:300}},dragon:{favFood:{emoji:'🌶️',name:'พริก',price:300}}},FOODS:[{id:'apple',name:'แอปเปิ้ล',emoji:'🍎',price:150},{id:'feast',name:'ชุดอาหาร',emoji:'🍱',price:1000},{id:'choco',name:'ช็อกโกแลต',emoji:'🍫',price:200,human:true,badFor:['dog','cat','dragon']}],ITEMS:[]};
 vm.createContext(ctx);vm.runInContext(read('js/data/petshopping.js')+'\n'+read('js/petpantry.js'),ctx);
 const p=ctx.window.PetPantry;
 assert(p&&['ensureState','capacity','total','qty','buyShelf','buyFood','take','takeMany','openPantry','openStore'].every(k=>typeof p[k]==='function'),'public API missing');
 let r=p.buyShelf('small');assert(r.ok&&r.cost===1500&&p.capacity()===30,'small empty shelf purchase failed');assert(p.total()===0,'new shelf must start empty');
 r=p.buyFood('apple',5);assert(r.ok&&r.cost===750&&p.qty('apple')===5,'food stock purchase failed');const coins=ctx.state.coins;assert(p.take('apple',1)&&p.qty('apple')===4&&ctx.state.coins===coins,'feeding take must debit stock only');
+assert(p.buyFood('choco',1).code==='invalid-food','harmful food must not be purchasable from the pet shop');ctx.state.petPantry.stock.choco=9;assert(p.total()===4,'legacy harmful stock must be inert and consume no visible shelf capacity');
 ctx.state.petPantry.stock={apple:3,feast:1};assert(p.takeMany([{food:{id:'apple'}},{food:{id:'apple'}},{food:{id:'feast'}}]),'atomic multi-take failed');assert(p.qty('apple')===1&&p.qty('feast')===0,'multi-take debited wrong quantities');const before=JSON.stringify(ctx.state.petPantry.stock);assert(!p.takeMany([{food:{id:'apple'}},{food:{id:'apple'}}]),'insufficient multi-take must fail');assert(JSON.stringify(ctx.state.petPantry.stock)===before,'failed multi-take partially mutated stock');
 r=p.buyShelf('medium');assert(r.ok&&r.cost===3500&&p.capacity()===75,'upgrade must charge difference');assert(p.buyShelf('small').code==='downgrade','downgrade must be blocked');
 ctx.state.petPantry.stock={apple:75};assert(p.buyFood('apple',1).code==='capacity','capacity limit missing');
@@ -18,4 +19,4 @@ assert(fashionJs.includes('pp-fashion-strip')&&fashionJs.includes('bindFashionSt
 assert(fashionJs.includes('ลองใส่')&&fashionJs.includes('fashionPetImage'),'try-on pet preview missing');
 assert(fashionJs.includes("padStart(6,'0')")&&fashionJs.includes('mkt-pin-grid'),'6-digit purchase confirmation missing');
 assert(fashionCss.includes('@media(max-height:430px)')&&fashionCss.includes('grid-template-columns:repeat(6'),'812x375 compact PIN layout missing');
-console.log('PASS pet pantry: shelves, atomic multi-stock take, horizontal fashion strip, try-on preview, 6-digit confirmation');
+console.log('PASS pet pantry: safe-only catalog, inert legacy harmful stock, atomic multi-stock take, fashion strip and PIN');

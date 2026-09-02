@@ -5764,7 +5764,7 @@ function feedPet(){
 function feedFoodsForPet(p){
   const favId=`fav_${p.type}`;
   const fav=Object.assign({id:favId,stockId:favId},PETS[p.type].favFood);
-  return [fav,...FOODS.map(f=>Object.assign({stockId:f.id},f))];
+  return [fav,...FOODS.filter(foodSafeForPetMenu).map(f=>Object.assign({stockId:f.id},f))];
 }
 function feedFoodById(p,id){ return feedFoodsForPet(p).find(f=>f.id===id)||null; }
 function feedFoodCanUse(p,food,now=Date.now()){
@@ -5813,7 +5813,7 @@ function openFoodMenu(seedPet){
     plan=Object.create(null);
     const left=Object.create(null),now=Date.now();
     pets.forEach((p,i)=>{
-      const candidates=feedFoodsForPet(p).filter(f=>!f.human&&!foodBadFor(f,p.type)&&feedFoodCanUse(p,f,now));
+      const candidates=feedFoodsForPet(p).filter(f=>feedFoodCanUse(p,f,now));
       for(const food of candidates){
         const sid=food.stockId||food.id;
         if(left[sid]===undefined) left[sid]=stockQty(food);
@@ -5841,12 +5841,11 @@ function openFoodMenu(seedPet){
       const sid=food.stockId||food.id,qty=stockQty(food),other=reserved(sid,selectedIndex);
       const selected=plan[selectedIndex]===food.id;
       const canUse=feedFoodCanUse(selectedPet,food,now);
-      const bad=foodBadFor(food,selectedPet.type);
       const noFree=!selected&&qty-other<=0;
       const disabled=!canUse||noFree;
-      const badge=bad?'⚠️ เป็นโทษ':food.safeNote?(food.id==='chicken'?'✅ ไร้กระดูก':'✅ ไม่ใช่กระดูกไก่'):food.exp?'💖 เมนูโปรด':food.skipNext?'⏳ ข้ามมื้อ':food.human?'🧑 อาหารคน':'🐾 ปลอดภัย';
+      const badge=food.safeNote?(food.id==='chicken'?'✅ ไร้กระดูก':'✅ ไม่ใช่กระดูกไก่'):food.exp?'💖 เมนูโปรด':food.skipNext?'⏳ ข้ามมื้อ':'🐾 ปลอดภัย';
       const stockText=qty<=0?'🚗 หมด — ไปซื้อ':noFree?'⏳ จองให้ตัวอื่นแล้ว':`บนชั้น ×${qty}`;
-      return `<button class="feed-all-food ${selected?'selected':''} ${bad?'bad':''} ${disabled?'disabled':''} ${qty<=0?'out':''}" data-food="${food.id}" title="${escapeHTML(food.safeNote||foodWhy(food,selectedPet.type)||food.name)}">
+      return `<button class="feed-all-food ${selected?'selected':''} ${disabled?'disabled':''} ${qty<=0?'out':''}" data-food="${food.id}" title="${escapeHTML(food.safeNote||food.name)}">
         <span class="feed-all-food-stock">${stockText}</span>${foodSpriteHTML(food,'feed-all-food-art')}
         <span class="feed-all-food-copy"><b>${escapeHTML(food.en)}</b><small>${escapeHTML(food.name)}</small></span>
         <span class="feed-all-food-badge">${badge}</span><span class="feed-all-food-fill">อิ่ม +${food.fill}</span>
@@ -5883,10 +5882,7 @@ function openFoodMenu(seedPet){
       const blocked=feedPetBlockText(p,Date.now());
       if(!feedFoodCanUse(p,food)){sfx.wrong();toast(blocked||'เมนูนี้ยังกินไม่ได้ในตอนนี้');return;}
       if(qty-reserved(food.stockId||food.id,selectedIndex)<=0){sfx.wrong();toast('อาหารชนิดนี้ถูกจัดให้สัตว์ตัวอื่นครบตามจำนวนบนชั้นแล้ว');return;}
-      const choose=()=>{plan[selectedIndex]=food.id;notice='';render();};
-      if(foodBadFor(food,p.type)){
-        sfx.wrong();askConfirm(`<div style="font-size:48px">${food.emoji}⚠️</div><b>${escapeHTML(food.name)}เป็นโทษกับ${escapeHTML(p.name)}</b><br><small>${escapeHTML(foodWhy(food,p.type))} · พิษ +${food.toxin||0}</small>`,'เลือกเมนูนี้',choose);
-      }else choose();
+      plan[selectedIndex]=food.id;notice='';render();
     }));
     overlay.querySelector('.feed-all-auto').addEventListener('click',()=>{autoPlan();notice='จัดเมนูปลอดภัยจากของที่มีบนชั้นให้แล้ว';render();});
     overlay.querySelector('.feed-all-shop').addEventListener('click',goShop);
@@ -5899,16 +5895,15 @@ function openFoodMenu(seedPet){
       if(typeof PetPantry==='undefined'||typeof PetPantry.takeMany!=='function'||!PetPantry.takeMany(rows.map(row=>({food:row.food})))){
         sfx.wrong();autoPlan();notice='จำนวนอาหารบนชั้นเปลี่ยนไป จัดเมนูใหม่ให้แล้วโดยยังไม่ได้ป้อนตัวใด';render();return;
       }
-      let full=0,toxic=0,shapeChanged=0;
+      let full=0,shapeChanged=0;
       rows.forEach(row=>{
         const result=applyFoodToPet(row.p,row.food,Date.now());
         if(result.full){full++;questEvent('feed');}
-        if(result.bad)toxic++;
         if(result.shapeChange)shapeChanged++;
         if(row.food.exp)addExp(row.food.exp,row.p);
       });
       sfx.buy();saveState();makeHappy(4000);
-      notice=`✅ ให้อาหารพร้อมกัน ${rows.length} ตัวแล้ว${full?` · อิ่มเต็ม ${full} ตัว`:''}${toxic?` · มีอาหารเป็นโทษ ${toxic} ตัว`:''}${shapeChanged?` · รูปร่างเปลี่ยน ${shapeChanged} ตัว`:''}`;
+      notice=`✅ ให้อาหารพร้อมกัน ${rows.length} ตัวแล้ว${full?` · อิ่มเต็ม ${full} ตัว`:''}${shapeChanged?` · รูปร่างเปลี่ยน ${shapeChanged} ตัว`:''}`;
       autoPlan();render();heartsFx(overlay.querySelector('.feed-all-pets'),Math.min(16,rows.length*2));
     });
   };
@@ -5935,6 +5930,9 @@ function applyFoodToPet(p,food,now=Date.now()){
 }
 
 function feedWith(p, food){
+  if(typeof foodSafeForPetMenu!=='function'||!foodSafeForPetMenu(food)){
+    sfx.wrong();toast('⛔ เมนูนี้ไม่ใช่อาหารปลอดภัยสำหรับสัตว์ จึงไม่สามารถป้อนได้');return;
+  }
   if(typeof PetPantry === 'undefined' || !PetPantry.take(food.stockId||food.id, 1)){
     sfx.wrong();
     toast('🥫 อาหารชิ้นนี้หมดจากชั้นแล้ว — ยังไม่ได้ให้น้องกินนะ');

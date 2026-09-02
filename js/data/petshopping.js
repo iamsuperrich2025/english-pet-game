@@ -16,5 +16,5 @@ const PET_SHOP_FAVORITES = Object.freeze(Object.keys(PETS).map(type=>Object.free
 })));
 const PET_SHOP_FOODS = Object.freeze([
   ...PET_SHOP_FAVORITES,
-  ...FOODS.map(food=>Object.freeze({...food, stockId:food.id})),
+  ...FOODS.filter(foodSafeForPetMenu).map(food=>Object.freeze({...food, stockId:food.id})),
 ]);

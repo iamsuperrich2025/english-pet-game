@@ -15,7 +15,8 @@ const PetPantry = (()=>{
   }
   function shelf(target=state){ const p=ensureState(target); return PET_PANTRY_SHELVES.find(x=>x.id===p.shelfId)||null; }
   function capacity(target=state){ const s=shelf(target); return s?s.capacity:0; }
-  function total(target=state){ return Object.values(ensureState(target).stock).reduce((a,n)=>a+cleanInt(n),0); }
+  /* สต็อกอาหารคน/อาหารเป็นโทษจากเซฟเก่าเป็นข้อมูลเฉื่อย: ไม่แสดง ไม่ขาย และไม่กินพื้นที่ชั้น */
+  function total(target=state){ return foodCatalog().reduce((sum,f)=>sum+qty(f,null,target),0); }
   function stockId(foodOrId,type){
     const id=typeof foodOrId==='object'&&foodOrId?foodOrId.id:String(foodOrId||'');
     if(id==='favorite') return `fav_${type||((activePet&&activePet())?activePet().type:'dog')}`;
@@ -25,7 +26,7 @@ const PetPantry = (()=>{
   function foodCatalog(){ return Array.from(PET_SHOP_FOODS); }
   function favoriteFor(type){ return PET_SHOP_FAVORITES.find(f=>f.petType===type)||null; }
   function foodById(id,type){ const sid=stockId(id,type); return PET_SHOP_FOODS.find(f=>f.stockId===sid)||null; }
-  function catalogForPet(type){ const fav=favoriteFor(type); return [fav,...FOODS].filter(Boolean); }
+  function catalogForPet(type){ const fav=favoriteFor(type); return [fav,...FOODS].filter(foodSafeForPetMenu); }
   function shelfValue(target=state){ const s=shelf(target); return s?s.price:0; }
   function stockValue(target=state){ return foodCatalog().reduce((sum,f)=>sum+qty(f,null,target)*cleanInt(f.price),0); }
   function done(){ saveState(); if(typeof syncHeader==='function')syncHeader(); if(typeof renderDashboard==='function')renderDashboard(); }

@@ -177,6 +177,7 @@
     bubble:`<circle cx="22" cy="38" r="15" class="i-blue"/><circle cx="39" cy="23" r="12" class="i-pink"/><circle cx="48" cy="42" r="8" class="i-mint"/><path d="M15 34c3-5 8-7 13-5M34 20c3-3 7-3 10-1" class="i-white-line"/>`,
     target:`<circle cx="30" cy="32" r="24" class="i-peach"/><circle cx="30" cy="32" r="16" class="i-white"/><circle cx="30" cy="32" r="8" class="i-pink"/><path d="M40 21l15-13-2 9 8 1-16 12z" class="i-purple"/><path d="M30 32l15-11" class="i-line"/>`,
     cannon:`<path d="M10 35h32l8 10H20z" class="i-purple"/><circle cx="22" cy="49" r="7" class="i-coin"/><circle cx="44" cy="49" r="7" class="i-coin"/><path d="M14 33l6-18 29 10-5 16z" class="i-blue"/><path d="M49 18l4-8 3 8 7 2-7 4-2 8-4-7-7-3z" class="i-star"/>`,
+    dragon:`<path d="M11 46c6-12 14-18 24-19-5-5-7-11-6-18 7 2 13 6 16 12 5-4 10-5 15-4-2 8-7 14-14 17 5 3 8 8 9 15-8-5-15-7-22-6-8 2-15 5-22 3z" class="i-purple"/><path d="M31 27c-10-1-18-5-24-12 1 11 6 19 15 24M44 28c4-6 10-10 17-12-2 9-7 16-14 20" class="i-roof"/><circle cx="40" cy="25" r="3" class="i-star"/><path d="M15 50c11 5 23 4 33-2" class="i-line"/>`,
     exam:`<path d="M15 8h34v48H15z" class="i-blue"/><path d="M23 19h18M23 28h18M23 37h10" class="i-white-line"/><path d="M37 42l5 5 10-12" class="i-line"/><path d="M22 6h20v8H22z" class="i-peach"/>`,
     flag:`<path d="M16 8v48" class="i-line"/><path d="M18 11c10-6 20 7 31 0v24c-11 7-21-6-31 0z" class="i-peach"/><path d="M18 19h31M18 27h31" class="i-white-line"/><circle cx="33" cy="23" r="5" class="i-blue"/>`,
     market:`<path d="M10 25h44v31H10z" class="i-mint"/><path d="M7 23l6-14h38l6 14c-4 8-12 8-16 1-5 8-13 8-18 0-4 7-12 7-16-1z" class="i-pink"/><path d="M20 56V38h12v18M39 37h9v10h-9z" class="i-white"/><path d="M20 38h12" class="i-line"/>`,
@@ -296,7 +297,7 @@
   const CLASSIC_RAIL_GLYPHS = Object.freeze({
     cure:'💊',city:'🏙️',worldAdv:'🌍',worldSky:'☁️',worldHaunt:'👻',worldHeli:'🚁',worldDrone:'🛸',
     worldDrive:'🚗',worldSoccer:'⚽',worldMoto:'🏍️',worldInvasion:'🛸',worldMecha:'🤖',home:'🏠',
-    invest:'📈',factory:'🏭',wordsearch:'🔎',typing:'⌨️',bubble:'🫧',shoot:'🎯',cannon:'🔤💥',
+    invest:'📈',factory:'🏭',wordsearch:'🔎',typing:'⌨️',bubble:'🫧',shoot:'🎯',cannon:'🐉🔥',
     examstd:'📋',onet:'🇹🇭',rank:'🥇',market:'🏪',friends:'👥',gifts:'🎁',stats:'📊',trophy:'🏆',racing:'🏎️'
   });
   function classicRailGlyph(actionName, sourceSelector){
@@ -1055,7 +1056,7 @@
       ['typing','typing','พิมพ์คำ','#btn-rail-typing'],
       ['bubble','bubble','เกมฟอง','#btn-rail-bubble'],
       ['shoot','target','ยิงเป้าคำ','#btn-rail-shootword'],
-      ['cannon','cannon','Letter Cannon','#btn-rail-lettercannon'],
+      ['cannon','dragon','Dragon Sky Siege','#btn-rail-lettercannon'],
       ['examstd','exam','ข้อสอบจริง','#btn-rail-examstd'],
       ['onet','flag','O-NET','#btn-rail-onet'],
       ['rank','crown','อันดับ','#btn-rail-rank'],
