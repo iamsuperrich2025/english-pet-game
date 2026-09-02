@@ -23,7 +23,10 @@ assert.match(code,/id="lc-music"[^>]*aria-pressed="true"/,'visible music button 
 assert.ok(code.indexOf('id="lc-music"')<code.indexOf('class="lc-actions"'),'music button must be separate from the crowded right action row');
 assert.match(css,/#lc-game \.lc-musicbtn\{[^}]*top:7px;left:7px;[^}]*pointer-events:auto/,'music button must occupy the free top-left HUD area');
 for(const width of [280,301,360,361,540]){const compact=width<=360,musicWidth=compact?82:88,actionsWidth=compact?173:197,gap=(width-7-actionsWidth)-(7+musicWidth);assert(gap>=10,'music/actions gap must stay >=10px at '+width+'px, got '+gap);const height=compact?35:38;assert(7+height<=55,'music button must end before the word HUD at '+width+'px');}
-assert.match(code,/running=true;resetMission\(\);if\(typeof Music[\s\S]{0,120}lcMusicStart\(\)/,'entry must start the BGM only after the game is active');
+assert.match(code,/function lcMusicPreferenceOn\(\)\{return lcMusicEnabled;\}/,'Dragon music must use a fresh session preference instead of persisted Lobby music-off');
+assert.match(code,/function open\(\)\{[^}]*opening=true;lcMusicEnabled=true;lcBgmBlocked=false;if\(typeof Music[^}]*suspendBg\)Music\.suspendBg\(\);lcMusicStart\(\);requestPortrait\(\);Promise\.all/,'entry must request BGM playback synchronously inside the menu click gesture');
+assert.match(code,/token!==lcBgmPlayToken\|\|\(!running&&!opening\)/,'gesture-started BGM must remain active while game assets finish loading');
+assert.match(code,/running=true;resetMission\(\);if\(typeof Music[\s\S]{0,120}lcMusicStart\(\)/,'active game start must reaffirm BGM playback');
 assert.match(code,/running=false;lcMusicStop\(LC_BGM_EXIT_FADE_MS,true/,'exit must fade, stop, and rewind the BGM');
 assert.doesNotMatch(code,/releasePortrait\(\);if\(typeof Music[\s\S]{0,80}resumeBg/,'Lobby music must wait for the Letter Cannon fade callback');
 assert.match(build,/sound\/letter_cannon\/Wordflight_Beyond_the_Stars\.mp3/,'production build must include the requested MP3');
@@ -34,7 +37,7 @@ assert.doesNotMatch(toggleSoundSource,/lcMusicStart|lcMusicStop/,'sound-effects 
 const precacheSource=build.slice(build.indexOf('const precache ='),build.indexOf('const swPath',build.indexOf('const precache =')));
 assert.doesNotMatch(precacheSource,/lcBgmUrl|Wordflight_Beyond_the_Stars/,'large BGM must stay out of Service Worker precache');
 
-let now=0,created=0,musicOn=true,resumeCalls=0;
+let now=0,created=0,resumeCalls=0;
 class FakeAudio{
   constructor(){created++;this.preload='auto';this.loop=false;this.volume=1;this.src='';this.paused=true;this.currentTime=19;this.listeners={};}
   addEventListener(name,fn){this.listeners[name]=fn;}
@@ -45,16 +48,16 @@ const button={attrs:{},textContent:'',title:'',setAttribute(k,v){this.attrs[k]=v
 const context={
   Audio:FakeAudio,Promise,performance:{now:()=>now},
   setTimeout(fn,ms){now+=Math.min(40,Number(ms)||0);fn();return 1;},clearTimeout(){},
-  state:{sound:false,musicOff:false},Music:{isMusicOn:()=>musicOn,setMusic(v){musicOn=v;},resumeBg(){resumeCalls++;}},
-  saveState(){},running:true,
+  state:{sound:false,musicOff:true},Music:{isMusicOn:()=>false,setMusic(){throw new Error('Dragon BGM must not mutate the Lobby preference');},resumeBg(){resumeCalls++;}},
+  saveState(){},running:true,opening:false,
 };
 vm.createContext(context);
 vm.runInContext([
   "const LC_BGM_URL='sound/letter_cannon/Wordflight_Beyond_the_Stars.mp3';",
   'const LC_BGM_VOLUME=.4;',
-  'let lcBgm=null,lcBgmBtn=this.__button,lcBgmFadeTimer=0,lcBgmFadeToken=0,lcBgmPlayToken=0,lcBgmBlocked=false;',
+  'let lcBgm=null,lcBgmBtn=this.__button,lcBgmFadeTimer=0,lcBgmFadeToken=0,lcBgmPlayToken=0,lcBgmBlocked=false,lcMusicEnabled=true;',
   moduleSource,
-  'this.__api={start:lcMusicStart,stop:lcMusicStop,toggle:lcMusicToggle,get audio(){return lcBgm;}};',
+  'this.__api={start:lcMusicStart,stop:lcMusicStop,toggle:lcMusicToggle,get audio(){return lcBgm;},get enabled(){return lcMusicEnabled;}};',
 ].join('\n'),Object.assign(context,{__button:button}),{filename:'letter_cannon_bgm.vm.js'});
 
 (async()=>{
@@ -67,22 +70,22 @@ vm.runInContext([
   assert.strictEqual(api.audio.src,'sound/letter_cannon/Wordflight_Beyond_the_Stars.mp3');
   assert.strictEqual(api.audio.paused,false);
   assert.strictEqual(api.audio.volume,.4);
-  assert.strictEqual(button.textContent,'🎵 เพลง เปิด','background music stays on when only sound effects are muted');
+  assert.strictEqual(button.textContent,'🎵 เพลง เปิด','Dragon music defaults on despite persisted Lobby music-off and muted effects');
   assert.match(moduleSource,/function lcMusicCanPlay\(\)\{return lcMusicPreferenceOn\(\);\}/,'BGM preference must be independent from the sound-effects switch');
-  assert.doesNotMatch(moduleSource,/masterOff|state\.sound/,'BGM module must not inherit the sound-effects mute state');
+  assert.doesNotMatch(moduleSource,/masterOff|state\.sound|state\.musicOff|Music\.isMusicOn|Music\.setMusic/,'BGM module must not inherit or mutate global audio preferences');
   api.toggle();
-  assert.strictEqual(musicOn,false,'off button persists through the global music preference');
+  assert.strictEqual(api.enabled,false,'off button controls only this Dragon session');
   assert.strictEqual(api.audio.paused,true,'off button fades to a paused media element');
   assert.strictEqual(created,1,'toggle reuses the same locally cached media element');
   await api.toggle();
-  assert.strictEqual(musicOn,true);
+  assert.strictEqual(api.enabled,true);
   assert.strictEqual(api.audio.paused,false);
-  api.audio.pause();api.audio.listeners.error();assert.strictEqual(button.textContent,'⚠️ แตะเปิดเพลง');await api.toggle();assert.strictEqual(musicOn,true,'blocked retry must keep the music preference enabled');assert.strictEqual(api.audio.paused,false,'tap on the blocked state retries playback from a user gesture');
+  api.audio.pause();api.audio.listeners.error();assert.strictEqual(button.textContent,'⚠️ แตะเปิดเพลง');await api.toggle();assert.strictEqual(api.enabled,true,'blocked retry must keep the session music enabled');assert.strictEqual(api.audio.paused,false,'tap on the blocked state retries playback from a user gesture');
   let faded=false;api.stop(1100,true,()=>{faded=true;});
   assert.strictEqual(faded,true,'exit callback runs after fade completion');
   assert.strictEqual(api.audio.paused,true);
   assert.strictEqual(api.audio.currentTime,0,'exit rewinds for the next session');
   assert.strictEqual(api.audio.volume,.4,'fade restores configured volume');
   assert.strictEqual(resumeCalls,0,'isolated BGM module never resumes Lobby itself');
-  console.log('PASS letter_cannon_bgm: SFX-independent lazy stream, blocked retry, loop, reuse, fade/stop/rewind, immutable build URL');
+  console.log('PASS letter_cannon_bgm: gesture-safe session-on music, SFX/global-preference independence, lazy loop/reuse, fade/stop/rewind, immutable build URL');
 })().catch(error=>{console.error(error);process.exitCode=1;});

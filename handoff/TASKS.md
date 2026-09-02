@@ -10,6 +10,9 @@
 
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 > ผู้ใช้เริ่มใช้ Codex ช่วยงานคู่ขนานกับ session Claude (4 ส.ค. 2026 เหตุ: Claude ติด rate limit) — Codex ไม่เห็น `img/`/`sound/` (ไม่อยู่ใน git) และ **deploy Firebase เองไม่ได้** ต้องรอผู้ใช้รันบนเครื่องเอง
+- **รอบ 1347 · Dragon Sky Siege แก้เพลงไม่ดังจริง:** ต้นเหตุอ่าน `state.musicOff` ที่บันทึกค้างและเรียก `Audio.play()` หลังรอภาพจนพ้น user gesture; เปลี่ยนเป็นเปิดเพลงใหม่ทุก session และสั่งเล่นทันทีจากคลิกเข้าเกม
+- ปุ่มเพลงควบคุมเฉพาะ Dragon session ไม่แก้ค่า Lobby/SFX; ยังคง Audio เดิม, lazy `preload=metadata`, loop, immutable disk cache และ fade 1.1 วินาทีเมื่อออก
+- MP3 ยาว 154.6 วินาที/peak -1.3 dB; BGM+Dragon regression, syntax, production build 9,384 ไฟล์ และ PWA/cache/TWA validator ผ่าน (browser audio QA ถูก Windows sandbox บล็อก)
 - **10 ส.ค. 2026 — รอบ 1096 Account deletion ผ่าน production แล้ว:** Rules ใหม่ publish/ตรวจสดตรง source และบัญชีทดสอบ `parkerhulk2020@gmail.com` ถูกลบสำเร็จ; รอ COMMIT_DEPLOY ส่ง client fix ที่ตัดพาธ reaction ว่างขึ้นเว็บ
 - **รอบ 1346 · เมนูสัตว์ปลอดภัย + Dragon Sky Siege:** ใช้ `foodSafeForPetMenu` ตัดอาหารคน/`badFor` จากแผงให้อาหารและร้านทุกชนิด; ของอันตรายจากเซฟเก่าเฉื่อยและ `feedWith` ปฏิเสธก่อนหัก stock
 - ปุ่ม Lobby เปลี่ยนจาก Letter Cannon เป็น `🐉🔥 Dragon Sky Siege`; Home V2/Classic ใช้ชื่อและสัญลักษณ์มังกรตรงกับเกม

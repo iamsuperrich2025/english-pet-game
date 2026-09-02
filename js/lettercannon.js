@@ -58,7 +58,7 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
   const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
   const ANNOUNCEMENT_KEY='vwLetterCannonAnnouncement1152';
   let root=null,canvas=null,ctx=null,raf=0,abort=null,audio=null,opening=false,saveTimer=0,dockObserver=null;
-  let lcBgm=null,lcBgmBtn=null,lcBgmFadeTimer=0,lcBgmFadeToken=0,lcBgmPlayToken=0,lcBgmBlocked=false;
+  let lcBgm=null,lcBgmBtn=null,lcBgmFadeTimer=0,lcBgmFadeToken=0,lcBgmPlayToken=0,lcBgmBlocked=false,lcMusicEnabled=true;
   let W=0,H=0,dpr=1,last=0,frameAt=0,elapsed=0,running=false,paused=false,counting=false;
   let word=null,pos=0,queue=[],queueGrade='',lastWord='',vocabSize=0,score=0,scoreSettled=false,combo=0,wordsDone=0,setWordsDone=0,coinsRun=0;
   let shield=MAX_SHIELD,wave=1,bossMode=false,boss=null,bossesDefeated=0,missionEnded=false,threatsStopped=0,misses=0;
@@ -287,10 +287,7 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
   /* ============================================================
      🎵 LETTER CANNON BACKGROUND MUSIC — lazy stream + disk cache + exit fade
      ============================================================ */
-  function lcMusicPreferenceOn(){
-    if(typeof Music!=='undefined'&&Music.isMusicOn)return Music.isMusicOn();
-    return !(typeof state!=='undefined'&&state.musicOff);
-  }
+  function lcMusicPreferenceOn(){return lcMusicEnabled;}
   function lcMusicCanPlay(){return lcMusicPreferenceOn();}
   function lcMusicSyncButton(){
     if(!lcBgmBtn)return;
@@ -310,7 +307,7 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
     lcMusicCancelFade();lcBgmBlocked=false;lcMusicSyncButton();if(!lcMusicCanPlay())return Promise.resolve(false);
     const a=lcMusicEnsure(),token=++lcBgmPlayToken;a.volume=LC_BGM_VOLUME;const p=a.play();
     if(!p||!p.then)return Promise.resolve(true);
-    return p.then(()=>{if(token!==lcBgmPlayToken||!running){a.pause();return false;}lcBgmBlocked=false;lcMusicSyncButton();return true;}).catch(()=>{if(token===lcBgmPlayToken){lcBgmBlocked=true;lcMusicSyncButton();}return false;});
+    return p.then(()=>{if(token!==lcBgmPlayToken||(!running&&!opening)){a.pause();return false;}lcBgmBlocked=false;lcMusicSyncButton();return true;}).catch(()=>{if(token===lcBgmPlayToken){lcBgmBlocked=true;lcMusicSyncButton();}return false;});
   }
   function lcMusicStop(fadeMs=0,reset=false,done){
     lcMusicCancelFade();lcBgmPlayToken++;const a=lcBgm;
@@ -321,8 +318,8 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
   }
   function lcMusicToggle(){
     if(lcBgmBlocked&&lcMusicPreferenceOn()){lcBgmBlocked=false;lcMusicSyncButton();lcMusicStart();return;}
-    const next=!lcMusicPreferenceOn();if(typeof Music!=='undefined'&&Music.setMusic)Music.setMusic(next);else if(typeof state!=='undefined'){state.musicOff=!next;if(typeof saveState==='function')saveState();}
-    lcBgmBlocked=false;lcMusicSyncButton();if(next)lcMusicStart();else lcMusicStop(320,false);
+    lcMusicEnabled=!lcMusicEnabled;
+    lcBgmBlocked=false;lcMusicSyncButton();if(lcMusicEnabled)lcMusicStart();else lcMusicStop(320,false);
   }
 
   function noiseBurst(type,t){
@@ -454,7 +451,7 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
   }
   function releasePortrait(){try{if(orientationLocked&&screen.orientation&&screen.orientation.unlock)screen.orientation.unlock();}catch(_e){}orientationLocked=false;if(gameFullscreen&&document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(()=>{});gameFullscreen=false;}
   function startGame(){if(!opening||running)return;opening=false;buildDom();layout();playerX=W*.5;playerY=H*.76;playerVX=playerVY=0;bind();running=true;resetMission();if(typeof Music!=='undefined'&&Music.suspendBg)Music.suspendBg();lcMusicStart();later(()=>loadBackgroundAsset(1),1800);later(()=>loadBackgroundAsset(2),5200);resetFrameClock();raf=requestAnimationFrame(frame);tutorial();}
-  function open(){if(running||opening)return;opening=true;requestPortrait();Promise.all([loadPlayerAssets(),loadBackgroundAsset(0)]).then(startGame).catch(err=>{opening=false;console.error(err);releasePortrait();if(typeof toast==='function')toast('⚠️ โหลดภาพมังกรนักบินไม่สำเร็จ กรุณารีเฟรชแล้วลองใหม่');});}
+  function open(){if(running||opening)return;opening=true;lcMusicEnabled=true;lcBgmBlocked=false;if(typeof Music!=='undefined'&&Music.suspendBg)Music.suspendBg();lcMusicStart();requestPortrait();Promise.all([loadPlayerAssets(),loadBackgroundAsset(0)]).then(startGame).catch(err=>{opening=false;lcMusicStop(0,true,()=>{if(typeof Music!=='undefined'&&Music.resumeBg)Music.resumeBg();});console.error(err);releasePortrait();if(typeof toast==='function')toast('⚠️ โหลดภาพมังกรนักบินไม่สำเร็จ กรุณารีเฟรชแล้วลองใหม่');});}
   function close(){opening=false;if(running)settleScoreRun();running=false;lcMusicStop(LC_BGM_EXIT_FADE_MS,true,()=>{if(!running&&typeof Music!=='undefined'&&Music.resumeBg)Music.resumeBg();});frameAt=0;dragPointer=null;keyLeft=keyRight=keyUp=keyDown=false;playerVX=playerVY=0;flushCloudSave();clearTimers();cancelAnimationFrame(raf);if(abort)abort.abort();abort=null;if(dockObserver)dockObserver.disconnect();dockObserver=null;letters.length=bullets.length=particles.length=shockwaves.length=0;try{if(audio&&audio.state==='running')audio.suspend();}catch(e){}if(root)root.remove();root=canvas=ctx=null;lcBgmBtn=null;releasePortrait();if(typeof renderDashboard==='function')renderDashboard();}
   function announcementSeen(){try{return !!(typeof state!=='undefined'&&state.letterCannonAnnouncementSeen)||localStorage.getItem(ANNOUNCEMENT_KEY)==='1';}catch(e){return false;}}
   function rememberAnnouncement(){try{localStorage.setItem(ANNOUNCEMENT_KEY,'1');}catch(e){}if(typeof state!=='undefined'){state.letterCannonAnnouncementSeen=true;if(typeof saveState==='function')saveState();if(typeof authPushSave==='function')authPushSave(false);}}
