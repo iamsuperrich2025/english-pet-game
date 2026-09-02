@@ -23701,7 +23701,7 @@
 
 
 
-/* 🪖 Frontline 1944 ADMIN PREVIEW bootstrap V3.
+/* 🪖 Frontline 1944 ADMIN PREVIEW bootstrap V4 — runtime-version aware.
 
 
 
@@ -23717,11 +23717,36 @@
 
 
 
-  var FRONTLINE_RUNTIME_ID='P1.2.6D-20260902-f02fff';
+  var FRONTLINE_RUNTIME_ID='P1.2.6F-20260902-5cc6a0';
   var FRONTLINE_JS_URL='__VW_FRONTLINE_JS_URL__';
   var FRONTLINE_CSS_URL='__VW_FRONTLINE_CSS_URL__';
-  var loaded=!!window.Frontline1944,loading=false,timer=0,tries=0;
+  var loaded=false,loading=false,timer=0,tries=0;
   function frontlineAssetUrl(value,fallback){return /^__VW_FRONTLINE_(?:JS|CSS)_URL__$/.test(String(value||''))?fallback+'?v='+encodeURIComponent(FRONTLINE_RUNTIME_ID):String(value||fallback);}
+  function currentRuntimeVersion(){try{return window.Frontline1944&&window.Frontline1944.VERSION?String(window.Frontline1944.VERSION):'';}catch(e){return '';}}
+  function hasCurrentRuntime(){return currentRuntimeVersion()===FRONTLINE_RUNTIME_ID;}
+  function removeStaleFrontlineAssets(){
+    document.querySelectorAll('script[data-fl44-admin-asset="1"],link[data-fl44-admin-asset="1"]').forEach(function(el){
+      if(el.getAttribute('data-fl44-runtime-id')!==FRONTLINE_RUNTIME_ID)el.remove();
+    });
+  }
+  function disposeStaleFrontlineRuntime(){
+    var runtime=window.Frontline1944;
+    if(!runtime||hasCurrentRuntime()){removeStaleFrontlineAssets();return false;}
+    var staleVersion=currentRuntimeVersion();
+    try{if(typeof runtime.close==='function')runtime.close();}catch(e){console.warn('[Frontline1944 bootstrap] stale runtime close failed',e);}
+    try{if(window.Frontline1944===runtime)delete window.Frontline1944;}catch(e){}
+    if(window.Frontline1944===runtime){try{window.Frontline1944=undefined;}catch(e){}}
+    removeStaleFrontlineAssets();loaded=false;
+    console.info('[Frontline1944 bootstrap] disposed stale runtime',staleVersion||'(unknown)','->',FRONTLINE_RUNTIME_ID);
+    return true;
+  }
+  function ensureCurrentFrontlineStylesheet(){
+    removeStaleFrontlineAssets();
+    var selector='link[data-fl44-admin-asset="1"][data-fl44-runtime-id="'+FRONTLINE_RUNTIME_ID+'"]';
+    if(document.querySelector(selector))return;
+    var link=document.createElement('link');link.rel='stylesheet';link.href=frontlineAssetUrl(FRONTLINE_CSS_URL,'css/frontline1944.css');link.setAttribute('data-fl44-admin-asset','1');link.setAttribute('data-fl44-runtime-id',FRONTLINE_RUNTIME_ID);document.head.appendChild(link);
+  }
+  loaded=hasCurrentRuntime();
 
 
 
@@ -23805,7 +23830,11 @@
 
 
 
-    loading=false;loaded=!!window.Frontline1944;
+    loading=false;loaded=hasCurrentRuntime();
+
+
+
+    if(!loaded){console.error('[Frontline1944 bootstrap] runtime identity mismatch; expected',FRONTLINE_RUNTIME_ID,'received',currentRuntimeVersion()||'(missing)');return;}
 
 
 
@@ -23841,7 +23870,11 @@
 
 
 
-    if(window.Frontline1944){loaded=true;finishLoad();return true;}
+    if(hasCurrentRuntime()){removeStaleFrontlineAssets();loaded=true;finishLoad();return true;}
+
+
+
+    if(window.Frontline1944)disposeStaleFrontlineRuntime();
 
 
 
@@ -23853,23 +23886,15 @@
 
 
 
-    if(!document.querySelector('link[data-fl44-admin-asset="1"]')){
+    ensureCurrentFrontlineStylesheet();
 
 
 
-      var link=document.createElement('link');link.rel='stylesheet';link.href=frontlineAssetUrl(FRONTLINE_CSS_URL,'css/frontline1944.css');link.setAttribute('data-fl44-admin-asset','1');link.setAttribute('data-fl44-runtime-id',FRONTLINE_RUNTIME_ID);document.head.appendChild(link);
+    var existing=document.querySelector('script[data-fl44-admin-asset="1"][data-fl44-runtime-id="'+FRONTLINE_RUNTIME_ID+'"]');
 
 
 
-    }
-
-
-
-    var existing=document.querySelector('script[data-fl44-admin-asset="1"]');
-
-
-
-    if(existing){existing.addEventListener('load',finishLoad,{once:true});existing.addEventListener('error',function(){loading=false;loaded=false;},{once:true});return true;}
+    if(existing)existing.remove();
 
 
 
@@ -23925,7 +23950,7 @@
 
 
 
-  window.__VW_FRONTLINE1944_BOOTSTRAP__={allowed:allowed,requestOpen:requestOpen,status:function(){return {allowed:allowed(),loaded:!!window.Frontline1944,loading:loading,pendingOpen:pendingOpen,assetId:FRONTLINE_RUNTIME_ID,jsUrl:frontlineAssetUrl(FRONTLINE_JS_URL,'js/frontline1944.js'),cssUrl:frontlineAssetUrl(FRONTLINE_CSS_URL,'css/frontline1944.css')};}};
+  window.__VW_FRONTLINE1944_BOOTSTRAP__={allowed:allowed,requestOpen:requestOpen,status:function(){return {allowed:allowed(),loaded:hasCurrentRuntime(),loading:loading,pendingOpen:pendingOpen,assetId:FRONTLINE_RUNTIME_ID,runtimeVersion:currentRuntimeVersion(),runtimeCurrent:hasCurrentRuntime(),jsUrl:frontlineAssetUrl(FRONTLINE_JS_URL,'js/frontline1944.js'),cssUrl:frontlineAssetUrl(FRONTLINE_CSS_URL,'css/frontline1944.css')};}};
 
 
 

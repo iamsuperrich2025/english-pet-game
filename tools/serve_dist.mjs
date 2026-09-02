@@ -2,10 +2,12 @@ import http from 'node:http';
 import { createReadStream, promises as fs } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { networkInterfaces } from 'node:os';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'dist');
 const PORT = Number(process.env.PORT || 4173);
+const HOST = String(process.env.HOST || '0.0.0.0');
 const MIME = {
   '.avif': 'image/avif', '.css': 'text/css; charset=utf-8', '.glb': 'model/gltf-binary', '.html': 'text/html; charset=utf-8',
   '.ico': 'image/x-icon', '.jpeg': 'image/jpeg', '.jpg': 'image/jpeg', '.js': 'text/javascript; charset=utf-8',
@@ -59,6 +61,43 @@ const server = http.createServer(async (request, response) => {
   }
 });
 
-server.listen(PORT, '127.0.0.1', () => {
-  console.log(`Vocab World preview: http://127.0.0.1:${PORT}`);
+function privateLanIpv4Addresses() {
+  const rows = [];
+  for (const [name, addresses] of Object.entries(networkInterfaces())) {
+    for (const address of addresses || []) {
+      const family = address.family === 4 || address.family === 'IPv4';
+      const ip = String(address.address || '');
+      if (!family || address.internal || !ip) continue;
+      const privateIp = /^10\./.test(ip) || /^192\.168\./.test(ip) || (() => {
+        const match = /^172\.(\d{1,3})\./.exec(ip);
+        if (!match) return false;
+        const second = Number(match[1]);
+        return second >= 16 && second <= 31;
+      })();
+      if (privateIp) rows.push({ name, ip });
+    }
+  }
+  const rank = ({ name, ip }) => {
+    const label = String(name || '').toLowerCase();
+    if (/wi-?fi|wlan|wireless/.test(label)) return 0;
+    if (/ethernet|lan/.test(label)) return 1;
+    if (/^192\.168\./.test(ip)) return 2;
+    if (/^10\./.test(ip)) return 3;
+    return 4;
+  };
+  return rows.sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name) || a.ip.localeCompare(b.ip));
+}
+
+server.listen(PORT, HOST, () => {
+  const desktopUrl = `http://127.0.0.1:${PORT}`;
+  const lan = privateLanIpv4Addresses();
+  console.log('Vocab World preview server ready');
+  console.log(`Desktop Preview URL: ${desktopUrl}`);
+  if (lan.length) {
+    console.log(`Mobile/LAN Preview URL: http://${lan[0].ip}:${PORT}`);
+    for (const item of lan.slice(1)) console.log(`Mobile/LAN Alternative (${item.name}): http://${item.ip}:${PORT}`);
+  } else {
+    console.log('Mobile/LAN Preview URL: NOT DETECTED (check that the PC is connected to the same private LAN as the phone)');
+  }
+  console.log(`Preview bind: ${HOST}:${PORT}`);
 });
