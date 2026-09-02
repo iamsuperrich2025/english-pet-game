@@ -21,6 +21,8 @@ assert(!read('js/data/pets.js').includes("name:'น่องไก่'"),'old bo
 const ui=read('js/ui.js'),css=read('css/style.css'),pantry=read('js/petpantry.js'),build=read('tools/build_web.mjs');
 assert(ui.includes('ให้อาหารสัตว์ทุกตัวที่เลี้ยงอยู่'),'all-pets button copy missing');
 assert(ui.includes('feed-all-pets')&&ui.includes('feed-all-foods')&&ui.includes('feed-all-confirm'),'bulk planner DOM missing');
+assert(ui.includes('feed-all-scroll')&&ui.includes('feed-all-close-top')&&ui.includes('feed-all-close-bottom'),'scroll region or clear top/bottom close controls missing');
+assert(ui.includes("querySelectorAll('.feed-all-close')")&&ui.includes('previousScrollTop'),'both close controls must work and rerenders must preserve scroll position');
 assert(ui.includes('FOODS.filter(foodSafeForPetMenu)'),'feeding menu must use the shared universally-safe filter');
 const menuBody=ui.slice(ui.indexOf('function openFoodMenu'),ui.indexOf('function applyFoodToPet'));
 assert(!menuBody.includes('เป็นโทษ')&&!menuBody.includes('askConfirm(')&&!menuBody.includes('foodBadFor('),'harmful-food warning path must not exist because harmful cards must never render');
@@ -29,8 +31,9 @@ assert(ui.includes("PetPantry.takeMany(rows.map"),'bulk feed must debit stock at
 assert(ui.includes('applyFoodToPet(row.p,row.food')&&ui.includes('function applyFoodToPet'),'single rule path for bulk mutation missing');
 assert(pantry.includes('function takeMany')&&pantry.includes('ids.some'),'atomic stock guard missing');
 assert(css.includes("url('../img/pet-food/food-sprite.webp')")&&css.includes('background-size:600% 300%'),'sprite CSS missing');
-assert(css.includes('grid-template-columns:repeat(5,minmax(0,1fr))')&&css.includes('@media(max-height:430px)'),'5x2/no-scroll responsive layout missing');
-assert(css.includes('.feed-all-box')&&css.includes('overflow:hidden'),'bulk dialog must not scroll');
+assert(css.includes('grid-template-columns:repeat(auto-fit,minmax(190px,1fr))')&&css.includes('@media(max-height:430px)'),'readable responsive food-card layout missing');
+assert(css.includes('.feed-all-scroll')&&css.includes('overflow-y:auto')&&css.includes('scrollbar-width:none')&&css.includes('.feed-all-scroll::-webkit-scrollbar'),'hidden-scrollbar vertical overflow contract missing');
+assert(css.includes('.feed-all-close-top')&&css.includes('.feed-all-close-bottom'),'clear top/bottom close-button styles missing');
 assert(build.includes("'img/pet-food/food-sprite.webp'"),'untracked first-build allowlist missing');
 const asset=fs.readFileSync(path.join(root,FOOD_SPRITE_URL));
 assert(asset.subarray(0,4).toString()==='RIFF'&&asset.subarray(8,12).toString()==='WEBP','runtime asset is not encoded WebP');
@@ -39,4 +42,4 @@ assert((asset[vp8x+8]&0x10)!==0,'WebP alpha flag missing');
 const u24=i=>asset[i]|asset[i+1]<<8|asset[i+2]<<16;
 assert(u24(vp8x+12)+1===1080&&u24(vp8x+15)+1===540,'WebP dimensions must be 1080x540');
 assert(asset.length<220000,`food sprite too heavy: ${asset.length} bytes`);
-console.log(`PASS bulk feeding: 9 pets, 12 safe menu foods, 0 harmful cards, boneless chicken, atomic stock (${asset.length} bytes)`);
+console.log(`PASS bulk feeding: 9 pets, 12 safe menu foods, readable hidden-scroll layout, two close controls, 0 harmful cards, boneless chicken, atomic stock (${asset.length} bytes)`);

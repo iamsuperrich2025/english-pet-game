@@ -10,6 +10,10 @@
 
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 > ผู้ใช้เริ่มใช้ Codex ช่วยงานคู่ขนานกับ session Claude (4 ส.ค. 2026 เหตุ: Claude ติด rate limit) — Codex ไม่เห็น `img/`/`sound/` (ไม่อยู่ใน git) และ **deploy Firebase เองไม่ได้** ต้องรอผู้ใช้รันบนเครื่องเอง
+- **รอบ 1350/1351 · ตัวอักษรแผงให้อาหารอ่านง่าย + เลื่อนซ่อน scrollbar:** ขยายข้อความหัว/สัตว์/อาหาร/ปุ่มจากเดิม 7.5–11px เป็น 11–28px ตาม viewport; เนื้อหากลางเลื่อนแนวตั้งเฉพาะเมื่อพื้นที่ไม่พอ โดยหัวและ footer อยู่คงที่
+- เพิ่มปุ่ม `✕ ปิด` ชัดเจนบน–ล่าง รักษา scrollTop และแก้ `tools/ship.sh` ให้รับ y/yes จาก Windows console แม้มี CR แฝง; ไฟล์ UI คือ `js/ui.js`, `css/style.css`, `tools/test_bulk_feeding.js`
+- Chrome source QA: 1320×622 ไม่ต้องเลื่อน; 812×375 เลื่อน 141px, scrollbar none, ไม่มีแนวนอนล้น, กล่องอยู่ใน viewport; ปุ่มปิดทั้งคู่และ scroll preservation ผ่าน
+- syntax/regression + production build 2026-09-02.1216 (9,386 ไฟล์), source/hashed dist contract และ Bash CR-input regression ผ่าน; รอบ 1351 เป็น recovery deploy หลัง console ปฏิเสธ y รอบแรก
 - **รอบ 1348 · Dragon Sky Siege แตะจอแล้วเพลงดังอัตโนมัติ:** หาก browser บล็อก play แรก การแตะ/คลิกที่ใดก็ได้ในเกมหรือกดคีย์จะ retry ทันที ไม่ต้องแตะปุ่มเพลง; ปุ่มเพลงไม่ถูก gesture handler แย่ง event
 - ปุ่มแสดงสามสถานะไม่กำกวม: `🎵 เปิดอยู่` สีเขียว, `🔇 ปิดอยู่` สีแดง, `▶ รอแตะจอ` สีเหลือง พร้อม ARIA/คำอธิบาย; คงขนาดเดิมและ geometry gap เดิม
 - เพิ่ม regression จำลอง NotAllowedError→แตะพื้นที่เกม→เล่นสำเร็จ; BGM/Dragon/syntax/diff, built JS/CSS contract และ production build/PWA/cache/TWA ผ่าน (browser audio QA ถูก Windows sandbox บล็อก)

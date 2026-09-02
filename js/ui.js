@@ -5824,6 +5824,8 @@ function openFoodMenu(seedPet){
 
   const render=()=>{
     if(!overlay.isConnected && document.body.contains(overlay)===false && overlay.dataset.mounted==='1') return;
+    const previousScroll=overlay.querySelector('.feed-all-scroll');
+    const previousScrollTop=previousScroll?previousScroll.scrollTop:0;
     const now=Date.now(),info=shelfInfo(),selectedPet=pets[selectedIndex]||pets[0];
     if(!selectedPet){overlay.remove();return;}
     const petCards=pets.map((p,i)=>{
@@ -5861,18 +5863,23 @@ function openFoodMenu(seedPet){
     overlay.innerHTML=`<section class="feed-all-box" role="dialog" aria-modal="true" aria-label="ให้อาหารสัตว์ทุกตัว">
       <header class="feed-all-head"><div><h2>🍽️ ให้อาหารสัตว์ทุกตัวที่เลี้ยงอยู่</h2><p>เลือกเมนูรายตัว แล้วกดให้อาหารพร้อมกันครั้งเดียว</p></div>
         <span class="feed-all-shelf">🗄️ ${info.shelf?`${escapeHTML(info.shelf.name)} ${info.used}/${info.cap} ช่อง`:'ยังไม่มีชั้นเก็บอาหาร'}</span>
-        <button class="feed-all-close" aria-label="ปิด">✕</button></header>
-      <div class="feed-all-pets" style="--pet-count:${Math.max(1,pets.length)}">${petCards}</div>
-      <div class="feed-all-menu">
-        <div class="feed-all-selected-head"><span><b>เลือกเมนูให้ ${escapeHTML(selectedPet.name)}</b><small>${selectedBlock||`ความอิ่ม ${selectedFull}/${MEAL_FULL}`}</small></span>
-          <span class="feed-all-mini-bar"><i style="width:${selectedFull}%"></i></span></div>
-        <div class="feed-all-foods">${foodCards}</div>
+        <button class="feed-all-close feed-all-close-top" type="button" aria-label="ปิดหน้าต่าง"><span aria-hidden="true">✕</span> ปิด</button></header>
+      <div class="feed-all-scroll" tabindex="0" aria-label="รายการสัตว์และอาหาร เลื่อนขึ้นลงได้">
+        <div class="feed-all-pets" style="--pet-count:${Math.max(1,pets.length)}">${petCards}</div>
+        <div class="feed-all-menu">
+          <div class="feed-all-selected-head"><span><b>เลือกเมนูให้ ${escapeHTML(selectedPet.name)}</b><small>${selectedBlock||`ความอิ่ม ${selectedFull}/${MEAL_FULL}`}</small></span>
+            <span class="feed-all-mini-bar"><i style="width:${selectedFull}%"></i></span></div>
+          <div class="feed-all-foods">${foodCards}</div>
+        </div>
       </div>
       <footer class="feed-all-actions"><button class="feed-all-auto">✨ จัดเมนูปลอดภัยอัตโนมัติ</button><span class="feed-all-summary">${escapeHTML(summary)}</span>
         <button class="feed-all-shop">${info.shelf?'🚗 ซื้ออาหารเติมชั้น':'🗄️ เลือกซื้อชั้น'}</button>
-        <button class="feed-all-confirm" ${planCount?'':'disabled'}>🍽️ ให้อาหารพร้อมกัน ${planCount} ตัว</button></footer>
+        <button class="feed-all-confirm" ${planCount?'':'disabled'}>🍽️ ให้อาหารพร้อมกัน ${planCount} ตัว</button>
+        <button class="feed-all-close feed-all-close-bottom" type="button" aria-label="ปิดหน้าต่าง">✕ ปิด</button></footer>
     </section>`;
-    overlay.querySelector('.feed-all-close').addEventListener('click',()=>{sfx.select();overlay.remove();});
+    const scrollArea=overlay.querySelector('.feed-all-scroll');
+    if(scrollArea) scrollArea.scrollTop=previousScrollTop;
+    overlay.querySelectorAll('.feed-all-close').forEach(btn=>btn.addEventListener('click',()=>{sfx.select();overlay.remove();}));
     overlay.querySelectorAll('[data-pet-index]').forEach(btn=>btn.addEventListener('click',()=>{selectedIndex=Number(btn.dataset.petIndex);notice='';render();}));
     overlay.querySelectorAll('[data-food]').forEach(btn=>btn.addEventListener('click',()=>{
       const p=pets[selectedIndex],food=feedFoodById(p,btn.dataset.food),qty=food?stockQty(food):0;
