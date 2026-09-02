@@ -415,31 +415,35 @@ removeSelector:60 · openSelector:66
 
 ## js/fpsweapon.js (194 บรรทัด · 0 รายการ)
 
-## js/frontline1944.js (865 บรรทัด · 142 รายการ)
-CFG:12 · LAYER:54 · TERRAIN:66 · SECTOR_TEMPLATES:77 · approach:105 · rotateToward:106
-listen:107 · hash32:108 · randFrom:109 · adminAllowed:111 · lockNotice:118 · syncAdminEntry:119
-claimTankRuntimeOwnership:128 · releaseTankRuntimeOwnership:135 · runtimeIdentity:140 · normalizeWord:142 · vocabPool:149 · auditVocabulary:157
-ensureProgress:164 · persist:173 · claim:182 · chooseWord:183 · pronounce:190 · awardLetter:191
-loadThree:205 · makeDom:212 · showToast:227 · sharedMesh:271 · addToLayer:272 · addToSector:273
-setWorldPos:274 · visualIdFor:369 · sectorDescriptor:370 · createSectorGroups:372 · removeSectorGroups:373 · registerOccluder:374
-updateOcclusionOrder:375 · addBaseSectorArt:381 · addFieldRows:392 · addCrater:393 · addMudPatch:394 · addTree:395
-addHouse:403 · addBunker:409 · addCampTent:410 · addWall:411 · addBridgeCrossing:417 · addSmoke:427
-makeSmokeTexture:431 · populateSector:435 · disposeSectorRuntime:456 · instantiateSector:461 · createProjectilePool:505 · createFxPool:513
-initPools:516 · disposePools:517 · makeTank:519 · playerIdentity:543 · makePlayer:548 · authoritativeTankPose:554
-syncTankVisual:558 · tankStateSnapshot:559 · interpolateRemoteTank:562 · makeEnemyFigure:565 · makeBossTank:568 · spawnEnemy:569
-registerFortressCollision:573 · makeFortress:583 · removeFortress:590 · activateNextFortress:591 · spawnDefenders:598 · spawnBoss:601
-recordDamage:603 · damageEnemy:604 · damagePlayer:605 · destroyCore:606 · cannonWorldPosition:608 · cannonWorldRay:609
-cannonWorldDirection:613 · spawnProjectile:614 · firePlayer:615 · enemyFire:621 · projectileImpact:625 · tickProjectilePool:626
-burst:641 · tickFx:645 · forwardFromRotation:653 · rightFromRotation:654 · rotationFromForward:655 · driveDelta:656
-normalizeTankCommand:657 · desktopCommandFromState:658 · mobileCommandFromState:663 · mergeTankCommands:668 · screenAimDirection:671 · tickTank:704
-tickFortress:707 · tickEnemies:710 · cameraTick:715 · updateObjective:719 · fortressStateText:720 · updateHud:721
-inputNow:733 · markTouchLikeInput:734 · hasRecentTouchLikeInput:735 · mobileAimLatchValid:736 · mobileAimLatchedHeading:737 · latchMobileAimWorldDirection:738
-latchMobileAimVector:739 · clearMobileAimLatch:740 · shouldAcceptDesktopAimEvent:741 · explicitInputDiagnosticsRequested:742 · coarseInputEnvironment:743 · inputDiagnosticsEnabled:744
-preventControlDefault:745 · stickVectorFromRect:746 · resetStickState:749 · pointInRect:752 · rectFromEdges:753 · viewportRectFor:754
-safeAreaInsetsFor:755 · mobileControlRegions:756 · elementUsableRect:761 · pointOverProtectedFrontlineUI:762 · eventTargetLabel:763 · isProtectedFrontlineTarget:767
-updateInputDiagnostics:796 · bindGlobalMobileTouchRouter:801 · bindControls:820 · pointerToGround:826 · bindCanvasAim:827 · resize:831
-buildLayers:832 · buildWorld:833 · initThree:838 · loop:841 · clearScene:845 · open:848
-close:854 · routeCheck:857 · occlusionAcceptance:859 · foundationDiagnostics:860
+## js/frontline1944.js (1,828 บรรทัด · 163 รายการ)
+CFG:23 · LAYER:123 · TERRAIN:147 · SECTOR_TEMPLATES:169 · approach:225 · rotateToward:227
+listen:229 · hash32:231 · randFrom:233 · adminAllowed:237 · lockNotice:251 · syncAdminEntry:253
+claimTankRuntimeOwnership:271 · releaseTankRuntimeOwnership:285 · runtimeIdentity:295 · normalizeWord:299 · vocabPool:313 · auditVocabulary:329
+ensureProgress:343 · persist:361 · claim:379 · chooseWord:381 · pronounce:395 · awardLetter:397
+loadThree:425 · makeDom:439 · showToast:469 · sharedMesh:557 · addToLayer:559 · addToSector:561
+setWorldPos:563 · visualIdFor:753 · sectorDescriptor:755 · createSectorGroups:759 · removeSectorGroups:761 · registerOccluder:763
+updateOcclusionOrder:765 · addBaseSectorArt:777 · addFieldRows:799 · addCrater:801 · addMudPatch:803 · addTree:805
+addHouse:821 · addBunker:833 · addCampTent:835 · addWall:837 · addBridgeCrossing:849 · addSmoke:869
+makeSmokeTexture:877 · populateSector:885 · disposeSectorRuntime:927 · instantiateSector:937 · createProjectilePool:1025 · createFxPool:1041
+initPools:1047 · disposePools:1049 · makeTank:1053 · playerIdentity:1101 · makePlayer:1111 · authoritativeTankPose:1123
+syncTankVisual:1131 · tankStateSnapshot:1133 · interpolateRemoteTank:1139 · makeEnemyFigure:1145 · makeBossTank:1151 · spawnEnemy:1153
+registerFortressCollision:1161 · makeFortress:1181 · removeFortress:1195 · activateNextFortress:1197 · spawnDefenders:1211 · spawnBoss:1217
+recordDamage:1221 · damageEnemy:1223 · damagePlayer:1225 · destroyCore:1227 · cannonWorldPosition:1231 · cannonWorldRay:1233
+cannonWorldDirection:1241 · spawnProjectile:1243 · firePlayer:1245 · enemyFire:1257 · projectileImpact:1265 · tickProjectilePool:1267
+burst:1297 · tickFx:1305 · forwardFromRotation:1321 · rightFromRotation:1323 · rotationFromForward:1325 · driveDelta:1327
+normalizeTankCommand:1329 · desktopCommandFromState:1331 · mobileCommandFromState:1341 · mergeTankCommands:1351 · screenAimDirection:1357 · tickTank:1423
+tickFortress:1429 · tickEnemies:1435 · cameraTick:1445 · updateObjective:1453 · fortressStateText:1455 · updateHud:1457
+inputNow:1481 · markTouchLikeInput:1483 · hasRecentTouchLikeInput:1485 · mobileAimLatchValid:1487 · mobileAimLatchedHeading:1489 · latchMobileAimWorldDirection:1491
+latchMobileAimVector:1493 · clearMobileAimLatch:1495 · shouldAcceptDesktopAimEvent:1497 · explicitInputDiagnosticsRequested:1499 · coarseInputEnvironment:1501 · inputDiagnosticsEnabled:1503
+preventControlDefault:1505 · queueMobileFirePulse:1507 · consumeMobileFirePulse:1509 · stickVectorFromRect:1511 · resetStickState:1517 · pointInRect:1523
+rectFromEdges:1525 · rectFromDomRect:1527 · rectCenter:1529 · expandRect:1531 · rectIntersects:1533 · viewportRectFor:1535
+safeAreaInsetsFor:1537 · safeGameplayRect:1539 · elementUsableRect:1541 · protectedFrontlineRects:1543 · mobileControlRegions:1545 · pointOverProtectedFrontlineUI:1555
+eventTargetLabel:1557 · isProtectedFrontlineTarget:1565 · firePlacementBlockedRects:1571 · fireRectWithinSafe:1573 · fireRectIsValid:1575 · fireRectAtCenter:1577
+findSafeFireRect:1579 · applyFireRect:1593 · fireOrientationKey:1595 · fireStorage:1597 · readFirePositionStore:1599 · writeFirePositionStore:1601
+normalizedFirePosition:1603 · saveFirePositionPreference:1605 · restoreFirePositionPreference:1607 · updateInputDiagnostics:1689 · bindGlobalMobileTouchRouter:1699 · bindControls:1737
+pointerToGround:1749 · bindCanvasAim:1751 · resize:1759 · buildLayers:1761 · buildWorld:1763 · initThree:1773
+loop:1779 · clearScene:1787 · open:1793 · close:1805 · routeCheck:1811 · occlusionAcceptance:1815
+foundationDiagnostics:1817
 
 ## js/game.js (1,230 บรรทัด · 91 รายการ)
 ### 🗂️ สารบัญโซน js/game.js (Read/Edit เฉพาะช่วง)
@@ -695,7 +699,7 @@ msbKickOut:9678 · tickMsBeam:9688 · TURBO_EVERY:9741 · TURBO_MS:9742 · TURBO
 TURBO_TRACK:9745 · resetTurbo:9747 · turboPick:9752 · turboBegin:9759 · tickTurbo:9771 · fit:9782
 tick:9788 · frame:9796 · build:9860 · start:9942 · exitWorld:10069
 
-## js/lettercannon.js (473 บรรทัด · 0 รายการ)
+## js/lettercannon.js (470 บรรทัด · 0 รายการ)
 
 ## js/lobby.js (52 บรรทัด · 3 รายการ)
 PANEL_TITLES:9 · openPanel:19 · closePanel:29
@@ -1080,11 +1084,11 @@ vbRender:148 · vbCardHTML:194
 .xsp-foot:235 · .xsb-box:250,277 · .xsb-head:255,256 · .xsb-grid:257 · .xsb-card:258,262 · .xsb-emoji:263
 .xsb-name:264 · .xsb-info:265 · .xsb-done:266 · .onet-picker:270,271,272,273(+3) · .onet-board:278,279,280
 
-## css/frontline1944.css (101 บรรทัด · 21 selector)
-#vw-frontline1944:4,7,10,99 · .fl44-hud:13 · .fl44-top:16 · .fl44-panel:19 · .fl44-player:22 · .fl44-bar:25
-.fl44-word:28 · .fl44-coins:31 · .fl44-boss:34 · .fl44-objective:37 · .fl44-state:40 · .fl44-exit:43
-.fl44-controls:46 · .fl44-stick:49,52,55 · .fl44-knob:58 · .fl44-aim-knob:61 · .fl44-fire:64 · .fl44-input-diag:67,69
-.fl44-toast:72 · .fl44-loading:75 · #btn-rail-frontline1944:78,81
+## css/frontline1944.css (206 บรรทัด · 21 selector)
+#vw-frontline1944:7,13,19,201 · .fl44-hud:25 · .fl44-top:31 · .fl44-panel:37 · .fl44-player:43 · .fl44-bar:49
+.fl44-word:55 · .fl44-coins:61 · .fl44-boss:67 · .fl44-objective:73 · .fl44-state:79 · .fl44-exit:85
+.fl44-controls:91 · .fl44-stick:97,103,109 · .fl44-knob:115 · .fl44-aim-knob:121 · .fl44-fire:127,131 · .fl44-input-diag:137,141
+.fl44-toast:147 · .fl44-loading:153 · #btn-rail-frontline1944:159,165
 
 ## css/home-v2.css (2,479 บรรทัด · 136 selector)
 :root:9,2467 · #screen-dashboard:36,46 · #vw-home-v2-root:48,49,59,60(+112) · .vw2-screen-frame:81 · .vw2-sky:82,83,92,99(+1) · .vw2-shell:102,107,589
