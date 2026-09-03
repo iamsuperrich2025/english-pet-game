@@ -35,11 +35,14 @@ assert(!/state\.coins\s*[-+]=/.test(feed), 'feeding must not debit coins directl
 assert(ui.includes("enterPetShopping3D('food')") && ui.includes("enterPetShopping3D('fashion')"), 'both shopping-trip CTAs must be wired');
 assert(!/state\.coins\s*-\s*=\s*item\.price/.test(ui), 'wardrobe still has a direct-purchase escape path');
 
-assert(/const rental\s*=\s*!\(state\.cars/.test(ui), 'no-car rental decision is missing');
+assert(ui.includes("const ownCarBlock = own ? carDriveBlock() : 'nocar'") && ui.includes("ownCarBlock === 'overdue' ? 'overdue'"), 'unusable personal car must fall back to the free system car');
 assert(/PET_SHOP_FOOD_TRIP_FEE\s*=\s*0/.test(petData), 'food-shopping car fee must be zero');
-assert(ui.includes("carId:own ? own.id : 'car_01'") && ui.includes('if(rental && fee > 0)') && ui.includes('state.coins -= fee'), 'fashion rental transaction or free-food guard is missing');
-assert(ui.indexOf('PetShopping3D.start') < ui.indexOf('state.coins -= fee', ui.indexOf('PetShopping3D.start')), 'rental fee must be charged only after world start');
-assert(ui.includes('ยืมรถไปซื้ออาหารฟรี') && ui.includes('ไม่มีการหักค่ารถ'), 'free food-trip copy or failure guarantee is missing');
+assert(/PET_SHOP_RENTAL_FEE\s*=\s*0/.test(petData), 'fashion-shopping car fee must be zero');
+assert(ui.includes("carId:tripCar ? tripCar.id : 'car_01'") && ui.includes('systemCar:useSystemCar'), 'free system-car fallback is not passed into the driving world');
+assert(!/state\.coins\s*-\s*=\s*fee/.test(ui.slice(ui.indexOf('async function enterPetShopping3D'), ui.indexOf('async function enterDrive3D'))), 'pet-shopping trip must never deduct a vehicle fee');
+assert(ui.includes('รถส่วนตัวที่เลือกค้างค่างวด') && ui.includes('รถระบบฟรี') && ui.includes('ไม่มีการหักค่ารถ'), 'free fallback or failure guarantee copy is missing');
+assert(ui.includes('petshop-loading-overlay') && ui.includes('กำลังเปิดหน้าขับรถ'), 'visible loading state is missing');
+assert(ui.includes('ไปซื้อเสื้อผ้า (รถฟรี)'), 'fashion-trip CTA must clearly state that the car is free');
 
 const shoppingEntry = ui.slice(ui.indexOf('async function enterPetShopping3D'), ui.indexOf('async function enterDrive3D'));
 assert(!/\.sick|hungerSickLock/.test(shoppingEntry), 'sickness must never block food-shopping entry');
@@ -60,4 +63,4 @@ assert(game.includes('ยังได้เหรียญตามปกติ'
  'img/pet-shopping/food_window.webp','img/pet-shopping/fashion_window.webp','img/pet-shopping/pantry_grant.webp']
   .forEach(rel=>assert(build.includes(`'${rel}'`), `untracked delivery file missing from build allowlist: ${rel}`));
 
-console.log('PASS pet-shopping integration: sick purchase, free food-trip car, readable hidden-scroll pet info, fashion rental, persistent grant');
+console.log('PASS pet-shopping integration: sick purchase, free food/fashion system car, overdue-car fallback, visible loading, readable hidden-scroll pet info, persistent grant');

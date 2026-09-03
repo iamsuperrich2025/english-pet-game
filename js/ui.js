@@ -5465,7 +5465,7 @@ function renderDashboard(){
       </div>
       <div class="care-row pantry-trip-row">
         <button class="care-btn btn-food-trip" id="btn-pi-food-trip">🚗 ออกไปซื้ออาหาร (รถฟรี)</button>
-        <button class="care-btn btn-fashion-trip" id="btn-pi-fashion-trip">🎀 ไปซื้อเสื้อผ้า</button>
+        <button class="care-btn btn-fashion-trip" id="btn-pi-fashion-trip">🎀 ไปซื้อเสื้อผ้า (รถฟรี)</button>
       </div>`;
   }
 
@@ -7423,26 +7423,22 @@ async function enterDrone3D(){
   return worldEntryStarted();
 }
 
-/* ==== 🐾🛍️ PET SHOPPING 3D — รอบ 1158 ====
-   ทริปซื้ออาหารใช้รถระบบฟรีแม้ไม่มีรถส่วนตัว; ทริปแฟชั่นยังใช้ค่าเช่าเดิม
-   ค่าเช่าทริปแฟชั่นหักหลัง engine เปิดสำเร็จเท่านั้น */
-function confirmPetShoppingEntry(target, rental){
+/* ==== 🐾🛍️ PET SHOPPING 3D — รอบ 1158/1352 ====
+   ทุกทริปใช้รถฟรี; ถ้ารถส่วนตัวใช้ไม่ได้/ค้างค่างวด ให้ยืมรถระบบแทนโดยไม่บล็อกโลก */
+function confirmPetShoppingEntry(target, systemCarReason=''){
   return new Promise(resolve=>{
     const food = target === 'food';
-    const fee = food
-      ? ((typeof PET_SHOP_FOOD_TRIP_FEE === 'number') ? PET_SHOP_FOOD_TRIP_FEE : 0)
-      : ((typeof PET_SHOP_RENTAL_FEE === 'number') ? PET_SHOP_RENTAL_FEE : 500);
+    const useSystemCar = !!systemCarReason;
+    const purpose = food ? 'ซื้ออาหาร' : 'ซื้อเสื้อผ้า';
     const ov = document.createElement('div');
     ov.className = 'levelup-overlay petshop-entry-overlay';
     ov.innerHTML = `<div class="levelup-box petshop-entry-box">
       <div class="petshop-entry-icon">${food ? '🥫🐾' : '🎀🐾'}</div>
       <h2>${food ? 'ไปร้านอาหารสัตว์' : 'ไปร้านแฟชั่นสัตว์เลี้ยง'}</h2>
       <p>พาน้องนั่งรถไปด้วย ขับตาม GPS ไปยังร้านที่อยู่ไม่ไกล แล้วเลือกซื้อที่หน้าร้านจริง</p>
-      ${rental
-        ? (fee === 0
-          ? `<div class="petshop-owncar-note">🚗 ยังไม่มีรถ — ระบบให้ยืม <b>รถแดงสายฟ้า</b> ไปซื้ออาหารรอบนี้ <b>ฟรี</b> (ไม่เพิ่มรถเข้าคลัง)</div>`
-          : `<div class="petshop-rental-note">🚗 ยังไม่มีรถ — ระบบจะให้เช่า <b>รถแดงสายฟ้า</b> รอบนี้<br>ค่าเช่า <b>🪙${fmtNum(fee)}</b> (ไม่เพิ่มรถเข้าคลัง)</div>`)
-        : `<div class="petshop-owncar-note">✅ ใช้รถส่วนตัวของหนู — <b>ไม่มีค่าเช่า</b></div>`}
+      ${useSystemCar
+        ? `<div class="petshop-owncar-note">🚗 ${systemCarReason==='overdue'?'รถส่วนตัวที่เลือกค้างค่างวด — ระบบจึงให้ยืม':'ยังไม่มีรถ — ระบบให้ยืม'} <b>รถแดงสายฟ้า</b> ไป${purpose}รอบนี้ <b>ฟรี</b> (ไม่เพิ่มรถเข้าคลัง)</div>`
+        : `<div class="petshop-owncar-note">✅ ใช้รถส่วนตัวของหนู — <b>ทริปนี้ฟรี ไม่มีค่ารถ</b></div>`}
       <div class="cb-btns"><button class="cf-no">ไว้ก่อน</button><button class="cf-ok">ออกเดินทาง 🚗</button></div>
     </div>`;
     let done = false;
@@ -7468,50 +7464,40 @@ async function enterPetShopping3D(target='food'){
   }
   if(advLoading){ advBusyMsg(()=>enterPetShopping3D(target)); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
 
-  const rental = !(state.cars && state.cars.length);
-  const fee = target === 'food'
-    ? ((typeof PET_SHOP_FOOD_TRIP_FEE === 'number') ? PET_SHOP_FOOD_TRIP_FEE : 0)
-    : ((typeof PET_SHOP_RENTAL_FEE === 'number') ? PET_SHOP_RENTAL_FEE : 500);
-  if(!rental && carDriveBlock() === 'overdue'){
-    sfx.wrong();
-    toast('🔒 รถคันนี้ค้างค่างวด — ชำระหรือสลับรถก่อนออกไปซื้อของนะ', 3200);
-    return worldEntryStopped('รถที่เลือกค้างค่างวด');
-  }
-  if(rental && fee > 0 && state.coins < fee){
-    sfx.wrong();
-    toast(`🪙 ต้องมี ${fmtNum(fee)} เหรียญสำหรับเช่ารถรอบนี้ — เล่นเกมหาเหรียญเพิ่มก่อนนะ`, 3200);
-    return worldEntryStopped('เหรียญไม่พอค่าเช่ารถ');
-  }
-  if(!await confirmPetShoppingEntry(target, rental)) return worldEntryStopped('ยกเลิกก่อนออกเดินทาง');
+  const own = myCar();
+  const ownCarBlock = own ? carDriveBlock() : 'nocar';
+  const systemCarReason = ownCarBlock === 'overdue' ? 'overdue' : (!own ? 'nocar' : '');
+  const useSystemCar = !!systemCarReason;
+  if(!await confirmPetShoppingEntry(target, systemCarReason)) return worldEntryStopped('ยกเลิกก่อนออกเดินทาง');
 
   advLoading = Date.now();
   toast(target==='food' ? '🚗 กำลังเตรียมเส้นทางไปร้านอาหารสัตว์...' : '🚗 กำลังเตรียมเส้นทางไปร้านแฟชั่นสัตว์เลี้ยง...');
+  const loading = document.createElement('div');
+  loading.className = 'levelup-overlay petshop-loading-overlay';
+  loading.setAttribute('role','status');
+  loading.innerHTML = `<div class="levelup-box petshop-entry-box"><div class="petshop-entry-icon">🚗💨</div><h2>กำลังเปิดหน้าขับรถ...</h2><p>${target==='food'?'กำลังเตรียมเส้นทางไปร้านอาหารสัตว์':'กำลังเตรียมเส้นทางไปร้านแฟชั่นสัตว์เลี้ยง'} กรุณารอสักครู่</p></div>`;
+  document.body.appendChild(loading);
   try{
     const ps3Css = document.querySelector('link[href*="css/petshopping3d.css"]');
     if(ps3Css && !ps3Css.href.includes('v=1168')) ps3Css.href='css/petshopping3d.css?v=1168';
     await loadScriptOnce('js/vendor/three.min.js');
     await loadScriptOnce('js/petshopping3d.js?v=1329');
     if(!window.PetShopping3D || typeof PetShopping3D.start !== 'function') throw new Error('PetShopping3D API ไม่พร้อม');
-    const own = rental ? null : myCar();
-    const started = PetShopping3D.start({target, carId:own ? own.id : 'car_01', rental});
+    const tripCar = useSystemCar ? null : own;
+    const started = PetShopping3D.start({target, carId:tripCar ? tripCar.id : 'car_01', systemCar:useSystemCar});
     if(started === false) throw new Error('เปิดฉาก Pet Shopping 3D ไม่สำเร็จ');
-    if(rental && fee > 0){
-      state.coins -= fee;
-      saveState();
-      if(typeof syncHeader === 'function') syncHeader();
-      if(typeof sfx !== 'undefined' && typeof sfx.buy === 'function') sfx.buy();
-      toast(`🚗 เช่ารถรอบนี้แล้ว 🪙${fmtNum(fee)} — ขับตาม GPS ไปที่ร้านได้เลย!`, 3000);
-    }else if(rental){
-      toast('🚗 ยืมรถไปซื้ออาหารฟรี — ขับตาม GPS ไปที่ร้านได้เลย!', 3000);
-    }
+    toast(useSystemCar
+      ? `🚗 ยืมรถระบบฟรีไป${target==='food'?'ซื้ออาหาร':'ซื้อเสื้อผ้า'} — ขับตาม GPS ได้เลย!`
+      : '🚗 ใช้รถส่วนตัวฟรี — ขับตาม GPS ไปที่ร้านได้เลย!', 3000);
     return worldEntryStarted();
   }catch(e){
     console.error('[pet-shopping-3d]', e);
     toast(target === 'food'
-      ? '⚠️ เปิดโลกซื้ออาหารไม่สำเร็จ — ไม่มีการหักค่ารถ ลองใหม่อีกครั้งนะ'
-      : '⚠️ เปิดโลกซื้อของไม่สำเร็จ — ยังไม่หักค่าเช่ารถ ลองใหม่อีกครั้งนะ', 3600);
+      ? '⚠️ เปิดโลกซื้ออาหารไม่สำเร็จ — ทริปฟรี ไม่มีการหักค่ารถ ลองใหม่อีกครั้งนะ'
+      : '⚠️ เปิดโลกซื้อเสื้อผ้าไม่สำเร็จ — ทริปฟรี ไม่มีการหักค่ารถ ลองใหม่อีกครั้งนะ', 5200);
     return worldEntryStopped('โหลดโลกซื้อของไม่สำเร็จและไม่มีการหักค่ารถ', e);
   }finally{
+    loading.remove();
     advLoading = false;
   }
 }
