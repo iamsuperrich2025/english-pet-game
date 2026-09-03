@@ -4169,8 +4169,8 @@ function bindPetPlateButtons(root){
   on('btn-pi-dress-pip', shapeToggle);   // 🎀 รอบ 661: กดภาพเล็ก "ชุดที่ใส่อยู่" = สลับมาดูตัวใหญ่
 }
 
-/* overlay ใหญ่ ข้อมูลน้อง & การดูแล — 2 คอลัมน์ (ร่างไข่ = คอลัมน์เดียว) ไม่มี scrollbar
-   เปิดจากปุ่มเหนือฟีด · กดปุ่มดูแลแล้ว renderDashboard จะ refresh เนื้อหาให้เอง */
+/* overlay ใหญ่ ข้อมูลน้อง & การดูแล — 2 คอลัมน์ (ร่างไข่ = คอลัมน์เดียว)
+   ตัวอักษรอ่านง่าย เลื่อนแต่ซ่อน scrollbar และมีปุ่มปิดค้างชัดทั้งบน/ล่าง */
 function openPetInfoOverlay(){
   if(!__petPlates) return;
   const ov = document.createElement('div');
@@ -4178,13 +4178,16 @@ function openPetInfoOverlay(){
   const close = ()=>{ window.__piOverlay = null; ov.remove(); };
   const fill = ()=>{
     if(!__petPlates || !activePet()){ close(); return; }
+    const previousScroll = Array.from(ov.querySelectorAll('.pi-plate')).map(panel=>panel.scrollTop);
     ov.innerHTML = `<div class="pi-box${__petPlates.care ? '' : ' one-col'}">
-      <button class="pl-close pi-close pi-close-left" aria-label="ปิด">✕</button>
+      <button class="pl-close pi-close pi-close-left pi-close-control pi-close-top" type="button" aria-label="ปิดหน้าต่าง">✕ <span>ปิด</span></button>
       <div class="stage-plate pi-plate pi-plate-img">${__petPlates.info}</div>
       ${__petPlates.care ? `<div class="stage-plate pi-plate">${__petPlates.care}</div>` : ''}
+      <button class="pi-close-bottom pi-close-control" type="button">✕ ปิดหน้าต่าง</button>
     </div>`;
     bindPetPlateButtons(ov);
-    ov.querySelectorAll('.pi-close').forEach(b=>b.addEventListener('click', close));
+    ov.querySelectorAll('.pi-plate').forEach((panel,index)=>{ panel.scrollTop = previousScroll[index] || 0; });
+    ov.querySelectorAll('.pi-close-control').forEach(b=>b.addEventListener('click', close));
   };
   ov.addEventListener('click', (e)=>{ if(e.target === ov) close(); });
   window.__piOverlay = {refresh: fill};
@@ -5345,8 +5348,7 @@ function renderDashboard(){
     const hungry = petHungry(p);
     let hungerStatus, barPct, barCls = '';
     if(p.sick){
-      /* 🚫 รอบ 952: บอกตรงนี้เลยว่า "ซื้อของกินไม่ได้" — ปุ่มถูกปิดต้องมีเหตุผลบนจอ (กฎทองข้อ 1)
-         เขียนทับบรรทัดเดิม ไม่เพิ่มบรรทัดใหม่ (แผงนี้ยาวชิดขอบจอเตี้ยอยู่แล้ว) */
+      /* ป่วยจึงยังป้อนไม่ได้ แต่การซื้ออาหารมาตุนเป็นคนละการกระทำและต้องเปิดใช้เสมอ */
       hungerStatus = '🤒 ป่วยอยู่... <b>ยังให้อาหารไม่ได้</b> ต้องรักษาให้หายก่อนนะ (ยังออกไปซื้อของมาตุนไว้ได้)';
       barPct = 0;
     }else if(p.sleeping){
@@ -5462,7 +5464,7 @@ function renderDashboard(){
         <button class="care-btn btn-pantry" id="btn-pi-pantry">🗄️ ชั้นเก็บอาหาร <small>${pantryLabel}</small></button>
       </div>
       <div class="care-row pantry-trip-row">
-        <button class="care-btn btn-food-trip" id="btn-pi-food-trip">🚗 ออกไปซื้ออาหารตุนไว้ให้น้อง</button>
+        <button class="care-btn btn-food-trip" id="btn-pi-food-trip">🚗 ออกไปซื้ออาหาร (รถฟรี)</button>
         <button class="care-btn btn-fashion-trip" id="btn-pi-fashion-trip">🎀 ไปซื้อเสื้อผ้า</button>
       </div>`;
   }
@@ -7422,12 +7424,14 @@ async function enterDrone3D(){
 }
 
 /* ==== 🐾🛍️ PET SHOPPING 3D — รอบ 1158 ====
-   โลกซื้อของใช้รถส่วนตัวฟรี; ผู้เล่นที่ยังไม่มีรถเช่า car_01 ครั้งละ 500 เหรียญ
-   หักค่าเช่าหลัง engine เปิดสำเร็จเท่านั้น เพื่อไม่กินเงินเมื่อโหลดไฟล์/WebGL ล้มเหลว */
+   ทริปซื้ออาหารใช้รถระบบฟรีแม้ไม่มีรถส่วนตัว; ทริปแฟชั่นยังใช้ค่าเช่าเดิม
+   ค่าเช่าทริปแฟชั่นหักหลัง engine เปิดสำเร็จเท่านั้น */
 function confirmPetShoppingEntry(target, rental){
   return new Promise(resolve=>{
     const food = target === 'food';
-    const fee = (typeof PET_SHOP_RENTAL_FEE === 'number') ? PET_SHOP_RENTAL_FEE : 500;
+    const fee = food
+      ? ((typeof PET_SHOP_FOOD_TRIP_FEE === 'number') ? PET_SHOP_FOOD_TRIP_FEE : 0)
+      : ((typeof PET_SHOP_RENTAL_FEE === 'number') ? PET_SHOP_RENTAL_FEE : 500);
     const ov = document.createElement('div');
     ov.className = 'levelup-overlay petshop-entry-overlay';
     ov.innerHTML = `<div class="levelup-box petshop-entry-box">
@@ -7435,7 +7439,9 @@ function confirmPetShoppingEntry(target, rental){
       <h2>${food ? 'ไปร้านอาหารสัตว์' : 'ไปร้านแฟชั่นสัตว์เลี้ยง'}</h2>
       <p>พาน้องนั่งรถไปด้วย ขับตาม GPS ไปยังร้านที่อยู่ไม่ไกล แล้วเลือกซื้อที่หน้าร้านจริง</p>
       ${rental
-        ? `<div class="petshop-rental-note">🚗 ยังไม่มีรถ — ระบบจะให้เช่า <b>รถแดงสายฟ้า</b> รอบนี้<br>ค่าเช่า <b>🪙${fmtNum(fee)}</b> (ไม่เพิ่มรถเข้าคลัง)</div>`
+        ? (fee === 0
+          ? `<div class="petshop-owncar-note">🚗 ยังไม่มีรถ — ระบบให้ยืม <b>รถแดงสายฟ้า</b> ไปซื้ออาหารรอบนี้ <b>ฟรี</b> (ไม่เพิ่มรถเข้าคลัง)</div>`
+          : `<div class="petshop-rental-note">🚗 ยังไม่มีรถ — ระบบจะให้เช่า <b>รถแดงสายฟ้า</b> รอบนี้<br>ค่าเช่า <b>🪙${fmtNum(fee)}</b> (ไม่เพิ่มรถเข้าคลัง)</div>`)
         : `<div class="petshop-owncar-note">✅ ใช้รถส่วนตัวของหนู — <b>ไม่มีค่าเช่า</b></div>`}
       <div class="cb-btns"><button class="cf-no">ไว้ก่อน</button><button class="cf-ok">ออกเดินทาง 🚗</button></div>
     </div>`;
@@ -7463,13 +7469,15 @@ async function enterPetShopping3D(target='food'){
   if(advLoading){ advBusyMsg(()=>enterPetShopping3D(target)); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
 
   const rental = !(state.cars && state.cars.length);
-  const fee = (typeof PET_SHOP_RENTAL_FEE === 'number') ? PET_SHOP_RENTAL_FEE : 500;
+  const fee = target === 'food'
+    ? ((typeof PET_SHOP_FOOD_TRIP_FEE === 'number') ? PET_SHOP_FOOD_TRIP_FEE : 0)
+    : ((typeof PET_SHOP_RENTAL_FEE === 'number') ? PET_SHOP_RENTAL_FEE : 500);
   if(!rental && carDriveBlock() === 'overdue'){
     sfx.wrong();
     toast('🔒 รถคันนี้ค้างค่างวด — ชำระหรือสลับรถก่อนออกไปซื้อของนะ', 3200);
     return worldEntryStopped('รถที่เลือกค้างค่างวด');
   }
-  if(rental && state.coins < fee){
+  if(rental && fee > 0 && state.coins < fee){
     sfx.wrong();
     toast(`🪙 ต้องมี ${fmtNum(fee)} เหรียญสำหรับเช่ารถรอบนี้ — เล่นเกมหาเหรียญเพิ่มก่อนนะ`, 3200);
     return worldEntryStopped('เหรียญไม่พอค่าเช่ารถ');
@@ -7487,18 +7495,22 @@ async function enterPetShopping3D(target='food'){
     const own = rental ? null : myCar();
     const started = PetShopping3D.start({target, carId:own ? own.id : 'car_01', rental});
     if(started === false) throw new Error('เปิดฉาก Pet Shopping 3D ไม่สำเร็จ');
-    if(rental){
+    if(rental && fee > 0){
       state.coins -= fee;
       saveState();
       if(typeof syncHeader === 'function') syncHeader();
       if(typeof sfx !== 'undefined' && typeof sfx.buy === 'function') sfx.buy();
       toast(`🚗 เช่ารถรอบนี้แล้ว 🪙${fmtNum(fee)} — ขับตาม GPS ไปที่ร้านได้เลย!`, 3000);
+    }else if(rental){
+      toast('🚗 ยืมรถไปซื้ออาหารฟรี — ขับตาม GPS ไปที่ร้านได้เลย!', 3000);
     }
     return worldEntryStarted();
   }catch(e){
     console.error('[pet-shopping-3d]', e);
-    toast('⚠️ เปิดโลกซื้อของไม่สำเร็จ — ยังไม่หักค่าเช่ารถ ลองใหม่อีกครั้งนะ', 3600);
-    return worldEntryStopped('โหลดโลกซื้อของไม่สำเร็จและไม่คิดค่าเช่า', e);
+    toast(target === 'food'
+      ? '⚠️ เปิดโลกซื้ออาหารไม่สำเร็จ — ไม่มีการหักค่ารถ ลองใหม่อีกครั้งนะ'
+      : '⚠️ เปิดโลกซื้อของไม่สำเร็จ — ยังไม่หักค่าเช่ารถ ลองใหม่อีกครั้งนะ', 3600);
+    return worldEntryStopped('โหลดโลกซื้อของไม่สำเร็จและไม่มีการหักค่ารถ', e);
   }finally{
     advLoading = false;
   }

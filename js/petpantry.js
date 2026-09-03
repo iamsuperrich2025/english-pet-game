@@ -26,7 +26,9 @@ const PetPantry = (()=>{
   function foodCatalog(){ return Array.from(PET_SHOP_FOODS); }
   function favoriteFor(type){ return PET_SHOP_FAVORITES.find(f=>f.petType===type)||null; }
   function foodById(id,type){ const sid=stockId(id,type); return PET_SHOP_FOODS.find(f=>f.stockId===sid)||null; }
-  function catalogForPet(type){ const fav=favoriteFor(type); return [fav,...FOODS].filter(foodSafeForPetMenu); }
+  /* ใช้แคตตาล็อกเดียวกับ buyFood โดยตรง เพื่อให้ทุกการ์ดที่แสดงซื้อได้จริง
+     สถานะป่วยมีผลเฉพาะการป้อนอาหาร ไม่บล็อกการซื้อของมาตุน */
+  function catalogForPet(type){ const fav=favoriteFor(type); return [fav,...PET_SHOP_FOODS.filter(f=>!f.favorite)].filter(foodSafeForPetMenu); }
   function shelfValue(target=state){ const s=shelf(target); return s?s.price:0; }
   function stockValue(target=state){ return foodCatalog().reduce((sum,f)=>sum+qty(f,null,target)*cleanInt(f.price),0); }
   function done(){ saveState(); if(typeof syncHeader==='function')syncHeader(); if(typeof renderDashboard==='function')renderDashboard(); }
@@ -87,7 +89,7 @@ const PetPantry = (()=>{
     const cur=shelf(), used=total(), cap=capacity();
     const shelves=PET_PANTRY_SHELVES.map(s=>{const owned=cur&&cur.id===s.id,locked=cur&&s.capacity<cur.capacity,cost=Math.max(0,s.price-(cur?cur.price:0));return `<article class="pp-shelf ${owned?'owned':''} ${locked?'locked':''}" data-shelf="${s.id}"><b>${s.emoji} ${s.name}</b><span>${s.capacity} ช่อง</span><small>${owned?'กำลังใช้':locked?'เล็กกว่าชั้นปัจจุบัน':`🪙${fmtNum(cost)}${cur?' (จ่ายส่วนต่าง)':''}`}</small></article>`}).join('');
     const rows=foodCatalog().filter(f=>qty(f)>0).map(f=>`<div class="pp-stock"><span>${f.emoji} ${escapeHTML(f.name)}</span><b>×${qty(f)}</b></div>`).join('')||'<div class="pp-empty">ชั้นยังว่างอยู่ — ขับรถไปเลือกอาหารมาตุนกันนะ 🚗</div>';
-    const ov=overlay('pantry','🗄️ ชั้นเก็บอาหาร',`<div class="pp-meter"><b>${cur?escapeHTML(cur.name):'ยังไม่มีชั้น'}</b><span>${used}/${cap||0} ช่อง</span><i><em style="width:${cap?used/cap*100:0}%"></em></i></div><div class="pp-shelves">${shelves}</div><div class="pp-stock-grid">${rows}</div><button class="pp-trip">🚗 ออกไปซื้ออาหารตุนไว้ให้น้อง</button>`,options.onClose);
+    const ov=overlay('pantry','🗄️ ชั้นเก็บอาหาร',`<div class="pp-meter"><b>${cur?escapeHTML(cur.name):'ยังไม่มีชั้น'}</b><span>${used}/${cap||0} ช่อง</span><i><em style="width:${cap?used/cap*100:0}%"></em></i></div><div class="pp-shelves">${shelves}</div><div class="pp-stock-grid">${rows}</div><button class="pp-trip">🚗 ออกไปซื้ออาหารตุนไว้ให้น้อง — รถฟรี</button>`,options.onClose);
 ov.querySelectorAll('[data-shelf]').forEach(el=>el.addEventListener('click',()=>{const r=buyShelf(el.dataset.shelf);if(r.ok){toast(`🗄️ ได้${r.shelf.name}แล้ว — ชั้นใหม่ยังว่างนะ`,0);openPantry(options);}else if(r.code==='coins')toast(`🪙 ต้องมี ${fmtNum(r.cost)} เหรียญ`);else if(r.code==='downgrade')toast('ชั้นนี้เล็กกว่าชั้นที่ใช้อยู่ จึงเปลี่ยนไม่ได้');}));
     ov.querySelector('.pp-trip').addEventListener('click',()=>{ov.remove();enterPetShopping3D('food');});
   }

@@ -67,7 +67,7 @@ window.PetShopping3D=(()=>{
     }
     return false;
   }
-  function onRoad(x,z){return Math.abs(x)<=ROAD_HALF_X||Math.abs(z-ROAD_CENTER_Z)<=ROAD_HALF_Z||onGuideRoad(x,z);}
+  function onRoad(x,z,kind=target){return Math.abs(x)<=ROAD_HALF_X||Math.abs(z-ROAD_CENTER_Z)<=ROAD_HALF_Z||onGuideRoad(x,z,kind);}
   function keepCarOnRoad(now=0){if(onRoad(car.x,car.z))return false;const dx=Math.abs(car.x)-ROAD_HALF_X,dz=Math.abs(car.z-ROAD_CENTER_Z)-ROAD_HALF_Z;let nx=0,nz=0;if(dx<=dz){const side=Math.sign(car.x)||1;car.x=side*(ROAD_HALF_X-.28);nx=-side;}else{const side=Math.sign(car.z-ROAD_CENTER_Z)||1;car.z=ROAD_CENTER_Z+side*(ROAD_HALF_Z-.28);nz=-side;}bounceCar(nx,nz,Math.hypot(dVelX,dVelZ),now);car.speed=Math.abs(dSpeed);return true;}
   const CarSnd={ctx:null,master:null,osc:null,osc2:null,gain:null,lp:null,on:false,rpm:0,skidGain:null,skidBp:null,
     ac(){if(!this.ctx){const A=window.AudioContext||window.webkitAudioContext;if(!A)return null;this.ctx=new A();this.master=this.ctx.createGain();this.master.gain.value=1;this.master.connect(this.ctx.destination);}if(this.ctx.state==='suspended')this.ctx.resume();return this.ctx;},

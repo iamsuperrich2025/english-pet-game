@@ -1,16 +1,16 @@
 'use strict';
 const fs=require('fs'),path=require('path'),vm=require('vm');const root=path.resolve(__dirname,'..'),read=r=>fs.readFileSync(path.join(root,r),'utf8');const assert=(x,m)=>{if(!x)throw new Error(m)};
 const js=read('js/petshopping3d.js'),css=read('css/petshopping3d.css'),ui=read('js/ui.js'),stateJs=read('js/state.js'),main=read('js/main.js');
-const sandbox={window:{},console,navigator:{}};vm.runInNewContext(js,sandbox);const testApi=sandbox.window.PetShopping3D._t,testRoute=testApi.routeFor({x:0,z:18},'fashion');
-assert(testRoute.every(p=>testApi.onRoad(p.x,p.z)),'GPS route must end on the drivable road');testApi.setPose(40,10,0);assert(!testApi.onRoad(40,10),'off-road fixture invalid');testApi.keepCarOnRoad();assert(testApi.onRoad(testApi.driveState.x,testApi.driveState.z),'off-road car was not projected back onto the road');
+const sandbox={window:{},console,navigator:{}};vm.runInNewContext(js,sandbox);const testApi=sandbox.window.PetShopping3D._t;
+['food','fashion'].forEach(kind=>{const route=testApi.routeFor({x:0,z:18},kind);assert(route.every(p=>testApi.onRoad(p.x,p.z,kind)),`GPS route to ${kind} must stay on the drivable road`);});testApi.setPose(40,10,0);assert(!testApi.onRoad(40,10),'off-road fixture invalid');testApi.keepCarOnRoad();assert(testApi.onRoad(testApi.driveState.x,testApi.driveState.z),'off-road car was not projected back onto the road');
 testApi.setPose(0,18,Math.PI);testApi.setSafety(true,true);testApi.setControls(true,false);const driveStartZ=testApi.driveState.z;for(let i=0;i<120;i++)testApi.stepDrive(1/60,1000+i*1000/60);testApi.setControls(false,false);assert(testApi.driveState.z<driveStartZ-5&&testApi.driveState.speed>1,'holding D/throttle must move the car forward continuously');
 testApi.setTestRect(0,2,6,1);testApi.setPose(0,1.6,0);testApi.setControls(true,false);testApi.stepDrive(1/60,5000);const solidBounce=testApi.driveState;assert(!testApi.hitsSolid(solidBounce.x,solidBounce.z)&&solidBounce.z<1.5&&solidBounce.speed<0&&solidBounce.collisionBounceUntil>5000,'solid collision must separate and bounce the car backward');let minBounceZ=solidBounce.z,maxBounceZ=solidBounce.z;for(let i=1;i<=180;i++){testApi.stepDrive(1/60,5000+i*1000/60);const p=testApi.driveState;assert(!testApi.hitsSolid(p.x,p.z),'held throttle must never leave the car embedded in a solid');minBounceZ=Math.min(minBounceZ,p.z);maxBounceZ=Math.max(maxBounceZ,p.z);}assert(maxBounceZ-minBounceZ>.35,'car must remain movable after collision instead of sticking at one point');
-testApi.clearTestSolids();testApi.setPose(13.1,0,Math.PI/2);testApi.keepCarOnRoad(6000);const edgeBounce=testApi.driveState;assert(edgeBounce.x<13&&edgeBounce.speed<0&&edgeBounce.collisionBounceUntil>6000,'road edge must nudge the car inward instead of pinning it');
+testApi.clearTestSolids();testApi.setPose(13.1,100,Math.PI/2);testApi.keepCarOnRoad(6000);const edgeBounce=testApi.driveState;assert(edgeBounce.x<13&&edgeBounce.speed<0&&edgeBounce.collisionBounceUntil>6000,'road edge must nudge the car inward instead of pinning it');
 assert(js.includes('window.PetShopping3D')&&js.includes('start,exit,isRunning'), 'world public API missing');
 assert(js.includes('antialias:false')&&js.includes('Math.min(devicePixelRatio||1,1.5)')&&js.includes('shadowMap.enabled=false'),'mobile renderer budget missing');
 assert(js.includes('routeFor')&&js.includes('LineBasicMaterial')&&js.includes('navText'),'GPS route/navigation missing');
-assert(js.includes('new THREE.BoxGeometry(2.6,.055,len)')&&js.includes('tickRouteLights(t)')&&js.includes('new THREE.CircleGeometry(.78,12)'),'wide cyan route band or chasing guide lights missing');
-['foundation','facade bays','pilasters','cornice'].forEach(()=>{});assert(js.includes('checkout')&&js.includes('wall shelves')&&js.includes('gondola')&&js.includes('addShop(\'food\')')&&js.includes('addShop(\'fashion\')'),'structured shop components missing');
+assert(js.includes('new THREE.BoxGeometry(2.6,.055,len)')&&js.includes('tickRouteLights(t)')&&js.includes('new THREE.BoxGeometry(ROUTE_LIGHT_WIDTH,.1,ROUTE_LIGHT_WIDTH*0.28)'),'wide cyan route band or chasing guide lights missing');
+assert(js.includes('function buildFoodShop')&&js.includes('function buildFashionShop')&&js.includes("addCuteShop('food')")&&js.includes("addCuteShop('fashion')"),'structured shop components missing');
 assert(js.includes("img/pet-shopping/${kind}_window.webp"),'generated shop-art mapping missing');
 assert(js.includes('PetPantry.openStore(target,{onClose')&&js.includes('currentPetImg')&&css.includes('@keyframes ps3Bob'),'shop checkout or pet passenger missing');
 assert(js.includes('radioState')&&js.includes('renderRadioList')&&js.includes('drawRadioViz')&&js.includes('Music.toggleCar()')&&css.includes('.ps3-radio-list'),'KPP car-radio/equalizer port missing');
@@ -27,7 +27,7 @@ assert(js.includes('toggleCamera')&&!js.includes('drawMirrors')&&!js.includes('m
 assert(!js.includes('ps3-windshield')&&!js.includes('ps3-wiper')&&!js.includes('ps3-visor')&&css.includes('.ps3-turn-effects'),'front windshield overlay and obsolete controls must be removed while turn glow remains');
 assert(js.includes('turnTick')&&js.includes('turnReturnAt=now+900')&&js.includes('ps3-turnpad'),'KPP self-cancelling turn signal missing');
 
-assert(js.includes('keepCarOnRoad(now)')&&js.includes('STORE_STOP_Z=-60')&&js.includes('ROAD_HALF_X=13')&&js.includes('ROAD_HALF_Z=11'),'road containment or safe store stop missing');
+assert(js.includes('keepCarOnRoad(now)')&&js.includes('STORE_STOP_Z=SHOP_CENTER_Z-8')&&js.includes('ROAD_HALF_X=13')&&js.includes('ROAD_HALF_Z=11'),'road containment or safe store stop missing');
 assert(js.includes('addRoadBarriers()')&&js.includes('new THREE.InstancedMesh')&&js.includes('ROAD CLOSED')&&js.includes('ห้ามผ่าน'),'visible guardrails and four road-closed end signs missing');
 assert(js.includes('gearDriveOn')&&js.includes('setPointerCapture')&&js.includes("'lostpointercapture'"),'hold D/R must drive immediately and release safely');
 assert(js.includes('pitchTgt')&&js.includes('dHeaveV')&&js.includes('groundShadow'),'grounded suspension weight or car contact shadow missing');

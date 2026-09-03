@@ -13,6 +13,8 @@ const main = read('js/main.js');
 const auth = read('js/auth.js');
 const game = read('js/game.js');
 const build = read('tools/build_web.mjs');
+const petData = read('js/data/petshopping.js');
+const lobbyCss = read('css/lobby.css');
 
 assert(index.indexOf('js/data/petshopping.js') > index.indexOf('js/data/pets.js'), 'pet-shopping data must load after foods');
 assert(index.indexOf('js/data/petshopping.js') < index.indexOf('js/state.js'), 'pet-shopping data must load before state migration');
@@ -34,9 +36,15 @@ assert(ui.includes("enterPetShopping3D('food')") && ui.includes("enterPetShoppin
 assert(!/state\.coins\s*-\s*=\s*item\.price/.test(ui), 'wardrobe still has a direct-purchase escape path');
 
 assert(/const rental\s*=\s*!\(state\.cars/.test(ui), 'no-car rental decision is missing');
-assert(ui.includes("carId:own ? own.id : 'car_01'") && ui.includes('state.coins -= fee'), 'rental car/fee transaction is missing');
+assert(/PET_SHOP_FOOD_TRIP_FEE\s*=\s*0/.test(petData), 'food-shopping car fee must be zero');
+assert(ui.includes("carId:own ? own.id : 'car_01'") && ui.includes('if(rental && fee > 0)') && ui.includes('state.coins -= fee'), 'fashion rental transaction or free-food guard is missing');
 assert(ui.indexOf('PetShopping3D.start') < ui.indexOf('state.coins -= fee', ui.indexOf('PetShopping3D.start')), 'rental fee must be charged only after world start');
-assert(ui.includes('ยังไม่หักค่าเช่ารถ'), 'world-load failure must explain that rental was not charged');
+assert(ui.includes('ยืมรถไปซื้ออาหารฟรี') && ui.includes('ไม่มีการหักค่ารถ'), 'free food-trip copy or failure guarantee is missing');
+
+const shoppingEntry = ui.slice(ui.indexOf('async function enterPetShopping3D'), ui.indexOf('async function enterDrive3D'));
+assert(!/\.sick|hungerSickLock/.test(shoppingEntry), 'sickness must never block food-shopping entry');
+assert(ui.includes('pi-close-top') && ui.includes('pi-close-bottom') && ui.includes("querySelectorAll('.pi-close-control')"), 'pet info needs working top and bottom close controls');
+assert(lobbyCss.includes('grid-template-rows:minmax(0,1fr) auto') && lobbyCss.includes('touch-action:pan-y') && lobbyCss.includes('.pi-close-bottom'), 'pet info hidden-scroll layout or bottom close style is missing');
 
 assert(main.includes('showPetShoppingGrantNotice') && main.includes('data-pet-shopping-grant'), 'persistent grant notice is missing');
 assert(main.includes('state.petShoppingGrantNotice = null') && main.includes("querySelector('.rankup-btn').addEventListener('click'"), 'grant notice must clear only on acknowledgement');
@@ -52,4 +60,4 @@ assert(game.includes('ยังได้เหรียญตามปกติ'
  'img/pet-shopping/food_window.webp','img/pet-shopping/fashion_window.webp','img/pet-shopping/pantry_grant.webp']
   .forEach(rel=>assert(build.includes(`'${rel}'`), `untracked delivery file missing from build allowlist: ${rel}`));
 
-console.log('PASS pet-shopping integration: migration, stock feeding, rental, persistent grant, sick-income regression');
+console.log('PASS pet-shopping integration: sick purchase, free food-trip car, readable hidden-scroll pet info, fashion rental, persistent grant');

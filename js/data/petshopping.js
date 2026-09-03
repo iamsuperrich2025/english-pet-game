@@ -6,6 +6,8 @@ const PET_PANTRY_SHELVES = Object.freeze([
   Object.freeze({id:'medium', name:'ชั้นแสนสบาย', emoji:'🏠', capacity:75,  price:5000,  color:'#f0b45f'}),
   Object.freeze({id:'large',  name:'ชั้นเจ้าตัวเล็ก',emoji:'🏬',capacity:160, price:12000, color:'#9f8be7'}),
 ]);
+/* รถระบบสำหรับทริปซื้ออาหารเป็นบริการฟรีเสมอ; ค่าเช่าคงไว้เฉพาะทริปแฟชั่น */
+const PET_SHOP_FOOD_TRIP_FEE = 0;
 const PET_SHOP_RENTAL_FEE = 500;
 const PET_SHOPPING_GRANT_VERSION = 1;
 const PET_SHOPPING_GRANT_AMOUNT = 10000;

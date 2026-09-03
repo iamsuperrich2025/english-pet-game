@@ -2602,26 +2602,54 @@ html.no-anim .fcm-hl{animation:none;box-shadow:0 0 0 2px rgba(255,214,102,.9);ba
   display:flex;align-items:center;justify-content:center;animation:fadeIn .22s;
 }
 .pi-box{
-  position:relative;width:min(96vw,880px);max-height:94vh;
-  display:grid;grid-template-columns:1fr 1fr;gap:10px;
-  animation:popIn .3s cubic-bezier(.2,1.5,.4,1);
+  position:relative;width:min(96vw,980px);height:94dvh;max-height:94dvh;
+  display:grid;grid-template-columns:1fr 1fr;grid-template-rows:minmax(0,1fr) auto;gap:10px;
 }
 .pi-box.one-col{grid-template-columns:1fr;width:min(96vw,480px);}
 .pi-box .stage-plate.pi-plate{
-  width:auto;max-height:94vh;overflow-y:auto;min-width:0;
-  scrollbar-width:none;-ms-overflow-style:none;   /* กันชนจอเตี้ยมาก — ปกติเนื้อหาพอดีไม่ต้องเลื่อน */
+  grid-row:1;width:auto;max-height:none;min-width:0;min-height:0;overflow-y:auto;
+  overscroll-behavior:contain;touch-action:pan-y;scrollbar-width:none;-ms-overflow-style:none;
 }
 .pi-box .stage-plate.pi-plate::-webkit-scrollbar{display:none;width:0;}
-/* รอบ 247: ปุ่มปิดเด่นชัด (วงกลมแดง กากบาทขาว ขอบขาว) — เห็นชัดทั้งบนรูปน้องและบนแผง */
+/* ปุ่มปิดบนเป็นป้ายข้อความค้างอยู่เสมอ; ปุ่มล่างอยู่แถว footer จึงไม่เลื่อนหาย */
 .pi-close{position:absolute;top:8px;right:8px;z-index:6;
-  width:34px;height:34px;border-radius:50%;
+  width:auto;min-width:84px;height:44px;padding:0 14px;border-radius:999px;
   background:rgba(224,59,82,.95);color:#fff;border:2px solid rgba(255,255,255,.9);
-  font-size:17px;font-weight:900;line-height:1;
+  font-size:16px;font-weight:900;line-height:1;
   box-shadow:0 3px 10px rgba(0,0,0,.45);}
 .pi-close:hover{background:#e03b52;}
 .pi-close:active{transform:scale(.9);}
 /* รอบ 246-247: ปุ่มปิดเพิ่มที่มุมบนซ้ายสุด (เหนือรูปน้อง) */
 .pi-close-left{left:8px;right:auto;}
+.pi-close-bottom{
+  grid-column:1/-1;grid-row:2;justify-self:center;min-width:min(360px,72vw);min-height:44px;
+  padding:9px 24px;border:2px solid rgba(255,255,255,.86);border-radius:999px;
+  background:linear-gradient(180deg,#f05c70,#c9324a);color:#fff;font-family:inherit;
+  font-size:clamp(16px,1.5vw,18px);font-weight:900;box-shadow:0 4px 0 #851f32;cursor:pointer;
+}
+.pi-close-bottom:active{transform:translateY(2px);box-shadow:0 2px 0 #851f32;}
+/* หน้าข้อมูลน้องต้องอ่านง่าย: ขยายเฉพาะ overlay นี้ แล้วใช้การเลื่อนแทนการย่อตัวหนังสือ */
+.pi-box .stage-plate.pi-plate .plate-title{font-size:clamp(14px,1.35vw,18px);line-height:1.4;}
+.pi-box .stage-plate.pi-plate .pet-name{font-size:clamp(20px,2vw,26px);font-weight:800;}
+.pi-box .stage-plate.pi-plate .stage-label{font-size:clamp(14px,1.35vw,18px);}
+.pi-box .stage-plate.pi-plate .level-badge{font-size:clamp(14px,1.25vw,17px);padding:3px 11px;}
+.pi-box .stage-plate.pi-plate .exp-text,
+.pi-box .stage-plate.pi-plate .hunger-text,
+.pi-box .stage-plate.pi-plate .heat-text,
+.pi-box .stage-plate.pi-plate .thirst-text{font-size:clamp(14px,1.3vw,17px);line-height:1.5;}
+.pi-box .stage-plate.pi-plate .ability-box,
+.pi-box .stage-plate.pi-plate .sick-banner{font-size:clamp(14px,1.3vw,17px);line-height:1.5;padding:8px 11px;}
+.pi-box .stage-plate.pi-plate .care-btn{font-size:clamp(15px,1.45vw,18px);line-height:1.3;min-height:44px;padding:9px 12px;}
+.pi-box .stage-plate.pi-plate .pi-shape-cap,
+.pi-box .stage-plate.pi-plate .pi-streak-head{font-size:clamp(14px,1.25vw,17px);line-height:1.5;}
+.pi-box .stage-plate.pi-plate .pi-streak-note{font-size:clamp(14px,1.15vw,16px);line-height:1.45;}
+/* ข้อความรองเดิมบางจุดกำหนดไว้เพียง 10–13px: ยกขั้นต่ำเฉพาะหน้าต่างนี้เป็น 14px */
+.pi-box .stage-plate.pi-plate small,
+.pi-box .stage-plate.pi-plate .pi-dress-btn,
+.pi-box .stage-plate.pi-plate .chip-edit,
+.pi-box .stage-plate.pi-plate .pi-streak-best,
+.pi-box .stage-plate.pi-plate .pi-dress-pip span,
+.pi-box .stage-plate.pi-plate .pi-wear-note{font-size:14px;line-height:1.4;}
 /* 🐾 รอบ 246: รูปน้องตัวใหญ่ในหน้าข้อมูล (คลิกน้อง→เปิด · ให้เด็กอินกับสัตว์เลี้ยง) */
 .pi-portrait{display:block;margin:2px auto 8px;max-height:min(30vh,260px);max-width:90%;
   object-fit:contain;filter:drop-shadow(0 10px 20px rgba(3,15,35,.5));}
@@ -2711,15 +2739,15 @@ button.pi-dress-pip:active{transform:scale(.94);}
 .pi-dot.today{outline:1.5px solid #7fd0ff;outline-offset:1px;}
 .pi-streak-note{margin-top:clamp(2px,.8vh,5px);font-size:clamp(10px,2.2vh,11.5px);color:#9fc6ee;}
 .pi-care-title{margin-top:14px;}
-/* 🛡️ รอบ 951: ปุ่ม "ควิซอาหารปลอดภัย" ย้ายมาต่อท้ายใต้ปุ่มให้อาหาร (กฎทองข้อ 7 — ต้องพอดีใบไม่ต้องเลื่อน)
-   จอเตี้ยมาก + สถานะหนัก (ป่วย+หิว+พิษ = แบนเนอร์เยอะ) → บีบปุ่มดูแลทั้งกลุ่มให้เนื้อหาลงพอดี */
+/* จอเตี้ย: คงตัวอักษรอ่านง่ายและให้แต่ละคอลัมน์เลื่อนแทน พร้อมซ่อน scrollbar */
 @media (max-height:430px){
-  .pi-box .stage-plate.pi-plate .care-btn{font-size:11px;padding:5px 8px;}
+  .pi-box{width:98vw;height:97dvh;max-height:97dvh;gap:6px;}
+  .pi-box .stage-plate.pi-plate .care-btn{font-size:14px;padding:7px 9px;min-height:40px;}
   .pi-box .stage-plate.pi-plate .care-row{margin-top:5px;gap:4px;}
   .pi-box .stage-plate.pi-plate .pi-care-title{margin-top:9px;}
-  /* บีบ "ระยะขอบ/บรรทัด" ของแบนเนอร์ยาว — ไม่ลดขนาดตัวอักษร (เด็กต้องอ่านออกเหมือนเดิม) */
   .pi-box .stage-plate.pi-plate .sick-banner{padding:4px 8px;margin-top:6px;line-height:1.3;}
   .pi-box .stage-plate.pi-plate .ability-box{padding:4px 8px;line-height:1.3;}
+  .pi-close-bottom{min-height:44px;padding:7px 18px;}
 }
 
 /* 🏆 รอบ 246: กระดานอันดับเต็มจอ 5 คอลัมน์ Top 100 (คลิกกลุ่มอันดับเพื่อเปิด · ไม่ต้องเลื่อน) */
