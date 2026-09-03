@@ -415,35 +415,35 @@ removeSelector:60 · openSelector:66
 
 ## js/fpsweapon.js (194 บรรทัด · 0 รายการ)
 
-## js/frontline1944.js (9,212 บรรทัด · 168 รายการ)
-FRONTLINE_EXECUTING_SCRIPT_URL:95 · CFG:115 · LAYER:615 · TERRAIN:735 · SECTOR_TEMPLATES:845 · approach:1125
-rotateToward:1135 · listen:1145 · hash32:1155 · randFrom:1165 · adminAllowed:1185 · lockNotice:1255
-syncAdminEntry:1265 · claimTankRuntimeOwnership:1355 · releaseTankRuntimeOwnership:1425 · runtimeIdentity:1475 · frontlineAssetLabel:1479 · frontlineDeliveryIdentity:1491
-renderRuntimeIdentity:1509 · normalizeWord:1537 · vocabPool:1607 · auditVocabulary:1687 · ensureProgress:1757 · persist:1847
-claim:1937 · chooseWord:1947 · pronounce:2017 · awardLetter:2027 · loadThree:2167 · makeDom:2237
-showToast:2387 · sharedMesh:2827 · addToLayer:2837 · addToSector:2847 · setWorldPos:2857 · visualIdFor:3807
-sectorDescriptor:3817 · createSectorGroups:3837 · removeSectorGroups:3847 · registerOccluder:3857 · updateOcclusionOrder:3867 · addBaseSectorArt:3927
-addFieldRows:4037 · addCrater:4047 · addMudPatch:4057 · addTree:4067 · addHouse:4147 · addBunker:4207
-addCampTent:4217 · addWall:4227 · addBridgeCrossing:4287 · addSmoke:4387 · makeSmokeTexture:4427 · populateSector:4467
-disposeSectorRuntime:4677 · instantiateSector:4727 · createProjectilePool:5167 · createFxPool:5247 · initPools:5277 · disposePools:5287
-makeTank:5307 · playerIdentity:5547 · makePlayer:5597 · authoritativeTankPose:5657 · syncTankVisual:5697 · tankStateSnapshot:5707
-interpolateRemoteTank:5737 · makeEnemyFigure:5767 · makeBossTank:5797 · spawnEnemy:5807 · registerFortressCollision:5847 · makeFortress:5947
-removeFortress:6017 · activateNextFortress:6027 · spawnDefenders:6097 · spawnBoss:6127 · recordDamage:6147 · damageEnemy:6157
-damagePlayer:6167 · destroyCore:6177 · cannonWorldPosition:6197 · cannonWorldRay:6207 · cannonWorldDirection:6247 · spawnProjectile:6257
-firePlayer:6267 · enemyFire:6327 · projectileImpact:6367 · tickProjectilePool:6377 · burst:6527 · tickFx:6567
-forwardFromRotation:6647 · rightFromRotation:6657 · rotationFromForward:6667 · driveDelta:6677 · normalizeTankCommand:6687 · steeringForTravelDirection:6697
-desktopCommandFromState:6707 · mobileCommandFromState:6757 · mergeTankCommands:6807 · screenAimDirection:6837 · tickTank:7167 · tickFortress:7197
-tickEnemies:7227 · cameraTick:7277 · updateObjective:7317 · fortressStateText:7327 · updateHud:7337 · inputNow:7459
-markTouchLikeInput:7469 · hasRecentTouchLikeInput:7479 · mobileAimLatchValid:7489 · mobileAimLatchedHeading:7499 · latchMobileAimWorldDirection:7509 · latchMobileAimVector:7519
-clearMobileAimLatch:7529 · shouldAcceptDesktopAimEvent:7539 · explicitInputDiagnosticsRequested:7549 · coarseInputEnvironment:7559 · inputDiagnosticsEnabled:7569 · preventControlDefault:7579
-queueMobileFirePulse:7589 · consumeMobileFirePulse:7599 · stickVectorFromRect:7609 · resetStickState:7639 · pointInRect:7669 · rectFromEdges:7679
-rectFromDomRect:7689 · rectCenter:7699 · expandRect:7709 · rectIntersects:7719 · viewportRectFor:7729 · safeAreaInsetsFor:7739
-safeGameplayRect:7749 · elementUsableRect:7759 · protectedFrontlineRects:7769 · mobileControlRegions:7779 · pointOverProtectedFrontlineUI:7829 · eventTargetLabel:7839
-isProtectedFrontlineTarget:7879 · firePlacementBlockedRects:7909 · fireRectWithinSafe:7919 · fireRectIsValid:7929 · fireRectAtCenter:7939 · findSafeFireRect:7949
-applyFireRect:8019 · fireOrientationKey:8029 · fireStorage:8039 · readFirePositionStore:8049 · writeFirePositionStore:8059 · normalizedFirePosition:8069
-saveFirePositionPreference:8079 · restoreFirePositionPreference:8089 · updateInputDiagnostics:8499 · bindGlobalMobileTouchRouter:8551 · bindControls:8741 · pointerToGround:8813
-bindCanvasAim:8823 · resize:8863 · buildLayers:8873 · buildWorld:8883 · initThree:8933 · loop:8963
-clearScene:9003 · open:9033 · close:9093 · routeCheck:9123 · occlusionAcceptance:9143 · foundationDiagnostics:9153
+## js/frontline1944.js (13,878 บรรทัด · 168 รายการ)
+FRONTLINE_EXECUTING_SCRIPT_URL:142 · CFG:172 · LAYER:952 · TERRAIN:1132 · SECTOR_TEMPLATES:1297 · approach:1717
+rotateToward:1732 · listen:1747 · hash32:1762 · randFrom:1777 · adminAllowed:1807 · lockNotice:1912
+syncAdminEntry:1927 · claimTankRuntimeOwnership:2062 · releaseTankRuntimeOwnership:2167 · runtimeIdentity:2242 · frontlineAssetLabel:2248 · frontlineDeliveryIdentity:2266
+renderRuntimeIdentity:2293 · normalizeWord:2335 · vocabPool:2440 · auditVocabulary:2560 · ensureProgress:2665 · persist:2800
+claim:2935 · chooseWord:2950 · pronounce:3055 · awardLetter:3070 · loadThree:3280 · makeDom:3385
+showToast:3610 · sharedMesh:4270 · addToLayer:4285 · addToSector:4300 · setWorldPos:4315 · visualIdFor:5740
+sectorDescriptor:5755 · createSectorGroups:5785 · removeSectorGroups:5800 · registerOccluder:5815 · updateOcclusionOrder:5830 · addBaseSectorArt:5920
+addFieldRows:6085 · addCrater:6100 · addMudPatch:6115 · addTree:6130 · addHouse:6250 · addBunker:6340
+addCampTent:6355 · addWall:6370 · addBridgeCrossing:6460 · addSmoke:6610 · makeSmokeTexture:6670 · populateSector:6730
+disposeSectorRuntime:7045 · instantiateSector:7120 · createProjectilePool:7780 · createFxPool:7900 · initPools:7945 · disposePools:7960
+makeTank:7990 · playerIdentity:8350 · makePlayer:8425 · authoritativeTankPose:8515 · syncTankVisual:8575 · tankStateSnapshot:8590
+interpolateRemoteTank:8635 · makeEnemyFigure:8680 · makeBossTank:8725 · spawnEnemy:8740 · registerFortressCollision:8800 · makeFortress:8950
+removeFortress:9055 · activateNextFortress:9070 · spawnDefenders:9175 · spawnBoss:9220 · recordDamage:9250 · damageEnemy:9265
+damagePlayer:9280 · destroyCore:9295 · cannonWorldPosition:9325 · cannonWorldRay:9340 · cannonWorldDirection:9400 · spawnProjectile:9415
+firePlayer:9430 · enemyFire:9520 · projectileImpact:9580 · tickProjectilePool:9595 · burst:9820 · tickFx:9880
+forwardFromRotation:10000 · rightFromRotation:10015 · rotationFromForward:10030 · driveDelta:10045 · normalizeTankCommand:10060 · steeringForTravelDirection:10075
+desktopCommandFromState:10090 · mobileCommandFromState:10165 · mergeTankCommands:10240 · screenAimDirection:10285 · tickTank:10780 · tickFortress:10825
+tickEnemies:10870 · cameraTick:10945 · updateObjective:11005 · fortressStateText:11020 · updateHud:11035 · inputNow:11218
+markTouchLikeInput:11233 · hasRecentTouchLikeInput:11248 · mobileAimLatchValid:11263 · mobileAimLatchedHeading:11278 · latchMobileAimWorldDirection:11293 · latchMobileAimVector:11308
+clearMobileAimLatch:11323 · shouldAcceptDesktopAimEvent:11338 · explicitInputDiagnosticsRequested:11353 · coarseInputEnvironment:11368 · inputDiagnosticsEnabled:11383 · preventControlDefault:11398
+queueMobileFirePulse:11413 · consumeMobileFirePulse:11428 · stickVectorFromRect:11443 · resetStickState:11488 · pointInRect:11533 · rectFromEdges:11548
+rectFromDomRect:11563 · rectCenter:11578 · expandRect:11593 · rectIntersects:11608 · viewportRectFor:11623 · safeAreaInsetsFor:11638
+safeGameplayRect:11653 · elementUsableRect:11668 · protectedFrontlineRects:11683 · mobileControlRegions:11698 · pointOverProtectedFrontlineUI:11773 · eventTargetLabel:11788
+isProtectedFrontlineTarget:11848 · firePlacementBlockedRects:11893 · fireRectWithinSafe:11908 · fireRectIsValid:11923 · fireRectAtCenter:11938 · findSafeFireRect:11953
+applyFireRect:12058 · fireOrientationKey:12073 · fireStorage:12088 · readFirePositionStore:12103 · writeFirePositionStore:12118 · normalizedFirePosition:12133
+saveFirePositionPreference:12148 · restoreFirePositionPreference:12163 · updateInputDiagnostics:12808 · bindGlobalMobileTouchRouter:12886 · bindControls:13171 · pointerToGround:13279
+bindCanvasAim:13294 · resize:13354 · buildLayers:13369 · buildWorld:13384 · initThree:13459 · loop:13504
+clearScene:13564 · open:13609 · close:13699 · routeCheck:13744 · occlusionAcceptance:13774 · foundationDiagnostics:13789
 
 ## js/game.js (1,230 บรรทัด · 91 รายการ)
 ### 🗂️ สารบัญโซน js/game.js (Read/Edit เฉพาะช่วง)
@@ -882,7 +882,7 @@ thLocaleOpt:46
 
 ## js/typing.js (370 บรรทัด · 0 รายการ)
 
-## js/ui.js (10,347 บรรทัด · 445 รายการ)
+## js/ui.js (10,333 บรรทัด · 445 รายการ)
 ### 🗂️ สารบัญโซน js/ui.js (Read/Edit เฉพาะช่วง)
 - 2-77 UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
 - 78-144 🎬 เวทีน้องน่ารัก (Cute Pet Show) — รอบ 604 (ผู้ใช้สั่ง 26 ก.ค. 2026)
@@ -922,22 +922,22 @@ thLocaleOpt:46
 - 6916-6960 item 8: โบนัสออนไลน์ +0.01 เหรียญ/วิ ฟรีทุกคนที่เปิดเกมออนไลน์อยู่
 - 6961-7221 💻 รอบ 706 (ผู้ใช้สั่ง 29 ก.ค. 2026): ช่องรายได้คอมพิวเตอร์บนแถบบนล็อบบี้
 - 7222-7229 🌀🔤 รอบ 1045 — Vocab Arena (โลกผจญภัยฉบับใหม่)
-- 7230-7705 ☁️📚 รอบ 1229 — Vocab Sky Playground
-- 7706-7725 🌍 ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย (ผู้ใช้สั่ง 9 ก.ค. 2026)
-- 7726-7791 🔒 รอบ 1070/1132: โลกที่ยังไม่เปิดสาธารณะ — เปิดให้บัญชีทดสอบ 2 ชื่อเท่านั้น
-- 7792-7930 ↩️🪙 รอบ 1143 — ธุรกรรมค่าเข้าเกม + คืนเงินเมื่อเกมเปิดไม่สำเร็จ
-- 7931-8024 ☁️🧸 รอบ 1258 — เลือกตัวละคร Sky ก่อนเข้าโลก
-- 8025-8208 🧭 ป้ายบอกทางของรางเมนูซ้าย (รอบ 601 · ผู้ใช้สั่ง 26 ก.ค. 2026)
-- 8209-8378 การ์ดสวนผลไม้ (ข้อ 12): ซื้อต้นไม้ปลูกได้ไม่จำกัด แต่ละต้นออกผล
-- 8379-8393 โรงงานผลิตสินค้า 🏭 + ตลาดขายต่อ (แนวคิดใหม่ 5 ก.ค. 2026)
-- 8394-8417 โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
-- 8418-8692 ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
-- 8693-9701 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
-- 9702-9765 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
-- 9766-9802 เลเวลอัพ (รายตัว)
-- 9803-9908 สถิติผลการเรียนรู้
-- 9909-9946 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
-- 9947-10347 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
+- 7230-7691 ☁️📚 รอบ 1229 — Vocab Sky Playground
+- 7692-7711 🌍 ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย (ผู้ใช้สั่ง 9 ก.ค. 2026)
+- 7712-7777 🔒 รอบ 1070/1132: โลกที่ยังไม่เปิดสาธารณะ — เปิดให้บัญชีทดสอบ 2 ชื่อเท่านั้น
+- 7778-7916 ↩️🪙 รอบ 1143 — ธุรกรรมค่าเข้าเกม + คืนเงินเมื่อเกมเปิดไม่สำเร็จ
+- 7917-8010 ☁️🧸 รอบ 1258 — เลือกตัวละคร Sky ก่อนเข้าโลก
+- 8011-8194 🧭 ป้ายบอกทางของรางเมนูซ้าย (รอบ 601 · ผู้ใช้สั่ง 26 ก.ค. 2026)
+- 8195-8364 การ์ดสวนผลไม้ (ข้อ 12): ซื้อต้นไม้ปลูกได้ไม่จำกัด แต่ละต้นออกผล
+- 8365-8379 โรงงานผลิตสินค้า 🏭 + ตลาดขายต่อ (แนวคิดใหม่ 5 ก.ค. 2026)
+- 8380-8403 โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
+- 8404-8678 ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
+- 8679-9687 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
+- 9688-9751 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
+- 9752-9788 เลเวลอัพ (รายตัว)
+- 9789-9894 สถิติผลการเรียนรู้
+- 9895-9932 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
+- 9933-10333 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
 ### รายการ js/ui.js
 startHTML:10 · PET_ANIM:30 · petAnimHTML:35 · petVisualHTML:50 · PET_SHOW:91 · PET_SHOW_STAGE:96
 PET_SHOW_H:99 · petShowBgHTML:102 · petBondLine:153 · PET_HEALTH_TIPS:177 · nextPetHealthTip:215 · petBondActionLine:223
@@ -996,24 +996,24 @@ onlineLiveTotal:6920 · syncCoinHeader:6927 · flashPillGain:6932 · renderOnlin
 renderComputerCard:7082 · buyComputer:7117 · sellComputer:7140 · soldCount:7161 · soldBadge:7162 · loadScriptOnce:7168
 advBusyMsg:7193 · advResetLoad:7205 · loadAdv3d:7211 · loadVocabArena3d:7227 · loadSkyPlayground3d:7234 · SKY_BETA_DENIED_MSG:7237
 ensureSkyBetaAccess:7238 · enterSkyPlayground3D:7246 · enterAdventure3D:7263 · pickAdvMap:7286 · enterHaunted3D:7321 · enterHeli3D:7344
-pickHeliMap:7371 · enterDrone3D:7407 · confirmPetShoppingEntry:7429 · enterPetShopping3D:7458 · enterDrive3D:7520 · pickDriveMap:7559
-enterMotoMapAsCar:7595 · enterSoccer3D:7614 · enterMoto3D:7634 · enterF1_3D:7657 · enterInvasion3D:7685 · WORLD3D:7713
-WORLD3D_COMING_SOON:7730 · world3DComingSoon:7731 · gotoRobotShop:7734 · openHealDialog:7740 · world3DFail:7761 · worldEntryStarted:7797
-worldEntryStopped:7798 · GAME_ENTRY_STABLE_MS:7799 · gameEntryCommit:7801 · gameEntryRefund:7809 · recoverInterruptedGameEntry:7826 · showGameEntryRefundNotice:7834
-startWorldEntry:7861 · railWorldClick:7906 · skyEntryCatalog:7935 · skyEntryPickerHTML:7939 · openWorldEntryDialog:7950 · railScrollHint:8030
-railScrollTop:8038 · initRailScroll:8043 · renderRailWorlds:8063 · tinvOnlineFriends:8146 · refreshTinvOnlineUI:8150 · tinvNoticeHTML:8161
-openTinvPicker:8170 · fruitCountdown:8214 · renderFarmCard:8226 · renderFarmClock:8301 · buyFruit:8317 · sellFruit:8337
-sellAllFruit:8358 · collectImg:8387 · renderFactoryCard:8398 · renderMarketCard:8422 · updateWishBadge:8480 · openWishlistDialog:8491
-bindStripArrows:8538 · renderMarketBrowse:8552 · openMarketBuyDialog:8579 · carImg:8699 · renderVehicleShop:8700 · CS_CYCLE_MS:8752
-carInteriorImg:8753 · carStatHtml:8755 · renderCarShowroom:8762 · csShowBig:8789 · csInit:8816 · RS_CYCLE_MS:8839
-robotImg:8840 · renderRobotShop:8841 · renderPetMarketShop:8865 · rsShowBig:8883 · rsInit:8904 · buyRobot:8923
-enterMecha3D:8948 · pickMechaRobot:8976 · pickDriveCar:9008 · openCarBuyDialog:9051 · buyCarInsurance:9112 · payCarLoanMonthly:9131
-payCarLoanFull:9143 · carDriveBlock:9162 · gotoVehicleShop:9167 · gotoMyStock:9172 · showNeedCarDialog:9178 · craftDiscount:9190
-renderFactory:9193 · renderOrdersUI:9262 · startProduce:9281 · buyCollectible:9309 · cancelProduce:9339 · deliverOrder:9353
-renderOrderClock:9370 · renderCollectMine:9380 · openListDialog:9429 · cancelListing:9486 · buyMarketItem:9510 · showCollectReveal:9575
-buyAC:9613 · openHomeShop:9632 · openPetPurchase:9706 · renderPetShop:9744 · showLevelUp:9769 · renderStats:9806
-showTeacherCard:9913 · CALL_REACT_EMOS:9957 · CALL_TALK_MIN:9960 · CALL_TALK_HOLD:9961 · CALL_ORDER_GAP:9963 · CALL_TONES:9969
-startCall:10343
+pickHeliMap:7371 · enterDrone3D:7407 · confirmPetShoppingEntry:7428 · enterPetShopping3D:7454 · enterDrive3D:7506 · pickDriveMap:7545
+enterMotoMapAsCar:7581 · enterSoccer3D:7600 · enterMoto3D:7620 · enterF1_3D:7643 · enterInvasion3D:7671 · WORLD3D:7699
+WORLD3D_COMING_SOON:7716 · world3DComingSoon:7717 · gotoRobotShop:7720 · openHealDialog:7726 · world3DFail:7747 · worldEntryStarted:7783
+worldEntryStopped:7784 · GAME_ENTRY_STABLE_MS:7785 · gameEntryCommit:7787 · gameEntryRefund:7795 · recoverInterruptedGameEntry:7812 · showGameEntryRefundNotice:7820
+startWorldEntry:7847 · railWorldClick:7892 · skyEntryCatalog:7921 · skyEntryPickerHTML:7925 · openWorldEntryDialog:7936 · railScrollHint:8016
+railScrollTop:8024 · initRailScroll:8029 · renderRailWorlds:8049 · tinvOnlineFriends:8132 · refreshTinvOnlineUI:8136 · tinvNoticeHTML:8147
+openTinvPicker:8156 · fruitCountdown:8200 · renderFarmCard:8212 · renderFarmClock:8287 · buyFruit:8303 · sellFruit:8323
+sellAllFruit:8344 · collectImg:8373 · renderFactoryCard:8384 · renderMarketCard:8408 · updateWishBadge:8466 · openWishlistDialog:8477
+bindStripArrows:8524 · renderMarketBrowse:8538 · openMarketBuyDialog:8565 · carImg:8685 · renderVehicleShop:8686 · CS_CYCLE_MS:8738
+carInteriorImg:8739 · carStatHtml:8741 · renderCarShowroom:8748 · csShowBig:8775 · csInit:8802 · RS_CYCLE_MS:8825
+robotImg:8826 · renderRobotShop:8827 · renderPetMarketShop:8851 · rsShowBig:8869 · rsInit:8890 · buyRobot:8909
+enterMecha3D:8934 · pickMechaRobot:8962 · pickDriveCar:8994 · openCarBuyDialog:9037 · buyCarInsurance:9098 · payCarLoanMonthly:9117
+payCarLoanFull:9129 · carDriveBlock:9148 · gotoVehicleShop:9153 · gotoMyStock:9158 · showNeedCarDialog:9164 · craftDiscount:9176
+renderFactory:9179 · renderOrdersUI:9248 · startProduce:9267 · buyCollectible:9295 · cancelProduce:9325 · deliverOrder:9339
+renderOrderClock:9356 · renderCollectMine:9366 · openListDialog:9415 · cancelListing:9472 · buyMarketItem:9496 · showCollectReveal:9561
+buyAC:9599 · openHomeShop:9618 · openPetPurchase:9692 · renderPetShop:9730 · showLevelUp:9755 · renderStats:9792
+showTeacherCard:9899 · CALL_REACT_EMOS:9943 · CALL_TALK_MIN:9946 · CALL_TALK_HOLD:9947 · CALL_ORDER_GAP:9949 · CALL_TONES:9955
+startCall:10329
 
 ## js/util.js (1,473 บรรทัด · 57 รายการ)
 ### 🗂️ สารบัญโซน js/util.js (Read/Edit เฉพาะช่วง)
@@ -1084,11 +1084,11 @@ vbRender:148 · vbCardHTML:194
 .xsp-foot:235 · .xsb-box:250,277 · .xsb-head:255,256 · .xsb-grid:257 · .xsb-card:258,262 · .xsb-emoji:263
 .xsb-name:264 · .xsb-info:265 · .xsb-done:266 · .onet-picker:270,271,272,273(+3) · .onet-board:278,279,280
 
-## css/frontline1944.css (412 บรรทัด · 21 selector)
-#vw-frontline1944:13,25,37,401 · .fl44-hud:49 · .fl44-top:61 · .fl44-panel:73 · .fl44-player:85 · .fl44-bar:97
-.fl44-word:109 · .fl44-coins:121 · .fl44-boss:133 · .fl44-objective:145 · .fl44-state:157 · .fl44-exit:169
-.fl44-controls:181 · .fl44-stick:193,205,217 · .fl44-knob:229 · .fl44-aim-knob:241 · .fl44-fire:253,261 · .fl44-input-diag:273,281
-.fl44-toast:293 · .fl44-loading:305 · #btn-rail-frontline1944:317,329
+## css/frontline1944.css (630 บรรทัด · 22 selector)
+#vw-frontline1944:19,37,55,613 · .fl44-hud:73 · .fl44-top:91 · .fl44-panel:109 · .fl44-player:127 · .fl44-bar:145
+.fl44-word:163 · .fl44-coins:181 · .fl44-boss:199 · .fl44-objective:217 · .fl44-state:235 · .fl44-exit:253
+.fl44-controls:271 · .fl44-stick:289,307,325 · .fl44-knob:343 · .fl44-aim-knob:361 · .fl44-aim-stick:373 · .fl44-fire:391,403
+.fl44-input-diag:421,433 · .fl44-toast:451 · .fl44-loading:469 · #btn-rail-frontline1944:487,505
 
 ## css/home-v2.css (2,479 บรรทัด · 136 selector)
 :root:9,2467 · #screen-dashboard:36,46 · #vw-home-v2-root:48,49,59,60(+112) · .vw2-screen-frame:81 · .vw2-sky:82,83,92,99(+1) · .vw2-shell:102,107,589
