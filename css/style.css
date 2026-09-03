@@ -1935,6 +1935,16 @@ html.no-anim *, html.no-anim *::before, html.no-anim *::after{
   margin-top:12px;background:var(--purple-d);color:#fff;border:none;border-radius:999px;
   padding:10px 26px;font-family:inherit;font-size:18px;cursor:pointer;box-shadow:0 4px 0 #7d5fc0;
 }
+/* Name dialogs must fit short landscape screens without an internal scrollbar. */
+@media (max-height:520px) and (min-width:560px){
+  .levelup-box.name-dialog-box{padding:12px 22px;max-height:calc(100dvh - 16px);overflow:hidden;}
+  .levelup-box.name-dialog-box .lv-emoji{font-size:36px;line-height:1;}
+  .levelup-box.name-dialog-box h2{font-size:20px;margin-bottom:2px;}
+  .levelup-box.name-dialog-box>p:first-of-type{font-size:13px!important;line-height:1.3!important;margin:3px 0 5px!important;}
+  .levelup-box.name-dialog-box #pf-name-input{padding:7px 10px!important;font-size:15px!important;}
+  .levelup-box.name-dialog-box #pf-name-err{min-height:15px!important;margin:4px 0 0!important;font-size:12px!important;}
+  .levelup-box.name-dialog-box button{margin-top:5px;padding:7px 20px;font-size:15px;}
+}
 
 /* ---------- บิลรายเดือน (ค่าบำรุงบ้าน ฯลฯ) ---------- */
 .bill-box{

@@ -229,6 +229,7 @@ function authApplyProfileName(name){
   sfx.levelup();
   toast(`📛 ชื่อในเกมของหนูคือ "${name}" 🎉`);
   renderDashboard();
+  window.dispatchEvent(new Event('vw2-profile-name-changed'));
   return true;
 }
 

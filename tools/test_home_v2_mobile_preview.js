@@ -7,6 +7,9 @@ const root = path.resolve(__dirname, "..");
 const read = (...p) => fs.readFileSync(path.join(root, ...p), "utf8");
 const home = read("js", "home-v2.js");
 const ui = read("js", "ui.js");
+const auth = read("js", "auth.js");
+const util = read("js", "util.js");
+const style = read("css", "style.css");
 const css = read("css", "home-v2.css");
 const lobby3d = read("js", "lobby3d.js");
 const preview = read("tools", "VW_MOBILE_DEVICE_PREVIEW.html");
@@ -234,6 +237,10 @@ must(!/font-size:(?:3|4)(?:\.\d+)?px/.test(css), "stylesheet reintroduced 3–4p
 /* Profile, avatar persistence delegation and player card. */
 must(home.includes('class="vw2-profile vw2-glass vw2-profile-link"') && home.includes('data-vw2-action="profile"'), "Profile interaction target missing");
 must(home.includes("typeof showPlayerCard === 'function'") && home.includes("showPlayerCard(uid"), "Profile no longer delegates to authoritative player card");
+must(home.includes('class="vw2-pencil" data-vw2-action="editName"') && home.includes("if(typeof authEditProfileName === 'function') authEditProfileName()"), "Profile-name edit button no longer delegates to the authoritative rename dialog");
+must(css.includes(".vw2-pencil{flex:0 0 28px") && css.includes(".vw2-pencil:focus-visible"), "Profile-name edit button lacks a usable touch/focus target");
+must(auth.includes("window.dispatchEvent(new Event('vw2-profile-name-changed'))") && home.includes("window.addEventListener('vw2-profile-name-changed', sync)"), "Saved profile names no longer sync to Home V2 immediately");
+must(util.includes('class="levelup-box name-dialog-box"') && style.includes(".levelup-box.name-dialog-box{padding:12px 22px") && style.includes("overflow:hidden"), "Name dialog no longer guarantees a no-scroll short-landscape layout");
 must(home.includes("typeof openPhotoMenu === 'function'") && home.includes("#pass-photo .pp-cam"), "Avatar editor no longer delegates to authoritative photo upload menu/camera");
 must(home.includes("ดาวเงิน · ประถม") && home.includes("ดาวทอง · มัธยม") && home.includes("เพชร 1 ดวง · ปริญญาตรี"), "education identity mapping missing");
 

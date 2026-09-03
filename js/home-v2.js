@@ -797,6 +797,12 @@
     if(name === 'petRename'){ renameActivePet(); return; }
     if(name === 'ownedPets'){ openOwnedPetsModal(); return; }
     if(name === 'profile'){ openUserProfile(); return; }
+    if(name === 'editName'){
+      // Keep auth.js as the single owner of validation, persistence and live name updates.
+      if(typeof authEditProfileName === 'function') authEditProfileName();
+      else clickExisting('#btn-edit-name');
+      return;
+    }
     if(name === 'avatarEdit'){ openAvatarEditor(); return; }
     if(name === 'newWord'){ clickExisting('#newword-banner'); return; }
     if(name === 'onlinePlayers'){ openOnlinePlayersModal(); return; }
@@ -1097,7 +1103,7 @@
             <div class="vw2-profile-kicker"><span>PLAYER IDENTITY</span><i aria-hidden="true">✦</i></div>
             <div class="vw2-avatar-frame"><div class="vw2-avatar" id="vw2-avatar">${knightFallback()}</div><button type="button" class="vw2-avatar-edit" data-vw2-action="avatarEdit" data-vw2-source="#pass-photo" aria-label="เปลี่ยนรูปโปรไฟล์" title="เปลี่ยนรูปโปรไฟล์">${icon('camera')}</button></div>
             <div class="vw2-profile-main">
-              <div class="vw2-name-row"><strong id="vw2-name">ผู้เล่น</strong><span class="vw2-pencil">${icon('edit')}</span></div>
+              <div class="vw2-name-row"><strong id="vw2-name">ผู้เล่น</strong><button type="button" class="vw2-pencil" data-vw2-action="editName" aria-label="เปลี่ยนชื่อในเกม" title="เปลี่ยนชื่อในเกม">${icon('edit')}</button></div>
               <div class="vw2-profile-meta">
                 <span class="vw2-profile-meta-chip class"><small>LEVEL / CLASS</small><b id="vw2-grade">—</b></span>
                 <span class="vw2-profile-meta-chip id"><small>PLAYER ID</small><b id="vw2-id">ID —</b></span>
@@ -2086,6 +2092,7 @@
     build();
     observeDashboardActivation();
     window.addEventListener('focus', wakeTick);
+    window.addEventListener('vw2-profile-name-changed', sync);
     window.addEventListener('resize', scheduleLocalPreviewReport);
     document.addEventListener('visibilitychange', handlePageVisibility);
     wakeTick();

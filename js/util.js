@@ -923,7 +923,7 @@ function speakWordTTS(word, onDone){
 function askNameDialog(opt){
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay';
-  overlay.innerHTML = `<div class="levelup-box">
+  overlay.innerHTML = `<div class="levelup-box name-dialog-box">
     <div class="lv-emoji">${opt.emoji || '📛'}</div>
     <h2>${opt.title}</h2>
     <p style="font-size:14.5px;color:#8a7aa0;margin:6px 0 10px">${opt.desc || ''}</p>
