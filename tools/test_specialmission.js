@@ -52,6 +52,7 @@ assert.strictEqual(result.credited,false,'failed run accepted a word after GAME 
 assert.strictEqual(second.state.coins,0,'failed run paid coins');
 
 const adventure=fs.readFileSync('js/adventure3d.js','utf8');
+const advCss=fs.readFileSync('js/adv3d_css.js','utf8');
 const special=fs.readFileSync('js/specialmission.js','utf8');
 const stateSource=fs.readFileSync('js/state.js','utf8');
 const mainSource=fs.readFileSync('js/main.js','utf8');
@@ -62,14 +63,25 @@ assert.ok(adventure.includes('.then(committed=>')&&adventure.includes('if(!commi
 assert.ok(adventure.includes('completesWord:!!(word&&hQuest.got.size===chars.length-1'),'personal completion is not tied to collecting the last missing letter');
 assert.ok(adventure.includes('window.SpecialMission.failHauntedRun()'),'GAME OVER is not connected to the solo mission reset');
 assert.ok(adventure.includes('window.SpecialMission.leaveHauntedRun()'),'leaving the hotel does not clear the in-memory solo run');
+assert.ok(!adventure.includes('id="adv-survive"')&&!adventure.includes('tickSurvive')&&!adventure.includes('hauntSurviveFinish'),'unneeded Haunted Hotel duration tracker still exists');
+assert.ok(adventure.includes('<span id="adv-coin"></span></div>\n    <div class="adv-hud" id="adv-hh-special"></div>'),'special mission badge is still inside the HP/coin topbar');
+assert.ok(advCss.includes('#adv-hh-special{display:none;top:52px;right:136px'),'special mission badge is not positioned under the Haunted Hotel control row');
+assert.ok(advCss.includes('.adv-haunt #adv-words{top:96px}'),'word target does not leave room below the special mission badge');
+assert.ok(adventure.includes("if(mode==='haunt'&&note)")&&adventure.includes("noteBox.querySelectorAll('.nr-go').forEach(el=>el.remove())"),'Haunted Hotel still shows the go-to-friend menu');
 assert.ok(special.includes('const PROMO_LOGIN_LIMIT = 2'),'promo is not limited to two login events');
 assert.ok(special.includes('z-index:13050'),'reward dialog does not sit above the 3D world');
+assert.ok(/\.hhsm-card:before\{[^}]*inset:0/.test(special),'dialog decoration inflates card scroll geometry');
 const rewardBlock=special.slice(special.indexOf('function showRewardNotice()'),special.indexOf('function award()'));
 assert.ok(rewardBlock.includes("[data-hhsm-ack]"),'reward dialog has no explicit acknowledgement button');
 assert.ok(!rewardBlock.includes("ov.addEventListener('click'"),'reward dialog can be dismissed by clicking its backdrop');
 assert.ok(!rewardBlock.includes('setTimeout(()=>ov.remove'),'reward dialog auto-dismisses');
+const promoBlock=special.slice(special.indexOf('function showPromo()'),special.indexOf('function promoLoop()'));
+assert.strictEqual((promoBlock.match(/closePromo\(ov\)/g)||[]).length,2,'login promo must close only from its two explicit buttons');
+assert.ok(promoBlock.includes("document.addEventListener('keydown',hold,true)"),'login promo does not capture Escape while it is open');
+assert.ok(promoBlock.includes("if(e.target===ov){e.preventDefault();e.stopPropagation();}"),'login promo backdrop is not inert');
+assert.ok(!promoBlock.includes('setTimeout(()=>ov.remove'),'login promo auto-dismisses');
 assert.ok(stateSource.includes('hauntSpecialMissionDone:false')&&stateSource.includes('hauntSpecialPromoViews:0'),'special mission save defaults are missing');
 assert.strictEqual((mainSource.match(/SpecialMission\.onLogin\(\);\},1800\)/g)||[]).length,2,'login promo is not delayed behind existing persistent notices for both new and returning players');
 assert.ok(html.indexOf('js/specialmission.js?v=1354')>=0&&html.indexOf('js/specialmission.js?v=1354')<html.indexOf('js/main.js?v=1126'),'special mission module is not loaded before login boot');
 assert.ok(buildSource.includes("'js/specialmission.js'"),'production build does not include the new mission module before its first commit');
-console.log('PASS Special Mission: personal five-word ownership, alignment guard, GAME OVER reset, immediate one-time 10,000 reward, persistent acknowledgement and two-login promo wiring');
+console.log('PASS Special Mission: personal five-word ownership, no duration/friend menu, separated HUD badge, immediate one-time 10,000 reward, persistent reward/promo acknowledgement and two-login wiring');

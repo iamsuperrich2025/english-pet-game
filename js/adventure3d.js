@@ -496,7 +496,6 @@ const ATC={
 let yaw=0, pitch=0;
 let hp=100, maxHp=100, sessionCoins=0, sessionWords=0;   // 🤖 รอบ 236: maxHp ต่อโลก (โลกหุ่น=MECHA_MAX_HP · อื่นๆ=100)
 let hurtUntil=0;                    // 👻 ช่วงกันเหตุโจมตีซ้อนในเฟรมเดียวกัน
-let hauntRunStart=0, hauntRecordShown=false;   // ⏱ รอบ 256: จับเวลา "หนีผีรอดนานสุด" (รอดต่อเนื่องไม่โดนจับ · สถิติใน state.hauntSurviveBest)
 let sessionWordLog=[];             // 📖 คำที่ประกอบสำเร็จรอบนี้ {en,th} — โชว์เป็นสมุดคำศัพท์ตอนออก (ทบทวนคำ)
 let inv={};                       // ตัวอักษรในกระเป๋า {a:2,...}
 let words=[];                     // guideline [{en,th}]
@@ -508,7 +507,7 @@ function orderedLetterMode(){ return !!(M&&(M.heli||M.drone)); }
 let monsters=[];                  // adv: [{spr,hp,tgt,wanderAt,hitAt}] · haunt(ผี): [{spr,born,hunting,wailAt,tgt,wanderAt}]
 let shots=[];                     // [{mesh,dir,life}]
 let keys={}, joy={on:false,dx:0,dy:0}, lookTouch=null, lastShot=0, lastEnsure=0, lastSpawn=0;
-let dmgFlashEl, hudWordsEl, hudInvEl, hudHpEl, hudCoinEl, hudHuntEl, hudHeartEl, hudSurvEl, hudBoardEl, hudHotelSpecialEl, mapCv, mapCtx, banEl, overlayEl, canvasEl, scareEl, hintEl, introEl;
+let dmgFlashEl, hudWordsEl, hudInvEl, hudHpEl, hudCoinEl, hudHuntEl, hudHeartEl, hudBoardEl, hudHotelSpecialEl, mapCv, mapCtx, banEl, overlayEl, canvasEl, scareEl, hintEl, introEl;
 let texCache={};
 
 /* ---------- multiplayer ---------- */
@@ -3444,7 +3443,6 @@ function spawnGhost(){
   monsters.push(fx);
 }
 function tickGhosts(dt,now){
-  tickSurvive();
   if(!hotelGhostFx||!hotel)return;
   const uid=typeof onlineKey==='function'?onlineKey():'local';
   hotelGhostFx.update(dt,now,{blackout:blackedOut,lightLevel:hotel.lightLevel===undefined?1:hotel.lightLevel,
@@ -3466,36 +3464,10 @@ function sessionRecapHtml(){
   return `<div class="adv-recap"><div class="adv-recap-h">📖 คำที่หนูประกอบได้รอบนี้ (${sessionWordLog.length} คำ)</div><div class="adv-recap-list">${chips}</div></div>`;
 }
 
-/* ⏱ รอบ 256: สถิติ "หนีผีรอดนานสุด" — เวลารอดต่อเนื่อง (วินาที) ไม่โดนจับ · จบช่วงตอนโดนจับ/ออกโลก */
-function hauntRunSec(){ return hauntRunStart ? Math.floor((performance.now()-hauntRunStart)/1000) : 0; }
-function fmtSurv(s){ return s>=60 ? `${Math.floor(s/60)} นาที ${s%60} วิ` : `${s} วิ`; }
-function hauntSurviveFinish(){
-  if(mode!=='haunt' || !hauntRunStart) return;
-  const run=hauntRunSec();
-  hauntRunStart=0;
-  if(run > (state.hauntSurviveBest||0)){
-    state.hauntSurviveBest=run;
-    saveState();
-    if(typeof onlinePushScore==='function') onlinePushScore();   // ดันสถิติขึ้น /leaderboard (field hs) ให้เพื่อนเห็นในการ์ด
-  }
-}
-function tickSurvive(){
-  if(!hudSurvEl || mode!=='haunt' || !running || !hauntRunStart) return;
-  const run=hauntRunSec(), best=state.hauntSurviveBest||0;
-  const txt=`⏱ อยู่ในโรงแรม ${fmtSurv(run)} · 🏆 ${fmtSurv(Math.max(best,run))}`;
-  if(hudSurvEl.textContent!==txt) hudSurvEl.textContent=txt;
-  if(!hauntRecordShown && best>0 && run>best){
-    hauntRecordShown=true;
-    HSound.reward();
-    showBanner(`🏆 <b>สถิติใหม่! กล้าอยู่ในโรงแรมผีสิงนานสุด ${fmtSurv(run)}</b><br><small>ยิ่งอยู่นานสถิติยิ่งพุ่ง — เพื่อนเห็นในการ์ดของหนูด้วยนะ</small>`);
-  }
-}
-
 /* ---------- ❤️ โรงแรมใช้หลอดพลังชีวิต 10 ช่องบน topbar; legacy hearts ไม่ใช้แล้ว ---------- */
 function renderHearts(){
   if(!hudHeartEl) return;
   hudHeartEl.style.display='none';
-  if(hudSurvEl) hudSurvEl.style.display = (mode==='haunt') ? 'block' : 'none';
 }
 function hotelGhostAttack(kind,force){
   if(!running||mode!=='haunt'||hotelGameOverShown)return false;
@@ -3514,7 +3486,7 @@ function hotelGhostAttack(kind,force){
 }
 function hotelGameOver(){
   if(hotelGameOverShown||mode!=='haunt')return;
-  hotelGameOverShown=true;running=false;hauntSurviveFinish();
+  hotelGameOverShown=true;running=false;
   if(window.SpecialMission)window.SpecialMission.failHauntedRun();
   renderHotelSpecialMission();
   HotelRuntime.later(()=>{
@@ -5224,13 +5196,16 @@ function renderBoard(){
       html+=`<div class="adv-b-title" style="margin-top:6px">🎯 ท็อปนักผาดโผน</div>`+aceHtml;
     }
   }
-  /* 🏟️ รอบ 640: ป้ายบอกสถานะสนาม — เด็กต้องรู้ว่าตัวเองอยู่สนามไหน มีกี่คน และมีทางไปหาเพื่อน */
-  const note=room ? room.statusText(innerHeight<430) : '';
+  /* 🏟️ ป้ายบอกสถานะสนามยังอยู่ แต่โรงแรมผีสิงเป็นภารกิจเดี่ยว จึงไม่แสดงทางลัด "ไปหาเพื่อน" */
+  let note=room ? room.statusText(innerHeight<430) : '';
+  if(mode==='haunt'&&note){
+    const noteBox=document.createElement('div');
+    noteBox.innerHTML=note;
+    noteBox.querySelectorAll('.nr-go').forEach(el=>el.remove());
+    note=noteBox.innerHTML.replace(/(?:\s*<br\s*\/?>\s*)+$/gi,'').trim();
+  }
   hudBoardEl.innerHTML=`<div class="adv-b-title">🏆 ประกอบคำรอบนี้</div>`+html
     +(note?`<div class="adv-b-room" style="margin-top:5px;padding-top:5px;border-top:1px solid rgba(255,255,255,.14);font-size:.82em;line-height:1.35;opacity:.93">${note}</div>`:'');
-  /* 🏨 รอบ 686: ป้ายเวลาหนีผี (#adv-survive) เดิม top:78px ตายตัว — พอกระดานมีป้ายสถานะโรงแรมต่อท้าย
-     กระดานสูงเกิน 78px ป้ายเวลาซ้อนทับกัน (วัดจริงที่ 812×375) → ให้ตามความสูงจริงของกระดานแทนทุกครั้งที่วาดใหม่ */
-  if(mode==='haunt' && hudSurvEl) hudSurvEl.style.top=(hudBoardEl.getBoundingClientRect().bottom+8)+'px';
   if(!hudBoardEl._nrWired){    // ดักคลิกปุ่ม "ไปหาเพื่อน" ครั้งเดียวพอ (innerHTML วาดใหม่ไม่ล้าง listener ที่ตัวแม่)
     hudBoardEl._nrWired=true;
     hudBoardEl.addEventListener('click',e=>{ if(e.target.closest('.nr-go')&&room) room.openFriends(); });
@@ -5411,7 +5386,8 @@ function buildDom(){
   overlayEl.id='adv-overlay';
   overlayEl.innerHTML=`
     <canvas id="adv-canvas"></canvas>
-    <div class="adv-hud" id="adv-topbar"><div class="adv-hp"><div class="adv-hp-fill" id="adv-hp"></div></div><span id="adv-coin"></span><span id="adv-hh-special"></span></div>
+    <div class="adv-hud" id="adv-topbar"><div class="adv-hp"><div class="adv-hp-fill" id="adv-hp"></div></div><span id="adv-coin"></span></div>
+    <div class="adv-hud" id="adv-hh-special"></div>
     <div class="adv-hud" id="adv-board"></div>
     <div class="adv-hud" id="adv-words"></div>
     <canvas class="adv-hud" id="adv-map" width="120" height="120"></canvas>
@@ -5424,7 +5400,6 @@ function buildDom(){
     <button id="adv-use">✋<small>ใช้ E</small></button>
     <div class="adv-hud" id="adv-hunt"></div>
     <div class="adv-hud" id="adv-hearts"></div>
-    <div class="adv-hud" id="adv-survive"></div>
     <div class="adv-hud" id="adv-inst"></div>
     <div class="adv-hud" id="adv-warn"></div>
     <div class="adv-hud" id="adv-junc">⚠️ ใกล้ทางแยก! เปิดไฟเลี้ยว ⬅️ ➡️ ก่อนเข้าแยก · ไม่งั้นปรับ 🪙5</div>
@@ -5631,7 +5606,6 @@ function buildDom(){
   hudCoinEl=overlayEl.querySelector('#adv-coin');
   hudHuntEl=overlayEl.querySelector('#adv-hunt');
   hudHeartEl=overlayEl.querySelector('#adv-hearts');
-  hudSurvEl=overlayEl.querySelector('#adv-survive');   // ⏱ รอบ 256: นาฬิกาหนีผีรอด
   hudHotelSpecialEl=overlayEl.querySelector('#adv-hh-special');
   banEl=overlayEl.querySelector('#adv-banner');
   hHintEl=overlayEl.querySelector('#adv-hh-hint');
@@ -13001,7 +12975,6 @@ function start(md,opt){
 
   maxHp=100; hp=100; sessionCoins=0; sessionWords=0; sessionWordLog=[]; inv={}; keys={}; yaw=0; pitch=0;   // maxHp ปรับต่อโลกด้านล่าง
   hurtUntil=0;
-  hauntRunStart=performance.now(); hauntRecordShown=false;             // ⏱ รอบ 256: เริ่มจับเวลาหนีผีรอด
   nmActive=false; nmMin=99; nmCrashed=false; nmCombo=0; nmLastAt=0;    // 💨 รีเซ็ตโบนัสบินเฉียด
   if(M.heli){
     // 🚁🌳 รอบ 816: kpp = ลงจอดบนลานหญ้าใกล้หอนาฬิกา (ลานจอดกลางเมืองเฮลิฯ คือ 0,0 ซึ่งที่นี่เป็นเกาะวงเวียน)
@@ -13194,7 +13167,6 @@ function start(md,opt){
 }
 
 function exitWorld(){
-  hauntSurviveFinish();                            // ⏱ ออกโลกผีเอง = นับเวลารอดรอบนี้เข้าสถิติด้วย
   const exitSoccer=mode==='soccer';
   running=false;
   if(exitSoccer){

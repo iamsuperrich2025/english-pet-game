@@ -18,7 +18,7 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
   .adv-haunt .adv-hp-fill{background:linear-gradient(90deg,#ff243c,#ff6b6b)}
   .adv-hp-fill.low{background:#ef5350}
   #adv-coin{color:#fff;font-weight:800;font-size:14px;text-shadow:0 1px 3px #000;white-space:nowrap}
-  #adv-hh-special{display:none;align-items:center;gap:6px;min-height:27px;padding:3px 9px;border:1px solid #ffe89a;border-radius:10px;
+  #adv-hh-special{display:none;top:52px;right:136px;z-index:6;align-items:center;gap:6px;min-height:27px;padding:3px 9px;border:1px solid #ffe89a;border-radius:10px;
     background:linear-gradient(180deg,rgba(72,35,0,.94),rgba(26,11,0,.94));color:#fff5c4;font-style:normal;white-space:nowrap;
     box-shadow:0 0 12px rgba(255,198,40,.35);text-shadow:0 1px 3px #000}
   #adv-hh-special small{font-size:10px;color:#ffe082}#adv-hh-special b{font-size:13px;color:#fff}#adv-hh-special em{font-size:11px;color:#ffd54f;font-style:normal}
@@ -38,6 +38,7 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
      · top:82 เลี่ยงชนแถบ "👻 หนี!" (top:52) + topbar · pointer-events:none ไม่บังนิ้ว · อยู่เหนือ crosshair/คอนโซล */
   #adv-words{top:82px;left:50%;transform:translateX(-50%);text-align:center;background:rgba(0,0,0,.4);
     border-radius:16px;padding:7px 16px;pointer-events:none;max-width:94vw}
+  .adv-haunt #adv-words{top:96px}
   .adv-fword{display:flex;gap:5px;justify-content:center;flex-wrap:wrap}
   .adv-fch{display:inline-block;min-width:30px;text-align:center;font-size:clamp(20px,5.5vw,34px);font-weight:800;
     color:#fff;background:rgba(255,255,255,.15);border-radius:9px;padding:3px 8px;text-shadow:0 2px 4px #000;transition:background .2s,box-shadow .2s}
@@ -105,8 +106,6 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
   .adv-soccer #adv-words .adv-fth{font-size:clamp(11px,2.4vw,14px);margin-top:2px}
   #adv-hearts{display:none;left:10px;top:42px;font-size:24px;letter-spacing:3px;pointer-events:none;
     filter:drop-shadow(0 1px 3px rgba(0,0,0,.85))}
-  #adv-survive{display:none;left:10px;top:78px;font-size:14px;font-weight:800;color:#c6f6d5;pointer-events:none;
-    background:rgba(0,0,0,.45);border-radius:10px;padding:3px 10px;text-shadow:0 1px 3px #000}
   #adv-map{top:8px;right:8px;pointer-events:auto;cursor:pointer}  /* รอบ 144: แตะ = เปิดแผนที่ขยาย */
   #adv-exit{top:118px;right:8px;pointer-events:auto;background:rgba(211,47,47,.92);color:#fff;border:2px solid #fff;
     border-radius:12px;font-weight:800;font-size:14px;padding:7px 12px;font-family:inherit}

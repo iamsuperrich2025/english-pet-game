@@ -76,7 +76,7 @@
         display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(4px,1.25vh,10px);
         padding:clamp(10px,2.6vh,24px) clamp(14px,3.4vw,34px);border:2px solid #ffd86c;border-radius:clamp(16px,3vh,28px);
         background:linear-gradient(155deg,rgba(37,15,58,.98),rgba(12,7,25,.99));box-shadow:0 0 0 4px rgba(255,216,108,.14),0 24px 80px #000}
-      .hhsm-card:before{content:"";position:absolute;inset:-55%;pointer-events:none;opacity:.18;
+      .hhsm-card:before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:.18;
         background:conic-gradient(transparent,#ffd86c,transparent 16%,transparent 32%,#c58cff,transparent 49%,transparent 70%,#ffd86c,transparent 86%);
         animation:hhsm-spin 14s linear infinite}
       .hhsm-card>*{position:relative;z-index:1}.hhsm-kicker{font-size:clamp(11px,2.4vh,16px);font-weight:900;letter-spacing:.18em;color:#d9b8ff}
@@ -158,7 +158,11 @@
     if(typeof document === 'undefined') return true;
     return !!document.querySelector('#hhsm-reward,.hhsm-promo,.rankup-overlay,.levelup-overlay,.panel-overlay,.onet-promo-overlay,.alert-overlay,#adv-overlay.on');
   }
-  function closePromo(ov){ if(ov) ov.remove(); }
+  function closePromo(ov){
+    if(!ov)return;
+    if(ov._hhsmEscapeHold)document.removeEventListener('keydown',ov._hhsmEscapeHold,true);
+    ov.remove();
+  }
   function gotoHaunted(){
     const button = typeof document !== 'undefined' ? document.getElementById('btn-world-haunt') : null;
     if(button && !button.disabled){ button.click(); return true; }
@@ -182,13 +186,14 @@
       <h2 class="hhsm-title">👻 โรงแรมผีสิง: นักล่าคำเดี่ยว</h2>
       <div class="hhsm-rule"><b>เก็บคำศัพท์ให้ครบ ${GOAL} คำ</b> โดยไม่ GAME OVER<br><em>นับเฉพาะคำที่หนูเก็บตัวอักษรสุดท้ายเอง — คำของเพื่อนไม่นับ</em></div>
       <div class="hhsm-amount">รางวัล ${REWARD.toLocaleString('en-US')} 🪙</div>
-      <p class="hhsm-copy">เงินเข้าทันทีเมื่อทำสำเร็จ · รับได้ครั้งเดียวต่อบัญชี<br><small>ป้ายเชิญชวนนี้แสดง 1 ครั้งต่อ login เฉพาะ 2 login แรก</small></p>
+      <p class="hhsm-copy">เงินเข้าทันทีเมื่อทำสำเร็จ · รับได้ครั้งเดียวต่อบัญชี<br><small>ป้ายนี้จะค้างจนกดปุ่มด้านล่าง · แสดง 1 ครั้งต่อ login เฉพาะ 2 login แรก</small></p>
       <div class="hhsm-actions"><button type="button" class="hhsm-btn" data-hhsm-go>ไปโรงแรมผีสิง</button><button type="button" class="hhsm-btn secondary" data-hhsm-close>รับทราบ</button></div>
     </section>`;
+    const hold=e=>{if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();}};
+    ov._hhsmEscapeHold=hold; document.addEventListener('keydown',hold,true);
     ov.querySelector('[data-hhsm-close]').addEventListener('click',()=>closePromo(ov));
     ov.querySelector('[data-hhsm-go]').addEventListener('click',()=>{ closePromo(ov); setTimeout(gotoHaunted,60); });
-    ov.addEventListener('click',e=>{ if(e.target === ov) closePromo(ov); });
-    ov.addEventListener('keydown',e=>{ if(e.key === 'Escape') closePromo(ov); });
+    ov.addEventListener('click',e=>{if(e.target===ov){e.preventDefault();e.stopPropagation();}});
     document.body.appendChild(ov); ov.querySelector('[data-hhsm-go]').focus();
     return true;
   }
