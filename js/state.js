@@ -55,6 +55,9 @@ const DEFAULT_STATE = {
   hauntTicket:false,                  // ตั๋วโลกผีสิงกลางคืน (ซื้อได้เมื่อมีตั๋วโลกผจญภัย · เฉพาะตัวเหมือนกัน)
   hauntDone:[],                       // คำที่ประกอบสำเร็จแล้วในโลกผีสิง (แยกจาก advDone)
   hauntSurviveBest:0,                 // ⏱ รอบ 256: สถิติหนีผีรอดนานสุด (วินาที · โชว์ HUD โลกผี + การ์ดผู้เล่น field hs)
+  hauntSpecialMissionDone:false,      // 👻🎯 รอบ 1354: ภารกิจเดี่ยว 5 คำไม่ GAME OVER รับ 10,000 ครั้งเดียว
+  hauntSpecialMissionNotice:null,     // ป้ายยินดี/เงินเข้าค้างจนกดรับทราบเอง
+  hauntSpecialPromoViews:0,           // ป้ายเชิญชวน 1 ครั้งต่อ login เฉพาะ 2 login แรก
   heliTicket:false,                   // ตั๋วโลกเฮลิคอปเตอร์ Bell (รอบ 51 · ซื้อได้เมื่อมีตั๋วโลกผจญภัย)
   heliDone:[],                        // คำที่ประกอบสำเร็จแล้วในโลกเฮลิคอปเตอร์ (แยกคลังต่อโลก)
   heliStreak:0,                       // รอบ 62: สตรีคประกอบคำในโลกเฮลิฯ โดยไม่ชนเลย (สะสมข้ามรอบ · ชน/กระแทกแรง = รีเซ็ต)
@@ -541,6 +544,9 @@ function loadState(){
       if(typeof s.hauntTicket !== 'boolean') s.hauntTicket = false;                        // โลกผีสิง
       if(!Array.isArray(s.hauntDone)) s.hauntDone = [];
       if(typeof s.hauntSurviveBest !== 'number') s.hauntSurviveBest = 0;   // ⏱ รอบ 256
+      if(typeof s.hauntSpecialMissionDone !== 'boolean') s.hauntSpecialMissionDone = false;
+      if(!s.hauntSpecialMissionNotice || typeof s.hauntSpecialMissionNotice !== 'object') s.hauntSpecialMissionNotice = null;
+      s.hauntSpecialPromoViews = Math.max(0, Math.min(2, Math.floor(Number(s.hauntSpecialPromoViews)||0)));
       if(typeof s.heliTicket !== 'boolean') s.heliTicket = false;                          // โลกเฮลิคอปเตอร์
       if(!Array.isArray(s.heliDone)) s.heliDone = [];
       if(typeof s.heliStreak !== 'number') s.heliStreak = 0;                               // รอบ 62

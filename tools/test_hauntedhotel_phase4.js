@@ -51,7 +51,7 @@ function makePool(){
   return out;
 }
 function runState(seed,runId){
-  const words=[['shadow','เงา'],['coffin','โลง'],['whisper','กระซิบ'],['ghost','ผี']];
+  const words=[['shadow','เงา'],['coffin','โลง'],['whisper','กระซิบ'],['ghost','ผี'],['room','ห้อง']];
   return {runId,seed,placementVersion:1,phase:'ACTIVE_WORD',wordIndex:0,ordinalMask:0,cabinetLetterSlot:2,
     completedAt:0,revision:0,wordSet:JSON.stringify(words)};
 }
@@ -70,7 +70,7 @@ a.forEach((word,wi)=>{
 
 HH.init({
   floorOf:y=>Math.round(y/4),database:()=>null,userId:()=>player.id,sessionId:()=>'',isSoleOccupant:()=>true,
-  createWordSet:()=>[['shadow','เงา'],['coffin','โลง'],['whisper','กระซิบ'],['ghost','ผี']].map(w=>({en:w[0],th:w[1]})),
+  createWordSet:()=>[['shadow','เงา'],['coffin','โลง'],['whisper','กระซิบ'],['ghost','ผี'],['room','ห้อง']].map(w=>({en:w[0],th:w[1]})),
   applyCanonicalState(){},currentSearchObjective:()=>objective,searchContext:()=>({player,players:[player]}),
   showCriticalHint:item=>shown.push(item),hideCriticalHint:item=>hidden.push(item),applyObjectiveProximity:d=>proximity.push(d),
   onSearchEvent:(kind,detail)=>searchEvents.push({kind,detail})

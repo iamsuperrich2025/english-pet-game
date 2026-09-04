@@ -45,7 +45,7 @@ const MODES = {
     sky:0x05060e, fogN:26, fogF:155, ground:0x1a1c18,
     ghostMax:1, ghostSpeed:2.15, keepR:1.65, scareR:1.5,
     ghostEmoji:['👻','👻','👻','💀','🧟'],
-    intro:'🏨 <b>โรงแรมกำมะหยี่ — ภารกิจ 4 คำ</b><br><small>ตั้งแต่<b>ชั้น 2</b> ทุกห้องมีตัวอักษร 1 ตัว · เก็บให้ครบเพื่อประกอบคำและรับเหรียญ<br>เข้าห้องไม่ซ้ำครบ <b>5 ห้อง</b> ไฟจะกระพริบ 10 วินาทีก่อนดับ · ครบ 10 ห้องไฟติด และครบ 13 ห้องไฟดับอีกครั้ง 🔦<br>👻 หลังไฟดับ ผีจะลอยตามคนที่ใกล้ที่สุด — หลบในห้องได้ไม่เกิน <b>2 นาที</b> ไม่เช่นนั้นผีจะตามเข้าไป<br>เปิดตู้จะยังไม่ตกใจ แต่เมื่อหันไปทางอื่นจะเจอ Jump Scare · ถูกผีโจมตีครบ <b>10 ครั้ง = Game Over</b></small>',
+    intro:'🏨 <b>โรงแรมกำมะหยี่ — ภารกิจ 5 คำ</b><br><small>ตั้งแต่<b>ชั้น 2</b> ทุกห้องมีตัวอักษร 1 ตัว · เก็บให้ครบเพื่อประกอบคำและรับเหรียญ<br>🎯 ภารกิจพิเศษเดี่ยว: เก็บตัวอักษรสุดท้ายของคำด้วยตัวเองให้ครบ <b>5 คำ</b> โดยไม่ Game Over รับ <b>10,000 เหรียญ</b> · คำของเพื่อนไม่นับ<br>เข้าห้องไม่ซ้ำครบ <b>5 ห้อง</b> ไฟจะกระพริบ 10 วินาทีก่อนดับ · ครบ 10 ห้องไฟติด และครบ 13 ห้องไฟดับอีกครั้ง 🔦<br>👻 หลังไฟดับ ผีจะลอยตามคนที่ใกล้ที่สุด — หลบในห้องได้ไม่เกิน <b>2 นาที</b> ไม่เช่นนั้นผีจะตามเข้าไป<br>เปิดตู้จะยังไม่ตกใจ แต่เมื่อหันไปทางอื่นจะเจอ Jump Scare · ถูกผีโจมตีครบ <b>10 ครั้ง = Game Over</b></small>',
     hint:'คลิกจอ=ล็อกเมาส์ · WASD เดิน · F=ไฟฉาย · E=ตู้/ลิฟต์ · ฟังเสียงรอบตัว · Esc ปลดเมาส์แล้วค่อยกดออก',
     koTitle:'💫 พลังหมดแล้ว!',
   },
@@ -508,7 +508,7 @@ function orderedLetterMode(){ return !!(M&&(M.heli||M.drone)); }
 let monsters=[];                  // adv: [{spr,hp,tgt,wanderAt,hitAt}] · haunt(ผี): [{spr,born,hunting,wailAt,tgt,wanderAt}]
 let shots=[];                     // [{mesh,dir,life}]
 let keys={}, joy={on:false,dx:0,dy:0}, lookTouch=null, lastShot=0, lastEnsure=0, lastSpawn=0;
-let dmgFlashEl, hudWordsEl, hudInvEl, hudHpEl, hudCoinEl, hudHuntEl, hudHeartEl, hudSurvEl, hudBoardEl, mapCv, mapCtx, banEl, overlayEl, canvasEl, scareEl, hintEl, introEl;
+let dmgFlashEl, hudWordsEl, hudInvEl, hudHpEl, hudCoinEl, hudHuntEl, hudHeartEl, hudSurvEl, hudBoardEl, hudHotelSpecialEl, mapCv, mapCtx, banEl, overlayEl, canvasEl, scareEl, hintEl, introEl;
 let texCache={};
 
 /* ---------- multiplayer ---------- */
@@ -542,7 +542,7 @@ function wordPool(second){
 function pickWords(n){
   return shuffle(wordPool()).slice(0,n).map(([en,th])=>({en:en.toLowerCase(), th}));
 }
-/* Haunted Hotel stores these four compact word pairs in the canonical run.
+/* Haunted Hotel stores five compact word pairs in the canonical run.
    The initializer's student pool is used once; late joiners never recalculate it
    from their own grade/history, so both players always receive the same words. */
 function hotelCreateWordSet(seed){
@@ -552,7 +552,7 @@ function hotelCreateWordSet(seed){
   const mixed=HotelRuntime.seededShuffle(pool,seed);
   const first=mixed.findIndex(([en])=>String(en).length>=4);
   if(first>0){const item=mixed.splice(first,1)[0];mixed.unshift(item);}
-  const fallback=[['ghost','ผี'],['light','แสง'],['hotel','โรงแรม'],['dark','มืด']];
+  const fallback=[['ghost','ผี'],['light','แสง'],['hotel','โรงแรม'],['dark','มืด'],['room','ห้อง']];
   const selected=[];
   mixed.concat(fallback).forEach(([en,th])=>{
     const key=String(en).toLowerCase();
@@ -2933,10 +2933,11 @@ function hotelPruneLetters(){
 }
 
 /* ============================================================
-   🔤 ภารกิจโรงแรม 4 คำ — ทุกห้องตั้งแต่ชั้น 2 มีตัวอักษร 1 ตัว
-   สำเนาในหลายห้องแชร์ ordinal เดียวกัน จึงเก็บ/ให้เหรียญเพียงครั้งเดียวแบบ multiplayer
+   🔤🎯 รอบ 1354 — โรงแรม 5 คำ + ภารกิจพิเศษเดี่ยว
+   ทุกห้องตั้งแต่ชั้น 2 มีตัวอักษร 1 ตัว; canonical ยังคุมโลกที่เล่นร่วมกัน
+   แต่ SpecialMission ให้เครดิตคำเฉพาะคนที่ชนะ transaction ตัวอักษรสุดท้ายของคำนั้น
    ============================================================ */
-const HOTEL_QUEST_WORDS=4;
+const HOTEL_QUEST_WORDS=5;
 const HOTEL_FLOOR=window.HauntedHotelRuntime.FLOOR;
 const HOTEL_SEARCH_FLOORS=[HOTEL_FLOOR.FOURTH,HOTEL_FLOOR.FOURTH,HOTEL_FLOOR.SECOND,HOTEL_FLOOR.GROUND];
 // Physical floor 4 (index 4) exists in the five-level mesh but is not part of the current story route.
@@ -3116,7 +3117,19 @@ function pickUpLetter(i,fromPeer){
     if(hQuest.got.has(l.hqOrdinal)){removeLetter(i);return;}
     // Phase 2: local contact proposes one ordinal transaction. The Firebase
     // snapshot is the only path that removes/awards the letter on either client.
-    HotelRuntime.claimOrdinal({wordIndex:hQuest.wordIndex,ordinal:l.hqOrdinal,final:!!l.hqFinal});
+    const word=words[0],chars=hotelQuestWordLetters();
+    const personalClaim={
+      runId:hQuest.runId,wordIndex:hQuest.wordIndex,ordinal:l.hqOrdinal,ch,
+      en:word&&word.en,th:word&&word.th,
+      completesWord:!!(word&&hQuest.got.size===chars.length-1&&!hQuest.got.has(l.hqOrdinal))
+    };
+    HotelRuntime.claimOrdinal({wordIndex:hQuest.wordIndex,ordinal:l.hqOrdinal,final:!!l.hqFinal}).then(committed=>{
+      if(!committed||!window.SpecialMission)return;
+      const result=window.SpecialMission.hauntedClaimCommitted(personalClaim);
+      renderHotelSpecialMission();
+      if(result.awarded){sessionCoins+=result.reward||0;renderHudTop();}
+      else if(result.credited)showBanner(`🎯 <b>ภารกิจเดี่ยว ${result.count}/${result.goal} คำ</b><br><small>${escapeHTML(word.en.toUpperCase())} = ${escapeHTML(word.th)} นับเป็นของคุณแล้ว</small>`,2200);
+    });
     return;
   }
   const at=l.spr.position.clone();            // เก็บตำแหน่งไว้ก่อนลบ (ไว้เด้งป้ายตรงจุดนั้น)
@@ -3502,13 +3515,15 @@ function hotelGhostAttack(kind,force){
 function hotelGameOver(){
   if(hotelGameOverShown||mode!=='haunt')return;
   hotelGameOverShown=true;running=false;hauntSurviveFinish();
+  if(window.SpecialMission)window.SpecialMission.failHauntedRun();
+  renderHotelSpecialMission();
   HotelRuntime.later(()=>{
     if(mode!=='haunt'||!overlayEl||!overlayEl.classList.contains('on'))return;
     HSound.stopAll();
     if(scareEl)scareEl.classList.remove('on','turn-scare');
     HotelRuntime.clearScopedHints('','',true);
     hotelImportantHint(`game-over-${Date.now()}`,
-      `ผีโจมตีครบ <b>${HAUNT_ATTACKS} ครั้ง</b><br>ภารกิจรอบนี้สิ้นสุดแล้ว`,
+      `ผีโจมตีครบ <b>${HAUNT_ATTACKS} ครั้ง</b><br>ภารกิจรอบนี้สิ้นสุดแล้ว<br><small>ภารกิจพิเศษเดี่ยวรีเซ็ตเป็น 0/${HOTEL_QUEST_WORDS} — เริ่มใหม่ได้รอบหน้า</small>`,
       {title:'GAME OVER',scope:'gameover',onDismiss:()=>exitWorld()});
   },3000);
 }
@@ -3604,6 +3619,7 @@ function hotelApplyCanonicalPhase(previous,next,first){
 function hotelApplyCanonicalState(previous,next,meta){
   if(!hQuest)hotelQuestReset();
   const first=!!(meta&&meta.firstSnapshot);
+  const completedFinal=!!(!first&&previous&&previous.phase!==HotelRuntime.PHASE.COMPLETE&&next.phase===HotelRuntime.PHASE.COMPLETE&&next.wordIndex===previous.wordIndex);
   if(!first&&previous&&next.wordIndex>previous.wordIndex){
     const priorWord=previous.words[previous.wordIndex];
     if(priorWord)hotelApplyCanonicalMask(Math.pow(2,priorWord.en.length)-1,true);
@@ -3621,6 +3637,7 @@ function hotelApplyCanonicalState(previous,next,meta){
     const roomLetters=HotelRuntime.deriveRoomLetters(placementPool,next);
     hotelQuestReset(); hQuest.bonusPaid=oldBonus;
     hQuest.runId=next.runId; hQuest.wordIndex=next.wordIndex;
+    if((!previous||previous.runId!==next.runId)&&window.SpecialMission)window.SpecialMission.beginHauntedRun(next.runId);
     hQuest.placementVersion=next.placementVersion||HotelRuntime.PLACEMENT_VERSION; hQuest.placements=placements; hQuest.roomLetters=roomLetters;
     words=next.words.slice(next.wordIndex).map(w=>({en:w.en,th:w.th}));
     hQuest.finish=next.phase===HotelRuntime.PHASE.COMPLETE||next.phase===HotelRuntime.PHASE.RETURN||next.wordIndex>=HOTEL_QUEST_WORDS;
@@ -3632,8 +3649,12 @@ function hotelApplyCanonicalState(previous,next,meta){
     showBanner(`🚪 <b>สำรวจห้องแล้ว ${nextVisits}/13 ห้อง</b><br><small>${nextVisits<5?'ครบ 5 ห้อง ไฟจะเริ่มกระพริบ':nextVisits<10?'ครบ 10 ห้อง ไฟจะกลับมาติด':nextVisits<13?'ครบ 13 ห้อง ไฟจะดับอีกครั้ง':'ไฟดับอีกครั้ง — ผีเริ่มตามแล้ว'}</small>`,2100);
   }
   if(!hQuest.finish)hotelApplyCanonicalMask(next.ordinalMask,!first);
+  if(completedFinal){
+    const finalWord=next.words[next.wordIndex];
+    if(finalWord){hotelApplyCanonicalMask(Math.pow(2,finalWord.en.length)-1,true);rewardCompletedWord(finalWord);}
+  }
   hotelApplyCanonicalPhase(previous,next,first);
-  renderHudInv(); renderHudWords();
+  renderHudInv(); renderHudWords(); renderHotelSpecialMission();
   if(!first&&previous&&previous.phase!==HotelRuntime.PHASE.COMPLETE&&next.phase===HotelRuntime.PHASE.COMPLETE){
     hQuest.finish=true; hotelClearQuestLetters(); HotelRuntime.later(hotelFinishRound,2500);
   }
@@ -5149,6 +5170,18 @@ function renderHudTop(){
     else delete hpBox.dataset.hp;
   }
   hudCoinEl.textContent=`🪙 +${fmtNum(sessionCoins)} · 📖 ${sessionWords} คำ`;
+  renderHotelSpecialMission();
+}
+function renderHotelSpecialMission(){
+  if(!hudHotelSpecialEl)return;
+  const visible=mode==='haunt'&&!!window.SpecialMission;
+  hudHotelSpecialEl.style.display=visible?'inline-flex':'none';
+  if(!visible)return;
+  const progress=window.SpecialMission.snapshot();
+  hudHotelSpecialEl.classList.toggle('done',!!progress.done);
+  hudHotelSpecialEl.innerHTML=progress.done
+    ? `<small>ภารกิจพิเศษ</small><b>✓ สำเร็จแล้ว</b>`
+    : `<small>ภารกิจพิเศษเดี่ยว</small><b>${progress.count}/${progress.goal} คำ</b><em>🏆 10,000</em>`;
 }
 function renderHudWords(){   // โชว์คำเป้าหมายปัจจุบัน (words[0]) เป็นคำใหญ่ทีละคำ · ตัวอักษรที่เก็บแล้วไฮไลต์เขียว
   const w=words[0];
@@ -5378,7 +5411,7 @@ function buildDom(){
   overlayEl.id='adv-overlay';
   overlayEl.innerHTML=`
     <canvas id="adv-canvas"></canvas>
-    <div class="adv-hud" id="adv-topbar"><div class="adv-hp"><div class="adv-hp-fill" id="adv-hp"></div></div><span id="adv-coin"></span></div>
+    <div class="adv-hud" id="adv-topbar"><div class="adv-hp"><div class="adv-hp-fill" id="adv-hp"></div></div><span id="adv-coin"></span><span id="adv-hh-special"></span></div>
     <div class="adv-hud" id="adv-board"></div>
     <div class="adv-hud" id="adv-words"></div>
     <canvas class="adv-hud" id="adv-map" width="120" height="120"></canvas>
@@ -5599,6 +5632,7 @@ function buildDom(){
   hudHuntEl=overlayEl.querySelector('#adv-hunt');
   hudHeartEl=overlayEl.querySelector('#adv-hearts');
   hudSurvEl=overlayEl.querySelector('#adv-survive');   // ⏱ รอบ 256: นาฬิกาหนีผีรอด
+  hudHotelSpecialEl=overlayEl.querySelector('#adv-hh-special');
   banEl=overlayEl.querySelector('#adv-banner');
   hHintEl=overlayEl.querySelector('#adv-hh-hint');
   hHintTitleEl=overlayEl.querySelector('#adv-hh-hint-title');
@@ -13187,6 +13221,7 @@ function exitWorld(){
   HSound.stopAll();
   // 🏨 รอบ 684: ออกจากโรงแรม = ปิดไฟฉาย + คืนไฟทั้งตึก + ซ่อน HUD เฉพาะโลกนี้
   if(mode==='haunt'){
+    if(window.SpecialMission)window.SpecialMission.leaveHauntedRun();
     HotelRuntime.exit();
     if(hWardrobeTurn)hWardrobeTurn.clear();
     disposeHotelTorch();

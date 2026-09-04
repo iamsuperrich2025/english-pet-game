@@ -18,6 +18,12 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
   .adv-haunt .adv-hp-fill{background:linear-gradient(90deg,#ff243c,#ff6b6b)}
   .adv-hp-fill.low{background:#ef5350}
   #adv-coin{color:#fff;font-weight:800;font-size:14px;text-shadow:0 1px 3px #000;white-space:nowrap}
+  #adv-hh-special{display:none;align-items:center;gap:6px;min-height:27px;padding:3px 9px;border:1px solid #ffe89a;border-radius:10px;
+    background:linear-gradient(180deg,rgba(72,35,0,.94),rgba(26,11,0,.94));color:#fff5c4;font-style:normal;white-space:nowrap;
+    box-shadow:0 0 12px rgba(255,198,40,.35);text-shadow:0 1px 3px #000}
+  #adv-hh-special small{font-size:10px;color:#ffe082}#adv-hh-special b{font-size:13px;color:#fff}#adv-hh-special em{font-size:11px;color:#ffd54f;font-style:normal}
+  #adv-hh-special.done{border-color:#8ff0af;background:linear-gradient(180deg,rgba(9,78,38,.94),rgba(2,39,19,.94));box-shadow:0 0 12px rgba(90,230,135,.35)}
+  @media(max-width:560px){.adv-haunt #adv-topbar{gap:5px}.adv-haunt .adv-hp{width:118px}.adv-haunt #adv-coin{font-size:12px}.adv-haunt #adv-hh-special{padding:3px 7px}.adv-haunt #adv-hh-special small,.adv-haunt #adv-hh-special em{display:none}}
   #adv-board{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.5);border-radius:12px;
     padding:6px 9px;min-width:132px;max-width:190px;pointer-events:none}
   /* 🚁 รอบ 352: กล้องใต้ท้องย้ายไปมุมซ้ายบน (ไม่บังวิวหน้า) → กระดานอันดับหลบลงมาอยู่ใต้กล้อง

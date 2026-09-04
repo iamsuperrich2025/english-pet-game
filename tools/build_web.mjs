@@ -262,7 +262,7 @@ async function sourceFiles() {
 
 
 
-    for (const rel of [...PUBLIC_ROOT_FILES, 'js/app-update.js', 'js/account-deletion.js', 'css/account-deletion.css',
+    for (const rel of [...PUBLIC_ROOT_FILES, 'js/app-update.js', 'js/account-deletion.js', 'js/specialmission.js', 'css/account-deletion.css',
 
 
 

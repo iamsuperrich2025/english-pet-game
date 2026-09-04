@@ -25,6 +25,7 @@ context.window=context;vm.createContext(context);
 vm.runInContext(fs.readFileSync('js/hauntedhotel.js','utf8'),context,{filename:'hauntedhotel.js'});
 vm.runInContext(fs.readFileSync('js/hauntedhotelghost.js','utf8'),context,{filename:'hauntedhotelghost.js'});
 const HH=context.HauntedHotelRuntime,GH=context.HauntedHotelGhost;
+assert.strictEqual(HH.HOTEL_WORDS,5,'Haunted Hotel canonical run is not five words');
 const adventureSource=fs.readFileSync('js/adventure3d.js','utf8');
 assert.ok(adventureSource.includes("thaiInstrument:'sound/ghost/thaiInstrumentGhost.mp3'"),'Thai ghost instrument file is not wired');
 assert.ok(/queueThaiInstrument\(\)[\s\S]*?120000[\s\S]*?5000/.test(adventureSource),'Thai ghost music does not wait 5 seconds then run for 2 minutes');
@@ -37,7 +38,7 @@ assert.strictEqual(GH.GHOST_OPACITY,.20,'in-world ghost opacity is not 20%');
 assert.ok(/Math\.min\(GHOST_OPACITY,opacity\+dt\*\.72\)/.test(fs.readFileSync('js/hauntedhotelghost.js','utf8')),'in-world ghost can fade above 20% opacity');
 
 function state(){return {runId:'hh-test-room-rules',seed:77,placementVersion:1,phase:'ACTIVE_WORD',wordIndex:0,ordinalMask:0,
-  cabinetLetterSlot:0,roomVisits:'',completedAt:0,revision:1,wordSet:JSON.stringify([['ghost','ผี'],['room','ห้อง'],['dark','มืด'],['light','ไฟ']])};}
+  cabinetLetterSlot:0,roomVisits:'',completedAt:0,revision:1,wordSet:JSON.stringify([['ghost','ผี'],['room','ห้อง'],['dark','มืด'],['light','ไฟ'],['door','ประตู']])};}
 const pool=[];
 for(let floor=1;floor<=4;floor++)for(let room=0;room<3;room++)for(let slot=1;slot<=2;slot++){
   const number=(floor+1)*100+room*2+1,key=`r${floor}n${room}`;
@@ -52,7 +53,7 @@ assert.deepStrictEqual(Array.from(new Set(letters.map(x=>x.ordinal))).sort(),[0,
 assert.strictEqual(HH.parseRoomVisits('F2_ROOM_201,F2_ROOM_201,F3_ROOM_301').length,2,'room visits did not de-duplicate');
 
 (async function(){
-  HH.init({floorOf:()=>0,createWordSet:()=>[['ghost','ผี'],['room','ห้อง'],['dark','มืด'],['light','ไฟ']].map(x=>({en:x[0],th:x[1]})),
+  HH.init({floorOf:()=>0,createWordSet:()=>[['ghost','ผี'],['room','ห้อง'],['dark','มืด'],['light','ไฟ'],['door','ประตู']].map(x=>({en:x[0],th:x[1]})),
     applyCanonicalState(){},applyLightingState(){},applyFlickerLevel(){}});
   HH.enter({footY:0,lighting:HH.LIGHTING.NORMAL});
   advance(1900);await Promise.resolve();advance(100);await Promise.resolve();
@@ -65,6 +66,17 @@ assert.strictEqual(HH.parseRoomVisits('F2_ROOM_201,F2_ROOM_201,F3_ROOM_301').len
     if(i===10)assert.strictEqual(phase,HH.PHASE.RESTORE,'ten rooms did not restore hotel lights');
     if(i===13)assert.strictEqual(phase,HH.PHASE.PERMANENT_DARK,'thirteen rooms did not trigger second blackout');
   }
+  const missionWords=['ghost','room','dark','light','door'];
+  for(let wordIndex=0;wordIndex<missionWords.length;wordIndex++){
+    for(let ordinal=0;ordinal<missionWords[wordIndex].length;ordinal++){
+      assert.strictEqual(await HH.claimOrdinal({wordIndex,ordinal}),true,`word ${wordIndex} ordinal ${ordinal} was not committed`);
+      advance(100);await Promise.resolve();
+    }
+    const canonical=HH.snapshot().canonical;
+    if(wordIndex<missionWords.length-1)assert.strictEqual(canonical.wordIndex,wordIndex+1,`word ${wordIndex} did not advance`);
+  }
+  assert.strictEqual(HH.snapshot().canonical.phase,HH.PHASE.COMPLETE,'fifth word did not complete the hotel run');
+  assert.strictEqual(HH.snapshot().canonical.wordIndex,4,'terminal hotel state escaped the Firebase wordIndex <= 4 rule');
   HH.exit();
 
   const wardrobe=GH.createWardrobeTurnTrigger();
@@ -84,5 +96,5 @@ assert.strictEqual(HH.parseRoomVisits('F2_ROOM_201,F2_ROOM_201,F3_ROOM_301').len
   assert.strictEqual(target.id,'near','ghost did not ignore hidden player or select nearest visible player');
   const forced=GH._chooseTarget({x:0,y:0,z:0},[{id:'hidden',x:1,y:0,z:0,room:'F2_ROOM_201'}],'hidden');
   assert.strictEqual(forced.id,'hidden','two-minute room intrusion did not target the hidden player');
-  console.log('PASS Haunted Hotel rules: room letters, 5/10/13 lighting, cabinet turn-away, two-minute intrusion, ten-hit health and Thai music sequence');
+  console.log('PASS Haunted Hotel rules: five words, room letters, 5/10/13 lighting, cabinet turn-away, two-minute intrusion, ten-hit health and Thai music sequence');
 })().catch(error=>{console.error(error);process.exitCode=1;});

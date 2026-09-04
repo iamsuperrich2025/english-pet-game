@@ -24,9 +24,10 @@
     NORMAL:'normal', FLICKER:'flicker', TEMP_BLACKOUT:'temp_blackout',
     RESTORED:'restored', PERMANENT_DARK:'permanent_dark'
   });
-  // HOTEL3D has five physical levels (0..4). Story copy currently uses 0..3.
+  // HOTEL3D has five physical levels (0..4). The special solo mission uses five vocabulary words.
   const FLOOR=Object.freeze({GROUND:0,SECOND:1,THIRD:2,FOURTH:3,EXTRA:4});
-  const HOTEL_WORDS=4;
+  const HOTEL_WORDS=5;
+  const LEGACY_HOTEL_WORDS=4; // accept an in-flight four-word run during a rolling deploy
   const MAX_PLAYERS=6; // Phase 3: the single Haunted Hotel-specific instance capacity
   const PLACEMENT_VERSION=1;
   const ROOM_THRESHOLDS=Object.freeze({FIRST_DARK:5,RESTORE:10,SECOND_DARK:13});
@@ -272,11 +273,12 @@
     };
   }
   function validCanonical(value){
+    const wordCount=value?parseWords(value.wordSet).length:0;
     return !!(value && PHASES.indexOf(value.phase)>=0 && typeof value.runId==='string' &&
       Number.isInteger(value.wordIndex) && value.wordIndex>=0 && value.wordIndex<=HOTEL_WORDS &&
       Number.isInteger(value.ordinalMask) && value.ordinalMask>=0 &&
       Number.isInteger(value.cabinetLetterSlot) && value.cabinetLetterSlot>=0 && value.cabinetLetterSlot<5 &&
-      parseWords(value.wordSet).length===HOTEL_WORDS);
+      (wordCount===HOTEL_WORDS||wordCount===LEGACY_HOTEL_WORDS) && value.wordIndex<=wordCount);
   }
   function publicState(value){
     if(!validCanonical(value))return null;
@@ -450,10 +452,12 @@
   function advanceWord(){
     if(!canonical || canonical.ordinalMask!==fullMask(canonical))return Promise.resolve({committed:false,state:canonical});
     const before=expected();
-    const wi=canonical.wordIndex;
+    const wi=canonical.wordIndex,view=publicState(canonical),wordTotal=view&&view.words.length||0;
     return mutate(before,function(next){
-      if(wi>=HOTEL_WORDS-1){
-        next.wordIndex=HOTEL_WORDS;
+      if(wi>=wordTotal-1){
+        // Keep the fifth word at index 4 so the published Firebase rule (wordIndex <= 4)
+        // remains strict; COMPLETE is the terminal marker instead of a sentinel index 5.
+        next.wordIndex=wi;
         next.ordinalMask=0;
         next.phase=PHASE.COMPLETE;
         if(!next.completedAt)next.completedAt=typeof firebase!=='undefined'&&firebase.database?firebase.database.ServerValue.TIMESTAMP:Date.now();
@@ -471,12 +475,12 @@
   function driveStateMachine(){
     if(!canonical||!active)return;
     const maskFull=canonical.ordinalMask===fullMask(canonical) && fullMask(canonical)>0;
-    const visits=roomVisitCount(canonical);
+    const visits=roomVisitCount(canonical),view=publicState(canonical),wordTotal=view&&view.words.length||0;
     if(canonical.phase===PHASE.ENTER){transitionTo(PHASE.ACTIVE_WORD,'run ready');return;}
     if(canonical.phase===PHASE.ACTIVE_WORD&&visits>=ROOM_THRESHOLDS.FIRST_DARK){transitionTo(PHASE.TEMP_BLACKOUT,'five unique rooms visited');return;}
     if(canonical.phase===PHASE.TEMP_BLACKOUT&&visits>=ROOM_THRESHOLDS.RESTORE){transitionTo(PHASE.RESTORE,'ten unique rooms visited');return;}
     if(canonical.phase===PHASE.RESTORE&&visits>=ROOM_THRESHOLDS.SECOND_DARK){transitionTo(PHASE.PERMANENT_DARK,'thirteen unique rooms visited');return;}
-    if(maskFull&&canonical.wordIndex<HOTEL_WORDS)advanceWord();
+    if(maskFull&&canonical.wordIndex<wordTotal&&canonical.phase!==PHASE.COMPLETE&&canonical.phase!==PHASE.RETURN)advanceWord();
   }
 
   function onSessionState(previous,next,meta){applyState(previous,next,meta||{});}
