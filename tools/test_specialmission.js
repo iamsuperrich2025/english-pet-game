@@ -53,6 +53,7 @@ assert.strictEqual(second.state.coins,0,'failed run paid coins');
 
 const adventure=fs.readFileSync('js/adventure3d.js','utf8');
 const advCss=fs.readFileSync('js/adv3d_css.js','utf8');
+const advIntro=fs.readFileSync('js/adv3d_intro.js','utf8');
 const special=fs.readFileSync('js/specialmission.js','utf8');
 const stateSource=fs.readFileSync('js/state.js','utf8');
 const mainSource=fs.readFileSync('js/main.js','utf8');
@@ -66,7 +67,15 @@ assert.ok(adventure.includes('window.SpecialMission.leaveHauntedRun()'),'leaving
 assert.ok(!adventure.includes('id="adv-survive"')&&!adventure.includes('tickSurvive')&&!adventure.includes('hauntSurviveFinish'),'unneeded Haunted Hotel duration tracker still exists');
 assert.ok(adventure.includes('<span id="adv-coin"></span></div>\n    <div class="adv-hud" id="adv-hh-special"></div>'),'special mission badge is still inside the HP/coin topbar');
 assert.ok(advCss.includes('#adv-hh-special{display:none;top:52px;right:136px'),'special mission badge is not positioned under the Haunted Hotel control row');
-assert.ok(advCss.includes('.adv-haunt #adv-words{top:96px}'),'word target does not leave room below the special mission badge');
+assert.ok(advCss.includes('.adv-haunt #adv-words{top:62px')&&advCss.includes('@media(max-width:1100px){.adv-haunt #adv-words{top:94px}}'),'Haunted Hotel word target is not compactly positioned in the upper HUD');
+assert.ok(advCss.includes('.adv-haunt #adv-words .adv-fch{min-width:clamp(18px,2.2vw,26px);font-size:clamp(17px,2.2vw,28px)'),'Haunted Hotel word tiles are still oversized');
+assert.ok(adventure.includes("if(mode==='haunt'){showHauntedEntryNotice();return;}"),'Haunted Hotel entry still uses the auto-fading generic banner');
+assert.strictEqual((adventure.match(/showModeIntro\(\);/g)||[]).length,2,'persistent Haunted Hotel entry notice is not wired for first and repeat entry');
+const hotelEntryBlock=adventure.slice(adventure.indexOf('function showHauntedEntryNotice()'),adventure.indexOf('function showModeIntro()'));
+assert.ok(hotelEntryBlock.includes("scope:'entry'")&&hotelEntryBlock.includes('running=false;')&&hotelEntryBlock.includes("onDismiss:()=>")&&!hotelEntryBlock.includes('setTimeout'),'Haunted Hotel entry notice does not persist and pause play until acknowledgement');
+assert.ok(adventure.includes("hHintEl.classList.toggle('entry',scope==='entry')")&&adventure.includes("scope==='entry'?'รับทราบ'"),'Haunted Hotel entry notice scope is not rendered with its acknowledgement state');
+assert.ok(advCss.includes('#adv-hh-hint.entry #adv-hh-hint-x{display:none}'),'Haunted Hotel entry notice still exposes a close control other than acknowledgement');
+assert.ok(advIntro.includes('เก็บคำศัพท์ให้ครบ <b>5 คำ</b>')&&!advIntro.includes('ภารกิจต่อคำ 4 คำ')&&!advIntro.includes('ไม่มีการไล่ล่าหรือเกมโอเวอร์'),'first-entry Haunted Hotel instructions contradict the current five-word/Game Over rules');
 assert.ok(adventure.includes("if(mode==='haunt'&&note)")&&adventure.includes("noteBox.querySelectorAll('.nr-go').forEach(el=>el.remove())"),'Haunted Hotel still shows the go-to-friend menu');
 assert.ok(special.includes('const PROMO_LOGIN_LIMIT = 2'),'promo is not limited to two login events');
 assert.ok(special.includes('z-index:13050'),'reward dialog does not sit above the 3D world');
@@ -84,4 +93,4 @@ assert.ok(stateSource.includes('hauntSpecialMissionDone:false')&&stateSource.inc
 assert.strictEqual((mainSource.match(/SpecialMission\.onLogin\(\);\},1800\)/g)||[]).length,2,'login promo is not delayed behind existing persistent notices for both new and returning players');
 assert.ok(html.indexOf('js/specialmission.js?v=1354')>=0&&html.indexOf('js/specialmission.js?v=1354')<html.indexOf('js/main.js?v=1126'),'special mission module is not loaded before login boot');
 assert.ok(buildSource.includes("'js/specialmission.js'"),'production build does not include the new mission module before its first commit');
-console.log('PASS Special Mission: personal five-word ownership, no duration/friend menu, separated HUD badge, immediate one-time 10,000 reward, persistent reward/promo acknowledgement and two-login wiring');
+console.log('PASS Special Mission: personal five-word ownership, persistent acknowledged hotel entry, compact upper word HUD, immediate one-time 10,000 reward and two-login wiring');

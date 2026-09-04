@@ -3672,16 +3672,18 @@ function hotelProximityCue(band){
 }
 function hotelShowCriticalHint(item){
   if(!hHintEl)return;
+  const scope=item&&item.scope||'mission';
   hHintTitleEl.textContent=item&&item.title||'คำใบ้ภารกิจ';
   hHintTextEl.innerHTML=item&&item.html||'';
-  hHintEl.classList.toggle('game-over',!!(item&&item.scope==='gameover'));
-  const ok=hHintEl.querySelector('#adv-hh-hint-ok');if(ok)ok.textContent=item&&item.scope==='gameover'?'กลับ Lobby':'เข้าใจแล้ว';
+  hHintEl.classList.toggle('game-over',scope==='gameover');
+  hHintEl.classList.toggle('entry',scope==='entry');
+  const ok=hHintEl.querySelector('#adv-hh-hint-ok');if(ok)ok.textContent=scope==='gameover'?'กลับ Lobby':scope==='entry'?'รับทราบ':'เข้าใจแล้ว';
   hHintEl.classList.add('on');
   hHintEl.setAttribute('aria-hidden','false');
   if(hHintHistoryEl)hHintHistoryEl.classList.remove('on');
 }
 function hotelHideCriticalHint(){
-  if(hHintEl){hHintEl.classList.remove('on','game-over');hHintEl.setAttribute('aria-hidden','true');
+  if(hHintEl){hHintEl.classList.remove('on','game-over','entry');hHintEl.setAttribute('aria-hidden','true');
     const ok=hHintEl.querySelector('#adv-hh-hint-ok');if(ok)ok.textContent='เข้าใจแล้ว';}
   if(hHintHistoryEl&&M&&M.hotel)hHintHistoryEl.classList.add('on');
 }
@@ -12925,11 +12927,27 @@ function showIntro(md,reopen){
 /* 🚁🌳 รอบ 816: ป้ายเปิดฉาก — เมืองกำแพงเพชรของเฮลิฯ มีกติกาคนละแบบกับเมืองเฮลิฯ (ดาดฟ้า vs พื้นที่สีเขียว) */
 const HELI_KPP_BANNER='🚁🌳 <b>บินเหนือเมืองกำแพงเพชร!</b><br><small>ตัวอักษรวางอยู่บน<b>พื้นที่สีเขียวข้างถนน</b> — ต้อง<b>ร่อนลงจอดบนหญ้า</b>ให้เครื่องจอดสนิทจึงเก็บได้<br>🎯 วงเป้าบนจอชี้จุดที่ต้องไป (ใกล้แล้วเป็นสีเขียว) · 🏆 ลงนุ่มๆ ได้เหรียญโบนัส<br>⚠️ บินให้สูงกว่ายอดตึกไว้ก่อน แล้วค่อยหย่อนลงตรงลานหญ้า</small>';
 const modeIntro=()=>heliKpp()?HELI_KPP_BANNER:M.intro;
+const HAUNT_ENTRY_NOTICE='<b>เก็บคำศัพท์ให้ครบ 5 คำ โดยไม่ Game Over</b><br>'+
+  'นับเฉพาะคำที่คุณเก็บตัวอักษรสุดท้ายด้วยตัวเอง · คำที่เพื่อนเก็บไม่นับ<br>'+
+  '<span class="adv-ban-coin">ทำสำเร็จรับทันที 10,000 🪙</span><br>'+
+  '<small>ป้ายนี้ไม่ปิดเอง — กด “รับทราบ” เมื่ออ่านจบ</small>';
+function showHauntedEntryNotice(){
+  running=false;
+  const shown=hotelImportantHint(`hotel-entry-${Date.now()}`,HAUNT_ENTRY_NOTICE,{
+    title:'ภารกิจพิเศษเดี่ยว · โรงแรมผีสิง',scope:'entry',
+    onDismiss:()=>{if(mode==='haunt'&&overlayEl&&overlayEl.classList.contains('on'))beginPlay();}
+  });
+  if(!shown)beginPlay();
+}
+function showModeIntro(){
+  if(mode==='haunt'){showHauntedEntryNotice();return;}
+  showBanner(modeIntro());
+}
 function closeIntro(md){
   markIntroSeen(md);
   introEl.classList.remove('on');
   beginPlay();
-  showBanner(modeIntro());
+  showModeIntro();
 }
 function beginPlay(){ clock.getDelta(); running=true; loop(); }   // เริ่ม/เล่นต่อ — ทิ้ง dt ที่ค้างช่วงพัก
 
@@ -13159,7 +13177,7 @@ function start(md,opt){
     soccerKitShow();                    // กด "เตะเลย!" → soccerKitGo() สร้างหุ่น + เข้าเกม/วิธีเล่น
   }else if(introSeen(introKey())){
     beginPlay();
-    showBanner(modeIntro());
+    showModeIntro();
   }else{
     renderer.render(scene,camera);      // แสดงฉากไว้ข้างหลังการ์ด (ยังไม่เดินลูป/พักเกม)
     showIntro(introKey(),false);        // การ์ดวิธีเล่นครั้งแรก — กด "เริ่มเล่น" แล้วค่อย beginPlay (รอบ 816: แผนที่ย่อยจำแยกใบ)

@@ -38,7 +38,14 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
      · top:82 เลี่ยงชนแถบ "👻 หนี!" (top:52) + topbar · pointer-events:none ไม่บังนิ้ว · อยู่เหนือ crosshair/คอนโซล */
   #adv-words{top:82px;left:50%;transform:translateX(-50%);text-align:center;background:rgba(0,0,0,.4);
     border-radius:16px;padding:7px 16px;pointer-events:none;max-width:94vw}
-  .adv-haunt #adv-words{top:96px}
+  /* 👻 รอบ 1356: คำเป้าหมายเป็น HUD ด้านบน ไม่ใช่กล่องกลางฉาก — ย่อให้เห็นทางและวางใต้ HP โดยไม่ชนป้ายภารกิจขวา */
+  .adv-haunt #adv-words{top:62px;padding:4px 10px;border-radius:12px;max-width:92vw;
+    background:rgba(0,0,0,.52);border:1px solid rgba(255,255,255,.12)}
+  .adv-haunt #adv-words .adv-fword{gap:clamp(2px,.45vw,4px);flex-wrap:nowrap}
+  .adv-haunt #adv-words .adv-fch{min-width:clamp(18px,2.2vw,26px);font-size:clamp(17px,2.2vw,28px);
+    padding:2px clamp(4px,.55vw,7px);border-radius:7px}
+  .adv-haunt #adv-words .adv-fth{font-size:clamp(12px,1.6vw,15px);margin-top:2px}
+  @media(max-width:1100px){.adv-haunt #adv-words{top:94px}}
   .adv-fword{display:flex;gap:5px;justify-content:center;flex-wrap:wrap}
   .adv-fch{display:inline-block;min-width:30px;text-align:center;font-size:clamp(20px,5.5vw,34px);font-weight:800;
     color:#fff;background:rgba(255,255,255,.15);border-radius:9px;padding:3px 8px;text-shadow:0 2px 4px #000;transition:background .2s,box-shadow .2s}
@@ -177,6 +184,12 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
   #adv-hh-hint.game-over #adv-hh-hint-text{font-size:clamp(15px,3.5vh,21px)}
   #adv-hh-hint.game-over #adv-hh-hint-x{display:none}
   #adv-hh-hint.game-over #adv-hh-hint-ok{margin:12px auto 0;background:linear-gradient(180deg,#b52238,#70101f)}
+  #adv-hh-hint.entry{text-align:center;width:min(520px,calc(100vw - 32px));border-color:#ffd66f;
+    background:linear-gradient(180deg,rgba(47,25,7,.98),rgba(9,7,6,.98))}
+  #adv-hh-hint.entry #adv-hh-hint-title{padding-right:0;color:#ffe39a;letter-spacing:.02em;text-transform:none}
+  #adv-hh-hint.entry #adv-hh-hint-text{padding-right:0;line-height:1.5}
+  #adv-hh-hint.entry #adv-hh-hint-x{display:none}
+  #adv-hh-hint.entry #adv-hh-hint-ok{margin:10px auto 0;min-width:160px;background:linear-gradient(180deg,#d59b25,#8c5b08)}
   #adv-hh-history{position:absolute;z-index:6;right:86px;bottom:24px;display:none;align-items:center;justify-content:center;
     min-width:54px;height:48px;padding:4px 9px;border:1px solid rgba(232,201,143,.7);border-radius:14px;
     background:rgba(12,10,14,.86);color:#f4d79f;font:900 18px/1 inherit;pointer-events:auto}
