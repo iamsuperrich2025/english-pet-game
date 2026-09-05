@@ -1,10 +1,10 @@
 {
   "schema_version": 4,
   "project": "english-pet-game",
-  "structure_signature": "8301e5ac3764c893ed8b4c9d77fee9bd1d7caef048d62be62f4a5c46846e2bbf",
-  "structure_entry_count": 2836,
+  "structure_signature": "51bb1b577082399e3d2fd15b892b4180d6193b67af27156d0e67716a8b0e0e23",
+  "structure_entry_count": 2842,
   "generated_by": "VW Dev Studio Local Token Saver",
-  "generated_at": "2026-09-04T13:08:22",
+  "generated_at": "2026-09-05T14:14:09",
   "generation_mode": "local_no_ai_no_api",
   "areas": {
     "main_world": [
@@ -207,6 +207,7 @@
       "work/auth-cloud-recovery-dist/delete-account.html",
       "work/auth-cloud-recovery-dist/index.html",
       "work/auth-cloud-recovery-dist/index_classic.html",
+      "work/auth-cloud-recovery-dist/manifest.webmanifest",
       "work/auth-cloud-recovery-dist/offline.html",
       "work/auth-cloud-recovery-dist/privacy.html",
       "work/auth-cloud-recovery-dist/sw.js",
@@ -214,8 +215,7 @@
       "work/archive-fallback-1145/js/auth.js",
       "work/auth-cloud-recovery-dist/.well-known/assetlinks.json",
       "work/auth-cloud-recovery-dist/css/account-deletion.css",
-      "work/auth-cloud-recovery-dist/css/arena3d.css",
-      "work/auth-cloud-recovery-dist/css/bubble.css"
+      "work/auth-cloud-recovery-dist/css/arena3d.css"
     ],
     "assets": [
       "CODEX_ASSET_BRIEF.md",
