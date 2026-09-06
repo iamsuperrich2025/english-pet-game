@@ -10376,7 +10376,7 @@ const versionPath='version.json',buildVersion=fs.existsSync(versionPath)?JSON.pa
 
 
 
-const RUNTIME_ID='P2.1R11.2-c85cc6';
+const RUNTIME_ID='P2.1R11.3-c08371';
 
 
 
@@ -235591,9 +235591,9 @@ function runPhase21R3Tests(){
   assert(source.includes("grid-template-columns:minmax(28px,.8fr) minmax(0,1fr)!important"),'AUTO icon/text columns are reserved');
   assert(source.includes("#vw-frontline1944 .fl44-state{display:none!important"),'long center state bar is removed from battlefield presentation');
   assert(source.includes('id="fl44-objective-state"'),'state information is relocated into right mission panel');
-  assert(css.includes('--fl44-css-runtime-id:"P2.1R11.2-c85cc6-CSS"'),'R11.2 CSS identity synchronized');
+  assert(css.includes('--fl44-css-runtime-id:"P2.1R11.3-c08371-CSS"'),'current CSS identity synchronized after R11.3');
   assert(css.includes('data-task-id="VW-20260906-182626-c85cc6"'),'R11.2 CSS task marker synchronized');
-  assert(html.includes("var FRONTLINE_RUNTIME_ID='P2.1R11.2-c85cc6';"),'R11.2 HTML loader identity synchronized');
+  assert(html.includes("var FRONTLINE_RUNTIME_ID='P2.1R11.3-c08371';"),'current HTML loader identity synchronized after R11.3');
 
   const start=source.indexOf('const R111_SYSTEM=');
   const end=source.indexOf('const R10_TANK_VEHICLE_MODELS',start);
@@ -235641,3 +235641,52 @@ function runPhase21R3Tests(){
 
 })();
 
+
+
+// Phase 2.1 R11.3 c08371 — destructible environment / combat score / shared MAIN COINS / HUD polish.
+(function testR113Acceptance(){
+  const source=fs.readFileSync('js/frontline1944.js','utf8'),css=fs.readFileSync('css/frontline1944.css','utf8'),html=fs.readFileSync('index_classic.html','utf8');
+  assert(source.includes("runtimeVersion:'P2.1R11.3-c08371'"),'R11.3 JS runtime identity');
+  assert(source.includes("const R113_SYSTEM=Object.freeze({id:'P2.1R11.3-c08371'"),'R11.3 system marker');
+  assert(source.includes("taskId:'VW-20260906-191254-c08371'"),'R11.3 Task identity');
+  assert(css.includes('--fl44-css-runtime-id:"P2.1R11.3-c08371-CSS"'),'R11.3 CSS identity');
+  assert(html.includes("var FRONTLINE_RUNTIME_ID='P2.1R11.3-c08371';"),'R11.3 loader identity');
+  assert(css.includes('.fl44-telemetry{display:none!important')||css.includes('.fl44-telemetry{display:none!important'), 'upper-middle telemetry rail hidden');
+  assert(css.includes('rgba(43,52,54,.50)')&&css.includes('opacity:1!important'),'50% backgrounds do not fade full controls');
+  assert(css.includes('.fl44-drive-labels text{font-size:12.5px!important'),'Thai DRIVE labels enlarged');
+  assert(source.includes("drive:128")&&source.includes("drive:100")&&source.includes("drive:156"),'responsive DRIVE sizes enlarged across tiers');
+  assert(source.includes("scoreCategory:'ENVIRONMENT'")&&source.includes("targetType==='ENEMY_TANK'||targetType==='ZOMBIE'"),'combat-score allowlist separates environment');
+  assert(source.includes("k==='fortress_core'?'OBJECTIVE'"),'fortress objective damage is excluded from combat leaderboard');
+  assert(source.includes("localTest?G.localTestClaims:G.claimed")&&source.includes('if(localTest)return true'),'Local Test reward claims are ephemeral/no-coin');
+  assert(source.includes("gateway.addCoins(coins)")&&source.includes("currentCoinBalance()")&&source.includes("gateway.state&&gateway.state.coins"),'Frontline rewards/display use shared state.coins + addCoins gateway');
+  assert(!source.includes('frontlineCoins'),'no separate authoritative Frontline coin field');
+  const start=source.indexOf('const R111_SYSTEM='),end=source.indexOf('const R10_TANK_VEHICLE_MODELS',start);assert(start>=0&&end>start);
+  const defs=source.slice(start,end),sb={console,globalThis:null,queueMicrotask(fn){fn();}};sb.globalThis=sb;
+  vm.runInNewContext(`const G={root:null};const R11_SYSTEM={taskId:'VW-20260906-171618-74a029'};function clamp(v,a,b){return Math.max(a,Math.min(b,v));}function rectFromEdges(left,top,right,bottom){return {left,top,right,bottom,width:Math.max(0,right-left),height:Math.max(0,bottom-top)};}function rectIntersects(a,b){return !!a&&!!b&&a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top;}function viewportRectFor(){return {width:1253,height:553};}${defs}globalThis.R={R113_SYSTEM,R111_VIEWPORTS,frontlineResponsiveLayoutModel};`,sb);
+  const matrix=[[568,320],[640,360],[720,360],[740,360],[780,360],[812,375],[844,390],[852,393],[896,414],[915,412],[932,430],[960,432],[1024,480],[1080,480],[1180,540],[1253,553],[1280,720],[1366,768],[1920,1080]];
+  for(const [w,h] of matrix){const o=sb.R.frontlineResponsiveLayoutModel(w,h);assert(o.report.pass,`${w}x${h} R11.3 layout fail: ${JSON.stringify(o.report)}`);assert.strictEqual(o.revision,'P2.1R11.3-c08371');}
+  const critical=sb.R.frontlineResponsiveLayoutModel(1253,553);assert(critical.metrics.drive>=128,'1253x553 DRIVE is visibly larger');assert(critical.report.pass,'1253x553 accepted layout');
+  console.log('PASS R11.3 source/layout acceptance: 19/19 viewports, 50% HUD background rule, central-wallet path and score allowlist.');
+})();
+
+(function testR113RuntimeAccountingAndDestruction(){
+  const source=fs.readFileSync('js/frontline1944.js','utf8');
+  class V3{constructor(x=0,y=0,z=0){this.x=x;this.y=y;this.z=z;}set(x,y,z){this.x=x;this.y=y;this.z=z;return this;}copy(v){return this.set(v.x,v.y,v.z);}clone(){return new V3(this.x,this.y,this.z);}setScalar(v){this.x=this.y=this.z=v;return this;}project(){return this;}}
+  class Gr{constructor(){this.children=[];this.parent=null;this.userData={};this.position=new V3();this.rotation={x:0,y:0,z:0};this.scale={x:1,y:1,z:1,set(x,y,z){this.x=x;this.y=y;this.z=z;},setScalar(v){this.x=this.y=this.z=v;}};}add(o){this.children.push(o);o.parent=this;return this;}remove(o){this.children=this.children.filter(x=>x!==o);o.parent=null;return this;}updateMatrixWorld(){}}
+  const doc={readyState:'loading',addEventListener(){},querySelector(){return null;},getElementById(){return null;},documentElement:{style:{getPropertyValue(){return '0';}},dataset:{}},body:{dataset:{},appendChild(){}}};
+  const state={coins:1000,frontline1944:{claims:[]}},coinCalls=[];
+  const sb={console,document:doc,navigator:{maxTouchPoints:0},location:{hostname:'vocabworld.web.app',search:'',origin:'https://vocabworld.web.app'},Math,Date,URLSearchParams,innerWidth:1253,innerHeight:553,performance:{now:()=>1000},isAdmin:()=>true,state,addCoins(n){n=Number(n)||0;coinCalls.push(n);state.coins+=n;},saveState(){},authPushSave(){},setTimeout(){return 1;},clearTimeout(){},setInterval(){return 1;},clearInterval(){},requestAnimationFrame(){return 1;},cancelAnimationFrame(){},queueMicrotask(fn){fn();},localStorage:{getItem(){return null;},setItem(){}},addEventListener(){},removeEventListener(){},getComputedStyle(){return {position:'absolute',left:'0px',top:'0px',right:'auto',bottom:'auto',transform:'none',getPropertyValue(){return '0';}}}};
+  sb.window=sb;sb.THREE={Vector3:V3,Group:Gr};vm.createContext(sb);vm.runInContext(source,sb);const T=sb.Frontline1944._t,G=T.G;
+  G.player={playerId:'player:r113',damageStatistic:{match:0,lifetime:0}};G.damageEvents=[];G.combatScoredKills.clear();G.enemies=[];
+  const zombie={id:'z:r113',isZombie:true,dead:false,hp:0,maxHp:10};G.enemies=[zombie];
+  let e=T.recordDamage(G.player.playerId,zombie.id,12,'zombie_projectile');assert.strictEqual(e.targetType,'ZOMBIE');assert.strictEqual(e.scoreDelta,10);assert.strictEqual(G.player.damageStatistic.match,10);
+  e=T.recordDamage(G.player.playerId,zombie.id,12,'zombie_projectile');assert.strictEqual(e.scoreDelta,0);assert.strictEqual(e.duplicateKill,true);assert.strictEqual(G.player.damageStatistic.match,10);
+  const tank={id:'tank:r113',isZombie:false,dead:false,hp:63,maxHp:100};G.enemies=[tank];e=T.recordDamage(G.player.playerId,tank.id,37,'projectile');assert.strictEqual(e.targetType,'ENEMY_TANK');assert.strictEqual(e.scoreDelta,37);assert.strictEqual(G.player.damageStatistic.match,47);
+  tank.hp=-17;e=T.recordDamage(G.player.playerId,tank.id,80,'projectile');assert.strictEqual(e.scoreDelta,63);assert.strictEqual(G.player.damageStatistic.match,110);tank.dead=true;e=T.recordDamage(G.player.playerId,tank.id,80,'projectile');assert.strictEqual(e.scoreDelta,0);
+  e=T.recordDamage(G.player.playerId,'fortress:core',145,'fortress_core');assert.strictEqual(e.targetType,'OBJECTIVE');assert.strictEqual(e.scoreDelta,0);assert.strictEqual(G.player.damageStatistic.match,110);
+  G.terrain=new T.TerrainSystem();G.collision=new T.CollisionSystem(G.terrain);G.environmentDestructibles.clear();const rt={index:0,ownerId:'sector:0:',environmentSerial:0,groups:{}};const rec=T.r113RegisterEnvironmentAABB(rt,0,-5,1,1,{kind:'house',mode:'structure'});const beforeScore=G.player.damageStatistic.match,out=T.CollisionSystem.prototype.resolveTankSweep.call(G.collision,{x:0,z:0,heading:0},{x:0,z:-9,heading:0},.5,.5,'player');assert(rec.destroyed,'approved structure destroyed');assert.strictEqual(out.blocked,false,'destroyed structure removes stale collision and tank continues');assert.strictEqual(G.player.damageStatistic.match,beforeScore,'environment destruction scores zero');
+  G.collision.registerAABB(0,0,-12,2,2,{ownerId:'fortress-protected',kind:'fortress_wall',protected:true,destructible:false});const protectedHit=G.collision.resolveTankSweep({x:0,z:-9,heading:0},{x:0,z:-14,heading:0},.5,.5,'player');assert(protectedHit.blocked,'protected mission structure stays solid');
+  G.claimed.clear();G.localTestClaims.clear();G.wordRunId='W-R113';state.coins=1000;coinCalls.length=0;assert.strictEqual(T.claim('reward:1',25),true);assert.strictEqual(state.coins,1025);assert.deepStrictEqual(coinCalls,[25]);assert.strictEqual(T.claim('reward:1',25),false);assert.strictEqual(state.coins,1025);
+  sb.location.hostname='localhost';assert.strictEqual(T.claim('local:reward',50),true);assert.strictEqual(state.coins,1025);assert.deepStrictEqual(coinCalls,[25]);assert.strictEqual(T.claim('local:reward',50),false);
+  console.log('PASS R11.3 runtime accounting: zombie kill once, enemy-tank actual HP, zero environment/objective score, destructible collision removal, protected structures, shared-wallet reward + Local Test no-reward.');
+})();

@@ -46,7 +46,7 @@
 
 
 
-#vw-frontline1944{--fl44-css-runtime-id:"P2.1R11.2-c85cc6-CSS";--fl44-safe-top:env(safe-area-inset-top,0px);--fl44-safe-right:env(safe-area-inset-right,0px);--fl44-safe-bottom:env(safe-area-inset-bottom,0px);--fl44-safe-left:env(safe-area-inset-left,0px);position:fixed;inset:0;z-index:2147481800;background:#0c1511;color:#fff;font-family:Kanit,system-ui,sans-serif;overflow:hidden;touch-action:none!important;overscroll-behavior:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#vw-frontline1944{--fl44-css-runtime-id:"P2.1R11.3-c08371-CSS";--fl44-safe-top:env(safe-area-inset-top,0px);--fl44-safe-right:env(safe-area-inset-right,0px);--fl44-safe-bottom:env(safe-area-inset-bottom,0px);--fl44-safe-left:env(safe-area-inset-left,0px);position:fixed;inset:0;z-index:2147481800;background:#0c1511;color:#fff;font-family:Kanit,system-ui,sans-serif;overflow:hidden;touch-action:none!important;overscroll-behavior:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 
 
 
@@ -2028,3 +2028,29 @@ body:has(#vw-frontline1944) #btn-rail-frontline1944,body:has(#vw-frontline1944) 
 
 /* Phase 2.1 R11.2 c85cc6: approved central combat safe-zone HUD reorganization; detailed responsive layout is injected by CURRENT js/frontline1944.js. */
 #vw-frontline1944[data-task-id="VW-20260906-182626-c85cc6"]{--fl44-r112-central-combat-zone:1;}
+
+
+/* Phase 2.1 R11.3 c08371: destructible environment, combat-score separation, central wallet and approved 50% HUD backgrounds. */
+#vw-frontline1944[data-runtime-version="P2.1R11.3-c08371"]{--fl44-r113-approved:1;}
+#vw-frontline1944[data-task-id="VW-20260906-191254-c08371"]{--fl44-r113-task:1;}
+#vw-frontline1944[data-runtime-version="P2.1R11.3-c08371"] .fl44-state,
+#vw-frontline1944[data-runtime-version="P2.1R11.3-c08371"] .fl44-telemetry{display:none!important;border:0!important;background:none!important;box-shadow:none!important;height:0!important;min-height:0!important;padding:0!important;margin:0!important;overflow:hidden!important;}
+#vw-frontline1944[data-runtime-version="P2.1R11.3-c08371"] .fl44-panel{background:linear-gradient(155deg,rgba(43,52,54,.50),rgba(14,21,23,.50))!important;border-color:rgba(184,157,99,.82)!important;opacity:1!important;}
+#vw-frontline1944[data-runtime-version="P2.1R11.3-c08371"] .fl44-stick{width:clamp(100px,var(--fl44-drive-size),156px)!important;height:clamp(100px,var(--fl44-drive-size),156px)!important;background:radial-gradient(circle at 42% 34%,rgba(67,79,80,.52),rgba(18,27,29,.50) 63%,rgba(9,14,15,.50) 64%)!important;border-color:rgba(193,160,91,.90)!important;opacity:1!important;}
+#vw-frontline1944[data-runtime-version="P2.1R11.3-c08371"] .fl44-drive-labels text{font-size:12.5px!important;font-weight:900!important;letter-spacing:.015em!important;fill:#fff1c8!important;stroke:rgba(4,9,10,.96)!important;stroke-width:2.5px!important;filter:drop-shadow(0 1px 1px rgba(0,0,0,.9));}
+#vw-frontline1944[data-runtime-version="P2.1R11.3-c08371"] .fl44-special-toggle{background:linear-gradient(155deg,rgba(48,59,63,.50),rgba(17,26,29,.50))!important;border-color:rgba(183,163,107,.82)!important;opacity:1!important;}
+#vw-frontline1944[data-runtime-version="P2.1R11.3-c08371"] .fl44-special-toggle.is-on{background:linear-gradient(155deg,rgba(45,111,66,.62),rgba(20,62,38,.62))!important;}
+#vw-frontline1944[data-runtime-version="P2.1R11.3-c08371"] .fl44-target-lock.is-locked{background:linear-gradient(155deg,rgba(126,87,28,.66),rgba(70,44,16,.66))!important;}
+#vw-frontline1944[data-runtime-version="P2.1R11.3-c08371"] .fl44-aim-stick{background:radial-gradient(circle at 42% 34%,rgba(59,70,73,.50),rgba(15,23,25,.50) 68%)!important;opacity:1!important;}
+#vw-frontline1944[data-runtime-version="P2.1R11.3-c08371"] .fl44-fire{background:radial-gradient(circle at 40% 32%,rgba(191,126,53,.66),rgba(79,48,27,.60) 60%,rgba(217,156,67,.64) 64%,rgba(52,33,21,.60) 69%)!important;opacity:1!important;}
+#vw-frontline1944[data-runtime-version="P2.1R11.3-c08371"] .fl44-mg,
+#vw-frontline1944[data-runtime-version="P2.1R11.3-c08371"] .fl44-exit,
+#vw-frontline1944[data-runtime-version="P2.1R11.3-c08371"] .fl44-garage-toggle,
+#vw-frontline1944[data-runtime-version="P2.1R11.3-c08371"] .fl44-objective,
+#vw-frontline1944[data-runtime-version="P2.1R11.3-c08371"] .fl44-lock-status,
+#vw-frontline1944[data-runtime-version="P2.1R11.3-c08371"] .fl44-boss{background:linear-gradient(155deg,rgba(39,48,51,.50),rgba(14,21,23,.50))!important;opacity:1!important;}
+#vw-frontline1944[data-runtime-version="P2.1R11.3-c08371"] .fl44-panel *,
+#vw-frontline1944[data-runtime-version="P2.1R11.3-c08371"] .fl44-special-toggle *,
+#vw-frontline1944[data-runtime-version="P2.1R11.3-c08371"] .fl44-fire *,
+#vw-frontline1944[data-runtime-version="P2.1R11.3-c08371"] .fl44-mg *{opacity:1!important;}
+@media(max-height:430px){#vw-frontline1944[data-runtime-version="P2.1R11.3-c08371"] .fl44-drive-labels text{font-size:11.6px!important;}}

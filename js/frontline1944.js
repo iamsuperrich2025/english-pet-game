@@ -12123,7 +12123,7 @@ const CFG={
 
 
 
-  runtimeVersion:'P2.1R11.2-c85cc6',
+  runtimeVersion:'P2.1R11.3-c08371',
 
 
 
@@ -38308,7 +38308,7 @@ const CFG={
 
 
 
-  damageEventCap:80
+  damageEventCap:80,environmentImpactMinDistance:.025
 
 
 
@@ -66363,7 +66363,7 @@ const G={
 
 
 
-  fortressSerial:0,objectiveSectorIndex:null,claimed:new Set(),audit:null,damageEvents:[],
+  fortressSerial:0,objectiveSectorIndex:null,claimed:new Set(),localTestClaims:new Set(),combatScoredKills:new Set(),audit:null,damageEvents:[],environmentDestructibles:new Map(),environmentDestroySerial:0,
 
 
 
@@ -122798,7 +122798,7 @@ function persist(){
 
 
 
-function claim(id,coins){if(G.claimed.has(id))return false;G.claimed.add(id);if(typeof addCoins==='function')addCoins(coins);persist();return true;}
+function claim(id,coins){const progress=!G.progressHydrated?ensureProgress():(window.state&&state.frontline1944);id=String(id||'');coins=Math.max(0,Math.floor(Number(coins)||0));const localTest=localTargetLockTestRangeEnabled()||!!(G.fortress&&G.fortress.testRange),bucket=localTest?G.localTestClaims:G.claimed,key=localTest?(String(G.wordRunId||'local')+':'+id):id;if(bucket.has(key))return false;bucket.add(key);if(localTest)return true;const gateway=mainGameCoinGateway();if(!gateway.state||!gateway.addCoins){bucket.delete(key);showToast('MAIN COINS ยังไม่พร้อม','รางวัลจะยังไม่ถูก claim จนกว่าระบบเหรียญกลางจะพร้อม');return false;}const previousClaims=progress&&Array.isArray(progress.claims)?progress.claims.slice():null;if(progress)progress.claims=Array.from(G.claimed).slice(-160);try{gateway.addCoins(coins);persist();syncMainCoinReadouts();return true;}catch(error){bucket.delete(key);if(progress&&previousClaims)progress.claims=previousClaims;return false;}}
 
 
 
@@ -251974,6 +251974,21 @@ class CollisionSystem{
 
 
 
+// Phase 2.1 R11.3 — lightweight destructible-environment extension. The accepted CollisionSystem/TankRuntime declarations stay byte-identical.
+const R113_ENV=Object.freeze({id:'P2.1R11.3-c08371',destructibleKinds:Object.freeze(['tree','house','ruin','tent','phase21_fence']),protectedKinds:Object.freeze(['fortress_wall','fortress_core','bunker','bridge_rail','r2-bridge-parapet'])});
+const _r113RegisterCircle=CollisionSystem.prototype.registerCircle,_r113RegisterAABB=CollisionSystem.prototype.registerAABB,_r113ResolveTankSweep=CollisionSystem.prototype.resolveTankSweep;
+function r113AttachColliderMeta(system,sectorIndex,meta){const list=system.bySector.get(sectorIndex)||[],c=list[list.length-1];if(c&&meta){c.destructible=meta.destructible===true;c.environmentId=String(meta.environmentId||'');c.protected=meta.protected===true;c.durability=Math.max(0,Number(meta.durability)||0);}return c||null;}
+CollisionSystem.prototype.registerCircle=function(sectorIndex,x,z,r,meta={}){const out=_r113RegisterCircle.call(this,sectorIndex,x,z,r,meta);r113AttachColliderMeta(this,sectorIndex,meta);return out;};
+CollisionSystem.prototype.registerAABB=function(sectorIndex,x,z,w,h,meta={}){const out=_r113RegisterAABB.call(this,sectorIndex,x,z,w,h,meta);r113AttachColliderMeta(this,sectorIndex,meta);return out;};
+function r113EnvironmentOwnerId(rt,kind){rt.environmentSerial=(Number(rt.environmentSerial)||0)+1;return String(rt.ownerId||'sector:')+'env:'+String(kind||'prop')+':'+rt.environmentSerial;}
+function r113RegisterEnvironment(rt,spec={}){if(!rt)return null;const id=String(spec.id||r113EnvironmentOwnerId(rt,spec.kind)),rec={id,rt,sectorIndex:rt.index,kind:String(spec.kind||'environment'),mode:String(spec.mode||'structure'),x:Number(spec.x)||0,z:Number(spec.z)||0,node:spec.node||null,nodes:Array.isArray(spec.nodes)?spec.nodes.filter(Boolean):[],destroyed:false,scoreCategory:'ENVIRONMENT'};G.environmentDestructibles.set(id,rec);return rec;}
+function r113RegisterEnvironmentCircle(rt,x,z,r,spec={}){const rec=r113RegisterEnvironment(rt,{...spec,x,z});G.collision.registerCircle(rt.index,x,z,r,{ownerId:rec.id,kind:rec.kind,tag:'r113-destructible',destructible:true,environmentId:rec.id});return rec;}
+function r113RegisterEnvironmentAABB(rt,x,z,w,h,spec={}){const rec=r113RegisterEnvironment(rt,{...spec,x,z});G.collision.registerAABB(rt.index,x,z,w,h,{ownerId:rec.id,kind:rec.kind,tag:'r113-destructible',destructible:true,environmentId:rec.id});return rec;}
+function r113EnvironmentImpactVector(from,to){const dx=(Number(to&&to.x)||0)-(Number(from&&from.x)||0),dz=(Number(to&&to.z)||0)-(Number(from&&from.z)||0),len=Math.hypot(dx,dz)||1;return {x:dx/len,z:dz/len,distance:Math.hypot(dx,dz)};}
+function r113DropVisual(rec,impact){if(!rec)return;const nodes=[rec.node,...rec.nodes].filter(Boolean),ix=Number(impact&&impact.x)||0,iz=Number(impact&&impact.z)||-1;if(rec.mode==='tree'){for(const n of nodes){if(!n.rotation)n.rotation={x:0,y:0,z:0};if(Math.abs(ix)>Math.abs(iz))n.rotation.z=(-Math.sign(ix||1))*1.38;else n.rotation.x=(Math.sign(iz||-1))*1.38;if(n.position&&Number.isFinite(Number(n.position.y)))n.position.y=Math.min(Number(n.position.y),.45);}}else{for(const n of nodes){if(n.scale&&Number.isFinite(Number(n.scale.y)))n.scale.y=Math.min(Number(n.scale.y),.22);if(n.position&&Number.isFinite(Number(n.position.y)))n.position.y-=.18;if(n.rotation)n.rotation.z+=(ix>=0?1:-1)*.08;}}try{if(G.resources&&rec.rt&&rec.rt.groups&&rec.rt.groups[LAYER.GAMEPLAY_PROPS]){for(let i=0;i<3;i++){const b=sharedMesh('box',i?0x6d6250:0x82725a,.55+i*.18,.22,.7-i*.12,'standard');b.position.set(rec.x+(i-1)*.7,.10,rec.z+(i%2?.45:-.35));addToSector(rec.rt,LAYER.GAMEPLAY_PROPS,b);}}}catch(_){}try{if(G.pools&&G.player)burst({x:rec.x,y:.45,z:rec.z},0xb99b72,G.lowFx?3:7);}catch(_){} }
+function r113DestroyEnvironmentByCollider(collider,from,to){if(!collider||collider.destructible!==true||collider.protected===true)return false;const rec=G.environmentDestructibles.get(String(collider.environmentId||collider.ownerId||''));if(!rec||rec.destroyed)return false;const impact=r113EnvironmentImpactVector(from,to);if(impact.distance<CFG.environmentImpactMinDistance)return false;rec.destroyed=true;rec.destroyedAt=Date.now();rec.impact=impact;if(G.collision)G.collision.removeOwner(rec.id);r113DropVisual(rec,impact);return true;}
+function r113DisposeEnvironmentPrefix(prefix){prefix=String(prefix||'');for(const [id,rec] of [...G.environmentDestructibles])if(id.startsWith(prefix)||String(rec&&rec.rt&&rec.rt.ownerId||'').startsWith(prefix))G.environmentDestructibles.delete(id);}
+CollisionSystem.prototype.resolveTankSweep=function(from,to,halfWidth=CFG.tankFootprintHalfWidth,halfLength=CFG.tankFootprintHalfLength,ignoreOwner=''){let out=_r113ResolveTankSweep.call(this,from,to,halfWidth,halfLength,ignoreOwner);if(out&&out.blocked&&out.contact&&out.contact.type==='solid'&&r113DestroyEnvironmentByCollider(out.contact.collider,from,to))out=_r113ResolveTankSweep.call(this,from,to,halfWidth,halfLength,ignoreOwner);return out;};
 function visualIdFor(logicalIndex){return hash32((logicalIndex|0)*1103515245+12345)%SECTOR_TEMPLATES.length;}
 
 
@@ -269474,7 +269489,7 @@ function addTree(rt,x,z,s=1){
 
 
 
-  G.collision.registerCircle(rt.index,x,z,.72*s,{ownerId:rt.ownerId,kind:'tree_trunk',tag:'tree'});
+  const env=r113RegisterEnvironmentCircle(rt,x,z,.72*s,{kind:'tree',mode:'tree',nodes:[trunk]});
 
 
 
@@ -271974,7 +271989,7 @@ function addTree(rt,x,z,s=1){
 
 
 
-  canopy.position.set(x,4.15*s,z);addToSector(rt,LAYER.FOREGROUND_OCCLUDERS,canopy);registerOccluder(rt,canopy,z,10);return {trunk,canopy};
+  canopy.position.set(x,4.15*s,z);addToSector(rt,LAYER.FOREGROUND_OCCLUDERS,canopy);registerOccluder(rt,canopy,z,10);if(env)env.nodes.push(canopy);return {trunk,canopy};
 
 
 
@@ -275724,7 +275739,7 @@ function addHouse(rt,x,z,ruined=false){
 
 
 
-  g.position.set(x,0,z);addToSector(rt,LAYER.GAMEPLAY_PROPS,g);G.collision.registerAABB(rt.index,x,z,6.4,5.5,{ownerId:rt.ownerId,kind:ruined?'ruin':'house'});return g;
+  g.position.set(x,0,z);addToSector(rt,LAYER.GAMEPLAY_PROPS,g);r113RegisterEnvironmentAABB(rt,x,z,6.4,5.5,{kind:ruined?'ruin':'house',mode:'structure',node:g});return g;
 
 
 
@@ -277599,7 +277614,7 @@ function addBunker(rt,x,z){const g=new THREE.Group(),base=sharedMesh('box',0x5a5
 
 
 
-function addCampTent(rt,x,z){const g=new THREE.Group(),b=sharedMesh('cone4',0x6c6b51,3.4,3,4.2);b.rotation.y=Math.PI/4;b.position.y=1.5;g.add(b);g.position.set(x,0,z);addToSector(rt,LAYER.GAMEPLAY_PROPS,g);G.collision.registerAABB(rt.index,x,z,5.5,6.5,{ownerId:rt.ownerId,kind:'tent'});}
+function addCampTent(rt,x,z){const g=new THREE.Group(),b=sharedMesh('cone4',0x6c6b51,3.4,3,4.2);b.rotation.y=Math.PI/4;b.position.y=1.5;g.add(b);g.position.set(x,0,z);addToSector(rt,LAYER.GAMEPLAY_PROPS,g);r113RegisterEnvironmentAABB(rt,x,z,5.5,6.5,{kind:'tent',mode:'structure',node:g});}
 
 
 
@@ -302606,20 +302621,21 @@ const R11_FACTION=Object.freeze({id:'ash-spear',label:'ASH SPEAR',charcoal:0x252
 const R111_SYSTEM=Object.freeze({id:'P2.1R11.1-d86056',taskId:'VW-20260906-174606-d86056',baselineTaskId:R11_SYSTEM.taskId,responsiveHud:true});
 
 const R112_SYSTEM=Object.freeze({id:'P2.1R11.2-c85cc6',taskId:'VW-20260906-182626-c85cc6',baselineTaskId:R111_SYSTEM.taskId,responsiveHud:true,centralCombatSafeZone:true});
+const R113_SYSTEM=Object.freeze({id:'P2.1R11.3-c08371',taskId:'VW-20260906-191254-c08371',baselineTaskId:R112_SYSTEM.taskId,responsiveHud:true,destructibleEnvironment:true,centralWallet:true,combatDamageAccounting:true});
 
 const R111_VIEWPORTS=Object.freeze([[568,320],[640,360],[720,360],[740,360],[780,360],[812,375],[844,390],[852,393],[896,414],[915,412],[932,430],[960,432],[1024,480],[1080,480],[1180,540],[1253,553],[1280,720],[1366,768],[1920,1080]]);
 
-const R111_LAYOUT_TIERS=Object.freeze({extra:{id:'extra-compact',maxH:360,uiScale:.74,controlScale:.76,topH:50,drive:86,aim:76,fire:72,specialH:34,specialW:64,missionW:168,missionH:46,bossW:238,bossH:25,exitW:46,exitH:48,gap:5,driveBottom:48,aimBottom:10,aimRight:58,fireBottom:92},compact:{id:'compact',maxH:430,uiScale:.82,controlScale:.84,topH:58,drive:98,aim:84,fire:78,specialH:40,specialW:70,missionW:190,missionH:50,bossW:270,bossH:27,exitW:48,exitH:50,gap:6,driveBottom:54,aimBottom:12,aimRight:62,fireBottom:106},standard:{id:'standard-phone',maxH:560,uiScale:.90,controlScale:.91,topH:66,drive:112,aim:96,fire:88,specialH:44,specialW:76,missionW:230,missionH:55,bossW:320,bossH:30,exitW:52,exitH:54,gap:7,driveBottom:70,aimBottom:18,aimRight:68,fireBottom:124},large:{id:'large-phone',maxH:700,uiScale:.96,controlScale:.96,topH:72,drive:128,aim:108,fire:100,specialH:48,specialW:84,missionW:285,missionH:62,bossW:380,bossH:34,exitW:56,exitH:58,gap:8,driveBottom:88,aimBottom:28,aimRight:76,fireBottom:150},desktop:{id:'tablet-desktop',maxH:1e9,uiScale:1,controlScale:1,topH:76,drive:142,aim:122,fire:112,specialH:53,specialW:96,missionW:330,missionH:70,bossW:430,bossH:38,exitW:60,exitH:62,gap:10,driveBottom:120,aimBottom:42,aimRight:88,fireBottom:175}});
+const R111_LAYOUT_TIERS=Object.freeze({extra:{id:'extra-compact',maxH:360,uiScale:.74,controlScale:.76,topH:50,drive:100,aim:76,fire:72,specialH:34,specialW:64,missionW:168,missionH:46,bossW:238,bossH:25,exitW:46,exitH:48,gap:5,driveBottom:48,aimBottom:10,aimRight:58,fireBottom:92},compact:{id:'compact',maxH:430,uiScale:.82,controlScale:.84,topH:58,drive:112,aim:84,fire:78,specialH:40,specialW:70,missionW:190,missionH:50,bossW:270,bossH:27,exitW:48,exitH:50,gap:6,driveBottom:54,aimBottom:12,aimRight:62,fireBottom:106},standard:{id:'standard-phone',maxH:560,uiScale:.90,controlScale:.91,topH:66,drive:128,aim:96,fire:88,specialH:44,specialW:76,missionW:230,missionH:55,bossW:320,bossH:30,exitW:52,exitH:54,gap:7,driveBottom:70,aimBottom:18,aimRight:68,fireBottom:124},large:{id:'large-phone',maxH:700,uiScale:.96,controlScale:.96,topH:72,drive:144,aim:108,fire:100,specialH:48,specialW:84,missionW:285,missionH:62,bossW:380,bossH:34,exitW:56,exitH:58,gap:8,driveBottom:88,aimBottom:28,aimRight:76,fireBottom:150},desktop:{id:'tablet-desktop',maxH:1e9,uiScale:1,controlScale:1,topH:76,drive:156,aim:122,fire:112,specialH:53,specialW:96,missionW:330,missionH:70,bossW:430,bossH:38,exitW:60,exitH:62,gap:10,driveBottom:120,aimBottom:42,aimRight:88,fireBottom:175}});
 
 function frontlineResponsiveTier(width,height){const w=Math.max(1,Number(width)||1),h=Math.max(1,Number(height)||1),a=w/h;let t=h<=360?R111_LAYOUT_TIERS.extra:h<=430?R111_LAYOUT_TIERS.compact:h<=560?R111_LAYOUT_TIERS.standard:h<=700?R111_LAYOUT_TIERS.large:R111_LAYOUT_TIERS.desktop;if(a<1.5&&t!==R111_LAYOUT_TIERS.extra)t=h<=430?R111_LAYOUT_TIERS.extra:h<=560?R111_LAYOUT_TIERS.compact:h<=700?R111_LAYOUT_TIERS.standard:R111_LAYOUT_TIERS.large;return t;}
 
 function frontlineResponsiveMetrics(width,height){const w=Math.max(1,Number(width)||1),h=Math.max(1,Number(height)||1),tier=frontlineResponsiveTier(w,h),bossRatio=tier.id==='extra-compact'?.35:tier.id==='compact'?.38:.42,autoW=clamp(tier.specialW*1.25,82,126);return {...tier,width:w,height:h,aspect:w/h,topSide:clamp(w*.011,5,14),topGap:clamp(Math.min(w,h)*.012,4,tier.gap),playerW:clamp(w*.235,tier.id==='extra-compact'?132:145,tier.id==='tablet-desktop'?300:238),wordW:clamp(w*.225,tier.id==='extra-compact'?150:165,tier.id==='tablet-desktop'?340:270),coinsW:clamp(w*.19,tier.id==='extra-compact'?116:126,tier.id==='tablet-desktop'?300:225),bossW:Math.min(tier.bossW,w*bossRatio),bossH:Math.min(tier.bossH,Math.max(22,tier.specialH*.72)),readyW:clamp(w*.235,tier.id==='extra-compact'?132:145,tier.id==='tablet-desktop'?300:238),readyH:clamp(tier.specialH*1.05,32,54),autoW,autoH:tier.specialH};}
-function applyFrontlineResponsiveTier(root=G.root,width=(typeof innerWidth!=='undefined'?innerWidth:0),height=(typeof innerHeight!=='undefined'?innerHeight:0)){if(!root)return frontlineResponsiveMetrics(width,height);const v=viewportRectFor(root),m=frontlineResponsiveMetrics(v.width||width,v.height||height);if(root.dataset){root.dataset.layoutTier=m.id;root.dataset.responsiveRevision=R112_SYSTEM.id;}if(root.style&&root.style.setProperty){const vars={'--fl44-ui-scale':m.uiScale,'--fl44-control-scale':m.controlScale,'--fl44-hud-gap':m.topGap+'px','--fl44-top-height':m.topH+'px','--fl44-top-side':m.topSide+'px','--fl44-player-width':m.playerW+'px','--fl44-word-width':m.wordW+'px','--fl44-coins-width':m.coinsW+'px','--fl44-drive-size':m.drive+'px','--fl44-aim-size':m.aim+'px','--fl44-fire-size':m.fire+'px','--fl44-special-height':m.specialH+'px','--fl44-special-width':m.specialW+'px','--fl44-mission-width':m.missionW+'px','--fl44-mission-height':m.missionH+'px','--fl44-boss-width':m.bossW+'px','--fl44-boss-height':m.bossH+'px','--fl44-ready-width':m.readyW+'px','--fl44-ready-height':m.readyH+'px','--fl44-auto-width':m.autoW+'px','--fl44-auto-height':m.autoH+'px','--fl44-exit-width':m.exitW+'px','--fl44-exit-height':m.exitH+'px','--fl44-drive-bottom':m.driveBottom+'px','--fl44-aim-bottom':m.aimBottom+'px','--fl44-aim-right':m.aimRight+'px','--fl44-fire-bottom':m.fireBottom+'px'};for(const [k,vv] of Object.entries(vars))root.style.setProperty(k,String(vv));}return m;}
+function applyFrontlineResponsiveTier(root=G.root,width=(typeof innerWidth!=='undefined'?innerWidth:0),height=(typeof innerHeight!=='undefined'?innerHeight:0)){if(!root)return frontlineResponsiveMetrics(width,height);const v=viewportRectFor(root),m=frontlineResponsiveMetrics(v.width||width,v.height||height),stamp=()=>{if(root&&root.dataset){root.dataset.layoutTier=m.id;root.dataset.responsiveRevision=R113_SYSTEM.id;root.dataset.patchTask=R113_SYSTEM.id;root.dataset.taskId=R113_SYSTEM.taskId;root.dataset.baselineTask=R112_SYSTEM.id;}};stamp();if(root.style&&root.style.setProperty){const vars={'--fl44-ui-scale':m.uiScale,'--fl44-control-scale':m.controlScale,'--fl44-hud-gap':m.topGap+'px','--fl44-top-height':m.topH+'px','--fl44-top-side':m.topSide+'px','--fl44-player-width':m.playerW+'px','--fl44-word-width':m.wordW+'px','--fl44-coins-width':m.coinsW+'px','--fl44-drive-size':m.drive+'px','--fl44-aim-size':m.aim+'px','--fl44-fire-size':m.fire+'px','--fl44-special-height':m.specialH+'px','--fl44-special-width':m.specialW+'px','--fl44-mission-width':m.missionW+'px','--fl44-mission-height':m.missionH+'px','--fl44-boss-width':m.bossW+'px','--fl44-boss-height':m.bossH+'px','--fl44-ready-width':m.readyW+'px','--fl44-ready-height':m.readyH+'px','--fl44-auto-width':m.autoW+'px','--fl44-auto-height':m.autoH+'px','--fl44-exit-width':m.exitW+'px','--fl44-exit-height':m.exitH+'px','--fl44-drive-bottom':m.driveBottom+'px','--fl44-aim-bottom':m.aimBottom+'px','--fl44-aim-right':m.aimRight+'px','--fl44-fire-bottom':m.fireBottom+'px'};for(const [k,vv] of Object.entries(vars))root.style.setProperty(k,String(vv));}if(typeof queueMicrotask==='function')queueMicrotask(stamp);else if(typeof setTimeout==='function')setTimeout(stamp,0);return m;}
 function r111ModelRect(left,top,width,height){return rectFromEdges(left,top,left+width,top+height);}
 
 function frontlineCombatSafeRect(safe,topFloor=null,bottomReserve=0){if(!safe)return null;const width=Math.max(1,safe.width*.38),left=(safe.left+safe.right-width)/2,baseTop=safe.top+safe.height*.30,top=Math.max(baseTop,Number.isFinite(Number(topFloor))?Number(topFloor):baseTop),reserve=Math.max(safe.height*.12,Math.max(0,Number(bottomReserve)||0)),bottom=Math.max(top+1,safe.bottom-reserve);return rectFromEdges(left,top,left+width,Math.min(safe.bottom,bottom));}
 
-function frontlineResponsiveLayoutModel(width,height,safeInsets={}){const m=frontlineResponsiveMetrics(width,height),ins={top:Math.max(0,Number(safeInsets.top)||0),right:Math.max(0,Number(safeInsets.right)||0),bottom:Math.max(0,Number(safeInsets.bottom)||0),left:Math.max(0,Number(safeInsets.left)||0)},margin=clamp(Math.min(m.width,m.height)*.018,6,16),safe=rectFromEdges(ins.left+margin,ins.top+margin,m.width-ins.right-margin,m.height-ins.bottom-margin),g=m.topGap,topY=safe.top,topH=Math.min(m.topH,Math.max(44,safe.height*.22)),playerW=Math.min(m.playerW,safe.width*.29),wordW=Math.min(m.wordW,safe.width*.31),coinsW=Math.min(m.coinsW,safe.width*.25),rects={};rects.player=r111ModelRect(safe.left,topY,playerW,topH);rects.word=r111ModelRect((safe.left+safe.right-wordW)/2,topY,wordW,topH);rects.coins=r111ModelRect(safe.right-coinsW,topY,coinsW,topH);const readyW=Math.min(m.readyW,safe.width*.31),readyH=Math.min(m.readyH,Math.max(32,safe.height*.16));rects.ready=r111ModelRect(safe.left,rects.player.bottom+g,readyW,readyH);const missionW=Math.min(m.missionW,safe.width*.34),missionH=Math.min(m.missionH,Math.max(38,safe.height*.15));rects.mission=r111ModelRect(safe.right-missionW,rects.coins.bottom+g,missionW,missionH);const bossW=Math.min(m.bossW,safe.width*(m.id==='extra-compact'?.35:m.id==='compact'?.38:.42)),bossH=m.bossH;rects.boss=r111ModelRect((safe.left+safe.right-bossW)/2,rects.word.bottom+g,bossW,bossH);const autoW=Math.min(m.autoW,safe.width*.24),autoH=m.autoH,leftX=safe.left+Math.max(2,g);rects.autoForward=r111ModelRect(leftX,rects.ready.bottom+g,autoW,autoH);const driveX=Math.max(safe.left,leftX+(autoW-m.drive)/2);rects.drive=r111ModelRect(driveX,rects.autoForward.bottom+g,m.drive,m.drive);rects.autoReverse=r111ModelRect(leftX,rects.drive.bottom+g,autoW,autoH);if(rects.autoReverse.bottom>safe.bottom){const dy=rects.autoReverse.bottom-safe.bottom;for(const k of ['autoForward','drive','autoReverse'])rects[k]=r111ModelRect(rects[k].left,rects[k].top-dy,rects[k].width,rects[k].height);}rects.exit=r111ModelRect(safe.right-m.exitW,safe.bottom-m.exitH,m.exitW,m.exitH);rects.aim=r111ModelRect(rects.exit.left-g-m.aim,safe.bottom-m.aim,m.aim,m.aim);const mgW=Math.max(46,Math.round(m.specialW*.75)),mgH=Math.max(m.specialH,Math.round(m.specialH*1.3));rects.mg=r111ModelRect(rects.aim.left-g-mgW,safe.bottom-mgH,mgW,mgH);rects.fire=r111ModelRect(rects.mg.left-g-m.fire,safe.bottom-m.fire,m.fire,m.fire);const lockW=Math.min(m.specialW+16,112),lockH=Math.min(m.specialH+8,60);rects.targetLock=r111ModelRect(safe.right-lockW,rects.aim.top-g-lockH,lockW,lockH);const scopeW=Math.min(m.specialW+24,125),scopeH=m.specialH,scopeTop=Math.max(rects.mission.bottom+g,rects.targetLock.top-g-scopeH);rects.scope=r111ModelRect(safe.right-scopeW,scopeTop,scopeW,scopeH);const combatSafe=frontlineCombatSafeRect(safe,rects.boss.bottom+g,rects.aim.height*.55);return {revision:R112_SYSTEM.id,tier:m.id,metrics:m,safe,combatSafe,rects,report:validateFrontlineLayoutRects(rects,safe,combatSafe)};}
+function frontlineResponsiveLayoutModel(width,height,safeInsets={}){const m=frontlineResponsiveMetrics(width,height),ins={top:Math.max(0,Number(safeInsets.top)||0),right:Math.max(0,Number(safeInsets.right)||0),bottom:Math.max(0,Number(safeInsets.bottom)||0),left:Math.max(0,Number(safeInsets.left)||0)},margin=clamp(Math.min(m.width,m.height)*.018,6,16),safe=rectFromEdges(ins.left+margin,ins.top+margin,m.width-ins.right-margin,m.height-ins.bottom-margin),g=m.topGap,topY=safe.top,topH=Math.min(m.topH,Math.max(44,safe.height*.22)),playerW=Math.min(m.playerW,safe.width*.29),wordW=Math.min(m.wordW,safe.width*.31),coinsW=Math.min(m.coinsW,safe.width*.25),rects={};rects.player=r111ModelRect(safe.left,topY,playerW,topH);rects.word=r111ModelRect((safe.left+safe.right-wordW)/2,topY,wordW,topH);rects.coins=r111ModelRect(safe.right-coinsW,topY,coinsW,topH);const readyW=Math.min(m.readyW,safe.width*.31),readyH=Math.min(m.readyH,Math.max(32,safe.height*.16));rects.ready=r111ModelRect(safe.left,rects.player.bottom+g,readyW,readyH);const missionW=Math.min(m.missionW,safe.width*.34),missionH=Math.min(m.missionH,Math.max(38,safe.height*.15));rects.mission=r111ModelRect(safe.right-missionW,rects.coins.bottom+g,missionW,missionH);const bossW=Math.min(m.bossW,safe.width*(m.id==='extra-compact'?.35:m.id==='compact'?.38:.42)),bossH=m.bossH;rects.boss=r111ModelRect((safe.left+safe.right-bossW)/2,rects.word.bottom+g,bossW,bossH);const autoW=Math.min(m.autoW,safe.width*.24),autoH=m.autoH,leftX=safe.left+Math.max(2,g);rects.autoForward=r111ModelRect(leftX,rects.ready.bottom+g,autoW,autoH);const driveX=Math.max(safe.left,leftX+(autoW-m.drive)/2);rects.drive=r111ModelRect(driveX,rects.autoForward.bottom+g,m.drive,m.drive);rects.autoReverse=r111ModelRect(leftX,rects.drive.bottom+g,autoW,autoH);if(rects.autoReverse.bottom>safe.bottom){const dy=rects.autoReverse.bottom-safe.bottom;for(const k of ['autoForward','drive','autoReverse'])rects[k]=r111ModelRect(rects[k].left,rects[k].top-dy,rects[k].width,rects[k].height);}rects.exit=r111ModelRect(safe.right-m.exitW,safe.bottom-m.exitH,m.exitW,m.exitH);rects.aim=r111ModelRect(rects.exit.left-g-m.aim,safe.bottom-m.aim,m.aim,m.aim);const mgW=Math.max(46,Math.round(m.specialW*.75)),mgH=Math.max(m.specialH,Math.round(m.specialH*1.3));rects.mg=r111ModelRect(rects.aim.left-g-mgW,safe.bottom-mgH,mgW,mgH);rects.fire=r111ModelRect(rects.mg.left-g-m.fire,safe.bottom-m.fire,m.fire,m.fire);const lockW=Math.min(m.specialW+16,112),lockH=Math.min(m.specialH+8,60);rects.targetLock=r111ModelRect(safe.right-lockW,rects.aim.top-g-lockH,lockW,lockH);const scopeW=Math.min(m.specialW+24,125),scopeH=m.specialH,scopeTop=Math.max(rects.mission.bottom+g,rects.targetLock.top-g-scopeH);rects.scope=r111ModelRect(safe.right-scopeW,scopeTop,scopeW,scopeH);const combatSafe=frontlineCombatSafeRect(safe,rects.boss.bottom+g,rects.aim.height*.55);return {revision:R113_SYSTEM.id,tier:m.id,metrics:m,safe,combatSafe,rects,report:validateFrontlineLayoutRects(rects,safe,combatSafe)};}
 function rectInsideSafe(rect,safe){return !!rect&&!!safe&&rect.left>=safe.left-.5&&rect.top>=safe.top-.5&&rect.right<=safe.right+.5&&rect.bottom<=safe.bottom+.5;}
 
 function validateFrontlineLayoutRects(rects,safe,combatSafe=null){const pairs=[['player','ready'],['player','autoForward'],['player','drive'],['ready','autoForward'],['ready','drive'],['autoForward','drive'],['drive','autoReverse'],['word','boss'],['word','player'],['word','coins'],['boss','player'],['boss','coins'],['boss','mission'],['coins','mission'],['mission','scope'],['scope','targetLock'],['mission','mg'],['mission','fire'],['fire','mg'],['fire','aim'],['mg','aim'],['targetLock','aim'],['aim','exit']],overlaps=[];for(const [a,b] of pairs)if(rects[a]&&rects[b]&&rectIntersects(rects[a],rects[b]))overlaps.push(a+'×'+b);const outOfBounds=[];for(const [name,r] of Object.entries(rects||{}))if(r&&!rectInsideSafe(r,safe))outOfBounds.push(name);const combatIntrusions=[];if(combatSafe)for(const name of ['ready','boss','mission','scope','targetLock','state'])if(rects[name]&&rectIntersects(rects[name],combatSafe))combatIntrusions.push(name);return {pass:overlaps.length===0&&outOfBounds.length===0&&combatIntrusions.length===0,overlaps,outOfBounds,combatIntrusions,combatSafe};}
@@ -306250,810 +306266,21 @@ class Phase21R2SectorArt extends Phase21SectorArt{
 
 
   tree(x,z,r=4.6,height=8.6){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     if(!this.clearForProp(x,z,1.0))return false;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    this.box(x,0,z,.63,height*.78,.63,'wood',0xc0b390);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    G.collision.registerCircle(this.rt.index,x,z,.65,{ownerId:this.rt.ownerId+'p21',kind:'tree_trunk',tag:'phase21'});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    const pivot=new THREE.Group(),trunk=sharedMesh('box',0x63513b,.63,height*.78,.63,'standard');pivot.name='FL44-R113-tree';pivot.position.set(x,0,z);trunk.position.set(0,height*.39,0);pivot.add(trunk);
     this.footprints.push({x,z,r:1,kind:'tree_trunk'});this.shadow(x+2,z-1.1,r*.92,r*.68);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     const b={p:[],uv:[],c:[]},tint=[0xffffff,0xc5cf9d,0xe4d7ae,0xbccc97][this.trees%4];
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // Upright leaf clusters, not the old horizontal canopy pancakes. Cutout foliage writes depth.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     const clusters=[[0,0,0,1],[-r*.40,-.70,r*.15,.72],[r*.39,-.45,-r*.10,.75],[0,r*.50,-r*.1,.74]];
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    for(const [dx,dy,dz,size] of clusters)for(let i=0;i<3;i++){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      const a=i*Math.PI/3+this.trees*.37,rx=Math.cos(a)*r*size,rz=Math.sin(a)*r*size,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        cx=x+dx,cy=height+dy,cz=z+dz,hh=r*size;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      const p=[[cx-rx,cy-hh,cz-rz],[cx+rx,cy-hh,cz+rz],[cx+rx,cy+hh,cz+rz],[cx-rx,cy+hh,cz-rz]];
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      this.tri(b,p[0],p[1],p[2],[0,0],[1,0],[1,1],tint);this.tri(b,p[0],p[2],p[3],[0,0],[1,1],[0,1],tint);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const mesh=this.mesh(b,'crown',LAYER.FOREGROUND_OCCLUDERS,'FL44-P21R2-leaf-volume');registerOccluder(this.rt,mesh,z,10);this.trees++;return true;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    for(const [dx,dy,dz,size] of clusters)for(let i=0;i<3;i++){const a=i*Math.PI/3+this.trees*.37,rx=Math.cos(a)*r*size,rz=Math.sin(a)*r*size,cx=x+dx,cy=height+dy,cz=z+dz,hh=r*size,p=[[cx-rx,cy-hh,cz-rz],[cx+rx,cy-hh,cz+rz],[cx+rx,cy+hh,cz+rz],[cx-rx,cy+hh,cz-rz]];this.tri(b,p[0],p[1],p[2],[0,0],[1,0],[1,1],tint);this.tri(b,p[0],p[2],p[3],[0,0],[1,1],[0,1],tint);}
+    const crown=this.mesh(b,'crown',LAYER.FOREGROUND_OCCLUDERS,'FL44-P21R2-leaf-volume');if(crown.parent)crown.parent.remove(crown);crown.geometry.translate(-x,0,-z);crown.geometry.computeBoundingSphere();pivot.add(crown);addToSector(this.rt,LAYER.FOREGROUND_OCCLUDERS,pivot);registerOccluder(this.rt,pivot,z,10);r113RegisterEnvironmentCircle(this.rt,x,z,.65,{kind:'tree',mode:'tree',node:pivot});this.trees++;return true;
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   fence(x,z,length){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     if(!this.clearForProp(x,z,Math.hypot(.28,length)/2))return;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const col=0xc1ad87;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    for(let dz=-length/2;dz<=length/2;dz+=2.6)this.box(x,0,z+dz,.24,1.55,.24,'wood',col);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    for(const y of [.58,1.15])this.box(x,y,z,.18,.17,length,'wood',col);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    this.collider(x,z,.30,length,'phase21_fence');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    const g=new THREE.Group(),col=0xc1ad87;g.name='FL44-R113-destructible-fence';g.position.set(x,0,z);
+    for(let dz=-length/2;dz<=length/2;dz+=2.6){const p=sharedMesh('box',col,.24,1.55,.24,'standard');p.position.set(0,.775,dz);g.add(p);}
+    for(const y of [.58,1.15]){const rail=sharedMesh('box',col,.18,.17,length,'standard');rail.position.set(0,y,z-z);g.add(rail);}
+    addToSector(this.rt,LAYER.GAMEPLAY_PROPS,g);r113RegisterEnvironmentAABB(this.rt,x,z,.30,length,{kind:'phase21_fence',mode:'structure',node:g});this.footprints.push({x,z,r:Math.hypot(.30,length)/2,kind:'phase21_fence',w:.30,d:length});
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   house(x,z,w,d,h,variant){
 
 
@@ -326279,6 +325506,7 @@ function populateSector(rt){
 
 
 function disposeSectorRuntime(rt){
+  r113DisposeEnvironmentPrefix(rt&&rt.ownerId);
 
 
 
@@ -384857,7 +384085,8 @@ function spawnBoss(){
 
 
 
-function recordDamage(sourceId,targetId,value,kind){const e={sourceId:String(sourceId||''),targetId:String(targetId||''),value:Number(value)||0,kind:String(kind||'damage'),at:Date.now()};G.damageEvents.push(e);if(G.damageEvents.length>CFG.damageEventCap)G.damageEvents.splice(0,G.damageEvents.length-CFG.damageEventCap);if(G.player&&e.sourceId===G.player.playerId)G.player.damageStatistic.match+=e.value;return e;}
+function recordCombatDamage(data={}){const sourceId=String(data.sourceId||''),targetId=String(data.targetId||''),targetType=String(data.targetType||'ENVIRONMENT'),actualDamage=Math.max(0,Number(data.actualDamage)||0),killed=!!data.killed,kind=String(data.kind||'damage'),allowed=targetType==='ENEMY_TANK'||targetType==='ZOMBIE';let scoreDelta=allowed?(targetType==='ZOMBIE'?(killed?actualDamage:0):actualDamage):0,duplicateKill=false;if(targetType==='ZOMBIE'&&killed){const killKey=sourceId+':'+targetId;duplicateKill=G.combatScoredKills.has(killKey);if(duplicateKill)scoreDelta=0;else G.combatScoredKills.add(killKey);}const e={sourceId,targetId,value:actualDamage,actualDamage,targetType,killed,kind,scoreDelta,duplicateKill,at:Date.now()};G.damageEvents.push(e);if(G.damageEvents.length>CFG.damageEventCap)G.damageEvents.splice(0,G.damageEvents.length-CFG.damageEventCap);if(G.player&&sourceId===G.player.playerId&&scoreDelta>0)G.player.damageStatistic.match+=scoreDelta;return e;}
+function recordDamage(sourceId,targetId,value,kind){const raw=Math.max(0,Number(value)||0),k=String(kind||'damage'),target=G.enemies&&G.enemies.find(e=>e&&String(e.id)===String(targetId)),isZombie=k.startsWith('zombie_')||!!(target&&target.isZombie),isTank=!!(target&&!target.isZombie),targetType=k==='fortress_core'?'OBJECTIVE':String(targetId)===String(G.player&&G.player.playerId)?'SELF':isZombie?'ZOMBIE':isTank?'ENEMY_TANK':'ENVIRONMENT';let actual=raw,killed=false;if(targetType==='ENEMY_TANK'&&target){const post=Number(target.hp)||0,pre=Math.max(0,post+raw);actual=target.dead?0:Math.min(raw,pre);killed=post<=0;}else if(targetType==='ZOMBIE'&&target){killed=(Number(target.hp)||0)<=0;actual=killed?Math.max(0,Number(target.maxHp)||Math.max(0,(Number(target.hp)||0)+raw)):0;}else if(targetType!=='ENEMY_TANK')actual=0;return recordCombatDamage({sourceId,targetId,targetType,actualDamage:actual,killed,kind:k});}
 
 
 
@@ -385488,7 +384717,7 @@ function zombieGooBurst(pos,intensity=1){if(!pos)return;const n=Math.max(2,Math.
 
 function killZombie(e,cause='damage'){
 
-  if(!e||!e.isZombie||e.dead)return false;e.dead=true;e.targetable=false;e.hp=0;e.deathCause=String(cause||'damage');zombieGooBurst(e.world,e.deathCause==='ram'?1.65:e.deathCause==='mg'?1.3:1);
+  if(!e||!e.isZombie||e.dead)return false;if(String(cause||'damage')==='ram')recordCombatDamage({sourceId:G.player&&G.player.playerId||'',targetId:e.id,targetType:'ZOMBIE',actualDamage:Math.max(0,Number(e.maxHp)||Number(e.hp)||0),killed:true,kind:'zombie_ram'});e.dead=true;e.targetable=false;e.hp=0;e.deathCause=String(cause||'damage');zombieGooBurst(e.world,e.deathCause==='ram'?1.65:e.deathCause==='mg'?1.3:1);
 
   if(e.group&&e.group.parent)e.group.parent.remove(e.group);e.group=null;updateHud();return true;
 
@@ -520590,7 +519819,7 @@ function foundationDiagnostics(){return {runtimeVersion:CFG.runtimeVersion,runti
 
 
 
-window.Frontline1944={VERSION:CFG.runtimeVersion,open,close,setViewportSuspended,auditVocabulary,adminAllowed,_t:{R3_SPAWN,r3SpawnDiagnostics,r3ResetSpawnState,r3SpawnRadius,r3DiskHitsZone,r3SpawnDiskClear,r3ValidateSpawn,r3FindSafeSpawn,r3CommitSafeSpawn,r3RequestSafeSpawn,r3PlayerEmbedded,r3TickSpawnSafety,r3SharedTexture,r3TextureDiagnostics,r3DisposeTextureCache,r2Surface,damagePlayer,makePlayer,registerFortressCollision,buildWorld,clearScene,loop,R2_VIEW,R5_AIM,R4_AIM,R6C_AIM,R2_EXTRA_ASSETS,Phase21R2SectorArt,r2CameraFrame,r4ScopeCameraFrame,r2UpdateCamera,R7_ARSENAL,R8_SYSTEM,R9_SYSTEM,R10_SYSTEM,R11_SYSTEM,R111_SYSTEM,R112_SYSTEM,R111_VIEWPORTS,R111_LAYOUT_TIERS,R11_FACTION,frontlineResponsiveTier,frontlineResponsiveMetrics,frontlineResponsiveLayoutModel,frontlineCombatSafeRect,applyFrontlineResponsiveTier,frontlineCriticalLayoutRects,validateFrontlineLayoutRects,validateFrontlineLayout,layoutBossBarUnderWord,layoutObjectiveUnderCoins,layoutFixedHudClusters,reflowFrontlineResponsiveLayout,R10_TANK_VEHICLE_MODELS,tankVehicleSpec,sanitizeTankVehicleOwnedLevels,currentTankVehicleModelLevel,tankVehicleOwnedLevels,tankVehicleIsOwned,purchaseTankVehicleModel,equipTankVehicleModel,applyTankVehicleModel,R8_TANK_WEAPON_ASSETS,R8_TANK_ARMOR_ASSETS,R9_TANK_WEAPON_ASSETS,R9_TANK_ARMOR_ASSETS,TANK_UPGRADE_LEVELS,ARMOR_LEVELS,normalizeTankUpgradeLevel,tankUpgradeSpec,currentTankUpgradeLevel,tankCannonRangeMeters,tankCannonRangeWorld,tankMachineGunSpec,normalizeTankArmorLevel,normalizeTankArmorSelection,tankArmorSpec,currentTankArmorLevel,tankArmorDamageReduction,tankArmorDamageResult,tankWeaponAssetForLevel,tankArmorAssetForLevel,mainGameCoinGateway,currentCoinBalance,syncMainCoinReadouts,restoreMainCoinBalance,spendTankUpgradeCoins,purchaseNextTankLevel,purchaseNextArmorLevel,applyTankUpgradeVisual,applyTankUpgradeLevel,applyTankArmorVisual,applyTankArmorLevel,setGarageMode,purchaseGarageSelection,updateGarageTankPreview,openGarage,closeGarage,renderGarage,machineGunWorldRay,fireMachineGun,tickMachineGun,precisionTurretStep,mobileAimStrength,mobileAimAxisStrength,mobileAimTargets,barrelPitchMotionStep,clampBarrelPitch,barrelPitchFromScreenY,turretMotionStep,scopeModeActive,scopeCameraFov,syncScopeProjection,setScopeMode,r4CannonWorldRay,projectedShotSolution,updateProjectedShotMarker,r4ResetSession,r2VisualDiagnostics,r2InstallHud,r2FortressShell,r2RefineTank,r2Dispose,ResourceCache,PHASE21_ASSETS,Phase21SectorArt,phase21Diagnostics,phase21PopulateSector,phase21ResetSession,CFG,G,setViewportSuspended,refreshFrontlineViewport,hideFrontlineToast,showToast,TERRAIN,LAYER,SECTOR_TEMPLATES,WorldSpace,TerrainSystem,CollisionSystem,SectorStreamer,ObjectPool,TankRuntime,DesktopTankInputAdapter,MobileTankInputAdapter,UnifiedTankInputAdapter,GlobalMobileTouchRouter,visualIdFor,sectorDescriptor,chooseWord,awardLetter,activateNextFortress,tankStateSnapshot,interpolateRemoteTank,authoritativeTankPose,forwardFromRotation,rightFromRotation,rotationFromForward,driveDelta,normalizeTankCommand,desktopCommandFromState,mobileCommandFromState,mergeTankCommands,stickVectorFromRect,driveDirectionFromVector,syncDriveDirectionUI,resetStickState,pointInRect,rectFromEdges,rectFromDomRect,rectCenter,expandRect,rectIntersects,viewportRectFor,safeAreaInsetsFor,safeGameplayRect,elementUsableRect,protectedFrontlineRects,mobileControlRegions,aimPlacementBlockers,aimPlacementBlockedRects,findSafeAimRect,aimOffsetParentPosition,aimDomPositionSnapshot,applyAimRect,pointOverProtectedFrontlineUI,isProtectedFrontlineTarget,firePlacementBlockedRects,fireRectIsValid,findSafeFireRect,applyFireRect,drivePlacementBlockedRects,findSafeDriveRect,applyDriveRect,readDrivePositionStore,writeDrivePositionStore,saveDrivePositionPreference,restoreDrivePositionPreference,fireOrientationKey,readFirePositionStore,writeFirePositionStore,normalizedFirePosition,saveFirePositionPreference,restoreFirePositionPreference,readAimPositionStore,writeAimPositionStore,normalizedAimPosition,aimRectIsValid,saveAimPositionPreference,restoreAimPositionPreference,queueMobileFirePulse,consumeMobileFirePulse,eventTargetLabel,specialControlElements,specialControlRects,specialControlState,layoutSpecialControls,autoMoveThrottleIntent,setAutoMoveMode,setTargetLockMode,toggleSpecialControl,targetLockTargetValid,makeDom,bindTargetLockTapFireBridge,targetLockLabel,targetLockDetails,targetLockSelectionPointAllowed,targetLockScreenBounds,renderTargetLockFeedback,updateTargetLockMarker,clearTargetLock,bindTargetLockDesktopControls,bindCanvasAim,pointerAimFromEvent,privatePreviewHostname,localTargetLockTestRangeEnabled,activateLocalTargetLockTestRange,safeActivateLocalTargetLockTestRange,spawnEnemy,spawnDefenders,spawnBoss,enemyFire,zombiePlayerContactDamage,zombieGooBurst,killZombie,tankZombieOverlap,tickZombieRamming,damageEnemy,destroyCore,removeFortress,tickTank,tickFortress,tickProjectilePool,targetLockWorld,targetLockCandidates,targetLockRaycastCandidateAtScreen,pickTargetLockAtScreen,selectTargetLockAtScreen,targetLockHeading,bindGlobalMobileTouchRouter,markTouchLikeInput,hasRecentTouchLikeInput,latchMobileAimVector,clearMobileAimLatch,mobileAimLatchedHeading,mobileAimLatchedPitch,shouldAcceptDesktopAimEvent,inputDiagnosticsEnabled,cannonWorldPosition,cannonWorldDirection,cannonWorldRay,runtimeIdentity,frontlineDeliveryIdentity,renderRuntimeIdentity,occlusionAcceptance,foundationDiagnostics,updateHud,updateInputDiagnostics}};
+window.Frontline1944={VERSION:CFG.runtimeVersion,open,close,setViewportSuspended,auditVocabulary,adminAllowed,_t:{R3_SPAWN,r3SpawnDiagnostics,r3ResetSpawnState,r3SpawnRadius,r3DiskHitsZone,r3SpawnDiskClear,r3ValidateSpawn,r3FindSafeSpawn,r3CommitSafeSpawn,r3RequestSafeSpawn,r3PlayerEmbedded,r3TickSpawnSafety,r3SharedTexture,r3TextureDiagnostics,r3DisposeTextureCache,r2Surface,damagePlayer,makePlayer,registerFortressCollision,buildWorld,clearScene,loop,R2_VIEW,R5_AIM,R4_AIM,R6C_AIM,R2_EXTRA_ASSETS,Phase21R2SectorArt,r2CameraFrame,r4ScopeCameraFrame,r2UpdateCamera,R7_ARSENAL,R8_SYSTEM,R9_SYSTEM,R10_SYSTEM,R11_SYSTEM,R111_SYSTEM,R112_SYSTEM,R113_SYSTEM,R111_VIEWPORTS,R111_LAYOUT_TIERS,R11_FACTION,frontlineResponsiveTier,frontlineResponsiveMetrics,frontlineResponsiveLayoutModel,frontlineCombatSafeRect,applyFrontlineResponsiveTier,frontlineCriticalLayoutRects,validateFrontlineLayoutRects,validateFrontlineLayout,layoutBossBarUnderWord,layoutObjectiveUnderCoins,layoutFixedHudClusters,reflowFrontlineResponsiveLayout,R10_TANK_VEHICLE_MODELS,tankVehicleSpec,sanitizeTankVehicleOwnedLevels,currentTankVehicleModelLevel,tankVehicleOwnedLevels,tankVehicleIsOwned,purchaseTankVehicleModel,equipTankVehicleModel,applyTankVehicleModel,R8_TANK_WEAPON_ASSETS,R8_TANK_ARMOR_ASSETS,R9_TANK_WEAPON_ASSETS,R9_TANK_ARMOR_ASSETS,TANK_UPGRADE_LEVELS,ARMOR_LEVELS,normalizeTankUpgradeLevel,tankUpgradeSpec,currentTankUpgradeLevel,tankCannonRangeMeters,tankCannonRangeWorld,tankMachineGunSpec,normalizeTankArmorLevel,normalizeTankArmorSelection,tankArmorSpec,currentTankArmorLevel,tankArmorDamageReduction,tankArmorDamageResult,tankWeaponAssetForLevel,tankArmorAssetForLevel,mainGameCoinGateway,currentCoinBalance,syncMainCoinReadouts,restoreMainCoinBalance,spendTankUpgradeCoins,purchaseNextTankLevel,purchaseNextArmorLevel,applyTankUpgradeVisual,applyTankUpgradeLevel,applyTankArmorVisual,applyTankArmorLevel,setGarageMode,purchaseGarageSelection,updateGarageTankPreview,openGarage,closeGarage,renderGarage,machineGunWorldRay,fireMachineGun,tickMachineGun,precisionTurretStep,mobileAimStrength,mobileAimAxisStrength,mobileAimTargets,barrelPitchMotionStep,clampBarrelPitch,barrelPitchFromScreenY,turretMotionStep,scopeModeActive,scopeCameraFov,syncScopeProjection,setScopeMode,r4CannonWorldRay,projectedShotSolution,updateProjectedShotMarker,r4ResetSession,r2VisualDiagnostics,r2InstallHud,r2FortressShell,r2RefineTank,r2Dispose,ResourceCache,PHASE21_ASSETS,Phase21SectorArt,phase21Diagnostics,phase21PopulateSector,phase21ResetSession,CFG,G,setViewportSuspended,refreshFrontlineViewport,hideFrontlineToast,showToast,TERRAIN,LAYER,SECTOR_TEMPLATES,WorldSpace,TerrainSystem,CollisionSystem,R113_ENV,r113RegisterEnvironment,r113RegisterEnvironmentCircle,r113RegisterEnvironmentAABB,r113DestroyEnvironmentByCollider,r113DisposeEnvironmentPrefix,SectorStreamer,ObjectPool,TankRuntime,DesktopTankInputAdapter,MobileTankInputAdapter,UnifiedTankInputAdapter,GlobalMobileTouchRouter,visualIdFor,sectorDescriptor,chooseWord,claim,awardLetter,activateNextFortress,tankStateSnapshot,interpolateRemoteTank,authoritativeTankPose,forwardFromRotation,rightFromRotation,rotationFromForward,driveDelta,normalizeTankCommand,desktopCommandFromState,mobileCommandFromState,mergeTankCommands,stickVectorFromRect,driveDirectionFromVector,syncDriveDirectionUI,resetStickState,pointInRect,rectFromEdges,rectFromDomRect,rectCenter,expandRect,rectIntersects,viewportRectFor,safeAreaInsetsFor,safeGameplayRect,elementUsableRect,protectedFrontlineRects,mobileControlRegions,aimPlacementBlockers,aimPlacementBlockedRects,findSafeAimRect,aimOffsetParentPosition,aimDomPositionSnapshot,applyAimRect,pointOverProtectedFrontlineUI,isProtectedFrontlineTarget,firePlacementBlockedRects,fireRectIsValid,findSafeFireRect,applyFireRect,drivePlacementBlockedRects,findSafeDriveRect,applyDriveRect,readDrivePositionStore,writeDrivePositionStore,saveDrivePositionPreference,restoreDrivePositionPreference,fireOrientationKey,readFirePositionStore,writeFirePositionStore,normalizedFirePosition,saveFirePositionPreference,restoreFirePositionPreference,readAimPositionStore,writeAimPositionStore,normalizedAimPosition,aimRectIsValid,saveAimPositionPreference,restoreAimPositionPreference,queueMobileFirePulse,consumeMobileFirePulse,eventTargetLabel,specialControlElements,specialControlRects,specialControlState,layoutSpecialControls,autoMoveThrottleIntent,setAutoMoveMode,setTargetLockMode,toggleSpecialControl,targetLockTargetValid,makeDom,bindTargetLockTapFireBridge,targetLockLabel,targetLockDetails,targetLockSelectionPointAllowed,targetLockScreenBounds,renderTargetLockFeedback,updateTargetLockMarker,clearTargetLock,bindTargetLockDesktopControls,bindCanvasAim,pointerAimFromEvent,privatePreviewHostname,localTargetLockTestRangeEnabled,activateLocalTargetLockTestRange,safeActivateLocalTargetLockTestRange,spawnEnemy,spawnDefenders,spawnBoss,enemyFire,zombiePlayerContactDamage,zombieGooBurst,recordCombatDamage,recordDamage,killZombie,tankZombieOverlap,tickZombieRamming,damageEnemy,destroyCore,removeFortress,tickTank,tickFortress,tickProjectilePool,targetLockWorld,targetLockCandidates,targetLockRaycastCandidateAtScreen,pickTargetLockAtScreen,selectTargetLockAtScreen,targetLockHeading,bindGlobalMobileTouchRouter,markTouchLikeInput,hasRecentTouchLikeInput,latchMobileAimVector,clearMobileAimLatch,mobileAimLatchedHeading,mobileAimLatchedPitch,shouldAcceptDesktopAimEvent,inputDiagnosticsEnabled,cannonWorldPosition,cannonWorldDirection,cannonWorldRay,runtimeIdentity,frontlineDeliveryIdentity,renderRuntimeIdentity,occlusionAcceptance,foundationDiagnostics,updateHud,updateInputDiagnostics}};
 
 
 
