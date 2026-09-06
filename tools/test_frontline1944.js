@@ -1,4406 +1,4429 @@
-"use strict";
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const fs=require('fs'),vm=require('vm'),assert=require('assert'),crypto=require('crypto');
-
-const PHASE21_LOCKED_DECLARATIONS={
-  "TankRuntime": "039c3f173d4ae0410a7c1bd078341dbdfe53d5323e8685523d164b2d82397171",
-  "GlobalMobileTouchRouter": "0156033c3a988a7fda61cfb27f61fe3fae9a6093a063166896868e516b72c187",
-  "DesktopTankInputAdapter": "431fc54b0c627bc72e12723b448ea446b9095882926a0ff0853a8498216675a5",
-  "MobileTankInputAdapter": "456acd69ac8e09e1fa6e55e75c0e9eb823772405f576c8c4d3c78d0195f0a2b2",
-  "UnifiedTankInputAdapter": "cc0d47d312f69bfdbf48cccb41ea728f4e71b769bb055bf54e02c4505c240c52",
-  "forwardFromRotation": "ba298b83c47089a066108e6cd2e1c9cd04cc9f32f1e8ba3bd542ce8bd4e2a169",
-  "rightFromRotation": "e4742e6ba1ce4db302cf5270efc13db2ae1aef1f978b8906e1bb48d7eadbdee0",
-  "rotationFromForward": "d81e09cd4284c9f4729ef6a70e03b1cec396eba48602871b739938e5b02ee8cc",
-  "driveDelta": "49e9577b57cbd61705a9a573652b037161794f95642c2e6f873f48c953a4ae53",
-  "tickTank": "03292da57e729cc7c099af5169115c54a0c6ecea079fb20a603b27b1b8d58583",
-  "tickProjectilePool": "4d9ba222d08d9bf67e720281e249a65d23723fea8b8305d62ac283f35a97aed9",
-  "makeDom": "9d83d179b70c99593a8ce971d1d47c5200ee971b1958601643fd51dc04010853",
-  "hideFrontlineToast": "bab9647389adecbb092f37e674a79ae8fcf8d64c25c043712697b9c2573414de",
-  "showToast": "f171dbcae22a13661a2d775dc18393acc02d1fd0fe64239359ce687dc36617fb",
-  "setViewportSuspended": "db17a23b13289501f283f9ede945194002dc1b40931c844df25f2f078ac17e8f",
-  "refreshFrontlineViewport": "1f6621649459feb5ad2b21a5badffabb85360af2a7654f807343a58cc99d6605",
-  "selectTargetLockAtScreen": "5ee013d648e56f6b0a06dbbcc27b0c73e9085d5dac041b670be42e54dfcaa625",
-  "pickTargetLockAtScreen": "cc8f892383d3d9700800761d1bd25a5f7374704f725ff8dfc3309f4ad7654e47",
-  "targetLockRaycastCandidateAtScreen": "aa7a8396c96e933aa286b5805bb9d992e6def231fd6dfe8f564c43cbbad18e5d",
-  "targetLockTargetValid": "f435edf821146ac8dd15f0e282a2a8dab9d348b523ec2e3874830b7d7f4bd502",
-  "targetLockHeading": "dc9c5a958cc953065b4e4e220890e908bc22667666f17a1ba8167c54ae7176d6",
-  "targetLockCandidates": "4274c88c554ca8e99f2d02a126d51b19106ca3bf178483b95f818a82e6eccc0c",
-  "bindTargetLockTapFireBridge": "1443143cdeda1f7580e339ff53b6088c7314be88b17b088de85c44c1470ae40e",
-  "bindTargetLockDesktopControls": "1be89fade1de66f982f41d0b99658fff5b3b5b53d304595cf668c30d8367fad2",
-  "bindCanvasAim": "a8a08a8648756c803a0379efe144fd6333ca741f9168a484898ec2a7bdf8c44d",
-  "setAutoMoveMode": "33c663df584b7f82e92fbb7847051e8efa0e949f6d1ac98bb70951736fb8a5aa",
-  "setTargetLockMode": "2bf7986b92e8de25152fde8f8f293ecbbb642473dbbf054afd44faf89e1c8083",
-  "privatePreviewHostname": "fcd6236c72ec04052fc1857633eed667316b9818e1e741d23f95e8d19dd45e2b",
-  "safeActivateLocalTargetLockTestRange": "f1a2dcf94daf38ab30f63f89341ac5fcf88e6a56bc1aa3d986c493d392bca1ca",
-  "activateLocalTargetLockTestRange": "7657c070958ebc7f4b02f5b6a2923e39fab10425ae82a7e000786fca0acbcec9",
-  "activateNextFortress": "7e7b56d363a416ee75205ad59a2954b5a77a61d6809979ca7dad5e406e0663ca",
-  "spawnEnemy": "fc9f647953fad8d5109441ea246d6422a186718031328f994e40809c952c3b1a",
-  "spawnDefenders": "effb334eb2b95801d2fdc8ce03a8e72c8ad687619d6c54a5531f8cd2b3492e8e",
-  "spawnBoss": "728e85bb3ed98544357b35232c877c7006b861af3f1b2ae44592e40ff7ce929d",
-  "damageEnemy": "bddd0d970e05a31515537d705a56b58c689b8c8a6cf213713ab784f5785b976c",
-  "destroyCore": "1e2c33348f6bc19ae0f06810d59abc4c2ae1ae7d84ec24af1717ba221552b32c",
-  "removeFortress": "298634b4bea9a9d49daa7fb94f2d082eaa3e06aea5a654de13c343b4ef98af01",
-  "awardLetter": "857dc866d3348c6fef909626b3ecd5a0c195342b84e1f9f45f8b2c3b7f75f1ea",
-  "open": "389f07b948715b323337d971d6b549c4fd818f3bd4ccc5d22486358f2a81033a",
-  "close": "24b99a4a5e002d4202e1097d3aa941fb9b242f1cf7af1ef67dde2e83918ecf39"
-};
-const R3_CURRENT_BASELINE_LOCKS={
-  "r2CameraFrame": "b1a6d2628e337eb068e3c2c2231efb47e0fba3635c1f77e3763e28a5f6e07b42",
-  "r2UpdateCamera": "9aee73e4363af1f1fb092f62ed2f39385802557ca7198290cd7e043d46aed3e8",
-  "r2FortressShell": "7e556395dedb5655d5ba8749ff99dc01398a0f18b663483d6953362758801622",
-  "r2RefineTank": "13455795f4c93e713ce384a1ec04c355bd292bc6f18d74a3dd65c18a6f0ef29d",
-  "ResourceCache": "0383eaca78b4bf9d2df61a34308e93e04bdc10229f28854f486efbde6f92534b",
-  "phase21Diagnostics": "01f6d973b9fb566e39d09e1220b6e777bd283652ddd53015b471827ad8d6cb42",
-  "phase21PopulateSector": "b1241f227ebc3a575f1195b649976429c73f890f4c60c824ad31eb6da5d5fcf9",
-  "phase21ResetSession": "9c7bb1e2792f17c54b9d9a75a03f311e9f22c5e282b84814264b02cae9dce8bc",
-  "setViewportSuspended": "28ac0495e449438b06b76787b37b4b5673f3ab54df2a9692bd06dcb3b1422663",
-  "refreshFrontlineViewport": "e0b6ef8302c0817cf29feb575c12c8bdf0c81834257b3ff4706b923ff732e1f5",
-  "hideFrontlineToast": "bab9647389adecbb092f37e674a79ae8fcf8d64c25c043712697b9c2573414de",
-  "showToast": "f171dbcae22a13661a2d775dc18393acc02d1fd0fe64239359ce687dc36617fb",
-  "TerrainSystem": "5c95af8d5c5036e6167a8228a0c04d537d795b1041638aff7b746f3b62a724c2",
-  "CollisionSystem": "0f1820da1cab683b71d3c58dc55bcbbed5019c4d67bb4ab4a26f19b6ea8319f9",
-  "SectorStreamer": "4241acc5c3dc496b41d1241de34687e51ed0ae335fb74937bf32b53651a5e357",
-  "ObjectPool": "cb36a74f3532dc3db14aa154679df5d159ba98758c929f54a6c6a1516480c8bb",
-  "TankRuntime": "24f40860b385e1d271e5155a64bfc2589fd7bcfb767340c3bd28234fead9b651",
-  "DesktopTankInputAdapter": "36dd5bd1b346f5aa7ba8ac4b80e4f64b41c36bb258ed21b76ab1e8b26d9dcfc2",
-  "MobileTankInputAdapter": "ac60688e1d4e2f14381d02d21483b76ff3522de99a5cf7a7e414e9bc91780367",
-  "UnifiedTankInputAdapter": "7398b3f10bb7103301d929fa89f44dcf8805fac66d7f1279695fb4decfeea925",
-  "GlobalMobileTouchRouter": "93cd04d912fbe7f846172c0e379e80fe39678724f28ac9afb469825722213871",
-  "visualIdFor": "975cabd5f480a708df3a33e75523a69969784cf9362b279b6afe2e9806ac0e92",
-  "sectorDescriptor": "7cf185f4aa6e07360e12ed35bb043a78f51c06bc3e28294918f86d054831e205",
-  "chooseWord": "c1ca8541767914cdd7795e797d1b683ad0193cb24a09c34bc450202dbcc0dcbe",
-  "awardLetter": "3a3df384a552a208278edeeb8e368a1f9fe20aad103c67cbb713065b396728b0",
-  "activateNextFortress": "8a824b17aa06be8a24fa6bcd5f92cdbb91f258edf9dbe0afc24fb4f6b0cc523d",
-  "tankStateSnapshot": "c9cd52cadf2a876e1c6f00db746fffa650efbed76fd1e59d4fbd6b21aad2945c",
-  "interpolateRemoteTank": "35829fcbebfdf88e9e22d98b2c3b5f63f62cb637e8b2791db1e3cf26cbfc1ee1",
-  "authoritativeTankPose": "eb3b90e8e463d3632ff8e95bcac60b236bc3269beb823f94091c346c408a7c5d",
-  "forwardFromRotation": "ba298b83c47089a066108e6cd2e1c9cd04cc9f32f1e8ba3bd542ce8bd4e2a169",
-  "rightFromRotation": "e4742e6ba1ce4db302cf5270efc13db2ae1aef1f978b8906e1bb48d7eadbdee0",
-  "rotationFromForward": "d81e09cd4284c9f4729ef6a70e03b1cec396eba48602871b739938e5b02ee8cc",
-  "driveDelta": "49e9577b57cbd61705a9a573652b037161794f95642c2e6f873f48c953a4ae53",
-  "normalizeTankCommand": "ef59ad35e257578ead95b1e425304297a9dc46ffe4d0d777b2ad8243e36e9aa2",
-  "desktopCommandFromState": "68daaea42319726f3407cb7e7418889323d6ac34cbdb9946ba037024e1e2af0b",
-  "mobileCommandFromState": "b620f21024dc097bbc8836399544029579bb30d08b7c7813045dedbd2f75a911",
-  "mergeTankCommands": "abf8f6b8932e85a8195895c614c9658b1de0dfb6a3ba79203ceecc76a015c4d1",
-  "stickVectorFromRect": "97fbe6df544090e7192754f76e905a482fc0925740bf934b71320b3c67adf48f",
-  "resetStickState": "832502a3ed83681d58380a3cc2725903266378e63d2ce17d3b931b5fe8d75fee",
-  "pointInRect": "9c06b3a69d258b264f05733451d3a5630cb9c3652327edec1ddc3314623f8375",
-  "rectFromEdges": "d860388d0c9dfec17a32bf0fe0c573520103bcc79e31aa16d4ff0d73a00a6244",
-  "rectFromDomRect": "412b5378e23915a87ef19126c4eb799bab6a4f9d7dc8d174f2e9b505f6b1bf5c",
-  "rectCenter": "4aa1fdcd378e0c14b70b1ba5b23873c6ab5cbd269467c220b3e63a5ac7309703",
-  "expandRect": "96c95a5bfd85fa4d4c453a700fd0ab1f61672b6f84eba1ea337dd90740214249",
-  "rectIntersects": "8fc3f49cbd89a8cefe1faaaf04b0fb9b48a53faf3b7b9418f6d58a42fd43c771",
-  "viewportRectFor": "e9a7a377d7819ca120e1747ff1f31df6e61648c426bd9e576a266bb526a515fa",
-  "safeAreaInsetsFor": "005449fb1a06721e3282dc17a710ba600777124173a6002d44a686975ccae2a3",
-  "safeGameplayRect": "c350fa9de35dbf7874c2af82062464eff35d24ed9568a9d891979294754c2897",
-  "elementUsableRect": "dbe1e408af0294bf71f236a6e50e41b02f0c0de573090dbee8964b555ce0abb4",
-  "protectedFrontlineRects": "b86b8bb259e32defb7dac01d071eeb11229e866a2632e4f017a60dc96c86e902",
-  "mobileControlRegions": "e55bddd452416c3f926628e1ca768966cc8cd043a0b4fabe5cc489b26ec5da93",
-  "aimPlacementBlockers": "ac1ef61cee924e80cc766e856126b9fefeb58a4a49dbf0ffc800799b7426c6e6",
-  "aimPlacementBlockedRects": "2fdc1ba9672c621a70d8a057873a2617d48f9071e78b7eda41a8bc089a88d253",
-  "findSafeAimRect": "c18fb5ef17e2f3ee5fe727fa934566575db45523738ca9bef00f218e65ba3003",
-  "aimOffsetParentPosition": "f612ce20bce070f34e34841cd62bce8b242de8b853f79b3d665a13d792a5865b",
-  "aimDomPositionSnapshot": "5a04bd6cc43699a33829f520c535da23b90ff5817ebaa4c3b47f786298e37ee3",
-  "applyAimRect": "74a714473ab31eb06e9ace8df192992bc05db85680135009de8afe253bb80f81",
-  "pointOverProtectedFrontlineUI": "38d74dffc5f5c046aef61b06425d3185dfc53286726b0e180028ef6d9e57df8d",
-  "isProtectedFrontlineTarget": "746b472d3c5ffa8baff7e18ec2d9be3333b15850bc25d27aaef6929c1b8a0c99",
-  "firePlacementBlockedRects": "d86db1dfb865f40dfd6faf26977e318b079f94cdca2a9d7942a6d57c67ab6d68",
-  "fireRectIsValid": "4db79f9cf75e95a0229a25e2ea8409e67b86efbdb50cc061e88a359526fdcf08",
-  "findSafeFireRect": "e3dfce4e0f389580d8c23b7c27e46195f2b367c22b5818573e00e26b7974ac88",
-  "applyFireRect": "d040ed4296c1494c5700ed4a5025e99b2c5c322cca21b39006cafee479ba7a2e",
-  "fireOrientationKey": "28e535e92608cb17cd022c90b1cb1339b5241d4d8d42cb853e4de0f1c000baef",
-  "readFirePositionStore": "99ad22365a0ce00690ecf0eb87821b0859386d9811719f11f5a4e47abcac3d41",
-  "writeFirePositionStore": "137e5aba61e4e83e3e0f54d2da86e085523879999beca5de3a0dc5913dd14840",
-  "normalizedFirePosition": "8658c687656754b506f5e2dcc83178b0c99511cf419267a98310a0fe81580f96",
-  "saveFirePositionPreference": "da23cfc413d7ed45d1dd39f0fea8ce9eb29e0c29c8bd52743caf9a9ecdf18c91",
-  "restoreFirePositionPreference": "85ea2e42477ccd336183ced91db84592f46b71f97cec407b0efd1dd270ce78bb",
-  "queueMobileFirePulse": "4be0f7c51358a87de58ce5ae5ddcf9a1b657ee368e682fdeec2bd3952525b126",
-  "consumeMobileFirePulse": "f2ba48d20d57f7d4ce8fd10cb4ad80fe7c1015391475ea5a1b1270117178f819",
-  "eventTargetLabel": "16e3f225f6ff37aac819a70d7cbd09e57a7b5148c09a2ac268f5f6c58e94cdcd",
-  "specialControlElements": "e75658d3596e234273efa2749ff45c75fcd47e0e58b694b8f7f1f1b4c7e30ebe",
-  "specialControlRects": "4d6287c77151cf2a4df8f29a2fe85fbe7868f44d61ac84d1880de8c09cf00a91",
-  "specialControlState": "2b7f8739789fd6f97e0b314f5cd6429e4f6ebe5373c7ff08be9af82e10ce98a6",
-  "layoutSpecialControls": "d41bdc694132cc0f6504d2b20a86207806e1bb47bc0fa42c0392513347e021dc",
-  "autoMoveThrottleIntent": "8760bbf4f05aec596fc733a704478d835e99b27d4e5400d9bd966a729c9d789c",
-  "setAutoMoveMode": "33c663df584b7f82e92fbb7847051e8efa0e949f6d1ac98bb70951736fb8a5aa",
-  "setTargetLockMode": "d92158ab5da562091c2a6815e3fd632c6c92d2693d42e061605a304d15707172",
-  "toggleSpecialControl": "6dbdc0f9e103d1b20ce48fabba8c2a9f97589ac2b8a2ab4206b296de66b2f4bc",
-  "targetLockTargetValid": "fbdcd5efbdaca47d88097f5558d285de52aaf2bb673eb497246954945a2281f8",
-  "makeDom": "016d295472d9f45005f856e638715f424ee37e4e49ee2f1f2a936469877294c9",
-  "bindTargetLockTapFireBridge": "3b08e139b2cfa471cd3d3fd27c1c83c01fb363202d43f27e2cd6b4016faa6833",
-  "targetLockLabel": "d54938816536e7d7e23acd662bd959ac772a0f490917385c356084c603d605ff",
-  "targetLockDetails": "8779af95c9875d9683ba7da19f6904f9125bde4887496dad54b0909a09d258ce",
-  "targetLockSelectionPointAllowed": "cc2d6d84a134b664ea2c54580374b8906ea40c7085102efc355ceb388a70d1f5",
-  "targetLockScreenBounds": "567f10cb896e4d6c2abe4f3ade3d0e0b20da150acb8282653ecaa9725daa7660",
-  "renderTargetLockFeedback": "4c1345872703f2a1eaa50033890abac0596c38331ba5e7924be11a78328435f3",
-  "updateTargetLockMarker": "12df585f691a785b078dac0a3c030f0412646c410e0c5d96481979cac79344f1",
-  "clearTargetLock": "a233e5aa60b89759478bfda18d61981405311d981d5fc168b26022bf4bcd589e",
-  "bindTargetLockDesktopControls": "c7134dfb6c923f2662e1f248cec7f6a7926c9462756f9a5e5162f1393ad7ac34",
-  "bindCanvasAim": "c1b63089a9c974e1d72870562da2f321ad5d0876bb86ec06c466f0eda3771d87",
-  "privatePreviewHostname": "67c1534af8b9918a35fc655584f3b8a165df20a2dab70f5659f77f98f22b5f3f",
-  "localTargetLockTestRangeEnabled": "cfffbc65627519a2f33b11251132dad9a779997c79fbd7d37d399e4fe5be7070",
-  "activateLocalTargetLockTestRange": "0698c1c09bff2817b40319ff462e3979a477d59eeebe12068765fb2d9d553db5",
-  "safeActivateLocalTargetLockTestRange": "77bf2cce9c7d292891a127804b14d6fd8a524afd296f4d98e2df84a0d4e0ba86",
-  "spawnEnemy": "0eee1b46e42f50e0f8611046f6a9e22ca2efe51eb0b0a4116e99205370f953c6",
-  "spawnDefenders": "e6963cd82806701fec58f645dfd984710b8ea96e4d66b814efd7c90f17d362de",
-  "spawnBoss": "93836b473d647a8aca8247676c6e4c068dee0058587733f72af9dd04fc305ce6",
-  "damageEnemy": "bddd0d970e05a31515537d705a56b58c689b8c8a6cf213713ab784f5785b976c",
-  "destroyCore": "d912fd674cd7433213f3504008ac5a53953718e3ea7ac1c65b7e0b8a3b0e4e41",
-  "removeFortress": "ebf5f8c46e80bbe75bb9c79e7fdc45aa9bdb29e9d0072a2252bdbf3133621058",
-  "tickTank": "dc4d2fedf406f200ccabf3caf4bda4f981f2fc380e6aa6ffd1be65756a53db11",
-  "tickFortress": "58540e2089564288c4f08b622aab79cc83df4cab66c08a91843e882e28e057fd",
-  "tickProjectilePool": "f388032ad16ff7f58c8744b540e721e65e47f7e54f881eb4ccc8864fb3f2982c",
-  "targetLockWorld": "bca43343f6b46fbf5c290457309cb76c3b6fa8f4664a7f48503591abb9a404bb",
-  "targetLockCandidates": "4274c88c554ca8e99f2d02a126d51b19106ca3bf178483b95f818a82e6eccc0c",
-  "targetLockRaycastCandidateAtScreen": "a8876d0cab6529d04e65fc2004fd272a7d8292340bbff9ff52adbd6dd4397b03",
-  "pickTargetLockAtScreen": "403a83ca982881aefa0180a4a017d5b702a234d0b962fdab31123b580bdfd98f",
-  "selectTargetLockAtScreen": "3a693d4291dca6b054b0b47e06a774e5ba19dda53e41279c58151e945a378f9c",
-  "targetLockHeading": "dccbf85077e99dbc8f8b348f9a9eb80014033f4e4ba11777399d3cedf5264561",
-  "bindGlobalMobileTouchRouter": "5454f2374353dd8b9da4dac639731002eb56479d3d4b84fa1666cb9b9f4436a3",
-  "markTouchLikeInput": "236eed27fa4207554b6f69c1632e2be075129dc89f13e2c27fff98477859681c",
-  "hasRecentTouchLikeInput": "daa0c98fcdf46b1109f5df06b3631dcb39fe65c0e7b6ab40c041fff1a2e3a134",
-  "latchMobileAimVector": "0446a6a5fdc67a981857fa9e52b0d9d249dceb53c750c78727b991f8c9aecaeb",
-  "clearMobileAimLatch": "7f64ce53d6703c47a41be71cbdf7936713ff3f328ff0fb002ccc6ff4db6e42c1",
-  "mobileAimLatchedHeading": "eb0b0ddcc452a188ed19a638f43c8d49e0be68d04b5fd8afaa2533ea3e20eb34",
-  "shouldAcceptDesktopAimEvent": "6c27dad53bb307188db592adb84bc87eef649765ae5c9e7cf6c6ace3ed6dbc3d",
-  "inputDiagnosticsEnabled": "c549e35aecedf57e2f31a7686190fc4e7741dcbb9af2f22d2cf7f64f3ad32911",
-  "cannonWorldPosition": "3c64b7ee95b79c8695a9a01e33d69360bd60ffe668cfdf80888f65ce00a10cc3",
-  "cannonWorldDirection": "87a584e9336ebed5f8c7dc690078170130f6769777d5a1c4337f1f7b967bff15",
-  "cannonWorldRay": "365680e45e561aa9f61046ede628dcb8f30ec751efa47d4acf6f4e455f8f5233",
-  "runtimeIdentity": "da4980d94e19f207ef42e08d505e0f63b76f72d7656aeff11072645a50157cc6",
-  "frontlineDeliveryIdentity": "cacbb474e480cf857823025da58ded3b2be6926df6bfbc1eef201c6665670ee4",
-  "renderRuntimeIdentity": "06aece57b50de8f02587a040cdc0bd8ab4083b7a5b5b739c988b3f40c3be87d9",
-  "occlusionAcceptance": "ebe2b9fa2877bb3cec137c8348fa8ff3e83efebcf49ae0706a69a6bb33c67c55",
-  "updateHud": "d9c68d7ee7c174a640e6f00671ef6c77ec6c7e1e9aaa03b514c96d4fd0ed14c1",
-  "updateInputDiagnostics": "f729fbb00b47091a5b660abd7cd191d9a0f16bf083581efd6116b5a655accde2",
-  "open": "7fe0d62b1426ac66a2ffc37b32854ea1a4b9c27a2fe500759052d2313ee81178",
-  "close": "c9fcd4221c6d791c1d5084379591c6ffca4b3149f2e40d31e8a8c307aa8176d0",
-  "adminAllowed": "d2f1fdc991df487c8421819954b6040635965f713595706be6823b09a0c3eee8"
-};
-if(process.argv.includes('--phase21-r5')){runPhase21R5Tests();process.exit(0);}
-if(process.argv.includes('--phase21-r4')){runPhase21R4Tests();process.exit(0);}
-if(process.argv.includes('--phase21-r3')){runPhase21R3Tests();process.exit(0);}
-if(process.argv.includes('--phase21-r2')){runPhase21R2Tests();process.exit(0);}
-if(process.argv.includes('--phase21-visual')){runPhase21VisualTests();process.exit(0);}
-// Run the N3 source-path suite independently; legacy assertions below remain unchanged.
-if(process.argv.includes('--landscape-lock')){runLandscapeN4Tests();process.exit(0);}
-if(process.argv.includes('--target-lock')){runTargetLockN3Tests();process.exit(0);}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const code=fs.readFileSync('js/frontline1944.js','utf8');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const css=fs.readFileSync('css/frontline1944.css','utf8');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const htmlPath='index_classic.html',html=fs.existsSync(htmlPath)?fs.readFileSync(htmlPath,'utf8'):null;
-const indexPath='index.html',indexHtml=fs.existsSync(indexPath)?fs.readFileSync(indexPath,'utf8'):null;
-const buildPath='tools/build_web.mjs',buildCode=fs.existsSync(buildPath)?fs.readFileSync(buildPath,'utf8'):null;
-const swPath='sw.js',swCode=fs.existsSync(swPath)?fs.readFileSync(swPath,'utf8'):null;
-const appUpdatePath='js/app-update.js',appUpdateCode=fs.existsSync(appUpdatePath)?fs.readFileSync(appUpdatePath,'utf8'):null;
-const versionPath='version.json',buildVersion=fs.existsSync(versionPath)?JSON.parse(fs.readFileSync(versionPath,'utf8')):null;
-const RUNTIME_ID='P1.2.6F-20260902-5cc6a0';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const f1Path='js/data/f1_vocab.js',f1=fs.existsSync(f1Path)?fs.readFileSync(f1Path,'utf8'):null;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Access / shared-system regression guards.
-
-
-
-
-
-
-
-
-
-if(html){
-
-
-
-
-  assert(html.includes('id="btn-rail-frontline1944"')&&html.includes('hidden')&&html.includes('ADMIN PREVIEW'),'Frontline lobby entry stays hidden-by-default admin preview');
-
-
-
-
-  assert(html.includes("var FRONTLINE_RUNTIME_ID='"+RUNTIME_ID+"'")&&html.includes("var FRONTLINE_JS_URL='__VW_FRONTLINE_JS_URL__'")&&html.includes("var FRONTLINE_CSS_URL='__VW_FRONTLINE_CSS_URL__'")&&html.includes("if(!allowed())return false"),'Frontline assets remain admin-gated and lazy-loaded with the current Phase 1.2.6F runtime identity plus build-time immutable placeholders');
-
-
-
-
-  assert(!html.includes('<link rel="stylesheet" href="css/frontline1944.css"')&&!html.includes('<script src="js/frontline1944.js"'),'public lobby still does not statically fetch Frontline-only assets');
-
-
-
-
-  const routeCapture=html.indexOf('window.__VW_FRONTLINE1944_ROUTE__=true'),legacyMain=html.indexOf('<script src="js/main.js');
-
-
-
-
-  assert(routeCapture>=0&&legacyMain>=0&&routeCapture<legacyMain,'Frontline direct route is captured before legacy main.js routing');
-
-
-
-
-}else console.log('SKIP loader/access audit in isolated Task ZIP: '+htmlPath+' was not supplied; full-project run must execute it.');
-
-
-
-
-
-
-
-
-
-// Current Phase 1.2.6F delivery/freshness proof. These checks do not alter gameplay semantics.
-assert(code.includes("runtimeVersion:'"+RUNTIME_ID+"'")&&code.includes('FRONTLINE_EXECUTING_SCRIPT_URL'),'Frontline executing JavaScript owns the current Phase 1.2.6F runtime identity');
-assert(code.includes("el.textContent='RUNTIME: '+delivery.runtimeId")&&code.includes("'\\nJS: '+delivery.jsAsset")&&code.includes('frontlineDeliveryIdentity()'),'visible diagnostics obtain runtime and JS identity from the executing Frontline JavaScript');
-assert(css.includes('--fl44-css-runtime-id:"'+RUNTIME_ID+'-CSS"'),'loaded Frontline stylesheet carries a separate CSS runtime identity');
-if(html){
-  assert(html.includes("fallback+'?v='+encodeURIComponent(FRONTLINE_RUNTIME_ID)")&&html.includes('assetId:FRONTLINE_RUNTIME_ID'),'source fallback URL and bootstrap status are tied to the unique runtime identity');
-}
-if(buildCode){
-  assert(buildCode.includes("makeImmutableAlias('js/frontline1944.js')")&&buildCode.includes("makeImmutableAlias('css/frontline1944.css')")&&buildCode.includes("frontlineHtml.replace(TOKEN_FRONTLINE_JS, frontlineJsUrl).replace(TOKEN_FRONTLINE_CSS, frontlineCssUrl)"),'build rewrites dynamic Frontline JS/CSS loader URLs to immutable content-hash aliases');
-  assert(buildCode.includes('const alias = `assets/build/${stem}.${sha(data)}${ext}`'),'immutable alias path is derived from asset content hash');
-  assert(buildCode.includes("await stripLocalPreviewBootstrap('index.html')")&&buildCode.includes("await stripLocalPreviewBootstrap('index_classic.html')"),'LAN-preview SW/cache reset remains source-only and is stripped from production builds');
-  const h1=crypto.createHash('sha256').update(code).digest('hex').slice(0,16),h2=crypto.createHash('sha256').update(code+'\n/* runtime mutation */').digest('hex').slice(0,16);
-  assert.notStrictEqual(h1,h2,'changing Frontline runtime bytes changes the hash used by its fetch/cache identity');
-}
-if(swCode){
-  const immutableStart=swCode.indexOf('async function cacheFirstImmutable'),immutableEnd=swCode.indexOf('function versionedCacheKey',immutableStart),immutableBlock=swCode.slice(immutableStart,immutableEnd);
-  assert(immutableStart>=0&&immutableBlock.includes('cache.match(request)')&&!immutableBlock.includes('ignoreSearch')&&swCode.includes("url.pathname.startsWith('/assets/build/')")&&swCode.includes('event.respondWith(cacheFirstImmutable(request))'),'service worker treats Frontline build aliases as exact immutable request URLs rather than query-insensitive legacy assets');
-  assert(swCode.includes("url.pathname === '/version.json'")&&swCode.includes("url.pathname === '/sw.js' || url.pathname === '/asset-manifest.json'"),'version/SW/manifest control files bypass stale asset-cache handling');
-}
-if(indexHtml&&html){
-  for(const page of [indexHtml,html])assert(page.includes('function isLocalPreviewHost(host)')&&page.includes("host==='localhost'")&&page.includes('192')&&page.includes('168')&&page.includes('second>=16&&second<=31')&&page.includes("navigator.serviceWorker.register = function(){ return Promise.reject(new Error('disabled in local preview')); }"),'Local Preview recognizes private-LAN devices and prevents a preview-origin service worker from re-registering');
-}
-if(appUpdateCode)assert(appUpdateCode.includes("cache: 'no-store'")&&appUpdateCode.includes("updateViaCache: 'none'")&&appUpdateCode.includes('registration.update()'),'production PWA update path remains explicit/no-store for version checks without globally disabling useful caching');
-if(buildVersion)assert(/^\d{4}-\d{2}-\d{2}\.\d+$/.test(String(buildVersion.version||'')),'build identity remains an explicit timestamp/revision token');
-
-assert(code.includes("typeof isAdmin==='function'&&isAdmin()===true")&&code.includes('return false; // fail closed'),'Frontline runtime continues to use authoritative admin interfaces and fail closed');
-
-
-
-
-
-
-
-
-
-assert(!/email\s*[=!]=|@gmail|ADMIN_EMAIL/i.test(code),'Frontline does not create a parallel email allowlist');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(code.includes('window.__VW_FRONTLINE1944_ROUTE__===true'),'Frontline runtime accepts the pre-main captured route flag');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(code.includes("typeof f1VocabForStudent==='function'")&&code.includes("typeof vocabForStudent==='function'"),'shared vocabulary adapters are reused');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(!code.includes('APPLE')&&!code.includes('BANANA'),'no sample vocabulary is hard-coded into the game');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(/letterCoins\s*:\s*1/.test(code)&&/wordBonus\s*:\s*50/.test(code),'Phase 1 preserves current reward values while leaving future reward rules for later phases');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(code.includes("typeof addCoins==='function'")&&code.includes("typeof saveState==='function'")&&code.includes("typeof authPushSave==='function'"),'existing economy/save/cloud path is reused');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Load only the exported foundation types. Browser rendering is not started in this VM.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// The window listener registry lets acceptance exercise the real mobile pointer delivery path.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const windowListeners=new Map();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function addWindowListener(type,fn){if(!windowListeners.has(type))windowListeners.set(type,[]);windowListeners.get(type).push(fn);}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function removeWindowListener(type,fn){const a=windowListeners.get(type)||[],i=a.indexOf(fn);if(i>=0)a.splice(i,1);}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-let nowMs=1234;class MemoryStorage{constructor(){this.m=new Map();}getItem(k){return this.m.has(k)?this.m.get(k):null;}setItem(k,v){this.m.set(k,String(v));}removeItem(k){this.m.delete(k);}clear(){this.m.clear();}}const localStorage=new MemoryStorage();
-
-
-
-
-const sb={console,window:null,document:{readyState:'loading',addEventListener(){},removeEventListener(){},elementFromPoint(){return null;}},navigator:{maxTouchPoints:1},location:{search:''},matchMedia(){return {matches:true};},isAdmin(){return true;},addEventListener:addWindowListener,removeEventListener:removeWindowListener,PointerEvent:function PointerEvent(){},performance:{now:()=>nowMs},localStorage,setInterval(){return 1;},clearInterval(){},setTimeout(){return 1;},clearTimeout(){},URLSearchParams,Math,Date};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-sb.window=sb;vm.createContext(sb);vm.runInContext(code,sb);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const T=sb.Frontline1944&&sb.Frontline1944._t;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(T,'Frontline test surface must be exported');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const {CFG,LAYER,TERRAIN,SECTOR_TEMPLATES,WorldSpace,TerrainSystem,CollisionSystem,SectorStreamer,ObjectPool,TankRuntime,DesktopTankInputAdapter,MobileTankInputAdapter,UnifiedTankInputAdapter,GlobalMobileTouchRouter,visualIdFor,tankStateSnapshot,interpolateRemoteTank,forwardFromRotation,rightFromRotation,rotationFromForward,driveDelta,normalizeTankCommand,desktopCommandFromState,mobileCommandFromState,mergeTankCommands,stickVectorFromRect,resetStickState,pointInRect,rectCenter,rectIntersects,safeGameplayRect,protectedFrontlineRects,mobileControlRegions,firePlacementBlockedRects,fireRectIsValid,findSafeFireRect,saveFirePositionPreference,restoreFirePositionPreference,readFirePositionStore,writeFirePositionStore,queueMobileFirePulse,consumeMobileFirePulse,eventTargetLabel,bindGlobalMobileTouchRouter,markTouchLikeInput,clearMobileAimLatch,mobileAimLatchedHeading,shouldAcceptDesktopAimEvent,inputDiagnosticsEnabled,cannonWorldRay,runtimeIdentity,occlusionAcceptance,updateInputDiagnostics,G}=T;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// World / sector streaming foundation.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert.strictEqual(SECTOR_TEMPLATES.length,10,'exactly 10 reusable visual sector identities are defined');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(CFG.viewW>=210&&CFG.viewW<=225,'Phase 1.2.6N2 tactical camera covers the requested 210-225 world-unit width');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(CFG.cameraHeight>=115&&CFG.cameraHeight<=120&&CFG.cameraOffsetX>=72&&CFG.cameraOffsetX<=78&&CFG.cameraOffsetZ>=88&&CFG.cameraOffsetZ<=95,'Phase 1.2.6N2 tactical camera uses the requested high/far offset envelope');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(/^P1\.2\.6F-/.test(CFG.runtimeVersion),'Phase 1.2.6F runtime freshness identity marker is explicit');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert.strictEqual(sb.Frontline1944.VERSION,CFG.runtimeVersion,'desktop/mobile parity marker is exported from the one Frontline runtime');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(Math.abs(WorldSpace.sectorCenterZ(0))<1e-12,'sector 0 world center');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert.strictEqual(WorldSpace.sectorCenterZ(1),-CFG.sectorLength,'logical sector numbers increase in the default tank-forward direction');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert.strictEqual(WorldSpace.sectorIndexAtZ(-CFG.sectorLength),1,'world position resolves to logical sector independent of pixels');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const ws=WorldSpace.localToWorld(3,12,-7),back=WorldSpace.worldToSector(ws.x,ws.z);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert.strictEqual(back.logicalIndex,3,'local/world sector transform round-trips logical index');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert.strictEqual(back.x,12,'local/world sector transform round-trips X');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert.strictEqual(back.z,-7,'local/world sector transform round-trips local Z');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const visualIds=new Set();for(let i=-50;i<=50;i++){const v=visualIdFor(i);assert(v>=0&&v<10,'visual sector id stays in reusable range');visualIds.add(v);}assert(visualIds.size>=8,'logical sectors reuse a diverse subset of the 10 visual identities');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(code.includes('new Set([current-1,current,current+1])'),'streamer keeps only Previous / Current / Next fully active');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(code.includes('this.preload(current+CFG.preloadAhead)')&&code.includes('this.preload(current-CFG.preloadAhead)'),'near-future sector descriptors are preloaded');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const streamer=new SectorStreamer();for(let i=0;i<20;i++)streamer.preload(i);assert(streamer.stats().preloadedCount<=CFG.descriptorCacheCap,'descriptor preload cache is bounded');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Terrain and collision acceptance logic, including deep water / bridge override.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const terrain=new TerrainSystem();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-terrain.registerRect(0,0,0,100,20,'DEEP_WATER',70,'test-river');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-terrain.registerRect(0,0,0,12,24,'ROAD',100,'test-bridge');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-terrain.registerRect(0,-30,0,12,20,'SHALLOW_WATER',95,'test-ford');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-terrain.registerRect(0,30,35,24,16,'MUD',60,'test-mud');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert.strictEqual(terrain.sample(25,0).id,TERRAIN.DEEP_WATER.id,'deep river samples as blocked water');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert.strictEqual(terrain.sample(0,0).id,TERRAIN.ROAD.id,'bridge road overrides deep-water blocking');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert.strictEqual(terrain.sample(-30,0).id,TERRAIN.SHALLOW_WATER.id,'explicit ford overrides deep water with shallow-water behavior');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(terrain.sample(30,35).speed<1,'mud reduces movement speed');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const collision=new CollisionSystem(terrain);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-collision.registerCircle(0,45,40,2,{ownerId:'tree:test',kind:'tree_trunk'});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-collision.registerAABB(0,-45,40,7,6,{ownerId:'house:test',kind:'house'});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-collision.registerAABB(0,25,45,7,6,{ownerId:'bunker:test',kind:'bunker'});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-collision.registerAABB(0,0,45,3,14,{ownerId:'fort:test',kind:'fortress_wall'});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(collision.hitSolid(45,40,1.5).blocked,'Tank -> tree trunk is blocked');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(collision.hitSolid(-45,40,1.5).blocked,'Tank -> house is blocked');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(collision.hitSolid(25,45,1.5).blocked,'Tank -> bunker is blocked');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(collision.hitSolid(0,45,1.5).blocked,'Tank -> fortress wall is blocked');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(collision.hitSolid(25,0,1.5).blocked,'Tank -> deep river is blocked');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(!collision.hitSolid(0,0,1.5).blocked,'Tank -> bridge crossing is allowed');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const moved=collision.resolveCircleMove({x:-8,z:45},{x:8,z:45},1.5);assert(moved.blocked&&moved.x<0,'swept circle movement does not tunnel through a fortress wall');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const vehicleMoved=collision.resolveVehicleMove({x:-8,z:45},{x:8,z:45},1.5);assert(vehicleMoved.blocked&&vehicleMoved.x<0,'strict tank resolver stops at collision instead of axis-sliding through/along the obstacle');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-terrain.registerRect(0,55,0,10,20,'DEEP_WATER',70,'footprint-water');assert(collision.hitSolid(49.8,0,2.45).blocked,'tank footprint blocks at deep-water edge before its center enters');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(!collision.hitTankFootprint(0,0,0,CFG.tankFootprintHalfWidth,CFG.tankFootprintHalfLength).blocked,'oriented tank footprint remains legal on the bridge override');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(collision.hitTankFootprint(25,0,0,CFG.tankFootprintHalfWidth,CFG.tankFootprintHalfLength).blocked,'oriented tank footprint blocks on deep water');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-collision.registerAABB(0,0,58,.5,18,{ownerId:'thin-wall:test',kind:'wall'});const tankSweep=collision.resolveTankSweep({x:-15,z:58,heading:Math.PI/2},{x:15,z:58,heading:Math.PI/2});assert(tankSweep.blocked&&tankSweep.x<0,'oriented swept tank footprint cannot tunnel through a thin wall at high travel distance');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// 2.5D layer/depth foundation.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-for(const k of ['BACKGROUND','TERRAIN','ROADS_WATER','GROUND_DECOR','GAMEPLAY_PROPS','ACTORS','FOREGROUND_OCCLUDERS','COMBAT_FX','ATMOSPHERE'])assert(Number.isInteger(LAYER[k]),k+' layer exists');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-G.player={group:{renderOrder:5000},world:{x:0,z:0}};G.occluders=[{parent:{},renderOrder:6010,userData:{occluder:true,depthAnchor:{worldZ:0,priority:10,foreground:true}}}];
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(occlusionAcceptance().pass,'foreground canopy has explicit depth ownership above the tank when overlapping');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Tank / multiplayer-ready state contract.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const fakeTank={playerId:'p1',displayName:'Tank One',world:{x:4,z:-12},hullRotation:.3,turretRotation:-.7,hp:300,maxHp:380,activeWeapon:'main_cannon',fireEvent:9,visualUpgradeTier:2,damageStatistic:{match:123,lifetime:456},hullVisualTier:1,armorTier:2,engineTier:3,turretTier:4,mainWeaponId:'m1',specialWeaponId:'s1',skinId:'skin'};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const snap=tankStateSnapshot(fakeTank);assert.strictEqual(snap.hullRotation,.3);assert.strictEqual(snap.turretRotation,-.7);assert.notStrictEqual(snap.hullRotation,snap.turretRotation,'hull and turret rotations are independent');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-for(const key of ['playerId','displayName','position','hp','maxHp','activeWeapon','fireEvent','visualUpgradeTier','damageStatistic','hullVisualTier','armorTier','engineTier','turretTier','mainWeaponId','specialWeaponId','skinId'])assert(Object.prototype.hasOwnProperty.call(snap,key),'multiplayer/upgrade snapshot contains '+key);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const remote={world:{x:0,z:0},hullRotation:0,turretRotation:0,group:{position:{set(x,y,z){this.x=x;this.y=y;this.z=z;}}},hull:{rotation:{y:0}},turret:{rotation:{y:0}}};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-interpolateRemoteTank(remote,{position:{x:10,z:-20},hullRotation:1,turretRotation:-1},.1);assert(remote.world.x>0&&remote.world.x<10&&remote.world.z<0&&remote.world.z>-20,'remote tank interpolation moves toward replicated state without snapping');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(code.includes('nameAnchor')&&code.includes('hpAnchor')&&code.includes('damageAnchor'),'future player-name / HP / floating-damage anchors are present');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Phase 1.2 canonical tracked-vehicle + unified-runtime acceptance contract.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert.strictEqual(typeof TankRuntime,'function','one authoritative TankRuntime class is exported');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert.strictEqual(typeof UnifiedTankInputAdapter,'function','desktop/mobile commands converge through one shared input adapter');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Independent visual-direction oracle: Three.js Object3D.rotation.y applied to the arrow's local -Z axis.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// This deliberately does NOT call forwardFromRotation(), so a sign mismatch cannot self-validate again.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function visualLocalMinusZAfterYaw(h){return {x:-Math.sin(h),z:-Math.cos(h)};}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-for(let deg=0;deg<360;deg++){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const h=deg*Math.PI/180,f=forwardFromRotation(h),r=rightFromRotation(h),visual=visualLocalMinusZAfterYaw(h);assert(Math.abs(Math.hypot(f.x,f.z)-1)<1e-10,'forward vector is normalized at '+deg+'deg');assert(Math.abs(f.x*r.x+f.z*r.z)<1e-10,'forward/right axes remain orthogonal at '+deg+'deg');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  assert(Math.abs(f.x-visual.x)<1e-10&&Math.abs(f.z-visual.z)<1e-10,'authoritative forward exactly matches the visible hull arrow at '+deg+'deg');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const forwardStep=driveDelta(h,7.5,.25),reverseStep=driveDelta(h,-7.5,.25);assert(forwardStep.x*visual.x+forwardStep.z*visual.z>0,'UP/forward follows the visible hull arrow at '+deg+'deg');assert(reverseStep.x*visual.x+reverseStep.z*visual.z<0,'DOWN/reverse is exactly opposite the visible hull arrow at '+deg+'deg');assert(Math.abs(forwardStep.x+reverseStep.x)<1e-10&&Math.abs(forwardStep.z+reverseStep.z)<1e-10,'forward/reverse are exact opposites at '+deg+'deg');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const recovered=rotationFromForward(visual.x,visual.z),err=Math.atan2(Math.sin(recovered-h),Math.cos(recovered-h));assert(Math.abs(err)<1e-10,'world direction converts back to the same Three.js hull yaw at '+deg+'deg');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const desktopAim=desktopCommandFromState(new Set(),{x:visual.x*10,z:visual.z*10},{x:0,z:0},false),mobileAim=mobileCommandFromState({active:false},{active:true},false,visual),desktopAimErr=Math.atan2(Math.sin(desktopAim.turretTargetHeading-h),Math.cos(desktopAim.turretTargetHeading-h)),mobileAimErr=Math.atan2(Math.sin(mobileAim.turretTargetHeading-h),Math.cos(mobileAim.turretTargetHeading-h));assert(Math.abs(desktopAimErr)<1e-10&&Math.abs(mobileAimErr)<1e-10,'desktop/mobile turret aim use the same visual yaw convention at '+deg+'deg');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert.strictEqual(desktopCommandFromState(new Set(['ArrowUp']),null,{x:0,z:0},false).throttle,1,'ArrowUp is positive throttle');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert.strictEqual(desktopCommandFromState(new Set(['ArrowDown']),null,{x:0,z:0},false).throttle,-1,'ArrowDown is negative throttle');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const desktopParity=desktopCommandFromState(new Set(['KeyW','KeyD']),null,{x:0,z:0},false),mobileParity=mobileCommandFromState({x:1,y:-1,active:true},{active:false},false,null);assert.strictEqual(desktopParity.throttle,mobileParity.throttle,'desktop/mobile throttle normalize identically');assert.strictEqual(desktopParity.steering,mobileParity.steering,'desktop/mobile steering normalize identically');const parityMerged=mergeTankCommands(desktopParity,mobileParity,true,false);assert.strictEqual(parityMerged.throttle,1);assert.strictEqual(parityMerged.steering,1);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Phase 1.2.6 mobile acceptance: accepted DRIVE/AIM lock + movable FIRE + safe global double-tap FIRE.
-
-
-
-
-// The tests exercise the real global pointer delivery path and keep the canonical TankRuntime untouched.
-
-
-
-
-class FakeClassList{constructor(){this.s=new Set();}add(x){this.s.add(x);}remove(x){this.s.delete(x);}toggle(x,on){if(on)this.s.add(x);else this.s.delete(x);}contains(x){return this.s.has(x);}}
-
-
-
-
-class FakeControlTarget{
-
-
-
-
-  constructor(rect,id,tagName='DIV',className=''){this.rect={...rect};this.style={};this.dataset={};this.attrs={};this.hidden=false;this.id=id||'';this.tagName=tagName;this.className=className;this.classList=new FakeClassList();this.parentElement=null;this.isContentEditable=false;}
-
-
-
-
-  getBoundingClientRect(){const w=this.rect.width,h=this.rect.height,left=Number.isFinite(parseFloat(this.style.left))?parseFloat(this.style.left):this.rect.left,top=Number.isFinite(parseFloat(this.style.top))?parseFloat(this.style.top):this.rect.top;return {left,top,width:w,height:h,right:left+w,bottom:top+h};}
-
-
-
-
-  setAttribute(k,v){this.attrs[k]=String(v);}getAttribute(k){return Object.prototype.hasOwnProperty.call(this.attrs,k)?this.attrs[k]:null;}
-
-
-
-
-}
-
-
-
-
-function pointerEvt(pointerId,clientX,clientY,target=canvasTarget,pointerType='touch'){return {pointerId,clientX,clientY,pointerType,target,button:0,cancelable:true,preventDefault(){this.defaultPrevented=true;},stopPropagation(){this.propagationStopped=true;}};}
-
-
-
-
-function emitWindow(type,event){for(const fn of [...(windowListeners.get(type)||[])])fn(event);}
-
-
-
-
-function center(r){return {x:r.left+r.width/2,y:r.top+r.height/2};}
-
-
-
-
-function closeHeading(a,b){return Math.abs(Math.atan2(Math.sin(a-b),Math.cos(a-b)))<1e-9;}
-
-
-
-
-const phase126Passed=new Set();function accept(n,condition,message){assert(condition,'Phase 1.2.6 acceptance '+n+': '+message);phase126Passed.add(n);}
-
-
-
-
-
-
-
-
-
-const canvasTarget={tagName:'CANVAS',id:'fl44-battlefield',className:'',parentElement:null};
-
-
-
-
-const rootRect={left:0,top:0,width:900,height:420};
-
-
-
-
-const driveEl=new FakeControlTarget({left:14,top:312,width:96,height:96},'fl44-stick','DIV','fl44-stick'),driveKnob={style:{}},aimEl=new FakeControlTarget({left:700,top:326,width:82,height:82},'fl44-aim-stick','DIV','fl44-aim-stick'),aimKnob={style:{}},fireEl=new FakeControlTarget({left:818,top:330,width:68,height:68},'fl44-fire','BUTTON','fl44-fire'),diagEl=new FakeControlTarget({left:230,top:61,width:430,height:106},'fl44-input-diag','PRE','fl44-input-diag');diagEl.textContent='';diagEl.hidden=true;diagEl.setAttribute('aria-hidden','true');
-
-
-
-
-const topEl=new FakeControlTarget({left:7,top:5,width:886,height:54},'','DIV','fl44-top'),objectiveEl=new FakeControlTarget({left:715,top:63,width:178,height:82},'fl44-objective','DIV','fl44-objective'),bossEl=new FakeControlTarget({left:250,top:61,width:400,height:44},'fl44-boss','DIV','fl44-boss');bossEl.hidden=true;const stateEl=new FakeControlTarget({left:350,top:390,width:200,height:26},'fl44-state','DIV','fl44-state'),exitEl=new FakeControlTarget({left:824,top:375,width:69,height:40},'fl44-exit','BUTTON','fl44-exit'),toastEl=new FakeControlTarget({left:300,top:160,width:300,height:90},'fl44-toast','DIV','fl44-toast');toastEl.hidden=true;
-
-
-
-
-const root={getBoundingClientRect(){return {...rootRect,right:rootRect.left+rootRect.width,bottom:rootRect.top+rootRect.height};},querySelector(sel){if(sel==='#fl44-input-diag:not([hidden])')return diagEl.hidden?null:diagEl;if(sel==='.fl44-toast.on')return toastEl.classList.contains('on')&&!toastEl.hidden?toastEl:null;if(sel==='.fl44-loading')return null;return ({'#fl44-stick':driveEl,'.fl44-knob':driveKnob,'#fl44-aim-stick':aimEl,'.fl44-aim-knob':aimKnob,'#fl44-fire':fireEl,'#fl44-input-diag':diagEl,'.fl44-top':topEl,'.fl44-objective':objectiveEl,'.fl44-boss':bossEl,'.fl44-state':stateEl,'#fl44-exit':exitEl})[sel]||null;}};
-
-
-
-
-for(const el of [driveEl,aimEl,fireEl,diagEl,topEl,objectiveEl,bossEl,stateEl,exitEl,toastEl,canvasTarget])el.parentElement=root;
-
-
-
-
-G.root=root;G.joy={x:0,y:0,id:null,active:false,transport:'idle',lastTransport:'none',captured:false,moves:0,lastEventAt:0};G.aim={x:0,y:0,id:null,active:false,transport:'idle',lastTransport:'none',captured:false,moves:0,lastEventAt:0};G.firing=false;G.mobileFirePulseCount=0;G.mobileFirePulseSerial=0;G.pointerAim=null;G.lastTouchLikeInputAt=0;clearMobileAimLatch();localStorage.clear();
-
-
-
-
-sb.navigator.maxTouchPoints=1;sb.matchMedia=()=>({matches:true});G.mobileRouter=bindGlobalMobileTouchRouter();assert(G.mobileRouter instanceof GlobalMobileTouchRouter,'one global mobile touch router owns DRIVE/AIM/FIRE');
-
-
-
-
-function regions(){return mobileControlRegions(root,driveEl,aimEl,fireEl);}function begin(id,x,y,type='touch',target=canvasTarget){emitWindow('pointerdown',pointerEvt(id,x,y,target,type));}function movePointer(id,x,y,type='touch',target=canvasTarget){emitWindow('pointermove',pointerEvt(id,x,y,target,type));}function endPointer(id,x,y,type='touch',target=canvasTarget){emitWindow('pointerup',pointerEvt(id,x,y,target,type));}function cancelPointer(id,x,y,type='touch',target=canvasTarget){emitWindow('pointercancel',pointerEvt(id,x,y,target,type));}function mobileCmd(){return new MobileTankInputAdapter().sample();}
-
-
-
-
-function tap(id,x,y,holdMs=35,target=canvasTarget){begin(id,x,y,'touch',target);nowMs+=holdMs;endPointer(id,x,y,'touch',target);}function resetTapState(){G.mobileRouter.lastTap=null;G.mobileRouter.tapCandidates.clear();G.mobileFirePulseCount=0;G.firing=false;}
-
-
-
-
-function fakeRuntimeTank(x=0,z=40,h=0){return {world:{x,z},speed:0,hullRotation:h,turretRotation:h,turretTargetRotation:h,footprint:{halfWidth:CFG.tankFootprintHalfWidth,halfLength:CFG.tankFootprintHalfLength},group:{position:{set(x,y,z){this.x=x;this.y=y;this.z=z;}},updateMatrixWorld(){}},hull:{rotation:{y:0}},turret:{rotation:{y:0}},damageStatistic:{match:0,lifetime:0},playerId:'p',displayName:'P',hp:100,maxHp:100,activeWeapon:'main',fireEvent:0,visualUpgradeTier:0,hullVisualTier:0,armorTier:0,engineTier:0,turretTier:0,mainWeaponId:'main',specialWeaponId:'',skinId:'default'};}
-
-
-
-
-
-
-
-
-
-// 1-7: the real-device accepted DRIVE path remains unchanged.
-
-
-
-
-let R=regions(),d=center(R.drive);nowMs=1300;begin(101,d.x,d.y);movePointer(101,d.x,d.y-70);let cmd=mobileCmd();accept(1,cmd.throttle>.9&&Math.abs(cmd.steering)<.08,'mobile DRIVE forward still passes');let rtTerrain=new TerrainSystem(),rt=new TankRuntime(fakeRuntimeTank(),new CollisionSystem(rtTerrain),rtTerrain),z0=rt.z;for(let i=0;i<60;i++)rt.step(cmd,1/60);assert(rt.z<z0-1,'forward command reaches TankRuntime');emitWindow('lostpointercapture',pointerEvt(101,d.x,d.y-70));movePointer(101,d.x,d.y-180);accept(6,G.joy.active&&G.joy.id===101&&mobileCmd().throttle>.9,'DRIVE pointer ownership continues outside visual joystick');endPointer(101,d.x,d.y-180);accept(7,!G.joy.active&&G.joy.id===null&&mobileCmd().throttle===0,'DRIVE release stops throttle');
-
-
-
-
-R=regions();d={x:R.drive.left+R.drive.width*.38,y:R.drive.top+R.drive.height*.55};begin(102,d.x,d.y);movePointer(102,d.x,d.y+70);cmd=mobileCmd();accept(2,cmd.throttle<-.9,'mobile DRIVE reverse still passes');endPointer(102,d.x,d.y+70);
-
-
-
-
-R=regions();d=center(R.drive);begin(103,d.x,d.y);movePointer(103,d.x-70,d.y);let leftCmd=mobileCmd();endPointer(103,d.x-70,d.y);R=regions();d=center(R.drive);begin(104,d.x,d.y);movePointer(104,d.x+70,d.y);let rightCmd=mobileCmd();endPointer(104,d.x+70,d.y);accept(3,leftCmd.steering<-.9&&rightCmd.steering>.9,'mobile DRIVE left/right steering still passes');
-
-
-
-
-R=regions();d=center(R.drive);begin(105,d.x,d.y);movePointer(105,d.x+60,d.y-60);const diagCmd=mobileCmd(),diagTerrain=new TerrainSystem(),diagRuntime=new TankRuntime(fakeRuntimeTank(),new CollisionSystem(diagTerrain),diagTerrain);for(let i=0;i<45;i++)diagRuntime.step(diagCmd,1/60);accept(4,diagCmd.throttle>.6&&diagCmd.steering>.6&&Math.abs(diagRuntime.heading)>.05,'diagonal DRIVE still passes');accept(5,Math.abs(diagRuntime.lastMotion.lateralVelocity)<1e-8,'zero strafe still passes');endPointer(105,d.x+60,d.y-60);
-
-
-
-
-
-
-
-
-
-// 8-14: accepted mobile AIM latch/release behavior remains locked.
-
-
-
-
-G.camera=null;R=regions();let aimPt=center(R.aim);begin(201,aimPt.x,aimPt.y);accept(8,G.aim.active&&G.aim.id===201,'AIM pointer acquisition works');movePointer(201,aimPt.x-65,aimPt.y+18);let activeAim=mobileCmd(),firstLatched=mobileAimLatchedHeading();accept(9,activeAim.turretTargetHeading!=null&&firstLatched!=null,'AIM drag updates turret target heading');endPointer(201,aimPt.x-65,aimPt.y+18);const releasedHeading=mobileAimLatchedHeading(),releasedMobile=mobileCmd();accept(10,!G.aim.active&&releasedHeading!=null&&closeHeading(releasedMobile.turretTargetHeading,releasedHeading),'AIM release preserves final turret heading');const upRightHeading=rotationFromForward(1,1);accept(11,!closeHeading(releasedHeading,upRightHeading),'AIM release does not return to Up-Right');
-
-
-
-
-const staleDesktopHeading=desktopCommandFromState(new Set(),{x:100,z:100},{x:0,z:0},false).turretTargetHeading,unifiedAfterRelease=mergeTankCommands({turretTargetHeading:staleDesktopHeading,source:'desktop'},releasedMobile,false,true);accept(12,closeHeading(unifiedAfterRelease.turretTargetHeading,releasedHeading)&&!closeHeading(unifiedAfterRelease.turretTargetHeading,staleDesktopHeading),'stale desktop pointer aim cannot replace latched mobile heading');markTouchLikeInput();accept(13,shouldAcceptDesktopAimEvent({pointerType:'mouse'})===false,'touch-generated compatibility mouse events cannot steal AIM authority');
-
-
-
-
-R=regions();aimPt={x:R.aim.left+R.aim.width*.68,y:R.aim.top+R.aim.height*.58};begin(202,aimPt.x,aimPt.y);movePointer(202,aimPt.x+58,aimPt.y-28);const secondLatched=mobileAimLatchedHeading();endPointer(202,aimPt.x+58,aimPt.y-28);accept(14,secondLatched!=null&&!closeHeading(firstLatched,secondLatched),'new AIM gesture updates previously latched heading');
-
-
-
-
-
-
-
-
-
-// 15-25: DRIVE/AIM remain floating while FIRE becomes intentional, movable, safe and persistent.
-
-
-
-
-R=regions();const d1={x:R.drive.left+R.drive.width*.28,y:R.drive.top+R.drive.height*.64};begin(301,d1.x,d1.y);const driveLeft1=parseFloat(driveEl.style.left);endPointer(301,d1.x,d1.y);R=regions();const d2={x:R.drive.left+R.drive.width*.70,y:R.drive.top+R.drive.height*.72};begin(302,d2.x,d2.y);const driveLeft2=parseFloat(driveEl.style.left);endPointer(302,d2.x,d2.y);accept(15,Number.isFinite(driveLeft1)&&Number.isFinite(driveLeft2)&&Math.abs(driveLeft2-driveLeft1)>20,'floating DRIVE center can still be acquired at a new valid position');
-
-
-
-
-R=regions();const a1={x:R.aim.left+R.aim.width*.30,y:R.aim.top+R.aim.height*.64};begin(303,a1.x,a1.y);const aimLeft1=parseFloat(aimEl.style.left);endPointer(303,a1.x,a1.y);R=regions();const a2={x:R.aim.left+R.aim.width*.68,y:R.aim.top+R.aim.height*.72};begin(304,a2.x,a2.y);const aimLeft2=parseFloat(aimEl.style.left);endPointer(304,a2.x,a2.y);accept(16,Number.isFinite(aimLeft1)&&Number.isFinite(aimLeft2)&&Math.abs(aimLeft2-aimLeft1)>20,'floating AIM center can still be acquired at a new valid position');
-
-
-
-
-R=regions();let firePt=center(R.fire);G.mobileFirePulseCount=0;nowMs=2200;begin(305,firePt.x,firePt.y);nowMs+=40;endPointer(305,firePt.x,firePt.y);let fireCmd=mobileCmd();accept(17,fireCmd.fire===true,'normal quick tap FIRE emits the existing mobile FIRE command');accept(18,mobileCmd().fire===false&&G.mobileFirePulseCount===0,'quick tap FIRE produces exactly one intended fire pulse');
-
-
-
-
-R=regions();firePt=center(R.fire);nowMs=2600;begin(306,firePt.x,firePt.y);nowMs+=150;movePointer(306,760,220);accept(19,!!(G.mobileRouter.fireGesture&&G.mobileRouter.fireGesture.repositioning&&fireEl.classList.contains('repositioning')),'FIRE button enters intentional reposition mode after hold + drag threshold');accept(20,G.mobileFirePulseCount===0&&!G.firing,'reposition gesture suppresses accidental firing');endPointer(306,760,220);const movedFireRect=fireEl.getBoundingClientRect(),safeRect=safeGameplayRect(root),blockedRects=firePlacementBlockedRects(root,driveEl,aimEl);accept(21,fireRectIsValid(movedFireRect,safeRect,blockedRects),'repositioned FIRE is clamped inside safe viewport bounds');accept(22,blockedRects.every(r=>!rectIntersects(movedFireRect,r)),'repositioned FIRE avoids protected UI and visible DRIVE/AIM controls');accept(23,!!localStorage.getItem(CFG.mobileFirePositionStorageKey)&&!!readFirePositionStore(localStorage).landscape,'FIRE normalized position is persisted per landscape device layout');
-
-
-
-
-const movedCenter=rectCenter(movedFireRect);fireEl.style.left='20px';fireEl.style.top='20px';const restoredRect=G.mobileRouter.restoreFirePosition(),restoredCenter=rectCenter(restoredRect);accept(24,Math.hypot(restoredCenter.x-movedCenter.x,restoredCenter.y-movedCenter.y)<2,'saved FIRE position restores after reopen/rebind semantics');writeFirePositionStore({v:1,landscape:{x:9,y:-4}},localStorage);const recoveredRect=G.mobileRouter.restoreFirePosition();accept(25,fireRectIsValid(recoveredRect,safeGameplayRect(root),firePlacementBlockedRects(root,driveEl,aimEl)),'invalid saved FIRE position safely clamps/recovers into a valid region');
-
-
-
-
-
-
-
-
-
-// 26-35: deterministic global double-tap recognition with real protected DOM rectangles.
-
-
-
-
-const worldPt={x:450,y:190};resetTapState();nowMs=4000;tap(501,worldPt.x,worldPt.y);accept(26,mobileCmd().fire===false,'single gameplay tap does not accidentally become double-tap FIRE');resetTapState();nowMs=4200;tap(502,worldPt.x,worldPt.y);nowMs+=120;tap(503,worldPt.x+10,worldPt.y+8);accept(27,mobileCmd().fire===true,'double tap in safe gameplay area produces FIRE');accept(28,mobileCmd().fire===false,'recognized double tap produces exactly one FIRE pulse');
-
-
-
-
-resetTapState();nowMs=5000;tap(504,worldPt.x,worldPt.y);nowMs+=80;tap(505,worldPt.x+100,worldPt.y);accept(29,mobileCmd().fire===false,'taps too far apart do not count as double tap');resetTapState();nowMs=5600;tap(506,worldPt.x,worldPt.y);nowMs+=CFG.mobileDoubleTapMaxMs+30;tap(507,worldPt.x+5,worldPt.y+5);accept(30,mobileCmd().fire===false,'taps too slow do not count as double tap');resetTapState();nowMs=6400;begin(508,worldPt.x,worldPt.y);movePointer(508,worldPt.x+CFG.mobileDoubleTapMovePx+12,worldPt.y);nowMs+=40;endPointer(508,worldPt.x+CFG.mobileDoubleTapMovePx+12,worldPt.y);nowMs+=80;tap(509,worldPt.x,worldPt.y);accept(31,mobileCmd().fire===false,'tap gesture with excessive movement is rejected');
-
-
-
-
-function protectedDoubleTap(id,x,y){resetTapState();nowMs+=500;tap(id,x,y);nowMs+=100;tap(id+1,x+1,y+1);return mobileCmd().fire;}accept(32,protectedDoubleTap(520,850,395)===false,'double tap over Exit does NOT fire');accept(33,protectedDoubleTap(522,80,30)===false,'double tap over HUD does NOT fire');accept(34,protectedDoubleTap(524,450,30)===false,'double tap over Target Word does NOT fire');accept(35,protectedDoubleTap(526,790,100)===false,'double tap over fortress/navigation objective UI does NOT fire');
-
-
-
-
-
-
-
-
-
-// 36-45: double-tap FIRE is parallel input; it cannot steal or mutate DRIVE/AIM ownership or headings.
-
-
-
-
-resetTapState();const latchBeforeDouble=mobileAimLatchedHeading(),headingTank=fakeRuntimeTank(0,40,.61),headingTerrain=new TerrainSystem(),headingRuntime=new TankRuntime(headingTank,new CollisionSystem(headingTerrain),headingTerrain),hullBeforeDouble=headingRuntime.heading;nowMs=8000;tap(540,worldPt.x,worldPt.y);nowMs+=100;tap(541,worldPt.x+4,worldPt.y+4);const headingFireCmd=mobileCmd();accept(36,headingFireCmd.fire&&closeHeading(headingFireCmd.turretTargetHeading,latchBeforeDouble)&&closeHeading(mobileAimLatchedHeading(),latchBeforeDouble),'double-tap FIRE does not alter current turret/AIM heading');headingRuntime.step(headingFireCmd,1/60);accept(37,closeHeading(headingRuntime.heading,hullBeforeDouble),'double-tap FIRE does not alter hull heading');
-
-
-
-
-resetTapState();R=regions();d=center(R.drive);aimPt=center(R.aim);begin(701,d.x,d.y);movePointer(701,d.x,d.y-58);begin(702,aimPt.x,aimPt.y);movePointer(702,aimPt.x-48,aimPt.y+5);const liveAimBefore=mobileAimLatchedHeading();nowMs=9000;tap(703,worldPt.x,worldPt.y);nowMs+=100;tap(704,worldPt.x+6,worldPt.y+4);accept(38,G.joy.active&&G.joy.id===701,'DRIVE continues during double-tap FIRE');accept(39,G.aim.active&&G.aim.id===702&&closeHeading(mobileAimLatchedHeading(),liveAimBefore),'AIM continues during double-tap FIRE');const comboDoubleCmd=mobileCmd();accept(40,comboDoubleCmd.fire&&comboDoubleCmd.throttle>.7&&comboDoubleCmd.turretTargetHeading!=null&&G.mobileRouter.activeCount()===2,'DRIVE + AIM + double-tap FIRE works through independent pointer ownership');endPointer(701,d.x,d.y-58);endPointer(702,aimPt.x-48,aimPt.y+5);
-
-
-
-
-R=regions();d=center(R.drive);begin(710,d.x,d.y);movePointer(710,d.x,d.y-55);firePt=center(regions().fire);nowMs+=200;tap(711,firePt.x,firePt.y);const driveFireCmd=mobileCmd();accept(41,G.joy.active&&driveFireCmd.fire&&driveFireCmd.throttle>.7,'DRIVE + FIRE quick tap works without releasing DRIVE');endPointer(710,d.x,d.y-55);
-
-
-
-
-R=regions();aimPt=center(R.aim);begin(712,aimPt.x,aimPt.y);movePointer(712,aimPt.x+45,aimPt.y);const aimBeforeFire=mobileAimLatchedHeading();firePt=center(regions().fire);nowMs+=200;tap(713,firePt.x,firePt.y);const aimFireCmd=mobileCmd();accept(42,G.aim.active&&aimFireCmd.fire&&closeHeading(mobileAimLatchedHeading(),aimBeforeFire),'AIM + FIRE works without changing AIM heading');endPointer(712,aimPt.x+45,aimPt.y);
-
-
-
-
-R=regions();d=center(R.drive);aimPt=center(R.aim);begin(720,d.x,d.y);movePointer(720,d.x,d.y-55);begin(721,aimPt.x,aimPt.y);movePointer(721,aimPt.x-45,aimPt.y);const allAimLatch=mobileAimLatchedHeading();firePt=center(regions().fire);nowMs+=200;begin(722,firePt.x,firePt.y);accept(43,G.joy.active&&G.aim.active&&G.mobileRouter.activeCount()===3&&G.mobileRouter.rolePointers.fire===722,'DRIVE + AIM + FIRE supports three simultaneous pointer owners');nowMs+=35;endPointer(722,firePt.x,firePt.y);const allFireCmd=mobileCmd();accept(44,G.joy.active&&G.aim.active&&G.mobileRouter.activeCount()===2&&allFireCmd.fire,'releasing FIRE does not reset DRIVE or AIM');accept(45,closeHeading(mobileAimLatchedHeading(),allAimLatch),'normal FIRE never changes the accepted AIM heading');endPointer(720,d.x,d.y-55);endPointer(721,aimPt.x-45,aimPt.y);
-
-
-
-
-
-
-
-
-
-// 46-57: locked projectile/desktop/runtime invariants plus router implementation guards.
-
-
-
-
-class TestVec3Phase126{constructor(){this.x=0;this.y=0;this.z=0;}}sb.THREE={Vector3:TestVec3Phase126};const muzzleTank126={group:{updateMatrixWorld(){}},cannonTip:{getWorldPosition(v){v.x=8;v.y=3;v.z=-12;}},barrel:{getWorldPosition(v){v.x=5;v.y=3;v.z=-8;}},turretRotation:0,world:{x:0,z:0}},ray126=cannonWorldRay(muzzleTank126),rayLen126=Math.hypot(3,-4);accept(46,Math.abs(ray126.direction.x-3/rayLen126)<1e-12&&Math.abs(ray126.direction.z+4/rayLen126)<1e-12,'projectile remains barrel/muzzle aligned');
-
-
-
-
-const desktopLocked=desktopCommandFromState(new Set(['ArrowUp','ArrowRight']),null,{x:0,z:0},false);accept(47,desktopLocked.throttle===1&&desktopLocked.steering===1,'desktop keyboard movement unchanged');G.lastTouchLikeInputAt=0;accept(48,shouldAcceptDesktopAimEvent({pointerType:'mouse'})===true&&desktopCommandFromState(new Set(),{x:0,z:-20},{x:0,z:0},false).turretTargetHeading!=null,'desktop mouse aim unchanged');accept(49,typeof UnifiedTankInputAdapter==='function'&&typeof TankRuntime==='function'&&code.includes('this.desktop.sample(runtime),m=this.mobile.sample(runtime)'),'Desktop and Mobile still feed ONE TankRuntime');
-
-
-
-
-let canonical360=true;for(let deg=0;deg<360;deg++){const h=deg*Math.PI/180,fwd=forwardFromRotation(h),visual=visualLocalMinusZAfterYaw(h),rev=driveDelta(h,-1,1);if(Math.abs(fwd.x-visual.x)>1e-10||Math.abs(fwd.z-visual.z)>1e-10||rev.x*visual.x+rev.z*visual.z>=0){canonical360=false;break;}}accept(50,canonical360,'canonical 360-degree forward/reverse tests remain PASS');accept(51,collision.hitSolid(45,40,1.5).blocked&&!collision.hitSolid(0,0,1.5).blocked,'collision tests remain PASS');
-
-
-
-
-const sectorTerrain126=new TerrainSystem(),sectorRuntime126=new TankRuntime(fakeRuntimeTank(0,70,.35),new CollisionSystem(sectorTerrain126),sectorTerrain126),sectorHeading126=sectorRuntime126.heading,startSector126=WorldSpace.sectorIndexAtZ(sectorRuntime126.z);for(let i=0;i<600;i++)sectorRuntime126.step({throttle:1,steering:0},1/60);accept(52,WorldSpace.sectorIndexAtZ(sectorRuntime126.z)!==startSector126&&Math.abs(sectorRuntime126.heading-sectorHeading126)<1e-12,'sector-transition heading stability remains PASS');
-
-
-
-
-sb.navigator.maxTouchPoints=0;sb.matchMedia=()=>({matches:false});sb.location.search='';delete sb.window.__VW_FRONTLINE1944_INPUT_DIAGNOSTICS__;updateInputDiagnostics();accept(53,diagEl.hidden===true&&diagEl.textContent===''&&diagEl.getAttribute('aria-hidden')==='true','normal desktop mode does NOT display diagnostic overlay');sb.navigator.maxTouchPoints=1;sb.matchMedia=()=>({matches:true});updateInputDiagnostics(G.mobileRouter.snapshot());accept(54,diagEl.hidden===true&&diagEl.textContent===''&&diagEl.getAttribute('aria-hidden')==='true'&&inputDiagnosticsEnabled()===false,'mobile/admin mode stays clean unless diagnostics are explicitly requested');accept(55,!code.includes('dblclick'),'double-tap recognition does not depend on browser dblclick');accept(56,code.includes("listen(window,'pointerdown',down,{passive:false,capture:true})")&&code.includes("listen(window,'pointercancel',cancel,{passive:false,capture:true})")&&code.includes("listen(window,'touchstart',down,{passive:false,capture:true})")&&code.includes("listen(window,'touchcancel',cancel,{passive:false,capture:true})")&&!code.includes('setPointerCapture('),'global pointer/touch router remains authoritative and cancellation-safe without pointer capture dependency');accept(57,runtimeIdentity().phase==='1.2.6'&&runtimeIdentity().kind==='tank','runtime identity publishes accepted Phase 1.2.6 tank runtime');
-
-
-
-
-assert.strictEqual(phase126Passed.size,57,'all 57 deterministic Phase 1.2.6 acceptance checks ran');
-
-
-
-
-
-
-
-
-
-// Phase 1.2.6A production diagnostics cleanup: diagnostics are explicit opt-in only.
-
-
-
-
-const phase126aPassed=new Set();function accept126a(n,condition,message){assert(condition,'Phase 1.2.6A acceptance '+n+': '+message);phase126aPassed.add(n);}
-
-
-
-
-const savedIsAdmin=sb.isAdmin;sb.location.search='';delete sb.window.__VW_FRONTLINE1944_INPUT_DIAGNOSTICS__;
-
-
-
-
-sb.isAdmin=()=>false;sb.navigator.maxTouchPoints=1;sb.matchMedia=()=>({matches:true});updateInputDiagnostics(G.mobileRouter.snapshot());accept126a(1,inputDiagnosticsEnabled()===false&&diagEl.hidden===true&&diagEl.textContent===''&&diagEl.getAttribute('aria-hidden')==='true','touch/coarse-pointer environment alone keeps diagnostics hidden');
-
-
-
-
-sb.isAdmin=()=>true;updateInputDiagnostics(G.mobileRouter.snapshot());accept126a(2,inputDiagnosticsEnabled()===false&&diagEl.hidden===true&&diagEl.textContent===''&&diagEl.getAttribute('aria-hidden')==='true','Admin plus mobile/coarse pointer still keeps diagnostics hidden without explicit opt-in');
-
-
-
-
-sb.location.search='?fl44diag=1';updateInputDiagnostics(G.mobileRouter.snapshot());accept126a(3,inputDiagnosticsEnabled()===true&&diagEl.hidden===false&&diagEl.textContent.includes('INPUT:')&&diagEl.textContent.includes('DT=')&&diagEl.getAttribute('aria-hidden')==='false','explicit ?fl44diag=1 opt-in displays diagnostics');
-
-
-
-
-sb.location.search='?frontlineInputDiag=1';updateInputDiagnostics(G.mobileRouter.snapshot());accept126a(4,inputDiagnosticsEnabled()===true&&diagEl.hidden===false,'explicit ?frontlineInputDiag=1 opt-in remains supported');
-
-
-
-
-sb.location.search='';sb.window.__VW_FRONTLINE1944_INPUT_DIAGNOSTICS__=true;updateInputDiagnostics(G.mobileRouter.snapshot());accept126a(5,inputDiagnosticsEnabled()===true&&diagEl.hidden===false,'explicit window diagnostics flag remains supported');
-
-
-
-
-delete sb.window.__VW_FRONTLINE1944_INPUT_DIAGNOSTICS__;updateInputDiagnostics(G.mobileRouter.snapshot());const diagFormerPoint=center(diagEl.getBoundingClientRect()),diagStillProtected=protectedFrontlineRects(root).some(r=>pointInRect(diagFormerPoint.x,diagFormerPoint.y,r));resetTapState();nowMs=12000;tap(801,diagFormerPoint.x,diagFormerPoint.y,35,diagEl);nowMs+=100;tap(802,diagFormerPoint.x+2,diagFormerPoint.y+2,35,diagEl);accept126a(6,diagEl.hidden===true&&!diagStillProtected&&mobileCmd().fire===true&&mobileCmd().fire===false,'hidden diagnostics create no protected rectangle and do not block safe double-tap FIRE in their former battlefield area');
-
-
-
-
-accept126a(7,code.includes('id="fl44-input-diag" hidden aria-hidden="true"'),'diagnostics DOM starts hidden before router binding or first diagnostic update');
-
-
-
-
-sb.isAdmin=savedIsAdmin;sb.location.search='';delete sb.window.__VW_FRONTLINE1944_INPUT_DIAGNOSTICS__;updateInputDiagnostics(G.mobileRouter.snapshot());
-
-
-
-
-assert.strictEqual(phase126aPassed.size,7,'all 7 deterministic Phase 1.2.6A diagnostics-cleanup checks ran');
-
-
-
-
-
-
-
-
-
-// Phase 1.2.6B reverse-diagonal semantics: invert steering intent only while translating in reverse.
-
-
-
-
-const phase126bPassed=new Set();function accept126b(n,condition,message){assert(condition,'Phase 1.2.6B acceptance '+n+': '+message);phase126bPassed.add(n);}
-
-
-
-
-const mobileReverseLeft=mobileCommandFromState({active:true,x:-.8,y:.8},{active:false},false,null,null),mobileReverseRight=mobileCommandFromState({active:true,x:.8,y:.8},{active:false},false,null,null),mobileForwardLeft=mobileCommandFromState({active:true,x:-.8,y:-.8},{active:false},false,null,null),mobileForwardRight=mobileCommandFromState({active:true,x:.8,y:-.8},{active:false},false,null,null),mobileStraightReverse=mobileCommandFromState({active:true,x:0,y:.8},{active:false},false,null,null);
-
-
-
-
-accept126b(1,mobileReverseLeft.throttle<0&&mobileReverseLeft.steering>0,'mobile Down-Left maps reverse travel to the steering sign that moves the rear toward player-left');
-
-
-
-
-accept126b(2,mobileReverseRight.throttle<0&&mobileReverseRight.steering<0,'mobile Down-Right maps reverse travel to the steering sign that moves the rear toward player-right');
-
-
-
-
-accept126b(3,mobileForwardLeft.throttle>0&&mobileForwardLeft.steering<0&&mobileForwardRight.throttle>0&&mobileForwardRight.steering>0,'forward Up-Left / Up-Right steering semantics remain unchanged');
-
-
-
-
-accept126b(4,mobileStraightReverse.throttle<0&&mobileStraightReverse.steering===0,'straight reverse remains straight');
-
-
-
-
-const desktopReverseLeft=desktopCommandFromState(new Set(['ArrowDown','ArrowLeft']),null,{x:0,z:0},false),desktopReverseRight=desktopCommandFromState(new Set(['ArrowDown','ArrowRight']),null,{x:0,z:0},false),desktopForwardLeft=desktopCommandFromState(new Set(['ArrowUp','ArrowLeft']),null,{x:0,z:0},false),desktopForwardRight=desktopCommandFromState(new Set(['ArrowUp','ArrowRight']),null,{x:0,z:0},false);
-
-
-
-
-accept126b(5,desktopReverseLeft.throttle<0&&desktopReverseLeft.steering>0&&desktopReverseRight.throttle<0&&desktopReverseRight.steering<0,'desktop reverse diagonals use the same corrected travel-relative semantics');
-
-
-
-
-accept126b(6,desktopForwardLeft.steering<0&&desktopForwardRight.steering>0,'desktop forward diagonals remain unchanged');
-
-
-
-
-const reverseHeadings=[0,Math.PI/6,Math.PI/2,-Math.PI*2/3,Math.PI-.17];let reverseDiagonalDeterministic=true,reverseZeroStrafe=true;
-
-
-
-
-for(const h0 of reverseHeadings){for(const spec of [{name:'Down-Left',cmd:mobileReverseLeft,side:-1},{name:'Down-Right',cmd:mobileReverseRight,side:1}]){const terrain126b=new TerrainSystem(),collision126b=new CollisionSystem(terrain126b),tank126b=fakeRuntimeTank(0,40,h0),runtime126b=new TankRuntime(tank126b,collision126b,terrain126b),start={x:runtime126b.x,z:runtime126b.z},initialForward=forwardFromRotation(h0),initialRight=rightFromRotation(h0);for(let i=0;i<24;i++)runtime126b.step(spec.cmd,1/60);const dx=runtime126b.x-start.x,dz=runtime126b.z-start.z,longitudinal=dx*initialForward.x+dz*initialForward.z,lateral=dx*initialRight.x+dz*initialRight.z;if(!(longitudinal<0&&lateral*spec.side>0&&Math.abs(runtime126b.heading-h0)>1e-4))reverseDiagonalDeterministic=false;if(Math.abs(runtime126b.lastMotion.lateralVelocity)>1e-8)reverseZeroStrafe=false;}}
-
-
-
-
-accept126b(7,reverseDiagonalDeterministic,'Down-Left reverses toward player-left and Down-Right toward player-right across multiple hull headings');
-
-
-
-
-accept126b(8,reverseZeroStrafe,'corrected reverse diagonals retain zero-strafe/zero-lateral-velocity Tank Runtime physics');
-
-
-
-
-accept126b(9,code.includes('function steeringForTravelDirection(throttle,steering){return throttle<-.08?-steering:steering;}')&&code.includes('this.heading-cmd.steering*CFG.tankTurnRate')&&code.includes('d=driveDelta(nextHeading,this.speed,h)'),'correction is isolated to input-command semantics while Tank Runtime steering/translation physics remain canonical');
-
-
-
-
-assert.strictEqual(phase126bPassed.size,9,'all 9 deterministic Phase 1.2.6B reverse-diagonal checks ran');
-
-
-
-
-// Phase 1.2.6C real-device recovery: the visible AIM control must be an authoritative acquisition target
-
-
-
-
-// even when responsive CSS places it outside the broader floating AIM recenter region.
-
-
-
-
-const phase126cPassed=new Set();function accept126c(n,condition,message){assert(condition,'Phase 1.2.6C acceptance '+n+': '+message);phase126cPassed.add(n);}
-
-
-
-
-function setAimLayout126c(width,height,aimRect126c,fireRect126c){
-
-
-
-
-  G.mobileRouter.cancelAll();
-
-
-
-
-  rootRect.width=width;rootRect.height=height;
-
-
-
-
-  aimEl.rect={...aimRect126c};fireEl.rect={...fireRect126c};
-
-
-
-
-  aimEl.style={};fireEl.style={};aimEl.dataset={};fireEl.dataset={};
-
-
-
-
-  G.mobileRouter.gestureRects={drive:null,aim:null,fire:null};
-
-
-
-
-  resetStickState(G.aim,aimKnob);G.firing=false;G.mobileFirePulseCount=0;clearMobileAimLatch();
-
-
-
-
-}
-
-
-
-
-const aimLayouts126c=[
-
-
-
-
-  {name:'900x420',w:900,h:420,aim:{left:730,top:329,width:82,height:82},fire:{left:818,top:330,width:68,height:68}},
-
-
-
-
-  {name:'844x390',w:844,h:390,aim:{left:674,top:299,width:82,height:82},fire:{left:762,top:300,width:68,height:68}},
-
-
-
-
-  {name:'1336x622',w:1336,h:622,aim:{left:1110,top:492,width:108,height:108},fire:{left:1226,top:490,width:84,height:84}}
-
-
-
-
-];
-
-
-
-
-let directAimLayoutsPass=true,visibleAimCoveredLayouts=0;
-
-
-
-
-for(const spec of aimLayouts126c){
-
-
-
-
-  setAimLayout126c(spec.w,spec.h,spec.aim,spec.fire);
-
-
-
-
-  const actualAim126c=aimEl.getBoundingClientRect(),actualCenter126c=center(actualAim126c),floating126c=G.mobileRouter.regions().aim;
-
-
-
-
-  if(pointInRect(floating126c,actualCenter126c.x,actualCenter126c.y))visibleAimCoveredLayouts++;
-
-
-
-
-  if(G.mobileRouter.roleAt(actualCenter126c.x,actualCenter126c.y)!=='aim')directAimLayoutsPass=false;
-
-
-
-
-}
-
-
-
-
-accept126c(1,visibleAimCoveredLayouts===aimLayouts126c.length,'floating AIM acquisition geometry now includes the visible AIM center at 900x420, 844x390 and 1336x622');
-
-
-
-
-accept126c(2,directAimLayoutsPass,'visible AIM control center is authoritative for pointer acquisition at 900x420, 844x390 and 1336x622');
-
-
-
-
-
-
-
-
-
-setAimLayout126c(1336,622,aimLayouts126c[2].aim,aimLayouts126c[2].fire);
-
-
-
-
-const directAimRect126c=aimEl.getBoundingClientRect(),directAimCenter126c=center(directAimRect126c),directAimLeft126c=directAimRect126c.left,directAimTop126c=directAimRect126c.top;
-
-
-
-
-begin(901,directAimCenter126c.x,directAimCenter126c.y);
-
-
-
-
-accept126c(3,G.aim.active&&G.aim.id===901&&Math.abs(G.aim.x)<1e-9&&Math.abs(G.aim.y)<1e-9,'touching the visible AIM center claims AIM without an artificial full-scale vector');
-
-
-
-
-accept126c(4,Math.abs(aimEl.getBoundingClientRect().left-directAimLeft126c)<1e-9&&Math.abs(aimEl.getBoundingClientRect().top-directAimTop126c)<1e-9,'direct visible-control acquisition does not jump/recenter the AIM base');
-
-
-
-
-movePointer(901,directAimCenter126c.x-42,directAimCenter126c.y+20);const directActiveHeading126c=mobileAimLatchedHeading(),directActiveCmd126c=mobileCmd();
-
-
-
-
-accept126c(5,directActiveHeading126c!=null&&directActiveCmd126c.turretTargetHeading!=null,'dragging after direct visible AIM acquisition updates the turret target');
-
-
-
-
-endPointer(901,directAimCenter126c.x-42,directAimCenter126c.y+20);const directReleasedHeading126c=mobileAimLatchedHeading();
-
-
-
-
-accept126c(6,!G.aim.active&&directReleasedHeading126c!=null&&closeHeading(mobileCmd().turretTargetHeading,directReleasedHeading126c),'direct visible AIM release preserves the final latched heading');
-
-
-
-
-
-
-
-
-
-const floatingRegion126c=G.mobileRouter.regions().aim,floatingPoint126c=center(floatingRegion126c),preFloatingLeft126c=aimEl.getBoundingClientRect().left;
-
-
-
-
-begin(902,floatingPoint126c.x,floatingPoint126c.y);const floatingClaimed126c=G.aim.active&&G.aim.id===902,postFloatingLeft126c=aimEl.getBoundingClientRect().left;endPointer(902,floatingPoint126c.x,floatingPoint126c.y);
-
-
-
-
-accept126c(7,floatingClaimed126c&&Math.abs(postFloatingLeft126c-preFloatingLeft126c)>20,'existing floating AIM acquisition/recenter behavior remains available away from the visible control');
-
-
-
-
-accept126c(8,code.includes("if(pointInRect(this.rect('aim'),x,y))return 'aim'")&&code.includes("const directAim=role==='aim'&&pointInRect(this.rect('aim'),x,y)")&&code.includes('actualAim=elementUsableRect(aimEl)')&&code.includes('function steeringForTravelDirection(throttle,steering){return throttle<-.08?-steering:steering;}'),'AIM acquisition now closes the visible-control geometry gap while reverse steering semantics remain locked');
-
-
-
-
-assert.strictEqual(phase126cPassed.size,8,'all 8 deterministic Phase 1.2.6C mobile AIM recovery checks ran');
-
-
-
-
-// Phase 1.2.6F focused acceptance: normal AIM is immediate, while intentional same-control reposition becomes deterministic within 320 ms.
-
-
-
-
-const phase126fPassed=new Set();function accept126f(n,condition,message){assert(condition,'Phase 1.2.6F acceptance '+n+': '+message);phase126fPassed.add(n);}
-
-
-
-
-accept126f(1,CFG.mobileAimRepositionHoldMs>=250&&CFG.mobileAimRepositionHoldMs<=400,'AIM reposition hold threshold is deliberate but remains within the requested 250-400 ms window');
-
-
-
-
-setAimLayout126c(1336,622,aimLayouts126c[2].aim,aimLayouts126c[2].fire);let aimRect126f=aimEl.getBoundingClientRect(),aimCenter126f=center(aimRect126f),aimLeft126f=aimRect126f.left;nowMs=20000;begin(920,aimCenter126f.x,aimCenter126f.y);nowMs+=70;movePointer(920,aimCenter126f.x-34,aimCenter126f.y+10);const immediateAimHeading126f=mobileAimLatchedHeading();accept126f(2,G.aim.active&&G.mobileRouter.aimGesture&&G.mobileRouter.aimGesture.intent==='aim'&&!G.mobileRouter.aimGesture.repositioning&&Math.abs(aimEl.getBoundingClientRect().left-aimLeft126f)<1e-9&&immediateAimHeading126f!=null,'ordinary AIM drag reacts immediately and locks to aiming before the reposition hold threshold');nowMs+=CFG.mobileAimRepositionHoldMs+80;movePointer(920,aimCenter126f.x-50,aimCenter126f.y+14);accept126f(3,G.mobileRouter.aimGesture&&G.mobileRouter.aimGesture.intent==='aim'&&!G.mobileRouter.aimGesture.repositioning&&Math.abs(aimEl.getBoundingClientRect().left-aimLeft126f)<1e-9,'an already-established normal AIM drag never turns into reposition merely because the finger stays down');endPointer(920,aimCenter126f.x-50,aimCenter126f.y+14);
-
-
-
-
-setAimLayout126c(1336,622,aimLayouts126c[2].aim,aimLayouts126c[2].fire);aimRect126f=aimEl.getBoundingClientRect();aimCenter126f=center(aimRect126f);aimLeft126f=aimRect126f.left;const latchBeforeReposition126f=mobileAimLatchedHeading();nowMs=22000;begin(921,aimCenter126f.x,aimCenter126f.y);nowMs+=CFG.mobileAimRepositionHoldMs+20;movePointer(921,aimCenter126f.x-54,aimCenter126f.y+8);const repositionedAimRect126f=aimEl.getBoundingClientRect();accept126f(4,G.mobileRouter.aimGesture&&G.mobileRouter.aimGesture.repositioning&&aimEl.classList.contains('repositioning')&&Math.abs(repositionedAimRect126f.left-aimLeft126f)>20,'hold-still then drag enters AIM reposition mode on the first post-threshold move instead of waiting multiple seconds');accept126f(5,closeHeading(mobileAimLatchedHeading(),latchBeforeReposition126f)&&G.aim.active&&Math.abs(G.aim.x)<1e-9&&Math.abs(G.aim.y)<1e-9,'repositioning moves only the AIM control base and preserves the accepted turret heading');const movedAimLeft126f=repositionedAimRect126f.left;movePointer(921,aimCenter126f.x-82,aimCenter126f.y+18);accept126f(6,aimEl.getBoundingClientRect().left<movedAimLeft126f-10,'once reposition mode is active the AIM base follows subsequent finger movement smoothly');endPointer(921,aimCenter126f.x-82,aimCenter126f.y+18);const releasedAimLeft126f=aimEl.getBoundingClientRect().left;accept126f(7,!G.aim.active&&!aimEl.classList.contains('repositioning')&&Math.abs(releasedAimLeft126f-aimEl.getBoundingClientRect().left)<1e-9&&closeHeading(mobileAimLatchedHeading(),latchBeforeReposition126f),'release leaves the AIM base at its new session position and keeps the final turret heading latched');
-
-
-
-
-R=regions();const instantFloat126f={x:R.aim.left+R.aim.width*.30,y:R.aim.top+R.aim.height*.68},preFloatLeft126f=aimEl.getBoundingClientRect().left;nowMs=24000;begin(922,instantFloat126f.x,instantFloat126f.y);accept126f(8,G.aim.active&&Math.abs(aimEl.getBoundingClientRect().left-preFloatLeft126f)>20,'touching a new valid floating AIM location still recenters immediately with no hold delay');endPointer(922,instantFloat126f.x,instantFloat126f.y);accept126f(9,!G.firing&&G.mobileFirePulseCount===0&&!G.joy.active,'AIM reposition path does not steal DRIVE ownership or emit FIRE');
-
-
-
-
-accept126f(10,code.includes('mobileAimRepositionHoldMs:320')&&code.includes("else if(role==='aim')this.moveAimGesture(id,x,y,transport)")&&!code.includes('mobileAimRepositionHoldMs:3000'),'the fix is isolated to the AIM router and contains no multi-second activation timer');
-
-
-
-
-assert.strictEqual(phase126fPassed.size,10,'all 10 deterministic Phase 1.2.6F AIM responsiveness checks ran');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-G.listeners.splice(0).forEach(f=>{try{f();}catch(_){}});G.mobileRouter=null;G.root=null;G.firing=false;G.mobileFirePulseCount=0;resetStickState(G.joy,driveKnob);resetStickState(G.aim,aimKnob);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const directionTerrain=new TerrainSystem(),directionCollision=new CollisionSystem(directionTerrain),upCommand=desktopCommandFromState(new Set(['ArrowUp']),null,{x:0,z:0},false),downCommand=desktopCommandFromState(new Set(['ArrowDown']),null,{x:0,z:0},false);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-for(let deg=0;deg<360;deg++){const h=deg*Math.PI/180,visual=visualLocalMinusZAfterYaw(h),forwardTank=fakeRuntimeTank(0,40,h),forwardRuntime=new TankRuntime(forwardTank,directionCollision,directionTerrain),fx=forwardRuntime.x,fz=forwardRuntime.z;forwardRuntime.step(upCommand,.05);const fdx=forwardRuntime.x-fx,fdz=forwardRuntime.z-fz;assert(fdx*visual.x+fdz*visual.z>0,'TankRuntime ArrowUp displacement follows visible arrow at '+deg+'deg');assert(Math.abs(fdx*visual.z-fdz*visual.x)<1e-8,'TankRuntime ArrowUp has no lateral displacement at '+deg+'deg');const reverseTank=fakeRuntimeTank(0,40,h),reverseRuntime=new TankRuntime(reverseTank,directionCollision,directionTerrain),rx=reverseRuntime.x,rz=reverseRuntime.z;reverseRuntime.step(downCommand,.05);const rdx=reverseRuntime.x-rx,rdz=reverseRuntime.z-rz;assert(rdx*visual.x+rdz*visual.z<0,'TankRuntime ArrowDown displacement is opposite visible arrow at '+deg+'deg');assert(Math.abs(rdx*visual.z-rdz*visual.x)<1e-8,'TankRuntime ArrowDown has no lateral displacement at '+deg+'deg');}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const rightTurnTank=fakeRuntimeTank(0,40,0),rightTurnRuntime=new TankRuntime(rightTurnTank,new CollisionSystem(new TerrainSystem()),new TerrainSystem());for(let i=0;i<45;i++)rightTurnRuntime.step({throttle:0,steering:1},1/60);assert(forwardFromRotation(rightTurnRuntime.heading).x>0,'right steering turns the visible front arrow toward +world X from the default -Z heading');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const clearTerrain=new TerrainSystem(),clearCollision=new CollisionSystem(clearTerrain),runtimeTank=fakeRuntimeTank(0,40,0),runtime=new TankRuntime(runtimeTank,clearCollision,clearTerrain);for(let i=0;i<75;i++)runtime.step({throttle:0,steering:1},1/60);const turnedHeading=runtime.heading;assert(Math.abs(turnedHeading)>.2,'steering changes the authoritative hull heading even before translation');const forwardBefore={x:runtime.x,z:runtime.z},turnedForward=forwardFromRotation(runtime.heading);for(let i=0;i<60;i++)runtime.step({throttle:1,steering:0},1/60);let rdx=runtime.x-forwardBefore.x,rdz=runtime.z-forwardBefore.z;assert(rdx*turnedForward.x+rdz*turnedForward.z>1,'forward after a turn follows the new authoritative hull heading');assert(Math.abs(runtime.lastMotion.lateralVelocity)<1e-8,'canonical runtime reports zero lateral velocity');runtime.teleport(runtime.x,runtime.z,turnedHeading);const reverseBefore={x:runtime.x,z:runtime.z};for(let i=0;i<60;i++)runtime.step({throttle:-1,steering:0},1/60);rdx=runtime.x-reverseBefore.x;rdz=runtime.z-reverseBefore.z;assert(rdx*turnedForward.x+rdz*turnedForward.z<-1,'reverse after a turn follows the exact opposite authoritative hull heading');assert(Math.abs(runtime.lastMotion.lateralVelocity)<1e-8,'reverse also has zero lateral velocity');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-G.player=runtimeTank;G.tankRuntime=runtime;const runtimeSnap=tankStateSnapshot(runtimeTank);assert.strictEqual(runtimeSnap.hullRotation,runtime.heading,'replicated hull yaw comes from authoritative runtime heading');assert.strictEqual(runtimeTank.hullRotation,runtime.heading,'physics/entity hull yaw equals authoritative heading');assert.strictEqual(runtimeTank.hull.rotation.y,runtime.heading,'visual hull yaw equals authoritative heading');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const sectorTank=fakeRuntimeTank(0,70,.35),sectorRuntime=new TankRuntime(sectorTank,clearCollision,clearTerrain),sectorHeading=sectorRuntime.heading,startSector=WorldSpace.sectorIndexAtZ(sectorRuntime.z);for(let i=0;i<600;i++)sectorRuntime.step({throttle:1,steering:0},1/60);assert.notStrictEqual(WorldSpace.sectorIndexAtZ(sectorRuntime.z),startSector,'deterministic drive crosses a logical sector boundary');assert(Math.abs(sectorRuntime.heading-sectorHeading)<1e-12,'sector transition does not mutate authoritative hull heading');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-class TestVec3{constructor(){this.x=0;this.y=0;this.z=0;}}sb.THREE={Vector3:TestVec3};const muzzleTank={group:{updateMatrixWorld(){}},cannonTip:{getWorldPosition(v){v.x=8;v.y=3;v.z=-12;}},barrel:{getWorldPosition(v){v.x=5;v.y=3;v.z=-8;}},turretRotation:0,world:{x:0,z:0}},ray=cannonWorldRay(muzzleTank),rayLen=Math.hypot(3,-4);assert(Math.abs(ray.direction.x-3/rayLen)<1e-12&&Math.abs(ray.direction.z+4/rayLen)<1e-12,'projectile direction agrees with the actual barrel-to-muzzle world transform');assert.strictEqual(ray.origin.x,8);assert.strictEqual(ray.origin.y,3);assert.strictEqual(ray.origin.z,-12);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(code.includes('resolveTankSweep(from,to,fp.halfWidth,fp.halfLength')&&code.includes('d=driveDelta(nextHeading,this.speed,h)'),'TankRuntime translates only from its authoritative hull-forward vector and swept footprint');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(code.includes('x:-Math.sin(rotation),z:-Math.cos(rotation)')&&code.includes('this.heading-cmd.steering*CFG.tankTurnRate'),'runtime uses the Three.js local -Z visual convention and right-steer yaw sign');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(code.includes("frontArrow=sharedMesh('cone4',0xfff08a")&&code.includes("rearLeft=sharedMesh('sphere',0xff4f3e"),'Admin Preview has unmistakable front arrow and rear lamps');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(code.includes('function cannonWorldRay(t)')&&code.includes('t.group.updateMatrixWorld')&&code.includes('dir=ray.direction'),'shell spawn and direction use the actual muzzle/barrel world transform');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(code.includes("listen(window,'pointerdown',down,{passive:false,capture:true})")&&code.includes("listen(window,'pointermove',move,{passive:false,capture:true})")&&code.includes("listen(window,'touchstart',down,{passive:false,capture:true})")&&code.includes('class GlobalMobileTouchRouter')&&code.includes('getBoundingClientRect')&&!code.includes('function bindStickElement(')&&!code.includes('setPointerCapture('),'DRIVE/AIM/FIRE acquisition is global geometry-routed and does not depend on joystick DOM pointerdown or pointer capture');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(code.includes("kind:'tank',phase:'1.2.6'")&&code.includes('__VW_FRONTLINE1944_RUNTIME__'),'loaded Frontline runtime publishes the Phase 1.2.6 authoritative tank-runtime identity marker');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert.strictEqual(runtimeIdentity().kind,'tank','runtime identity cannot describe the active Frontline controller as infantry');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(code.includes('runtimeOpen=!!G.root')&&code.includes("b.style.pointerEvents=hide?'none':''"),'admin launcher is hidden/disabled while Frontline runtime is open so it cannot cover mobile controls');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Projectile / pooling / bounded-memory foundation.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const pool=new ObjectPool('unit',2,()=>({group:{visible:false},active:false}),o=>{o.group.visible=true;});const a=pool.acquire({}),b=pool.acquire({});assert(a&&b&&!pool.acquire({}),'object pool enforces hard cap');pool.release(a);assert(pool.acquire({}),'released pooled object is reusable');assert.strictEqual(pool.stats().created,2,'pool does not allocate beyond cap');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(CFG.projectileCap<=48&&CFG.enemyProjectileCap<=32&&CFG.fxCap<=72,'mobile projectile/FX caps remain bounded');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(code.includes('lifetime')&&code.includes('ownerId')&&code.includes('weaponId')&&code.includes('impactEvent')&&code.includes('collisionRadius'),'projectile contract includes owner, weapon, impact, lifetime and collision data');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(code.includes('if(!sectorActive)continue')&&code.includes('if(!active)return'),'inactive sectors do not run expensive enemy/fortress simulation');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(code.includes('pool.release(p)')&&code.includes('G.enemies=G.enemies.filter'),'expired projectiles and destroyed enemies are cleaned/reused');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(code.includes('renderer.setPixelRatio(Math.min(devicePixelRatio||1,CFG.dpr))'),'mobile DPR is capped');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-assert(css.includes('.fl44-aim-stick')&&css.includes('.fl44-aim-stick.repositioning')&&css.includes('.fl44-fire.repositioning')&&css.includes('.fl44-input-diag')&&css.includes('@media (max-height:460px)')&&css.includes('touch-action:none')&&css.includes('-webkit-user-select:none'),'mobile landscape controls, AIM/FIRE reposition feedback and temporary Admin input diagnostics are hardened');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Vocabulary source audit still uses the real current shared data when that dependency exists in the full project.
-
-
-
-
-if(f1){
-
-
-
-
-  const vb={console,state:{student:{grade:'ป.1'}}};vb.window=vb;vm.createContext(vb);vm.runInContext(f1,vb);
-
-
-
-
-  assert.strictEqual(typeof vb.f1VocabForStudent,'function','authoritative shooter vocabulary provider exists');
-
-
-
-
-  const grades=['ป.1','ป.2','ป.3','ป.4','ป.5','ป.6'],counts={};
-
-
-
-
-  for(const grade of grades){vb.state.student.grade=grade;const raw=vb.f1VocabForStudent()||[];const words=raw.map(x=>Array.isArray(x)?x[0]:x&&(x.en||x.word||x.eng||x.english)).filter(Boolean).map(x=>String(x).trim().toUpperCase());counts[grade]={count:words.length,unique:new Set(words).size};assert(words.length>0,grade+' vocabulary source must not be empty');assert.strictEqual(counts[grade].count,counts[grade].unique,grade+' vocabulary must not duplicate English targets in the shooter pool');}
-
-
-
-
-  console.log('Frontline vocabulary audit P.1-P.6:',JSON.stringify(counts));
-
-
-
-
-}else console.log('SKIP vocabulary audit in isolated Task ZIP: '+f1Path+' was not supplied; full-project run must execute it.');
-
-
-
-
-console.log('PASS Frontline 1944 Phase 1.2.6F AIM RESPONSIVENESS: baseline + diagnostics + reverse-diagonal + mobile-AIM recovery + 10 AIM-reposition responsiveness checks pass; accepted DRIVE/AIM/FIRE and Tank Runtime physics remain locked');
-
-
-
-
-
-
-function runTargetLockN3Tests({sourceOnly=false}={}){
-  // Source-path / DOM-contract tests with explicit rendering doubles, NOT real-device/WebGL PASS.
-  const fs=require('fs'),vm=require('vm'),assert=require('assert');
-  const source=fs.readFileSync('js/frontline1944.js','utf8'),style=sourceOnly?null:fs.readFileSync('css/frontline1944.css','utf8');
-  let checks=0,time=5000,rayHits=[],lastRay=null,rayRecursive=false,coinCalls=0,saveCalls=0,cloudCalls=0;
-  const timers=[],events=new Map();
-  const check=(name,fn)=>{fn();checks++;console.log('PASS N3 '+name);};
-  class Vec3{
-    constructor(x=0,y=0,z=0){this.set(x,y,z);}
-    set(x,y,z){this.x=x;this.y=y;this.z=z;return this;}
-    setScalar(s){return this.set(s,s,s);}
-    clone(){return new Vec3(this.x,this.y,this.z);}
-    project(camera){
-      const p=camera.position,t=camera.target,dx=t.x-p.x,dy=t.y-p.y,dz=t.z-p.z,l=Math.hypot(dx,dy,dz),fx=dx/l,fy=dy/l,fz=dz/l,rl=Math.hypot(fx,fz),rx=-fz/rl,rz=fx/rl,ux=-rz*fy,uy=rz*fx-rx*fz,uz=rx*fy,x=this.x-p.x,y=this.y-p.y,z=this.z-p.z;
-      return this.set((x*rx+z*rz)/(camera.width/2),(x*ux+y*uy+z*uz)/(camera.height/2),2*((x*fx+y*fy+z*fz)-.1)/(420-.1)-1);
-    }
-  }
-  const worldPoint=(node,v)=>{let o=node;while(o){v.x*=o.scale.x;v.y*=o.scale.y;v.z*=o.scale.z;const x=v.x,z=v.z,c=Math.cos(o.rotation.y),s=Math.sin(o.rotation.y);v.x=x*c+z*s+o.position.x;v.z=-x*s+z*c+o.position.z;v.y+=o.position.y;o=o.parent;}return v;};
-  class Group{
-    constructor(){this.children=[];this.parent=null;this.position=new Vec3();this.scale=new Vec3(1,1,1);this.rotation={x:0,y:0,z:0};this.visible=true;this.userData={};}
-    add(...nodes){for(const node of nodes){if(node.parent)node.parent.remove(node);node.parent=this;this.children.push(node);}}
-    remove(node){this.children=this.children.filter(n=>n!==node);node.parent=null;}
-    traverse(fn){fn(this);for(const node of this.children)node.traverse(fn);}
-    updateMatrixWorld(){this.matrixUpdates=(this.matrixUpdates||0)+1;}
-    getWorldPosition(v){return worldPoint(this,v.set(0,0,0));}
-  }
-  class Mesh extends Group{constructor(geometry,material){super();this.geometry=geometry;this.material=material;this.isMesh=true;}}
-  class Box3{
-    setFromObject(root){this.min=new Vec3(Infinity,Infinity,Infinity);this.max=new Vec3(-Infinity,-Infinity,-Infinity);root.traverse(node=>{if(!node.isMesh||node.visible===false)return;for(const x of [-.5,.5])for(const y of [-.5,.5])for(const z of [-.5,.5]){const v=worldPoint(node,new Vec3(x,y,z));for(const k of ['x','y','z']){this.min[k]=Math.min(this.min[k],v[k]);this.max[k]=Math.max(this.max[k],v[k]);}}});return this;}
-    isEmpty(){return this.min.x>this.max.x;}
-  }
-  class El{
-    constructor(id,left=0,top=0,width=0,height=0,tag='DIV'){Object.assign(this,{id,tagName:tag,base:{left,top,width,height},style:{},dataset:{},hidden:false,attrs:{},textContent:'',parentElement:null,offsetParent:null,children:{},handlers:new Map()});const classes=new Set();this.classList={add:x=>classes.add(x),remove:x=>classes.delete(x),toggle:(x,on)=>on?classes.add(x):classes.delete(x),contains:x=>classes.has(x)};}
-    querySelector(s){return this.children[s]||null;}
-    getBoundingClientRect(){const b=this.base,p=this.offsetParent?this.offsetParent.getBoundingClientRect():{left:0,top:0};const left=this.style.left&&this.style.left!=='auto'?parseFloat(this.style.left)+p.left:b.left,top=this.style.top&&this.style.top!=='auto'?parseFloat(this.style.top)+p.top:b.top,width=this.style.width?parseFloat(this.style.width):b.width,height=this.style.height?parseFloat(this.style.height):b.height;return {left,top,width,height,right:left+width,bottom:top+height};}
-    getAttribute(k){return this.attrs[k]||null;}setAttribute(k,v){this.attrs[k]=String(v);}
-    addEventListener(n,f){if(!this.handlers.has(n))this.handlers.set(n,[]);this.handlers.get(n).push(f);}removeEventListener(n,f){this.handlers.set(n,(this.handlers.get(n)||[]).filter(x=>x!==f));}
-    emit(n,e={}){for(const fn of this.handlers.get(n)||[])fn({target:this,button:0,detail:1,cancelable:true,preventDefault(){},stopPropagation(){},...e});}
-  }
-  const doc={readyState:'loading',hidden:false,addEventListener(){},removeEventListener(){},getElementById(){return null;},querySelector(){return null;},elementFromPoint(){return null;}};
-  const sb={console,document:doc,navigator:{maxTouchPoints:1},location:{hostname:'192.168.1.107',search:'',origin:'http://192.168.1.107:4173'},performance:{now:()=>time},Math,Date,URLSearchParams,innerWidth:844,innerHeight:390,devicePixelRatio:3,PointerEvent:function(){},isAdmin:()=>true,matchMedia:()=>({matches:true}),getComputedStyle:el=>({getPropertyValue:()=>0,position:'absolute',left:el.style.left||'0px',top:el.style.top||'0px',transform:'none'}),setInterval(){return 1;},clearInterval(){},setTimeout(fn,ms){const id=timers.length+1;timers.push({id,fn,ms,active:true});return id;},clearTimeout(id){const t=timers.find(t=>t.id===id);if(t)t.active=false;},requestAnimationFrame(){return 1;},cancelAnimationFrame(){},localStorage:{getItem(){return null;},setItem(){},removeItem(){}},state:{coins:50,frontline1944:{claims:[],wordsDone:0,fortressSerial:2}},addCoins(){coinCalls++;},saveState(){saveCalls++;},authPushSave(){cloudCalls++;}};
-  sb.addEventListener=(n,f)=>{if(!events.has(n))events.set(n,[]);events.get(n).push(f);};sb.removeEventListener=(n,f)=>events.set(n,(events.get(n)||[]).filter(x=>x!==f));sb.window=sb;sb.THREE={Group,Mesh,Vector3:Vec3,Box3,Object3D:Group};vm.createContext(sb);vm.runInContext(source,sb);
-  const T=sb.Frontline1944._t,G=T.G,CFG=T.CFG;
-  const root=new El('vw-frontline1944',16,24,844,390),canvas=new El('canvas',16,24,844,390,'CANVAS'),nodes={};canvas.parentElement=root;
-  function element(selector,id,x,y,w,h,tag='DIV'){const e=new El(id,x,y,w,h,tag);e.parentElement=root;e.offsetParent=root;nodes[selector]=e;return e;}
-  const button=element('#fl44-target-lock','fl44-target-lock',660,229,66,34,'BUTTON');button.children.small=new El('status');
-  for(const [selector,id,x,y,w,h] of [['#fl44-auto-forward','fl44-auto-forward',48,220,66,34],['#fl44-auto-reverse','fl44-auto-reverse',143,320,66,34],['#fl44-scope','fl44-scope',700,180,66,34],['#fl44-stick','fl44-stick',30,290,96,96],['#fl44-aim-stick','fl44-aim-stick',690,306,82,82],['#fl44-fire','fl44-fire',778,288,68,68]]){const e=element(selector,id,x,y,w,h,id.includes('stick')?'DIV':'BUTTON');e.children.small=new El('small');}
-  const panel=element('#fl44-lock-status','fl44-lock-status',26,108,215,54);panel.hidden=true;panel.children.b=new El('title');panel.children.small=new El('detail');nodes['.fl44-lock-status']=panel;
-  const marker=element('#fl44-lock-marker','fl44-lock-marker',0,0,28,28);marker.hidden=true;marker.children.span=new El('label');
-  nodes['#fl44-bossname']=new El('fl44-bossname');nodes['#fl44-bosshp']=new El('fl44-bosshp');
-  nodes['.fl44-knob']=new El('drive-knob');nodes['.fl44-aim-knob']=new El('aim-knob');
-  element('.fl44-top','top',23,29,830,56);element('#fl44-exit','fl44-exit',797,389,53,20,'BUTTON');
-  const stateEl=element('#fl44-state','fl44-state',260,388,330,22);nodes['.fl44-state']=stateEl;
-  element('#fl44-objective','fl44-objective',685,90,158,18);element('#fl44-distance','fl44-distance',685,108,80,20);
-  const toast=new El('fl44-toast');toast.children.b=new El('b');toast.children.span=new El('span');nodes['#fl44-toast']=toast;
-  root.querySelector=s=>nodes[s]||null;
-  G.root=root;G.canvas=canvas;G.scene=new Group();G.layers={};for(const key of Object.values(T.LAYER)){G.layers[key]=new Group();G.scene.add(G.layers[key]);}
-  G.camera={position:new Vec3(76,118,92),target:new Vec3(),width:220,height:220*390/844,lookAt(x,y,z){this.target.set(x,y,z);},updateMatrixWorld(){this.updates=(this.updates||0)+1;},matrixWorld:{elements:[1,0,0,0,0,1,0]}};
-  G.raycaster={setFromCamera(ndc){lastRay=ndc;},intersectObjects(roots,recursive){rayRecursive=recursive;return rayHits;},ray:{intersectPlane(p,v){v.set(60,0,20);return v;}}};
-  G.resources={geometry:k=>({kind:k}),material:()=>({color:{setHex(){}},opacity:1}),mesh(kind,color,size){const m=new Mesh(this.geometry(kind),this.material(color));m.scale.set(...size);return m;}};G.terrain=new T.TerrainSystem();G.collision=new T.CollisionSystem(G.terrain);
-  G.sectorStreamer={currentIndex:0,ensure(){},isActive(){return true;},update(){},visualId(){return 0;}};
-  function makePlayer(){return {world:{x:0,z:0},hullRotation:0,turretRotation:0,speed:0,hp:380,maxHp:380,invuln:0,playerId:'local-test-player',damageStatistic:{match:0,lifetime:0},group:new Group(),hull:new Group(),turret:new Group()};}
-  G.player=makePlayer();G.running=true;G.fortressSerial=2;G.tankRuntime=new T.TankRuntime(G.player,G.collision,G.terrain);
-  const emit=(name,data)=>{const e={pointerType:'touch',button:0,detail:1,target:canvas,cancelable:true,preventDefault(){},stopPropagation(){},...data};for(const fn of events.get(name)||[])fn(e);};
-  const centerOf=target=>{const b=T.targetLockScreenBounds(target);assert(b,'real entity group projects into current wide view');return {x:b.left+b.width/2,y:b.top+b.height/2};};
-  const choose=(target)=>{rayHits=[{object:target.ref.group.children[0]}];const p=centerOf(target);assert(T.selectTargetLockAtScreen(p.x,p.y,false,canvas));return p;};
-  let enemy,enemy2,fortress;
-  check('accepted identity and wide camera',()=>{assert.strictEqual(CFG.runtimeVersion,'P1.2.6F-20260902-5cc6a0');if(sourceOnly)console.log('SKIP N3 current stylesheet identity: not supplied / source-only mode');else assert(style.includes('--fl44-css-runtime-id:"'+CFG.runtimeVersion+'-CSS"'));assert.deepStrictEqual([CFG.viewW,CFG.cameraHeight,CFG.cameraOffsetX,CFG.cameraOffsetZ],[220,118,76,92]);});
-  check('private-host policy and production isolation',()=>{for(const h of ['localhost','127.0.0.1','10.2.0.8','172.16.0.8','172.31.1.4','192.168.1.107','[::1]'])assert(T.privatePreviewHostname(h));for(const h of ['vocabworld.web.app','example.com','172.32.0.1','192.169.1.1','999.1.1.1'])assert(!T.privatePreviewHostname(h));sb.location.hostname='vocabworld.web.app';assert.strictEqual(T.activateLocalTargetLockTestRange(),false);assert.strictEqual(G.fortress,null);sb.location.hostname='192.168.1.107';});
-  check('local range creates real Fortress + three real defenders',()=>{const progress=JSON.stringify(sb.state);assert(T.activateLocalTargetLockTestRange());assert.strictEqual(G.enemies.length,3);assert(G.enemies.every(e=>e.testRange&&e.group&&e.hp>0));assert.strictEqual(G.localTargetLockTestStatus.state,'ready');assert.strictEqual(G.fortress.testRange,true);assert(Math.abs(Math.hypot(G.fortress.world.x,G.fortress.world.z)-28)<1e-9);for(const e of G.enemies)assert(Math.hypot(e.world.x,e.world.z)>=12&&Math.hypot(e.world.x,e.world.z)<=16);assert.strictEqual(JSON.stringify(sb.state),progress);assert(nodes['#fl44-objective'].textContent.startsWith('LOCAL TEST'));enemy={kind:'enemy',id:G.enemies[0].id,ref:G.enemies[0]};enemy2={kind:'enemy',id:G.enemies[1].id,ref:G.enemies[1]};fortress={kind:'fortress',id:G.fortress.id,ref:G.fortress};});
-  check('OFF -> READY does not invent a lock; instruction is not a blocking toast',()=>{T.setTargetLockMode(false);assert.strictEqual(button.children.small.textContent,'OFF');T.setTargetLockMode(true);assert.strictEqual(T.specialControlState().lockedTarget,null);assert.strictEqual(button.children.small.textContent,'READY');assert(panel.children.b.textContent.includes('SELECT TARGET'));assert(marker.hidden);assert(!toast.classList.contains('on'));});
-  check('arming removes only the bootstrap ready toast, not combat/reward notices',()=>{toast.children.b.textContent='Phase 1.2.6N2 Runtime '+CFG.runtimeVersion;toast.classList.add('on');T.setTargetLockMode(true);assert(!toast.classList.contains('on'));toast.children.b.textContent='FORTRESS DESTROYED';toast.classList.add('on');T.setTargetLockMode(true);assert(toast.classList.contains('on'));toast.classList.remove('on');});
-  check('enemy child mesh -> actual entity -> LOCKED -> name/HP/marker',()=>{choose(enemy);assert.strictEqual(T.specialControlState().lockedTarget.ref,enemy.ref);assert(rayRecursive);assert.strictEqual(button.children.small.textContent,'LOCKED');assert(panel.children.b.textContent.includes('ENEMY 1'));assert(panel.children.small.textContent.includes('HP '));assert.strictEqual(marker.dataset.targetId,enemy.id);assert(!marker.hidden);});
-  check('CSS canvas coordinates, offsets and DPR at four wide-camera viewports',()=>{for(const [w,h] of [[667,375],[844,390],[915,412],[1280,720]])for(const dpr of [1,2,3]){canvas.base.width=w;canvas.base.height=h;canvas.width=w*dpr;canvas.height=h*dpr;G.camera.height=220*h/w;rayHits=[{object:enemy.ref.group.children[0]}];const p=centerOf(enemy);assert.strictEqual(T.targetLockRaycastCandidateAtScreen(p.x,p.y,[enemy]).ref,enemy.ref);assert(Math.abs(lastRay.x-((p.x-16)/w*2-1))<1e-9);assert(Math.abs(lastRay.y-(1-(p.y-24)/h*2))<1e-9);}canvas.base.width=844;canvas.base.height=390;G.camera.height=220*390/844;});
-  check('wide-camera small-actor allowance is bounded; empty ground never picks a Fortress',()=>{rayHits=[];const p=centerOf(enemy);assert.strictEqual(T.pickTargetLockAtScreen(p.x,p.y).ref,enemy.ref);assert.strictEqual(T.pickTargetLockAtScreen(430,350),null);assert.strictEqual(T.pickTargetLockAtScreen(-10,-10),null);assert.strictEqual(T.pickTargetLockAtScreen(NaN,200),null);const f=centerOf(fortress);assert.strictEqual(T.pickTargetLockAtScreen(f.x+60,f.y),null);});
-  check('switching locks actual clicked enemy; miss retains current target',()=>{choose(enemy2);const previous=T.specialControlState().lockedTarget;rayHits=[];assert.strictEqual(T.selectTargetLockAtScreen(430,350),false);assert.strictEqual(T.specialControlState().lockedTarget,previous);assert(panel.children.b.textContent.includes('ENEMY 2'));});
-  check('protected HUD/button input cannot select behind UI',()=>{rayHits=[{object:enemy.ref.group.children[0]}];const p=centerOf(enemy);assert.strictEqual(T.selectTargetLockAtScreen(p.x,p.y,false,button),false);assert.strictEqual(T.selectTargetLockAtScreen(50,42),false);doc.elementFromPoint=()=>button;assert.strictEqual(T.selectTargetLockAtScreen(p.x,p.y),false);doc.elementFromPoint=()=>null;});
-  check('Fortress child mesh remains selectable while Core is protected',()=>{const child=fortress.ref.group.children[0],nested=new Group();child.add(nested);rayHits=[{object:nested}];const p=centerOf(fortress);assert(T.selectTargetLockAtScreen(p.x,p.y));assert.strictEqual(T.specialControlState().lockedTarget.ref,fortress.ref);assert(panel.children.small.textContent.includes('CORE PROTECTED'));assert.strictEqual(T.targetLockTargetValid(fortress),true);});
-  check('marker follows the entity and turret heading has one lock authority',()=>{choose(enemy);const old=marker.style.left;enemy.ref.world.x+=3;enemy.ref.group.position.x=enemy.ref.world.x;T.updateTargetLockMarker();assert.notStrictEqual(marker.style.left,old);const expected=T.rotationFromForward(enemy.ref.world.x-G.player.world.x,enemy.ref.world.z-G.player.world.z);assert(Math.abs(T.targetLockHeading()-expected)<1e-9);G.inputAdapter={sample:()=>({throttle:0,steering:0,turretTargetHeading:1.8,fire:false,source:'manual'})};T.tickTank(.016);assert(Math.abs(G.tankRuntime.turretTargetHeading-expected)<1e-9);});
-  check('OFF clears marker/state and restores manual aiming immediately',()=>{T.setTargetLockMode(false);assert.strictEqual(T.targetLockHeading(),null);assert.strictEqual(T.specialControlState().lockedTarget,null);assert(marker.hidden);assert.strictEqual(marker.dataset.targetId,'');T.tickTank(.016);assert(Math.abs(G.tankRuntime.turretTargetHeading-1.8)<1e-9);});
-  check('desktop click selects instead of firing; FIRE/Space remain available',()=>{T.bindTargetLockDesktopControls();T.bindCanvasAim();G.lastTouchLikeInputAt=0;button.emit('click',{pointerType:'mouse'});assert(T.specialControlState().targetLockMode);G.desktopFireQueued=false;rayHits=[{object:enemy.ref.group.children[0]}];const p=centerOf(enemy);canvas.emit('pointerdown',{pointerType:'mouse',clientX:p.x,clientY:p.y});assert.strictEqual(T.specialControlState().lockedTarget.ref,enemy.ref);assert.strictEqual(G.desktopFireQueued,false);nodes['#fl44-fire'].emit('click',{pointerType:'mouse'});assert(G.desktopFireQueued);G.desktopFireQueued=false;});
-  let router;
-  check('actual mobile router binds with current special-button DOM',()=>{router=T.bindGlobalMobileTouchRouter();assert(router);G.mobileRouter=router;T.bindTargetLockTapFireBridge(router);T.setTargetLockMode(false);const r=button.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;emit('pointerdown',{pointerId:10,clientX:x,clientY:y,target:button});emit('pointerup',{pointerId:10,clientX:x,clientY:y,target:button});assert(T.specialControlState().targetLockMode);button.emit('click',{pointerType:'touch'});assert(T.specialControlState().targetLockMode,'compatibility click must not toggle twice');});
-  check('Scope mobile role toggles independently without stealing DRIVE/AIM/FIRE ownership',()=>{const scope=nodes['#fl44-scope'],r=scope.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,camera=G.camera;G.camera=null;assert.strictEqual(T.specialControlState().scopeMode,false);time+=80;emit('pointerdown',{pointerId:24,clientX:x,clientY:y,target:scope});assert.strictEqual(router.owners.get(24),'scope');assert.strictEqual(router.rolePointers.scope,24);assert.strictEqual(router.rolePointers.drive,null);assert.strictEqual(router.rolePointers.aim,null);assert.strictEqual(router.rolePointers.fire,null);emit('pointerup',{pointerId:24,clientX:x,clientY:y,target:scope});assert.strictEqual(T.specialControlState().scopeMode,true);assert.strictEqual(router.rolePointers.scope,null);scope.emit('click',{pointerType:'touch'});assert.strictEqual(T.specialControlState().scopeMode,true,'compatibility click must not toggle Scope twice');time+=80;emit('pointerdown',{pointerId:25,clientX:x,clientY:y,target:scope});emit('pointerup',{pointerId:25,clientX:x,clientY:y,target:scope});assert.strictEqual(T.specialControlState().scopeMode,false);G.camera=camera;});
-
-
-
-  check('touch target acquisition and double-tap FIRE use current router paths',()=>{rayHits=[{object:enemy.ref.group.children[0]}];const p=centerOf(enemy);G.mobileFirePulseCount=0;for(const id of [11,12]){time+=100;emit('pointerdown',{pointerId:id,clientX:p.x,clientY:p.y});assert.strictEqual(T.specialControlState().lockedTarget.ref,enemy.ref);assert.strictEqual(router.owners.get(id),'targetLock');time+=35;emit('pointerup',{pointerId:id,clientX:p.x,clientY:p.y});}assert.strictEqual(G.mobileFirePulseCount,1);assert.strictEqual(router.owners.size,0);assert.strictEqual(router.tapCandidates.size,0);});
-  check('selected-target drag and cancel do not turn into double-tap FIRE',()=>{const p=centerOf(enemy);G.mobileFirePulseCount=0;time+=700;emit('pointerdown',{pointerId:13,clientX:p.x,clientY:p.y});emit('pointermove',{pointerId:13,clientX:p.x+40,clientY:p.y});emit('pointerup',{pointerId:13,clientX:p.x+40,clientY:p.y});time+=80;emit('pointerdown',{pointerId:14,clientX:p.x,clientY:p.y});emit('pointercancel',{pointerId:14,clientX:p.x,clientY:p.y});assert.strictEqual(G.mobileFirePulseCount,0);assert.strictEqual(router.tapCandidates.size,0);});
-  check('DRIVE + immediate AIM + FIRE ownership stays independent during lock',()=>{rayHits=[];router.cancelAll();const d=nodes['#fl44-stick'].getBoundingClientRect(),a=nodes['#fl44-aim-stick'].getBoundingClientRect(),f=nodes['#fl44-fire'].getBoundingClientRect();assert.strictEqual(router.begin(21,d.left+48,d.top+48,canvas,'pointer'),'drive');assert.strictEqual(router.begin(22,a.left+41,a.top+41,canvas,'pointer'),'aim');assert.strictEqual(router.begin(23,f.left+34,f.top+34,nodes['#fl44-fire'],'pointer'),'fire');router.move(22,f.left-2,f.top+20,canvas,'pointer');assert.strictEqual(router.rolePointers.aim,22);assert.strictEqual(router.rolePointers.drive,21);assert.strictEqual(router.rolePointers.fire,23);router.noteLostCapture(22,canvas,'pointer');assert.strictEqual(router.rolePointers.aim,22);router.cancelAll();assert.strictEqual(router.owners.size,0);});
-  check('auto forward/reverse mutual exclusion and manual steering survive',()=>{T.setAutoMoveMode(1);assert.strictEqual(T.autoMoveThrottleIntent(),1);T.setAutoMoveMode(-1);assert.strictEqual(T.autoMoveThrottleIntent(),-1);T.setAutoMoveMode(0);assert.strictEqual(T.autoMoveThrottleIntent(),0);const c=T.mobileCommandFromState({x:.5,y:0,active:true},{x:0,y:0,active:false},false,null,null,1);assert(c.steering>0);});
-  check('hidden/unloaded/detached lifecycle targets cannot remain stale',()=>{T.setTargetLockMode(true);choose(enemy);enemy.ref.group.visible=false;rayHits=[{object:enemy.ref.group.children[0]}];assert.strictEqual(T.targetLockRaycastCandidateAtScreen(centerOf(enemy2).x,centerOf(enemy2).y,[enemy]),null);enemy.ref.group.visible=true;const active=G.sectorStreamer.isActive;G.sectorStreamer.isActive=()=>false;assert.strictEqual(T.targetLockHeading(),null);assert.strictEqual(T.specialControlState().lockedTarget,null);G.sectorStreamer.isActive=active;choose(enemy);enemy.ref.dead=true;assert.strictEqual(T.targetLockHeading(),null);assert(marker.hidden);assert(panel.children.small.textContent.includes('DESTROYED'));enemy.ref.dead=false;});
-  check('defenders -> real Boss -> vulnerable Core grants no persistent rewards',()=>{const before=JSON.stringify(sb.state),serial=G.fortressSerial;for(const e of G.enemies.slice())T.damageEnemy(e,e.hp,{ownerId:G.player.playerId});T.tickFortress();const boss=G.fortress.boss;assert(boss&&boss.boss&&boss.testRange);assert(Math.hypot(boss.world.x-G.player.world.x,boss.world.z-G.player.world.z)<20);choose({kind:'enemy',id:boss.id,ref:boss});assert(panel.children.b.textContent.includes('BOSS'));T.damageEnemy(boss,boss.hp,{ownerId:G.player.playerId});assert.strictEqual(G.fortress.state,'core');choose(fortress);assert(panel.children.b.textContent.includes('FORTRESS CORE'));assert(panel.children.small.textContent.includes('CORE VULNERABLE'));assert.strictEqual(JSON.stringify(sb.state),before);assert.strictEqual(G.fortressSerial,serial);assert.deepStrictEqual([coinCalls,saveCalls,cloudCalls],[0,0,0]);});
-  check('normal projectile collision retains protected/vulnerable Core damage gating',()=>{const f=G.fortress,hp=f.coreHP;const shell=()=>({world:{x:f.world.x,z:f.world.z},direction:{x:0,z:0},speed:0,lifetime:1,damage:24,ownerId:G.player.playerId,team:'player',collisionRadius:.22,group:new Group()});const pool={active:[shell()],release(p){this.active=this.active.filter(x=>x!==p);}};f.state='boss';T.tickProjectilePool(pool,.016,true);assert.strictEqual(f.coreHP,hp);f.state='core';pool.active=[shell()];T.tickProjectilePool(pool,.016,true);assert.strictEqual(f.coreHP,hp-24);});
-  check('Core destruction clears feedback and safely respawns near player without persistence',()=>{const before=JSON.stringify(sb.state),old=G.fortress;T.destroyCore();T.updateTargetLockMarker();assert(marker.hidden);assert.strictEqual(T.specialControlState().lockedTarget,null);const timer=timers.filter(t=>t.active&&t.ms===620).pop();assert(timer);timer.fn();assert.notStrictEqual(G.fortress,old);assert.strictEqual(G.enemies.length,3);assert.strictEqual(JSON.stringify(sb.state),before);assert.deepStrictEqual([coinCalls,saveCalls,cloudCalls],[0,0,0]);});
-  check('local placement follows rotated Hull Forward, not a fixed world axis',()=>{for(const yaw of [Math.PI/2,Math.PI,-Math.PI/2]){G.tankRuntime.teleport(5,-15,yaw);assert(T.activateLocalTargetLockTestRange());const f=T.forwardFromRotation(yaw),p=G.tankRuntime.pose();assert(Math.abs(G.fortress.world.x-(p.x+f.x*28))<1e-9);assert(Math.abs(G.fortress.world.z-(p.z+f.z*28))<1e-9);for(const e of G.enemies)assert(Math.hypot(e.world.x-p.x,e.world.z-p.z)>=12&&Math.hypot(e.world.x-p.x,e.world.z-p.z)<=16);}});
-  check('test setup failure stays non-blocking and visibly reports failure',()=>{const ensure=G.sectorStreamer.ensure;G.sectorStreamer.ensure=()=>{throw new Error('injected setup failure');};const savedConsole=sb.console;sb.console={...console,error(){},warn(){}};assert.strictEqual(T.safeActivateLocalTargetLockTestRange(),false);assert.strictEqual(G.running,true);assert.strictEqual(G.localTargetLockTestStatus.state,'error');assert(stateEl.textContent.includes('LOCAL TEST ERROR'));G.sectorStreamer.ensure=ensure;sb.console=savedConsole;assert(T.safeActivateLocalTargetLockTestRange());});
-  check('fallback touchstart/touchend selects real targets and preserves double-tap FIRE',()=>{router.cancelAll();events.clear();delete sb.PointerEvent;router=T.bindGlobalMobileTouchRouter();G.mobileRouter=router;T.bindTargetLockTapFireBridge(router);T.setTargetLockMode(true);const e=G.enemies[1],target={kind:'enemy',id:e.id,ref:e},p=centerOf(target);rayHits=[{object:e.group.children[0]}];G.mobileFirePulseCount=0;for(const id of [31,32]){time+=100;const touch={identifier:id,clientX:p.x,clientY:p.y,target:canvas};emit('touchstart',{changedTouches:[touch],touches:[touch]});assert.strictEqual(T.specialControlState().lockedTarget.ref,e);time+=25;emit('touchend',{changedTouches:[touch],touches:[]});}assert.strictEqual(G.mobileFirePulseCount,1);assert.strictEqual(router.owners.size,0);assert.strictEqual(router.tapCandidates.size,0);sb.PointerEvent=function(){};});
-  check('removal/re-entry clears entity reference; original bootstrap remains deferred',()=>{const e=G.enemies[0];T.setTargetLockMode(true);choose({kind:'enemy',id:e.id,ref:e});T.removeFortress();assert.strictEqual(T.specialControlState().lockedTarget,null);assert(marker.hidden);assert.strictEqual(G.enemies.length,0);assert(source.includes("bootStage='scheduleLocalTestRange'"));assert(source.includes('requestAnimationFrame(()=>setTimeout(()=>{if(G.running)safeActivateLocalTargetLockTestRange();},0))'));assert(source.includes('G.specialControls={autoMove:0,targetLockMode:false,lockedTarget:null,scopeMode:false}'));});
-  console.log('PASS N3 '+checks+' focused groups; source-path / rendering-double tests only. Real browser delivery, WebGL raycasting and physical mobile acceptance remain required.');
-}
-
-// N4 tests are additive. Existing default and --target-lock assertions are not rewritten.
-function runLandscapeN4Tests(){
-  const fs=require('fs'),vm=require('vm'),assert=require('assert'),path=require('path');
-  const root=path.resolve(__dirname,'..'),source=fs.readFileSync(path.join(root,'js/frontline1944.js'),'utf8'),html=fs.readFileSync(path.join(root,'index_classic.html'),'utf8'),css=fs.readFileSync(path.join(root,'css/frontline1944.css'),'utf8');
-  let count=0;const check=(name,fn)=>{fn();count++;console.log('PASS N4 '+name);};
-  const gateCode=html.match(/<script id="vw-landscape-gate-controller">([\s\S]*?)<\/script>/),gateCss=html.match(/<style id="vw-landscape-gate-css">([\s\S]*?)<\/style>/);
-  check('orientation integration precedes engine capture handlers',()=>{assert(gateCode&&gateCss);assert(html.indexOf(gateCode[0])<html.indexOf('<script src="js/util.js?v=1126">'));});
-  check('gate text, hidden hit-testing and no fake CSS rotation',()=>{assert(gateCode[1].includes('กรุณาหมุนอุปกรณ์เป็นแนวนอน'));assert(gateCss[1].includes('[hidden]{display:none!important'));assert(!/transform\s*:\s*rotate/i.test(gateCss[1]));});
-  check('startup toast removed, exact accepted identity preserved',()=>{assert(!source.includes("bootStage='readyToast'"));assert(source.includes("bootStage='compactIdentity'"));assert(source.includes('P1.2.6F-20260902-5cc6a0'));assert(css.includes('P1.2.6F-20260902-5cc6a0-CSS'));});
-  check('hidden toast removed from hit testing, not merely transparent',()=>{assert(css.includes('.fl44-toast:not(.on)'));assert(css.includes('.fl44-toast[hidden]{display:none!important'));});
-  // Execute the actual adapter against explicit rendering/DOM doubles. Browser audit separately
-  // exercises actual Three.js, event hit testing, Home V2, geometry, camera and native API failure flows.
-  const listeners=new Map(),doc={readyState:'loading',hidden:false,addEventListener(){},removeEventListener(){},querySelector(){return null;},getElementById(){return null;}};
-  let now=1000,cancel=0,recover=0,synced=0;
-  const sb={console,document:doc,navigator:{maxTouchPoints:0},performance:{now:()=>now},Math,Date,Set,Map,URLSearchParams,innerWidth:844,innerHeight:390,devicePixelRatio:2,location:{hostname:'192.168.1.37',search:''},setTimeout(){return 1;},clearTimeout(){},setInterval(){},clearInterval(){},requestAnimationFrame(){},cancelAnimationFrame(){},addEventListener(n,f){listeners.set(n,f);},removeEventListener(){},localStorage:{getItem(){return null;},setItem(){}},isAdmin:()=>true};sb.window=sb;vm.createContext(sb);vm.runInContext(source,sb);
-  const T=sb.Frontline1944._t,G=T.G;G.keys.add('ArrowUp');G.keys.add('Space');G.firing=true;G.desktopFireQueued=true;G.mobileFirePulseCount=3;G.specialControls.autoMove=1;
-  G.mobileRouter={cancelAll(){cancel++;},recoverFirePosition(){recover++;}};G.player={speed:3};G.tankRuntime={speed:3,syncEntity(){synced++;}};
-  G.aim.active=true;G.joy.active=true;
-  check('portrait cancels through existing public hook and neutralizes held commands',()=>{T.setViewportSuspended(true);assert.strictEqual(cancel,1);assert(G.viewportSuspended);assert.strictEqual(G.keys.size,0);assert(!G.firing&&!G.desktopFireQueued&&!G.aim.active&&!G.joy.active);assert.strictEqual(G.mobileFirePulseCount,0);assert.strictEqual(G.specialControls.autoMove,0);assert.strictEqual(G.tankRuntime.speed,0);assert.strictEqual(synced,1);});
-  check('portrait cannot acquire a target even through direct selection helper',()=>{assert.strictEqual(T.targetLockSelectionPointAllowed(100,100),false);});
-  check('repeated suspension never saves/restores a portrait FIRE preference',()=>{T.setViewportSuspended(true);assert.strictEqual(cancel,1);assert.strictEqual(recover,0);});
-  check('resume uses existing FIRE restoration and resets timing without phantom input',()=>{now=4000;G.fireAt=1200;T.setViewportSuspended(false);assert(!G.viewportSuspended);assert.strictEqual(recover,1);assert.strictEqual(G.last,0);assert.strictEqual(G.fireAt,4200);assert(!G.firing&&G.keys.size===0&&G.specialControls.autoMove===0);});
-  const hidden={hidden:true,parentElement:null},span={parentElement:hidden,tagName:'SPAN'};
-  check('hidden ancestor is not a protected hit target',()=>assert.strictEqual(T.isProtectedFrontlineTarget(span),false));
-  check('visible genuine HUD remains protected',()=>assert.strictEqual(T.isProtectedFrontlineTarget({className:'fl44-top',parentElement:null}),true));
-  check('dismissed toast class is ignored; active toast remains protected',()=>{const n={className:'fl44-toast',parentElement:null,classList:{contains:()=>false}};assert.strictEqual(T.isProtectedFrontlineTarget(n),false);n.classList.contains=()=>true;assert.strictEqual(T.isProtectedFrontlineTarget(n),true);});
-  // Lightweight route DOM for deterministic portrait/landscape/scope checks of the actual inline controller.
-  const all=[],winEvents={};let d;
-  class Element{
-    constructor(tag='DIV',id=''){this.tagName=tag;this.id=id;this.attrs={};this.hidden=false;this.isConnected=true;this.children=[];this.style={};this.parentElement=null;this.classes=new Set();this.classList={contains:x=>this.classes.has(x),add:x=>this.classes.add(x),remove:x=>this.classes.delete(x)};all.push(this);}
-    setAttribute(k,v){this.attrs[k]=String(v);}getAttribute(k){return k in this.attrs?this.attrs[k]:null;}removeAttribute(k){delete this.attrs[k];}
-    appendChild(n){this.children.push(n);n.parentElement=this;}contains(n){return n===this||this.children.some(c=>c.contains(n));}
-    getBoundingClientRect(){return {left:0,top:0,right:844,bottom:390,width:844,height:390};}
-    set innerHTML(v){this.markup=v;this.appendChild(new Element('BUTTON'));this.appendChild(new Element('H2'));}
-    querySelector(s){return this.children.find(c=>c.tagName===s.toUpperCase())||null;}
-    focus(){d.activeElement=this;}closest(s){for(let n=this;n;n=n.parentElement)if(s==='[inert]'&&n.getAttribute('inert')!==null)return n;return null;}
-  }
-  const body=new Element('BODY'),dash=new Element('SECTION','screen-dashboard');dash.classes.add('active');dash.classes.add('screen');body.appendChild(dash);
-  d={body,documentElement:new Element('HTML'),activeElement:body,hidden:false,addEventListener(){},getElementById:id=>all.find(n=>n.id===id)||null,createElement:t=>new Element(t.toUpperCase()),querySelectorAll:s=>all.filter(n=>s==='.screen'?n.classes.has('screen'):s==='.screen.active'?n.classes.has('screen')&&n.classes.has('active'):false)};
-  const env={document:d,console,innerWidth:844,innerHeight:390,screen:{orientation:{angle:0}},Map,Set,Promise,queueMicrotask(){},MutationObserver:class{observe(){}disconnect(){}},CustomEvent:class{constructor(type,opts){this.type=type;this.detail=opts.detail;}},getComputedStyle:n=>({display:n.hidden?'none':'block',visibility:'visible',opacity:'1',position:'static',zIndex:'0'}),addEventListener:(n,f)=>winEvents[n]=f,dispatchEvent(){}};env.window=env;vm.createContext(env);vm.runInContext(gateCode[1],env);
-  const C=env.VWLandscapeGate,gate=d.getElementById('vw-landscape-gate');
-  check('actual dashboard landscape route does not block',()=>{assert.strictEqual(C.state().surface,'lobby');assert.strictEqual(C.state().blocked,false);assert(gate.hidden);});
-  check('actual route controller gates portrait and owns inert state',()=>{env.innerWidth=390;env.innerHeight=844;C.refresh();assert(C.state().blocked);assert(!gate.hidden);assert.strictEqual(dash.getAttribute('inert'),'');});
-  check('window capture blocks special-button coordinates before game router',()=>{let prevented=false,stopped=false;winEvents.pointerdown({type:'pointerdown',target:dash,cancelable:true,preventDefault(){prevented=true;},stopImmediatePropagation(){stopped=true;}});assert(prevented&&stopped);});
-  check('landscape secondary resumes with exact prior inert restoration',()=>{env.screen.orientation.angle=270;env.innerWidth=844;env.innerHeight=390;C.refresh();assert(!C.state().blocked&&gate.hidden);assert.strictEqual(dash.getAttribute('inert'),null);});
-  check('inactive dashboard never gates authentication/other screens',()=>{dash.classList.remove('active');env.innerWidth=390;env.innerHeight=844;C.refresh();assert.strictEqual(C.state().surface,'');assert(gate.hidden);});
-  check('native path feature-detects capability and catches failed promises',()=>{assert(gateCode[1].includes("typeof screen.orientation.lock !== 'function'"));assert(gateCode[1].includes("screen.orientation.lock('landscape')"));assert(gateCode[1].includes('token !== session'));assert(gateCode[1].includes('catch (e)'));});
-  check('controller is a singleton across repeated module entries',()=>{vm.runInContext(gateCode[1],env);assert.strictEqual(env.VWLandscapeGate,C);assert.strictEqual(all.filter(n=>n.id==='vw-landscape-gate').length,1);});
-  console.log('PASS N4 '+count+' focused adapter/route checks. DOM/native/rendering doubles here; see separate real-browser audit.');
-}
-
-// Phase 2.1 tests use real Three.js geometry plus a controlled TextureLoader transport.
-// They do NOT claim a WebGL frame, original launcher delivery or physical-phone acceptance.
-function runPhase21VisualTests(){
-  const fixtureArg=process.argv.indexOf('--three-fixture');
-  const vendorPath=fixtureArg>=0?process.argv[fixtureArg+1]:'js/vendor/three.min.js';
-  if(!vendorPath||!fs.existsSync(vendorPath))throw new Error('Phase 2.1 geometry tests need '+vendorPath+' (not supplied in the partial Task ZIP).');
-  const source=fs.readFileSync('js/frontline1944.js','utf8'),cssBytes=fs.readFileSync('css/frontline1944.css');
-  const vendor={console,setTimeout,clearTimeout};vendor.window=vendor;vendor.self=vendor;
-  vm.runInNewContext(fs.readFileSync(vendorPath,'utf8'),vendor,{filename:vendorPath});
-  assert(vendor.THREE&&vendor.THREE.BufferGeometry,'real Three.js global build is available');
-  const THREE={...vendor.THREE},requests=[],timers=new Map(),warnings=[];let timerSerial=0;
-  THREE.TextureLoader=class {load(url,ok,progress,error){const texture=new THREE.Texture();requests.push({url,ok,error,texture});return texture;}};
-  const document={readyState:'loading',addEventListener(){},removeEventListener(){},querySelector(){return null;},getElementById(){return null;},
-    createElement(){return {width:64,height:64,getContext(){return {createRadialGradient(){return {addColorStop(){}};},fillRect(){}};}};}};
-  const context={THREE,document,console:{info(){},log(){},error(){},warn(...a){warnings.push(a.join(' '));}},URL,URLSearchParams,Date,Math,Map,Set,
-    setTimeout(fn){const id=++timerSerial;timers.set(id,fn);return id;},clearTimeout(id){timers.delete(id);},setInterval(){return 1;},clearInterval(){},
-    requestAnimationFrame(){return 1;},cancelAnimationFrame(){},performance:{now:()=>1000},navigator:{hardwareConcurrency:8},
-    innerWidth:844,innerHeight:390,devicePixelRatio:2,addEventListener(){},removeEventListener(){},dispatchEvent(){},
-    location:{hostname:'localhost',origin:'http://localhost',search:''}};
-  context.window=context;vm.runInNewContext(source,context,{filename:'js/frontline1944.js'});
-  const api=context.Frontline1944,t=api._t,g=t.G;let groups=0;
-  const pass=s=>{groups++;console.log('PASS P2.1 '+s);};
-  const guards=PHASE21_LOCKED_DECLARATIONS;
-  for(const [name,expected] of Object.entries(guards)){
-    const value=name==='open'||name==='close'?api[name]:t[name];assert.strictEqual(typeof value,'function',name);
-    assert.strictEqual(crypto.createHash('sha256').update(value.toString()).digest('hex'),expected,name+' remains byte-identical to accepted N4');
-  }
-  assert.strictEqual(crypto.createHash('sha256').update(cssBytes).digest('hex'),'47e99dbe33fa859ba3cd12c4c63f6c5034064d9dfe649c9f96a952be12ec215a');
-  assert.strictEqual(t.CFG.runtimeVersion,'P1.2.6F-20260902-5cc6a0');
-  assert.deepStrictEqual([t.CFG.viewW,t.CFG.cameraOffsetX,t.CFG.cameraHeight,t.CFG.cameraOffsetZ],[220,76,118,92]);
-  pass('accepted runtime, camera, CSS and '+Object.keys(guards).length+' protected declarations unchanged');
-  function webpInfo(bytes){
-    assert.strictEqual(bytes.toString('ascii',0,4),'RIFF');assert.strictEqual(bytes.toString('ascii',8,12),'WEBP');
-    assert.strictEqual(bytes.readUInt32LE(4)+8,bytes.length,'RIFF byte length');
-    for(let i=12;i+8<=bytes.length;){const kind=bytes.toString('ascii',i,i+4),size=bytes.readUInt32LE(i+4),p=i+8;
-      assert(p+size<=bytes.length,'WebP chunk fits file');
-      if(kind==='VP8X')return {w:bytes.readUIntLE(p+4,3)+1,h:bytes.readUIntLE(p+7,3)+1};
-      if(kind==='VP8 ')return {w:bytes.readUInt16LE(p+6)&16383,h:bytes.readUInt16LE(p+8)&16383};
-      if(kind==='VP8L'){const n=bytes.readUInt32LE(p+1);return {w:(n&16383)+1,h:((n>>>14)&16383)+1};}
-      i=p+size+(size%2);
-    }throw new Error('Missing WebP image header');
-  }
-  let totalBytes=0,rgbaBytes=0;
-  const entries=Object.entries(t.PHASE21_ASSETS);assert.strictEqual(entries.length,7);
-  for(const [key,url] of entries){
-    assert(/^img\/frontline1944\/phase21\/p21_959e5f_[a-z]+\.webp$/.test(url),'allowlisted new image path');
-    const data=fs.readFileSync(url),size=webpInfo(data),expected=['stone','tiles'].includes(key)?128:256;
-    assert.strictEqual(size.w,expected);assert.strictEqual(size.h,expected);assert(data.length<32000,'per-image self-imposed budget');
-    totalBytes+=data.length;rgbaBytes+=size.w*size.h*4;
-  }
-  assert(totalBytes<100000,'seven images stay under 100 kB');assert(rgbaBytes*4/3<2*1024*1024,'RGBA8 + full mip estimate under 2 MiB');
-  const build=fs.readFileSync('tools/build_web.mjs','utf8');for(const [,url] of entries)assert(build.includes("'"+url+"'"),'explicit untracked build inclusion: '+url);
-  pass('all seven WebP signatures, actual dimensions, paths and build references ('+totalBytes+' bytes; RGBA8+mips estimate '+Math.ceil(rgbaBytes*4/3)+' bytes)');
-  function setup(x=0,z=0,heading=0){
-    if(g.fortress)t.removeFortress();if(g.sectorStreamer)g.sectorStreamer.dispose();if(g.resources)g.resources.dispose();t.phase21ResetSession();requests.length=0;timers.clear();
-    g.layers={};for(const v of Object.values(t.LAYER))g.layers[v]=new THREE.Group();
-    g.resources=new t.ResourceCache();g.occluders=[];g.smoke=[];g.scene=new THREE.Scene();for(const layer of Object.values(g.layers))g.scene.add(layer);g.root=null;
-    g.terrain=new t.TerrainSystem();g.collision=new t.CollisionSystem(g.terrain);
-    g.player={world:{x,z},hullRotation:heading,turretRotation:heading,group:new THREE.Group()};g.player.group.renderOrder=5000;
-    g.tankRuntime={entity:g.player,pose(){return {x:g.player.world.x,z:g.player.world.z,heading:g.player.hullRotation,turretHeading:g.player.turretRotation};}};
-    g.sectorStreamer=new t.SectorStreamer();g.sectorStreamer.update(z,true);g.running=true;
-    return g.sectorStreamer.active.get(t.WorldSpace.sectorIndexAtZ(z)).phase21Art;
-  }
-  let art=setup();assert(art);assert.strictEqual(g.sectorStreamer.active.size,3);
-  assert.strictEqual([...g.sectorStreamer.active.values()].filter(s=>s.phase21Art).length,1);
-  assert.strictEqual(requests.length,7);assert(art.houses>=4,'recognizable village');assert(art.trees>=14,'tree line and crowns');
-  assert(art.meshCount<80&&art.triangleCount<8000);assert(g.terrain.stats().zones<40,'straight roads use one terrain proxy each, not per-metre zones');assert.strictEqual(art.batches.size,0);
-  const initial={houses:art.houses,trees:art.trees,meshes:art.meshCount,triangles:art.triangleCount};
-  pass('one spawn sector dressed, adjacent templates unchanged; '+JSON.stringify(initial));
-  for(const geometry of art.geometries){
-    for(const name of ['position','normal','uv','color']){
-      const attr=geometry.getAttribute(name);assert(attr&&attr.count>0,name);
-      for(const value of attr.array)assert(Number.isFinite(value),'finite '+name+' vertex data');
-    }
-    assert(Number.isFinite(geometry.boundingSphere.radius));
-  }
-  const rt=art.rt;for(const group of Object.values(rt.groups))group.traverse(o=>{if(o.isMesh)assert(o.userData.phase21Decoration||art.river,'only intended owned geometry');});
-  assert(rt.occluders.every(o=>o.userData.phase21Decoration&&o.userData.depthAnchor.foreground&&o.renderOrder>g.player.group.renderOrder));
-  assert.strictEqual(g.enemies.length,0);assert.strictEqual(g.fortress,null);
-  pass('real Three.js buffer bounds/normals; separate foreground crowns; scenery adds no combat targets');
-  const owned=()=>[...g.collision.bySector.values()].flat().filter(c=>c.tag==='phase21');
-  for(const collider of owned())assert(g.collision.hitSolid(collider.x,collider.z,.01).blocked,'visible prop has a solid proxy');
-  for(const x of [-3,0,3])for(let z=-65;z<=65;z+=2)for(const heading of [0,Math.PI/2,Math.PI])
-    assert(!g.collision.hitTankFootprint(x,z,heading).blocked,'main route and turning clearance at '+x+','+z);
-  for(const p of [[0,0],[-5.5,-14],[0,-13],[5.5,-14],[0,-28],[0,-13]])
-    assert(!g.collision.hitTankFootprint(...p,0).blocked,'spawn/defenders/real local fort/Boss clearance');
-  for(const p of art.footprints)assert(Math.abs(p.x)<88&&Math.abs(p.z-art.cz)<74,'new footprint within owned sector');
-  pass('solid house/body/step/trunk proxies and a drivable turning/reverse corridor to real test anchors');
-  const materialsBefore=art.materials.size;
-  for(const req of requests){req.texture.image={width:256,height:256};req.ok(req.texture);}
-  assert.strictEqual(t.phase21Diagnostics().status,'ready');assert.strictEqual(t.phase21Diagnostics().loaded,7);
-  assert.strictEqual(art.materials.size,materialsBefore);assert.strictEqual(timers.size,0);
-  for(const [key] of entries){const mat=art.materials.get(key);assert(mat.map);assert.strictEqual(mat.map.anisotropy,1);}
-  for(let i=0;i<200;i++)t.phase21Diagnostics();assert.strictEqual(requests.length,7);assert.strictEqual(art.materials.size,materialsBefore);
-  pass('seven reused textures/materials, no new allocations on diagnostics, POT mipmaps and no anisotropy escalation');
-  let disposedGeometries=0,disposedMaterials=0,disposedTextures=0;
-  const oldMeshes=art.geometries.length,oldMaterials=art.materials.size;
-  for(const q of art.geometries)q.addEventListener('dispose',()=>disposedGeometries++);
-  for(const q of art.materials.values())q.addEventListener('dispose',()=>disposedMaterials++);
-  for(const q of art.textures)q.addEventListener('dispose',()=>disposedTextures++);
-  g.sectorStreamer.update(-600,true);
-  assert.strictEqual(t.phase21Diagnostics().status,'inactive');assert.strictEqual(owned().length,0);
-  assert.strictEqual(disposedGeometries,oldMeshes);assert.strictEqual(disposedMaterials,oldMaterials);assert.strictEqual(disposedTextures,7);
-  assert.strictEqual(art.alive,false);assert.strictEqual(art.footprints.length,0);assert.strictEqual(art.materials.size,0);
-  assert(!g.occluders.some(q=>rt.occluders.includes(q)),'old crowns removed');
-  pass('stream-out disposes every owned geometry/material/texture, collider, terrain and crown');
-  for(let i=0;i<12;i++){
-    g.sectorStreamer.update(0,true);const d=t.phase21Diagnostics();assert.strictEqual(d.status,'loading');assert.strictEqual(d.meshes,initial.meshes);assert.strictEqual(d.textures,7);
-    assert.strictEqual(g.sectorStreamer.active.size,3);assert(g.sectorStreamer.preloaded.size<=t.CFG.descriptorCacheCap);
-    assert.strictEqual(timers.size,7);g.sectorStreamer.update(-600,true);assert.strictEqual(timers.size,0);
-  }
-  pass('12 stream out/back cycles preserve active/descriptor caps, deterministic geometry and zero abandoned timers');
-  art=setup();const pending=requests.slice();g.sectorStreamer.update(-600,true);
-  for(const req of pending)req.ok(req.texture);
-  assert.strictEqual(t.phase21Diagnostics().status,'inactive');assert.strictEqual(timers.size,0);assert.strictEqual(owned().length,0);
-  pass('late texture callbacks cannot resurrect an unloaded sector');
-  art=setup();const errorsBefore=warnings.length;for(const req of requests)req.error(new Error('fixture 404'));
-  assert.strictEqual(t.phase21Diagnostics().status,'error');assert.strictEqual(t.phase21Diagnostics().loaded,0);
-  assert.strictEqual(t.phase21Diagnostics().failed.length,7);assert.strictEqual(warnings.length-errorsBefore,7);assert(g.running);
-  pass('asset 404 reports explicit art error, never declares visual success and does not stop gameplay');
-  art=setup();for(const fn of [...timers.values()])fn();assert.strictEqual(t.phase21Diagnostics().status,'error');
-  for(const req of requests)req.ok(req.texture);assert.strictEqual(t.phase21Diagnostics().status,'ready');
-  pass('timeout reports failure; genuine late success may recover without restarting input/game entry');
-  let crossing=null;
-  for(let i=0;i<100;i++)if(t.SECTOR_TEMPLATES[t.visualIdFor(i)].id==='river_crossing'){crossing=i;break;}
-  assert(crossing!==null);const cz=t.WorldSpace.sectorCenterZ(crossing);art=setup(0,cz);
-  assert(art.river);assert.strictEqual(g.terrain.sample(25,cz+6).id,'DEEP_WATER');assert(g.collision.hitTankFootprint(25,cz+6,0).blocked);
-  assert.strictEqual(g.terrain.sample(0,cz+6).id,'ROAD');assert(!g.collision.hitTankFootprint(0,cz+6,0).blocked);
-  assert.strictEqual(g.terrain.sample(-48,cz+6).id,'SHALLOW_WATER');
-  pass('starting on existing river template retains deep-water blocking, bridge priority and ford');
-  for(const [x,z,heading] of [[48,12,Math.PI/2],[-52,-34,-Math.PI/2],[18,68,Math.PI],[0,-71,0]]){
-    art=setup(x,z,heading);assert(art);
-    const newHit=owned().filter(c=>c.shape==='circle'?g.collision.circleHitsOBB(c,x,z,heading,t.CFG.tankFootprintHalfWidth,t.CFG.tankFootprintHalfLength):g.collision.aabbHitsOBB(c,x,z,heading,t.CFG.tankFootprintHalfWidth,t.CFG.tankFootprintHalfLength));
-    assert.strictEqual(newHit.length,0,'saved tank never embedded in a new prop');
-    assert.strictEqual(t.phase21Diagnostics().anchor.x,x);assert.strictEqual(t.phase21Diagnostics().anchor.z,z);
-  }
-  pass('saved translated/rotated and boundary spawns are not moved or covered by new solid props');
-  art=setup();g.camera=new THREE.OrthographicCamera(-110,110,60,-60,.1,420);g.raycaster=new THREE.Raycaster();
-  assert(t.safeActivateLocalTargetLockTestRange(),'real local Fortress/defenders created in dressed area');
-  function project(x,y,z,box){const p=new THREE.Vector3(x,y,z).project(g.camera);return {x:box.left+(p.x+1)*box.width/2,y:box.top+(1-p.y)*box.height/2};}
-  for(const [width,height] of [[844,390],[980,368],[1252,472],[1280,720]]){
-    const rect={left:37,top:19,width,height,right:37+width,bottom:19+height};g.canvas={getBoundingClientRect:()=>rect};
-    g.camera.left=-110;g.camera.right=110;g.camera.top=110*height/width;g.camera.bottom=-110*height/width;
-    g.camera.position.set(76,118,92);g.camera.lookAt(0,0,0);g.camera.updateProjectionMatrix();g.camera.updateMatrixWorld(true);g.scene.updateMatrixWorld(true);
-    t.setTargetLockMode(true);
-    for(const enemy of g.enemies){
-      const point=project(enemy.world.x,2.0,enemy.world.z,rect),hit=t.targetLockRaycastCandidateAtScreen(point.x,point.y);
-      assert(hit&&hit.ref===enemy,'real child-mesh raycast at '+width+'x'+height);
-      assert(t.selectTargetLockAtScreen(point.x,point.y));assert.strictEqual(g.specialControls.lockedTarget.ref,enemy);
-    }
-    const f=g.fortress,fp=project(f.world.x,5.5,f.world.z,rect),fortHit=t.targetLockRaycastCandidateAtScreen(fp.x,fp.y);
-    assert(fortHit&&fortHit.ref===f,'Fortress owner survives decorative geometry');assert.strictEqual(f.state,'defenders');
-    assert(t.targetLockDetails(fortHit).includes('CORE PROTECTED'));assert.strictEqual(f.coreHP,f.maxCoreHP);
-    for(const crown of art.rt.occluders.slice(0,5)){
-      const pos=crown.geometry.getAttribute('position'),point=project(pos.getX(0),pos.getY(0),pos.getZ(0),rect);
-      assert.strictEqual(t.pickTargetLockAtScreen(point.x,point.y),null,'tree canopy is not selectable');
-    }
-    t.setTargetLockMode(false);assert.strictEqual(g.specialControls.lockedTarget,null);assert.strictEqual(t.targetLockHeading(),null);
-  }
-  pass('real Three.js recursive child-mesh raycasting at 844x390, 980x368, 1252x472 and 1280x720, CSS offsets, target switching and OFF');
-  pass('real Fortress still protected; separate scenery never enters targeting even with crowns at projected click positions');
-  // This is the unchanged runtime adapter, not a replacement for the absent Lobby gate test.
-  g.tankRuntime.syncEntity=()=>{};t.setAutoMoveMode(1);t.setViewportSuspended(true,'portrait');
-  assert(g.viewportSuspended);assert.strictEqual(g.specialControls.autoMove,0);assert.strictEqual(t.targetLockSelectionPointAllowed(400,200),false);
-  t.setViewportSuspended(false,'landscape');assert.strictEqual(g.viewportSuspended,false);
-  t.removeFortress();g.camera=null;g.canvas=null;g.raycaster=null;
-  pass('portrait/landscape runtime adapter suspends and safely resumes; actual Lobby/DOM gate still requires original HTML');
-  g.sectorStreamer.dispose();g.resources.dispose();t.phase21ResetSession();assert.strictEqual(t.phase21Diagnostics().status,'inactive');
-  assert.strictEqual(timers.size,0);assert.strictEqual(g.collision.bySector.size,0);assert.strictEqual(g.terrain.bySector.size,0);
-  art=setup();assert.strictEqual(art.houses,initial.houses);assert.strictEqual(art.trees,initial.trees);g.sectorStreamer.dispose();g.resources.dispose();t.phase21ResetSession();
-  pass('dispose/re-entry resets art ownership; accepted control/session cleanup declarations unchanged');
-  console.log('PASS P2.1 '+groups+' geometry/asset/source groups, Three.js r'+THREE.REVISION+(fixtureArg>=0?' (explicit TEST-ONLY vendor substitute)':' (current project vendor)')+'. No GPU, browser delivery or physical-phone PASS is implied.');
-}
-
-
-// R2 additions use CURRENT 692a14 function bytes, not the stale Phase 2.1/N4 hashes above.
-// The previous test functions and assertions remain unchanged. Real browser captures are separate.
-function runPhase21R2Tests(){
-  const path=require('path'),source=fs.readFileSync('js/frontline1944.js','utf8');
-  const baselineGuards={
-  "TankRuntime": "f469889ae449f3c66d0c19c09ad0f03b64cd2a1233bd0f2eeb413b39c7ec3a70",
-  "GlobalMobileTouchRouter": "ff63b3eeec7fc7b8ef2c6cd67c25e59b6ce83ca27b27a701561f725bdbf11e94",
-  "DesktopTankInputAdapter": "0ebe83210cc943ef79c24eac2f8f93df38cce32413187838822096ff7cb75128",
-  "MobileTankInputAdapter": "d2950e489ca09d2178c59a32dc287c902370a101137c1958b018f66acd47ab90",
-  "UnifiedTankInputAdapter": "9daff8dd8fe4d636129f52fe7b94e7aa8869fcfa260c352c25b64911480c8466",
+"use strict";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const fs=require('fs'),vm=require('vm'),assert=require('assert'),crypto=require('crypto');
+
+const PHASE21_LOCKED_DECLARATIONS={
+  "TankRuntime": "039c3f173d4ae0410a7c1bd078341dbdfe53d5323e8685523d164b2d82397171",
+  "GlobalMobileTouchRouter": "0156033c3a988a7fda61cfb27f61fe3fae9a6093a063166896868e516b72c187",
+  "DesktopTankInputAdapter": "431fc54b0c627bc72e12723b448ea446b9095882926a0ff0853a8498216675a5",
+  "MobileTankInputAdapter": "456acd69ac8e09e1fa6e55e75c0e9eb823772405f576c8c4d3c78d0195f0a2b2",
+  "UnifiedTankInputAdapter": "cc0d47d312f69bfdbf48cccb41ea728f4e71b769bb055bf54e02c4505c240c52",
+  "forwardFromRotation": "ba298b83c47089a066108e6cd2e1c9cd04cc9f32f1e8ba3bd542ce8bd4e2a169",
+  "rightFromRotation": "e4742e6ba1ce4db302cf5270efc13db2ae1aef1f978b8906e1bb48d7eadbdee0",
+  "rotationFromForward": "d81e09cd4284c9f4729ef6a70e03b1cec396eba48602871b739938e5b02ee8cc",
+  "driveDelta": "49e9577b57cbd61705a9a573652b037161794f95642c2e6f873f48c953a4ae53",
+  "tickTank": "03292da57e729cc7c099af5169115c54a0c6ecea079fb20a603b27b1b8d58583",
+  "tickProjectilePool": "4d9ba222d08d9bf67e720281e249a65d23723fea8b8305d62ac283f35a97aed9",
+  "makeDom": "9d83d179b70c99593a8ce971d1d47c5200ee971b1958601643fd51dc04010853",
+  "hideFrontlineToast": "bab9647389adecbb092f37e674a79ae8fcf8d64c25c043712697b9c2573414de",
+  "showToast": "f171dbcae22a13661a2d775dc18393acc02d1fd0fe64239359ce687dc36617fb",
+  "setViewportSuspended": "db17a23b13289501f283f9ede945194002dc1b40931c844df25f2f078ac17e8f",
+  "refreshFrontlineViewport": "1f6621649459feb5ad2b21a5badffabb85360af2a7654f807343a58cc99d6605",
+  "selectTargetLockAtScreen": "5ee013d648e56f6b0a06dbbcc27b0c73e9085d5dac041b670be42e54dfcaa625",
+  "pickTargetLockAtScreen": "cc8f892383d3d9700800761d1bd25a5f7374704f725ff8dfc3309f4ad7654e47",
+  "targetLockRaycastCandidateAtScreen": "aa7a8396c96e933aa286b5805bb9d992e6def231fd6dfe8f564c43cbbad18e5d",
+  "targetLockTargetValid": "f435edf821146ac8dd15f0e282a2a8dab9d348b523ec2e3874830b7d7f4bd502",
+  "targetLockHeading": "dc9c5a958cc953065b4e4e220890e908bc22667666f17a1ba8167c54ae7176d6",
+  "targetLockCandidates": "4274c88c554ca8e99f2d02a126d51b19106ca3bf178483b95f818a82e6eccc0c",
+  "bindTargetLockTapFireBridge": "1443143cdeda1f7580e339ff53b6088c7314be88b17b088de85c44c1470ae40e",
+  "bindTargetLockDesktopControls": "1be89fade1de66f982f41d0b99658fff5b3b5b53d304595cf668c30d8367fad2",
+  "bindCanvasAim": "a8a08a8648756c803a0379efe144fd6333ca741f9168a484898ec2a7bdf8c44d",
+  "setAutoMoveMode": "33c663df584b7f82e92fbb7847051e8efa0e949f6d1ac98bb70951736fb8a5aa",
+  "setTargetLockMode": "2bf7986b92e8de25152fde8f8f293ecbbb642473dbbf054afd44faf89e1c8083",
+  "privatePreviewHostname": "fcd6236c72ec04052fc1857633eed667316b9818e1e741d23f95e8d19dd45e2b",
+  "safeActivateLocalTargetLockTestRange": "f1a2dcf94daf38ab30f63f89341ac5fcf88e6a56bc1aa3d986c493d392bca1ca",
+  "activateLocalTargetLockTestRange": "7657c070958ebc7f4b02f5b6a2923e39fab10425ae82a7e000786fca0acbcec9",
+  "activateNextFortress": "7e7b56d363a416ee75205ad59a2954b5a77a61d6809979ca7dad5e406e0663ca",
+  "spawnEnemy": "fc9f647953fad8d5109441ea246d6422a186718031328f994e40809c952c3b1a",
+  "spawnDefenders": "effb334eb2b95801d2fdc8ce03a8e72c8ad687619d6c54a5531f8cd2b3492e8e",
+  "spawnBoss": "728e85bb3ed98544357b35232c877c7006b861af3f1b2ae44592e40ff7ce929d",
+  "damageEnemy": "bddd0d970e05a31515537d705a56b58c689b8c8a6cf213713ab784f5785b976c",
+  "destroyCore": "1e2c33348f6bc19ae0f06810d59abc4c2ae1ae7d84ec24af1717ba221552b32c",
+  "removeFortress": "298634b4bea9a9d49daa7fb94f2d082eaa3e06aea5a654de13c343b4ef98af01",
+  "awardLetter": "857dc866d3348c6fef909626b3ecd5a0c195342b84e1f9f45f8b2c3b7f75f1ea",
+  "open": "389f07b948715b323337d971d6b549c4fd818f3bd4ccc5d22486358f2a81033a",
+  "close": "24b99a4a5e002d4202e1097d3aa941fb9b242f1cf7af1ef67dde2e83918ecf39"
+};
+const R3_CURRENT_BASELINE_LOCKS={
+  "r2CameraFrame": "b1a6d2628e337eb068e3c2c2231efb47e0fba3635c1f77e3763e28a5f6e07b42",
+  "r2UpdateCamera": "9aee73e4363af1f1fb092f62ed2f39385802557ca7198290cd7e043d46aed3e8",
+  "r2FortressShell": "7e556395dedb5655d5ba8749ff99dc01398a0f18b663483d6953362758801622",
+  "r2RefineTank": "13455795f4c93e713ce384a1ec04c355bd292bc6f18d74a3dd65c18a6f0ef29d",
+  "ResourceCache": "0383eaca78b4bf9d2df61a34308e93e04bdc10229f28854f486efbde6f92534b",
+  "phase21Diagnostics": "01f6d973b9fb566e39d09e1220b6e777bd283652ddd53015b471827ad8d6cb42",
+  "phase21PopulateSector": "b1241f227ebc3a575f1195b649976429c73f890f4c60c824ad31eb6da5d5fcf9",
+  "phase21ResetSession": "9c7bb1e2792f17c54b9d9a75a03f311e9f22c5e282b84814264b02cae9dce8bc",
+  "setViewportSuspended": "28ac0495e449438b06b76787b37b4b5673f3ab54df2a9692bd06dcb3b1422663",
+  "refreshFrontlineViewport": "e0b6ef8302c0817cf29feb575c12c8bdf0c81834257b3ff4706b923ff732e1f5",
+  "hideFrontlineToast": "bab9647389adecbb092f37e674a79ae8fcf8d64c25c043712697b9c2573414de",
+  "showToast": "f171dbcae22a13661a2d775dc18393acc02d1fd0fe64239359ce687dc36617fb",
+  "TerrainSystem": "5c95af8d5c5036e6167a8228a0c04d537d795b1041638aff7b746f3b62a724c2",
+  "CollisionSystem": "0f1820da1cab683b71d3c58dc55bcbbed5019c4d67bb4ab4a26f19b6ea8319f9",
+  "SectorStreamer": "4241acc5c3dc496b41d1241de34687e51ed0ae335fb74937bf32b53651a5e357",
+  "ObjectPool": "cb36a74f3532dc3db14aa154679df5d159ba98758c929f54a6c6a1516480c8bb",
+  "TankRuntime": "24f40860b385e1d271e5155a64bfc2589fd7bcfb767340c3bd28234fead9b651",
+  "DesktopTankInputAdapter": "36dd5bd1b346f5aa7ba8ac4b80e4f64b41c36bb258ed21b76ab1e8b26d9dcfc2",
+  "MobileTankInputAdapter": "ac60688e1d4e2f14381d02d21483b76ff3522de99a5cf7a7e414e9bc91780367",
+  "UnifiedTankInputAdapter": "7398b3f10bb7103301d929fa89f44dcf8805fac66d7f1279695fb4decfeea925",
+  "GlobalMobileTouchRouter": "93cd04d912fbe7f846172c0e379e80fe39678724f28ac9afb469825722213871",
+  "visualIdFor": "975cabd5f480a708df3a33e75523a69969784cf9362b279b6afe2e9806ac0e92",
+  "sectorDescriptor": "7cf185f4aa6e07360e12ed35bb043a78f51c06bc3e28294918f86d054831e205",
+  "chooseWord": "c1ca8541767914cdd7795e797d1b683ad0193cb24a09c34bc450202dbcc0dcbe",
+  "awardLetter": "3a3df384a552a208278edeeb8e368a1f9fe20aad103c67cbb713065b396728b0",
+  "activateNextFortress": "8a824b17aa06be8a24fa6bcd5f92cdbb91f258edf9dbe0afc24fb4f6b0cc523d",
+  "tankStateSnapshot": "c9cd52cadf2a876e1c6f00db746fffa650efbed76fd1e59d4fbd6b21aad2945c",
+  "interpolateRemoteTank": "35829fcbebfdf88e9e22d98b2c3b5f63f62cb637e8b2791db1e3cf26cbfc1ee1",
+  "authoritativeTankPose": "eb3b90e8e463d3632ff8e95bcac60b236bc3269beb823f94091c346c408a7c5d",
   "forwardFromRotation": "ba298b83c47089a066108e6cd2e1c9cd04cc9f32f1e8ba3bd542ce8bd4e2a169",
   "rightFromRotation": "e4742e6ba1ce4db302cf5270efc13db2ae1aef1f978b8906e1bb48d7eadbdee0",
   "rotationFromForward": "d81e09cd4284c9f4729ef6a70e03b1cec396eba48602871b739938e5b02ee8cc",
   "driveDelta": "49e9577b57cbd61705a9a573652b037161794f95642c2e6f873f48c953a4ae53",
-  "tickTank": "bf6f85992f250ed3d9df124a56ea70b56dbef9e2e63ee87cd3b6e60c14f91ed5",
-  "tickProjectilePool": "f72fae94c216bde9cce677dd9edf3f776601282a8d2d819a995ce15deb679bcf",
-  "makeDom": "d307dd3d77328e547d0dd5fcd1bb7b1da98e3c57c3e747023912307242159716",
-  "hideFrontlineToast": "bab9647389adecbb092f37e674a79ae8fcf8d64c25c043712697b9c2573414de",
-  "showToast": "f171dbcae22a13661a2d775dc18393acc02d1fd0fe64239359ce687dc36617fb",
-  "setViewportSuspended": "6fa387449ff17b69ac1098a74b066808fe6d4d048f92fa35c24a5acf698145d9",
-  "refreshFrontlineViewport": "2207c220dda8703c86973ba5596a742c8a8249a6d5f2262e45ea7fe885972bfe",
-  "selectTargetLockAtScreen": "01d62605940fce4affec78b0eb3d98541c5c28335a314e3f6549c2da7609a64c",
-  "pickTargetLockAtScreen": "158d690d1c42f64d6212cc835e15c7f91cd9e5e5824fa28500542bdac0c465d7",
-  "targetLockRaycastCandidateAtScreen": "5377022623ecfbe180b2e8c9a981759ef417d6fc54376c994c11009ffc9a9ff4",
-  "targetLockTargetValid": "7e2b761300ea1804ef5cea2b5ce65e800bd920f7a7014ecd12715be8077770a3",
-  "targetLockHeading": "faba06a408eb15ce6e9b9e7425615e662a0f9e5124e0dcff3ba7970267731b07",
-  "targetLockCandidates": "4274c88c554ca8e99f2d02a126d51b19106ca3bf178483b95f818a82e6eccc0c",
-  "bindTargetLockTapFireBridge": "1a00060f988375776353a61c464017a9d814f40a49361d5cd98a40240899dbd4",
-  "bindTargetLockDesktopControls": "e84931d2995adb2a105109f52b2d8b7c50d3d125a6b281f417620daf8fdbbc93",
-  "bindCanvasAim": "baec6b1898e719fbe6723a1b081ee673d016c54c67ee62631a021869f9690d51",
-  "setAutoMoveMode": "33c663df584b7f82e92fbb7847051e8efa0e949f6d1ac98bb70951736fb8a5aa",
-  "setTargetLockMode": "b09576d34da3fa76bfaba4cb6753670693fa3282ea3014da0c4a9ddb8a2a2117",
-  "privatePreviewHostname": "1e8410300c523121ae1f79b45e9ae94af141af9eb54c531db01c132d6faed0fc",
-  "safeActivateLocalTargetLockTestRange": "7a0e356af8561215b0fffffc51d196fee559b37a07a8e45a2046916f18924275",
-  "activateNextFortress": "cd1f3a4b0ecbcbc8c726073f58bbbb16785299ea8308809e8446cb24f5522341",
-  "spawnEnemy": "4ee68282404ca66300e84b36ea0c414b330876ff5485c0e06753fa74d5fdcf71",
-  "spawnDefenders": "5210c842dbfde57e17c7c85fe36c66eda318865dae193457957ced6953e3993e",
-  "spawnBoss": "41a257ab33a224c809d305ac9eb690257ff48d68d310de203a419ec3b0dc28c3",
-  "damageEnemy": "bddd0d970e05a31515537d705a56b58c689b8c8a6cf213713ab784f5785b976c",
-  "destroyCore": "7103d1505868801b4f85b214e1580b72ab8963a35de3d5afbd2dcdd91ae272bc",
-  "removeFortress": "e6b7e573b8bef4dfc57788142ca25f8f47e61ab6faebe9691f6e41b5f0d9ebdc",
-  "awardLetter": "95628e87a70b63bebc8716c60b948ef4ac96e8fe9a89e420dd554c68cc8cbd47",
-  "open": "bb4f86fe4e2c58fc34b32eb97d447c2c80c61f22b8c444e5b0a012f4d141f2c2",
-  "close": "c1e8df75f4f095887ed7c4dc0f0baac9358b3630e5d5a28f09131a192cebea20",
-  "cannonWorldRay": "16c8061b7d11543a47a6ba28a5e543fb5716d66189ce3cceae935391cc7d8ae9",
-  "cannonWorldDirection": "87a584e9336ebed5f8c7dc690078170130f6769777d5a1c4337f1f7b967bff15",
-  "targetLockScreenBounds": "d1ec85cd9f1938fd3a0a7b69a11bca89f80bf1ff8dfb8956c6df5324d996901e",
+  "normalizeTankCommand": "ef59ad35e257578ead95b1e425304297a9dc46ffe4d0d777b2ad8243e36e9aa2",
+  "desktopCommandFromState": "68daaea42319726f3407cb7e7418889323d6ac34cbdb9946ba037024e1e2af0b",
+  "mobileCommandFromState": "b620f21024dc097bbc8836399544029579bb30d08b7c7813045dedbd2f75a911",
+  "mergeTankCommands": "abf8f6b8932e85a8195895c614c9658b1de0dfb6a3ba79203ceecc76a015c4d1",
+  "stickVectorFromRect": "97fbe6df544090e7192754f76e905a482fc0925740bf934b71320b3c67adf48f",
+  "resetStickState": "832502a3ed83681d58380a3cc2725903266378e63d2ce17d3b931b5fe8d75fee",
+  "pointInRect": "9c06b3a69d258b264f05733451d3a5630cb9c3652327edec1ddc3314623f8375",
+  "rectFromEdges": "d860388d0c9dfec17a32bf0fe0c573520103bcc79e31aa16d4ff0d73a00a6244",
+  "rectFromDomRect": "412b5378e23915a87ef19126c4eb799bab6a4f9d7dc8d174f2e9b505f6b1bf5c",
+  "rectCenter": "4aa1fdcd378e0c14b70b1ba5b23873c6ab5cbd269467c220b3e63a5ac7309703",
+  "expandRect": "96c95a5bfd85fa4d4c453a700fd0ab1f61672b6f84eba1ea337dd90740214249",
+  "rectIntersects": "8fc3f49cbd89a8cefe1faaaf04b0fb9b48a53faf3b7b9418f6d58a42fd43c771",
+  "viewportRectFor": "e9a7a377d7819ca120e1747ff1f31df6e61648c426bd9e576a266bb526a515fa",
+  "safeAreaInsetsFor": "005449fb1a06721e3282dc17a710ba600777124173a6002d44a686975ccae2a3",
+  "safeGameplayRect": "c350fa9de35dbf7874c2af82062464eff35d24ed9568a9d891979294754c2897",
+  "elementUsableRect": "dbe1e408af0294bf71f236a6e50e41b02f0c0de573090dbee8964b555ce0abb4",
+  "protectedFrontlineRects": "b86b8bb259e32defb7dac01d071eeb11229e866a2632e4f017a60dc96c86e902",
+  "mobileControlRegions": "e55bddd452416c3f926628e1ca768966cc8cd043a0b4fabe5cc489b26ec5da93",
+  "aimPlacementBlockers": "ac1ef61cee924e80cc766e856126b9fefeb58a4a49dbf0ffc800799b7426c6e6",
+  "aimPlacementBlockedRects": "2fdc1ba9672c621a70d8a057873a2617d48f9071e78b7eda41a8bc089a88d253",
   "findSafeAimRect": "c18fb5ef17e2f3ee5fe727fa934566575db45523738ca9bef00f218e65ba3003",
-  "findSafeFireRect": "e3b86ead55f1a9fa671bb8110400a042c8051f77d87e8ad824b2aaa8e51e0f30",
-  "mobileCommandFromState": "b30043b4e2a5bff8a42dfb4b2184fad8ec02a32d0dcbf26cc797c52a26fa861e",
-  "desktopCommandFromState": "1188c01c67e913751e69fb2f97ca2d0190a320a1f56d5f1a261eb3b70756100f",
-  "mergeTankCommands": "d8034fc1da1903c1af8b4e3c9d6cdd305fa4be125716a5a5c8a8a0935b235047",
-  "adminAllowed": "e1624b8f5448b6a826688086f0bccb9a0d3da2613c84a5cb213e1857d279de3a"
+  "aimOffsetParentPosition": "f612ce20bce070f34e34841cd62bce8b242de8b853f79b3d665a13d792a5865b",
+  "aimDomPositionSnapshot": "5a04bd6cc43699a33829f520c535da23b90ff5817ebaa4c3b47f786298e37ee3",
+  "applyAimRect": "74a714473ab31eb06e9ace8df192992bc05db85680135009de8afe253bb80f81",
+  "pointOverProtectedFrontlineUI": "38d74dffc5f5c046aef61b06425d3185dfc53286726b0e180028ef6d9e57df8d",
+  "isProtectedFrontlineTarget": "746b472d3c5ffa8baff7e18ec2d9be3333b15850bc25d27aaef6929c1b8a0c99",
+  "firePlacementBlockedRects": "d86db1dfb865f40dfd6faf26977e318b079f94cdca2a9d7942a6d57c67ab6d68",
+  "fireRectIsValid": "4db79f9cf75e95a0229a25e2ea8409e67b86efbdb50cc061e88a359526fdcf08",
+  "findSafeFireRect": "e3dfce4e0f389580d8c23b7c27e46195f2b367c22b5818573e00e26b7974ac88",
+  "applyFireRect": "d040ed4296c1494c5700ed4a5025e99b2c5c322cca21b39006cafee479ba7a2e",
+  "fireOrientationKey": "28e535e92608cb17cd022c90b1cb1339b5241d4d8d42cb853e4de0f1c000baef",
+  "readFirePositionStore": "99ad22365a0ce00690ecf0eb87821b0859386d9811719f11f5a4e47abcac3d41",
+  "writeFirePositionStore": "137e5aba61e4e83e3e0f54d2da86e085523879999beca5de3a0dc5913dd14840",
+  "normalizedFirePosition": "8658c687656754b506f5e2dcc83178b0c99511cf419267a98310a0fe81580f96",
+  "saveFirePositionPreference": "da23cfc413d7ed45d1dd39f0fea8ce9eb29e0c29c8bd52743caf9a9ecdf18c91",
+  "restoreFirePositionPreference": "85ea2e42477ccd336183ced91db84592f46b71f97cec407b0efd1dd270ce78bb",
+  "queueMobileFirePulse": "4be0f7c51358a87de58ce5ae5ddcf9a1b657ee368e682fdeec2bd3952525b126",
+  "consumeMobileFirePulse": "f2ba48d20d57f7d4ce8fd10cb4ad80fe7c1015391475ea5a1b1270117178f819",
+  "eventTargetLabel": "16e3f225f6ff37aac819a70d7cbd09e57a7b5148c09a2ac268f5f6c58e94cdcd",
+  "specialControlElements": "e75658d3596e234273efa2749ff45c75fcd47e0e58b694b8f7f1f1b4c7e30ebe",
+  "specialControlRects": "4d6287c77151cf2a4df8f29a2fe85fbe7868f44d61ac84d1880de8c09cf00a91",
+  "specialControlState": "2b7f8739789fd6f97e0b314f5cd6429e4f6ebe5373c7ff08be9af82e10ce98a6",
+  "layoutSpecialControls": "d41bdc694132cc0f6504d2b20a86207806e1bb47bc0fa42c0392513347e021dc",
+  "autoMoveThrottleIntent": "8760bbf4f05aec596fc733a704478d835e99b27d4e5400d9bd966a729c9d789c",
+  "setAutoMoveMode": "33c663df584b7f82e92fbb7847051e8efa0e949f6d1ac98bb70951736fb8a5aa",
+  "setTargetLockMode": "d92158ab5da562091c2a6815e3fd632c6c92d2693d42e061605a304d15707172",
+  "toggleSpecialControl": "6dbdc0f9e103d1b20ce48fabba8c2a9f97589ac2b8a2ab4206b296de66b2f4bc",
+  "targetLockTargetValid": "fbdcd5efbdaca47d88097f5558d285de52aaf2bb673eb497246954945a2281f8",
+  "makeDom": "016d295472d9f45005f856e638715f424ee37e4e49ee2f1f2a936469877294c9",
+  "bindTargetLockTapFireBridge": "3b08e139b2cfa471cd3d3fd27c1c83c01fb363202d43f27e2cd6b4016faa6833",
+  "targetLockLabel": "d54938816536e7d7e23acd662bd959ac772a0f490917385c356084c603d605ff",
+  "targetLockDetails": "8779af95c9875d9683ba7da19f6904f9125bde4887496dad54b0909a09d258ce",
+  "targetLockSelectionPointAllowed": "cc2d6d84a134b664ea2c54580374b8906ea40c7085102efc355ceb388a70d1f5",
+  "targetLockScreenBounds": "567f10cb896e4d6c2abe4f3ade3d0e0b20da150acb8282653ecaa9725daa7660",
+  "renderTargetLockFeedback": "4c1345872703f2a1eaa50033890abac0596c38331ba5e7924be11a78328435f3",
+  "updateTargetLockMarker": "12df585f691a785b078dac0a3c030f0412646c410e0c5d96481979cac79344f1",
+  "clearTargetLock": "a233e5aa60b89759478bfda18d61981405311d981d5fc168b26022bf4bcd589e",
+  "bindTargetLockDesktopControls": "c7134dfb6c923f2662e1f248cec7f6a7926c9462756f9a5e5162f1393ad7ac34",
+  "bindCanvasAim": "c1b63089a9c974e1d72870562da2f321ad5d0876bb86ec06c466f0eda3771d87",
+  "privatePreviewHostname": "67c1534af8b9918a35fc655584f3b8a165df20a2dab70f5659f77f98f22b5f3f",
+  "localTargetLockTestRangeEnabled": "cfffbc65627519a2f33b11251132dad9a779997c79fbd7d37d399e4fe5be7070",
+  "activateLocalTargetLockTestRange": "0698c1c09bff2817b40319ff462e3979a477d59eeebe12068765fb2d9d553db5",
+  "safeActivateLocalTargetLockTestRange": "77bf2cce9c7d292891a127804b14d6fd8a524afd296f4d98e2df84a0d4e0ba86",
+  "spawnEnemy": "0eee1b46e42f50e0f8611046f6a9e22ca2efe51eb0b0a4116e99205370f953c6",
+  "spawnDefenders": "e6963cd82806701fec58f645dfd984710b8ea96e4d66b814efd7c90f17d362de",
+  "spawnBoss": "93836b473d647a8aca8247676c6e4c068dee0058587733f72af9dd04fc305ce6",
+  "damageEnemy": "bddd0d970e05a31515537d705a56b58c689b8c8a6cf213713ab784f5785b976c",
+  "destroyCore": "d912fd674cd7433213f3504008ac5a53953718e3ea7ac1c65b7e0b8a3b0e4e41",
+  "removeFortress": "ebf5f8c46e80bbe75bb9c79e7fdc45aa9bdb29e9d0072a2252bdbf3133621058",
+  "tickTank": "dc4d2fedf406f200ccabf3caf4bda4f981f2fc380e6aa6ffd1be65756a53db11",
+  "tickFortress": "58540e2089564288c4f08b622aab79cc83df4cab66c08a91843e882e28e057fd",
+  "tickProjectilePool": "f388032ad16ff7f58c8744b540e721e65e47f7e54f881eb4ccc8864fb3f2982c",
+  "targetLockWorld": "bca43343f6b46fbf5c290457309cb76c3b6fa8f4664a7f48503591abb9a404bb",
+  "targetLockCandidates": "4274c88c554ca8e99f2d02a126d51b19106ca3bf178483b95f818a82e6eccc0c",
+  "targetLockRaycastCandidateAtScreen": "a8876d0cab6529d04e65fc2004fd272a7d8292340bbff9ff52adbd6dd4397b03",
+  "pickTargetLockAtScreen": "403a83ca982881aefa0180a4a017d5b702a234d0b962fdab31123b580bdfd98f",
+  "selectTargetLockAtScreen": "3a693d4291dca6b054b0b47e06a774e5ba19dda53e41279c58151e945a378f9c",
+  "targetLockHeading": "dccbf85077e99dbc8f8b348f9a9eb80014033f4e4ba11777399d3cedf5264561",
+  "bindGlobalMobileTouchRouter": "5454f2374353dd8b9da4dac639731002eb56479d3d4b84fa1666cb9b9f4436a3",
+  "markTouchLikeInput": "236eed27fa4207554b6f69c1632e2be075129dc89f13e2c27fff98477859681c",
+  "hasRecentTouchLikeInput": "daa0c98fcdf46b1109f5df06b3631dcb39fe65c0e7b6ab40c041fff1a2e3a134",
+  "latchMobileAimVector": "0446a6a5fdc67a981857fa9e52b0d9d249dceb53c750c78727b991f8c9aecaeb",
+  "clearMobileAimLatch": "7f64ce53d6703c47a41be71cbdf7936713ff3f328ff0fb002ccc6ff4db6e42c1",
+  "mobileAimLatchedHeading": "eb0b0ddcc452a188ed19a638f43c8d49e0be68d04b5fd8afaa2533ea3e20eb34",
+  "shouldAcceptDesktopAimEvent": "6c27dad53bb307188db592adb84bc87eef649765ae5c9e7cf6c6ace3ed6dbc3d",
+  "inputDiagnosticsEnabled": "c549e35aecedf57e2f31a7686190fc4e7741dcbb9af2f22d2cf7f64f3ad32911",
+  "cannonWorldPosition": "3c64b7ee95b79c8695a9a01e33d69360bd60ffe668cfdf80888f65ce00a10cc3",
+  "cannonWorldDirection": "87a584e9336ebed5f8c7dc690078170130f6769777d5a1c4337f1f7b967bff15",
+  "cannonWorldRay": "365680e45e561aa9f61046ede628dcb8f30ec751efa47d4acf6f4e455f8f5233",
+  "runtimeIdentity": "da4980d94e19f207ef42e08d505e0f63b76f72d7656aeff11072645a50157cc6",
+  "frontlineDeliveryIdentity": "cacbb474e480cf857823025da58ded3b2be6926df6bfbc1eef201c6665670ee4",
+  "renderRuntimeIdentity": "06aece57b50de8f02587a040cdc0bd8ab4083b7a5b5b739c988b3f40c3be87d9",
+  "occlusionAcceptance": "ebe2b9fa2877bb3cec137c8348fa8ff3e83efebcf49ae0706a69a6bb33c67c55",
+  "updateHud": "d9c68d7ee7c174a640e6f00671ef6c77ec6c7e1e9aaa03b514c96d4fd0ed14c1",
+  "updateInputDiagnostics": "f729fbb00b47091a5b660abd7cd191d9a0f16bf083581efd6116b5a655accde2",
+  "open": "7fe0d62b1426ac66a2ffc37b32854ea1a4b9c27a2fe500759052d2313ee81178",
+  "close": "c9fcd4221c6d791c1d5084379591c6ffca4b3149f2e40d31e8a8c307aa8176d0",
+  "adminAllowed": "d2f1fdc991df487c8421819954b6040635965f713595706be6823b09a0c3eee8"
 };
-  const vendor={console,setTimeout,clearTimeout};vendor.window=vendor;vendor.self=vendor;
-  vm.runInNewContext(fs.readFileSync('js/vendor/three.min.js','utf8'),vendor);
-  const THREE={...vendor.THREE},requests=[],timers=new Map();let time=1000,serial=0,passes=0;
-  THREE.TextureLoader=class {load(url,ok,progress,error){const texture=new THREE.Texture();requests.push({url,ok,error,texture});return texture;}};
-  const doc={readyState:'loading',addEventListener(){},removeEventListener(){},querySelector(){return null;},getElementById(){return null;},
-    createElement(){return {width:64,height:64,getContext(){return {createRadialGradient(){return {addColorStop(){}};},fillRect(){}};}};}};
-  const c={THREE,document:doc,console:{info(){},log(){},warn(){},error(){}},URL,URLSearchParams,Date,Math,Map,Set,
-    setTimeout(fn){const id=++serial;timers.set(id,fn);return id;},clearTimeout(id){timers.delete(id);},setInterval(){return 1;},clearInterval(){},
-    requestAnimationFrame(){return 1;},cancelAnimationFrame(){},performance:{now:()=>time},navigator:{hardwareConcurrency:8},
-    innerWidth:844,innerHeight:390,devicePixelRatio:1,addEventListener(){},removeEventListener(){},dispatchEvent(){},
-    location:{hostname:'localhost',origin:'http://localhost',search:''}};c.window=c;
-  vm.runInNewContext(source,c,{filename:'CURRENT js/frontline1944.js'});const api=c.Frontline1944,t=api._t,g=t.G;
-  const pass=(name,fn)=>{fn();passes++;console.log('PASS R2 '+name);};
-  const sha=data=>crypto.createHash('sha256').update(data).digest('hex');
-  pass('48 accepted control/combat/economy/admin entry declarations preserve CURRENT Task bytes',()=>{
-    for(const [name,expected] of Object.entries(baselineGuards))assert.strictEqual(sha((api[name]||t[name]).toString()),expected,name);
-  });
-  pass('active perspective view is independent of legacy diagnostic camera constants',()=>{
-    assert.strictEqual(t.R2_VIEW.fov,55);assert.strictEqual(t.R2_VIEW.height,9.2);assert.strictEqual(t.R2_VIEW.distance,20);
-    assert(source.includes('new THREE.PerspectiveCamera(R2_VIEW.fov'));assert(source.includes('function cameraTick(dt){r2UpdateCamera(dt);}'));
-    assert.strictEqual(t.CFG.runtimeVersion,'P1.2.6F-20260902-5cc6a0');
-  });
-  pass('trailing frame behind authoritative hull at eight headings; pose is never mutated',()=>{
-    for(let i=0;i<8;i++){const pose={x:17,z:-23,heading:i*Math.PI/4,turretHeading:-.7};const old=JSON.stringify(pose),frame=t.r2CameraFrame(pose),f=t.forwardFromRotation(pose.heading);
-      assert(Math.abs((frame.position.x-pose.x)*f.x+(frame.position.z-pose.z)*f.z+20)<1e-9);
-      assert(Math.abs((frame.look.x-pose.x)*f.x+(frame.look.z-pose.z)*f.z-22)<1e-9);assert.strictEqual(JSON.stringify(pose),old);}
-  });
-  const manifest=JSON.parse(fs.readFileSync('img/frontline1944/phase21/p21r2_asset_manifest.json','utf8'));
-  pass('11 real WebP payloads, RIFF lengths, hashes, dimensions and verified importer ceilings',()=>{
-    assert.strictEqual(manifest.assets.length,11);let bytes=0;
-    for(const a of manifest.assets){assert(/^img\/frontline1944\/phase21\/p21r2_[a-z]+\.webp$/.test(a.path));const b=fs.readFileSync(a.path);
-      assert.strictEqual(b.toString('ascii',0,4),'RIFF');assert.strictEqual(b.toString('ascii',8,12),'WEBP');assert.strictEqual(b.readUInt32LE(4)+8,b.length);
-      assert.strictEqual(sha(b),a.sha256);assert.strictEqual(b.length,a.bytes);assert(b.length<=450000);assert(a.width<=1024&&a.height<=512);bytes+=b.length;}
-    assert(bytes<=4000000&&manifest.assets.length<=40);assert.strictEqual(bytes,manifest.total_bytes);
-    const urls=[...Object.values(t.PHASE21_ASSETS),...Object.values(t.R2_EXTRA_ASSETS)];assert.strictEqual(new Set(urls).size,11);
-    for(const u of urls)assert(manifest.assets.some(a=>a.path===u));
-  });
-  pass('build ships precisely named new art/metadata even before Git commit',()=>{
-    const build=fs.readFileSync('tools/build_web.mjs','utf8');for(const a of manifest.assets)assert(build.includes("'"+a.path+"'"));
-    assert(build.includes("'img/frontline1944/phase21/p21r2_asset_manifest.json'"));
-    assert(!source.includes('https://'));assert(!source.includes('http://cdn'));
-  });
-  function setup(x=0,z=0,heading=0){
-    if(g.fortress)t.removeFortress();if(g.sectorStreamer)g.sectorStreamer.dispose();t.r2Dispose();if(g.resources)g.resources.dispose();t.phase21ResetSession();requests.length=0;timers.clear();
-    g.layers={};for(const name of Object.values(t.LAYER))g.layers[name]=new THREE.Group();g.resources=new t.ResourceCache();g.scene=new THREE.Scene();Object.values(g.layers).forEach(v=>g.scene.add(v));
-    g.occluders=[];g.smoke=[];g.root=null;g.renderer=null;g.enemies=[];g.fortress=null;g.terrain=new t.TerrainSystem();g.collision=new t.CollisionSystem(g.terrain);
-    g.player={world:{x,z},hullRotation:heading,turretRotation:heading,group:new THREE.Group(),hp:380,maxHp:380};g.player.group.renderOrder=5000;
-    g.tankRuntime={entity:g.player,pose(){return {x:g.player.world.x,z:g.player.world.z,heading:g.player.hullRotation,turretHeading:g.player.turretRotation};}};
-    g.sectorStreamer=new t.SectorStreamer();g.sectorStreamer.update(z,true);g.running=true;g.viewportSuspended=false;
-    g.camera=new THREE.PerspectiveCamera(t.R2_VIEW.fov,c.innerWidth/c.innerHeight,.3,t.R2_VIEW.far);g.raycaster=new THREE.Raycaster();
-    g.canvas={getBoundingClientRect:()=>({left:0,top:0,width:c.innerWidth,height:c.innerHeight,right:c.innerWidth,bottom:c.innerHeight})};
-    t.r2UpdateCamera(0,true);return g.sectorStreamer.active.get(t.WorldSpace.sectorIndexAtZ(z)).phase21Art;
-  }
-  let art=setup();const initial={meshes:art.meshCount,triangles:art.triangleCount,houses:art.houses,trees:art.trees};
-  pass('one owned R2 scene with real buildings, upright crops/canopies and bounded geometry',()=>{
-    assert(art instanceof t.Phase21R2SectorArt);assert.strictEqual(g.sectorStreamer.active.size,3);assert.strictEqual([...g.sectorStreamer.active.values()].filter(s=>s.phase21Art).length,1);
-    assert(art.houses>=6&&art.trees>=18);assert(art.meshCount<75&&art.triangleCount<22000);assert(art.materials.get('grain').alphaTest>0);
-    for(const geo of art.geometries)for(const kind of ['position','normal','uv','color'])for(const n of geo.getAttribute(kind).array)assert(Number.isFinite(n));
-    assert.strictEqual(g.enemies.length,0);assert.strictEqual(g.fortress,null);
-  });
-  pass('central driving/reverse corridor and bridge are physically clear; banks have shallow terrain',()=>{
-    for(let z=-64;z<=64;z+=1.5)assert(!g.collision.hitTankFootprint(0,z,0).blocked,'center z='+z);
-    for(const heading of [0,Math.PI/2,Math.PI,Math.PI*1.5])assert(!g.collision.hitTankFootprint(0,0,heading).blocked,'spawn turning bay');
-    for(const x of [-3,0,3])assert(!g.collision.hitTankFootprint(x,-12,0).blocked,'bridge width');
-    assert.strictEqual(g.terrain.sample(0,-12).id,'ROAD');
-    for(const fp of art.footprints)assert(Math.abs(fp.x)<89&&Math.abs(fp.z-art.cz)<75);
-  });
-  pass('current bytes deliver all nine scene textures and reuse loaded materials',()=>{
-    for(const q of requests){q.texture.image={width:512,height:512};q.ok(q.texture);}
-    assert.strictEqual(t.phase21Diagnostics().loaded,9);assert.strictEqual(t.phase21Diagnostics().status,'ready');assert.strictEqual(timers.size,0);
-    for(const key of Object.keys(t.PHASE21_ASSETS))assert(art.materials.get(key).map);const count=requests.length;
-    for(let i=0;i<100;i++)t.phase21Diagnostics();assert.strictEqual(requests.length,count);
-  });
-  pass('real perspective ray selection hits new child meshes and resolves unchanged combat owners at 4 viewports',()=>{
-    assert(t.activateLocalTargetLockTestRange());assert.strictEqual(g.enemies.length,3);assert(g.fortress.group.userData.r2Visual);
-    for(const [w,h] of [[844,390],[980,368],[1252,472],[1280,720]]){
-      c.innerWidth=w;c.innerHeight=h;g.camera.aspect=w/h;g.camera.updateProjectionMatrix();t.r2UpdateCamera(0,true);g.scene.updateMatrixWorld(true);
-      t.setTargetLockMode(true);assert.strictEqual(t.specialControlState().lockedTarget,null);
-      for(const e of g.enemies){const p=new THREE.Vector3(e.world.x,2.12,e.world.z).project(g.camera),x=(p.x+1)*w/2,y=(1-p.y)*h/2;
-        assert(x>0&&x<w&&y>70&&y<h);const hit=t.targetLockRaycastCandidateAtScreen(x,y);assert(hit&&hit.ref===e,w+'x'+h+' child-mesh ownership');
-        assert(t.selectTargetLockAtScreen(x,y));assert.strictEqual(t.specialControlState().lockedTarget.ref,e);}
-      const f=g.fortress,p=new THREE.Vector3(f.world.x-7,4,f.world.z+11.15).project(g.camera);
-      assert(t.selectTargetLockAtScreen((p.x+1)*w/2,(1-p.y)*h/2));assert.strictEqual(t.specialControlState().lockedTarget.ref,f);
-      t.setTargetLockMode(false);assert.strictEqual(t.specialControlState().lockedTarget,null);
-    }
-  });
-  pass('local defenders -> Boss uses detailed tank shells without moving cannon origins or turret roots',()=>{
-    const boss=t.spawnEnemy(5,-15,true);assert(boss.group.userData.r2Visual);assert.strictEqual(boss.group.scale.x,.78);
-    assert(boss.group.children.some(o=>o.name==='r2-tank-contact-shadow'));const expectedTip=[0,3.25,-6.3];let tip;
-    boss.group.traverse(o=>{if(o.type==='Object3D'&&o.position.y===3.25)tip=o;});assert(tip);assert.deepStrictEqual([tip.position.x,tip.position.y,tip.position.z],expectedTip);
-    let detail=false;boss.group.traverse(o=>{if(o.name==='r2-tank-hull-armor')detail=true;});assert(detail);
-  });
-  pass('stream out/back disposes owned crop/foliage/materials and keeps neighbors bounded',()=>{
-    t.removeFortress();let disposed=0;art.geometries.forEach(a=>a.addEventListener('dispose',()=>disposed++));const old=art.geometries.length;
-    g.sectorStreamer.update(-600,true);assert.strictEqual(disposed,old);assert(!art.alive);assert.strictEqual(t.phase21Diagnostics().status,'inactive');
-    for(let i=0;i<8;i++){g.sectorStreamer.update(0,true);const a=g.sectorStreamer.active.get(0).phase21Art;assert.strictEqual(a.meshCount,initial.meshes);assert.strictEqual(a.triangleCount,initial.triangles);assert.strictEqual(g.sectorStreamer.active.size,3);g.sectorStreamer.update(-600,true);}
-    assert.strictEqual([...g.collision.bySector.values()].flat().filter(q=>q.tag==='phase21').length,0);
-  });
-  pass('missing/late scene artwork never blocks gameplay or resurrects disposed geometry',()=>{
-    art=setup();for(const q of requests)q.error();assert.strictEqual(t.phase21Diagnostics().status,'error');assert(g.running);
-    const pending=requests.slice();g.sectorStreamer.update(-600,true);for(const q of pending)q.ok(q.texture);assert.strictEqual(t.phase21Diagnostics().status,'inactive');
-  });
-  pass('saved position/heading remain exact and new props never cover the spawn',()=>{
-    for(const [x,z,yaw] of [[48,12,Math.PI/2],[-52,-34,-Math.PI/2],[18,68,Math.PI],[0,-71,0]]){art=setup(x,z,yaw);
-      const owned=[...g.collision.bySector.values()].flat().filter(q=>q.tag==='phase21');
-      for(const q of owned)assert(!(q.shape==='circle'?g.collision.circleHitsOBB(q,x,z,yaw,t.CFG.tankFootprintHalfWidth,t.CFG.tankFootprintHalfLength):g.collision.aabbHitsOBB(q,x,z,yaw,t.CFG.tankFootprintHalfWidth,t.CFG.tankFootprintHalfLength)),'new blocker at saved spawn');
-      assert.strictEqual(g.player.world.x,x);assert.strictEqual(g.player.world.z,z);assert.strictEqual(g.player.hullRotation,yaw);}
-  });
-  pass('existing deep-water template keeps its bridge/ford/deep blocking rules',()=>{
-    let i=0;while(t.SECTOR_TEMPLATES[t.visualIdFor(i)].id!=='river_crossing'&&i<100)i++;assert(i<100);const z=t.WorldSpace.sectorCenterZ(i);art=setup(0,z);
-    assert(art.river);assert.strictEqual(g.terrain.sample(25,z+6).id,'DEEP_WATER');assert(g.collision.hitTankFootprint(25,z+6,0).blocked);
-    assert.strictEqual(g.terrain.sample(0,z+6).id,'ROAD');assert(!g.collision.hitTankFootprint(0,z+6,0).blocked);
-  });
-  pass('new HUD labels remain pointer transparent; detail drawer is inside existing protected objective',()=>{
-    const css=fs.readFileSync('css/frontline1944.css','utf8');assert(css.includes('.fl44-r2-labels'));assert(css.includes('pointer-events:none!important'));
-    assert(source.includes("panel.appendChild(drawer)"));assert(source.includes("drawer.hidden=true"));assert(source.includes("toggle.setAttribute('aria-expanded',String(!drawer.hidden))"));
-    assert(!css.includes('@import'));assert(!source.includes('fakeRanking'));assert(source.includes("info.textContent='ความเสียหายรอบนี้ '"));
-  });
-  pass('R2 cleanup followed by re-entry has deterministic ownership, not another static demo',()=>{
-    g.sectorStreamer.dispose();t.r2Dispose();g.resources.dispose();t.phase21ResetSession();art=setup();assert.strictEqual(art.houses,initial.houses);assert.strictEqual(art.meshCount,initial.meshes);
-    g.sectorStreamer.dispose();t.r2Dispose();g.resources.dispose();t.phase21ResetSession();assert.strictEqual(g.collision.bySector.size,0);assert.strictEqual(timers.size,0);
-  });
-  console.log('PASS R2 '+passes+' focused groups. Current Three.js r'+THREE.REVISION+'; geometry/VM tests, not physical phone or hosting delivery.');
-}
+if(process.argv.includes('--phase21-r6c')){runPhase21R6CTests();process.exit(0);}
+if(process.argv.includes('--phase21-r5')){runPhase21R5Tests();process.exit(0);}
+if(process.argv.includes('--phase21-r4')){runPhase21R4Tests();process.exit(0);}
+if(process.argv.includes('--phase21-r3')){runPhase21R3Tests();process.exit(0);}
+if(process.argv.includes('--phase21-r2')){runPhase21R2Tests();process.exit(0);}
+if(process.argv.includes('--phase21-visual')){runPhase21VisualTests();process.exit(0);}
+// Run the N3 source-path suite independently; legacy assertions below remain unchanged.
+if(process.argv.includes('--landscape-lock')){runLandscapeN4Tests();process.exit(0);}
+if(process.argv.includes('--target-lock')){runTargetLockN3Tests();process.exit(0);}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const code=fs.readFileSync('js/frontline1944.js','utf8');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const css=fs.readFileSync('css/frontline1944.css','utf8');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const htmlPath='index_classic.html',html=fs.existsSync(htmlPath)?fs.readFileSync(htmlPath,'utf8'):null;
+const indexPath='index.html',indexHtml=fs.existsSync(indexPath)?fs.readFileSync(indexPath,'utf8'):null;
+const buildPath='tools/build_web.mjs',buildCode=fs.existsSync(buildPath)?fs.readFileSync(buildPath,'utf8'):null;
+const swPath='sw.js',swCode=fs.existsSync(swPath)?fs.readFileSync(swPath,'utf8'):null;
+const appUpdatePath='js/app-update.js',appUpdateCode=fs.existsSync(appUpdatePath)?fs.readFileSync(appUpdatePath,'utf8'):null;
+const versionPath='version.json',buildVersion=fs.existsSync(versionPath)?JSON.parse(fs.readFileSync(versionPath,'utf8')):null;
+const RUNTIME_ID='P1.2.6F-20260902-5cc6a0';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const f1Path='js/data/f1_vocab.js',f1=fs.existsSync(f1Path)?fs.readFileSync(f1Path,'utf8'):null;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Access / shared-system regression guards.
+
+
+
+
+
+
+
+
+
+if(html){
+
+
+
+
+  assert(html.includes('id="btn-rail-frontline1944"')&&html.includes('hidden')&&html.includes('ADMIN PREVIEW'),'Frontline lobby entry stays hidden-by-default admin preview');
+
+
+
+
+  assert(html.includes("var FRONTLINE_RUNTIME_ID='"+RUNTIME_ID+"'")&&html.includes("var FRONTLINE_JS_URL='__VW_FRONTLINE_JS_URL__'")&&html.includes("var FRONTLINE_CSS_URL='__VW_FRONTLINE_CSS_URL__'")&&html.includes("if(!allowed())return false"),'Frontline assets remain admin-gated and lazy-loaded with the current Phase 1.2.6F runtime identity plus build-time immutable placeholders');
+
+
+
+
+  assert(!html.includes('<link rel="stylesheet" href="css/frontline1944.css"')&&!html.includes('<script src="js/frontline1944.js"'),'public lobby still does not statically fetch Frontline-only assets');
+
+
+
+
+  const routeCapture=html.indexOf('window.__VW_FRONTLINE1944_ROUTE__=true'),legacyMain=html.indexOf('<script src="js/main.js');
+
+
+
+
+  assert(routeCapture>=0&&legacyMain>=0&&routeCapture<legacyMain,'Frontline direct route is captured before legacy main.js routing');
+
+
+
+
+}else console.log('SKIP loader/access audit in isolated Task ZIP: '+htmlPath+' was not supplied; full-project run must execute it.');
+
+
+
+
+
+
+
+
+
+// Current Phase 1.2.6F delivery/freshness proof. These checks do not alter gameplay semantics.
+assert(code.includes("runtimeVersion:'"+RUNTIME_ID+"'")&&code.includes('FRONTLINE_EXECUTING_SCRIPT_URL'),'Frontline executing JavaScript owns the current Phase 1.2.6F runtime identity');
+assert(code.includes("el.textContent='RUNTIME: '+delivery.runtimeId")&&code.includes("'\\nJS: '+delivery.jsAsset")&&code.includes('frontlineDeliveryIdentity()'),'visible diagnostics obtain runtime and JS identity from the executing Frontline JavaScript');
+assert(css.includes('--fl44-css-runtime-id:"'+RUNTIME_ID+'-CSS"'),'loaded Frontline stylesheet carries a separate CSS runtime identity');
+if(html){
+  assert(html.includes("fallback+'?v='+encodeURIComponent(FRONTLINE_RUNTIME_ID)")&&html.includes('assetId:FRONTLINE_RUNTIME_ID'),'source fallback URL and bootstrap status are tied to the unique runtime identity');
+}
+if(buildCode){
+  assert(buildCode.includes("makeImmutableAlias('js/frontline1944.js')")&&buildCode.includes("makeImmutableAlias('css/frontline1944.css')")&&buildCode.includes("frontlineHtml.replace(TOKEN_FRONTLINE_JS, frontlineJsUrl).replace(TOKEN_FRONTLINE_CSS, frontlineCssUrl)"),'build rewrites dynamic Frontline JS/CSS loader URLs to immutable content-hash aliases');
+  assert(buildCode.includes('const alias = `assets/build/${stem}.${sha(data)}${ext}`'),'immutable alias path is derived from asset content hash');
+  assert(buildCode.includes("await stripLocalPreviewBootstrap('index.html')")&&buildCode.includes("await stripLocalPreviewBootstrap('index_classic.html')"),'LAN-preview SW/cache reset remains source-only and is stripped from production builds');
+  const h1=crypto.createHash('sha256').update(code).digest('hex').slice(0,16),h2=crypto.createHash('sha256').update(code+'\n/* runtime mutation */').digest('hex').slice(0,16);
+  assert.notStrictEqual(h1,h2,'changing Frontline runtime bytes changes the hash used by its fetch/cache identity');
+}
+if(swCode){
+  const immutableStart=swCode.indexOf('async function cacheFirstImmutable'),immutableEnd=swCode.indexOf('function versionedCacheKey',immutableStart),immutableBlock=swCode.slice(immutableStart,immutableEnd);
+  assert(immutableStart>=0&&immutableBlock.includes('cache.match(request)')&&!immutableBlock.includes('ignoreSearch')&&swCode.includes("url.pathname.startsWith('/assets/build/')")&&swCode.includes('event.respondWith(cacheFirstImmutable(request))'),'service worker treats Frontline build aliases as exact immutable request URLs rather than query-insensitive legacy assets');
+  assert(swCode.includes("url.pathname === '/version.json'")&&swCode.includes("url.pathname === '/sw.js' || url.pathname === '/asset-manifest.json'"),'version/SW/manifest control files bypass stale asset-cache handling');
+}
+if(indexHtml&&html){
+  for(const page of [indexHtml,html])assert(page.includes('function isLocalPreviewHost(host)')&&page.includes("host==='localhost'")&&page.includes('192')&&page.includes('168')&&page.includes('second>=16&&second<=31')&&page.includes("navigator.serviceWorker.register = function(){ return Promise.reject(new Error('disabled in local preview')); }"),'Local Preview recognizes private-LAN devices and prevents a preview-origin service worker from re-registering');
+}
+if(appUpdateCode)assert(appUpdateCode.includes("cache: 'no-store'")&&appUpdateCode.includes("updateViaCache: 'none'")&&appUpdateCode.includes('registration.update()'),'production PWA update path remains explicit/no-store for version checks without globally disabling useful caching');
+if(buildVersion)assert(/^\d{4}-\d{2}-\d{2}\.\d+$/.test(String(buildVersion.version||'')),'build identity remains an explicit timestamp/revision token');
+
+assert(code.includes("typeof isAdmin==='function'&&isAdmin()===true")&&code.includes('return false; // fail closed'),'Frontline runtime continues to use authoritative admin interfaces and fail closed');
+
+
+
+
+
+
+
+
+
+assert(!/email\s*[=!]=|@gmail|ADMIN_EMAIL/i.test(code),'Frontline does not create a parallel email allowlist');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(code.includes('window.__VW_FRONTLINE1944_ROUTE__===true'),'Frontline runtime accepts the pre-main captured route flag');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(code.includes("typeof f1VocabForStudent==='function'")&&code.includes("typeof vocabForStudent==='function'"),'shared vocabulary adapters are reused');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(!code.includes('APPLE')&&!code.includes('BANANA'),'no sample vocabulary is hard-coded into the game');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(/letterCoins\s*:\s*1/.test(code)&&/wordBonus\s*:\s*50/.test(code),'Phase 1 preserves current reward values while leaving future reward rules for later phases');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(code.includes("typeof addCoins==='function'")&&code.includes("typeof saveState==='function'")&&code.includes("typeof authPushSave==='function'"),'existing economy/save/cloud path is reused');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Load only the exported foundation types. Browser rendering is not started in this VM.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// The window listener registry lets acceptance exercise the real mobile pointer delivery path.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const windowListeners=new Map();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function addWindowListener(type,fn){if(!windowListeners.has(type))windowListeners.set(type,[]);windowListeners.get(type).push(fn);}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function removeWindowListener(type,fn){const a=windowListeners.get(type)||[],i=a.indexOf(fn);if(i>=0)a.splice(i,1);}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+let nowMs=1234;class MemoryStorage{constructor(){this.m=new Map();}getItem(k){return this.m.has(k)?this.m.get(k):null;}setItem(k,v){this.m.set(k,String(v));}removeItem(k){this.m.delete(k);}clear(){this.m.clear();}}const localStorage=new MemoryStorage();
+
+
+
+
+const sb={console,window:null,document:{readyState:'loading',addEventListener(){},removeEventListener(){},elementFromPoint(){return null;}},navigator:{maxTouchPoints:1},location:{search:''},matchMedia(){return {matches:true};},isAdmin(){return true;},addEventListener:addWindowListener,removeEventListener:removeWindowListener,PointerEvent:function PointerEvent(){},performance:{now:()=>nowMs},localStorage,setInterval(){return 1;},clearInterval(){},setTimeout(){return 1;},clearTimeout(){},URLSearchParams,Math,Date};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+sb.window=sb;vm.createContext(sb);vm.runInContext(code,sb);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const T=sb.Frontline1944&&sb.Frontline1944._t;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(T,'Frontline test surface must be exported');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const {CFG,LAYER,TERRAIN,SECTOR_TEMPLATES,WorldSpace,TerrainSystem,CollisionSystem,SectorStreamer,ObjectPool,TankRuntime,DesktopTankInputAdapter,MobileTankInputAdapter,UnifiedTankInputAdapter,GlobalMobileTouchRouter,visualIdFor,tankStateSnapshot,interpolateRemoteTank,forwardFromRotation,rightFromRotation,rotationFromForward,driveDelta,normalizeTankCommand,desktopCommandFromState,mobileCommandFromState,mergeTankCommands,stickVectorFromRect,resetStickState,pointInRect,rectCenter,rectIntersects,safeGameplayRect,protectedFrontlineRects,mobileControlRegions,firePlacementBlockedRects,fireRectIsValid,findSafeFireRect,saveFirePositionPreference,restoreFirePositionPreference,readFirePositionStore,writeFirePositionStore,queueMobileFirePulse,consumeMobileFirePulse,eventTargetLabel,bindGlobalMobileTouchRouter,markTouchLikeInput,clearMobileAimLatch,mobileAimLatchedHeading,shouldAcceptDesktopAimEvent,inputDiagnosticsEnabled,cannonWorldRay,runtimeIdentity,occlusionAcceptance,updateInputDiagnostics,G}=T;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// World / sector streaming foundation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert.strictEqual(SECTOR_TEMPLATES.length,10,'exactly 10 reusable visual sector identities are defined');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(CFG.viewW>=210&&CFG.viewW<=225,'Phase 1.2.6N2 tactical camera covers the requested 210-225 world-unit width');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(CFG.cameraHeight>=115&&CFG.cameraHeight<=120&&CFG.cameraOffsetX>=72&&CFG.cameraOffsetX<=78&&CFG.cameraOffsetZ>=88&&CFG.cameraOffsetZ<=95,'Phase 1.2.6N2 tactical camera uses the requested high/far offset envelope');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(/^P1\.2\.6F-/.test(CFG.runtimeVersion),'Phase 1.2.6F runtime freshness identity marker is explicit');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert.strictEqual(sb.Frontline1944.VERSION,CFG.runtimeVersion,'desktop/mobile parity marker is exported from the one Frontline runtime');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(Math.abs(WorldSpace.sectorCenterZ(0))<1e-12,'sector 0 world center');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert.strictEqual(WorldSpace.sectorCenterZ(1),-CFG.sectorLength,'logical sector numbers increase in the default tank-forward direction');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert.strictEqual(WorldSpace.sectorIndexAtZ(-CFG.sectorLength),1,'world position resolves to logical sector independent of pixels');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const ws=WorldSpace.localToWorld(3,12,-7),back=WorldSpace.worldToSector(ws.x,ws.z);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert.strictEqual(back.logicalIndex,3,'local/world sector transform round-trips logical index');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert.strictEqual(back.x,12,'local/world sector transform round-trips X');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert.strictEqual(back.z,-7,'local/world sector transform round-trips local Z');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const visualIds=new Set();for(let i=-50;i<=50;i++){const v=visualIdFor(i);assert(v>=0&&v<10,'visual sector id stays in reusable range');visualIds.add(v);}assert(visualIds.size>=8,'logical sectors reuse a diverse subset of the 10 visual identities');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(code.includes('new Set([current-1,current,current+1])'),'streamer keeps only Previous / Current / Next fully active');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(code.includes('this.preload(current+CFG.preloadAhead)')&&code.includes('this.preload(current-CFG.preloadAhead)'),'near-future sector descriptors are preloaded');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const streamer=new SectorStreamer();for(let i=0;i<20;i++)streamer.preload(i);assert(streamer.stats().preloadedCount<=CFG.descriptorCacheCap,'descriptor preload cache is bounded');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Terrain and collision acceptance logic, including deep water / bridge override.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const terrain=new TerrainSystem();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+terrain.registerRect(0,0,0,100,20,'DEEP_WATER',70,'test-river');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+terrain.registerRect(0,0,0,12,24,'ROAD',100,'test-bridge');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+terrain.registerRect(0,-30,0,12,20,'SHALLOW_WATER',95,'test-ford');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+terrain.registerRect(0,30,35,24,16,'MUD',60,'test-mud');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert.strictEqual(terrain.sample(25,0).id,TERRAIN.DEEP_WATER.id,'deep river samples as blocked water');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert.strictEqual(terrain.sample(0,0).id,TERRAIN.ROAD.id,'bridge road overrides deep-water blocking');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert.strictEqual(terrain.sample(-30,0).id,TERRAIN.SHALLOW_WATER.id,'explicit ford overrides deep water with shallow-water behavior');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(terrain.sample(30,35).speed<1,'mud reduces movement speed');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const collision=new CollisionSystem(terrain);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+collision.registerCircle(0,45,40,2,{ownerId:'tree:test',kind:'tree_trunk'});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+collision.registerAABB(0,-45,40,7,6,{ownerId:'house:test',kind:'house'});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+collision.registerAABB(0,25,45,7,6,{ownerId:'bunker:test',kind:'bunker'});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+collision.registerAABB(0,0,45,3,14,{ownerId:'fort:test',kind:'fortress_wall'});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(collision.hitSolid(45,40,1.5).blocked,'Tank -> tree trunk is blocked');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(collision.hitSolid(-45,40,1.5).blocked,'Tank -> house is blocked');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(collision.hitSolid(25,45,1.5).blocked,'Tank -> bunker is blocked');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(collision.hitSolid(0,45,1.5).blocked,'Tank -> fortress wall is blocked');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(collision.hitSolid(25,0,1.5).blocked,'Tank -> deep river is blocked');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(!collision.hitSolid(0,0,1.5).blocked,'Tank -> bridge crossing is allowed');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const moved=collision.resolveCircleMove({x:-8,z:45},{x:8,z:45},1.5);assert(moved.blocked&&moved.x<0,'swept circle movement does not tunnel through a fortress wall');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const vehicleMoved=collision.resolveVehicleMove({x:-8,z:45},{x:8,z:45},1.5);assert(vehicleMoved.blocked&&vehicleMoved.x<0,'strict tank resolver stops at collision instead of axis-sliding through/along the obstacle');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+terrain.registerRect(0,55,0,10,20,'DEEP_WATER',70,'footprint-water');assert(collision.hitSolid(49.8,0,2.45).blocked,'tank footprint blocks at deep-water edge before its center enters');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(!collision.hitTankFootprint(0,0,0,CFG.tankFootprintHalfWidth,CFG.tankFootprintHalfLength).blocked,'oriented tank footprint remains legal on the bridge override');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(collision.hitTankFootprint(25,0,0,CFG.tankFootprintHalfWidth,CFG.tankFootprintHalfLength).blocked,'oriented tank footprint blocks on deep water');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+collision.registerAABB(0,0,58,.5,18,{ownerId:'thin-wall:test',kind:'wall'});const tankSweep=collision.resolveTankSweep({x:-15,z:58,heading:Math.PI/2},{x:15,z:58,heading:Math.PI/2});assert(tankSweep.blocked&&tankSweep.x<0,'oriented swept tank footprint cannot tunnel through a thin wall at high travel distance');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// 2.5D layer/depth foundation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+for(const k of ['BACKGROUND','TERRAIN','ROADS_WATER','GROUND_DECOR','GAMEPLAY_PROPS','ACTORS','FOREGROUND_OCCLUDERS','COMBAT_FX','ATMOSPHERE'])assert(Number.isInteger(LAYER[k]),k+' layer exists');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+G.player={group:{renderOrder:5000},world:{x:0,z:0}};G.occluders=[{parent:{},renderOrder:6010,userData:{occluder:true,depthAnchor:{worldZ:0,priority:10,foreground:true}}}];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(occlusionAcceptance().pass,'foreground canopy has explicit depth ownership above the tank when overlapping');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Tank / multiplayer-ready state contract.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const fakeTank={playerId:'p1',displayName:'Tank One',world:{x:4,z:-12},hullRotation:.3,turretRotation:-.7,hp:300,maxHp:380,activeWeapon:'main_cannon',fireEvent:9,visualUpgradeTier:2,damageStatistic:{match:123,lifetime:456},hullVisualTier:1,armorTier:2,engineTier:3,turretTier:4,mainWeaponId:'m1',specialWeaponId:'s1',skinId:'skin'};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const snap=tankStateSnapshot(fakeTank);assert.strictEqual(snap.hullRotation,.3);assert.strictEqual(snap.turretRotation,-.7);assert.notStrictEqual(snap.hullRotation,snap.turretRotation,'hull and turret rotations are independent');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+for(const key of ['playerId','displayName','position','hp','maxHp','activeWeapon','fireEvent','visualUpgradeTier','damageStatistic','hullVisualTier','armorTier','engineTier','turretTier','mainWeaponId','specialWeaponId','skinId'])assert(Object.prototype.hasOwnProperty.call(snap,key),'multiplayer/upgrade snapshot contains '+key);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const remote={world:{x:0,z:0},hullRotation:0,turretRotation:0,group:{position:{set(x,y,z){this.x=x;this.y=y;this.z=z;}}},hull:{rotation:{y:0}},turret:{rotation:{y:0}}};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+interpolateRemoteTank(remote,{position:{x:10,z:-20},hullRotation:1,turretRotation:-1},.1);assert(remote.world.x>0&&remote.world.x<10&&remote.world.z<0&&remote.world.z>-20,'remote tank interpolation moves toward replicated state without snapping');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(code.includes('nameAnchor')&&code.includes('hpAnchor')&&code.includes('damageAnchor'),'future player-name / HP / floating-damage anchors are present');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Phase 1.2 canonical tracked-vehicle + unified-runtime acceptance contract.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert.strictEqual(typeof TankRuntime,'function','one authoritative TankRuntime class is exported');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert.strictEqual(typeof UnifiedTankInputAdapter,'function','desktop/mobile commands converge through one shared input adapter');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Independent visual-direction oracle: Three.js Object3D.rotation.y applied to the arrow's local -Z axis.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// This deliberately does NOT call forwardFromRotation(), so a sign mismatch cannot self-validate again.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function visualLocalMinusZAfterYaw(h){return {x:-Math.sin(h),z:-Math.cos(h)};}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+for(let deg=0;deg<360;deg++){
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const h=deg*Math.PI/180,f=forwardFromRotation(h),r=rightFromRotation(h),visual=visualLocalMinusZAfterYaw(h);assert(Math.abs(Math.hypot(f.x,f.z)-1)<1e-10,'forward vector is normalized at '+deg+'deg');assert(Math.abs(f.x*r.x+f.z*r.z)<1e-10,'forward/right axes remain orthogonal at '+deg+'deg');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  assert(Math.abs(f.x-visual.x)<1e-10&&Math.abs(f.z-visual.z)<1e-10,'authoritative forward exactly matches the visible hull arrow at '+deg+'deg');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const forwardStep=driveDelta(h,7.5,.25),reverseStep=driveDelta(h,-7.5,.25);assert(forwardStep.x*visual.x+forwardStep.z*visual.z>0,'UP/forward follows the visible hull arrow at '+deg+'deg');assert(reverseStep.x*visual.x+reverseStep.z*visual.z<0,'DOWN/reverse is exactly opposite the visible hull arrow at '+deg+'deg');assert(Math.abs(forwardStep.x+reverseStep.x)<1e-10&&Math.abs(forwardStep.z+reverseStep.z)<1e-10,'forward/reverse are exact opposites at '+deg+'deg');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const recovered=rotationFromForward(visual.x,visual.z),err=Math.atan2(Math.sin(recovered-h),Math.cos(recovered-h));assert(Math.abs(err)<1e-10,'world direction converts back to the same Three.js hull yaw at '+deg+'deg');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const desktopAim=desktopCommandFromState(new Set(),{x:visual.x*10,z:visual.z*10},{x:0,z:0},false),mobileAim=mobileCommandFromState({active:false},{active:true},false,visual),desktopAimErr=Math.atan2(Math.sin(desktopAim.turretTargetHeading-h),Math.cos(desktopAim.turretTargetHeading-h)),mobileAimErr=Math.atan2(Math.sin(mobileAim.turretTargetHeading-h),Math.cos(mobileAim.turretTargetHeading-h));assert(Math.abs(desktopAimErr)<1e-10&&Math.abs(mobileAimErr)<1e-10,'desktop/mobile turret aim use the same visual yaw convention at '+deg+'deg');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert.strictEqual(desktopCommandFromState(new Set(['ArrowUp']),null,{x:0,z:0},false).throttle,1,'ArrowUp is positive throttle');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert.strictEqual(desktopCommandFromState(new Set(['ArrowDown']),null,{x:0,z:0},false).throttle,-1,'ArrowDown is negative throttle');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const desktopParity=desktopCommandFromState(new Set(['KeyW','KeyD']),null,{x:0,z:0},false),mobileParity=mobileCommandFromState({x:1,y:-1,active:true},{active:false},false,null);assert.strictEqual(desktopParity.throttle,mobileParity.throttle,'desktop/mobile throttle normalize identically');assert.strictEqual(desktopParity.steering,mobileParity.steering,'desktop/mobile steering normalize identically');const parityMerged=mergeTankCommands(desktopParity,mobileParity,true,false);assert.strictEqual(parityMerged.throttle,1);assert.strictEqual(parityMerged.steering,1);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Phase 1.2.6 mobile acceptance: accepted DRIVE/AIM lock + movable FIRE + safe global double-tap FIRE.
+
+
+
+
+// The tests exercise the real global pointer delivery path and keep the canonical TankRuntime untouched.
+
+
+
+
+class FakeClassList{constructor(){this.s=new Set();}add(x){this.s.add(x);}remove(x){this.s.delete(x);}toggle(x,on){if(on)this.s.add(x);else this.s.delete(x);}contains(x){return this.s.has(x);}}
+
+
+
+
+class FakeControlTarget{
+
+
+
+
+  constructor(rect,id,tagName='DIV',className=''){this.rect={...rect};this.style={};this.dataset={};this.attrs={};this.hidden=false;this.id=id||'';this.tagName=tagName;this.className=className;this.classList=new FakeClassList();this.parentElement=null;this.isContentEditable=false;}
+
+
+
+
+  getBoundingClientRect(){const w=this.rect.width,h=this.rect.height,left=Number.isFinite(parseFloat(this.style.left))?parseFloat(this.style.left):this.rect.left,top=Number.isFinite(parseFloat(this.style.top))?parseFloat(this.style.top):this.rect.top;return {left,top,width:w,height:h,right:left+w,bottom:top+h};}
+
+
+
+
+  setAttribute(k,v){this.attrs[k]=String(v);}getAttribute(k){return Object.prototype.hasOwnProperty.call(this.attrs,k)?this.attrs[k]:null;}
+
+
+
+
+}
+
+
+
+
+function pointerEvt(pointerId,clientX,clientY,target=canvasTarget,pointerType='touch'){return {pointerId,clientX,clientY,pointerType,target,button:0,cancelable:true,preventDefault(){this.defaultPrevented=true;},stopPropagation(){this.propagationStopped=true;}};}
+
+
+
+
+function emitWindow(type,event){for(const fn of [...(windowListeners.get(type)||[])])fn(event);}
+
+
+
+
+function center(r){return {x:r.left+r.width/2,y:r.top+r.height/2};}
+
+
+
+
+function closeHeading(a,b){return Math.abs(Math.atan2(Math.sin(a-b),Math.cos(a-b)))<1e-9;}
+
+
+
+
+const phase126Passed=new Set();function accept(n,condition,message){assert(condition,'Phase 1.2.6 acceptance '+n+': '+message);phase126Passed.add(n);}
+
+
+
+
+
+
+
+
+
+const canvasTarget={tagName:'CANVAS',id:'fl44-battlefield',className:'',parentElement:null};
+
+
+
+
+const rootRect={left:0,top:0,width:900,height:420};
+
+
+
+
+const driveEl=new FakeControlTarget({left:14,top:312,width:96,height:96},'fl44-stick','DIV','fl44-stick'),driveKnob={style:{}},aimEl=new FakeControlTarget({left:700,top:326,width:82,height:82},'fl44-aim-stick','DIV','fl44-aim-stick'),aimKnob={style:{}},fireEl=new FakeControlTarget({left:818,top:330,width:68,height:68},'fl44-fire','BUTTON','fl44-fire'),diagEl=new FakeControlTarget({left:230,top:61,width:430,height:106},'fl44-input-diag','PRE','fl44-input-diag');diagEl.textContent='';diagEl.hidden=true;diagEl.setAttribute('aria-hidden','true');
+
+
+
+
+const topEl=new FakeControlTarget({left:7,top:5,width:886,height:54},'','DIV','fl44-top'),objectiveEl=new FakeControlTarget({left:715,top:63,width:178,height:82},'fl44-objective','DIV','fl44-objective'),bossEl=new FakeControlTarget({left:250,top:61,width:400,height:44},'fl44-boss','DIV','fl44-boss');bossEl.hidden=true;const stateEl=new FakeControlTarget({left:350,top:390,width:200,height:26},'fl44-state','DIV','fl44-state'),exitEl=new FakeControlTarget({left:824,top:375,width:69,height:40},'fl44-exit','BUTTON','fl44-exit'),toastEl=new FakeControlTarget({left:300,top:160,width:300,height:90},'fl44-toast','DIV','fl44-toast');toastEl.hidden=true;
+
+
+
+
+const root={getBoundingClientRect(){return {...rootRect,right:rootRect.left+rootRect.width,bottom:rootRect.top+rootRect.height};},querySelector(sel){if(sel==='#fl44-input-diag:not([hidden])')return diagEl.hidden?null:diagEl;if(sel==='.fl44-toast.on')return toastEl.classList.contains('on')&&!toastEl.hidden?toastEl:null;if(sel==='.fl44-loading')return null;return ({'#fl44-stick':driveEl,'.fl44-knob':driveKnob,'#fl44-aim-stick':aimEl,'.fl44-aim-knob':aimKnob,'#fl44-fire':fireEl,'#fl44-input-diag':diagEl,'.fl44-top':topEl,'.fl44-objective':objectiveEl,'.fl44-boss':bossEl,'.fl44-state':stateEl,'#fl44-exit':exitEl})[sel]||null;}};
+
+
+
+
+for(const el of [driveEl,aimEl,fireEl,diagEl,topEl,objectiveEl,bossEl,stateEl,exitEl,toastEl,canvasTarget])el.parentElement=root;
+
+
+
+
+G.root=root;G.joy={x:0,y:0,id:null,active:false,transport:'idle',lastTransport:'none',captured:false,moves:0,lastEventAt:0};G.aim={x:0,y:0,id:null,active:false,transport:'idle',lastTransport:'none',captured:false,moves:0,lastEventAt:0};G.firing=false;G.mobileFirePulseCount=0;G.mobileFirePulseSerial=0;G.pointerAim=null;G.lastTouchLikeInputAt=0;clearMobileAimLatch();localStorage.clear();
+
+
+
+
+sb.navigator.maxTouchPoints=1;sb.matchMedia=()=>({matches:true});G.mobileRouter=bindGlobalMobileTouchRouter();assert(G.mobileRouter instanceof GlobalMobileTouchRouter,'one global mobile touch router owns DRIVE/AIM/FIRE');
+
+
+
+
+function regions(){return mobileControlRegions(root,driveEl,aimEl,fireEl);}function begin(id,x,y,type='touch',target=canvasTarget){emitWindow('pointerdown',pointerEvt(id,x,y,target,type));}function movePointer(id,x,y,type='touch',target=canvasTarget){emitWindow('pointermove',pointerEvt(id,x,y,target,type));}function endPointer(id,x,y,type='touch',target=canvasTarget){emitWindow('pointerup',pointerEvt(id,x,y,target,type));}function cancelPointer(id,x,y,type='touch',target=canvasTarget){emitWindow('pointercancel',pointerEvt(id,x,y,target,type));}function mobileCmd(){return new MobileTankInputAdapter().sample();}
+
+
+
+
+function tap(id,x,y,holdMs=35,target=canvasTarget){begin(id,x,y,'touch',target);nowMs+=holdMs;endPointer(id,x,y,'touch',target);}function resetTapState(){G.mobileRouter.lastTap=null;G.mobileRouter.tapCandidates.clear();G.mobileFirePulseCount=0;G.firing=false;}
+
+
+
+
+function fakeRuntimeTank(x=0,z=40,h=0){return {world:{x,z},speed:0,hullRotation:h,turretRotation:h,turretTargetRotation:h,footprint:{halfWidth:CFG.tankFootprintHalfWidth,halfLength:CFG.tankFootprintHalfLength},group:{position:{set(x,y,z){this.x=x;this.y=y;this.z=z;}},updateMatrixWorld(){}},hull:{rotation:{y:0}},turret:{rotation:{y:0}},damageStatistic:{match:0,lifetime:0},playerId:'p',displayName:'P',hp:100,maxHp:100,activeWeapon:'main',fireEvent:0,visualUpgradeTier:0,hullVisualTier:0,armorTier:0,engineTier:0,turretTier:0,mainWeaponId:'main',specialWeaponId:'',skinId:'default'};}
+
+
+
+
+
+
+
+
+
+// 1-7: the real-device accepted DRIVE path remains unchanged.
+
+
+
+
+let R=regions(),d=center(R.drive);nowMs=1300;begin(101,d.x,d.y);movePointer(101,d.x,d.y-70);let cmd=mobileCmd();accept(1,cmd.throttle>.9&&Math.abs(cmd.steering)<.08,'mobile DRIVE forward still passes');let rtTerrain=new TerrainSystem(),rt=new TankRuntime(fakeRuntimeTank(),new CollisionSystem(rtTerrain),rtTerrain),z0=rt.z;for(let i=0;i<60;i++)rt.step(cmd,1/60);assert(rt.z<z0-1,'forward command reaches TankRuntime');emitWindow('lostpointercapture',pointerEvt(101,d.x,d.y-70));movePointer(101,d.x,d.y-180);accept(6,G.joy.active&&G.joy.id===101&&mobileCmd().throttle>.9,'DRIVE pointer ownership continues outside visual joystick');endPointer(101,d.x,d.y-180);accept(7,!G.joy.active&&G.joy.id===null&&mobileCmd().throttle===0,'DRIVE release stops throttle');
+
+
+
+
+R=regions();d={x:R.drive.left+R.drive.width*.38,y:R.drive.top+R.drive.height*.55};begin(102,d.x,d.y);movePointer(102,d.x,d.y+70);cmd=mobileCmd();accept(2,cmd.throttle<-.9,'mobile DRIVE reverse still passes');endPointer(102,d.x,d.y+70);
+
+
+
+
+R=regions();d=center(R.drive);begin(103,d.x,d.y);movePointer(103,d.x-70,d.y);let leftCmd=mobileCmd();endPointer(103,d.x-70,d.y);R=regions();d=center(R.drive);begin(104,d.x,d.y);movePointer(104,d.x+70,d.y);let rightCmd=mobileCmd();endPointer(104,d.x+70,d.y);accept(3,leftCmd.steering<-.9&&rightCmd.steering>.9,'mobile DRIVE left/right steering still passes');
+
+
+
+
+R=regions();d=center(R.drive);begin(105,d.x,d.y);movePointer(105,d.x+60,d.y-60);const diagCmd=mobileCmd(),diagTerrain=new TerrainSystem(),diagRuntime=new TankRuntime(fakeRuntimeTank(),new CollisionSystem(diagTerrain),diagTerrain);for(let i=0;i<45;i++)diagRuntime.step(diagCmd,1/60);accept(4,diagCmd.throttle>.6&&diagCmd.steering>.6&&Math.abs(diagRuntime.heading)>.05,'diagonal DRIVE still passes');accept(5,Math.abs(diagRuntime.lastMotion.lateralVelocity)<1e-8,'zero strafe still passes');endPointer(105,d.x+60,d.y-60);
+
+
+
+
+
+
+
+
+
+// 8-14: accepted mobile AIM latch/release behavior remains locked.
+
+
+
+
+G.camera=null;R=regions();let aimPt=center(R.aim);begin(201,aimPt.x,aimPt.y);accept(8,G.aim.active&&G.aim.id===201,'AIM pointer acquisition works');movePointer(201,aimPt.x-65,aimPt.y+18);let activeAim=mobileCmd(),firstLatched=mobileAimLatchedHeading();accept(9,activeAim.turretTargetHeading!=null&&firstLatched!=null,'AIM drag updates turret target heading');endPointer(201,aimPt.x-65,aimPt.y+18);const releasedHeading=mobileAimLatchedHeading(),releasedMobile=mobileCmd();accept(10,!G.aim.active&&releasedHeading!=null&&closeHeading(releasedMobile.turretTargetHeading,releasedHeading),'AIM release preserves final turret heading');const upRightHeading=rotationFromForward(1,1);accept(11,!closeHeading(releasedHeading,upRightHeading),'AIM release does not return to Up-Right');
+
+
+
+
+const staleDesktopHeading=desktopCommandFromState(new Set(),{x:100,z:100},{x:0,z:0},false).turretTargetHeading,unifiedAfterRelease=mergeTankCommands({turretTargetHeading:staleDesktopHeading,source:'desktop'},releasedMobile,false,true);accept(12,closeHeading(unifiedAfterRelease.turretTargetHeading,releasedHeading)&&!closeHeading(unifiedAfterRelease.turretTargetHeading,staleDesktopHeading),'stale desktop pointer aim cannot replace latched mobile heading');markTouchLikeInput();accept(13,shouldAcceptDesktopAimEvent({pointerType:'mouse'})===false,'touch-generated compatibility mouse events cannot steal AIM authority');
+
+
+
+
+R=regions();aimPt={x:R.aim.left+R.aim.width*.68,y:R.aim.top+R.aim.height*.58};begin(202,aimPt.x,aimPt.y);movePointer(202,aimPt.x+58,aimPt.y-28);const secondLatched=mobileAimLatchedHeading();endPointer(202,aimPt.x+58,aimPt.y-28);accept(14,secondLatched!=null&&!closeHeading(firstLatched,secondLatched),'new AIM gesture updates previously latched heading');
+
+
+
+
+
+
+
+
+
+// 15-25: DRIVE/AIM remain floating while FIRE becomes intentional, movable, safe and persistent.
+
+
+
+
+R=regions();const d1={x:R.drive.left+R.drive.width*.28,y:R.drive.top+R.drive.height*.64};begin(301,d1.x,d1.y);const driveLeft1=parseFloat(driveEl.style.left);endPointer(301,d1.x,d1.y);R=regions();const d2={x:R.drive.left+R.drive.width*.70,y:R.drive.top+R.drive.height*.72};begin(302,d2.x,d2.y);const driveLeft2=parseFloat(driveEl.style.left);endPointer(302,d2.x,d2.y);accept(15,Number.isFinite(driveLeft1)&&Number.isFinite(driveLeft2)&&Math.abs(driveLeft2-driveLeft1)>20,'floating DRIVE center can still be acquired at a new valid position');
+
+
+
+
+R=regions();const a1={x:R.aim.left+R.aim.width*.30,y:R.aim.top+R.aim.height*.64};begin(303,a1.x,a1.y);const aimLeft1=parseFloat(aimEl.style.left);endPointer(303,a1.x,a1.y);R=regions();const a2={x:R.aim.left+R.aim.width*.68,y:R.aim.top+R.aim.height*.72};begin(304,a2.x,a2.y);const aimLeft2=parseFloat(aimEl.style.left);endPointer(304,a2.x,a2.y);accept(16,Number.isFinite(aimLeft1)&&Number.isFinite(aimLeft2)&&Math.abs(aimLeft2-aimLeft1)>20,'floating AIM center can still be acquired at a new valid position');
+
+
+
+
+R=regions();let firePt=center(R.fire);G.mobileFirePulseCount=0;nowMs=2200;begin(305,firePt.x,firePt.y);nowMs+=40;endPointer(305,firePt.x,firePt.y);let fireCmd=mobileCmd();accept(17,fireCmd.fire===true,'normal quick tap FIRE emits the existing mobile FIRE command');accept(18,mobileCmd().fire===false&&G.mobileFirePulseCount===0,'quick tap FIRE produces exactly one intended fire pulse');
+
+
+
+
+R=regions();firePt=center(R.fire);nowMs=2600;begin(306,firePt.x,firePt.y);nowMs+=150;movePointer(306,760,220);accept(19,!!(G.mobileRouter.fireGesture&&G.mobileRouter.fireGesture.repositioning&&fireEl.classList.contains('repositioning')),'FIRE button enters intentional reposition mode after hold + drag threshold');accept(20,G.mobileFirePulseCount===0&&!G.firing,'reposition gesture suppresses accidental firing');endPointer(306,760,220);const movedFireRect=fireEl.getBoundingClientRect(),safeRect=safeGameplayRect(root),blockedRects=firePlacementBlockedRects(root,driveEl,aimEl);accept(21,fireRectIsValid(movedFireRect,safeRect,blockedRects),'repositioned FIRE is clamped inside safe viewport bounds');accept(22,blockedRects.every(r=>!rectIntersects(movedFireRect,r)),'repositioned FIRE avoids protected UI and visible DRIVE/AIM controls');accept(23,!!localStorage.getItem(CFG.mobileFirePositionStorageKey)&&!!readFirePositionStore(localStorage).landscape,'FIRE normalized position is persisted per landscape device layout');
+
+
+
+
+const movedCenter=rectCenter(movedFireRect);fireEl.style.left='20px';fireEl.style.top='20px';const restoredRect=G.mobileRouter.restoreFirePosition(),restoredCenter=rectCenter(restoredRect);accept(24,Math.hypot(restoredCenter.x-movedCenter.x,restoredCenter.y-movedCenter.y)<2,'saved FIRE position restores after reopen/rebind semantics');writeFirePositionStore({v:1,landscape:{x:9,y:-4}},localStorage);const recoveredRect=G.mobileRouter.restoreFirePosition();accept(25,fireRectIsValid(recoveredRect,safeGameplayRect(root),firePlacementBlockedRects(root,driveEl,aimEl)),'invalid saved FIRE position safely clamps/recovers into a valid region');
+
+
+
+
+
+
+
+
+
+// 26-35: deterministic global double-tap recognition with real protected DOM rectangles.
+
+
+
+
+const worldPt={x:450,y:190};resetTapState();nowMs=4000;tap(501,worldPt.x,worldPt.y);accept(26,mobileCmd().fire===false,'single gameplay tap does not accidentally become double-tap FIRE');resetTapState();nowMs=4200;tap(502,worldPt.x,worldPt.y);nowMs+=120;tap(503,worldPt.x+10,worldPt.y+8);accept(27,mobileCmd().fire===true,'double tap in safe gameplay area produces FIRE');accept(28,mobileCmd().fire===false,'recognized double tap produces exactly one FIRE pulse');
+
+
+
+
+resetTapState();nowMs=5000;tap(504,worldPt.x,worldPt.y);nowMs+=80;tap(505,worldPt.x+100,worldPt.y);accept(29,mobileCmd().fire===false,'taps too far apart do not count as double tap');resetTapState();nowMs=5600;tap(506,worldPt.x,worldPt.y);nowMs+=CFG.mobileDoubleTapMaxMs+30;tap(507,worldPt.x+5,worldPt.y+5);accept(30,mobileCmd().fire===false,'taps too slow do not count as double tap');resetTapState();nowMs=6400;begin(508,worldPt.x,worldPt.y);movePointer(508,worldPt.x+CFG.mobileDoubleTapMovePx+12,worldPt.y);nowMs+=40;endPointer(508,worldPt.x+CFG.mobileDoubleTapMovePx+12,worldPt.y);nowMs+=80;tap(509,worldPt.x,worldPt.y);accept(31,mobileCmd().fire===false,'tap gesture with excessive movement is rejected');
+
+
+
+
+function protectedDoubleTap(id,x,y){resetTapState();nowMs+=500;tap(id,x,y);nowMs+=100;tap(id+1,x+1,y+1);return mobileCmd().fire;}accept(32,protectedDoubleTap(520,850,395)===false,'double tap over Exit does NOT fire');accept(33,protectedDoubleTap(522,80,30)===false,'double tap over HUD does NOT fire');accept(34,protectedDoubleTap(524,450,30)===false,'double tap over Target Word does NOT fire');accept(35,protectedDoubleTap(526,790,100)===false,'double tap over fortress/navigation objective UI does NOT fire');
+
+
+
+
+
+
+
+
+
+// 36-45: double-tap FIRE is parallel input; it cannot steal or mutate DRIVE/AIM ownership or headings.
+
+
+
+
+resetTapState();const latchBeforeDouble=mobileAimLatchedHeading(),headingTank=fakeRuntimeTank(0,40,.61),headingTerrain=new TerrainSystem(),headingRuntime=new TankRuntime(headingTank,new CollisionSystem(headingTerrain),headingTerrain),hullBeforeDouble=headingRuntime.heading;nowMs=8000;tap(540,worldPt.x,worldPt.y);nowMs+=100;tap(541,worldPt.x+4,worldPt.y+4);const headingFireCmd=mobileCmd();accept(36,headingFireCmd.fire&&closeHeading(headingFireCmd.turretTargetHeading,latchBeforeDouble)&&closeHeading(mobileAimLatchedHeading(),latchBeforeDouble),'double-tap FIRE does not alter current turret/AIM heading');headingRuntime.step(headingFireCmd,1/60);accept(37,closeHeading(headingRuntime.heading,hullBeforeDouble),'double-tap FIRE does not alter hull heading');
+
+
+
+
+resetTapState();R=regions();d=center(R.drive);aimPt=center(R.aim);begin(701,d.x,d.y);movePointer(701,d.x,d.y-58);begin(702,aimPt.x,aimPt.y);movePointer(702,aimPt.x-48,aimPt.y+5);const liveAimBefore=mobileAimLatchedHeading();nowMs=9000;tap(703,worldPt.x,worldPt.y);nowMs+=100;tap(704,worldPt.x+6,worldPt.y+4);accept(38,G.joy.active&&G.joy.id===701,'DRIVE continues during double-tap FIRE');accept(39,G.aim.active&&G.aim.id===702&&closeHeading(mobileAimLatchedHeading(),liveAimBefore),'AIM continues during double-tap FIRE');const comboDoubleCmd=mobileCmd();accept(40,comboDoubleCmd.fire&&comboDoubleCmd.throttle>.7&&comboDoubleCmd.turretTargetHeading!=null&&G.mobileRouter.activeCount()===2,'DRIVE + AIM + double-tap FIRE works through independent pointer ownership');endPointer(701,d.x,d.y-58);endPointer(702,aimPt.x-48,aimPt.y+5);
+
+
+
+
+R=regions();d=center(R.drive);begin(710,d.x,d.y);movePointer(710,d.x,d.y-55);firePt=center(regions().fire);nowMs+=200;tap(711,firePt.x,firePt.y);const driveFireCmd=mobileCmd();accept(41,G.joy.active&&driveFireCmd.fire&&driveFireCmd.throttle>.7,'DRIVE + FIRE quick tap works without releasing DRIVE');endPointer(710,d.x,d.y-55);
+
+
+
+
+R=regions();aimPt=center(R.aim);begin(712,aimPt.x,aimPt.y);movePointer(712,aimPt.x+45,aimPt.y);const aimBeforeFire=mobileAimLatchedHeading();firePt=center(regions().fire);nowMs+=200;tap(713,firePt.x,firePt.y);const aimFireCmd=mobileCmd();accept(42,G.aim.active&&aimFireCmd.fire&&closeHeading(mobileAimLatchedHeading(),aimBeforeFire),'AIM + FIRE works without changing AIM heading');endPointer(712,aimPt.x+45,aimPt.y);
+
+
+
+
+R=regions();d=center(R.drive);aimPt=center(R.aim);begin(720,d.x,d.y);movePointer(720,d.x,d.y-55);begin(721,aimPt.x,aimPt.y);movePointer(721,aimPt.x-45,aimPt.y);const allAimLatch=mobileAimLatchedHeading();firePt=center(regions().fire);nowMs+=200;begin(722,firePt.x,firePt.y);accept(43,G.joy.active&&G.aim.active&&G.mobileRouter.activeCount()===3&&G.mobileRouter.rolePointers.fire===722,'DRIVE + AIM + FIRE supports three simultaneous pointer owners');nowMs+=35;endPointer(722,firePt.x,firePt.y);const allFireCmd=mobileCmd();accept(44,G.joy.active&&G.aim.active&&G.mobileRouter.activeCount()===2&&allFireCmd.fire,'releasing FIRE does not reset DRIVE or AIM');accept(45,closeHeading(mobileAimLatchedHeading(),allAimLatch),'normal FIRE never changes the accepted AIM heading');endPointer(720,d.x,d.y-55);endPointer(721,aimPt.x-45,aimPt.y);
+
+
+
+
+
+
+
+
+
+// 46-57: locked projectile/desktop/runtime invariants plus router implementation guards.
+
+
+
+
+class TestVec3Phase126{constructor(){this.x=0;this.y=0;this.z=0;}}sb.THREE={Vector3:TestVec3Phase126};const muzzleTank126={group:{updateMatrixWorld(){}},cannonTip:{getWorldPosition(v){v.x=8;v.y=3;v.z=-12;}},barrel:{getWorldPosition(v){v.x=5;v.y=3;v.z=-8;}},turretRotation:0,world:{x:0,z:0}},ray126=cannonWorldRay(muzzleTank126),rayLen126=Math.hypot(3,-4);accept(46,Math.abs(ray126.direction.x-3/rayLen126)<1e-12&&Math.abs(ray126.direction.z+4/rayLen126)<1e-12,'projectile remains barrel/muzzle aligned');
+
+
+
+
+const desktopLocked=desktopCommandFromState(new Set(['ArrowUp','ArrowRight']),null,{x:0,z:0},false);accept(47,desktopLocked.throttle===1&&desktopLocked.steering===1,'desktop keyboard movement unchanged');G.lastTouchLikeInputAt=0;accept(48,shouldAcceptDesktopAimEvent({pointerType:'mouse'})===true&&desktopCommandFromState(new Set(),{x:0,z:-20},{x:0,z:0},false).turretTargetHeading!=null,'desktop mouse aim unchanged');accept(49,typeof UnifiedTankInputAdapter==='function'&&typeof TankRuntime==='function'&&code.includes('this.desktop.sample(runtime),m=this.mobile.sample(runtime)'),'Desktop and Mobile still feed ONE TankRuntime');
+
+
+
+
+let canonical360=true;for(let deg=0;deg<360;deg++){const h=deg*Math.PI/180,fwd=forwardFromRotation(h),visual=visualLocalMinusZAfterYaw(h),rev=driveDelta(h,-1,1);if(Math.abs(fwd.x-visual.x)>1e-10||Math.abs(fwd.z-visual.z)>1e-10||rev.x*visual.x+rev.z*visual.z>=0){canonical360=false;break;}}accept(50,canonical360,'canonical 360-degree forward/reverse tests remain PASS');accept(51,collision.hitSolid(45,40,1.5).blocked&&!collision.hitSolid(0,0,1.5).blocked,'collision tests remain PASS');
+
+
+
+
+const sectorTerrain126=new TerrainSystem(),sectorRuntime126=new TankRuntime(fakeRuntimeTank(0,70,.35),new CollisionSystem(sectorTerrain126),sectorTerrain126),sectorHeading126=sectorRuntime126.heading,startSector126=WorldSpace.sectorIndexAtZ(sectorRuntime126.z);for(let i=0;i<600;i++)sectorRuntime126.step({throttle:1,steering:0},1/60);accept(52,WorldSpace.sectorIndexAtZ(sectorRuntime126.z)!==startSector126&&Math.abs(sectorRuntime126.heading-sectorHeading126)<1e-12,'sector-transition heading stability remains PASS');
+
+
+
+
+sb.navigator.maxTouchPoints=0;sb.matchMedia=()=>({matches:false});sb.location.search='';delete sb.window.__VW_FRONTLINE1944_INPUT_DIAGNOSTICS__;updateInputDiagnostics();accept(53,diagEl.hidden===true&&diagEl.textContent===''&&diagEl.getAttribute('aria-hidden')==='true','normal desktop mode does NOT display diagnostic overlay');sb.navigator.maxTouchPoints=1;sb.matchMedia=()=>({matches:true});updateInputDiagnostics(G.mobileRouter.snapshot());accept(54,diagEl.hidden===true&&diagEl.textContent===''&&diagEl.getAttribute('aria-hidden')==='true'&&inputDiagnosticsEnabled()===false,'mobile/admin mode stays clean unless diagnostics are explicitly requested');accept(55,!code.includes('dblclick'),'double-tap recognition does not depend on browser dblclick');accept(56,code.includes("listen(window,'pointerdown',down,{passive:false,capture:true})")&&code.includes("listen(window,'pointercancel',cancel,{passive:false,capture:true})")&&code.includes("listen(window,'touchstart',down,{passive:false,capture:true})")&&code.includes("listen(window,'touchcancel',cancel,{passive:false,capture:true})")&&!code.includes('setPointerCapture('),'global pointer/touch router remains authoritative and cancellation-safe without pointer capture dependency');accept(57,runtimeIdentity().phase==='1.2.6'&&runtimeIdentity().kind==='tank','runtime identity publishes accepted Phase 1.2.6 tank runtime');
+
+
+
+
+assert.strictEqual(phase126Passed.size,57,'all 57 deterministic Phase 1.2.6 acceptance checks ran');
+
+
+
+
+
+
+
+
+
+// Phase 1.2.6A production diagnostics cleanup: diagnostics are explicit opt-in only.
+
+
+
+
+const phase126aPassed=new Set();function accept126a(n,condition,message){assert(condition,'Phase 1.2.6A acceptance '+n+': '+message);phase126aPassed.add(n);}
+
+
+
+
+const savedIsAdmin=sb.isAdmin;sb.location.search='';delete sb.window.__VW_FRONTLINE1944_INPUT_DIAGNOSTICS__;
+
+
+
+
+sb.isAdmin=()=>false;sb.navigator.maxTouchPoints=1;sb.matchMedia=()=>({matches:true});updateInputDiagnostics(G.mobileRouter.snapshot());accept126a(1,inputDiagnosticsEnabled()===false&&diagEl.hidden===true&&diagEl.textContent===''&&diagEl.getAttribute('aria-hidden')==='true','touch/coarse-pointer environment alone keeps diagnostics hidden');
+
+
+
+
+sb.isAdmin=()=>true;updateInputDiagnostics(G.mobileRouter.snapshot());accept126a(2,inputDiagnosticsEnabled()===false&&diagEl.hidden===true&&diagEl.textContent===''&&diagEl.getAttribute('aria-hidden')==='true','Admin plus mobile/coarse pointer still keeps diagnostics hidden without explicit opt-in');
+
+
+
+
+sb.location.search='?fl44diag=1';updateInputDiagnostics(G.mobileRouter.snapshot());accept126a(3,inputDiagnosticsEnabled()===true&&diagEl.hidden===false&&diagEl.textContent.includes('INPUT:')&&diagEl.textContent.includes('DT=')&&diagEl.getAttribute('aria-hidden')==='false','explicit ?fl44diag=1 opt-in displays diagnostics');
+
+
+
+
+sb.location.search='?frontlineInputDiag=1';updateInputDiagnostics(G.mobileRouter.snapshot());accept126a(4,inputDiagnosticsEnabled()===true&&diagEl.hidden===false,'explicit ?frontlineInputDiag=1 opt-in remains supported');
+
+
+
+
+sb.location.search='';sb.window.__VW_FRONTLINE1944_INPUT_DIAGNOSTICS__=true;updateInputDiagnostics(G.mobileRouter.snapshot());accept126a(5,inputDiagnosticsEnabled()===true&&diagEl.hidden===false,'explicit window diagnostics flag remains supported');
+
+
+
+
+delete sb.window.__VW_FRONTLINE1944_INPUT_DIAGNOSTICS__;updateInputDiagnostics(G.mobileRouter.snapshot());const diagFormerPoint=center(diagEl.getBoundingClientRect()),diagStillProtected=protectedFrontlineRects(root).some(r=>pointInRect(diagFormerPoint.x,diagFormerPoint.y,r));resetTapState();nowMs=12000;tap(801,diagFormerPoint.x,diagFormerPoint.y,35,diagEl);nowMs+=100;tap(802,diagFormerPoint.x+2,diagFormerPoint.y+2,35,diagEl);accept126a(6,diagEl.hidden===true&&!diagStillProtected&&mobileCmd().fire===true&&mobileCmd().fire===false,'hidden diagnostics create no protected rectangle and do not block safe double-tap FIRE in their former battlefield area');
+
+
+
+
+accept126a(7,code.includes('id="fl44-input-diag" hidden aria-hidden="true"'),'diagnostics DOM starts hidden before router binding or first diagnostic update');
+
+
+
+
+sb.isAdmin=savedIsAdmin;sb.location.search='';delete sb.window.__VW_FRONTLINE1944_INPUT_DIAGNOSTICS__;updateInputDiagnostics(G.mobileRouter.snapshot());
+
+
+
+
+assert.strictEqual(phase126aPassed.size,7,'all 7 deterministic Phase 1.2.6A diagnostics-cleanup checks ran');
+
+
+
+
+
+
+
+
+
+// Phase 1.2.6B reverse-diagonal semantics: invert steering intent only while translating in reverse.
+
+
+
+
+const phase126bPassed=new Set();function accept126b(n,condition,message){assert(condition,'Phase 1.2.6B acceptance '+n+': '+message);phase126bPassed.add(n);}
+
+
+
+
+const mobileReverseLeft=mobileCommandFromState({active:true,x:-.8,y:.8},{active:false},false,null,null),mobileReverseRight=mobileCommandFromState({active:true,x:.8,y:.8},{active:false},false,null,null),mobileForwardLeft=mobileCommandFromState({active:true,x:-.8,y:-.8},{active:false},false,null,null),mobileForwardRight=mobileCommandFromState({active:true,x:.8,y:-.8},{active:false},false,null,null),mobileStraightReverse=mobileCommandFromState({active:true,x:0,y:.8},{active:false},false,null,null);
+
+
+
+
+accept126b(1,mobileReverseLeft.throttle<0&&mobileReverseLeft.steering>0,'mobile Down-Left maps reverse travel to the steering sign that moves the rear toward player-left');
+
+
+
+
+accept126b(2,mobileReverseRight.throttle<0&&mobileReverseRight.steering<0,'mobile Down-Right maps reverse travel to the steering sign that moves the rear toward player-right');
+
+
+
+
+accept126b(3,mobileForwardLeft.throttle>0&&mobileForwardLeft.steering<0&&mobileForwardRight.throttle>0&&mobileForwardRight.steering>0,'forward Up-Left / Up-Right steering semantics remain unchanged');
+
+
+
+
+accept126b(4,mobileStraightReverse.throttle<0&&mobileStraightReverse.steering===0,'straight reverse remains straight');
+
+
+
+
+const desktopReverseLeft=desktopCommandFromState(new Set(['ArrowDown','ArrowLeft']),null,{x:0,z:0},false),desktopReverseRight=desktopCommandFromState(new Set(['ArrowDown','ArrowRight']),null,{x:0,z:0},false),desktopForwardLeft=desktopCommandFromState(new Set(['ArrowUp','ArrowLeft']),null,{x:0,z:0},false),desktopForwardRight=desktopCommandFromState(new Set(['ArrowUp','ArrowRight']),null,{x:0,z:0},false);
+
+
+
+
+accept126b(5,desktopReverseLeft.throttle<0&&desktopReverseLeft.steering>0&&desktopReverseRight.throttle<0&&desktopReverseRight.steering<0,'desktop reverse diagonals use the same corrected travel-relative semantics');
+
+
+
+
+accept126b(6,desktopForwardLeft.steering<0&&desktopForwardRight.steering>0,'desktop forward diagonals remain unchanged');
+
+
+
+
+const reverseHeadings=[0,Math.PI/6,Math.PI/2,-Math.PI*2/3,Math.PI-.17];let reverseDiagonalDeterministic=true,reverseZeroStrafe=true;
+
+
+
+
+for(const h0 of reverseHeadings){for(const spec of [{name:'Down-Left',cmd:mobileReverseLeft,side:-1},{name:'Down-Right',cmd:mobileReverseRight,side:1}]){const terrain126b=new TerrainSystem(),collision126b=new CollisionSystem(terrain126b),tank126b=fakeRuntimeTank(0,40,h0),runtime126b=new TankRuntime(tank126b,collision126b,terrain126b),start={x:runtime126b.x,z:runtime126b.z},initialForward=forwardFromRotation(h0),initialRight=rightFromRotation(h0);for(let i=0;i<24;i++)runtime126b.step(spec.cmd,1/60);const dx=runtime126b.x-start.x,dz=runtime126b.z-start.z,longitudinal=dx*initialForward.x+dz*initialForward.z,lateral=dx*initialRight.x+dz*initialRight.z;if(!(longitudinal<0&&lateral*spec.side>0&&Math.abs(runtime126b.heading-h0)>1e-4))reverseDiagonalDeterministic=false;if(Math.abs(runtime126b.lastMotion.lateralVelocity)>1e-8)reverseZeroStrafe=false;}}
+
+
+
+
+accept126b(7,reverseDiagonalDeterministic,'Down-Left reverses toward player-left and Down-Right toward player-right across multiple hull headings');
+
+
+
+
+accept126b(8,reverseZeroStrafe,'corrected reverse diagonals retain zero-strafe/zero-lateral-velocity Tank Runtime physics');
+
+
+
+
+accept126b(9,code.includes('function steeringForTravelDirection(throttle,steering){return throttle<-.08?-steering:steering;}')&&code.includes('this.heading-cmd.steering*CFG.tankTurnRate')&&code.includes('d=driveDelta(nextHeading,this.speed,h)'),'correction is isolated to input-command semantics while Tank Runtime steering/translation physics remain canonical');
+
+
+
+
+assert.strictEqual(phase126bPassed.size,9,'all 9 deterministic Phase 1.2.6B reverse-diagonal checks ran');
+
+
+
+
+// Phase 1.2.6C real-device recovery: the visible AIM control must be an authoritative acquisition target
+
+
+
+
+// even when responsive CSS places it outside the broader floating AIM recenter region.
+
+
+
+
+const phase126cPassed=new Set();function accept126c(n,condition,message){assert(condition,'Phase 1.2.6C acceptance '+n+': '+message);phase126cPassed.add(n);}
+
+
+
+
+function setAimLayout126c(width,height,aimRect126c,fireRect126c){
+
+
+
+
+  G.mobileRouter.cancelAll();
+
+
+
+
+  rootRect.width=width;rootRect.height=height;
+
+
+
+
+  aimEl.rect={...aimRect126c};fireEl.rect={...fireRect126c};
+
+
+
+
+  aimEl.style={};fireEl.style={};aimEl.dataset={};fireEl.dataset={};
+
+
+
+
+  G.mobileRouter.gestureRects={drive:null,aim:null,fire:null};
+
+
+
+
+  resetStickState(G.aim,aimKnob);G.firing=false;G.mobileFirePulseCount=0;clearMobileAimLatch();
+
+
+
+
+}
+
+
+
+
+const aimLayouts126c=[
+
+
+
+
+  {name:'900x420',w:900,h:420,aim:{left:730,top:329,width:82,height:82},fire:{left:818,top:330,width:68,height:68}},
+
+
+
+
+  {name:'844x390',w:844,h:390,aim:{left:674,top:299,width:82,height:82},fire:{left:762,top:300,width:68,height:68}},
+
+
+
+
+  {name:'1336x622',w:1336,h:622,aim:{left:1110,top:492,width:108,height:108},fire:{left:1226,top:490,width:84,height:84}}
+
+
+
+
+];
+
+
+
+
+let directAimLayoutsPass=true,visibleAimCoveredLayouts=0;
+
+
+
+
+for(const spec of aimLayouts126c){
+
+
+
+
+  setAimLayout126c(spec.w,spec.h,spec.aim,spec.fire);
+
+
+
+
+  const actualAim126c=aimEl.getBoundingClientRect(),actualCenter126c=center(actualAim126c),floating126c=G.mobileRouter.regions().aim;
+
+
+
+
+  if(pointInRect(floating126c,actualCenter126c.x,actualCenter126c.y))visibleAimCoveredLayouts++;
+
+
+
+
+  if(G.mobileRouter.roleAt(actualCenter126c.x,actualCenter126c.y)!=='aim')directAimLayoutsPass=false;
+
+
+
+
+}
+
+
+
+
+accept126c(1,visibleAimCoveredLayouts===aimLayouts126c.length,'floating AIM acquisition geometry now includes the visible AIM center at 900x420, 844x390 and 1336x622');
+
+
+
+
+accept126c(2,directAimLayoutsPass,'visible AIM control center is authoritative for pointer acquisition at 900x420, 844x390 and 1336x622');
+
+
+
+
+
+
+
+
+
+setAimLayout126c(1336,622,aimLayouts126c[2].aim,aimLayouts126c[2].fire);
+
+
+
+
+const directAimRect126c=aimEl.getBoundingClientRect(),directAimCenter126c=center(directAimRect126c),directAimLeft126c=directAimRect126c.left,directAimTop126c=directAimRect126c.top;
+
+
+
+
+begin(901,directAimCenter126c.x,directAimCenter126c.y);
+
+
+
+
+accept126c(3,G.aim.active&&G.aim.id===901&&Math.abs(G.aim.x)<1e-9&&Math.abs(G.aim.y)<1e-9,'touching the visible AIM center claims AIM without an artificial full-scale vector');
+
+
+
+
+accept126c(4,Math.abs(aimEl.getBoundingClientRect().left-directAimLeft126c)<1e-9&&Math.abs(aimEl.getBoundingClientRect().top-directAimTop126c)<1e-9,'direct visible-control acquisition does not jump/recenter the AIM base');
+
+
+
+
+movePointer(901,directAimCenter126c.x-42,directAimCenter126c.y+20);const directActiveHeading126c=mobileAimLatchedHeading(),directActiveCmd126c=mobileCmd();
+
+
+
+
+accept126c(5,directActiveHeading126c!=null&&directActiveCmd126c.turretTargetHeading!=null,'dragging after direct visible AIM acquisition updates the turret target');
+
+
+
+
+endPointer(901,directAimCenter126c.x-42,directAimCenter126c.y+20);const directReleasedHeading126c=mobileAimLatchedHeading();
+
+
+
+
+accept126c(6,!G.aim.active&&directReleasedHeading126c!=null&&closeHeading(mobileCmd().turretTargetHeading,directReleasedHeading126c),'direct visible AIM release preserves the final latched heading');
+
+
+
+
+
+
+
+
+
+const floatingRegion126c=G.mobileRouter.regions().aim,floatingPoint126c=center(floatingRegion126c),preFloatingLeft126c=aimEl.getBoundingClientRect().left;
+
+
+
+
+begin(902,floatingPoint126c.x,floatingPoint126c.y);const floatingClaimed126c=G.aim.active&&G.aim.id===902,postFloatingLeft126c=aimEl.getBoundingClientRect().left;endPointer(902,floatingPoint126c.x,floatingPoint126c.y);
+
+
+
+
+accept126c(7,floatingClaimed126c&&Math.abs(postFloatingLeft126c-preFloatingLeft126c)>20,'existing floating AIM acquisition/recenter behavior remains available away from the visible control');
+
+
+
+
+accept126c(8,code.includes("if(pointInRect(this.rect('aim'),x,y))return 'aim'")&&code.includes("const directAim=role==='aim'&&pointInRect(this.rect('aim'),x,y)")&&code.includes('actualAim=elementUsableRect(aimEl)')&&code.includes('function steeringForTravelDirection(throttle,steering){return throttle<-.08?-steering:steering;}'),'AIM acquisition now closes the visible-control geometry gap while reverse steering semantics remain locked');
+
+
+
+
+assert.strictEqual(phase126cPassed.size,8,'all 8 deterministic Phase 1.2.6C mobile AIM recovery checks ran');
+
+
+
+
+// Phase 1.2.6F focused acceptance: normal AIM is immediate, while intentional same-control reposition becomes deterministic within 320 ms.
+
+
+
+
+const phase126fPassed=new Set();function accept126f(n,condition,message){assert(condition,'Phase 1.2.6F acceptance '+n+': '+message);phase126fPassed.add(n);}
+
+
+
+
+accept126f(1,CFG.mobileAimRepositionHoldMs>=250&&CFG.mobileAimRepositionHoldMs<=400,'AIM reposition hold threshold is deliberate but remains within the requested 250-400 ms window');
+
+
+
+
+setAimLayout126c(1336,622,aimLayouts126c[2].aim,aimLayouts126c[2].fire);let aimRect126f=aimEl.getBoundingClientRect(),aimCenter126f=center(aimRect126f),aimLeft126f=aimRect126f.left;nowMs=20000;begin(920,aimCenter126f.x,aimCenter126f.y);nowMs+=70;movePointer(920,aimCenter126f.x-34,aimCenter126f.y+10);const immediateAimHeading126f=mobileAimLatchedHeading();accept126f(2,G.aim.active&&G.mobileRouter.aimGesture&&G.mobileRouter.aimGesture.intent==='aim'&&!G.mobileRouter.aimGesture.repositioning&&Math.abs(aimEl.getBoundingClientRect().left-aimLeft126f)<1e-9&&immediateAimHeading126f!=null,'ordinary AIM drag reacts immediately and locks to aiming before the reposition hold threshold');nowMs+=CFG.mobileAimRepositionHoldMs+80;movePointer(920,aimCenter126f.x-50,aimCenter126f.y+14);accept126f(3,G.mobileRouter.aimGesture&&G.mobileRouter.aimGesture.intent==='aim'&&!G.mobileRouter.aimGesture.repositioning&&Math.abs(aimEl.getBoundingClientRect().left-aimLeft126f)<1e-9,'an already-established normal AIM drag never turns into reposition merely because the finger stays down');endPointer(920,aimCenter126f.x-50,aimCenter126f.y+14);
+
+
+
+
+setAimLayout126c(1336,622,aimLayouts126c[2].aim,aimLayouts126c[2].fire);aimRect126f=aimEl.getBoundingClientRect();aimCenter126f=center(aimRect126f);aimLeft126f=aimRect126f.left;const latchBeforeReposition126f=mobileAimLatchedHeading();nowMs=22000;begin(921,aimCenter126f.x,aimCenter126f.y);nowMs+=CFG.mobileAimRepositionHoldMs+20;movePointer(921,aimCenter126f.x-54,aimCenter126f.y+8);const repositionedAimRect126f=aimEl.getBoundingClientRect();accept126f(4,G.mobileRouter.aimGesture&&G.mobileRouter.aimGesture.repositioning&&aimEl.classList.contains('repositioning')&&Math.abs(repositionedAimRect126f.left-aimLeft126f)>20,'hold-still then drag enters AIM reposition mode on the first post-threshold move instead of waiting multiple seconds');accept126f(5,closeHeading(mobileAimLatchedHeading(),latchBeforeReposition126f)&&G.aim.active&&Math.abs(G.aim.x)<1e-9&&Math.abs(G.aim.y)<1e-9,'repositioning moves only the AIM control base and preserves the accepted turret heading');const movedAimLeft126f=repositionedAimRect126f.left;movePointer(921,aimCenter126f.x-82,aimCenter126f.y+18);accept126f(6,aimEl.getBoundingClientRect().left<movedAimLeft126f-10,'once reposition mode is active the AIM base follows subsequent finger movement smoothly');endPointer(921,aimCenter126f.x-82,aimCenter126f.y+18);const releasedAimLeft126f=aimEl.getBoundingClientRect().left;accept126f(7,!G.aim.active&&!aimEl.classList.contains('repositioning')&&Math.abs(releasedAimLeft126f-aimEl.getBoundingClientRect().left)<1e-9&&closeHeading(mobileAimLatchedHeading(),latchBeforeReposition126f),'release leaves the AIM base at its new session position and keeps the final turret heading latched');
+
+
+
+
+R=regions();const instantFloat126f={x:R.aim.left+R.aim.width*.30,y:R.aim.top+R.aim.height*.68},preFloatLeft126f=aimEl.getBoundingClientRect().left;nowMs=24000;begin(922,instantFloat126f.x,instantFloat126f.y);accept126f(8,G.aim.active&&Math.abs(aimEl.getBoundingClientRect().left-preFloatLeft126f)>20,'touching a new valid floating AIM location still recenters immediately with no hold delay');endPointer(922,instantFloat126f.x,instantFloat126f.y);accept126f(9,!G.firing&&G.mobileFirePulseCount===0&&!G.joy.active,'AIM reposition path does not steal DRIVE ownership or emit FIRE');
+
+
+
+
+accept126f(10,code.includes('mobileAimRepositionHoldMs:320')&&code.includes("else if(role==='aim')this.moveAimGesture(id,x,y,transport)")&&!code.includes('mobileAimRepositionHoldMs:3000'),'the fix is isolated to the AIM router and contains no multi-second activation timer');
+
+
+
+
+assert.strictEqual(phase126fPassed.size,10,'all 10 deterministic Phase 1.2.6F AIM responsiveness checks ran');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+G.listeners.splice(0).forEach(f=>{try{f();}catch(_){}});G.mobileRouter=null;G.root=null;G.firing=false;G.mobileFirePulseCount=0;resetStickState(G.joy,driveKnob);resetStickState(G.aim,aimKnob);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const directionTerrain=new TerrainSystem(),directionCollision=new CollisionSystem(directionTerrain),upCommand=desktopCommandFromState(new Set(['ArrowUp']),null,{x:0,z:0},false),downCommand=desktopCommandFromState(new Set(['ArrowDown']),null,{x:0,z:0},false);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+for(let deg=0;deg<360;deg++){const h=deg*Math.PI/180,visual=visualLocalMinusZAfterYaw(h),forwardTank=fakeRuntimeTank(0,40,h),forwardRuntime=new TankRuntime(forwardTank,directionCollision,directionTerrain),fx=forwardRuntime.x,fz=forwardRuntime.z;forwardRuntime.step(upCommand,.05);const fdx=forwardRuntime.x-fx,fdz=forwardRuntime.z-fz;assert(fdx*visual.x+fdz*visual.z>0,'TankRuntime ArrowUp displacement follows visible arrow at '+deg+'deg');assert(Math.abs(fdx*visual.z-fdz*visual.x)<1e-8,'TankRuntime ArrowUp has no lateral displacement at '+deg+'deg');const reverseTank=fakeRuntimeTank(0,40,h),reverseRuntime=new TankRuntime(reverseTank,directionCollision,directionTerrain),rx=reverseRuntime.x,rz=reverseRuntime.z;reverseRuntime.step(downCommand,.05);const rdx=reverseRuntime.x-rx,rdz=reverseRuntime.z-rz;assert(rdx*visual.x+rdz*visual.z<0,'TankRuntime ArrowDown displacement is opposite visible arrow at '+deg+'deg');assert(Math.abs(rdx*visual.z-rdz*visual.x)<1e-8,'TankRuntime ArrowDown has no lateral displacement at '+deg+'deg');}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const rightTurnTank=fakeRuntimeTank(0,40,0),rightTurnRuntime=new TankRuntime(rightTurnTank,new CollisionSystem(new TerrainSystem()),new TerrainSystem());for(let i=0;i<45;i++)rightTurnRuntime.step({throttle:0,steering:1},1/60);assert(forwardFromRotation(rightTurnRuntime.heading).x>0,'right steering turns the visible front arrow toward +world X from the default -Z heading');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const clearTerrain=new TerrainSystem(),clearCollision=new CollisionSystem(clearTerrain),runtimeTank=fakeRuntimeTank(0,40,0),runtime=new TankRuntime(runtimeTank,clearCollision,clearTerrain);for(let i=0;i<75;i++)runtime.step({throttle:0,steering:1},1/60);const turnedHeading=runtime.heading;assert(Math.abs(turnedHeading)>.2,'steering changes the authoritative hull heading even before translation');const forwardBefore={x:runtime.x,z:runtime.z},turnedForward=forwardFromRotation(runtime.heading);for(let i=0;i<60;i++)runtime.step({throttle:1,steering:0},1/60);let rdx=runtime.x-forwardBefore.x,rdz=runtime.z-forwardBefore.z;assert(rdx*turnedForward.x+rdz*turnedForward.z>1,'forward after a turn follows the new authoritative hull heading');assert(Math.abs(runtime.lastMotion.lateralVelocity)<1e-8,'canonical runtime reports zero lateral velocity');runtime.teleport(runtime.x,runtime.z,turnedHeading);const reverseBefore={x:runtime.x,z:runtime.z};for(let i=0;i<60;i++)runtime.step({throttle:-1,steering:0},1/60);rdx=runtime.x-reverseBefore.x;rdz=runtime.z-reverseBefore.z;assert(rdx*turnedForward.x+rdz*turnedForward.z<-1,'reverse after a turn follows the exact opposite authoritative hull heading');assert(Math.abs(runtime.lastMotion.lateralVelocity)<1e-8,'reverse also has zero lateral velocity');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+G.player=runtimeTank;G.tankRuntime=runtime;const runtimeSnap=tankStateSnapshot(runtimeTank);assert.strictEqual(runtimeSnap.hullRotation,runtime.heading,'replicated hull yaw comes from authoritative runtime heading');assert.strictEqual(runtimeTank.hullRotation,runtime.heading,'physics/entity hull yaw equals authoritative heading');assert.strictEqual(runtimeTank.hull.rotation.y,runtime.heading,'visual hull yaw equals authoritative heading');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const sectorTank=fakeRuntimeTank(0,70,.35),sectorRuntime=new TankRuntime(sectorTank,clearCollision,clearTerrain),sectorHeading=sectorRuntime.heading,startSector=WorldSpace.sectorIndexAtZ(sectorRuntime.z);for(let i=0;i<600;i++)sectorRuntime.step({throttle:1,steering:0},1/60);assert.notStrictEqual(WorldSpace.sectorIndexAtZ(sectorRuntime.z),startSector,'deterministic drive crosses a logical sector boundary');assert(Math.abs(sectorRuntime.heading-sectorHeading)<1e-12,'sector transition does not mutate authoritative hull heading');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class TestVec3{constructor(){this.x=0;this.y=0;this.z=0;}}sb.THREE={Vector3:TestVec3};const muzzleTank={group:{updateMatrixWorld(){}},cannonTip:{getWorldPosition(v){v.x=8;v.y=3;v.z=-12;}},barrel:{getWorldPosition(v){v.x=5;v.y=3;v.z=-8;}},turretRotation:0,world:{x:0,z:0}},ray=cannonWorldRay(muzzleTank),rayLen=Math.hypot(3,-4);assert(Math.abs(ray.direction.x-3/rayLen)<1e-12&&Math.abs(ray.direction.z+4/rayLen)<1e-12,'projectile direction agrees with the actual barrel-to-muzzle world transform');assert.strictEqual(ray.origin.x,8);assert.strictEqual(ray.origin.y,3);assert.strictEqual(ray.origin.z,-12);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(code.includes('resolveTankSweep(from,to,fp.halfWidth,fp.halfLength')&&code.includes('d=driveDelta(nextHeading,this.speed,h)'),'TankRuntime translates only from its authoritative hull-forward vector and swept footprint');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(code.includes('x:-Math.sin(rotation),z:-Math.cos(rotation)')&&code.includes('this.heading-cmd.steering*CFG.tankTurnRate'),'runtime uses the Three.js local -Z visual convention and right-steer yaw sign');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(code.includes("frontArrow=sharedMesh('cone4',0xfff08a")&&code.includes("rearLeft=sharedMesh('sphere',0xff4f3e"),'Admin Preview has unmistakable front arrow and rear lamps');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(code.includes('function cannonWorldRay(t)')&&code.includes('t.group.updateMatrixWorld')&&code.includes('dir=ray.direction'),'shell spawn and direction use the actual muzzle/barrel world transform');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(code.includes("listen(window,'pointerdown',down,{passive:false,capture:true})")&&code.includes("listen(window,'pointermove',move,{passive:false,capture:true})")&&code.includes("listen(window,'touchstart',down,{passive:false,capture:true})")&&code.includes('class GlobalMobileTouchRouter')&&code.includes('getBoundingClientRect')&&!code.includes('function bindStickElement(')&&!code.includes('setPointerCapture('),'DRIVE/AIM/FIRE acquisition is global geometry-routed and does not depend on joystick DOM pointerdown or pointer capture');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(code.includes("kind:'tank',phase:'1.2.6'")&&code.includes('__VW_FRONTLINE1944_RUNTIME__'),'loaded Frontline runtime publishes the Phase 1.2.6 authoritative tank-runtime identity marker');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert.strictEqual(runtimeIdentity().kind,'tank','runtime identity cannot describe the active Frontline controller as infantry');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(code.includes('runtimeOpen=!!G.root')&&code.includes("b.style.pointerEvents=hide?'none':''"),'admin launcher is hidden/disabled while Frontline runtime is open so it cannot cover mobile controls');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Projectile / pooling / bounded-memory foundation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const pool=new ObjectPool('unit',2,()=>({group:{visible:false},active:false}),o=>{o.group.visible=true;});const a=pool.acquire({}),b=pool.acquire({});assert(a&&b&&!pool.acquire({}),'object pool enforces hard cap');pool.release(a);assert(pool.acquire({}),'released pooled object is reusable');assert.strictEqual(pool.stats().created,2,'pool does not allocate beyond cap');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(CFG.projectileCap<=48&&CFG.enemyProjectileCap<=32&&CFG.fxCap<=72,'mobile projectile/FX caps remain bounded');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(code.includes('lifetime')&&code.includes('ownerId')&&code.includes('weaponId')&&code.includes('impactEvent')&&code.includes('collisionRadius'),'projectile contract includes owner, weapon, impact, lifetime and collision data');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(code.includes('if(!sectorActive)continue')&&code.includes('if(!active)return'),'inactive sectors do not run expensive enemy/fortress simulation');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(code.includes('pool.release(p)')&&code.includes('G.enemies=G.enemies.filter'),'expired projectiles and destroyed enemies are cleaned/reused');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(code.includes('renderer.setPixelRatio(Math.min(devicePixelRatio||1,CFG.dpr))'),'mobile DPR is capped');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+assert(css.includes('.fl44-aim-stick')&&css.includes('.fl44-aim-stick.repositioning')&&css.includes('.fl44-fire.repositioning')&&css.includes('.fl44-input-diag')&&css.includes('@media (max-height:460px)')&&css.includes('touch-action:none')&&css.includes('-webkit-user-select:none'),'mobile landscape controls, AIM/FIRE reposition feedback and temporary Admin input diagnostics are hardened');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Vocabulary source audit still uses the real current shared data when that dependency exists in the full project.
+
+
+
+
+if(f1){
+
+
+
+
+  const vb={console,state:{student:{grade:'ป.1'}}};vb.window=vb;vm.createContext(vb);vm.runInContext(f1,vb);
+
+
+
+
+  assert.strictEqual(typeof vb.f1VocabForStudent,'function','authoritative shooter vocabulary provider exists');
+
+
+
+
+  const grades=['ป.1','ป.2','ป.3','ป.4','ป.5','ป.6'],counts={};
+
+
+
+
+  for(const grade of grades){vb.state.student.grade=grade;const raw=vb.f1VocabForStudent()||[];const words=raw.map(x=>Array.isArray(x)?x[0]:x&&(x.en||x.word||x.eng||x.english)).filter(Boolean).map(x=>String(x).trim().toUpperCase());counts[grade]={count:words.length,unique:new Set(words).size};assert(words.length>0,grade+' vocabulary source must not be empty');assert.strictEqual(counts[grade].count,counts[grade].unique,grade+' vocabulary must not duplicate English targets in the shooter pool');}
+
+
+
+
+  console.log('Frontline vocabulary audit P.1-P.6:',JSON.stringify(counts));
+
+
+
+
+}else console.log('SKIP vocabulary audit in isolated Task ZIP: '+f1Path+' was not supplied; full-project run must execute it.');
+
+
+
+
+console.log('PASS Frontline 1944 Phase 1.2.6F AIM RESPONSIVENESS: baseline + diagnostics + reverse-diagonal + mobile-AIM recovery + 10 AIM-reposition responsiveness checks pass; accepted DRIVE/AIM/FIRE and Tank Runtime physics remain locked');
+
+
+
+
+
+
+function runTargetLockN3Tests({sourceOnly=false}={}){
+  // Source-path / DOM-contract tests with explicit rendering doubles, NOT real-device/WebGL PASS.
+  const fs=require('fs'),vm=require('vm'),assert=require('assert');
+  const source=fs.readFileSync('js/frontline1944.js','utf8'),style=sourceOnly?null:fs.readFileSync('css/frontline1944.css','utf8');
+  let checks=0,time=5000,rayHits=[],lastRay=null,rayRecursive=false,coinCalls=0,saveCalls=0,cloudCalls=0;
+  const timers=[],events=new Map();
+  const check=(name,fn)=>{fn();checks++;console.log('PASS N3 '+name);};
+  class Vec3{
+    constructor(x=0,y=0,z=0){this.set(x,y,z);}
+    set(x,y,z){this.x=x;this.y=y;this.z=z;return this;}
+    setScalar(s){return this.set(s,s,s);}
+    clone(){return new Vec3(this.x,this.y,this.z);}
+    project(camera){
+      const p=camera.position,t=camera.target,dx=t.x-p.x,dy=t.y-p.y,dz=t.z-p.z,l=Math.hypot(dx,dy,dz),fx=dx/l,fy=dy/l,fz=dz/l,rl=Math.hypot(fx,fz),rx=-fz/rl,rz=fx/rl,ux=-rz*fy,uy=rz*fx-rx*fz,uz=rx*fy,x=this.x-p.x,y=this.y-p.y,z=this.z-p.z;
+      return this.set((x*rx+z*rz)/(camera.width/2),(x*ux+y*uy+z*uz)/(camera.height/2),2*((x*fx+y*fy+z*fz)-.1)/(420-.1)-1);
+    }
+  }
+  const worldPoint=(node,v)=>{let o=node;while(o){v.x*=o.scale.x;v.y*=o.scale.y;v.z*=o.scale.z;const x=v.x,z=v.z,c=Math.cos(o.rotation.y),s=Math.sin(o.rotation.y);v.x=x*c+z*s+o.position.x;v.z=-x*s+z*c+o.position.z;v.y+=o.position.y;o=o.parent;}return v;};
+  class Group{
+    constructor(){this.children=[];this.parent=null;this.position=new Vec3();this.scale=new Vec3(1,1,1);this.rotation={x:0,y:0,z:0};this.visible=true;this.userData={};}
+    add(...nodes){for(const node of nodes){if(node.parent)node.parent.remove(node);node.parent=this;this.children.push(node);}}
+    remove(node){this.children=this.children.filter(n=>n!==node);node.parent=null;}
+    traverse(fn){fn(this);for(const node of this.children)node.traverse(fn);}
+    updateMatrixWorld(){this.matrixUpdates=(this.matrixUpdates||0)+1;}
+    getWorldPosition(v){return worldPoint(this,v.set(0,0,0));}
+  }
+  class Mesh extends Group{constructor(geometry,material){super();this.geometry=geometry;this.material=material;this.isMesh=true;}}
+  class Box3{
+    setFromObject(root){this.min=new Vec3(Infinity,Infinity,Infinity);this.max=new Vec3(-Infinity,-Infinity,-Infinity);root.traverse(node=>{if(!node.isMesh||node.visible===false)return;for(const x of [-.5,.5])for(const y of [-.5,.5])for(const z of [-.5,.5]){const v=worldPoint(node,new Vec3(x,y,z));for(const k of ['x','y','z']){this.min[k]=Math.min(this.min[k],v[k]);this.max[k]=Math.max(this.max[k],v[k]);}}});return this;}
+    isEmpty(){return this.min.x>this.max.x;}
+  }
+  class El{
+    constructor(id,left=0,top=0,width=0,height=0,tag='DIV'){Object.assign(this,{id,tagName:tag,base:{left,top,width,height},style:{},dataset:{},hidden:false,attrs:{},textContent:'',parentElement:null,offsetParent:null,children:{},handlers:new Map()});const classes=new Set();this.classList={add:x=>classes.add(x),remove:x=>classes.delete(x),toggle:(x,on)=>on?classes.add(x):classes.delete(x),contains:x=>classes.has(x)};}
+    querySelector(s){return this.children[s]||null;}
+    getBoundingClientRect(){const b=this.base,p=this.offsetParent?this.offsetParent.getBoundingClientRect():{left:0,top:0};const left=this.style.left&&this.style.left!=='auto'?parseFloat(this.style.left)+p.left:b.left,top=this.style.top&&this.style.top!=='auto'?parseFloat(this.style.top)+p.top:b.top,width=this.style.width?parseFloat(this.style.width):b.width,height=this.style.height?parseFloat(this.style.height):b.height;return {left,top,width,height,right:left+width,bottom:top+height};}
+    getAttribute(k){return this.attrs[k]||null;}setAttribute(k,v){this.attrs[k]=String(v);}
+    addEventListener(n,f){if(!this.handlers.has(n))this.handlers.set(n,[]);this.handlers.get(n).push(f);}removeEventListener(n,f){this.handlers.set(n,(this.handlers.get(n)||[]).filter(x=>x!==f));}
+    emit(n,e={}){for(const fn of this.handlers.get(n)||[])fn({target:this,button:0,detail:1,cancelable:true,preventDefault(){},stopPropagation(){},...e});}
+  }
+  const doc={readyState:'loading',hidden:false,addEventListener(){},removeEventListener(){},getElementById(){return null;},querySelector(){return null;},elementFromPoint(){return null;}};
+  const sb={console,document:doc,navigator:{maxTouchPoints:1},location:{hostname:'192.168.1.107',search:'',origin:'http://192.168.1.107:4173'},performance:{now:()=>time},Math,Date,URLSearchParams,innerWidth:844,innerHeight:390,devicePixelRatio:3,PointerEvent:function(){},isAdmin:()=>true,matchMedia:()=>({matches:true}),getComputedStyle:el=>({getPropertyValue:()=>0,position:'absolute',left:el.style.left||'0px',top:el.style.top||'0px',transform:'none'}),setInterval(){return 1;},clearInterval(){},setTimeout(fn,ms){const id=timers.length+1;timers.push({id,fn,ms,active:true});return id;},clearTimeout(id){const t=timers.find(t=>t.id===id);if(t)t.active=false;},requestAnimationFrame(){return 1;},cancelAnimationFrame(){},localStorage:{getItem(){return null;},setItem(){},removeItem(){}},state:{coins:50,frontline1944:{claims:[],wordsDone:0,fortressSerial:2}},addCoins(){coinCalls++;},saveState(){saveCalls++;},authPushSave(){cloudCalls++;}};
+  sb.addEventListener=(n,f)=>{if(!events.has(n))events.set(n,[]);events.get(n).push(f);};sb.removeEventListener=(n,f)=>events.set(n,(events.get(n)||[]).filter(x=>x!==f));sb.window=sb;sb.THREE={Group,Mesh,Vector3:Vec3,Box3,Object3D:Group};vm.createContext(sb);vm.runInContext(source,sb);
+  const T=sb.Frontline1944._t,G=T.G,CFG=T.CFG;
+  const root=new El('vw-frontline1944',16,24,844,390),canvas=new El('canvas',16,24,844,390,'CANVAS'),nodes={};canvas.parentElement=root;
+  function element(selector,id,x,y,w,h,tag='DIV'){const e=new El(id,x,y,w,h,tag);e.parentElement=root;e.offsetParent=root;nodes[selector]=e;return e;}
+  const button=element('#fl44-target-lock','fl44-target-lock',660,229,66,34,'BUTTON');button.children.small=new El('status');
+  for(const [selector,id,x,y,w,h] of [['#fl44-auto-forward','fl44-auto-forward',48,220,66,34],['#fl44-auto-reverse','fl44-auto-reverse',143,320,66,34],['#fl44-scope','fl44-scope',700,180,66,34],['#fl44-stick','fl44-stick',30,290,96,96],['#fl44-aim-stick','fl44-aim-stick',690,306,82,82],['#fl44-fire','fl44-fire',778,288,68,68]]){const e=element(selector,id,x,y,w,h,id.includes('stick')?'DIV':'BUTTON');e.children.small=new El('small');}
+  const panel=element('#fl44-lock-status','fl44-lock-status',26,108,215,54);panel.hidden=true;panel.children.b=new El('title');panel.children.small=new El('detail');nodes['.fl44-lock-status']=panel;
+  const marker=element('#fl44-lock-marker','fl44-lock-marker',0,0,28,28);marker.hidden=true;marker.children.span=new El('label');
+  nodes['#fl44-bossname']=new El('fl44-bossname');nodes['#fl44-bosshp']=new El('fl44-bosshp');
+  nodes['.fl44-knob']=new El('drive-knob');nodes['.fl44-aim-knob']=new El('aim-knob');
+  element('.fl44-top','top',23,29,830,56);element('#fl44-exit','fl44-exit',797,389,53,20,'BUTTON');
+  const stateEl=element('#fl44-state','fl44-state',260,388,330,22);nodes['.fl44-state']=stateEl;
+  element('#fl44-objective','fl44-objective',685,90,158,18);element('#fl44-distance','fl44-distance',685,108,80,20);
+  const toast=new El('fl44-toast');toast.children.b=new El('b');toast.children.span=new El('span');nodes['#fl44-toast']=toast;
+  root.querySelector=s=>nodes[s]||null;
+  G.root=root;G.canvas=canvas;G.scene=new Group();G.layers={};for(const key of Object.values(T.LAYER)){G.layers[key]=new Group();G.scene.add(G.layers[key]);}
+  G.camera={position:new Vec3(76,118,92),target:new Vec3(),width:220,height:220*390/844,lookAt(x,y,z){this.target.set(x,y,z);},updateMatrixWorld(){this.updates=(this.updates||0)+1;},matrixWorld:{elements:[1,0,0,0,0,1,0]}};
+  G.raycaster={setFromCamera(ndc){lastRay=ndc;},intersectObjects(roots,recursive){rayRecursive=recursive;return rayHits;},ray:{intersectPlane(p,v){v.set(60,0,20);return v;}}};
+  G.resources={geometry:k=>({kind:k}),material:()=>({color:{setHex(){}},opacity:1}),mesh(kind,color,size){const m=new Mesh(this.geometry(kind),this.material(color));m.scale.set(...size);return m;}};G.terrain=new T.TerrainSystem();G.collision=new T.CollisionSystem(G.terrain);
+  G.sectorStreamer={currentIndex:0,ensure(){},isActive(){return true;},update(){},visualId(){return 0;}};
+  function makePlayer(){return {world:{x:0,z:0},hullRotation:0,turretRotation:0,speed:0,hp:380,maxHp:380,invuln:0,playerId:'local-test-player',damageStatistic:{match:0,lifetime:0},group:new Group(),hull:new Group(),turret:new Group()};}
+  G.player=makePlayer();G.running=true;G.fortressSerial=2;G.tankRuntime=new T.TankRuntime(G.player,G.collision,G.terrain);
+  const emit=(name,data)=>{const e={pointerType:'touch',button:0,detail:1,target:canvas,cancelable:true,preventDefault(){},stopPropagation(){},...data};for(const fn of events.get(name)||[])fn(e);};
+  const centerOf=target=>{const b=T.targetLockScreenBounds(target);assert(b,'real entity group projects into current wide view');return {x:b.left+b.width/2,y:b.top+b.height/2};};
+  const choose=(target)=>{rayHits=[{object:target.ref.group.children[0]}];const p=centerOf(target);assert(T.selectTargetLockAtScreen(p.x,p.y,false,canvas));return p;};
+  let enemy,enemy2,fortress;
+  check('accepted identity and wide camera',()=>{assert.strictEqual(CFG.runtimeVersion,'P1.2.6F-20260902-5cc6a0');if(sourceOnly)console.log('SKIP N3 current stylesheet identity: not supplied / source-only mode');else assert(style.includes('--fl44-css-runtime-id:"'+CFG.runtimeVersion+'-CSS"'));assert.deepStrictEqual([CFG.viewW,CFG.cameraHeight,CFG.cameraOffsetX,CFG.cameraOffsetZ],[220,118,76,92]);});
+  check('private-host policy and production isolation',()=>{for(const h of ['localhost','127.0.0.1','10.2.0.8','172.16.0.8','172.31.1.4','192.168.1.107','[::1]'])assert(T.privatePreviewHostname(h));for(const h of ['vocabworld.web.app','example.com','172.32.0.1','192.169.1.1','999.1.1.1'])assert(!T.privatePreviewHostname(h));sb.location.hostname='vocabworld.web.app';assert.strictEqual(T.activateLocalTargetLockTestRange(),false);assert.strictEqual(G.fortress,null);sb.location.hostname='192.168.1.107';});
+  check('local range creates real Fortress + three real defenders',()=>{const progress=JSON.stringify(sb.state);assert(T.activateLocalTargetLockTestRange());assert.strictEqual(G.enemies.length,3);assert(G.enemies.every(e=>e.testRange&&e.group&&e.hp>0));assert.strictEqual(G.localTargetLockTestStatus.state,'ready');assert.strictEqual(G.fortress.testRange,true);assert(Math.abs(Math.hypot(G.fortress.world.x,G.fortress.world.z)-28)<1e-9);for(const e of G.enemies)assert(Math.hypot(e.world.x,e.world.z)>=12&&Math.hypot(e.world.x,e.world.z)<=16);assert.strictEqual(JSON.stringify(sb.state),progress);assert(nodes['#fl44-objective'].textContent.startsWith('LOCAL TEST'));enemy={kind:'enemy',id:G.enemies[0].id,ref:G.enemies[0]};enemy2={kind:'enemy',id:G.enemies[1].id,ref:G.enemies[1]};fortress={kind:'fortress',id:G.fortress.id,ref:G.fortress};});
+  check('OFF -> READY does not invent a lock; instruction is not a blocking toast',()=>{T.setTargetLockMode(false);assert.strictEqual(button.children.small.textContent,'OFF');T.setTargetLockMode(true);assert.strictEqual(T.specialControlState().lockedTarget,null);assert.strictEqual(button.children.small.textContent,'READY');assert(panel.children.b.textContent.includes('SELECT TARGET'));assert(marker.hidden);assert(!toast.classList.contains('on'));});
+  check('arming removes only the bootstrap ready toast, not combat/reward notices',()=>{toast.children.b.textContent='Phase 1.2.6N2 Runtime '+CFG.runtimeVersion;toast.classList.add('on');T.setTargetLockMode(true);assert(!toast.classList.contains('on'));toast.children.b.textContent='FORTRESS DESTROYED';toast.classList.add('on');T.setTargetLockMode(true);assert(toast.classList.contains('on'));toast.classList.remove('on');});
+  check('enemy child mesh -> actual entity -> LOCKED -> name/HP/marker',()=>{choose(enemy);assert.strictEqual(T.specialControlState().lockedTarget.ref,enemy.ref);assert(rayRecursive);assert.strictEqual(button.children.small.textContent,'LOCKED');assert(panel.children.b.textContent.includes('ENEMY 1'));assert(panel.children.small.textContent.includes('HP '));assert.strictEqual(marker.dataset.targetId,enemy.id);assert(!marker.hidden);});
+  check('CSS canvas coordinates, offsets and DPR at four wide-camera viewports',()=>{for(const [w,h] of [[667,375],[844,390],[915,412],[1280,720]])for(const dpr of [1,2,3]){canvas.base.width=w;canvas.base.height=h;canvas.width=w*dpr;canvas.height=h*dpr;G.camera.height=220*h/w;rayHits=[{object:enemy.ref.group.children[0]}];const p=centerOf(enemy);assert.strictEqual(T.targetLockRaycastCandidateAtScreen(p.x,p.y,[enemy]).ref,enemy.ref);assert(Math.abs(lastRay.x-((p.x-16)/w*2-1))<1e-9);assert(Math.abs(lastRay.y-(1-(p.y-24)/h*2))<1e-9);}canvas.base.width=844;canvas.base.height=390;G.camera.height=220*390/844;});
+  check('wide-camera small-actor allowance is bounded; empty ground never picks a Fortress',()=>{rayHits=[];const p=centerOf(enemy);assert.strictEqual(T.pickTargetLockAtScreen(p.x,p.y).ref,enemy.ref);assert.strictEqual(T.pickTargetLockAtScreen(430,350),null);assert.strictEqual(T.pickTargetLockAtScreen(-10,-10),null);assert.strictEqual(T.pickTargetLockAtScreen(NaN,200),null);const f=centerOf(fortress);assert.strictEqual(T.pickTargetLockAtScreen(f.x+60,f.y),null);});
+  check('switching locks actual clicked enemy; miss retains current target',()=>{choose(enemy2);const previous=T.specialControlState().lockedTarget;rayHits=[];assert.strictEqual(T.selectTargetLockAtScreen(430,350),false);assert.strictEqual(T.specialControlState().lockedTarget,previous);assert(panel.children.b.textContent.includes('ENEMY 2'));});
+  check('protected HUD/button input cannot select behind UI',()=>{rayHits=[{object:enemy.ref.group.children[0]}];const p=centerOf(enemy);assert.strictEqual(T.selectTargetLockAtScreen(p.x,p.y,false,button),false);assert.strictEqual(T.selectTargetLockAtScreen(50,42),false);doc.elementFromPoint=()=>button;assert.strictEqual(T.selectTargetLockAtScreen(p.x,p.y),false);doc.elementFromPoint=()=>null;});
+  check('Fortress child mesh remains selectable while Core is protected',()=>{const child=fortress.ref.group.children[0],nested=new Group();child.add(nested);rayHits=[{object:nested}];const p=centerOf(fortress);assert(T.selectTargetLockAtScreen(p.x,p.y));assert.strictEqual(T.specialControlState().lockedTarget.ref,fortress.ref);assert(panel.children.small.textContent.includes('CORE PROTECTED'));assert.strictEqual(T.targetLockTargetValid(fortress),true);});
+  check('marker follows the entity and turret heading has one lock authority',()=>{choose(enemy);const old=marker.style.left;enemy.ref.world.x+=3;enemy.ref.group.position.x=enemy.ref.world.x;T.updateTargetLockMarker();assert.notStrictEqual(marker.style.left,old);const expected=T.rotationFromForward(enemy.ref.world.x-G.player.world.x,enemy.ref.world.z-G.player.world.z);assert(Math.abs(T.targetLockHeading()-expected)<1e-9);G.inputAdapter={sample:()=>({throttle:0,steering:0,turretTargetHeading:1.8,fire:false,source:'manual'})};T.tickTank(.016);assert(Math.abs(G.tankRuntime.turretTargetHeading-expected)<1e-9);});
+  check('OFF clears marker/state and restores manual aiming immediately',()=>{T.setTargetLockMode(false);assert.strictEqual(T.targetLockHeading(),null);assert.strictEqual(T.specialControlState().lockedTarget,null);assert(marker.hidden);assert.strictEqual(marker.dataset.targetId,'');T.tickTank(.016);assert(Math.abs(G.tankRuntime.turretTargetHeading-1.8)<1e-9);});
+  check('desktop click selects instead of firing; FIRE/Space remain available',()=>{T.bindTargetLockDesktopControls();T.bindCanvasAim();G.lastTouchLikeInputAt=0;button.emit('click',{pointerType:'mouse'});assert(T.specialControlState().targetLockMode);G.desktopFireQueued=false;rayHits=[{object:enemy.ref.group.children[0]}];const p=centerOf(enemy);canvas.emit('pointerdown',{pointerType:'mouse',clientX:p.x,clientY:p.y});assert.strictEqual(T.specialControlState().lockedTarget.ref,enemy.ref);assert.strictEqual(G.desktopFireQueued,false);nodes['#fl44-fire'].emit('click',{pointerType:'mouse'});assert(G.desktopFireQueued);G.desktopFireQueued=false;});
+  let router;
+  check('actual mobile router binds with current special-button DOM',()=>{router=T.bindGlobalMobileTouchRouter();assert(router);G.mobileRouter=router;T.bindTargetLockTapFireBridge(router);T.setTargetLockMode(false);const r=button.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;emit('pointerdown',{pointerId:10,clientX:x,clientY:y,target:button});emit('pointerup',{pointerId:10,clientX:x,clientY:y,target:button});assert(T.specialControlState().targetLockMode);button.emit('click',{pointerType:'touch'});assert(T.specialControlState().targetLockMode,'compatibility click must not toggle twice');});
+  check('Scope mobile role toggles independently without stealing DRIVE/AIM/FIRE ownership',()=>{const scope=nodes['#fl44-scope'],r=scope.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,camera=G.camera;G.camera=null;assert.strictEqual(T.specialControlState().scopeMode,false);time+=80;emit('pointerdown',{pointerId:24,clientX:x,clientY:y,target:scope});assert.strictEqual(router.owners.get(24),'scope');assert.strictEqual(router.rolePointers.scope,24);assert.strictEqual(router.rolePointers.drive,null);assert.strictEqual(router.rolePointers.aim,null);assert.strictEqual(router.rolePointers.fire,null);emit('pointerup',{pointerId:24,clientX:x,clientY:y,target:scope});assert.strictEqual(T.specialControlState().scopeMode,true);assert.strictEqual(router.rolePointers.scope,null);scope.emit('click',{pointerType:'touch'});assert.strictEqual(T.specialControlState().scopeMode,true,'compatibility click must not toggle Scope twice');time+=80;emit('pointerdown',{pointerId:25,clientX:x,clientY:y,target:scope});emit('pointerup',{pointerId:25,clientX:x,clientY:y,target:scope});assert.strictEqual(T.specialControlState().scopeMode,false);G.camera=camera;});
 
 
-
-function runPhase21R5Tests(){
-  // Phase 2.1 R5 focused source/runtime tests. These do not claim physical-phone, WebGL screenshot, build, deploy or hosting acceptance.
-  const source=fs.readFileSync('js/frontline1944.js','utf8');
-  let checks=0;const check=(name,fn)=>{fn();checks++;console.log('PASS R5 '+name);};
-  class Vec3{constructor(x=0,y=0,z=0){this.set(x,y,z);}set(x,y,z){this.x=x;this.y=y;this.z=z;return this;}setScalar(v){return this.set(v,v,v);}copy(v){return this.set(v.x,v.y,v.z);}clone(){return new Vec3(this.x,this.y,this.z);}lerp(v,t){return this.set(this.x+(v.x-this.x)*t,this.y+(v.y-this.y)*t,this.z+(v.z-this.z)*t);}project(){return this;}}
-  const document={readyState:'loading',addEventListener(){},querySelector(){return null;},getElementById(){return null;},documentElement:{style:{getPropertyValue(){return '0';}}}};
-  let now=1000,timerSerial=0;const timers=new Map(),store=new Map();
-  const sb={console,document,navigator:{maxTouchPoints:1},location:{hostname:'localhost',search:'',origin:'http://localhost'},Math,Date,URLSearchParams,innerWidth:1000,innerHeight:500,performance:{now:()=>now},isAdmin:()=>true,
-    setTimeout(fn){const id=++timerSerial;timers.set(id,fn);return id;},clearTimeout(id){timers.delete(id);},setInterval(){return 1},clearInterval(){},requestAnimationFrame(){return 1},cancelAnimationFrame(){},localStorage:{getItem(k){return store.has(k)?store.get(k):null;},setItem(k,v){store.set(k,String(v));}},addEventListener(){},removeEventListener(){},getComputedStyle(){return {position:'absolute',left:'0px',top:'0px',right:'auto',bottom:'auto',transform:'none',getPropertyValue(){return '0';}}}};
-  sb.window=sb;sb.THREE={Vector3:Vec3};vm.createContext(sb);vm.runInContext(source,sb);
-  const T=sb.Frontline1944._t,G=T.G;
-  const fakeTank=()=>{const group={updateMatrixWorld(){},visible:true,position:{set(){}},rotation:{y:0}},cannonTip={getWorldPosition(v){return v.set(0,3,-6.3);}},barrel={getWorldPosition(v){return v.set(0,3,-3.55);}};return {world:{x:0,z:0},group,cannonTip,barrel,playerId:'p1',ownerId:'p1',hullRotation:0,turretRotation:0,turretTargetRotation:0,speed:0,footprint:{halfWidth:T.CFG.tankFootprintHalfWidth,halfLength:T.CFG.tankFootprintHalfLength},hp:1000,maxHp:1000,invuln:0,hull:{rotation:{y:0}},turret:{rotation:{y:0}}};};
-  function simulate(strength,scoped=false,seconds=.7){let h=0,v=0;for(let t=0;t<seconds;t+=1/60){const step=T.turretMotionStep(h,1.25,v,1/60,scoped,strength);h=step.heading;v=step.velocity;}return {h,v};}
-  function classList(){const set=new Set();return {add(...xs){xs.forEach(x=>set.add(x));},remove(...xs){xs.forEach(x=>set.delete(x));},contains(x){return set.has(x);},toggle(x,on){if(on===undefined)on=!set.has(x);on?set.add(x):set.delete(x);return !!on;}};}
-  function fakeEl(left,top,width,height,id='',className=''){const style={left:'',top:'',right:'',bottom:'',transform:'',removeProperty(k){this[k]='';}},dataset={},cl=classList(),el={id,className,hidden:false,style,dataset,classList:cl,parentElement:null,offsetParent:null,clientLeft:0,clientTop:0,scrollLeft:0,scrollTop:0,getAttribute(){return null;},getBoundingClientRect(){const l=Number.parseFloat(style.left),t=Number.parseFloat(style.top),x=Number.isFinite(l)?l:left,y=Number.isFinite(t)?t:top;return {left:x,top:y,right:x+width,bottom:y+height,width,height};}};return el;}
-
-  check('R5 identity, HP/Scope preservation and deliberate long-hold tuning',()=>{
-    assert.strictEqual(T.R5_AIM.id,'P2.1R5-1420f0');assert.strictEqual(T.R4_AIM.id,T.R5_AIM.id);assert.strictEqual(T.CFG.playerHP,1000);assert.strictEqual(T.R5_AIM.scopeFov,22);assert(T.CFG.mobileAimRepositionHoldMs>=650&&T.CFG.mobileAimRepositionHoldMs<=800);assert(T.CFG.mobileAimHoldMoveTolerancePx>=8&&T.CFG.mobileAimHoldMoveTolerancePx<=16);
-  });
-  check('thumb response curve keeps a small dead zone and gives finer small-input rotation',()=>{
-    const dead=T.mobileAimStrength({x:.04,y:0}),fine=T.mobileAimStrength({x:.18,y:0}),medium=T.mobileAimStrength({x:.5,y:0}),full=T.mobileAimStrength({x:1,y:0});assert.strictEqual(dead,0);assert(fine>0&&fine<medium&&medium<full&&full<=1);const slow=simulate(fine,false),fast=simulate(1,false),scope=simulate(1,true);assert(Math.abs(slow.h)<Math.abs(fast.h));assert(Math.abs(scope.h)<Math.abs(fast.h));
-  });
-  check('turret input starts immediately but ramps velocity and decelerates without long drift',()=>{
-    const a=T.turretMotionStep(0,1,0,1/60,false,1),b=T.turretMotionStep(a.heading,1,a.velocity,1/60,false,1);assert(a.heading>0&&a.velocity>0);assert(a.velocity<T.R5_AIM.turretMaxRate);assert(b.velocity>a.velocity);const released=T.turretMotionStep(b.heading,1,b.velocity,1/60,false,0);assert(released.heading>b.heading&&released.velocity<b.velocity);let h=released.heading,v=released.velocity;for(let i=0;i<90;i++){const q=T.turretMotionStep(h,1,v,1/60,false,0);h=q.heading;v=q.velocity;}assert(Math.abs(v)<1e-9);assert(h<.35,'release inertia must stop rather than free-drift toward stale target');
-  });
-  check('authoritative TankRuntime uses angular velocity and Target Lock supplies full-strength damped aim',()=>{
-    const tank=fakeTank(),collision={resolveTankSweep(from,to){return {x:to.x,z:to.z,heading:to.heading,blocked:false,contact:null};}},terrain={sample(){return {speed:1};}},rt=new T.TankRuntime(tank,collision,terrain);const before=rt.turretHeading;rt.step({turretTargetHeading:1,turretInputStrength:1},1/60);assert(rt.turretHeading>before&&rt.turretAngularVelocity>0);const v=rt.turretAngularVelocity;rt.step({turretTargetHeading:1,turretInputStrength:0},1/60);assert(rt.turretAngularVelocity<v);assert(source.includes('turretInputStrength:1,source:String(cmd.source||\'shared\')+\'+target-lock\''));assert(source.includes('this.turretHeading=turretMotion.heading;this.turretAngularVelocity=turretMotion.velocity'));
-  });
-  check('AIM base stays fixed for ordinary drag, long-hold drag repositions safely, persists, and multitouch FIRE ownership remains separate',()=>{
-    const root=fakeEl(0,0,1000,500,'vw-frontline1944','');root.querySelector=()=>null;const drive=fakeEl(55,345,96,96,'fl44-stick','fl44-stick'),driveKnob=fakeEl(0,0,1,1,'','fl44-knob'),aim=fakeEl(700,330,82,82,'fl44-aim-stick','fl44-aim-stick'),aimKnob=fakeEl(0,0,1,1,'','fl44-aim-knob'),fire=fakeEl(875,350,68,68,'fl44-fire','fl44-fire');for(const el of [drive,driveKnob,aim,aimKnob,fire])el.parentElement=root;G.root=root;G.specialControls={autoMove:0,targetLockMode:false,lockedTarget:null,scopeMode:false};const driveState={x:0,y:0,id:null,active:false},aimState={x:0,y:0,id:null,active:false},vectors=[];const router=new T.GlobalMobileTouchRouter({root,driveEl:drive,driveKnob,aimEl:aim,aimKnob,fireEl:fire,driveState,aimState,storage:sb.localStorage,onAimVector:v=>vectors.push({x:v.x,y:v.y}),protectedPointAt:()=>false,onDiagnostic:()=>{}});const c=T.rectCenter(T.elementUsableRect(aim)),left0=T.elementUsableRect(aim).left;now=2000;assert.strictEqual(router.begin(91,c.x,c.y,aim,'pointer'),'aim');now+=40;router.move(91,c.x+30,c.y+5,aim,'pointer');assert.strictEqual(router.aimGesture.intent,'aim');assert(!router.aimGesture.repositioning);assert(Math.abs(T.elementUsableRect(aim).left-left0)<1e-9);router.end(91,c.x+30,c.y+5,aim,'pointer');const c2=T.rectCenter(T.elementUsableRect(aim));now=4000;assert.strictEqual(router.begin(92,c2.x,c2.y,aim,'pointer'),'aim');now+=T.CFG.mobileAimRepositionHoldMs+5;router.move(92,c2.x-95,c2.y-45,aim,'pointer');assert(router.aimGesture.repositioning);assert(Math.abs(T.elementUsableRect(aim).left-left0)>20);assert.strictEqual(aimState.x,0);assert.strictEqual(aimState.y,0);router.end(92,c2.x-95,c2.y-45,aim,'pointer');assert(sb.localStorage.getItem(T.CFG.mobileAimPositionStorageKey));const movedLeft=T.elementUsableRect(aim).left,movedCenter=T.rectCenter(T.elementUsableRect(aim)),fireCenter=T.rectCenter(T.elementUsableRect(fire));now=6000;assert.strictEqual(router.begin(93,movedCenter.x,movedCenter.y,aim,'pointer'),'aim');assert.strictEqual(router.begin(94,fireCenter.x,fireCenter.y,fire,'pointer'),'fire');assert.strictEqual(router.rolePointers.aim,93);assert.strictEqual(router.rolePointers.fire,94);assert.strictEqual(router.activeCount(),2);router.end(94,fireCenter.x,fireCenter.y,fire,'pointer');router.end(93,movedCenter.x,movedCenter.y,aim,'pointer');const broadX=560,broadY=250;now=8000;assert.strictEqual(router.begin(95,broadX,broadY,root,'pointer'),'aim');assert.strictEqual(router.aimGesture.repositionEligible,false);now+=T.CFG.mobileAimRepositionHoldMs+50;router.move(95,broadX-35,broadY,root,'pointer');assert(!router.aimGesture.repositioning);assert(Math.abs(T.elementUsableRect(aim).left-movedLeft)<1e-9);router.end(95,broadX-35,broadY,root,'pointer');
-  });
-  check('projected marker is thin/clean and remains tied to actual cannon/projectile direction',()=>{
-    const tank=fakeTank();G.player=tank;G.tankRuntime=null;G.enemies=[];G.fortress=null;G.collision={hitSolidOnly(){return null;}};const ray=T.cannonWorldRay(tank),solution=T.projectedShotSolution(tank);assert(Math.abs(ray.direction.x)<1e-9&&Math.abs(ray.direction.z+1)<1e-9);assert(solution&&solution.kind==='range'&&solution.z<0);assert(source.includes('.fl44-shot-marker{position:absolute')&&source.includes('width:17px;height:17px'));assert(source.includes('.fl44-shot-marker:before')&&source.includes('height:1px')&&source.includes('width:1px;height:15px'));assert(source.includes('id="fl44-shot-marker" aria-hidden="true" hidden></div>'));assert(!source.includes('font:900 25px/1 ui-monospace'));assert(source.includes('const t=G.player,ray=cannonWorldRay(t)'));assert(source.includes('function r4CannonWorldRay(t)'));assert(source.includes('marker.dataset.kind=solution.kind'));
-  });
-  check('R3 safe respawn and 1000 HP remain active',()=>{
-    const tank=fakeTank();tank.hp=0;G.player=tank;G.tankRuntime=null;G.enemies=[];G.fortress=null;G.terrain={bySector:new Map()};G.collision={collidersNear(){return[];}};G.sectorStreamer={update(){},isActive(){return true;}};G.camera=null;T.r3ResetSpawnState();const pos={x:0,z:0,heading:0,sector:0,attempts:1,fallback:false};assert(T.r3ValidateSpawn(pos));assert(T.r3CommitSafeSpawn(pos,'death'));assert.strictEqual(tank.hp,1000);assert(tank.invuln>=2);
-  });
-  check('R5 remains localized and preserves accepted systems',()=>{
-    for(const token of ["const SPECIAL_CONTROL_ROLES=Object.freeze(['autoForward','autoReverse','targetLock','scope'])",'GlobalMobileTouchRouter','targetLockHeading()','mobileFirePositionStorageKey','r3PlayerEmbedded()','scopeMode:false','DRIVE','AIM','FIRE'])assert(source.includes(token),token);assert(source.includes("drawer.innerHTML='<b>FRONTLINE 1944 · R5</b>"));assert(source.includes("G.root.dataset.patchTask='P2.1R5-1420f0'"));
-  });
-  console.log('PASS R5 '+checks+' focused groups. Source/runtime math + mobile-router harness only; physical phone, actual WebGL visuals, build/deploy and hosting delivery remain user acceptance checks.');
-}
-
-function runPhase21R4Tests(){
-  // R4 source-path / gameplay-math tests. NOT a physical-phone, WebGL screenshot, hosting-delivery or art-reference PASS.
+
+  check('touch target acquisition and double-tap FIRE use current router paths',()=>{rayHits=[{object:enemy.ref.group.children[0]}];const p=centerOf(enemy);G.mobileFirePulseCount=0;for(const id of [11,12]){time+=100;emit('pointerdown',{pointerId:id,clientX:p.x,clientY:p.y});assert.strictEqual(T.specialControlState().lockedTarget.ref,enemy.ref);assert.strictEqual(router.owners.get(id),'targetLock');time+=35;emit('pointerup',{pointerId:id,clientX:p.x,clientY:p.y});}assert.strictEqual(G.mobileFirePulseCount,1);assert.strictEqual(router.owners.size,0);assert.strictEqual(router.tapCandidates.size,0);});
+  check('selected-target drag and cancel do not turn into double-tap FIRE',()=>{const p=centerOf(enemy);G.mobileFirePulseCount=0;time+=700;emit('pointerdown',{pointerId:13,clientX:p.x,clientY:p.y});emit('pointermove',{pointerId:13,clientX:p.x+40,clientY:p.y});emit('pointerup',{pointerId:13,clientX:p.x+40,clientY:p.y});time+=80;emit('pointerdown',{pointerId:14,clientX:p.x,clientY:p.y});emit('pointercancel',{pointerId:14,clientX:p.x,clientY:p.y});assert.strictEqual(G.mobileFirePulseCount,0);assert.strictEqual(router.tapCandidates.size,0);});
+  check('DRIVE + immediate AIM + FIRE ownership stays independent during lock',()=>{rayHits=[];router.cancelAll();const d=nodes['#fl44-stick'].getBoundingClientRect(),a=nodes['#fl44-aim-stick'].getBoundingClientRect(),f=nodes['#fl44-fire'].getBoundingClientRect();assert.strictEqual(router.begin(21,d.left+48,d.top+48,canvas,'pointer'),'drive');assert.strictEqual(router.begin(22,a.left+41,a.top+41,canvas,'pointer'),'aim');assert.strictEqual(router.begin(23,f.left+34,f.top+34,nodes['#fl44-fire'],'pointer'),'fire');router.move(22,f.left-2,f.top+20,canvas,'pointer');assert.strictEqual(router.rolePointers.aim,22);assert.strictEqual(router.rolePointers.drive,21);assert.strictEqual(router.rolePointers.fire,23);router.noteLostCapture(22,canvas,'pointer');assert.strictEqual(router.rolePointers.aim,22);router.cancelAll();assert.strictEqual(router.owners.size,0);});
+  check('auto forward/reverse mutual exclusion and manual steering survive',()=>{T.setAutoMoveMode(1);assert.strictEqual(T.autoMoveThrottleIntent(),1);T.setAutoMoveMode(-1);assert.strictEqual(T.autoMoveThrottleIntent(),-1);T.setAutoMoveMode(0);assert.strictEqual(T.autoMoveThrottleIntent(),0);const c=T.mobileCommandFromState({x:.5,y:0,active:true},{x:0,y:0,active:false},false,null,null,1);assert(c.steering>0);});
+  check('hidden/unloaded/detached lifecycle targets cannot remain stale',()=>{T.setTargetLockMode(true);choose(enemy);enemy.ref.group.visible=false;rayHits=[{object:enemy.ref.group.children[0]}];assert.strictEqual(T.targetLockRaycastCandidateAtScreen(centerOf(enemy2).x,centerOf(enemy2).y,[enemy]),null);enemy.ref.group.visible=true;const active=G.sectorStreamer.isActive;G.sectorStreamer.isActive=()=>false;assert.strictEqual(T.targetLockHeading(),null);assert.strictEqual(T.specialControlState().lockedTarget,null);G.sectorStreamer.isActive=active;choose(enemy);enemy.ref.dead=true;assert.strictEqual(T.targetLockHeading(),null);assert(marker.hidden);assert(panel.children.small.textContent.includes('DESTROYED'));enemy.ref.dead=false;});
+  check('defenders -> real Boss -> vulnerable Core grants no persistent rewards',()=>{const before=JSON.stringify(sb.state),serial=G.fortressSerial;for(const e of G.enemies.slice())T.damageEnemy(e,e.hp,{ownerId:G.player.playerId});T.tickFortress();const boss=G.fortress.boss;assert(boss&&boss.boss&&boss.testRange);assert(Math.hypot(boss.world.x-G.player.world.x,boss.world.z-G.player.world.z)<20);choose({kind:'enemy',id:boss.id,ref:boss});assert(panel.children.b.textContent.includes('BOSS'));T.damageEnemy(boss,boss.hp,{ownerId:G.player.playerId});assert.strictEqual(G.fortress.state,'core');choose(fortress);assert(panel.children.b.textContent.includes('FORTRESS CORE'));assert(panel.children.small.textContent.includes('CORE VULNERABLE'));assert.strictEqual(JSON.stringify(sb.state),before);assert.strictEqual(G.fortressSerial,serial);assert.deepStrictEqual([coinCalls,saveCalls,cloudCalls],[0,0,0]);});
+  check('normal projectile collision retains protected/vulnerable Core damage gating',()=>{const f=G.fortress,hp=f.coreHP;const shell=()=>({world:{x:f.world.x,z:f.world.z},direction:{x:0,z:0},speed:0,lifetime:1,damage:24,ownerId:G.player.playerId,team:'player',collisionRadius:.22,group:new Group()});const pool={active:[shell()],release(p){this.active=this.active.filter(x=>x!==p);}};f.state='boss';T.tickProjectilePool(pool,.016,true);assert.strictEqual(f.coreHP,hp);f.state='core';pool.active=[shell()];T.tickProjectilePool(pool,.016,true);assert.strictEqual(f.coreHP,hp-24);});
+  check('Core destruction clears feedback and safely respawns near player without persistence',()=>{const before=JSON.stringify(sb.state),old=G.fortress;T.destroyCore();T.updateTargetLockMarker();assert(marker.hidden);assert.strictEqual(T.specialControlState().lockedTarget,null);const timer=timers.filter(t=>t.active&&t.ms===620).pop();assert(timer);timer.fn();assert.notStrictEqual(G.fortress,old);assert.strictEqual(G.enemies.length,3);assert.strictEqual(JSON.stringify(sb.state),before);assert.deepStrictEqual([coinCalls,saveCalls,cloudCalls],[0,0,0]);});
+  check('local placement follows rotated Hull Forward, not a fixed world axis',()=>{for(const yaw of [Math.PI/2,Math.PI,-Math.PI/2]){G.tankRuntime.teleport(5,-15,yaw);assert(T.activateLocalTargetLockTestRange());const f=T.forwardFromRotation(yaw),p=G.tankRuntime.pose();assert(Math.abs(G.fortress.world.x-(p.x+f.x*28))<1e-9);assert(Math.abs(G.fortress.world.z-(p.z+f.z*28))<1e-9);for(const e of G.enemies)assert(Math.hypot(e.world.x-p.x,e.world.z-p.z)>=12&&Math.hypot(e.world.x-p.x,e.world.z-p.z)<=16);}});
+  check('test setup failure stays non-blocking and visibly reports failure',()=>{const ensure=G.sectorStreamer.ensure;G.sectorStreamer.ensure=()=>{throw new Error('injected setup failure');};const savedConsole=sb.console;sb.console={...console,error(){},warn(){}};assert.strictEqual(T.safeActivateLocalTargetLockTestRange(),false);assert.strictEqual(G.running,true);assert.strictEqual(G.localTargetLockTestStatus.state,'error');assert(stateEl.textContent.includes('LOCAL TEST ERROR'));G.sectorStreamer.ensure=ensure;sb.console=savedConsole;assert(T.safeActivateLocalTargetLockTestRange());});
+  check('fallback touchstart/touchend selects real targets and preserves double-tap FIRE',()=>{router.cancelAll();events.clear();delete sb.PointerEvent;router=T.bindGlobalMobileTouchRouter();G.mobileRouter=router;T.bindTargetLockTapFireBridge(router);T.setTargetLockMode(true);const e=G.enemies[1],target={kind:'enemy',id:e.id,ref:e},p=centerOf(target);rayHits=[{object:e.group.children[0]}];G.mobileFirePulseCount=0;for(const id of [31,32]){time+=100;const touch={identifier:id,clientX:p.x,clientY:p.y,target:canvas};emit('touchstart',{changedTouches:[touch],touches:[touch]});assert.strictEqual(T.specialControlState().lockedTarget.ref,e);time+=25;emit('touchend',{changedTouches:[touch],touches:[]});}assert.strictEqual(G.mobileFirePulseCount,1);assert.strictEqual(router.owners.size,0);assert.strictEqual(router.tapCandidates.size,0);sb.PointerEvent=function(){};});
+  check('removal/re-entry clears entity reference; original bootstrap remains deferred',()=>{const e=G.enemies[0];T.setTargetLockMode(true);choose({kind:'enemy',id:e.id,ref:e});T.removeFortress();assert.strictEqual(T.specialControlState().lockedTarget,null);assert(marker.hidden);assert.strictEqual(G.enemies.length,0);assert(source.includes("bootStage='scheduleLocalTestRange'"));assert(source.includes('requestAnimationFrame(()=>setTimeout(()=>{if(G.running)safeActivateLocalTargetLockTestRange();},0))'));assert(source.includes('G.specialControls={autoMove:0,targetLockMode:false,lockedTarget:null,scopeMode:false}'));});
+  console.log('PASS N3 '+checks+' focused groups; source-path / rendering-double tests only. Real browser delivery, WebGL raycasting and physical mobile acceptance remain required.');
+}
+
+// N4 tests are additive. Existing default and --target-lock assertions are not rewritten.
+function runLandscapeN4Tests(){
+  const fs=require('fs'),vm=require('vm'),assert=require('assert'),path=require('path');
+  const root=path.resolve(__dirname,'..'),source=fs.readFileSync(path.join(root,'js/frontline1944.js'),'utf8'),html=fs.readFileSync(path.join(root,'index_classic.html'),'utf8'),css=fs.readFileSync(path.join(root,'css/frontline1944.css'),'utf8');
+  let count=0;const check=(name,fn)=>{fn();count++;console.log('PASS N4 '+name);};
+  const gateCode=html.match(/<script id="vw-landscape-gate-controller">([\s\S]*?)<\/script>/),gateCss=html.match(/<style id="vw-landscape-gate-css">([\s\S]*?)<\/style>/);
+  check('orientation integration precedes engine capture handlers',()=>{assert(gateCode&&gateCss);assert(html.indexOf(gateCode[0])<html.indexOf('<script src="js/util.js?v=1126">'));});
+  check('gate text, hidden hit-testing and no fake CSS rotation',()=>{assert(gateCode[1].includes('กรุณาหมุนอุปกรณ์เป็นแนวนอน'));assert(gateCss[1].includes('[hidden]{display:none!important'));assert(!/transform\s*:\s*rotate/i.test(gateCss[1]));});
+  check('startup toast removed, exact accepted identity preserved',()=>{assert(!source.includes("bootStage='readyToast'"));assert(source.includes("bootStage='compactIdentity'"));assert(source.includes('P1.2.6F-20260902-5cc6a0'));assert(css.includes('P1.2.6F-20260902-5cc6a0-CSS'));});
+  check('hidden toast removed from hit testing, not merely transparent',()=>{assert(css.includes('.fl44-toast:not(.on)'));assert(css.includes('.fl44-toast[hidden]{display:none!important'));});
+  // Execute the actual adapter against explicit rendering/DOM doubles. Browser audit separately
+  // exercises actual Three.js, event hit testing, Home V2, geometry, camera and native API failure flows.
+  const listeners=new Map(),doc={readyState:'loading',hidden:false,addEventListener(){},removeEventListener(){},querySelector(){return null;},getElementById(){return null;}};
+  let now=1000,cancel=0,recover=0,synced=0;
+  const sb={console,document:doc,navigator:{maxTouchPoints:0},performance:{now:()=>now},Math,Date,Set,Map,URLSearchParams,innerWidth:844,innerHeight:390,devicePixelRatio:2,location:{hostname:'192.168.1.37',search:''},setTimeout(){return 1;},clearTimeout(){},setInterval(){},clearInterval(){},requestAnimationFrame(){},cancelAnimationFrame(){},addEventListener(n,f){listeners.set(n,f);},removeEventListener(){},localStorage:{getItem(){return null;},setItem(){}},isAdmin:()=>true};sb.window=sb;vm.createContext(sb);vm.runInContext(source,sb);
+  const T=sb.Frontline1944._t,G=T.G;G.keys.add('ArrowUp');G.keys.add('Space');G.firing=true;G.desktopFireQueued=true;G.mobileFirePulseCount=3;G.specialControls.autoMove=1;
+  G.mobileRouter={cancelAll(){cancel++;},recoverFirePosition(){recover++;}};G.player={speed:3};G.tankRuntime={speed:3,syncEntity(){synced++;}};
+  G.aim.active=true;G.joy.active=true;
+  check('portrait cancels through existing public hook and neutralizes held commands',()=>{T.setViewportSuspended(true);assert.strictEqual(cancel,1);assert(G.viewportSuspended);assert.strictEqual(G.keys.size,0);assert(!G.firing&&!G.desktopFireQueued&&!G.aim.active&&!G.joy.active);assert.strictEqual(G.mobileFirePulseCount,0);assert.strictEqual(G.specialControls.autoMove,0);assert.strictEqual(G.tankRuntime.speed,0);assert.strictEqual(synced,1);});
+  check('portrait cannot acquire a target even through direct selection helper',()=>{assert.strictEqual(T.targetLockSelectionPointAllowed(100,100),false);});
+  check('repeated suspension never saves/restores a portrait FIRE preference',()=>{T.setViewportSuspended(true);assert.strictEqual(cancel,1);assert.strictEqual(recover,0);});
+  check('resume uses existing FIRE restoration and resets timing without phantom input',()=>{now=4000;G.fireAt=1200;T.setViewportSuspended(false);assert(!G.viewportSuspended);assert.strictEqual(recover,1);assert.strictEqual(G.last,0);assert.strictEqual(G.fireAt,4200);assert(!G.firing&&G.keys.size===0&&G.specialControls.autoMove===0);});
+  const hidden={hidden:true,parentElement:null},span={parentElement:hidden,tagName:'SPAN'};
+  check('hidden ancestor is not a protected hit target',()=>assert.strictEqual(T.isProtectedFrontlineTarget(span),false));
+  check('visible genuine HUD remains protected',()=>assert.strictEqual(T.isProtectedFrontlineTarget({className:'fl44-top',parentElement:null}),true));
+  check('dismissed toast class is ignored; active toast remains protected',()=>{const n={className:'fl44-toast',parentElement:null,classList:{contains:()=>false}};assert.strictEqual(T.isProtectedFrontlineTarget(n),false);n.classList.contains=()=>true;assert.strictEqual(T.isProtectedFrontlineTarget(n),true);});
+  // Lightweight route DOM for deterministic portrait/landscape/scope checks of the actual inline controller.
+  const all=[],winEvents={};let d;
+  class Element{
+    constructor(tag='DIV',id=''){this.tagName=tag;this.id=id;this.attrs={};this.hidden=false;this.isConnected=true;this.children=[];this.style={};this.parentElement=null;this.classes=new Set();this.classList={contains:x=>this.classes.has(x),add:x=>this.classes.add(x),remove:x=>this.classes.delete(x)};all.push(this);}
+    setAttribute(k,v){this.attrs[k]=String(v);}getAttribute(k){return k in this.attrs?this.attrs[k]:null;}removeAttribute(k){delete this.attrs[k];}
+    appendChild(n){this.children.push(n);n.parentElement=this;}contains(n){return n===this||this.children.some(c=>c.contains(n));}
+    getBoundingClientRect(){return {left:0,top:0,right:844,bottom:390,width:844,height:390};}
+    set innerHTML(v){this.markup=v;this.appendChild(new Element('BUTTON'));this.appendChild(new Element('H2'));}
+    querySelector(s){return this.children.find(c=>c.tagName===s.toUpperCase())||null;}
+    focus(){d.activeElement=this;}closest(s){for(let n=this;n;n=n.parentElement)if(s==='[inert]'&&n.getAttribute('inert')!==null)return n;return null;}
+  }
+  const body=new Element('BODY'),dash=new Element('SECTION','screen-dashboard');dash.classes.add('active');dash.classes.add('screen');body.appendChild(dash);
+  d={body,documentElement:new Element('HTML'),activeElement:body,hidden:false,addEventListener(){},getElementById:id=>all.find(n=>n.id===id)||null,createElement:t=>new Element(t.toUpperCase()),querySelectorAll:s=>all.filter(n=>s==='.screen'?n.classes.has('screen'):s==='.screen.active'?n.classes.has('screen')&&n.classes.has('active'):false)};
+  const env={document:d,console,innerWidth:844,innerHeight:390,screen:{orientation:{angle:0}},Map,Set,Promise,queueMicrotask(){},MutationObserver:class{observe(){}disconnect(){}},CustomEvent:class{constructor(type,opts){this.type=type;this.detail=opts.detail;}},getComputedStyle:n=>({display:n.hidden?'none':'block',visibility:'visible',opacity:'1',position:'static',zIndex:'0'}),addEventListener:(n,f)=>winEvents[n]=f,dispatchEvent(){}};env.window=env;vm.createContext(env);vm.runInContext(gateCode[1],env);
+  const C=env.VWLandscapeGate,gate=d.getElementById('vw-landscape-gate');
+  check('actual dashboard landscape route does not block',()=>{assert.strictEqual(C.state().surface,'lobby');assert.strictEqual(C.state().blocked,false);assert(gate.hidden);});
+  check('actual route controller gates portrait and owns inert state',()=>{env.innerWidth=390;env.innerHeight=844;C.refresh();assert(C.state().blocked);assert(!gate.hidden);assert.strictEqual(dash.getAttribute('inert'),'');});
+  check('window capture blocks special-button coordinates before game router',()=>{let prevented=false,stopped=false;winEvents.pointerdown({type:'pointerdown',target:dash,cancelable:true,preventDefault(){prevented=true;},stopImmediatePropagation(){stopped=true;}});assert(prevented&&stopped);});
+  check('landscape secondary resumes with exact prior inert restoration',()=>{env.screen.orientation.angle=270;env.innerWidth=844;env.innerHeight=390;C.refresh();assert(!C.state().blocked&&gate.hidden);assert.strictEqual(dash.getAttribute('inert'),null);});
+  check('inactive dashboard never gates authentication/other screens',()=>{dash.classList.remove('active');env.innerWidth=390;env.innerHeight=844;C.refresh();assert.strictEqual(C.state().surface,'');assert(gate.hidden);});
+  check('native path feature-detects capability and catches failed promises',()=>{assert(gateCode[1].includes("typeof screen.orientation.lock !== 'function'"));assert(gateCode[1].includes("screen.orientation.lock('landscape')"));assert(gateCode[1].includes('token !== session'));assert(gateCode[1].includes('catch (e)'));});
+  check('controller is a singleton across repeated module entries',()=>{vm.runInContext(gateCode[1],env);assert.strictEqual(env.VWLandscapeGate,C);assert.strictEqual(all.filter(n=>n.id==='vw-landscape-gate').length,1);});
+  console.log('PASS N4 '+count+' focused adapter/route checks. DOM/native/rendering doubles here; see separate real-browser audit.');
+}
+
+// Phase 2.1 tests use real Three.js geometry plus a controlled TextureLoader transport.
+// They do NOT claim a WebGL frame, original launcher delivery or physical-phone acceptance.
+function runPhase21VisualTests(){
+  const fixtureArg=process.argv.indexOf('--three-fixture');
+  const vendorPath=fixtureArg>=0?process.argv[fixtureArg+1]:'js/vendor/three.min.js';
+  if(!vendorPath||!fs.existsSync(vendorPath))throw new Error('Phase 2.1 geometry tests need '+vendorPath+' (not supplied in the partial Task ZIP).');
+  const source=fs.readFileSync('js/frontline1944.js','utf8'),cssBytes=fs.readFileSync('css/frontline1944.css');
+  const vendor={console,setTimeout,clearTimeout};vendor.window=vendor;vendor.self=vendor;
+  vm.runInNewContext(fs.readFileSync(vendorPath,'utf8'),vendor,{filename:vendorPath});
+  assert(vendor.THREE&&vendor.THREE.BufferGeometry,'real Three.js global build is available');
+  const THREE={...vendor.THREE},requests=[],timers=new Map(),warnings=[];let timerSerial=0;
+  THREE.TextureLoader=class {load(url,ok,progress,error){const texture=new THREE.Texture();requests.push({url,ok,error,texture});return texture;}};
+  const document={readyState:'loading',addEventListener(){},removeEventListener(){},querySelector(){return null;},getElementById(){return null;},
+    createElement(){return {width:64,height:64,getContext(){return {createRadialGradient(){return {addColorStop(){}};},fillRect(){}};}};}};
+  const context={THREE,document,console:{info(){},log(){},error(){},warn(...a){warnings.push(a.join(' '));}},URL,URLSearchParams,Date,Math,Map,Set,
+    setTimeout(fn){const id=++timerSerial;timers.set(id,fn);return id;},clearTimeout(id){timers.delete(id);},setInterval(){return 1;},clearInterval(){},
+    requestAnimationFrame(){return 1;},cancelAnimationFrame(){},performance:{now:()=>1000},navigator:{hardwareConcurrency:8},
+    innerWidth:844,innerHeight:390,devicePixelRatio:2,addEventListener(){},removeEventListener(){},dispatchEvent(){},
+    location:{hostname:'localhost',origin:'http://localhost',search:''}};
+  context.window=context;vm.runInNewContext(source,context,{filename:'js/frontline1944.js'});
+  const api=context.Frontline1944,t=api._t,g=t.G;let groups=0;
+  const pass=s=>{groups++;console.log('PASS P2.1 '+s);};
+  const guards=PHASE21_LOCKED_DECLARATIONS;
+  for(const [name,expected] of Object.entries(guards)){
+    const value=name==='open'||name==='close'?api[name]:t[name];assert.strictEqual(typeof value,'function',name);
+    assert.strictEqual(crypto.createHash('sha256').update(value.toString()).digest('hex'),expected,name+' remains byte-identical to accepted N4');
+  }
+  assert.strictEqual(crypto.createHash('sha256').update(cssBytes).digest('hex'),'47e99dbe33fa859ba3cd12c4c63f6c5034064d9dfe649c9f96a952be12ec215a');
+  assert.strictEqual(t.CFG.runtimeVersion,'P1.2.6F-20260902-5cc6a0');
+  assert.deepStrictEqual([t.CFG.viewW,t.CFG.cameraOffsetX,t.CFG.cameraHeight,t.CFG.cameraOffsetZ],[220,76,118,92]);
+  pass('accepted runtime, camera, CSS and '+Object.keys(guards).length+' protected declarations unchanged');
+  function webpInfo(bytes){
+    assert.strictEqual(bytes.toString('ascii',0,4),'RIFF');assert.strictEqual(bytes.toString('ascii',8,12),'WEBP');
+    assert.strictEqual(bytes.readUInt32LE(4)+8,bytes.length,'RIFF byte length');
+    for(let i=12;i+8<=bytes.length;){const kind=bytes.toString('ascii',i,i+4),size=bytes.readUInt32LE(i+4),p=i+8;
+      assert(p+size<=bytes.length,'WebP chunk fits file');
+      if(kind==='VP8X')return {w:bytes.readUIntLE(p+4,3)+1,h:bytes.readUIntLE(p+7,3)+1};
+      if(kind==='VP8 ')return {w:bytes.readUInt16LE(p+6)&16383,h:bytes.readUInt16LE(p+8)&16383};
+      if(kind==='VP8L'){const n=bytes.readUInt32LE(p+1);return {w:(n&16383)+1,h:((n>>>14)&16383)+1};}
+      i=p+size+(size%2);
+    }throw new Error('Missing WebP image header');
+  }
+  let totalBytes=0,rgbaBytes=0;
+  const entries=Object.entries(t.PHASE21_ASSETS);assert.strictEqual(entries.length,7);
+  for(const [key,url] of entries){
+    assert(/^img\/frontline1944\/phase21\/p21_959e5f_[a-z]+\.webp$/.test(url),'allowlisted new image path');
+    const data=fs.readFileSync(url),size=webpInfo(data),expected=['stone','tiles'].includes(key)?128:256;
+    assert.strictEqual(size.w,expected);assert.strictEqual(size.h,expected);assert(data.length<32000,'per-image self-imposed budget');
+    totalBytes+=data.length;rgbaBytes+=size.w*size.h*4;
+  }
+  assert(totalBytes<100000,'seven images stay under 100 kB');assert(rgbaBytes*4/3<2*1024*1024,'RGBA8 + full mip estimate under 2 MiB');
+  const build=fs.readFileSync('tools/build_web.mjs','utf8');for(const [,url] of entries)assert(build.includes("'"+url+"'"),'explicit untracked build inclusion: '+url);
+  pass('all seven WebP signatures, actual dimensions, paths and build references ('+totalBytes+' bytes; RGBA8+mips estimate '+Math.ceil(rgbaBytes*4/3)+' bytes)');
+  function setup(x=0,z=0,heading=0){
+    if(g.fortress)t.removeFortress();if(g.sectorStreamer)g.sectorStreamer.dispose();if(g.resources)g.resources.dispose();t.phase21ResetSession();requests.length=0;timers.clear();
+    g.layers={};for(const v of Object.values(t.LAYER))g.layers[v]=new THREE.Group();
+    g.resources=new t.ResourceCache();g.occluders=[];g.smoke=[];g.scene=new THREE.Scene();for(const layer of Object.values(g.layers))g.scene.add(layer);g.root=null;
+    g.terrain=new t.TerrainSystem();g.collision=new t.CollisionSystem(g.terrain);
+    g.player={world:{x,z},hullRotation:heading,turretRotation:heading,group:new THREE.Group()};g.player.group.renderOrder=5000;
+    g.tankRuntime={entity:g.player,pose(){return {x:g.player.world.x,z:g.player.world.z,heading:g.player.hullRotation,turretHeading:g.player.turretRotation};}};
+    g.sectorStreamer=new t.SectorStreamer();g.sectorStreamer.update(z,true);g.running=true;
+    return g.sectorStreamer.active.get(t.WorldSpace.sectorIndexAtZ(z)).phase21Art;
+  }
+  let art=setup();assert(art);assert.strictEqual(g.sectorStreamer.active.size,3);
+  assert.strictEqual([...g.sectorStreamer.active.values()].filter(s=>s.phase21Art).length,1);
+  assert.strictEqual(requests.length,7);assert(art.houses>=4,'recognizable village');assert(art.trees>=14,'tree line and crowns');
+  assert(art.meshCount<80&&art.triangleCount<8000);assert(g.terrain.stats().zones<40,'straight roads use one terrain proxy each, not per-metre zones');assert.strictEqual(art.batches.size,0);
+  const initial={houses:art.houses,trees:art.trees,meshes:art.meshCount,triangles:art.triangleCount};
+  pass('one spawn sector dressed, adjacent templates unchanged; '+JSON.stringify(initial));
+  for(const geometry of art.geometries){
+    for(const name of ['position','normal','uv','color']){
+      const attr=geometry.getAttribute(name);assert(attr&&attr.count>0,name);
+      for(const value of attr.array)assert(Number.isFinite(value),'finite '+name+' vertex data');
+    }
+    assert(Number.isFinite(geometry.boundingSphere.radius));
+  }
+  const rt=art.rt;for(const group of Object.values(rt.groups))group.traverse(o=>{if(o.isMesh)assert(o.userData.phase21Decoration||art.river,'only intended owned geometry');});
+  assert(rt.occluders.every(o=>o.userData.phase21Decoration&&o.userData.depthAnchor.foreground&&o.renderOrder>g.player.group.renderOrder));
+  assert.strictEqual(g.enemies.length,0);assert.strictEqual(g.fortress,null);
+  pass('real Three.js buffer bounds/normals; separate foreground crowns; scenery adds no combat targets');
+  const owned=()=>[...g.collision.bySector.values()].flat().filter(c=>c.tag==='phase21');
+  for(const collider of owned())assert(g.collision.hitSolid(collider.x,collider.z,.01).blocked,'visible prop has a solid proxy');
+  for(const x of [-3,0,3])for(let z=-65;z<=65;z+=2)for(const heading of [0,Math.PI/2,Math.PI])
+    assert(!g.collision.hitTankFootprint(x,z,heading).blocked,'main route and turning clearance at '+x+','+z);
+  for(const p of [[0,0],[-5.5,-14],[0,-13],[5.5,-14],[0,-28],[0,-13]])
+    assert(!g.collision.hitTankFootprint(...p,0).blocked,'spawn/defenders/real local fort/Boss clearance');
+  for(const p of art.footprints)assert(Math.abs(p.x)<88&&Math.abs(p.z-art.cz)<74,'new footprint within owned sector');
+  pass('solid house/body/step/trunk proxies and a drivable turning/reverse corridor to real test anchors');
+  const materialsBefore=art.materials.size;
+  for(const req of requests){req.texture.image={width:256,height:256};req.ok(req.texture);}
+  assert.strictEqual(t.phase21Diagnostics().status,'ready');assert.strictEqual(t.phase21Diagnostics().loaded,7);
+  assert.strictEqual(art.materials.size,materialsBefore);assert.strictEqual(timers.size,0);
+  for(const [key] of entries){const mat=art.materials.get(key);assert(mat.map);assert.strictEqual(mat.map.anisotropy,1);}
+  for(let i=0;i<200;i++)t.phase21Diagnostics();assert.strictEqual(requests.length,7);assert.strictEqual(art.materials.size,materialsBefore);
+  pass('seven reused textures/materials, no new allocations on diagnostics, POT mipmaps and no anisotropy escalation');
+  let disposedGeometries=0,disposedMaterials=0,disposedTextures=0;
+  const oldMeshes=art.geometries.length,oldMaterials=art.materials.size;
+  for(const q of art.geometries)q.addEventListener('dispose',()=>disposedGeometries++);
+  for(const q of art.materials.values())q.addEventListener('dispose',()=>disposedMaterials++);
+  for(const q of art.textures)q.addEventListener('dispose',()=>disposedTextures++);
+  g.sectorStreamer.update(-600,true);
+  assert.strictEqual(t.phase21Diagnostics().status,'inactive');assert.strictEqual(owned().length,0);
+  assert.strictEqual(disposedGeometries,oldMeshes);assert.strictEqual(disposedMaterials,oldMaterials);assert.strictEqual(disposedTextures,7);
+  assert.strictEqual(art.alive,false);assert.strictEqual(art.footprints.length,0);assert.strictEqual(art.materials.size,0);
+  assert(!g.occluders.some(q=>rt.occluders.includes(q)),'old crowns removed');
+  pass('stream-out disposes every owned geometry/material/texture, collider, terrain and crown');
+  for(let i=0;i<12;i++){
+    g.sectorStreamer.update(0,true);const d=t.phase21Diagnostics();assert.strictEqual(d.status,'loading');assert.strictEqual(d.meshes,initial.meshes);assert.strictEqual(d.textures,7);
+    assert.strictEqual(g.sectorStreamer.active.size,3);assert(g.sectorStreamer.preloaded.size<=t.CFG.descriptorCacheCap);
+    assert.strictEqual(timers.size,7);g.sectorStreamer.update(-600,true);assert.strictEqual(timers.size,0);
+  }
+  pass('12 stream out/back cycles preserve active/descriptor caps, deterministic geometry and zero abandoned timers');
+  art=setup();const pending=requests.slice();g.sectorStreamer.update(-600,true);
+  for(const req of pending)req.ok(req.texture);
+  assert.strictEqual(t.phase21Diagnostics().status,'inactive');assert.strictEqual(timers.size,0);assert.strictEqual(owned().length,0);
+  pass('late texture callbacks cannot resurrect an unloaded sector');
+  art=setup();const errorsBefore=warnings.length;for(const req of requests)req.error(new Error('fixture 404'));
+  assert.strictEqual(t.phase21Diagnostics().status,'error');assert.strictEqual(t.phase21Diagnostics().loaded,0);
+  assert.strictEqual(t.phase21Diagnostics().failed.length,7);assert.strictEqual(warnings.length-errorsBefore,7);assert(g.running);
+  pass('asset 404 reports explicit art error, never declares visual success and does not stop gameplay');
+  art=setup();for(const fn of [...timers.values()])fn();assert.strictEqual(t.phase21Diagnostics().status,'error');
+  for(const req of requests)req.ok(req.texture);assert.strictEqual(t.phase21Diagnostics().status,'ready');
+  pass('timeout reports failure; genuine late success may recover without restarting input/game entry');
+  let crossing=null;
+  for(let i=0;i<100;i++)if(t.SECTOR_TEMPLATES[t.visualIdFor(i)].id==='river_crossing'){crossing=i;break;}
+  assert(crossing!==null);const cz=t.WorldSpace.sectorCenterZ(crossing);art=setup(0,cz);
+  assert(art.river);assert.strictEqual(g.terrain.sample(25,cz+6).id,'DEEP_WATER');assert(g.collision.hitTankFootprint(25,cz+6,0).blocked);
+  assert.strictEqual(g.terrain.sample(0,cz+6).id,'ROAD');assert(!g.collision.hitTankFootprint(0,cz+6,0).blocked);
+  assert.strictEqual(g.terrain.sample(-48,cz+6).id,'SHALLOW_WATER');
+  pass('starting on existing river template retains deep-water blocking, bridge priority and ford');
+  for(const [x,z,heading] of [[48,12,Math.PI/2],[-52,-34,-Math.PI/2],[18,68,Math.PI],[0,-71,0]]){
+    art=setup(x,z,heading);assert(art);
+    const newHit=owned().filter(c=>c.shape==='circle'?g.collision.circleHitsOBB(c,x,z,heading,t.CFG.tankFootprintHalfWidth,t.CFG.tankFootprintHalfLength):g.collision.aabbHitsOBB(c,x,z,heading,t.CFG.tankFootprintHalfWidth,t.CFG.tankFootprintHalfLength));
+    assert.strictEqual(newHit.length,0,'saved tank never embedded in a new prop');
+    assert.strictEqual(t.phase21Diagnostics().anchor.x,x);assert.strictEqual(t.phase21Diagnostics().anchor.z,z);
+  }
+  pass('saved translated/rotated and boundary spawns are not moved or covered by new solid props');
+  art=setup();g.camera=new THREE.OrthographicCamera(-110,110,60,-60,.1,420);g.raycaster=new THREE.Raycaster();
+  assert(t.safeActivateLocalTargetLockTestRange(),'real local Fortress/defenders created in dressed area');
+  function project(x,y,z,box){const p=new THREE.Vector3(x,y,z).project(g.camera);return {x:box.left+(p.x+1)*box.width/2,y:box.top+(1-p.y)*box.height/2};}
+  for(const [width,height] of [[844,390],[980,368],[1252,472],[1280,720]]){
+    const rect={left:37,top:19,width,height,right:37+width,bottom:19+height};g.canvas={getBoundingClientRect:()=>rect};
+    g.camera.left=-110;g.camera.right=110;g.camera.top=110*height/width;g.camera.bottom=-110*height/width;
+    g.camera.position.set(76,118,92);g.camera.lookAt(0,0,0);g.camera.updateProjectionMatrix();g.camera.updateMatrixWorld(true);g.scene.updateMatrixWorld(true);
+    t.setTargetLockMode(true);
+    for(const enemy of g.enemies){
+      const point=project(enemy.world.x,2.0,enemy.world.z,rect),hit=t.targetLockRaycastCandidateAtScreen(point.x,point.y);
+      assert(hit&&hit.ref===enemy,'real child-mesh raycast at '+width+'x'+height);
+      assert(t.selectTargetLockAtScreen(point.x,point.y));assert.strictEqual(g.specialControls.lockedTarget.ref,enemy);
+    }
+    const f=g.fortress,fp=project(f.world.x,5.5,f.world.z,rect),fortHit=t.targetLockRaycastCandidateAtScreen(fp.x,fp.y);
+    assert(fortHit&&fortHit.ref===f,'Fortress owner survives decorative geometry');assert.strictEqual(f.state,'defenders');
+    assert(t.targetLockDetails(fortHit).includes('CORE PROTECTED'));assert.strictEqual(f.coreHP,f.maxCoreHP);
+    for(const crown of art.rt.occluders.slice(0,5)){
+      const pos=crown.geometry.getAttribute('position'),point=project(pos.getX(0),pos.getY(0),pos.getZ(0),rect);
+      assert.strictEqual(t.pickTargetLockAtScreen(point.x,point.y),null,'tree canopy is not selectable');
+    }
+    t.setTargetLockMode(false);assert.strictEqual(g.specialControls.lockedTarget,null);assert.strictEqual(t.targetLockHeading(),null);
+  }
+  pass('real Three.js recursive child-mesh raycasting at 844x390, 980x368, 1252x472 and 1280x720, CSS offsets, target switching and OFF');
+  pass('real Fortress still protected; separate scenery never enters targeting even with crowns at projected click positions');
+  // This is the unchanged runtime adapter, not a replacement for the absent Lobby gate test.
+  g.tankRuntime.syncEntity=()=>{};t.setAutoMoveMode(1);t.setViewportSuspended(true,'portrait');
+  assert(g.viewportSuspended);assert.strictEqual(g.specialControls.autoMove,0);assert.strictEqual(t.targetLockSelectionPointAllowed(400,200),false);
+  t.setViewportSuspended(false,'landscape');assert.strictEqual(g.viewportSuspended,false);
+  t.removeFortress();g.camera=null;g.canvas=null;g.raycaster=null;
+  pass('portrait/landscape runtime adapter suspends and safely resumes; actual Lobby/DOM gate still requires original HTML');
+  g.sectorStreamer.dispose();g.resources.dispose();t.phase21ResetSession();assert.strictEqual(t.phase21Diagnostics().status,'inactive');
+  assert.strictEqual(timers.size,0);assert.strictEqual(g.collision.bySector.size,0);assert.strictEqual(g.terrain.bySector.size,0);
+  art=setup();assert.strictEqual(art.houses,initial.houses);assert.strictEqual(art.trees,initial.trees);g.sectorStreamer.dispose();g.resources.dispose();t.phase21ResetSession();
+  pass('dispose/re-entry resets art ownership; accepted control/session cleanup declarations unchanged');
+  console.log('PASS P2.1 '+groups+' geometry/asset/source groups, Three.js r'+THREE.REVISION+(fixtureArg>=0?' (explicit TEST-ONLY vendor substitute)':' (current project vendor)')+'. No GPU, browser delivery or physical-phone PASS is implied.');
+}
+
+
+// R2 additions use CURRENT 692a14 function bytes, not the stale Phase 2.1/N4 hashes above.
+// The previous test functions and assertions remain unchanged. Real browser captures are separate.
+function runPhase21R2Tests(){
+  const path=require('path'),source=fs.readFileSync('js/frontline1944.js','utf8');
+  const baselineGuards={
+  "TankRuntime": "f469889ae449f3c66d0c19c09ad0f03b64cd2a1233bd0f2eeb413b39c7ec3a70",
+  "GlobalMobileTouchRouter": "ff63b3eeec7fc7b8ef2c6cd67c25e59b6ce83ca27b27a701561f725bdbf11e94",
+  "DesktopTankInputAdapter": "0ebe83210cc943ef79c24eac2f8f93df38cce32413187838822096ff7cb75128",
+  "MobileTankInputAdapter": "d2950e489ca09d2178c59a32dc287c902370a101137c1958b018f66acd47ab90",
+  "UnifiedTankInputAdapter": "9daff8dd8fe4d636129f52fe7b94e7aa8869fcfa260c352c25b64911480c8466",
+  "forwardFromRotation": "ba298b83c47089a066108e6cd2e1c9cd04cc9f32f1e8ba3bd542ce8bd4e2a169",
+  "rightFromRotation": "e4742e6ba1ce4db302cf5270efc13db2ae1aef1f978b8906e1bb48d7eadbdee0",
+  "rotationFromForward": "d81e09cd4284c9f4729ef6a70e03b1cec396eba48602871b739938e5b02ee8cc",
+  "driveDelta": "49e9577b57cbd61705a9a573652b037161794f95642c2e6f873f48c953a4ae53",
+  "tickTank": "bf6f85992f250ed3d9df124a56ea70b56dbef9e2e63ee87cd3b6e60c14f91ed5",
+  "tickProjectilePool": "f72fae94c216bde9cce677dd9edf3f776601282a8d2d819a995ce15deb679bcf",
+  "makeDom": "d307dd3d77328e547d0dd5fcd1bb7b1da98e3c57c3e747023912307242159716",
+  "hideFrontlineToast": "bab9647389adecbb092f37e674a79ae8fcf8d64c25c043712697b9c2573414de",
+  "showToast": "f171dbcae22a13661a2d775dc18393acc02d1fd0fe64239359ce687dc36617fb",
+  "setViewportSuspended": "6fa387449ff17b69ac1098a74b066808fe6d4d048f92fa35c24a5acf698145d9",
+  "refreshFrontlineViewport": "2207c220dda8703c86973ba5596a742c8a8249a6d5f2262e45ea7fe885972bfe",
+  "selectTargetLockAtScreen": "01d62605940fce4affec78b0eb3d98541c5c28335a314e3f6549c2da7609a64c",
+  "pickTargetLockAtScreen": "158d690d1c42f64d6212cc835e15c7f91cd9e5e5824fa28500542bdac0c465d7",
+  "targetLockRaycastCandidateAtScreen": "5377022623ecfbe180b2e8c9a981759ef417d6fc54376c994c11009ffc9a9ff4",
+  "targetLockTargetValid": "7e2b761300ea1804ef5cea2b5ce65e800bd920f7a7014ecd12715be8077770a3",
+  "targetLockHeading": "faba06a408eb15ce6e9b9e7425615e662a0f9e5124e0dcff3ba7970267731b07",
+  "targetLockCandidates": "4274c88c554ca8e99f2d02a126d51b19106ca3bf178483b95f818a82e6eccc0c",
+  "bindTargetLockTapFireBridge": "1a00060f988375776353a61c464017a9d814f40a49361d5cd98a40240899dbd4",
+  "bindTargetLockDesktopControls": "e84931d2995adb2a105109f52b2d8b7c50d3d125a6b281f417620daf8fdbbc93",
+  "bindCanvasAim": "baec6b1898e719fbe6723a1b081ee673d016c54c67ee62631a021869f9690d51",
+  "setAutoMoveMode": "33c663df584b7f82e92fbb7847051e8efa0e949f6d1ac98bb70951736fb8a5aa",
+  "setTargetLockMode": "b09576d34da3fa76bfaba4cb6753670693fa3282ea3014da0c4a9ddb8a2a2117",
+  "privatePreviewHostname": "1e8410300c523121ae1f79b45e9ae94af141af9eb54c531db01c132d6faed0fc",
+  "safeActivateLocalTargetLockTestRange": "7a0e356af8561215b0fffffc51d196fee559b37a07a8e45a2046916f18924275",
+  "activateNextFortress": "cd1f3a4b0ecbcbc8c726073f58bbbb16785299ea8308809e8446cb24f5522341",
+  "spawnEnemy": "4ee68282404ca66300e84b36ea0c414b330876ff5485c0e06753fa74d5fdcf71",
+  "spawnDefenders": "5210c842dbfde57e17c7c85fe36c66eda318865dae193457957ced6953e3993e",
+  "spawnBoss": "41a257ab33a224c809d305ac9eb690257ff48d68d310de203a419ec3b0dc28c3",
+  "damageEnemy": "bddd0d970e05a31515537d705a56b58c689b8c8a6cf213713ab784f5785b976c",
+  "destroyCore": "7103d1505868801b4f85b214e1580b72ab8963a35de3d5afbd2dcdd91ae272bc",
+  "removeFortress": "e6b7e573b8bef4dfc57788142ca25f8f47e61ab6faebe9691f6e41b5f0d9ebdc",
+  "awardLetter": "95628e87a70b63bebc8716c60b948ef4ac96e8fe9a89e420dd554c68cc8cbd47",
+  "open": "bb4f86fe4e2c58fc34b32eb97d447c2c80c61f22b8c444e5b0a012f4d141f2c2",
+  "close": "c1e8df75f4f095887ed7c4dc0f0baac9358b3630e5d5a28f09131a192cebea20",
+  "cannonWorldRay": "16c8061b7d11543a47a6ba28a5e543fb5716d66189ce3cceae935391cc7d8ae9",
+  "cannonWorldDirection": "87a584e9336ebed5f8c7dc690078170130f6769777d5a1c4337f1f7b967bff15",
+  "targetLockScreenBounds": "d1ec85cd9f1938fd3a0a7b69a11bca89f80bf1ff8dfb8956c6df5324d996901e",
+  "findSafeAimRect": "c18fb5ef17e2f3ee5fe727fa934566575db45523738ca9bef00f218e65ba3003",
+  "findSafeFireRect": "e3b86ead55f1a9fa671bb8110400a042c8051f77d87e8ad824b2aaa8e51e0f30",
+  "mobileCommandFromState": "b30043b4e2a5bff8a42dfb4b2184fad8ec02a32d0dcbf26cc797c52a26fa861e",
+  "desktopCommandFromState": "1188c01c67e913751e69fb2f97ca2d0190a320a1f56d5f1a261eb3b70756100f",
+  "mergeTankCommands": "d8034fc1da1903c1af8b4e3c9d6cdd305fa4be125716a5a5c8a8a0935b235047",
+  "adminAllowed": "e1624b8f5448b6a826688086f0bccb9a0d3da2613c84a5cb213e1857d279de3a"
+};
+  const vendor={console,setTimeout,clearTimeout};vendor.window=vendor;vendor.self=vendor;
+  vm.runInNewContext(fs.readFileSync('js/vendor/three.min.js','utf8'),vendor);
+  const THREE={...vendor.THREE},requests=[],timers=new Map();let time=1000,serial=0,passes=0;
+  THREE.TextureLoader=class {load(url,ok,progress,error){const texture=new THREE.Texture();requests.push({url,ok,error,texture});return texture;}};
+  const doc={readyState:'loading',addEventListener(){},removeEventListener(){},querySelector(){return null;},getElementById(){return null;},
+    createElement(){return {width:64,height:64,getContext(){return {createRadialGradient(){return {addColorStop(){}};},fillRect(){}};}};}};
+  const c={THREE,document:doc,console:{info(){},log(){},warn(){},error(){}},URL,URLSearchParams,Date,Math,Map,Set,
+    setTimeout(fn){const id=++serial;timers.set(id,fn);return id;},clearTimeout(id){timers.delete(id);},setInterval(){return 1;},clearInterval(){},
+    requestAnimationFrame(){return 1;},cancelAnimationFrame(){},performance:{now:()=>time},navigator:{hardwareConcurrency:8},
+    innerWidth:844,innerHeight:390,devicePixelRatio:1,addEventListener(){},removeEventListener(){},dispatchEvent(){},
+    location:{hostname:'localhost',origin:'http://localhost',search:''}};c.window=c;
+  vm.runInNewContext(source,c,{filename:'CURRENT js/frontline1944.js'});const api=c.Frontline1944,t=api._t,g=t.G;
+  const pass=(name,fn)=>{fn();passes++;console.log('PASS R2 '+name);};
+  const sha=data=>crypto.createHash('sha256').update(data).digest('hex');
+  pass('48 accepted control/combat/economy/admin entry declarations preserve CURRENT Task bytes',()=>{
+    for(const [name,expected] of Object.entries(baselineGuards))assert.strictEqual(sha((api[name]||t[name]).toString()),expected,name);
+  });
+  pass('active perspective view is independent of legacy diagnostic camera constants',()=>{
+    assert.strictEqual(t.R2_VIEW.fov,55);assert.strictEqual(t.R2_VIEW.height,9.2);assert.strictEqual(t.R2_VIEW.distance,20);
+    assert(source.includes('new THREE.PerspectiveCamera(R2_VIEW.fov'));assert(source.includes('function cameraTick(dt){r2UpdateCamera(dt);}'));
+    assert.strictEqual(t.CFG.runtimeVersion,'P1.2.6F-20260902-5cc6a0');
+  });
+  pass('trailing frame behind authoritative hull at eight headings; pose is never mutated',()=>{
+    for(let i=0;i<8;i++){const pose={x:17,z:-23,heading:i*Math.PI/4,turretHeading:-.7};const old=JSON.stringify(pose),frame=t.r2CameraFrame(pose),f=t.forwardFromRotation(pose.heading);
+      assert(Math.abs((frame.position.x-pose.x)*f.x+(frame.position.z-pose.z)*f.z+20)<1e-9);
+      assert(Math.abs((frame.look.x-pose.x)*f.x+(frame.look.z-pose.z)*f.z-22)<1e-9);assert.strictEqual(JSON.stringify(pose),old);}
+  });
+  const manifest=JSON.parse(fs.readFileSync('img/frontline1944/phase21/p21r2_asset_manifest.json','utf8'));
+  pass('11 real WebP payloads, RIFF lengths, hashes, dimensions and verified importer ceilings',()=>{
+    assert.strictEqual(manifest.assets.length,11);let bytes=0;
+    for(const a of manifest.assets){assert(/^img\/frontline1944\/phase21\/p21r2_[a-z]+\.webp$/.test(a.path));const b=fs.readFileSync(a.path);
+      assert.strictEqual(b.toString('ascii',0,4),'RIFF');assert.strictEqual(b.toString('ascii',8,12),'WEBP');assert.strictEqual(b.readUInt32LE(4)+8,b.length);
+      assert.strictEqual(sha(b),a.sha256);assert.strictEqual(b.length,a.bytes);assert(b.length<=450000);assert(a.width<=1024&&a.height<=512);bytes+=b.length;}
+    assert(bytes<=4000000&&manifest.assets.length<=40);assert.strictEqual(bytes,manifest.total_bytes);
+    const urls=[...Object.values(t.PHASE21_ASSETS),...Object.values(t.R2_EXTRA_ASSETS)];assert.strictEqual(new Set(urls).size,11);
+    for(const u of urls)assert(manifest.assets.some(a=>a.path===u));
+  });
+  pass('build ships precisely named new art/metadata even before Git commit',()=>{
+    const build=fs.readFileSync('tools/build_web.mjs','utf8');for(const a of manifest.assets)assert(build.includes("'"+a.path+"'"));
+    assert(build.includes("'img/frontline1944/phase21/p21r2_asset_manifest.json'"));
+    assert(!source.includes('https://'));assert(!source.includes('http://cdn'));
+  });
+  function setup(x=0,z=0,heading=0){
+    if(g.fortress)t.removeFortress();if(g.sectorStreamer)g.sectorStreamer.dispose();t.r2Dispose();if(g.resources)g.resources.dispose();t.phase21ResetSession();requests.length=0;timers.clear();
+    g.layers={};for(const name of Object.values(t.LAYER))g.layers[name]=new THREE.Group();g.resources=new t.ResourceCache();g.scene=new THREE.Scene();Object.values(g.layers).forEach(v=>g.scene.add(v));
+    g.occluders=[];g.smoke=[];g.root=null;g.renderer=null;g.enemies=[];g.fortress=null;g.terrain=new t.TerrainSystem();g.collision=new t.CollisionSystem(g.terrain);
+    g.player={world:{x,z},hullRotation:heading,turretRotation:heading,group:new THREE.Group(),hp:380,maxHp:380};g.player.group.renderOrder=5000;
+    g.tankRuntime={entity:g.player,pose(){return {x:g.player.world.x,z:g.player.world.z,heading:g.player.hullRotation,turretHeading:g.player.turretRotation};}};
+    g.sectorStreamer=new t.SectorStreamer();g.sectorStreamer.update(z,true);g.running=true;g.viewportSuspended=false;
+    g.camera=new THREE.PerspectiveCamera(t.R2_VIEW.fov,c.innerWidth/c.innerHeight,.3,t.R2_VIEW.far);g.raycaster=new THREE.Raycaster();
+    g.canvas={getBoundingClientRect:()=>({left:0,top:0,width:c.innerWidth,height:c.innerHeight,right:c.innerWidth,bottom:c.innerHeight})};
+    t.r2UpdateCamera(0,true);return g.sectorStreamer.active.get(t.WorldSpace.sectorIndexAtZ(z)).phase21Art;
+  }
+  let art=setup();const initial={meshes:art.meshCount,triangles:art.triangleCount,houses:art.houses,trees:art.trees};
+  pass('one owned R2 scene with real buildings, upright crops/canopies and bounded geometry',()=>{
+    assert(art instanceof t.Phase21R2SectorArt);assert.strictEqual(g.sectorStreamer.active.size,3);assert.strictEqual([...g.sectorStreamer.active.values()].filter(s=>s.phase21Art).length,1);
+    assert(art.houses>=6&&art.trees>=18);assert(art.meshCount<75&&art.triangleCount<22000);assert(art.materials.get('grain').alphaTest>0);
+    for(const geo of art.geometries)for(const kind of ['position','normal','uv','color'])for(const n of geo.getAttribute(kind).array)assert(Number.isFinite(n));
+    assert.strictEqual(g.enemies.length,0);assert.strictEqual(g.fortress,null);
+  });
+  pass('central driving/reverse corridor and bridge are physically clear; banks have shallow terrain',()=>{
+    for(let z=-64;z<=64;z+=1.5)assert(!g.collision.hitTankFootprint(0,z,0).blocked,'center z='+z);
+    for(const heading of [0,Math.PI/2,Math.PI,Math.PI*1.5])assert(!g.collision.hitTankFootprint(0,0,heading).blocked,'spawn turning bay');
+    for(const x of [-3,0,3])assert(!g.collision.hitTankFootprint(x,-12,0).blocked,'bridge width');
+    assert.strictEqual(g.terrain.sample(0,-12).id,'ROAD');
+    for(const fp of art.footprints)assert(Math.abs(fp.x)<89&&Math.abs(fp.z-art.cz)<75);
+  });
+  pass('current bytes deliver all nine scene textures and reuse loaded materials',()=>{
+    for(const q of requests){q.texture.image={width:512,height:512};q.ok(q.texture);}
+    assert.strictEqual(t.phase21Diagnostics().loaded,9);assert.strictEqual(t.phase21Diagnostics().status,'ready');assert.strictEqual(timers.size,0);
+    for(const key of Object.keys(t.PHASE21_ASSETS))assert(art.materials.get(key).map);const count=requests.length;
+    for(let i=0;i<100;i++)t.phase21Diagnostics();assert.strictEqual(requests.length,count);
+  });
+  pass('real perspective ray selection hits new child meshes and resolves unchanged combat owners at 4 viewports',()=>{
+    assert(t.activateLocalTargetLockTestRange());assert.strictEqual(g.enemies.length,3);assert(g.fortress.group.userData.r2Visual);
+    for(const [w,h] of [[844,390],[980,368],[1252,472],[1280,720]]){
+      c.innerWidth=w;c.innerHeight=h;g.camera.aspect=w/h;g.camera.updateProjectionMatrix();t.r2UpdateCamera(0,true);g.scene.updateMatrixWorld(true);
+      t.setTargetLockMode(true);assert.strictEqual(t.specialControlState().lockedTarget,null);
+      for(const e of g.enemies){const p=new THREE.Vector3(e.world.x,2.12,e.world.z).project(g.camera),x=(p.x+1)*w/2,y=(1-p.y)*h/2;
+        assert(x>0&&x<w&&y>70&&y<h);const hit=t.targetLockRaycastCandidateAtScreen(x,y);assert(hit&&hit.ref===e,w+'x'+h+' child-mesh ownership');
+        assert(t.selectTargetLockAtScreen(x,y));assert.strictEqual(t.specialControlState().lockedTarget.ref,e);}
+      const f=g.fortress,p=new THREE.Vector3(f.world.x-7,4,f.world.z+11.15).project(g.camera);
+      assert(t.selectTargetLockAtScreen((p.x+1)*w/2,(1-p.y)*h/2));assert.strictEqual(t.specialControlState().lockedTarget.ref,f);
+      t.setTargetLockMode(false);assert.strictEqual(t.specialControlState().lockedTarget,null);
+    }
+  });
+  pass('local defenders -> Boss uses detailed tank shells without moving cannon origins or turret roots',()=>{
+    const boss=t.spawnEnemy(5,-15,true);assert(boss.group.userData.r2Visual);assert.strictEqual(boss.group.scale.x,.78);
+    assert(boss.group.children.some(o=>o.name==='r2-tank-contact-shadow'));const expectedTip=[0,3.25,-6.3];let tip;
+    boss.group.traverse(o=>{if(o.type==='Object3D'&&o.position.y===3.25)tip=o;});assert(tip);assert.deepStrictEqual([tip.position.x,tip.position.y,tip.position.z],expectedTip);
+    let detail=false;boss.group.traverse(o=>{if(o.name==='r2-tank-hull-armor')detail=true;});assert(detail);
+  });
+  pass('stream out/back disposes owned crop/foliage/materials and keeps neighbors bounded',()=>{
+    t.removeFortress();let disposed=0;art.geometries.forEach(a=>a.addEventListener('dispose',()=>disposed++));const old=art.geometries.length;
+    g.sectorStreamer.update(-600,true);assert.strictEqual(disposed,old);assert(!art.alive);assert.strictEqual(t.phase21Diagnostics().status,'inactive');
+    for(let i=0;i<8;i++){g.sectorStreamer.update(0,true);const a=g.sectorStreamer.active.get(0).phase21Art;assert.strictEqual(a.meshCount,initial.meshes);assert.strictEqual(a.triangleCount,initial.triangles);assert.strictEqual(g.sectorStreamer.active.size,3);g.sectorStreamer.update(-600,true);}
+    assert.strictEqual([...g.collision.bySector.values()].flat().filter(q=>q.tag==='phase21').length,0);
+  });
+  pass('missing/late scene artwork never blocks gameplay or resurrects disposed geometry',()=>{
+    art=setup();for(const q of requests)q.error();assert.strictEqual(t.phase21Diagnostics().status,'error');assert(g.running);
+    const pending=requests.slice();g.sectorStreamer.update(-600,true);for(const q of pending)q.ok(q.texture);assert.strictEqual(t.phase21Diagnostics().status,'inactive');
+  });
+  pass('saved position/heading remain exact and new props never cover the spawn',()=>{
+    for(const [x,z,yaw] of [[48,12,Math.PI/2],[-52,-34,-Math.PI/2],[18,68,Math.PI],[0,-71,0]]){art=setup(x,z,yaw);
+      const owned=[...g.collision.bySector.values()].flat().filter(q=>q.tag==='phase21');
+      for(const q of owned)assert(!(q.shape==='circle'?g.collision.circleHitsOBB(q,x,z,yaw,t.CFG.tankFootprintHalfWidth,t.CFG.tankFootprintHalfLength):g.collision.aabbHitsOBB(q,x,z,yaw,t.CFG.tankFootprintHalfWidth,t.CFG.tankFootprintHalfLength)),'new blocker at saved spawn');
+      assert.strictEqual(g.player.world.x,x);assert.strictEqual(g.player.world.z,z);assert.strictEqual(g.player.hullRotation,yaw);}
+  });
+  pass('existing deep-water template keeps its bridge/ford/deep blocking rules',()=>{
+    let i=0;while(t.SECTOR_TEMPLATES[t.visualIdFor(i)].id!=='river_crossing'&&i<100)i++;assert(i<100);const z=t.WorldSpace.sectorCenterZ(i);art=setup(0,z);
+    assert(art.river);assert.strictEqual(g.terrain.sample(25,z+6).id,'DEEP_WATER');assert(g.collision.hitTankFootprint(25,z+6,0).blocked);
+    assert.strictEqual(g.terrain.sample(0,z+6).id,'ROAD');assert(!g.collision.hitTankFootprint(0,z+6,0).blocked);
+  });
+  pass('new HUD labels remain pointer transparent; detail drawer is inside existing protected objective',()=>{
+    const css=fs.readFileSync('css/frontline1944.css','utf8');assert(css.includes('.fl44-r2-labels'));assert(css.includes('pointer-events:none!important'));
+    assert(source.includes("panel.appendChild(drawer)"));assert(source.includes("drawer.hidden=true"));assert(source.includes("toggle.setAttribute('aria-expanded',String(!drawer.hidden))"));
+    assert(!css.includes('@import'));assert(!source.includes('fakeRanking'));assert(source.includes("info.textContent='ความเสียหายรอบนี้ '"));
+  });
+  pass('R2 cleanup followed by re-entry has deterministic ownership, not another static demo',()=>{
+    g.sectorStreamer.dispose();t.r2Dispose();g.resources.dispose();t.phase21ResetSession();art=setup();assert.strictEqual(art.houses,initial.houses);assert.strictEqual(art.meshCount,initial.meshes);
+    g.sectorStreamer.dispose();t.r2Dispose();g.resources.dispose();t.phase21ResetSession();assert.strictEqual(g.collision.bySector.size,0);assert.strictEqual(timers.size,0);
+  });
+  console.log('PASS R2 '+passes+' focused groups. Current Three.js r'+THREE.REVISION+'; geometry/VM tests, not physical phone or hosting delivery.');
+}
+
+
+
+function runPhase21R6CTests(){
+  // Phase 2.1 R6C deterministic source/runtime tests. Physical-device multitouch and actual WebGL visual acceptance remain manual checks.
   const source=fs.readFileSync('js/frontline1944.js','utf8');
-  let checks=0;const check=(name,fn)=>{fn();checks++;console.log('PASS R4 '+name);};
-  class Vec3{
-    constructor(x=0,y=0,z=0){this.set(x,y,z);}set(x,y,z){this.x=x;this.y=y;this.z=z;return this;}setScalar(s){return this.set(s,s,s);}
-    copy(v){return this.set(v.x,v.y,v.z);}clone(){return new Vec3(this.x,this.y,this.z);}lerp(v,t){return this.set(this.x+(v.x-this.x)*t,this.y+(v.y-this.y)*t,this.z+(v.z-this.z)*t);}
-    project(){return this;}
-  }
+  let checks=0;const check=(name,fn)=>{fn();checks++;console.log('PASS R6C '+name);};
+  class Vec3{constructor(x=0,y=0,z=0){this.set(x,y,z);}set(x,y,z){this.x=x;this.y=y;this.z=z;return this;}setScalar(v){return this.set(v,v,v);}copy(v){return this.set(v.x,v.y,v.z);}clone(){return new Vec3(this.x,this.y,this.z);}lerp(v,t){return this.set(this.x+(v.x-this.x)*t,this.y+(v.y-this.y)*t,this.z+(v.z-this.z)*t);}project(){return this;}}
   const document={readyState:'loading',addEventListener(){},querySelector(){return null;},getElementById(){return null;},documentElement:{style:{getPropertyValue(){return '0';}}}};
-  let now=1000;
-  const sb={console,document,navigator:{maxTouchPoints:1},location:{hostname:'localhost',search:'',origin:'http://localhost'},Math,Date,URLSearchParams,innerWidth:844,innerHeight:390,performance:{now:()=>now},isAdmin:()=>true,
-    setTimeout(){return 1},clearTimeout(){},setInterval(){return 1},clearInterval(){},requestAnimationFrame(){return 1},cancelAnimationFrame(){},localStorage:{getItem(){return null},setItem(){}},addEventListener(){},removeEventListener(){},getComputedStyle(){return {getPropertyValue(){return '0';}}}};
+  const sb={console,document,navigator:{maxTouchPoints:1},location:{hostname:'localhost',search:'',origin:'http://localhost'},Math,Date,URLSearchParams,innerWidth:1000,innerHeight:500,performance:{now:()=>1000},isAdmin:()=>true,setTimeout(){return 1},clearTimeout(){},setInterval(){return 1},clearInterval(){},requestAnimationFrame(){return 1},cancelAnimationFrame(){},localStorage:{getItem(){return null;},setItem(){}},addEventListener(){},removeEventListener(){},getComputedStyle(){return {position:'absolute',left:'0px',top:'0px',right:'auto',bottom:'auto',transform:'none',getPropertyValue(){return '0';}}}};
+  sb.window=sb;sb.THREE={Vector3:Vec3};vm.createContext(sb);vm.runInContext(source,sb);const T=sb.Frontline1944._t,G=T.G;
+  function fakeTank(pitch=0){const L=2.75,base={x:0,y:3.25,z:-3.55},tip={x:0,y:base.y+Math.sin(pitch)*L,z:base.z-Math.cos(pitch)*L};return {world:{x:0,z:0},group:{updateMatrixWorld(){},visible:true,position:{set(){}},rotation:{y:0}},barrel:{getWorldPosition(v){return v.set(base.x,base.y,base.z);}},cannonTip:{getWorldPosition(v){return v.set(tip.x,tip.y,tip.z);}},playerId:'p',ownerId:'p',hullRotation:0,turretRotation:0,turretTargetRotation:0,barrelPitch:pitch,barrelTargetPitch:pitch,speed:0,hp:1000,maxHp:1000,invuln:0,footprint:{halfWidth:T.CFG.tankFootprintHalfWidth,halfLength:T.CFG.tankFootprintHalfLength},hull:{rotation:{y:0}},turret:{rotation:{y:0}},gunPivot:{rotation:{x:0}}};}
+  check('identity, HP, steel default and believable pitch limits',()=>{assert.strictEqual(T.R6C_AIM.id,'P2.1R6C-a3a5cf');assert(Math.abs(T.R6C_AIM.barrelMinPitch*180/Math.PI+10)<1e-9);assert(Math.abs(T.R6C_AIM.barrelMaxPitch*180/Math.PI-18)<1e-9);assert.strictEqual(T.CFG.playerHP,1000);assert(source.includes('DEFAULT_STEEL:0x5d6468'));});
+  check('mobile X controls yaw while Y independently controls elevation/depression',()=>{const pose={turretHeading:.4,barrelPitch:.02};const right=T.mobileAimTargets({x:.8,y:0},pose,false),up=T.mobileAimTargets({x:0,y:-.8},pose,false),down=T.mobileAimTargets({x:0,y:.8},pose,false);assert(right.heading<pose.turretHeading);assert(Math.abs(right.barrelPitch-pose.barrelPitch)<1e-12);assert(Math.abs(up.heading-pose.turretHeading)<1e-12&&up.barrelPitch>pose.barrelPitch);assert(Math.abs(down.heading-pose.turretHeading)<1e-12&&down.barrelPitch<pose.barrelPitch);});
+  check('barrel pitch responds immediately, damps smoothly, scopes slower and clamps',()=>{let a=T.barrelPitchMotionStep(0,.2,0,1/60,false,1),b=T.barrelPitchMotionStep(0,.2,0,1/60,true,1);assert(a.pitch>0&&a.velocity>0);assert(b.pitch>0&&b.velocity>0&&b.pitch<a.pitch);let p=0,v=0;for(let i=0;i<240;i++){const q=T.barrelPitchMotionStep(p,9,v,1/60,false,1);p=q.pitch;v=q.velocity;}assert(p<=T.R6C_AIM.barrelMaxPitch+1e-12);for(let i=0;i<120;i++){const q=T.barrelPitchMotionStep(p,p,v,1/60,false,0);p=q.pitch;v=q.velocity;}assert(Math.abs(v)<1e-9);});
+  check('TankRuntime owns authoritative pitch and drives the real gun pivot',()=>{const tank=fakeTank(0),collision={resolveTankSweep(from,to){return {x:to.x,z:to.z,heading:to.heading,blocked:false,contact:null};}},terrain={sample(){return {speed:1};}},rt=new T.TankRuntime(tank,collision,terrain);rt.step({barrelTargetPitch:.15,barrelInputStrength:1},1/60);assert(rt.barrelPitch>0);assert.strictEqual(tank.barrelPitch,rt.barrelPitch);assert.strictEqual(rt.pose().barrelPitch,rt.barrelPitch);assert(Math.abs(tank.gunPivot.rotation.x-rt.barrelPitch)<1e-12);});
+  check('cannon ray and Scope camera share the same normalized 3D gun direction',()=>{const pitch=10*Math.PI/180,tank=fakeTank(pitch);G.player=tank;G.tankRuntime=null;const ray=T.cannonWorldRay(tank);assert(Math.abs(Math.hypot(ray.direction.x,ray.direction.y,ray.direction.z)-1)<1e-10);assert(Math.abs(ray.direction.y-Math.sin(pitch))<1e-10);const f=T.r4ScopeCameraFrame(tank),dx=f.look.x-f.position.x,dy=f.look.y-f.position.y,dz=f.look.z-f.position.z,L=Math.hypot(dx,dy,dz);assert(Math.abs(dx/L-ray.direction.x)<1e-10);assert(Math.abs(dy/L-ray.direction.y)<1e-10);assert(Math.abs(dz/L-ray.direction.z)<1e-10);});
+  check('projected shot solution follows elevation and depression reaches terrain',()=>{G.enemies=[];G.fortress=null;G.collision={hitSolidOnly(){return null;}};let tank=fakeTank(10*Math.PI/180);G.player=tank;let sol=T.projectedShotSolution(tank);assert(sol.kind==='range'&&sol.y>tank.cannonTip.getWorldPosition(new Vec3()).y);tank=fakeTank(-10*Math.PI/180);G.player=tank;sol=T.projectedShotSolution(tank);assert.strictEqual(sol.kind,'terrain');assert(sol.distance>5&&sol.distance<40);});
+  check('projectile stepping preserves vertical direction',()=>{G.enemies=[];G.fortress=null;G.collision={hitSolidOnly(){return null;}};const p={lifetime:2,speed:10,world:{x:0,y:2,z:0},direction:{x:0,y:.2,z:-Math.sqrt(.96)},collisionRadius:.2,ownerId:'p',team:'player',group:{position:{x:0,y:2,z:0}}};const pool={active:[p],release(){throw new Error('should not release');}};T.tickProjectilePool(pool,.1,true);assert(p.world.y>2);assert.strictEqual(p.group.position.y,p.world.y);});
+  check('Scope presentation is tank-optic oriented and shows elevation',()=>{for(const token of ['fl44-scope-overlay:before','border:10px solid rgba(22,27,24,.96)','filter:saturate(.78) contrast(.97) brightness(.93) sepia(.06)','EL +0.0°','· EL '])assert(source.includes(token),token);assert(source.includes("drawer.innerHTML='<b>FRONTLINE 1944 · R6C</b>"));assert(source.includes("G.root.dataset.patchTask='P2.1R6C-a3a5cf'"));});
+  check('Target Lock remains a yaw-only override so manual pitch is not frozen',()=>{assert(source.includes("cmd=normalizeTankCommand({...cmd,turretTargetHeading:lockedHeading,turretInputStrength:1,source:String(cmd.source||'shared')+'+target-lock'})"));assert(!source.includes('barrelTargetPitch:lockedHeading'));});
+  check('accepted Global Mobile Router and long-hold AIM architecture remain present',()=>{assert(source.includes('class GlobalMobileTouchRouter'));assert(T.CFG.mobileAimRepositionHoldMs>=650&&T.CFG.mobileAimRepositionHoldMs<=800);assert(source.includes('onAimVector:v=>latchMobileAimVector(v.x,v.y)'));assert(source.includes("const SPECIAL_CONTROL_ROLES=Object.freeze(['autoForward','autoReverse','targetLock','scope'])"));});
+  console.log('PASS R6C '+checks+' focused groups. Deterministic source/runtime math only; physical phone, actual WebGL visual acceptance, build/deploy and hosting delivery remain user acceptance checks.');
+}
+
+function runPhase21R5Tests(){
+  // Phase 2.1 R5 focused source/runtime tests. These do not claim physical-phone, WebGL screenshot, build, deploy or hosting acceptance.
+  const source=fs.readFileSync('js/frontline1944.js','utf8');
+  let checks=0;const check=(name,fn)=>{fn();checks++;console.log('PASS R5 '+name);};
+  class Vec3{constructor(x=0,y=0,z=0){this.set(x,y,z);}set(x,y,z){this.x=x;this.y=y;this.z=z;return this;}setScalar(v){return this.set(v,v,v);}copy(v){return this.set(v.x,v.y,v.z);}clone(){return new Vec3(this.x,this.y,this.z);}lerp(v,t){return this.set(this.x+(v.x-this.x)*t,this.y+(v.y-this.y)*t,this.z+(v.z-this.z)*t);}project(){return this;}}
+  const document={readyState:'loading',addEventListener(){},querySelector(){return null;},getElementById(){return null;},documentElement:{style:{getPropertyValue(){return '0';}}}};
+  let now=1000,timerSerial=0;const timers=new Map(),store=new Map();
+  const sb={console,document,navigator:{maxTouchPoints:1},location:{hostname:'localhost',search:'',origin:'http://localhost'},Math,Date,URLSearchParams,innerWidth:1000,innerHeight:500,performance:{now:()=>now},isAdmin:()=>true,
+    setTimeout(fn){const id=++timerSerial;timers.set(id,fn);return id;},clearTimeout(id){timers.delete(id);},setInterval(){return 1},clearInterval(){},requestAnimationFrame(){return 1},cancelAnimationFrame(){},localStorage:{getItem(k){return store.has(k)?store.get(k):null;},setItem(k,v){store.set(k,String(v));}},addEventListener(){},removeEventListener(){},getComputedStyle(){return {position:'absolute',left:'0px',top:'0px',right:'auto',bottom:'auto',transform:'none',getPropertyValue(){return '0';}}}};
   sb.window=sb;sb.THREE={Vector3:Vec3};vm.createContext(sb);vm.runInContext(source,sb);
   const T=sb.Frontline1944._t,G=T.G;
   const fakeTank=()=>{const group={updateMatrixWorld(){},visible:true,position:{set(){}},rotation:{y:0}},cannonTip={getWorldPosition(v){return v.set(0,3,-6.3);}},barrel={getWorldPosition(v){return v.set(0,3,-3.55);}};return {world:{x:0,z:0},group,cannonTip,barrel,playerId:'p1',ownerId:'p1',hullRotation:0,turretRotation:0,turretTargetRotation:0,speed:0,footprint:{halfWidth:T.CFG.tankFootprintHalfWidth,halfLength:T.CFG.tankFootprintHalfLength},hp:1000,maxHp:1000,invuln:0,hull:{rotation:{y:0}},turret:{rotation:{y:0}}};};
+  function simulate(strength,scoped=false,seconds=.7){let h=0,v=0;for(let t=0;t<seconds;t+=1/60){const step=T.turretMotionStep(h,1.25,v,1/60,scoped,strength);h=step.heading;v=step.velocity;}return {h,v};}
+  function classList(){const set=new Set();return {add(...xs){xs.forEach(x=>set.add(x));},remove(...xs){xs.forEach(x=>set.delete(x));},contains(x){return set.has(x);},toggle(x,on){if(on===undefined)on=!set.has(x);on?set.add(x):set.delete(x);return !!on;}};}
+  function fakeEl(left,top,width,height,id='',className=''){const style={left:'',top:'',right:'',bottom:'',transform:'',removeProperty(k){this[k]='';}},dataset={},cl=classList(),el={id,className,hidden:false,style,dataset,classList:cl,parentElement:null,offsetParent:null,clientLeft:0,clientTop:0,scrollLeft:0,scrollTop:0,getAttribute(){return null;},getBoundingClientRect(){const l=Number.parseFloat(style.left),t=Number.parseFloat(style.top),x=Number.isFinite(l)?l:left,y=Number.isFinite(t)?t:top;return {left:x,top:y,right:x+width,bottom:y+height,width,height};}};return el;}
 
-  check('HP baseline is 1000 for creation and R3 death-respawn authority',()=>{
-    assert.strictEqual(T.CFG.playerHP,1000);assert(source.includes('hp:CFG.playerHP,maxHp:CFG.playerHP'));assert(source.includes("if(reason==='death')t.hp=t.maxHp"));
+  check('R5 identity, HP/Scope preservation and deliberate long-hold tuning',()=>{
+    assert.strictEqual(T.R5_AIM.id,'P2.1R5-1420f0');assert.strictEqual(T.R4_AIM.id,T.R5_AIM.id);assert.strictEqual(T.CFG.playerHP,1000);assert.strictEqual(T.R5_AIM.scopeFov,22);assert(T.CFG.mobileAimRepositionHoldMs>=650&&T.CFG.mobileAimRepositionHoldMs<=800);assert(T.CFG.mobileAimHoldMoveTolerancePx>=8&&T.CFG.mobileAimHoldMoveTolerancePx<=16);
   });
-  check('fine turret convergence is continuous and more precise near target, with finer scoped control',()=>{
-    const far=Math.abs(T.precisionTurretStep(0,1,1/60,false)),near=Math.abs(T.precisionTurretStep(0,.05,1/60,false)),scoped=Math.abs(T.precisionTurretStep(0,.05,1/60,true));
-    assert(far>near&&near>scoped&&scoped>0);assert(Math.abs(T.precisionTurretStep(0,.001,1/60,true)-.001)<1e-9);assert(source.includes('this.turretHeading=precisionTurretStep('));
+  check('thumb response curve keeps a small dead zone and gives finer small-input rotation',()=>{
+    const dead=T.mobileAimStrength({x:.04,y:0}),fine=T.mobileAimStrength({x:.18,y:0}),medium=T.mobileAimStrength({x:.5,y:0}),full=T.mobileAimStrength({x:1,y:0});assert.strictEqual(dead,0);assert(fine>0&&fine<medium&&medium<full&&full<=1);const slow=simulate(fine,false),fast=simulate(1,false),scope=simulate(1,true);assert(Math.abs(slow.h)<Math.abs(fast.h));assert(Math.abs(scope.h)<Math.abs(fast.h));
   });
-  check('projected shot solution shares actual cannon ray and resolves range, enemies and solids',()=>{
-    const tank=fakeTank();G.player=tank;G.tankRuntime=null;G.enemies=[];G.fortress=null;G.collision={hitSolidOnly(){return null;}};
-    const ray=T.cannonWorldRay(tank);assert(Math.abs(ray.direction.x)<1e-9);assert(Math.abs(ray.direction.z+1)<1e-9);let sol=T.projectedShotSolution(tank);assert.strictEqual(sol.kind,'range');assert(sol.z<-50);
-    G.enemies=[{dead:false,hp:30,group:{},world:{x:0,z:-30},radius:2.45}];sol=T.projectedShotSolution(tank);assert.strictEqual(sol.kind,'enemy');assert(sol.distance>20&&sol.distance<35);
-    G.enemies=[];G.collision={hitSolidOnly(x,z){return z<-20?{tag:'wall'}:null;}};sol=T.projectedShotSolution(tank);assert.strictEqual(sol.kind,'solid');
-    assert(source.includes("id=\"fl44-shot-marker\"")&&source.includes('hidden>+</div>'));assert(source.includes('const t=G.player,ray=cannonWorldRay(t)'));
+  check('turret input starts immediately but ramps velocity and decelerates without long drift',()=>{
+    const a=T.turretMotionStep(0,1,0,1/60,false,1),b=T.turretMotionStep(a.heading,1,a.velocity,1/60,false,1);assert(a.heading>0&&a.velocity>0);assert(a.velocity<T.R5_AIM.turretMaxRate);assert(b.velocity>a.velocity);const released=T.turretMotionStep(b.heading,1,b.velocity,1/60,false,0);assert(released.heading>b.heading&&released.velocity<b.velocity);let h=released.heading,v=released.velocity;for(let i=0;i<90;i++){const q=T.turretMotionStep(h,1,v,1/60,false,0);h=q.heading;v=q.velocity;}assert(Math.abs(v)<1e-9);assert(h<.35,'release inertia must stop rather than free-drift toward stale target');
   });
-  check('scope has real zoom, barrel-aligned camera, reticle markings and reliable normal return',()=>{
-    const tank=fakeTank();G.player=tank;G.tankRuntime=null;G.collision={hitSolidOnly(){return null;}};G.enemies=[];G.fortress=null;G.camera=null;T.setScopeMode(true,true);assert.strictEqual(T.scopeCameraFov(),22);
-    const ray=T.cannonWorldRay(tank),frame=T.r4ScopeCameraFrame(tank),dx=frame.look.x-frame.position.x,dz=frame.look.z-frame.position.z,L=Math.hypot(dx,dz);assert(Math.abs(dx/L-ray.direction.x)<1e-9);assert(Math.abs(dz/L-ray.direction.z)<1e-9);
-    T.setScopeMode(false,true);assert.strictEqual(T.scopeCameraFov(),T.R2_VIEW.fov);assert(source.includes('id="fl44-scope"'));assert(source.includes('fl44-scope-th')&&source.includes('fl44-scope-tv')&&source.includes('fl44-scope-num'));assert(source.includes('AZ 000.0° · RNG —'));
+  check('authoritative TankRuntime uses angular velocity and Target Lock supplies full-strength damped aim',()=>{
+    const tank=fakeTank(),collision={resolveTankSweep(from,to){return {x:to.x,z:to.z,heading:to.heading,blocked:false,contact:null};}},terrain={sample(){return {speed:1};}},rt=new T.TankRuntime(tank,collision,terrain);const before=rt.turretHeading;rt.step({turretTargetHeading:1,turretInputStrength:1},1/60);assert(rt.turretHeading>before&&rt.turretAngularVelocity>0);const v=rt.turretAngularVelocity;rt.step({turretTargetHeading:1,turretInputStrength:0},1/60);assert(rt.turretAngularVelocity<v);assert(source.includes('turretInputStrength:1,source:String(cmd.source||\'shared\')+\'+target-lock\''));assert(source.includes('this.turretHeading=turretMotion.heading;this.turretAngularVelocity=turretMotion.velocity'));
   });
-  check('R3 safe-spawn semantics remain active and death respawn restores the new 1000 HP max',()=>{
-    const tank=fakeTank();tank.hp=0;G.player=tank;G.tankRuntime=null;G.enemies=[];G.fortress=null;G.terrain={bySector:new Map()};G.collision={collidersNear(){return[];}};G.sectorStreamer={update(){},isActive(){return true;}};G.camera=null;T.r3ResetSpawnState();
-    const p={x:0,z:0,heading:0,sector:0,attempts:1,fallback:false};assert(T.r3ValidateSpawn(p));assert(T.r3CommitSafeSpawn(p,'death'));assert.strictEqual(tank.hp,1000);assert(tank.invuln>=2);assert(source.includes('r3PlayerEmbedded()')&&source.includes("r3RequestSafeSpawn(p,force?'entry-recovery':'embedded-recovery')"));
+  check('AIM base stays fixed for ordinary drag, long-hold drag repositions safely, persists, and multitouch FIRE ownership remains separate',()=>{
+    const root=fakeEl(0,0,1000,500,'vw-frontline1944','');root.querySelector=()=>null;const drive=fakeEl(55,345,96,96,'fl44-stick','fl44-stick'),driveKnob=fakeEl(0,0,1,1,'','fl44-knob'),aim=fakeEl(700,330,82,82,'fl44-aim-stick','fl44-aim-stick'),aimKnob=fakeEl(0,0,1,1,'','fl44-aim-knob'),fire=fakeEl(875,350,68,68,'fl44-fire','fl44-fire');for(const el of [drive,driveKnob,aim,aimKnob,fire])el.parentElement=root;G.root=root;G.specialControls={autoMove:0,targetLockMode:false,lockedTarget:null,scopeMode:false};const driveState={x:0,y:0,id:null,active:false},aimState={x:0,y:0,id:null,active:false},vectors=[];const router=new T.GlobalMobileTouchRouter({root,driveEl:drive,driveKnob,aimEl:aim,aimKnob,fireEl:fire,driveState,aimState,storage:sb.localStorage,onAimVector:v=>vectors.push({x:v.x,y:v.y}),protectedPointAt:()=>false,onDiagnostic:()=>{}});const c=T.rectCenter(T.elementUsableRect(aim)),left0=T.elementUsableRect(aim).left;now=2000;assert.strictEqual(router.begin(91,c.x,c.y,aim,'pointer'),'aim');now+=40;router.move(91,c.x+30,c.y+5,aim,'pointer');assert.strictEqual(router.aimGesture.intent,'aim');assert(!router.aimGesture.repositioning);assert(Math.abs(T.elementUsableRect(aim).left-left0)<1e-9);router.end(91,c.x+30,c.y+5,aim,'pointer');const c2=T.rectCenter(T.elementUsableRect(aim));now=4000;assert.strictEqual(router.begin(92,c2.x,c2.y,aim,'pointer'),'aim');now+=T.CFG.mobileAimRepositionHoldMs+5;router.move(92,c2.x-95,c2.y-45,aim,'pointer');assert(router.aimGesture.repositioning);assert(Math.abs(T.elementUsableRect(aim).left-left0)>20);assert.strictEqual(aimState.x,0);assert.strictEqual(aimState.y,0);router.end(92,c2.x-95,c2.y-45,aim,'pointer');assert(sb.localStorage.getItem(T.CFG.mobileAimPositionStorageKey));const movedLeft=T.elementUsableRect(aim).left,movedCenter=T.rectCenter(T.elementUsableRect(aim)),fireCenter=T.rectCenter(T.elementUsableRect(fire));now=6000;assert.strictEqual(router.begin(93,movedCenter.x,movedCenter.y,aim,'pointer'),'aim');assert.strictEqual(router.begin(94,fireCenter.x,fireCenter.y,fire,'pointer'),'fire');assert.strictEqual(router.rolePointers.aim,93);assert.strictEqual(router.rolePointers.fire,94);assert.strictEqual(router.activeCount(),2);router.end(94,fireCenter.x,fireCenter.y,fire,'pointer');router.end(93,movedCenter.x,movedCenter.y,aim,'pointer');const broadX=560,broadY=250;now=8000;assert.strictEqual(router.begin(95,broadX,broadY,root,'pointer'),'aim');assert.strictEqual(router.aimGesture.repositionEligible,false);now+=T.CFG.mobileAimRepositionHoldMs+50;router.move(95,broadX-35,broadY,root,'pointer');assert(!router.aimGesture.repositioning);assert(Math.abs(T.elementUsableRect(aim).left-movedLeft)<1e-9);router.end(95,broadX-35,broadY,root,'pointer');
   });
-  check('accepted control/target-lock architecture is extended, not replaced',()=>{
-    assert(source.includes("const SPECIAL_CONTROL_ROLES=Object.freeze(['autoForward','autoReverse','targetLock','scope'])"));assert(source.includes('DRIVE')&&source.includes('AIM')&&source.includes('FIRE'));assert(source.includes('targetLockHeading()'));assert(source.includes('GlobalMobileTouchRouter'));assert(source.includes('scopeMode:false'));
+  check('projected marker is thin/clean and remains tied to actual cannon/projectile direction',()=>{
+    const tank=fakeTank();G.player=tank;G.tankRuntime=null;G.enemies=[];G.fortress=null;G.collision={hitSolidOnly(){return null;}};const ray=T.cannonWorldRay(tank),solution=T.projectedShotSolution(tank);assert(Math.abs(ray.direction.x)<1e-9&&Math.abs(ray.direction.z+1)<1e-9);assert(solution&&solution.kind==='range'&&solution.z<0);assert(source.includes('.fl44-shot-marker{position:absolute')&&source.includes('width:17px;height:17px'));assert(source.includes('.fl44-shot-marker:before')&&source.includes('height:1px')&&source.includes('width:1px;height:15px'));assert(source.includes('id="fl44-shot-marker" aria-hidden="true" hidden></div>'));assert(!source.includes('font:900 25px/1 ui-monospace'));assert(source.includes('const t=G.player,ray=cannonWorldRay(t)'));assert(source.includes('function r4CannonWorldRay(t)'));assert(source.includes('marker.dataset.kind=solution.kind'));
   });
-  console.log('PASS R4 '+checks+' focused groups; source-path/gameplay-math tests only. Running accepted Target Lock / global mobile-router regression suite next.');
-  runTargetLockN3Tests({sourceOnly:true});
-  console.log('PASS R4 regression bridge: N3 Target Lock / DRIVE-AIM-FIRE router source-path suite passed with additive Scope role. Real browser WebGL, physical mobile multitouch, exact reference-image fidelity and hosting delivery remain acceptance checks.');
+  check('R3 safe respawn and 1000 HP remain active',()=>{
+    const tank=fakeTank();tank.hp=0;G.player=tank;G.tankRuntime=null;G.enemies=[];G.fortress=null;G.terrain={bySector:new Map()};G.collision={collidersNear(){return[];}};G.sectorStreamer={update(){},isActive(){return true;}};G.camera=null;T.r3ResetSpawnState();const pos={x:0,z:0,heading:0,sector:0,attempts:1,fallback:false};assert(T.r3ValidateSpawn(pos));assert(T.r3CommitSafeSpawn(pos,'death'));assert.strictEqual(tank.hp,1000);assert(tank.invuln>=2);
+  });
+  check('R5 remains localized and preserves accepted systems',()=>{
+    for(const token of ["const SPECIAL_CONTROL_ROLES=Object.freeze(['autoForward','autoReverse','targetLock','scope'])",'GlobalMobileTouchRouter','targetLockHeading()','mobileFirePositionStorageKey','r3PlayerEmbedded()','scopeMode:false','DRIVE','AIM','FIRE'])assert(source.includes(token),token);assert(source.includes("drawer.innerHTML='<b>FRONTLINE 1944 · R6C</b>"));assert(source.includes("G.root.dataset.patchTask='P2.1R6C-a3a5cf'"));
+  });
+  console.log('PASS R5 '+checks+' focused groups. Source/runtime math + mobile-router harness only; physical phone, actual WebGL visuals, build/deploy and hosting delivery remain user acceptance checks.');
 }
 
-function runPhase21R3Tests(){
-  // Explicit source-path/geometry-contract doubles. NOT a WebGL, visual, delivery or physical-phone PASS.
+function runPhase21R4Tests(){
+  // R4 source-path / gameplay-math tests. NOT a physical-phone, WebGL screenshot, hosting-delivery or art-reference PASS.
   const source=fs.readFileSync('js/frontline1944.js','utf8');
-  let checks=0;const check=(name,fn)=>{fn();checks++;console.log('PASS R3 '+name);};
+  let checks=0;const check=(name,fn)=>{fn();checks++;console.log('PASS R4 '+name);};
   class Vec3{
-    constructor(x=0,y=0,z=0){this.set(x,y,z);}set(x,y,z){this.x=x;this.y=y;this.z=z;return this;}
-    setScalar(s){return this.set(s,s,s);}copy(v){return this.set(v.x,v.y,v.z);}clone(){return new Vec3(this.x,this.y,this.z);}
-    lerp(v,t){return this.set(this.x+(v.x-this.x)*t,this.y+(v.y-this.y)*t,this.z+(v.z-this.z)*t);}
+    constructor(x=0,y=0,z=0){this.set(x,y,z);}set(x,y,z){this.x=x;this.y=y;this.z=z;return this;}setScalar(s){return this.set(s,s,s);}
+    copy(v){return this.set(v.x,v.y,v.z);}clone(){return new Vec3(this.x,this.y,this.z);}lerp(v,t){return this.set(this.x+(v.x-this.x)*t,this.y+(v.y-this.y)*t,this.z+(v.z-this.z)*t);}
+    project(){return this;}
   }
-  class Group{
-    constructor(){this.children=[];this.parent=null;this.position=new Vec3();this.scale=new Vec3(1,1,1);this.rotation={x:0,y:0,z:0};this.userData={};this.visible=true;}
-    add(...nodes){for(const n of nodes){if(n.parent)n.parent.remove(n);n.parent=this;this.children.push(n);}return this;}
-    remove(n){this.children=this.children.filter(x=>x!==n);n.parent=null;}
-    traverse(fn){fn(this);for(const n of this.children)n.traverse(fn);}updateMatrixWorld(){}
-    getWorldPosition(v){v.copy(this.position);for(let p=this.parent;p;p=p.parent){v.x+=p.position.x;v.y+=p.position.y;v.z+=p.position.z;}return v;}
-  }
-  class Color{constructor(value=0xffffff){this.setHex(value);}setHex(v){this.r=((v>>16)&255)/255;this.g=((v>>8)&255)/255;this.b=(v&255)/255;return this;}convertSRGBToLinear(){return this;}clone(){return new Color().copy(this);}copy(c){Object.assign(this,c);return this;}multiplyScalar(v){this.r*=v;this.g*=v;this.b*=v;return this;}}
-  class Material{constructor(o={}){Object.assign(this,o);this.color=new Color(o.color);this.disposals=0;}dispose(){this.disposals++;}clone(){return new Material(this);}}
-  class Geometry{constructor(){this.attributes={};this.disposals=0;}setAttribute(k,v){this.attributes[k]=v;return this;}getAttribute(k){return this.attributes[k];}computeVertexNormals(){}computeBoundingSphere(){this.boundingSphere={radius:150};}dispose(){this.disposals++;}}
-  class Attribute{constructor(values,size){this.array=new Float32Array(values);this.itemSize=size;this.count=values.length/size;}getX(i){return this.array[i*this.itemSize];}getY(i){return this.array[i*this.itemSize+1];}getZ(i){return this.array[i*this.itemSize+2];}}
-  class Mesh extends Group{constructor(g,m){super();this.geometry=g;this.material=m;this.isMesh=true;}}
-  class Texture{constructor(){this.disposals=0;}dispose(){this.disposals++;}}
-  const requests=[],timers=new Map();let serial=0;
-  class TextureLoader{load(url,ok,progress,fail){const texture=new Texture();requests.push({url,ok:()=>ok(texture),fail,texture});return texture;}}
-  const ctx={createRadialGradient(){return {addColorStop(){}};},fillRect(){},clearRect(){}};
-  const document={readyState:'loading',addEventListener(){},removeEventListener(){},querySelector(){return null;},getElementById(){return null;},createElement(){return {width:0,height:0,getContext:()=>ctx};}};
-  const THREE={Group,Object3D:Group,Mesh,Vector3:Vec3,Color,BufferGeometry:Geometry,Float32BufferAttribute:Attribute,
-    MeshBasicMaterial:Material,MeshStandardMaterial:Material,MeshLambertMaterial:Material,SpriteMaterial:Material,
-    BoxGeometry:Geometry,PlaneGeometry:Geometry,CylinderGeometry:Geometry,ConeGeometry:Geometry,DodecahedronGeometry:Geometry,SphereGeometry:Geometry,OctahedronGeometry:Geometry,
-    TextureLoader,CanvasTexture:Texture,Sprite:class extends Group{constructor(m){super();this.material=m;}},RepeatWrapping:1000,sRGBEncoding:3001,DoubleSide:2,BackSide:1};
-  const sb={console,document,THREE,navigator:{maxTouchPoints:1},location:{hostname:'localhost',search:'',origin:'http://localhost:4173'},Math,Date,URLSearchParams,
-    innerWidth:844,innerHeight:390,performance:{now:()=>1000},isAdmin:()=>true,state:{coins:50,frontline1944:{claims:[],wordsDone:0,fortressSerial:2}},
-    setTimeout(fn,ms){const id=++serial;timers.set(id,{fn,ms});return id;},clearTimeout(id){timers.delete(id);},setInterval(){},clearInterval(){},requestAnimationFrame(){},cancelAnimationFrame(){},
-    localStorage:{getItem(){return null;},setItem(){}},addEventListener(){},removeEventListener(){},getComputedStyle(){return {getPropertyValue:()=>0};}};
-  sb.window=sb;vm.createContext(sb);vm.runInContext(source,sb);const T=sb.Frontline1944._t,G=T.G;
-  function reset(x=0,z=0,heading=0,stream=true){
-    if(G.sectorStreamer&&G.sectorStreamer.dispose)G.sectorStreamer.dispose();T.r2Dispose();T.r3ResetSpawnState();T.phase21ResetSession();
-    if(G.resources)G.resources.dispose();G.root=null;G.camera=null;G.scene=new Group();G.layers={};
-    for(const k of Object.values(T.LAYER)){G.layers[k]=new Group();G.scene.add(G.layers[k]);}
-    G.resources=new T.ResourceCache();G.terrain=new T.TerrainSystem();G.collision=new T.CollisionSystem(G.terrain);G.pools=null;G.fortress=null;G.enemies=[];G.smoke=[];G.occluders=[];G.damageEvents=[];G.running=false;
-    G.player={world:{x,z},hullRotation:heading,turretRotation:heading,speed:0,hp:380,maxHp:380,invuln:0,ownerId:'player-owner',playerId:'test-player',damageStatistic:{match:0,lifetime:0},
-      footprint:{halfWidth:T.CFG.tankFootprintHalfWidth,halfLength:T.CFG.tankFootprintHalfLength},group:new Group(),hull:new Group(),turret:new Group()};
-    G.tankRuntime=new T.TankRuntime(G.player,G.collision,G.terrain);G.sectorStreamer=new T.SectorStreamer();
-    if(stream)G.sectorStreamer.update(z,true);
-    G.specialControls={autoMove:0,targetLockMode:false,lockedTarget:null,scopeMode:false};G.keys.clear();return G.player;
-  }
-  function clearWorld(x=0,z=0,heading=0){reset(x,z,heading,false);G.sectorStreamer={currentIndex:T.WorldSpace.sectorIndexAtZ(z),active:new Map(),isActive(i){return this.active.has(i);},update(zz){this.currentIndex=T.WorldSpace.sectorIndexAtZ(zz);this.active=new Map([this.currentIndex-1,this.currentIndex,this.currentIndex+1].map(i=>[i,{}]));},dispose(){}};G.sectorStreamer.update(z,true);}
-  function atPose(){return G.tankRuntime.pose();}
-  function maneuverProof(){
-    const p=atPose(),fp=G.player.footprint;
-    for(let h=0;h<16;h++){
-      const heading=h*Math.PI/8,f=T.forwardFromRotation(heading);
-      assert(!G.collision.hitTankFootprint(p.x,p.z,heading,fp.halfWidth,fp.halfLength,G.player.ownerId).blocked,'full rotation clearance');
-      for(const sign of [-1,1])assert(!G.collision.resolveTankSweep({x:p.x,z:p.z,heading},{x:p.x+f.x*4*sign,z:p.z+f.z*4*sign,heading},fp.halfWidth,fp.halfLength,G.player.ownerId).blocked,'four-unit forward/reverse clearance');
-    }
-    // Execute unchanged authoritative simulation, not just a spawn predicate.
-    for(const throttle of [-1,1]){G.tankRuntime.teleport(p.x,p.z,p.heading);let moved=0;for(let i=0;i<30;i++){const r=G.tankRuntime.step({throttle,steering:0},1/60);assert(!r.motion.blocked);moved+=Math.hypot(r.motion.dx,r.motion.dz);}assert(moved>1.2);}
-    for(const steering of [-1,1]){G.tankRuntime.teleport(p.x,p.z,p.heading);for(let i=0;i<460;i++)assert(!G.tankRuntime.step({throttle:0,steering},1/60).motion.blocked);}
-    G.tankRuntime.teleport(p.x,p.z,p.heading);
-  }
-  check('exact uploaded baseline declaration locks (physics/input/targets/economy/admin)',()=>{
-    const expected=R3_CURRENT_BASELINE_LOCKS;
-    for(const [name,hash] of Object.entries(expected)){const value=T[name]||sb.Frontline1944[name];assert(value,'export '+name);assert.strictEqual(crypto.createHash('sha256').update(value.toString()).digest('hex'),hash,name+' changed');}
-    console.log('  LOCKED '+Object.keys(expected).length+' declarations byte-identical to Task 7cf516');
+  const document={readyState:'loading',addEventListener(){},querySelector(){return null;},getElementById(){return null;},documentElement:{style:{getPropertyValue(){return '0';}}}};
+  let now=1000;
+  const sb={console,document,navigator:{maxTouchPoints:1},location:{hostname:'localhost',search:'',origin:'http://localhost'},Math,Date,URLSearchParams,innerWidth:844,innerHeight:390,performance:{now:()=>now},isAdmin:()=>true,
+    setTimeout(){return 1},clearTimeout(){},setInterval(){return 1},clearInterval(){},requestAnimationFrame(){return 1},cancelAnimationFrame(){},localStorage:{getItem(){return null},setItem(){}},addEventListener(){},removeEventListener(){},getComputedStyle(){return {getPropertyValue(){return '0';}}}};
+  sb.window=sb;sb.THREE={Vector3:Vec3};vm.createContext(sb);vm.runInContext(source,sb);
+  const T=sb.Frontline1944._t,G=T.G;
+  const fakeTank=()=>{const group={updateMatrixWorld(){},visible:true,position:{set(){}},rotation:{y:0}},cannonTip={getWorldPosition(v){return v.set(0,3,-6.3);}},barrel={getWorldPosition(v){return v.set(0,3,-3.55);}};return {world:{x:0,z:0},group,cannonTip,barrel,playerId:'p1',ownerId:'p1',hullRotation:0,turretRotation:0,turretTargetRotation:0,speed:0,footprint:{halfWidth:T.CFG.tankFootprintHalfWidth,halfLength:T.CFG.tankFootprintHalfLength},hp:1000,maxHp:1000,invuln:0,hull:{rotation:{y:0}},turret:{rotation:{y:0}}};};
+
+  check('HP baseline is 1000 for creation and R3 death-respawn authority',()=>{
+    assert.strictEqual(T.CFG.playerHP,1000);assert(source.includes('hp:CFG.playerHP,maxHp:CFG.playerHP'));assert(source.includes("if(reason==='death')t.hp=t.maxHp"));
   });
-  check('initial active sector uses actual current R2 corridor geometry and collision proxies',()=>{
-    reset();const art=G.sectorStreamer.active.get(0).phase21Art;assert(art&&art.meshCount>0&&art.houses>0&&art.trees>0);assert(G.collision.stats().colliders>20);assert.strictEqual(G.sectorStreamer.active.size,3);
-    console.log('  corridor meshes='+art.meshCount+' triangles='+art.triangleCount+' colliders='+G.collision.stats().colliders);
+  check('fine turret convergence is continuous and more precise near target, with finer scoped control',()=>{
+    const far=Math.abs(T.precisionTurretStep(0,1,1/60,false)),near=Math.abs(T.precisionTurretStep(0,.05,1/60,false)),scoped=Math.abs(T.precisionTurretStep(0,.05,1/60,true));
+    assert(far>near&&near>scoped&&scoped>0);assert(Math.abs(T.precisionTurretStep(0,.001,1/60,true)-.001)<1e-9);assert(source.includes('this.turretHeading=precisionTurretStep('));
   });
-  check('unsafe old center respawn reproduced and fixed through damagePlayer',()=>{
-    reset();G.collision.registerAABB(0,0,0,15,15,{ownerId:'repro-building'});assert(G.collision.hitTankFootprint(0,0,0).blocked);
-    G.player.invuln=0;T.damagePlayer(1000,{ownerId:'test-enemy'});assert.strictEqual(G.player.hp,380);assert(T.r3ValidateSpawn(atPose()));assert.notStrictEqual(G.player.world.z,0);assert.strictEqual(T.r3SpawnDiagnostics().last.reason,'death');maneuverProof();
+  check('projected shot solution shares actual cannon ray and resolves range, enemies and solids',()=>{
+    const tank=fakeTank();G.player=tank;G.tankRuntime=null;G.enemies=[];G.fortress=null;G.collision={hitSolidOnly(){return null;}};
+    const ray=T.cannonWorldRay(tank);assert(Math.abs(ray.direction.x)<1e-9);assert(Math.abs(ray.direction.z+1)<1e-9);let sol=T.projectedShotSolution(tank);assert.strictEqual(sol.kind,'range');assert(sol.z<-50);
+    G.enemies=[{dead:false,hp:30,group:{},world:{x:0,z:-30},radius:2.45}];sol=T.projectedShotSolution(tank);assert.strictEqual(sol.kind,'enemy');assert(sol.distance>20&&sol.distance<35);
+    G.enemies=[];G.collision={hitSolidOnly(x,z){return z<-20?{tag:'wall'}:null;}};sol=T.projectedShotSolution(tank);assert.strictEqual(sol.kind,'solid');
+    assert(source.includes("id=\"fl44-shot-marker\"")&&source.includes('hidden>+</div>'));assert(source.includes('const t=G.player,ray=cannonWorldRay(t)'));
   });
-  check('real fortress proxies reject core, walls and gate for respawn, without disabling collision',()=>{
-    clearWorld();const f={world:{x:0,z:0},sectorIndex:0,ownerId:'fortress-repro'};T.registerFortressCollision(f);
-    for(const z of [0,10,-10])assert(!T.r3ValidateSpawn({x:0,z,heading:0}));assert(!T.r3ValidateSpawn({x:10,z:0,heading:0}));
-    const solids=G.collision.stats().colliders;assert(T.r3RequestSafeSpawn({x:0,z:0,heading:0},'death'));assert.strictEqual(G.collision.stats().colliders,solids);maneuverProof();
+  check('scope has real zoom, barrel-aligned camera, reticle markings and reliable normal return',()=>{
+    const tank=fakeTank();G.player=tank;G.tankRuntime=null;G.collision={hitSolidOnly(){return null;}};G.enemies=[];G.fortress=null;G.camera=null;T.setScopeMode(true,true);assert.strictEqual(T.scopeCameraFov(),22);
+    const ray=T.cannonWorldRay(tank),frame=T.r4ScopeCameraFrame(tank),dx=frame.look.x-frame.position.x,dz=frame.look.z-frame.position.z,L=Math.hypot(dx,dz);assert(Math.abs(dx/L-ray.direction.x)<1e-9);assert(Math.abs(dz/L-ray.direction.z)<1e-9);
+    T.setScopeMode(false,true);assert.strictEqual(T.scopeCameraFov(),T.R2_VIEW.fov);assert(source.includes('id="fl44-scope"'));assert(source.includes('fl44-scope-th')&&source.includes('fl44-scope-tv')&&source.includes('fl44-scope-num'));assert(source.includes('AZ 000.0° · RNG —'));
   });
-  check('spawn requires visual hull plus full turn and forward/reverse maneuver envelope',()=>{
-    clearWorld();assert(T.r3SpawnRadius()>9);G.collision.registerAABB(0,7,0,2,2,{ownerId:'near-wall'});
-    assert(!G.collision.hitTankFootprint(0,0,0).blocked,'accepted hull alone fits');assert(!T.r3ValidateSpawn({x:0,z:0,heading:0}));
-    assert(T.r3RequestSafeSpawn({x:0,z:0,heading:0},'death'));maneuverProof();
+  check('R3 safe-spawn semantics remain active and death respawn restores the new 1000 HP max',()=>{
+    const tank=fakeTank();tank.hp=0;G.player=tank;G.tankRuntime=null;G.enemies=[];G.fortress=null;G.terrain={bySector:new Map()};G.collision={collidersNear(){return[];}};G.sectorStreamer={update(){},isActive(){return true;}};G.camera=null;T.r3ResetSpawnState();
+    const p={x:0,z:0,heading:0,sector:0,attempts:1,fallback:false};assert(T.r3ValidateSpawn(p));assert(T.r3CommitSafeSpawn(p,'death'));assert.strictEqual(tank.hp,1000);assert(tank.invuln>=2);assert(source.includes('r3PlayerEmbedded()')&&source.includes("r3RequestSafeSpawn(p,force?'entry-recovery':'embedded-recovery')"));
   });
-  check('safe preferred heading survives respawn at each of eight hull directions',()=>{
-    for(let i=0;i<8;i++){clearWorld(0,0,i*Math.PI/4);const heading=G.tankRuntime.heading;
-      assert(T.r3RequestSafeSpawn({x:0,z:0,heading},'death'));assert.strictEqual(G.tankRuntime.heading,heading);maneuverProof();}
+  check('accepted control/target-lock architecture is extended, not replaced',()=>{
+    assert(source.includes("const SPECIAL_CONTROL_ROLES=Object.freeze(['autoForward','autoReverse','targetLock','scope'])"));assert(source.includes('DRIVE')&&source.includes('AIM')&&source.includes('FIRE'));assert(source.includes('targetLockHeading()'));assert(source.includes('GlobalMobileTouchRouter'));assert(source.includes('scopeMode:false'));
   });
-  check('tiny circular blockers and rectangular corners cannot fall between footprint samples',()=>{
-    clearWorld();const r=T.r3SpawnRadius();G.collision.registerCircle(0,r*.69,r*.69,.05,{ownerId:'tiny-tree'});assert(!T.r3ValidateSpawn({x:0,z:0,heading:0}));
-    G.collision.bySector.clear();G.collision.registerAABB(0,r*.7,r*.7,.10,.10,{ownerId:'corner'});assert(!T.r3ValidateSpawn({x:0,z:0,heading:0}));
-  });
-  check('deep water and narrow bridge are not selected as maneuver-safe spawn bays',()=>{
-    clearWorld();G.terrain.registerRect(0,0,6,180,20,'DEEP_WATER',80);G.terrain.registerRect(0,0,6,10.5,26,'ROAD',100);
-    assert(!G.terrain.sample(0,6).blocked,'unchanged bridge priority remains driveable');assert(!T.r3ValidateSpawn({x:0,z:6,heading:0}));
-    assert(T.r3RequestSafeSpawn({x:0,z:6,heading:0},'death'));maneuverProof();
-  });
-  check('descriptor-only terrain cannot be mistaken for a safe spawn',()=>{
-    reset(0,0,0,false);G.sectorStreamer.preload(0);assert(!G.sectorStreamer.isActive(0));assert(!T.r3ValidateSpawn({x:0,z:0,heading:0}));
-    assert(T.r3RequestSafeSpawn({x:0,z:0,heading:0},'death'));assert(G.sectorStreamer.active.size===3);maneuverProof();
-  });
-  check('enclosed off-road courtyard rejected unless connected to through road',()=>{
-    clearWorld(40,0);for(const [x,z,w,h] of [[23,0,2,40],[57,0,2,40],[40,20,36,2],[40,-20,36,2]])G.collision.registerAABB(0,x,z,w,h,{ownerId:'courtyard'});
-    assert(T.r3SpawnDiskClear(40,0,T.r3SpawnRadius()),'local bay fits');assert(!T.r3ValidateSpawn({x:40,z:0,heading:0}));
-    assert(T.r3RequestSafeSpawn({x:40,z:0,heading:0},'embedded-recovery'));assert.strictEqual(G.player.world.x,0);maneuverProof();
-  });
-  check('normal wall contact or holding DRIVE does not trigger a teleport',()=>{
-    clearWorld();G.collision.registerAABB(0,0,-9,15,2,{ownerId:'wall'});
-    for(let i=0;i<1200;i++){G.tankRuntime.step({throttle:1,steering:0},1/60);assert(T.r3TickSpawnSafety(1/60));}
-    assert(G.tankRuntime.lastMotion.blocked);assert.strictEqual(T.r3SpawnDiagnostics().recoveries,0);assert(!T.r3PlayerEmbedded());
-  });
-  check('embedded saved pose recovers on entry, valid saved pose is unchanged',()=>{
-    clearWorld(4,-10,.7);const p=JSON.stringify(atPose());T.r3TickSpawnSafety(0,true);assert.strictEqual(JSON.stringify(atPose()),p);
-    G.collision.registerAABB(0,4,-10,18,18,{ownerId:'saved-building'});assert(T.r3PlayerEmbedded());assert(T.r3TickSpawnSafety(0,true));assert(T.r3ValidateSpawn(atPose()));assert.strictEqual(T.r3SpawnDiagnostics().last.reason,'entry-recovery');maneuverProof();
-  });
-  check('late scene/collision insertion recovers only a genuinely embedded player',()=>{
-    clearWorld();G.collision.registerAABB(0,0,0,7,7,{ownerId:'late-fort'});assert(T.r3TickSpawnSafety(.3));assert(T.r3ValidateSpawn(atPose()));assert.strictEqual(T.r3SpawnDiagnostics().last.reason,'embedded-recovery');
-  });
-  check('all candidates blocked: fail closed, preserve pose/solids, retry then recover',()=>{
-    clearWorld();const old=JSON.stringify(atPose());for(const i of [-1,0,1,2])G.collision.registerAABB(i,0,T.WorldSpace.sectorCenterZ(i),180,150,{ownerId:'blocked-'+i});
-    const solids=G.collision.stats().colliders;assert(!T.r3RequestSafeSpawn({x:0,z:0,heading:0},'death'));assert.strictEqual(JSON.stringify(atPose()),old);assert(!G.player.group.visible);assert(T.r3SpawnDiagnostics().pending);assert(!T.r3TickSpawnSafety(.1));assert.strictEqual(G.collision.stats().colliders,solids);
-    G.collision.bySector.clear();assert(T.r3TickSpawnSafety(1));assert(!T.r3SpawnDiagnostics().pending);assert(T.r3ValidateSpawn(atPose()));
-  });
-  check('failed-death retry blocks repeated damage and rewards are untouched',()=>{
-    clearWorld();for(const i of [-1,0,1,2])G.collision.registerAABB(i,0,T.WorldSpace.sectorCenterZ(i),180,150,{ownerId:'block'});
-    const state=JSON.stringify(sb.state);T.damagePlayer(1000,{ownerId:'enemy'});assert.strictEqual(G.player.hp,0);const n=G.damageEvents.length;T.damagePlayer(1000,{ownerId:'enemy'});assert.strictEqual(G.damageEvents.length,n);assert.strictEqual(JSON.stringify(sb.state),state);
-  });
-  check('live enemies excluded; dead enemies do not reserve permanent spawn space',()=>{
-    clearWorld();G.enemies=[{world:{x:0,z:0},hp:100,radius:2,dead:false}];assert(!T.r3ValidateSpawn({x:0,z:0,heading:0}));G.enemies[0].dead=true;assert(T.r3ValidateSpawn({x:0,z:0,heading:0}));
-  });
-  check('NaN/infinite/out-of-bounds spawn requests cannot be accepted',()=>{
-    clearWorld();for(const p of [{x:NaN,z:0,heading:0},{x:0,z:Infinity,heading:0},{x:0,z:0,heading:NaN},{x:89,z:0,heading:0}])assert(!T.r3ValidateSpawn(p));
-    assert(T.r3RequestSafeSpawn({x:NaN,z:Infinity,heading:NaN},'death'));assert(T.r3ValidateSpawn(atPose()));
-  });
-  check('200 real damage/death cycles across all ten current procedural templates and 8 headings',()=>{
-    reset();const templates=new Set(),claims=JSON.stringify(sb.state);
-    // Each active layout is instantiated by the original SectorStreamer, never an empty collision fixture.
-    for(let cycle=0;cycle<200;cycle++){
-      const index=2+(cycle%40),z=T.WorldSpace.sectorCenterZ(index),heading=(cycle%8)*Math.PI/4;
-      G.tankRuntime.teleport(0,z,heading);G.sectorStreamer.update(z,true);templates.add(T.visualIdFor(index));
-      const dest=index-1;G.collision.registerAABB(dest,0,T.WorldSpace.sectorCenterZ(dest),18,18,{ownerId:'cycle-fort-'+cycle});
-      G.player.invuln=0;T.damagePlayer(1000,{ownerId:'test-enemy'});assert.strictEqual(G.player.hp,380);assert(!T.r3SpawnDiagnostics().pending);assert(T.r3ValidateSpawn(atPose()));
-      if(cycle%20===0)maneuverProof();else{
-        const p=atPose(),f=T.forwardFromRotation(p.heading),fp=G.player.footprint;
-        for(const sign of [-1,1])assert(!G.collision.resolveTankSweep(p,{x:p.x+f.x*4*sign,z:p.z+f.z*4*sign,heading:p.heading},fp.halfWidth,fp.halfLength,G.player.ownerId).blocked);
-      }
-      assert(G.sectorStreamer.active.size<=3);G.collision.removeOwner('cycle-fort-'+cycle);
-    }
-    assert.strictEqual(templates.size,10);assert.strictEqual(JSON.stringify(sb.state),claims);console.log('  death cycles=200, procedural templates='+templates.size+', streamed sectors max=3');
-  });
-  check('accepted drive, reverse and zero-strafe remain correct after respawn',()=>{
-    clearWorld();assert(T.r3RequestSafeSpawn({x:0,z:0,heading:.35},'death'));const r=G.tankRuntime;
-    for(const throttle of [-1,1]){r.teleport(0,0,.35);for(let i=0;i<30;i++){const result=r.step({throttle,steering:.4},1/60);assert(Math.abs(result.motion.lateralVelocity)<1e-8);}}
-    maneuverProof();
-  });
-  check('respawn preserves independent router pointer ownership, AIM latch, FIRE and auto mode',()=>{
-    clearWorld();const router=new T.GlobalMobileTouchRouter({driveState:G.joy,aimState:G.aim,storage:null});
-    G.mobileRouter=router;for(const [role,id] of [['drive',71],['aim',72],['fire',73]]){router.owners.set(id,role);router.rolePointers[role]=id;}
-    G.joy.active=true;G.joy.id=71;G.aim.active=true;G.aim.id=72;G.mobileAimLatch={valid:true,heading:.9,lastUpdateAt:1000};G.firing=true;G.specialControls.autoMove=-1;
-    const ownership=JSON.stringify([...router.owners]),roles=JSON.stringify(router.rolePointers),latch=JSON.stringify(G.mobileAimLatch);
-    G.collision.registerAABB(0,0,0,14,14,{ownerId:'death-building'});T.damagePlayer(1000,{ownerId:'enemy'});
-    assert.strictEqual(G.mobileRouter,router);assert.strictEqual(JSON.stringify([...router.owners]),ownership);assert.strictEqual(JSON.stringify(router.rolePointers),roles);
-    assert.strictEqual(JSON.stringify(G.mobileAimLatch),latch);assert(G.joy.active&&G.aim.active&&G.firing);assert.strictEqual(G.specialControls.autoMove,-1);
-    G.mobileRouter=null;G.joy.active=false;G.aim.active=false;G.firing=false;G.specialControls.autoMove=0;
-  });
-  check('camera is trailing and lower/closer without changing authoritative pose at 8 headings',()=>{
-    clearWorld();G.camera={position:new Vec3(),lookAt(v){this.look=v.clone();},updateMatrixWorld(){},type:'PerspectiveCamera',fov:T.R2_VIEW.fov};
-    for(let i=0;i<8;i++){
-      G.tankRuntime.teleport(3,-9,i*Math.PI/4);const before=JSON.stringify(atPose());T.r2UpdateCamera(.016,true);const p=atPose(),f=T.forwardFromRotation(p.heading),dx=G.camera.position.x-p.x,dz=G.camera.position.z-p.z;
-      assert(Math.abs(dx*f.x+dz*f.z+17.5)<1e-8);assert.strictEqual(G.camera.position.y,8);assert.strictEqual(JSON.stringify(atPose()),before);
-    }
-    G.camera=null;
-  });
-  check('no new image URLs, texture dimensions or heavyweight model dependencies',()=>{
-    assert.strictEqual(Object.keys(T.PHASE21_ASSETS).length+Object.keys(T.R2_EXTRA_ASSETS).length,11);
-    for(const url of [...Object.values(T.PHASE21_ASSETS),...Object.values(T.R2_EXTRA_ASSETS)])assert(/^img\/frontline1944\/phase21\/p21r2_[a-z]+\.webp$/.test(url));
-    assert(source.includes("runtimeVersion:'P1.2.6F-20260902-5cc6a0'"));
-  });
-  check('shared URL loads once for different materials and repeated subscribers',()=>{
-    reset(0,0,0,false);const start=requests.length;let hits=0;
-    T.r3SharedTexture('stone',()=>hits++);T.r3SharedTexture('stone',()=>hits++);const a=T.r2Surface('stone'),b=T.r2Surface('stone',0xcccccc);
-    assert.strictEqual(requests.length-start,1);requests.at(-1).ok();assert.strictEqual(hits,2);assert.strictEqual(a.map,b.map);
-    T.r3SharedTexture('stone',()=>hits++);assert.strictEqual(hits,3);assert.strictEqual(requests.length-start,1);assert.strictEqual(T.r3TextureDiagnostics().subscribers,0);
-  });
-  check('unloaded subscribers cannot touch disposed materials',()=>{
-    T.r3DisposeTextureCache();let called=0;const release=T.r3SharedTexture('lane',()=>called++);const request=requests.at(-1);release();request.ok();assert.strictEqual(called,0);assert.strictEqual(request.texture.disposals,0);
-  });
-  check('failed/timeout textures do not block gameplay or retry-download on sector churn',()=>{
-    T.r3DisposeTextureCache();let errors=0,ready=0;const start=requests.length;T.r3SharedTexture('grain',()=>ready++,()=>errors++);
-    const request=requests.at(-1);request.fail();T.r3SharedTexture('grain',()=>ready++,()=>errors++);assert.strictEqual(errors,2);assert.strictEqual(ready,0);assert.strictEqual(requests.length-start,1);
-    T.r3SharedTexture('sky',()=>ready++,()=>errors++);const sky=requests.at(-1);for(const [id,t] of [...timers])if(t.ms===10000){timers.delete(id);t.fn();}
-    assert.strictEqual(T.r3TextureDiagnostics().failed,2);sky.ok();assert.strictEqual(ready,0);assert.strictEqual(sky.texture.disposals,1);
-  });
-  check('close while loading prevents late callback and disposes each texture once',()=>{
-    T.r3DisposeTextureCache();let calls=0;T.r3SharedTexture('armor',()=>calls++);const r=requests.at(-1);T.r3DisposeTextureCache();r.ok();assert.strictEqual(calls,0);assert.strictEqual(r.texture.disposals,1);assert.strictEqual(T.r3TextureDiagnostics().urls,0);
-  });
-  check('real corridor unload/re-entry reuses nine existing maps with bounded resources',()=>{
-    reset();const start=requests.length;for(const r of requests.slice(-9))r.ok();const initial=T.r3TextureDiagnostics().urls;
-    const textures=[...G.sectorStreamer.active.get(0).phase21Art.textures];assert.strictEqual(textures.length,9);
-    for(let i=0;i<8;i++){G.sectorStreamer.update(-750,true);G.sectorStreamer.update(0,true);assert(G.sectorStreamer.active.size===3);}
-    assert.strictEqual(requests.length,start);assert.strictEqual(T.r3TextureDiagnostics().urls,initial);assert(textures.every(t=>t.disposals===0));
-    G.sectorStreamer.dispose();T.r2Dispose();assert(textures.every(t=>t.disposals===1));assert.strictEqual(T.r3TextureDiagnostics().urls,0);
-  });
-  check('portrait suspension adapter still neutralizes controls and resume resets time',()=>{
-    reset(0,0,0,false);let cancel=0,recover=0;G.mobileRouter={cancelAll(){cancel++;},recoverFirePosition(){recover++;}};
-    G.keys.add('ArrowUp');G.keys.add('Space');G.firing=true;G.specialControls.autoMove=1;G.mobileFirePulseCount=3;
-    T.setViewportSuspended(true);assert(G.viewportSuspended);assert.strictEqual(cancel,1);assert.strictEqual(G.keys.size,0);assert(!G.firing);assert.strictEqual(G.specialControls.autoMove,0);
-    T.setViewportSuspended(false);assert(!G.viewportSuspended);assert.strictEqual(recover,1);assert.strictEqual(G.last,0);G.mobileRouter=null;
-  });
-  check('safe-spawn state reset has no pending retry leaking into next session',()=>{T.r3ResetSpawnState();assert.strictEqual(T.r3SpawnDiagnostics().recoveries,0);assert(!T.r3SpawnDiagnostics().pending);});
-  console.log('PASS R3 '+checks+' focused groups. Rendering doubles only: no real WebGL screenshots or physical-device acceptance claimed.');
-  console.log('Running existing N3 dynamic control/target tests; its stylesheet-only check is explicitly skipped in this source-only mode.');
+  console.log('PASS R4 '+checks+' focused groups; source-path/gameplay-math tests only. Running accepted Target Lock / global mobile-router regression suite next.');
   runTargetLockN3Tests({sourceOnly:true});
+  console.log('PASS R4 regression bridge: N3 Target Lock / DRIVE-AIM-FIRE router source-path suite passed with additive Scope role. Real browser WebGL, physical mobile multitouch, exact reference-image fidelity and hosting delivery remain acceptance checks.');
 }
+
+function runPhase21R3Tests(){
+  // Explicit source-path/geometry-contract doubles. NOT a WebGL, visual, delivery or physical-phone PASS.
+  const source=fs.readFileSync('js/frontline1944.js','utf8');
+  let checks=0;const check=(name,fn)=>{fn();checks++;console.log('PASS R3 '+name);};
+  class Vec3{
+    constructor(x=0,y=0,z=0){this.set(x,y,z);}set(x,y,z){this.x=x;this.y=y;this.z=z;return this;}
+    setScalar(s){return this.set(s,s,s);}copy(v){return this.set(v.x,v.y,v.z);}clone(){return new Vec3(this.x,this.y,this.z);}
+    lerp(v,t){return this.set(this.x+(v.x-this.x)*t,this.y+(v.y-this.y)*t,this.z+(v.z-this.z)*t);}
+  }
+  class Group{
+    constructor(){this.children=[];this.parent=null;this.position=new Vec3();this.scale=new Vec3(1,1,1);this.rotation={x:0,y:0,z:0};this.userData={};this.visible=true;}
+    add(...nodes){for(const n of nodes){if(n.parent)n.parent.remove(n);n.parent=this;this.children.push(n);}return this;}
+    remove(n){this.children=this.children.filter(x=>x!==n);n.parent=null;}
+    traverse(fn){fn(this);for(const n of this.children)n.traverse(fn);}updateMatrixWorld(){}
+    getWorldPosition(v){v.copy(this.position);for(let p=this.parent;p;p=p.parent){v.x+=p.position.x;v.y+=p.position.y;v.z+=p.position.z;}return v;}
+  }
+  class Color{constructor(value=0xffffff){this.setHex(value);}setHex(v){this.r=((v>>16)&255)/255;this.g=((v>>8)&255)/255;this.b=(v&255)/255;return this;}convertSRGBToLinear(){return this;}clone(){return new Color().copy(this);}copy(c){Object.assign(this,c);return this;}multiplyScalar(v){this.r*=v;this.g*=v;this.b*=v;return this;}}
+  class Material{constructor(o={}){Object.assign(this,o);this.color=new Color(o.color);this.disposals=0;}dispose(){this.disposals++;}clone(){return new Material(this);}}
+  class Geometry{constructor(){this.attributes={};this.disposals=0;}setAttribute(k,v){this.attributes[k]=v;return this;}getAttribute(k){return this.attributes[k];}computeVertexNormals(){}computeBoundingSphere(){this.boundingSphere={radius:150};}dispose(){this.disposals++;}}
+  class Attribute{constructor(values,size){this.array=new Float32Array(values);this.itemSize=size;this.count=values.length/size;}getX(i){return this.array[i*this.itemSize];}getY(i){return this.array[i*this.itemSize+1];}getZ(i){return this.array[i*this.itemSize+2];}}
+  class Mesh extends Group{constructor(g,m){super();this.geometry=g;this.material=m;this.isMesh=true;}}
+  class Texture{constructor(){this.disposals=0;}dispose(){this.disposals++;}}
+  const requests=[],timers=new Map();let serial=0;
+  class TextureLoader{load(url,ok,progress,fail){const texture=new Texture();requests.push({url,ok:()=>ok(texture),fail,texture});return texture;}}
+  const ctx={createRadialGradient(){return {addColorStop(){}};},fillRect(){},clearRect(){}};
+  const document={readyState:'loading',addEventListener(){},removeEventListener(){},querySelector(){return null;},getElementById(){return null;},createElement(){return {width:0,height:0,getContext:()=>ctx};}};
+  const THREE={Group,Object3D:Group,Mesh,Vector3:Vec3,Color,BufferGeometry:Geometry,Float32BufferAttribute:Attribute,
+    MeshBasicMaterial:Material,MeshStandardMaterial:Material,MeshLambertMaterial:Material,SpriteMaterial:Material,
+    BoxGeometry:Geometry,PlaneGeometry:Geometry,CylinderGeometry:Geometry,ConeGeometry:Geometry,DodecahedronGeometry:Geometry,SphereGeometry:Geometry,OctahedronGeometry:Geometry,
+    TextureLoader,CanvasTexture:Texture,Sprite:class extends Group{constructor(m){super();this.material=m;}},RepeatWrapping:1000,sRGBEncoding:3001,DoubleSide:2,BackSide:1};
+  const sb={console,document,THREE,navigator:{maxTouchPoints:1},location:{hostname:'localhost',search:'',origin:'http://localhost:4173'},Math,Date,URLSearchParams,
+    innerWidth:844,innerHeight:390,performance:{now:()=>1000},isAdmin:()=>true,state:{coins:50,frontline1944:{claims:[],wordsDone:0,fortressSerial:2}},
+    setTimeout(fn,ms){const id=++serial;timers.set(id,{fn,ms});return id;},clearTimeout(id){timers.delete(id);},setInterval(){},clearInterval(){},requestAnimationFrame(){},cancelAnimationFrame(){},
+    localStorage:{getItem(){return null;},setItem(){}},addEventListener(){},removeEventListener(){},getComputedStyle(){return {getPropertyValue:()=>0};}};
+  sb.window=sb;vm.createContext(sb);vm.runInContext(source,sb);const T=sb.Frontline1944._t,G=T.G;
+  function reset(x=0,z=0,heading=0,stream=true){
+    if(G.sectorStreamer&&G.sectorStreamer.dispose)G.sectorStreamer.dispose();T.r2Dispose();T.r3ResetSpawnState();T.phase21ResetSession();
+    if(G.resources)G.resources.dispose();G.root=null;G.camera=null;G.scene=new Group();G.layers={};
+    for(const k of Object.values(T.LAYER)){G.layers[k]=new Group();G.scene.add(G.layers[k]);}
+    G.resources=new T.ResourceCache();G.terrain=new T.TerrainSystem();G.collision=new T.CollisionSystem(G.terrain);G.pools=null;G.fortress=null;G.enemies=[];G.smoke=[];G.occluders=[];G.damageEvents=[];G.running=false;
+    G.player={world:{x,z},hullRotation:heading,turretRotation:heading,speed:0,hp:380,maxHp:380,invuln:0,ownerId:'player-owner',playerId:'test-player',damageStatistic:{match:0,lifetime:0},
+      footprint:{halfWidth:T.CFG.tankFootprintHalfWidth,halfLength:T.CFG.tankFootprintHalfLength},group:new Group(),hull:new Group(),turret:new Group()};
+    G.tankRuntime=new T.TankRuntime(G.player,G.collision,G.terrain);G.sectorStreamer=new T.SectorStreamer();
+    if(stream)G.sectorStreamer.update(z,true);
+    G.specialControls={autoMove:0,targetLockMode:false,lockedTarget:null,scopeMode:false};G.keys.clear();return G.player;
+  }
+  function clearWorld(x=0,z=0,heading=0){reset(x,z,heading,false);G.sectorStreamer={currentIndex:T.WorldSpace.sectorIndexAtZ(z),active:new Map(),isActive(i){return this.active.has(i);},update(zz){this.currentIndex=T.WorldSpace.sectorIndexAtZ(zz);this.active=new Map([this.currentIndex-1,this.currentIndex,this.currentIndex+1].map(i=>[i,{}]));},dispose(){}};G.sectorStreamer.update(z,true);}
+  function atPose(){return G.tankRuntime.pose();}
+  function maneuverProof(){
+    const p=atPose(),fp=G.player.footprint;
+    for(let h=0;h<16;h++){
+      const heading=h*Math.PI/8,f=T.forwardFromRotation(heading);
+      assert(!G.collision.hitTankFootprint(p.x,p.z,heading,fp.halfWidth,fp.halfLength,G.player.ownerId).blocked,'full rotation clearance');
+      for(const sign of [-1,1])assert(!G.collision.resolveTankSweep({x:p.x,z:p.z,heading},{x:p.x+f.x*4*sign,z:p.z+f.z*4*sign,heading},fp.halfWidth,fp.halfLength,G.player.ownerId).blocked,'four-unit forward/reverse clearance');
+    }
+    // Execute unchanged authoritative simulation, not just a spawn predicate.
+    for(const throttle of [-1,1]){G.tankRuntime.teleport(p.x,p.z,p.heading);let moved=0;for(let i=0;i<30;i++){const r=G.tankRuntime.step({throttle,steering:0},1/60);assert(!r.motion.blocked);moved+=Math.hypot(r.motion.dx,r.motion.dz);}assert(moved>1.2);}
+    for(const steering of [-1,1]){G.tankRuntime.teleport(p.x,p.z,p.heading);for(let i=0;i<460;i++)assert(!G.tankRuntime.step({throttle:0,steering},1/60).motion.blocked);}
+    G.tankRuntime.teleport(p.x,p.z,p.heading);
+  }
+  check('exact uploaded baseline declaration locks (physics/input/targets/economy/admin)',()=>{
+    const expected=R3_CURRENT_BASELINE_LOCKS;
+    for(const [name,hash] of Object.entries(expected)){const value=T[name]||sb.Frontline1944[name];assert(value,'export '+name);assert.strictEqual(crypto.createHash('sha256').update(value.toString()).digest('hex'),hash,name+' changed');}
+    console.log('  LOCKED '+Object.keys(expected).length+' declarations byte-identical to Task 7cf516');
+  });
+  check('initial active sector uses actual current R2 corridor geometry and collision proxies',()=>{
+    reset();const art=G.sectorStreamer.active.get(0).phase21Art;assert(art&&art.meshCount>0&&art.houses>0&&art.trees>0);assert(G.collision.stats().colliders>20);assert.strictEqual(G.sectorStreamer.active.size,3);
+    console.log('  corridor meshes='+art.meshCount+' triangles='+art.triangleCount+' colliders='+G.collision.stats().colliders);
+  });
+  check('unsafe old center respawn reproduced and fixed through damagePlayer',()=>{
+    reset();G.collision.registerAABB(0,0,0,15,15,{ownerId:'repro-building'});assert(G.collision.hitTankFootprint(0,0,0).blocked);
+    G.player.invuln=0;T.damagePlayer(1000,{ownerId:'test-enemy'});assert.strictEqual(G.player.hp,380);assert(T.r3ValidateSpawn(atPose()));assert.notStrictEqual(G.player.world.z,0);assert.strictEqual(T.r3SpawnDiagnostics().last.reason,'death');maneuverProof();
+  });
+  check('real fortress proxies reject core, walls and gate for respawn, without disabling collision',()=>{
+    clearWorld();const f={world:{x:0,z:0},sectorIndex:0,ownerId:'fortress-repro'};T.registerFortressCollision(f);
+    for(const z of [0,10,-10])assert(!T.r3ValidateSpawn({x:0,z,heading:0}));assert(!T.r3ValidateSpawn({x:10,z:0,heading:0}));
+    const solids=G.collision.stats().colliders;assert(T.r3RequestSafeSpawn({x:0,z:0,heading:0},'death'));assert.strictEqual(G.collision.stats().colliders,solids);maneuverProof();
+  });
+  check('spawn requires visual hull plus full turn and forward/reverse maneuver envelope',()=>{
+    clearWorld();assert(T.r3SpawnRadius()>9);G.collision.registerAABB(0,7,0,2,2,{ownerId:'near-wall'});
+    assert(!G.collision.hitTankFootprint(0,0,0).blocked,'accepted hull alone fits');assert(!T.r3ValidateSpawn({x:0,z:0,heading:0}));
+    assert(T.r3RequestSafeSpawn({x:0,z:0,heading:0},'death'));maneuverProof();
+  });
+  check('safe preferred heading survives respawn at each of eight hull directions',()=>{
+    for(let i=0;i<8;i++){clearWorld(0,0,i*Math.PI/4);const heading=G.tankRuntime.heading;
+      assert(T.r3RequestSafeSpawn({x:0,z:0,heading},'death'));assert.strictEqual(G.tankRuntime.heading,heading);maneuverProof();}
+  });
+  check('tiny circular blockers and rectangular corners cannot fall between footprint samples',()=>{
+    clearWorld();const r=T.r3SpawnRadius();G.collision.registerCircle(0,r*.69,r*.69,.05,{ownerId:'tiny-tree'});assert(!T.r3ValidateSpawn({x:0,z:0,heading:0}));
+    G.collision.bySector.clear();G.collision.registerAABB(0,r*.7,r*.7,.10,.10,{ownerId:'corner'});assert(!T.r3ValidateSpawn({x:0,z:0,heading:0}));
+  });
+  check('deep water and narrow bridge are not selected as maneuver-safe spawn bays',()=>{
+    clearWorld();G.terrain.registerRect(0,0,6,180,20,'DEEP_WATER',80);G.terrain.registerRect(0,0,6,10.5,26,'ROAD',100);
+    assert(!G.terrain.sample(0,6).blocked,'unchanged bridge priority remains driveable');assert(!T.r3ValidateSpawn({x:0,z:6,heading:0}));
+    assert(T.r3RequestSafeSpawn({x:0,z:6,heading:0},'death'));maneuverProof();
+  });
+  check('descriptor-only terrain cannot be mistaken for a safe spawn',()=>{
+    reset(0,0,0,false);G.sectorStreamer.preload(0);assert(!G.sectorStreamer.isActive(0));assert(!T.r3ValidateSpawn({x:0,z:0,heading:0}));
+    assert(T.r3RequestSafeSpawn({x:0,z:0,heading:0},'death'));assert(G.sectorStreamer.active.size===3);maneuverProof();
+  });
+  check('enclosed off-road courtyard rejected unless connected to through road',()=>{
+    clearWorld(40,0);for(const [x,z,w,h] of [[23,0,2,40],[57,0,2,40],[40,20,36,2],[40,-20,36,2]])G.collision.registerAABB(0,x,z,w,h,{ownerId:'courtyard'});
+    assert(T.r3SpawnDiskClear(40,0,T.r3SpawnRadius()),'local bay fits');assert(!T.r3ValidateSpawn({x:40,z:0,heading:0}));
+    assert(T.r3RequestSafeSpawn({x:40,z:0,heading:0},'embedded-recovery'));assert.strictEqual(G.player.world.x,0);maneuverProof();
+  });
+  check('normal wall contact or holding DRIVE does not trigger a teleport',()=>{
+    clearWorld();G.collision.registerAABB(0,0,-9,15,2,{ownerId:'wall'});
+    for(let i=0;i<1200;i++){G.tankRuntime.step({throttle:1,steering:0},1/60);assert(T.r3TickSpawnSafety(1/60));}
+    assert(G.tankRuntime.lastMotion.blocked);assert.strictEqual(T.r3SpawnDiagnostics().recoveries,0);assert(!T.r3PlayerEmbedded());
+  });
+  check('embedded saved pose recovers on entry, valid saved pose is unchanged',()=>{
+    clearWorld(4,-10,.7);const p=JSON.stringify(atPose());T.r3TickSpawnSafety(0,true);assert.strictEqual(JSON.stringify(atPose()),p);
+    G.collision.registerAABB(0,4,-10,18,18,{ownerId:'saved-building'});assert(T.r3PlayerEmbedded());assert(T.r3TickSpawnSafety(0,true));assert(T.r3ValidateSpawn(atPose()));assert.strictEqual(T.r3SpawnDiagnostics().last.reason,'entry-recovery');maneuverProof();
+  });
+  check('late scene/collision insertion recovers only a genuinely embedded player',()=>{
+    clearWorld();G.collision.registerAABB(0,0,0,7,7,{ownerId:'late-fort'});assert(T.r3TickSpawnSafety(.3));assert(T.r3ValidateSpawn(atPose()));assert.strictEqual(T.r3SpawnDiagnostics().last.reason,'embedded-recovery');
+  });
+  check('all candidates blocked: fail closed, preserve pose/solids, retry then recover',()=>{
+    clearWorld();const old=JSON.stringify(atPose());for(const i of [-1,0,1,2])G.collision.registerAABB(i,0,T.WorldSpace.sectorCenterZ(i),180,150,{ownerId:'blocked-'+i});
+    const solids=G.collision.stats().colliders;assert(!T.r3RequestSafeSpawn({x:0,z:0,heading:0},'death'));assert.strictEqual(JSON.stringify(atPose()),old);assert(!G.player.group.visible);assert(T.r3SpawnDiagnostics().pending);assert(!T.r3TickSpawnSafety(.1));assert.strictEqual(G.collision.stats().colliders,solids);
+    G.collision.bySector.clear();assert(T.r3TickSpawnSafety(1));assert(!T.r3SpawnDiagnostics().pending);assert(T.r3ValidateSpawn(atPose()));
+  });
+  check('failed-death retry blocks repeated damage and rewards are untouched',()=>{
+    clearWorld();for(const i of [-1,0,1,2])G.collision.registerAABB(i,0,T.WorldSpace.sectorCenterZ(i),180,150,{ownerId:'block'});
+    const state=JSON.stringify(sb.state);T.damagePlayer(1000,{ownerId:'enemy'});assert.strictEqual(G.player.hp,0);const n=G.damageEvents.length;T.damagePlayer(1000,{ownerId:'enemy'});assert.strictEqual(G.damageEvents.length,n);assert.strictEqual(JSON.stringify(sb.state),state);
+  });
+  check('live enemies excluded; dead enemies do not reserve permanent spawn space',()=>{
+    clearWorld();G.enemies=[{world:{x:0,z:0},hp:100,radius:2,dead:false}];assert(!T.r3ValidateSpawn({x:0,z:0,heading:0}));G.enemies[0].dead=true;assert(T.r3ValidateSpawn({x:0,z:0,heading:0}));
+  });
+  check('NaN/infinite/out-of-bounds spawn requests cannot be accepted',()=>{
+    clearWorld();for(const p of [{x:NaN,z:0,heading:0},{x:0,z:Infinity,heading:0},{x:0,z:0,heading:NaN},{x:89,z:0,heading:0}])assert(!T.r3ValidateSpawn(p));
+    assert(T.r3RequestSafeSpawn({x:NaN,z:Infinity,heading:NaN},'death'));assert(T.r3ValidateSpawn(atPose()));
+  });
+  check('200 real damage/death cycles across all ten current procedural templates and 8 headings',()=>{
+    reset();const templates=new Set(),claims=JSON.stringify(sb.state);
+    // Each active layout is instantiated by the original SectorStreamer, never an empty collision fixture.
+    for(let cycle=0;cycle<200;cycle++){
+      const index=2+(cycle%40),z=T.WorldSpace.sectorCenterZ(index),heading=(cycle%8)*Math.PI/4;
+      G.tankRuntime.teleport(0,z,heading);G.sectorStreamer.update(z,true);templates.add(T.visualIdFor(index));
+      const dest=index-1;G.collision.registerAABB(dest,0,T.WorldSpace.sectorCenterZ(dest),18,18,{ownerId:'cycle-fort-'+cycle});
+      G.player.invuln=0;T.damagePlayer(1000,{ownerId:'test-enemy'});assert.strictEqual(G.player.hp,380);assert(!T.r3SpawnDiagnostics().pending);assert(T.r3ValidateSpawn(atPose()));
+      if(cycle%20===0)maneuverProof();else{
+        const p=atPose(),f=T.forwardFromRotation(p.heading),fp=G.player.footprint;
+        for(const sign of [-1,1])assert(!G.collision.resolveTankSweep(p,{x:p.x+f.x*4*sign,z:p.z+f.z*4*sign,heading:p.heading},fp.halfWidth,fp.halfLength,G.player.ownerId).blocked);
+      }
+      assert(G.sectorStreamer.active.size<=3);G.collision.removeOwner('cycle-fort-'+cycle);
+    }
+    assert.strictEqual(templates.size,10);assert.strictEqual(JSON.stringify(sb.state),claims);console.log('  death cycles=200, procedural templates='+templates.size+', streamed sectors max=3');
+  });
+  check('accepted drive, reverse and zero-strafe remain correct after respawn',()=>{
+    clearWorld();assert(T.r3RequestSafeSpawn({x:0,z:0,heading:.35},'death'));const r=G.tankRuntime;
+    for(const throttle of [-1,1]){r.teleport(0,0,.35);for(let i=0;i<30;i++){const result=r.step({throttle,steering:.4},1/60);assert(Math.abs(result.motion.lateralVelocity)<1e-8);}}
+    maneuverProof();
+  });
+  check('respawn preserves independent router pointer ownership, AIM latch, FIRE and auto mode',()=>{
+    clearWorld();const router=new T.GlobalMobileTouchRouter({driveState:G.joy,aimState:G.aim,storage:null});
+    G.mobileRouter=router;for(const [role,id] of [['drive',71],['aim',72],['fire',73]]){router.owners.set(id,role);router.rolePointers[role]=id;}
+    G.joy.active=true;G.joy.id=71;G.aim.active=true;G.aim.id=72;G.mobileAimLatch={valid:true,heading:.9,lastUpdateAt:1000};G.firing=true;G.specialControls.autoMove=-1;
+    const ownership=JSON.stringify([...router.owners]),roles=JSON.stringify(router.rolePointers),latch=JSON.stringify(G.mobileAimLatch);
+    G.collision.registerAABB(0,0,0,14,14,{ownerId:'death-building'});T.damagePlayer(1000,{ownerId:'enemy'});
+    assert.strictEqual(G.mobileRouter,router);assert.strictEqual(JSON.stringify([...router.owners]),ownership);assert.strictEqual(JSON.stringify(router.rolePointers),roles);
+    assert.strictEqual(JSON.stringify(G.mobileAimLatch),latch);assert(G.joy.active&&G.aim.active&&G.firing);assert.strictEqual(G.specialControls.autoMove,-1);
+    G.mobileRouter=null;G.joy.active=false;G.aim.active=false;G.firing=false;G.specialControls.autoMove=0;
+  });
+  check('camera is trailing and lower/closer without changing authoritative pose at 8 headings',()=>{
+    clearWorld();G.camera={position:new Vec3(),lookAt(v){this.look=v.clone();},updateMatrixWorld(){},type:'PerspectiveCamera',fov:T.R2_VIEW.fov};
+    for(let i=0;i<8;i++){
+      G.tankRuntime.teleport(3,-9,i*Math.PI/4);const before=JSON.stringify(atPose());T.r2UpdateCamera(.016,true);const p=atPose(),f=T.forwardFromRotation(p.heading),dx=G.camera.position.x-p.x,dz=G.camera.position.z-p.z;
+      assert(Math.abs(dx*f.x+dz*f.z+17.5)<1e-8);assert.strictEqual(G.camera.position.y,8);assert.strictEqual(JSON.stringify(atPose()),before);
+    }
+    G.camera=null;
+  });
+  check('no new image URLs, texture dimensions or heavyweight model dependencies',()=>{
+    assert.strictEqual(Object.keys(T.PHASE21_ASSETS).length+Object.keys(T.R2_EXTRA_ASSETS).length,11);
+    for(const url of [...Object.values(T.PHASE21_ASSETS),...Object.values(T.R2_EXTRA_ASSETS)])assert(/^img\/frontline1944\/phase21\/p21r2_[a-z]+\.webp$/.test(url));
+    assert(source.includes("runtimeVersion:'P1.2.6F-20260902-5cc6a0'"));
+  });
+  check('shared URL loads once for different materials and repeated subscribers',()=>{
+    reset(0,0,0,false);const start=requests.length;let hits=0;
+    T.r3SharedTexture('stone',()=>hits++);T.r3SharedTexture('stone',()=>hits++);const a=T.r2Surface('stone'),b=T.r2Surface('stone',0xcccccc);
+    assert.strictEqual(requests.length-start,1);requests.at(-1).ok();assert.strictEqual(hits,2);assert.strictEqual(a.map,b.map);
+    T.r3SharedTexture('stone',()=>hits++);assert.strictEqual(hits,3);assert.strictEqual(requests.length-start,1);assert.strictEqual(T.r3TextureDiagnostics().subscribers,0);
+  });
+  check('unloaded subscribers cannot touch disposed materials',()=>{
+    T.r3DisposeTextureCache();let called=0;const release=T.r3SharedTexture('lane',()=>called++);const request=requests.at(-1);release();request.ok();assert.strictEqual(called,0);assert.strictEqual(request.texture.disposals,0);
+  });
+  check('failed/timeout textures do not block gameplay or retry-download on sector churn',()=>{
+    T.r3DisposeTextureCache();let errors=0,ready=0;const start=requests.length;T.r3SharedTexture('grain',()=>ready++,()=>errors++);
+    const request=requests.at(-1);request.fail();T.r3SharedTexture('grain',()=>ready++,()=>errors++);assert.strictEqual(errors,2);assert.strictEqual(ready,0);assert.strictEqual(requests.length-start,1);
+    T.r3SharedTexture('sky',()=>ready++,()=>errors++);const sky=requests.at(-1);for(const [id,t] of [...timers])if(t.ms===10000){timers.delete(id);t.fn();}
+    assert.strictEqual(T.r3TextureDiagnostics().failed,2);sky.ok();assert.strictEqual(ready,0);assert.strictEqual(sky.texture.disposals,1);
+  });
+  check('close while loading prevents late callback and disposes each texture once',()=>{
+    T.r3DisposeTextureCache();let calls=0;T.r3SharedTexture('armor',()=>calls++);const r=requests.at(-1);T.r3DisposeTextureCache();r.ok();assert.strictEqual(calls,0);assert.strictEqual(r.texture.disposals,1);assert.strictEqual(T.r3TextureDiagnostics().urls,0);
+  });
+  check('real corridor unload/re-entry reuses nine existing maps with bounded resources',()=>{
+    reset();const start=requests.length;for(const r of requests.slice(-9))r.ok();const initial=T.r3TextureDiagnostics().urls;
+    const textures=[...G.sectorStreamer.active.get(0).phase21Art.textures];assert.strictEqual(textures.length,9);
+    for(let i=0;i<8;i++){G.sectorStreamer.update(-750,true);G.sectorStreamer.update(0,true);assert(G.sectorStreamer.active.size===3);}
+    assert.strictEqual(requests.length,start);assert.strictEqual(T.r3TextureDiagnostics().urls,initial);assert(textures.every(t=>t.disposals===0));
+    G.sectorStreamer.dispose();T.r2Dispose();assert(textures.every(t=>t.disposals===1));assert.strictEqual(T.r3TextureDiagnostics().urls,0);
+  });
+  check('portrait suspension adapter still neutralizes controls and resume resets time',()=>{
+    reset(0,0,0,false);let cancel=0,recover=0;G.mobileRouter={cancelAll(){cancel++;},recoverFirePosition(){recover++;}};
+    G.keys.add('ArrowUp');G.keys.add('Space');G.firing=true;G.specialControls.autoMove=1;G.mobileFirePulseCount=3;
+    T.setViewportSuspended(true);assert(G.viewportSuspended);assert.strictEqual(cancel,1);assert.strictEqual(G.keys.size,0);assert(!G.firing);assert.strictEqual(G.specialControls.autoMove,0);
+    T.setViewportSuspended(false);assert(!G.viewportSuspended);assert.strictEqual(recover,1);assert.strictEqual(G.last,0);G.mobileRouter=null;
+  });
+  check('safe-spawn state reset has no pending retry leaking into next session',()=>{T.r3ResetSpawnState();assert.strictEqual(T.r3SpawnDiagnostics().recoveries,0);assert(!T.r3SpawnDiagnostics().pending);});
+  console.log('PASS R3 '+checks+' focused groups. Rendering doubles only: no real WebGL screenshots or physical-device acceptance claimed.');
+  console.log('Running existing N3 dynamic control/target tests; its stylesheet-only check is explicitly skipped in this source-only mode.');
+  runTargetLockN3Tests({sourceOnly:true});
+}
