@@ -1,10 +1,10 @@
 {
   "schema_version": 4,
   "project": "english-pet-game",
-  "structure_signature": "51bb1b577082399e3d2fd15b892b4180d6193b67af27156d0e67716a8b0e0e23",
-  "structure_entry_count": 2842,
+  "structure_signature": "45c733821e3055066b7f8c48d6a88e7e816fbe6ac11afe34b17105079ad0c831",
+  "structure_entry_count": 2843,
   "generated_by": "VW Dev Studio Local Token Saver",
-  "generated_at": "2026-09-05T14:14:09",
+  "generated_at": "2026-09-06T06:55:07",
   "generation_mode": "local_no_ai_no_api",
   "areas": {
     "main_world": [
