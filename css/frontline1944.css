@@ -46,7 +46,7 @@
 
 
 
-#vw-frontline1944{--fl44-css-runtime-id:"P2.1R11.3-c08371-CSS";--fl44-safe-top:env(safe-area-inset-top,0px);--fl44-safe-right:env(safe-area-inset-right,0px);--fl44-safe-bottom:env(safe-area-inset-bottom,0px);--fl44-safe-left:env(safe-area-inset-left,0px);position:fixed;inset:0;z-index:2147481800;background:#0c1511;color:#fff;font-family:Kanit,system-ui,sans-serif;overflow:hidden;touch-action:none!important;overscroll-behavior:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#vw-frontline1944{--fl44-css-runtime-id:"P2.1R12-a8e36a-CSS";--fl44-safe-top:env(safe-area-inset-top,0px);--fl44-safe-right:env(safe-area-inset-right,0px);--fl44-safe-bottom:env(safe-area-inset-bottom,0px);--fl44-safe-left:env(safe-area-inset-left,0px);position:fixed;inset:0;z-index:2147481800;background:#0c1511;color:#fff;font-family:Kanit,system-ui,sans-serif;overflow:hidden;touch-action:none!important;overscroll-behavior:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 
 
 
@@ -2054,3 +2054,11 @@ body:has(#vw-frontline1944) #btn-rail-frontline1944,body:has(#vw-frontline1944) 
 #vw-frontline1944[data-runtime-version="P2.1R11.3-c08371"] .fl44-fire *,
 #vw-frontline1944[data-runtime-version="P2.1R11.3-c08371"] .fl44-mg *{opacity:1!important;}
 @media(max-height:430px){#vw-frontline1944[data-runtime-version="P2.1R11.3-c08371"] .fl44-drive-labels text{font-size:11.6px!important;}}
+
+/* Phase 2.1 R12 objective guidance: compact, safe and non-blocking. */
+#vw-frontline1944 .fl44-objective{max-width:min(330px,34vw);background:rgba(18,23,21,.50);border-color:rgba(193,151,78,.72)}
+#vw-frontline1944 .fl44-objective #fl44-distance{font-variant-numeric:tabular-nums}
+#vw-frontline1944 .fl44-arrow[data-offscreen="true"]{filter:drop-shadow(0 0 5px rgba(255,210,112,.8));animation:fl44-r12-guide 1.1s ease-in-out infinite}
+#vw-frontline1944 .fl44-boss{max-width:280px;background:rgba(18,23,21,.50)}
+@keyframes fl44-r12-guide{50%{opacity:.58}}
+@media(max-width:700px),(max-height:430px){#vw-frontline1944 .fl44-objective{max-width:min(250px,38vw);font-size:9px}#vw-frontline1944 .fl44-boss{max-width:220px}}

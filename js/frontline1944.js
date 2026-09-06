@@ -12123,7 +12123,7 @@ const CFG={
 
 
 
-  runtimeVersion:'P2.1R11.3-c08371',
+  runtimeVersion:'P2.1R12-a8e36a',
 
 
 
@@ -119793,7 +119793,7 @@ function persist(){
 
 
 
-  p.objectiveSectorIndex=Number.isFinite(G.objectiveSectorIndex)?G.objectiveSectorIndex:null;
+  p.objectiveSectorIndex=Number.isFinite(G.objectiveSectorIndex)?G.objectiveSectorIndex:null;r12PersistMission();
 
 
 
@@ -251989,7 +251989,7 @@ function r113DropVisual(rec,impact){if(!rec)return;const nodes=[rec.node,...rec.
 function r113DestroyEnvironmentByCollider(collider,from,to){if(!collider||collider.destructible!==true||collider.protected===true)return false;const rec=G.environmentDestructibles.get(String(collider.environmentId||collider.ownerId||''));if(!rec||rec.destroyed)return false;const impact=r113EnvironmentImpactVector(from,to);if(impact.distance<CFG.environmentImpactMinDistance)return false;rec.destroyed=true;rec.destroyedAt=Date.now();rec.impact=impact;if(G.collision)G.collision.removeOwner(rec.id);r113DropVisual(rec,impact);return true;}
 function r113DisposeEnvironmentPrefix(prefix){prefix=String(prefix||'');for(const [id,rec] of [...G.environmentDestructibles])if(id.startsWith(prefix)||String(rec&&rec.rt&&rec.rt.ownerId||'').startsWith(prefix))G.environmentDestructibles.delete(id);}
 CollisionSystem.prototype.resolveTankSweep=function(from,to,halfWidth=CFG.tankFootprintHalfWidth,halfLength=CFG.tankFootprintHalfLength,ignoreOwner=''){let out=_r113ResolveTankSweep.call(this,from,to,halfWidth,halfLength,ignoreOwner);if(out&&out.blocked&&out.contact&&out.contact.type==='solid'&&r113DestroyEnvironmentByCollider(out.contact.collider,from,to))out=_r113ResolveTankSweep.call(this,from,to,halfWidth,halfLength,ignoreOwner);return out;};
-function visualIdFor(logicalIndex){return hash32((logicalIndex|0)*1103515245+12345)%SECTOR_TEMPLATES.length;}
+function visualIdFor(logicalIndex){const m=G&&G.r12Mission;if(m&&logicalIndex>=m.baseSector&&logicalIndex<m.baseSector+R12_SECTOR_PLAN.length)return R12_SECTOR_PLAN[logicalIndex-m.baseSector].visual;return hash32((logicalIndex|0)*1103515245+12345)%SECTOR_TEMPLATES.length;}
 
 
 
@@ -302622,6 +302622,47 @@ const R111_SYSTEM=Object.freeze({id:'P2.1R11.1-d86056',taskId:'VW-20260906-17460
 
 const R112_SYSTEM=Object.freeze({id:'P2.1R11.2-c85cc6',taskId:'VW-20260906-182626-c85cc6',baselineTaskId:R111_SYSTEM.taskId,responsiveHud:true,centralCombatSafeZone:true});
 const R113_SYSTEM=Object.freeze({id:'P2.1R11.3-c08371',taskId:'VW-20260906-191254-c08371',baselineTaskId:R112_SYSTEM.taskId,responsiveHud:true,destructibleEnvironment:true,centralWallet:true,combatDamageAccounting:true});
+
+
+// Phase 2.1 R12 — battlefield mission flow / streamed sectors / fortress progression.
+const R12_SYSTEM=Object.freeze({id:'P2.1R12-a8e36a',taskId:'VW-20260906-200047-a8e36a',baselineTaskId:'VW-20260906-191254-c08371',sectorCount:8});
+const R12_MISSION_STATES=Object.freeze({MISSION_START:'MISSION_START',ADVANCE:'ADVANCE',ACTIVE_OBJECTIVE:'ACTIVE_OBJECTIVE',OBJECTIVE_COMPLETE:'OBJECTIVE_COMPLETE',SECTOR_CLEAR:'SECTOR_CLEAR',NEXT_SECTOR:'NEXT_SECTOR',FORTRESS_APPROACH:'FORTRESS_APPROACH',FORTRESS_ASSAULT:'FORTRESS_ASSAULT',MISSION_COMPLETE:'MISSION_COMPLETE'});
+const R12_SECTOR_PLAN=Object.freeze([
+ Object.freeze({key:'rural',label:'Rural Approach',visual:0,landmark:'WINDMILL',objective:'ADVANCE TO VILLAGE'}),
+ Object.freeze({key:'village',label:'Village',visual:3,landmark:'WATER TOWER',objective:'CROSS THE VILLAGE'}),
+ Object.freeze({key:'woodland',label:'Forest / Woodland',visual:2,landmark:'SMOKE COLUMN',objective:'FOLLOW THE WOODLAND ROAD'}),
+ Object.freeze({key:'bridge',label:'Bridge / River Approach',visual:5,landmark:'BRIDGE',objective:'REACH THE BRIDGE'}),
+ Object.freeze({key:'ruins',label:'Damaged Town / Ruins',visual:4,landmark:'RUINED TOWER',objective:'ADVANCE THROUGH THE RUINS'}),
+ Object.freeze({key:'defense',label:'Defensive Line',visual:6,landmark:'BUNKER LINE',objective:'BREAK THROUGH THE DEFENSIVE LINE'}),
+ Object.freeze({key:'fortress_approach',label:'Fortress Approach',visual:9,landmark:'FORTRESS GATE',objective:'REACH FORTRESS APPROACH'}),
+ Object.freeze({key:'fortress_outer',label:'Fortress Outer Area',visual:9,landmark:'FORTRESS CORE',objective:'ASSAULT THE FORTRESS'})
+]);
+function r12Mission(){return G.r12Mission||null;}
+function r12InitMission(){
+ const p=ensureProgress(),start=WorldSpace.sectorIndexAtZ(G.player?G.player.world.z:0),saved=p&&p.r12Mission&&typeof p.r12Mission==='object'?p.r12Mission:null;
+ let base=Number.isFinite(Number(saved&&saved.baseSector))?Number(saved.baseSector):start,step=clamp(Math.floor(Number(saved&&saved.step)||0),0,R12_SECTOR_PLAN.length-1),complete=!!(saved&&saved.complete);
+ if(start<base-1||start>base+R12_SECTOR_PLAN.length+1){base=start;step=0;complete=false;}
+ G.r12Mission={baseSector:base,step,state:complete?R12_MISSION_STATES.MISSION_COMPLETE:(step>=6?R12_MISSION_STATES.FORTRESS_APPROACH:R12_MISSION_STATES.ADVANCE),complete,advanceSerial:0,checkpointStep:clamp(Math.floor(Number(saved&&saved.checkpointStep)||0),0,step),rewarded:!!(saved&&saved.rewarded)};
+ r12PersistMission();return G.r12Mission;
+}
+function r12PersistMission(){const m=r12Mission(),p=window.state&&state.frontline1944;if(!m||!p)return;p.r12Mission={baseSector:m.baseSector,step:m.step,state:m.state,complete:m.complete,checkpointStep:m.checkpointStep,rewarded:m.rewarded};}
+function r12PlanAtStep(step){return R12_SECTOR_PLAN[clamp(Math.floor(Number(step)||0),0,R12_SECTOR_PLAN.length-1)];}
+function r12SectorForStep(step){const m=r12Mission();return (m?m.baseSector:0)+clamp(Math.floor(Number(step)||0),0,R12_SECTOR_PLAN.length-1);}
+function r12CurrentObjective(){
+ const m=r12Mission();if(!m)return null;if(m.complete)return {label:'MISSION COMPLETE',detail:'ภารกิจสำเร็จ',sectorIndex:r12SectorForStep(7),world:G.fortress&&G.fortress.world};
+ const plan=r12PlanAtStep(m.step),sectorIndex=r12SectorForStep(m.step),world=(m.step>=7&&G.fortress)?G.fortress.world:{x:0,z:WorldSpace.sectorCenterZ(sectorIndex)};
+ return {label:plan.objective,detail:plan.landmark+' · '+plan.label,sectorIndex,world};
+}
+function r12CheckpointPose(){const m=r12Mission();if(!m)return null;const step=clamp(m.checkpointStep,0,R12_SECTOR_PLAN.length-1),idx=r12SectorForStep(step),z=WorldSpace.sectorCenterZ(idx)+Math.min(28,CFG.sectorLength*.18);return {x:0,z,heading:0};}
+function r12AdvanceMission(){
+ const m=r12Mission();if(!m||m.complete)return false;const old=m.step;if(old>=7)return false;m.state=R12_MISSION_STATES.OBJECTIVE_COMPLETE;m.step=old+1;m.advanceSerial++;if(m.step===1||m.step===3||m.step===6)m.checkpointStep=m.step;m.state=m.step>=7?R12_MISSION_STATES.FORTRESS_ASSAULT:(m.step>=6?R12_MISSION_STATES.FORTRESS_APPROACH:R12_MISSION_STATES.NEXT_SECTOR);r12PersistMission();persist();updateHud();return true;
+}
+function r12TickMission(){
+ const m=r12Mission();if(!m||m.complete||!G.player)return;const idx=WorldSpace.sectorIndexAtZ(G.player.world.z),target=r12SectorForStep(m.step);
+ if(m.step<7&&idx>=target){m.state=R12_MISSION_STATES.ACTIVE_OBJECTIVE;const center=WorldSpace.sectorCenterZ(target),passed=G.player.world.z>=center+CFG.sectorLength*.24;if(passed)r12AdvanceMission();}
+ if(m.step>=7&&G.fortress){m.state=R12_MISSION_STATES.FORTRESS_ASSAULT;}
+}
+function r12MissionComplete(){const m=r12Mission();if(!m||m.complete)return false;m.complete=true;m.state=R12_MISSION_STATES.MISSION_COMPLETE;m.checkpointStep=7;r12PersistMission();persist();return true;}
 
 const R111_VIEWPORTS=Object.freeze([[568,320],[640,360],[720,360],[740,360],[780,360],[812,375],[844,390],[852,393],[896,414],[915,412],[932,430],[960,432],[1024,480],[1080,480],[1180,540],[1253,553],[1280,720],[1366,768],[1920,1080]]);
 
@@ -380911,6 +380952,7 @@ function safeActivateLocalTargetLockTestRange(){
 
 
 function activateNextFortress(initial){
+  if(r12Mission()&&r12Mission().complete&&!localTargetLockTestRangeEnabled()){removeFortress();updateHud();return false;}
 
 
 
@@ -381285,7 +381327,7 @@ function activateNextFortress(initial){
 
 
 
-  else target=Math.max(current+1,Number.isFinite(oldSector)?oldSector+1:current+1);
+  else target=r12Mission()?r12SectorForStep(7):Math.max(current+1,Number.isFinite(oldSector)?oldSector+1:current+1);
 
 
 
@@ -389443,7 +389485,7 @@ function damagePlayer(d,projectile){
 
   recordDamage(projectile&&projectile.ownerId||'enemy',G.player.playerId,armor.effective,'projectile');burst(G.player.world,0xff7048,8);
 
-  if(G.player.hp<=0){clearTargetLock('LOST',true);const idx=Math.max(0,G.sectorStreamer.currentIndex-1);r3RequestSafeSpawn({x:0,z:WorldSpace.sectorCenterZ(idx),heading:G.tankRuntime?G.tankRuntime.heading:G.player.hullRotation},'death');}
+  if(G.player.hp<=0){clearTargetLock('LOST',true);const cp=r12CheckpointPose(),idx=Math.max(0,G.sectorStreamer.currentIndex-1);r3RequestSafeSpawn(cp||{x:0,z:WorldSpace.sectorCenterZ(idx),heading:G.tankRuntime?G.tankRuntime.heading:G.player.hullRotation},'death');}
 
   updateHud();return armor.effective>0;
 
@@ -389901,7 +389943,7 @@ function destroyCore(){
 
 
 
-  showToast('FORTRESS DESTROYED','กำลังยึดตัวอักษรจากฐาน');const id=f.id;setTimeout(()=>{if(G.running)awardLetter(id);},620);updateHud();
+  r12MissionComplete();showToast('MISSION COMPLETE · FORTRESS DESTROYED','กำลังยึดตัวอักษรจากฐาน');const id=f.id;setTimeout(()=>{if(G.running)awardLetter(id);},620);updateHud();
 
 
 
@@ -417719,7 +417761,7 @@ function cameraTick(dt){r2UpdateCamera(dt);}
 
 
 
-function updateObjective(){if(!G.fortress||!G.player)return;const a=G.player.world,b=G.fortress.world,dx=b.x-a.x,dz=b.z-a.z,ang=wrapPi(Math.atan2(dx,-dz)+(r2Visual&&r2Visual.cameraHeading||0))*180/Math.PI,meters=Math.round(Math.hypot(dx,dz)*4);const ar=$('#fl44-arrow');if(ar)ar.style.transform='rotate('+ang+'deg)';const ds=$('#fl44-distance');if(ds)ds.textContent=meters+' m';}
+function updateObjective(){if(!G.player)return;const objective=r12CurrentObjective(),b=objective&&objective.world?objective.world:(G.fortress&&G.fortress.world);if(!b)return;const a=G.player.world,dx=b.x-a.x,dz=b.z-a.z,ang=wrapPi(Math.atan2(dx,-dz)+(r2Visual&&r2Visual.cameraHeading||0))*180/Math.PI,meters=Math.round(Math.hypot(dx,dz)*4);const ar=$('#fl44-arrow');if(ar){ar.style.transform='rotate('+ang+'deg)';ar.dataset.offscreen=String(!!(WorldSpace.worldToScreen&&(()=>{const p=WorldSpace.worldToScreen(b.x,3,b.z);return !p||!p.visible||p.x<40||p.x>innerWidth-40||p.y<70||p.y>innerHeight-40;})()));}const ds=$('#fl44-distance');if(ds)ds.textContent=(Math.max(0,Math.round(meters/10)*10))+' m';}
 
 
 
@@ -418344,7 +418386,7 @@ function updateObjective(){if(!G.fortress||!G.player)return;const a=G.player.wor
 
 
 
-function fortressStateText(){if(r3SpawnState.pending)return 'กำลังค้นหาจุดเกิดปลอดภัย · รอพื้นที่ว่าง';if(localTargetLockTestRangeEnabled()&&G.localTargetLockTestStatus&&G.localTargetLockTestStatus.state==='error')return 'LOCAL TEST ERROR · เล่นต่อได้ · ตรวจ console';const f=G.fortress;if(f&&f.testRange&&f.state!=='destroyed')return 'LOCAL TEST · NO REWARDS · '+({defenders:'ทำลายศัตรู 3 ตัว',boss:'กำจัดบอส',core:'ทำลาย Core'}[f.state]||f.state);if(!f)return 'กำลังค้นหาเป้าหมาย';if(f.testRange&&f.state==='destroyed')return 'Local Target Lock test complete · กำลังสร้างชุดใหม่';return ({dormant:'เดินทางไปยังฐานเป้าหมาย',defenders:'ทำลายหน่วยป้องกัน',boss:'กำจัดบอสประจำฐาน',core:'บอสพ่ายแล้ว · ทำลาย Fortress Core',destroyed:'ฐานถูกทำลาย · รับตัวอักษร'})[f.state]||f.state;}
+function fortressStateText(){const mission=r12Mission();if(mission&&mission.complete)return 'MISSION COMPLETE';if(mission&&mission.step<7){const o=r12CurrentObjective();return o?o.detail:'ADVANCE';}if(r3SpawnState.pending)return 'กำลังค้นหาจุดเกิดปลอดภัย · รอพื้นที่ว่าง';if(localTargetLockTestRangeEnabled()&&G.localTargetLockTestStatus&&G.localTargetLockTestStatus.state==='error')return 'LOCAL TEST ERROR · เล่นต่อได้ · ตรวจ console';const f=G.fortress;if(f&&f.testRange&&f.state!=='destroyed')return 'LOCAL TEST · NO REWARDS · '+({defenders:'ทำลายศัตรู 3 ตัว',boss:'กำจัดบอส',core:'ทำลาย Core'}[f.state]||f.state);if(!f)return 'กำลังค้นหาเป้าหมาย';if(f.testRange&&f.state==='destroyed')return 'Local Target Lock test complete · กำลังสร้างชุดใหม่';return ({dormant:'เดินทางไปยังฐานเป้าหมาย',defenders:'ทำลายหน่วยป้องกัน',boss:'กำจัดบอสประจำฐาน',core:'บอสพ่ายแล้ว · ทำลาย Fortress Core',destroyed:'ฐานถูกทำลาย · รับตัวอักษร'})[f.state]||f.state;}
 
 
 
@@ -418639,7 +418681,7 @@ function updateHud(){
 
 
 
-  const ob=$('#fl44-objective');if(ob)ob.textContent=G.fortress?(G.fortress.testRange?'LOCAL TEST · Fortress ':'Fortress ')+G.fortress.serial:'ค้นหาฐานศัตรู';
+  const ob=$('#fl44-objective'),r12o=r12CurrentObjective();if(ob)ob.textContent=r12o?r12o.label:(G.fortress?(G.fortress.testRange?'LOCAL TEST · Fortress ':'Fortress ')+G.fortress.serial:'ค้นหาฐานศัตรู');
 
 
 
@@ -506879,7 +506921,7 @@ function buildWorld(){
 
 
 
-  G.terrain=new TerrainSystem();G.collision=new CollisionSystem(G.terrain);G.sectorStreamer=new SectorStreamer();initPools();makePlayer();G.sectorStreamer.currentIndex=WorldSpace.sectorIndexAtZ(G.player.world.z);G.sectorStreamer.update(G.player.world.z,true);activateNextFortress(true);r3TickSpawnSafety(0,true);r2UpdateCamera(0,true);r2InstallHud();
+  G.terrain=new TerrainSystem();G.collision=new CollisionSystem(G.terrain);G.sectorStreamer=new SectorStreamer();initPools();makePlayer();G.sectorStreamer.currentIndex=WorldSpace.sectorIndexAtZ(G.player.world.z);r12InitMission();G.sectorStreamer.update(G.player.world.z,true);activateNextFortress(true);r3TickSpawnSafety(0,true);r2UpdateCamera(0,true);r2InstallHud();
 
 
 
@@ -508859,7 +508901,7 @@ function loop(now){
 
 
 
-  if(!G.running)return;if(G.viewportSuspended){G.last=0;G.raf=requestAnimationFrame(loop);return;}const dt=Math.min(.034,G.last?(now-G.last)/1000:.016);G.last=now;if(r3TickSpawnSafety(dt))tickTank(dt);tickFortress();tickEnemies(dt,now);tickZombieRamming();tickMachineGun(now);tickProjectilePool(G.pools.playerProjectiles,dt,true);tickProjectilePool(G.pools.mgProjectiles,dt,true);tickProjectilePool(G.pools.enemyProjectiles,dt,false);tickFx(dt,now);cameraTick(dt);updateOcclusionOrder();updateObjective();updateTargetLockMarker();updateProjectedShotMarker(now);if((now|0)%220<34)updateHud();G.renderer.render(G.scene,G.camera);G.raf=requestAnimationFrame(loop);
+  if(!G.running)return;if(G.viewportSuspended){G.last=0;G.raf=requestAnimationFrame(loop);return;}const dt=Math.min(.034,G.last?(now-G.last)/1000:.016);G.last=now;if(r3TickSpawnSafety(dt))tickTank(dt);r12TickMission();tickFortress();tickEnemies(dt,now);tickZombieRamming();tickMachineGun(now);tickProjectilePool(G.pools.playerProjectiles,dt,true);tickProjectilePool(G.pools.mgProjectiles,dt,true);tickProjectilePool(G.pools.enemyProjectiles,dt,false);tickFx(dt,now);cameraTick(dt);updateOcclusionOrder();updateObjective();updateTargetLockMarker();updateProjectedShotMarker(now);if((now|0)%220<34)updateHud();G.renderer.render(G.scene,G.camera);G.raf=requestAnimationFrame(loop);
 
 
 

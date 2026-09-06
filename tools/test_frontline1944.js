@@ -10376,7 +10376,7 @@ const versionPath='version.json',buildVersion=fs.existsSync(versionPath)?JSON.pa
 
 
 
-const RUNTIME_ID='P2.1R11.3-c08371';
+const RUNTIME_ID='P2.1R12-a8e36a';
 
 
 
@@ -235591,9 +235591,9 @@ function runPhase21R3Tests(){
   assert(source.includes("grid-template-columns:minmax(28px,.8fr) minmax(0,1fr)!important"),'AUTO icon/text columns are reserved');
   assert(source.includes("#vw-frontline1944 .fl44-state{display:none!important"),'long center state bar is removed from battlefield presentation');
   assert(source.includes('id="fl44-objective-state"'),'state information is relocated into right mission panel');
-  assert(css.includes('--fl44-css-runtime-id:"P2.1R11.3-c08371-CSS"'),'current CSS identity synchronized after R11.3');
+  assert(css.includes('--fl44-css-runtime-id:"P2.1R12-a8e36a-CSS"'),'current CSS identity synchronized after R12');
   assert(css.includes('data-task-id="VW-20260906-182626-c85cc6"'),'R11.2 CSS task marker synchronized');
-  assert(html.includes("var FRONTLINE_RUNTIME_ID='P2.1R11.3-c08371';"),'current HTML loader identity synchronized after R11.3');
+  assert(html.includes("var FRONTLINE_RUNTIME_ID='P2.1R12-a8e36a';"),'current HTML loader identity synchronized after R12');
 
   const start=source.indexOf('const R111_SYSTEM=');
   const end=source.indexOf('const R10_TANK_VEHICLE_MODELS',start);
@@ -235646,11 +235646,11 @@ function runPhase21R3Tests(){
 // Phase 2.1 R11.3 c08371 — destructible environment / combat score / shared MAIN COINS / HUD polish.
 (function testR113Acceptance(){
   const source=fs.readFileSync('js/frontline1944.js','utf8'),css=fs.readFileSync('css/frontline1944.css','utf8'),html=fs.readFileSync('index_classic.html','utf8');
-  assert(source.includes("runtimeVersion:'P2.1R11.3-c08371'"),'R11.3 JS runtime identity');
+  assert(source.includes("runtimeVersion:'P2.1R12-a8e36a'"),'current JS runtime identity is R12');
   assert(source.includes("const R113_SYSTEM=Object.freeze({id:'P2.1R11.3-c08371'"),'R11.3 system marker');
   assert(source.includes("taskId:'VW-20260906-191254-c08371'"),'R11.3 Task identity');
-  assert(css.includes('--fl44-css-runtime-id:"P2.1R11.3-c08371-CSS"'),'R11.3 CSS identity');
-  assert(html.includes("var FRONTLINE_RUNTIME_ID='P2.1R11.3-c08371';"),'R11.3 loader identity');
+  assert(css.includes('--fl44-css-runtime-id:"P2.1R12-a8e36a-CSS"'),'current CSS identity is R12');
+  assert(html.includes("var FRONTLINE_RUNTIME_ID='P2.1R12-a8e36a';"),'current loader identity is R12');
   assert(css.includes('.fl44-telemetry{display:none!important')||css.includes('.fl44-telemetry{display:none!important'), 'upper-middle telemetry rail hidden');
   assert(css.includes('rgba(43,52,54,.50)')&&css.includes('opacity:1!important'),'50% backgrounds do not fade full controls');
   assert(css.includes('.fl44-drive-labels text{font-size:12.5px!important'),'Thai DRIVE labels enlarged');
@@ -235689,4 +235689,27 @@ function runPhase21R3Tests(){
   G.claimed.clear();G.localTestClaims.clear();G.wordRunId='W-R113';state.coins=1000;coinCalls.length=0;assert.strictEqual(T.claim('reward:1',25),true);assert.strictEqual(state.coins,1025);assert.deepStrictEqual(coinCalls,[25]);assert.strictEqual(T.claim('reward:1',25),false);assert.strictEqual(state.coins,1025);
   sb.location.hostname='localhost';assert.strictEqual(T.claim('local:reward',50),true);assert.strictEqual(state.coins,1025);assert.deepStrictEqual(coinCalls,[25]);assert.strictEqual(T.claim('local:reward',50),false);
   console.log('PASS R11.3 runtime accounting: zombie kill once, enemy-tank actual HP, zero environment/objective score, destructible collision removal, protected structures, shared-wallet reward + Local Test no-reward.');
+})();
+
+
+// Phase 2.1 R12 a8e36a — mission flow / streamed battlefield / fortress progression.
+(function testR12MissionExpansion(){
+ const source=fs.readFileSync('js/frontline1944.js','utf8'),css=fs.readFileSync('css/frontline1944.css','utf8'),html=fs.readFileSync('index_classic.html','utf8');
+ assert(source.includes("const R12_SYSTEM=Object.freeze({id:'P2.1R12-a8e36a'"),'R12 system identity');
+ assert(source.includes("taskId:'VW-20260906-200047-a8e36a'"),'R12 task identity');
+ assert(source.includes('const R12_MISSION_STATES=Object.freeze'),'centralized mission state controller');
+ assert(source.includes('const R12_SECTOR_PLAN=Object.freeze(['),'deterministic battlefield sector plan');
+ for(const label of ['Rural Approach','Village','Forest / Woodland','Bridge / River Approach','Damaged Town / Ruins','Defensive Line','Fortress Approach','Fortress Outer Area'])assert(source.includes(label),label+' sector exists');
+ assert(source.includes('new Set([current-1,current,current+1])'),'streamer keeps previous/current/next active');
+ assert(source.includes('function r12CheckpointPose()'),'checkpoint respawn helper');
+ assert(source.includes("r3RequestSafeSpawn(cp||"),'death respawn uses latest mission checkpoint with existing safe-spawn validation');
+ assert(source.includes('function r12MissionComplete()'),'mission completion is centralized and idempotent');
+ assert(source.includes("target=r12Mission()?r12SectorForStep(7)"),'fortress is routed to final mission sector');
+ assert(source.includes("if(r12Mission()&&r12Mission().complete"),'completed mission does not spawn another fortress');
+ assert(source.includes("targetType==='ENEMY_TANK'||targetType==='ZOMBIE'"),'R11.3 combat-score allowlist retained');
+ assert(source.includes("protected:true,destructible:false")||source.includes("kind:'fortress_wall'"),'protected fortress geometry retained');
+ assert(css.includes('--fl44-css-runtime-id:"P2.1R12-a8e36a-CSS"'),'R12 CSS identity');
+ assert(css.includes('.fl44-arrow[data-offscreen="true"]'),'off-screen objective guidance styling');
+ assert(html.includes("var FRONTLINE_RUNTIME_ID='P2.1R12-a8e36a';"),'R12 loader identity');
+ console.log('PASS R12 mission expansion: sectors, mission ordering, checkpoint safety, final fortress routing, objective guidance, score/wallet baseline preserved.');
 })();
