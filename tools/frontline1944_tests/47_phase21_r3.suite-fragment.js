@@ -1,0 +1,10650 @@
+function runPhase21R3Tests(){
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // Explicit source-path/geometry-contract doubles. NOT a WebGL, visual, delivery or physical-phone PASS.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const source=fs.readFileSync('js/frontline1944.js','utf8');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  let checks=0;const check=(name,fn)=>{fn();checks++;console.log('PASS R3 '+name);};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  class Vec3{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    constructor(x=0,y=0,z=0){this.set(x,y,z);}set(x,y,z){this.x=x;this.y=y;this.z=z;return this;}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    setScalar(s){return this.set(s,s,s);}copy(v){return this.set(v.x,v.y,v.z);}clone(){return new Vec3(this.x,this.y,this.z);}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    lerp(v,t){return this.set(this.x+(v.x-this.x)*t,this.y+(v.y-this.y)*t,this.z+(v.z-this.z)*t);}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  class Group{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    constructor(){this.children=[];this.parent=null;this.position=new Vec3();this.scale=new Vec3(1,1,1);this.rotation={x:0,y:0,z:0};this.userData={};this.visible=true;}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    add(...nodes){for(const n of nodes){if(n.parent)n.parent.remove(n);n.parent=this;this.children.push(n);}return this;}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    remove(n){this.children=this.children.filter(x=>x!==n);n.parent=null;}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    traverse(fn){fn(this);for(const n of this.children)n.traverse(fn);}updateMatrixWorld(){}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    getWorldPosition(v){v.copy(this.position);for(let p=this.parent;p;p=p.parent){v.x+=p.position.x;v.y+=p.position.y;v.z+=p.position.z;}return v;}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  class Color{constructor(value=0xffffff){this.setHex(value);}setHex(v){this.r=((v>>16)&255)/255;this.g=((v>>8)&255)/255;this.b=(v&255)/255;return this;}convertSRGBToLinear(){return this;}clone(){return new Color().copy(this);}copy(c){Object.assign(this,c);return this;}multiplyScalar(v){this.r*=v;this.g*=v;this.b*=v;return this;}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  class Material{constructor(o={}){Object.assign(this,o);this.color=new Color(o.color);this.disposals=0;}dispose(){this.disposals++;}clone(){return new Material(this);}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  class Geometry{constructor(){this.attributes={};this.disposals=0;}setAttribute(k,v){this.attributes[k]=v;return this;}getAttribute(k){return this.attributes[k];}computeVertexNormals(){}computeBoundingSphere(){this.boundingSphere={radius:150};}dispose(){this.disposals++;}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  class Attribute{constructor(values,size){this.array=new Float32Array(values);this.itemSize=size;this.count=values.length/size;}getX(i){return this.array[i*this.itemSize];}getY(i){return this.array[i*this.itemSize+1];}getZ(i){return this.array[i*this.itemSize+2];}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  class Mesh extends Group{constructor(g,m){super();this.geometry=g;this.material=m;this.isMesh=true;}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  class Texture{constructor(){this.disposals=0;}dispose(){this.disposals++;}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const requests=[],timers=new Map();let serial=0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  class TextureLoader{load(url,ok,progress,fail){const texture=new Texture();requests.push({url,ok:()=>ok(texture),fail,texture});return texture;}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const ctx={createRadialGradient(){return {addColorStop(){}};},fillRect(){},clearRect(){}};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const document={readyState:'loading',addEventListener(){},removeEventListener(){},querySelector(){return null;},getElementById(){return null;},createElement(){return {width:0,height:0,getContext:()=>ctx};}};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const THREE={Group,Object3D:Group,Mesh,Vector3:Vec3,Color,BufferGeometry:Geometry,Float32BufferAttribute:Attribute,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    MeshBasicMaterial:Material,MeshStandardMaterial:Material,MeshLambertMaterial:Material,SpriteMaterial:Material,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    BoxGeometry:Geometry,PlaneGeometry:Geometry,CylinderGeometry:Geometry,ConeGeometry:Geometry,DodecahedronGeometry:Geometry,SphereGeometry:Geometry,OctahedronGeometry:Geometry,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    TextureLoader,CanvasTexture:Texture,Sprite:class extends Group{constructor(m){super();this.material=m;}},RepeatWrapping:1000,sRGBEncoding:3001,DoubleSide:2,BackSide:1};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const sb={console,document,THREE,navigator:{maxTouchPoints:1},location:{hostname:'localhost',search:'',origin:'http://localhost:4173'},Math,Date,URLSearchParams,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    innerWidth:844,innerHeight:390,performance:{now:()=>1000},isAdmin:()=>true,state:{coins:50,frontline1944:{claims:[],wordsDone:0,fortressSerial:2}},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    setTimeout(fn,ms){const id=++serial;timers.set(id,{fn,ms});return id;},clearTimeout(id){timers.delete(id);},setInterval(){},clearInterval(){},requestAnimationFrame(){},cancelAnimationFrame(){},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    localStorage:{getItem(){return null;},setItem(){}},addEventListener(){},removeEventListener(){},getComputedStyle(){return {getPropertyValue:()=>0};}};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  sb.window=sb;vm.createContext(sb);vm.runInContext(source,sb);const T=sb.Frontline1944._t,G=T.G;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  function reset(x=0,z=0,heading=0,stream=true){
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    if(G.sectorStreamer&&G.sectorStreamer.dispose)G.sectorStreamer.dispose();T.r2Dispose();T.r3ResetSpawnState();T.phase21ResetSession();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    if(G.resources)G.resources.dispose();G.root=null;G.camera=null;G.scene=new Group();G.layers={};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    for(const k of Object.values(T.LAYER)){G.layers[k]=new Group();G.scene.add(G.layers[k]);}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    G.resources=new T.ResourceCache();G.terrain=new T.TerrainSystem();G.collision=new T.CollisionSystem(G.terrain);G.pools=null;G.fortress=null;G.enemies=[];G.smoke=[];G.occluders=[];G.damageEvents=[];G.running=false;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    G.player={world:{x,z},hullRotation:heading,turretRotation:heading,speed:0,hp:380,maxHp:380,invuln:0,ownerId:'player-owner',playerId:'test-player',damageStatistic:{match:0,lifetime:0},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      footprint:{halfWidth:T.CFG.tankFootprintHalfWidth,halfLength:T.CFG.tankFootprintHalfLength},group:new Group(),hull:new Group(),turret:new Group()};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    G.tankRuntime=new T.TankRuntime(G.player,G.collision,G.terrain);G.sectorStreamer=new T.SectorStreamer();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    if(stream)G.sectorStreamer.update(z,true);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    G.specialControls={autoMove:0,targetLockMode:false,lockedTarget:null,scopeMode:false};G.keys.clear();return G.player;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  function clearWorld(x=0,z=0,heading=0){reset(x,z,heading,false);G.sectorStreamer={currentIndex:T.WorldSpace.sectorIndexAtZ(z),active:new Map(),isActive(i){return this.active.has(i);},update(zz){this.currentIndex=T.WorldSpace.sectorIndexAtZ(zz);this.active=new Map([this.currentIndex-1,this.currentIndex,this.currentIndex+1].map(i=>[i,{}]));},dispose(){}};G.sectorStreamer.update(z,true);}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  function atPose(){return G.tankRuntime.pose();}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  function maneuverProof(){
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    const p=atPose(),fp=G.player.footprint;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    for(let h=0;h<16;h++){
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      const heading=h*Math.PI/8,f=T.forwardFromRotation(heading);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      assert(!G.collision.hitTankFootprint(p.x,p.z,heading,fp.halfWidth,fp.halfLength,G.player.ownerId).blocked,'full rotation clearance');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      for(const sign of [-1,1])assert(!G.collision.resolveTankSweep({x:p.x,z:p.z,heading},{x:p.x+f.x*4*sign,z:p.z+f.z*4*sign,heading},fp.halfWidth,fp.halfLength,G.player.ownerId).blocked,'four-unit forward/reverse clearance');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // Execute unchanged authoritative simulation, not just a spawn predicate.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    for(const throttle of [-1,1]){G.tankRuntime.teleport(p.x,p.z,p.heading);let moved=0;for(let i=0;i<30;i++){const r=G.tankRuntime.step({throttle,steering:0},1/60);assert(!r.motion.blocked);moved+=Math.hypot(r.motion.dx,r.motion.dz);}assert(moved>1.2);}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    for(const steering of [-1,1]){G.tankRuntime.teleport(p.x,p.z,p.heading);for(let i=0;i<460;i++)assert(!G.tankRuntime.step({throttle:0,steering},1/60).motion.blocked);}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    G.tankRuntime.teleport(p.x,p.z,p.heading);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('exact uploaded baseline declaration locks (physics/input/targets/economy/admin)',()=>{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    const expected=R3_CURRENT_BASELINE_LOCKS;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    for(const [name,hash] of Object.entries(expected)){const value=T[name]||sb.Frontline1944[name];assert(value,'export '+name);assert.strictEqual(crypto.createHash('sha256').update(value.toString()).digest('hex'),hash,name+' changed');}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    console.log('  LOCKED '+Object.keys(expected).length+' declarations byte-identical to Task 7cf516');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('initial active sector uses actual current R2 corridor geometry and collision proxies',()=>{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    reset();const art=G.sectorStreamer.active.get(0).phase21Art;assert(art&&art.meshCount>0&&art.houses>0&&art.trees>0);assert(G.collision.stats().colliders>20);assert.strictEqual(G.sectorStreamer.active.size,3);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    console.log('  corridor meshes='+art.meshCount+' triangles='+art.triangleCount+' colliders='+G.collision.stats().colliders);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('unsafe old center respawn reproduced and fixed through damagePlayer',()=>{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    reset();G.collision.registerAABB(0,0,0,15,15,{ownerId:'repro-building'});assert(G.collision.hitTankFootprint(0,0,0).blocked);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    G.player.invuln=0;T.damagePlayer(1000,{ownerId:'test-enemy'});assert.strictEqual(G.player.hp,380);assert(T.r3ValidateSpawn(atPose()));assert.notStrictEqual(G.player.world.z,0);assert.strictEqual(T.r3SpawnDiagnostics().last.reason,'death');maneuverProof();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('real fortress proxies reject core, walls and gate for respawn, without disabling collision',()=>{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    clearWorld();const f={world:{x:0,z:0},sectorIndex:0,ownerId:'fortress-repro'};T.registerFortressCollision(f);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    for(const z of [0,10,-10])assert(!T.r3ValidateSpawn({x:0,z,heading:0}));assert(!T.r3ValidateSpawn({x:10,z:0,heading:0}));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    const solids=G.collision.stats().colliders;assert(T.r3RequestSafeSpawn({x:0,z:0,heading:0},'death'));assert.strictEqual(G.collision.stats().colliders,solids);maneuverProof();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('spawn requires visual hull plus full turn and forward/reverse maneuver envelope',()=>{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    clearWorld();assert(T.r3SpawnRadius()>9);G.collision.registerAABB(0,7,0,2,2,{ownerId:'near-wall'});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    assert(!G.collision.hitTankFootprint(0,0,0).blocked,'accepted hull alone fits');assert(!T.r3ValidateSpawn({x:0,z:0,heading:0}));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    assert(T.r3RequestSafeSpawn({x:0,z:0,heading:0},'death'));maneuverProof();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('safe preferred heading survives respawn at each of eight hull directions',()=>{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    for(let i=0;i<8;i++){clearWorld(0,0,i*Math.PI/4);const heading=G.tankRuntime.heading;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      assert(T.r3RequestSafeSpawn({x:0,z:0,heading},'death'));assert.strictEqual(G.tankRuntime.heading,heading);maneuverProof();}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('tiny circular blockers and rectangular corners cannot fall between footprint samples',()=>{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    clearWorld();const r=T.r3SpawnRadius();G.collision.registerCircle(0,r*.69,r*.69,.05,{ownerId:'tiny-tree'});assert(!T.r3ValidateSpawn({x:0,z:0,heading:0}));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    G.collision.bySector.clear();G.collision.registerAABB(0,r*.7,r*.7,.10,.10,{ownerId:'corner'});assert(!T.r3ValidateSpawn({x:0,z:0,heading:0}));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('driveable shallow water and its bridge are not selected as maneuver-safe spawn bays',()=>{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    clearWorld();G.terrain.registerRect(0,0,6,180,20,'SHALLOW_WATER',80);G.terrain.registerRect(0,0,6,10.5,26,'ROAD',100);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    assert(!G.terrain.sample(0,6).blocked,'bridge priority remains driveable');assert(!T.r3ValidateSpawn({x:0,z:6,heading:0}));assert.strictEqual(G.terrain.sample(25,6).id,'SHALLOW_WATER');assert(!G.terrain.sample(25,6).blocked,'R13.1 water is driveable');assert(!T.r3ValidateSpawn({x:25,z:6,heading:0}),'driveable water is still rejected for safe respawn');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    assert(T.r3RequestSafeSpawn({x:0,z:6,heading:0},'death'));maneuverProof();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('descriptor-only terrain cannot be mistaken for a safe spawn',()=>{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    reset(0,0,0,false);G.sectorStreamer.preload(0);assert(!G.sectorStreamer.isActive(0));assert(!T.r3ValidateSpawn({x:0,z:0,heading:0}));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    assert(T.r3RequestSafeSpawn({x:0,z:0,heading:0},'death'));assert(G.sectorStreamer.active.size===3);maneuverProof();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('enclosed off-road courtyard rejected unless connected to through road',()=>{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    clearWorld(40,0);for(const [x,z,w,h] of [[23,0,2,40],[57,0,2,40],[40,20,36,2],[40,-20,36,2]])G.collision.registerAABB(0,x,z,w,h,{ownerId:'courtyard'});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    assert(T.r3SpawnDiskClear(40,0,T.r3SpawnRadius()),'local bay fits');assert(!T.r3ValidateSpawn({x:40,z:0,heading:0}));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    assert(T.r3RequestSafeSpawn({x:40,z:0,heading:0},'embedded-recovery'));assert.strictEqual(G.player.world.x,0);maneuverProof();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('normal wall contact or holding DRIVE does not trigger a teleport',()=>{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    clearWorld();G.collision.registerAABB(0,0,-9,15,2,{ownerId:'wall'});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    for(let i=0;i<1200;i++){G.tankRuntime.step({throttle:1,steering:0},1/60);assert(T.r3TickSpawnSafety(1/60));}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    assert(G.tankRuntime.lastMotion.blocked);assert.strictEqual(T.r3SpawnDiagnostics().recoveries,0);assert(!T.r3PlayerEmbedded());
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('embedded saved pose recovers on entry, valid saved pose is unchanged',()=>{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    clearWorld(4,-10,.7);const p=JSON.stringify(atPose());T.r3TickSpawnSafety(0,true);assert.strictEqual(JSON.stringify(atPose()),p);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    G.collision.registerAABB(0,4,-10,18,18,{ownerId:'saved-building'});assert(T.r3PlayerEmbedded());assert(T.r3TickSpawnSafety(0,true));assert(T.r3ValidateSpawn(atPose()));assert.strictEqual(T.r3SpawnDiagnostics().last.reason,'entry-recovery');maneuverProof();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('late scene/collision insertion recovers only a genuinely embedded player',()=>{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    clearWorld();G.collision.registerAABB(0,0,0,7,7,{ownerId:'late-fort'});assert(T.r3TickSpawnSafety(.3));assert(T.r3ValidateSpawn(atPose()));assert.strictEqual(T.r3SpawnDiagnostics().last.reason,'embedded-recovery');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('all candidates blocked: fail closed, preserve pose/solids, retry then recover',()=>{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    clearWorld();const old=JSON.stringify(atPose());for(const i of [-1,0,1,2])G.collision.registerAABB(i,0,T.WorldSpace.sectorCenterZ(i),180,150,{ownerId:'blocked-'+i});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    const solids=G.collision.stats().colliders;assert(!T.r3RequestSafeSpawn({x:0,z:0,heading:0},'death'));assert.strictEqual(JSON.stringify(atPose()),old);assert(!G.player.group.visible);assert(T.r3SpawnDiagnostics().pending);assert(!T.r3TickSpawnSafety(.1));assert.strictEqual(G.collision.stats().colliders,solids);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    G.collision.bySector.clear();assert(T.r3TickSpawnSafety(1));assert(!T.r3SpawnDiagnostics().pending);assert(T.r3ValidateSpawn(atPose()));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('failed-death retry blocks repeated damage and rewards are untouched',()=>{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    clearWorld();for(const i of [-1,0,1,2])G.collision.registerAABB(i,0,T.WorldSpace.sectorCenterZ(i),180,150,{ownerId:'block'});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    const state=JSON.stringify(sb.state);T.damagePlayer(1000,{ownerId:'enemy'});assert.strictEqual(G.player.hp,0);const n=G.damageEvents.length;T.damagePlayer(1000,{ownerId:'enemy'});assert.strictEqual(G.damageEvents.length,n);assert.strictEqual(JSON.stringify(sb.state),state);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('live enemies excluded; dead enemies do not reserve permanent spawn space',()=>{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    clearWorld();G.enemies=[{world:{x:0,z:0},hp:100,radius:2,dead:false}];assert(!T.r3ValidateSpawn({x:0,z:0,heading:0}));G.enemies[0].dead=true;assert(T.r3ValidateSpawn({x:0,z:0,heading:0}));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('NaN/infinite/out-of-bounds spawn requests cannot be accepted',()=>{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    clearWorld();for(const p of [{x:NaN,z:0,heading:0},{x:0,z:Infinity,heading:0},{x:0,z:0,heading:NaN},{x:89,z:0,heading:0}])assert(!T.r3ValidateSpawn(p));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    assert(T.r3RequestSafeSpawn({x:NaN,z:Infinity,heading:NaN},'death'));assert(T.r3ValidateSpawn(atPose()));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('200 real damage/death cycles across all ten current procedural templates and 8 headings',()=>{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    reset();const templates=new Set(),claims=JSON.stringify(sb.state);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // Each active layout is instantiated by the original SectorStreamer, never an empty collision fixture.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    for(let cycle=0;cycle<200;cycle++){
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      const index=2+(cycle%40),z=T.WorldSpace.sectorCenterZ(index),heading=(cycle%8)*Math.PI/4;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      G.tankRuntime.teleport(0,z,heading);G.sectorStreamer.update(z,true);templates.add(T.visualIdFor(index));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      const dest=index-1;G.collision.registerAABB(dest,0,T.WorldSpace.sectorCenterZ(dest),18,18,{ownerId:'cycle-fort-'+cycle});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      G.player.invuln=0;T.damagePlayer(1000,{ownerId:'test-enemy'});assert.strictEqual(G.player.hp,380);assert(!T.r3SpawnDiagnostics().pending);assert(T.r3ValidateSpawn(atPose()));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      if(cycle%20===0)maneuverProof();else{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        const p=atPose(),f=T.forwardFromRotation(p.heading),fp=G.player.footprint;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        for(const sign of [-1,1])assert(!G.collision.resolveTankSweep(p,{x:p.x+f.x*4*sign,z:p.z+f.z*4*sign,heading:p.heading},fp.halfWidth,fp.halfLength,G.player.ownerId).blocked);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      assert(G.sectorStreamer.active.size<=3);G.collision.removeOwner('cycle-fort-'+cycle);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    assert.strictEqual(templates.size,10);assert.strictEqual(JSON.stringify(sb.state),claims);console.log('  death cycles=200, procedural templates='+templates.size+', streamed sectors max=3');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('accepted drive, reverse and zero-strafe remain correct after respawn',()=>{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    clearWorld();assert(T.r3RequestSafeSpawn({x:0,z:0,heading:.35},'death'));const r=G.tankRuntime;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    for(const throttle of [-1,1]){r.teleport(0,0,.35);for(let i=0;i<30;i++){const result=r.step({throttle,steering:.4},1/60);assert(Math.abs(result.motion.lateralVelocity)<1e-8);}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    maneuverProof();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('respawn preserves independent router pointer ownership, AIM latch, FIRE and auto mode',()=>{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    clearWorld();const router=new T.GlobalMobileTouchRouter({driveState:G.joy,aimState:G.aim,storage:null});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    G.mobileRouter=router;for(const [role,id] of [['drive',71],['aim',72],['fire',73]]){router.owners.set(id,role);router.rolePointers[role]=id;}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    G.joy.active=true;G.joy.id=71;G.aim.active=true;G.aim.id=72;G.mobileAimLatch={valid:true,heading:.9,lastUpdateAt:1000};G.firing=true;G.specialControls.autoMove=-1;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    const ownership=JSON.stringify([...router.owners]),roles=JSON.stringify(router.rolePointers),latch=JSON.stringify(G.mobileAimLatch);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    G.collision.registerAABB(0,0,0,14,14,{ownerId:'death-building'});T.damagePlayer(1000,{ownerId:'enemy'});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    assert.strictEqual(G.mobileRouter,router);assert.strictEqual(JSON.stringify([...router.owners]),ownership);assert.strictEqual(JSON.stringify(router.rolePointers),roles);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    assert.strictEqual(JSON.stringify(G.mobileAimLatch),latch);assert(G.joy.active&&G.aim.active&&G.firing);assert.strictEqual(G.specialControls.autoMove,-1);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    G.mobileRouter=null;G.joy.active=false;G.aim.active=false;G.firing=false;G.specialControls.autoMove=0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('camera is trailing and lower/closer without changing authoritative pose at 8 headings',()=>{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    clearWorld();G.camera={position:new Vec3(),lookAt(v){this.look=v.clone();},updateMatrixWorld(){},type:'PerspectiveCamera',fov:T.R2_VIEW.fov};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    for(let i=0;i<8;i++){
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      G.tankRuntime.teleport(3,-9,i*Math.PI/4);const before=JSON.stringify(atPose());T.r2UpdateCamera(.016,true);const p=atPose(),f=T.forwardFromRotation(p.heading),dx=G.camera.position.x-p.x,dz=G.camera.position.z-p.z;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      assert(Math.abs(dx*f.x+dz*f.z+17.5)<1e-8);assert.strictEqual(G.camera.position.y,8);assert.strictEqual(JSON.stringify(atPose()),before);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    G.camera=null;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('no new image URLs, texture dimensions or heavyweight model dependencies',()=>{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    assert.strictEqual(Object.keys(T.PHASE21_ASSETS).length+Object.keys(T.R2_EXTRA_ASSETS).length,11);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    for(const url of [...Object.values(T.PHASE21_ASSETS),...Object.values(T.R2_EXTRA_ASSETS)])assert(/^img\/frontline1944\/phase21\/p21r2_[a-z]+\.webp$/.test(url));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    assert(source.includes("runtimeVersion:'P1.2.6F-20260902-5cc6a0'"));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('shared URL loads once for different materials and repeated subscribers',()=>{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    reset(0,0,0,false);const start=requests.length;let hits=0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    T.r3SharedTexture('stone',()=>hits++);T.r3SharedTexture('stone',()=>hits++);const a=T.r2Surface('stone'),b=T.r2Surface('stone',0xcccccc);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    assert.strictEqual(requests.length-start,1);requests.at(-1).ok();assert.strictEqual(hits,2);assert.strictEqual(a.map,b.map);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    T.r3SharedTexture('stone',()=>hits++);assert.strictEqual(hits,3);assert.strictEqual(requests.length-start,1);assert.strictEqual(T.r3TextureDiagnostics().subscribers,0);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('unloaded subscribers cannot touch disposed materials',()=>{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    T.r3DisposeTextureCache();let called=0;const release=T.r3SharedTexture('lane',()=>called++);const request=requests.at(-1);release();request.ok();assert.strictEqual(called,0);assert.strictEqual(request.texture.disposals,0);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('failed/timeout textures do not block gameplay or retry-download on sector churn',()=>{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    T.r3DisposeTextureCache();let errors=0,ready=0;const start=requests.length;T.r3SharedTexture('grain',()=>ready++,()=>errors++);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    const request=requests.at(-1);request.fail();T.r3SharedTexture('grain',()=>ready++,()=>errors++);assert.strictEqual(errors,2);assert.strictEqual(ready,0);assert.strictEqual(requests.length-start,1);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    T.r3SharedTexture('sky',()=>ready++,()=>errors++);const sky=requests.at(-1);for(const [id,t] of [...timers])if(t.ms===10000){timers.delete(id);t.fn();}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    assert.strictEqual(T.r3TextureDiagnostics().failed,2);sky.ok();assert.strictEqual(ready,0);assert.strictEqual(sky.texture.disposals,1);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('close while loading prevents late callback and disposes each texture once',()=>{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    T.r3DisposeTextureCache();let calls=0;T.r3SharedTexture('armor',()=>calls++);const r=requests.at(-1);T.r3DisposeTextureCache();r.ok();assert.strictEqual(calls,0);assert.strictEqual(r.texture.disposals,1);assert.strictEqual(T.r3TextureDiagnostics().urls,0);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('real corridor unload/re-entry reuses nine existing maps with bounded resources',()=>{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    reset();const start=requests.length;for(const r of requests.slice(-9))r.ok();const initial=T.r3TextureDiagnostics().urls;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    const textures=[...G.sectorStreamer.active.get(0).phase21Art.textures];assert.strictEqual(textures.length,9);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    for(let i=0;i<8;i++){G.sectorStreamer.update(-750,true);G.sectorStreamer.update(0,true);assert(G.sectorStreamer.active.size===3);}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    assert.strictEqual(requests.length,start);assert.strictEqual(T.r3TextureDiagnostics().urls,initial);assert(textures.every(t=>t.disposals===0));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    G.sectorStreamer.dispose();T.r2Dispose();assert(textures.every(t=>t.disposals===1));assert.strictEqual(T.r3TextureDiagnostics().urls,0);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('portrait suspension adapter still neutralizes controls and resume resets time',()=>{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    reset(0,0,0,false);let cancel=0,recover=0;G.mobileRouter={cancelAll(){cancel++;},recoverFirePosition(){recover++;}};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    G.keys.add('ArrowUp');G.keys.add('Space');G.firing=true;G.specialControls.autoMove=1;G.mobileFirePulseCount=3;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    T.setViewportSuspended(true);assert(G.viewportSuspended);assert.strictEqual(cancel,1);assert.strictEqual(G.keys.size,0);assert(!G.firing);assert.strictEqual(G.specialControls.autoMove,0);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    T.setViewportSuspended(false);assert(!G.viewportSuspended);assert.strictEqual(recover,1);assert.strictEqual(G.last,0);G.mobileRouter=null;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('safe-spawn state reset has no pending retry leaking into next session',()=>{T.r3ResetSpawnState();assert.strictEqual(T.r3SpawnDiagnostics().recoveries,0);assert(!T.r3SpawnDiagnostics().pending);});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  console.log('PASS R3 '+checks+' focused groups. Rendering doubles only: no real WebGL screenshots or physical-device acceptance claimed.');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  console.log('Running existing N3 dynamic control/target tests; its stylesheet-only check is explicitly skipped in this source-only mode.');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  runTargetLockN3Tests({sourceOnly:true});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

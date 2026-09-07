@@ -1,0 +1,180 @@
+function runPhase21R7Tests(){
+
+
+
+
+
+
+
+
+
+  const source=fs.readFileSync('js/frontline1944.js','utf8');let checks=0;const check=(name,fn)=>{fn();checks++;console.log('PASS R7 '+name);};
+
+
+
+
+
+
+
+
+
+  class Vec3{constructor(x=0,y=0,z=0){this.set(x,y,z);}set(x,y,z){this.x=x;this.y=y;this.z=z;return this;}setScalar(v){return this.set(v,v,v);}copy(v){return this.set(v.x,v.y,v.z);}clone(){return new Vec3(this.x,this.y,this.z);}lerp(v,t){return this.set(this.x+(v.x-this.x)*t,this.y+(v.y-this.y)*t,this.z+(v.z-this.z)*t);}project(){return this;}}
+
+
+
+
+
+
+
+
+
+  function classList(){const set=new Set();return {add(...xs){xs.forEach(x=>set.add(x));},remove(...xs){xs.forEach(x=>set.delete(x));},contains(x){return set.has(x);},toggle(x,on){if(on===undefined)on=!set.has(x);on?set.add(x):set.delete(x);return !!on;}};}
+
+
+
+
+
+
+
+
+
+  function fakeEl(left,top,width,height,id='',className=''){const style={left:'',top:'',right:'',bottom:'',transform:'',removeProperty(k){this[k]='';}},el={id,className,hidden:false,style,dataset:{},classList:classList(),parentElement:null,offsetParent:null,clientLeft:0,clientTop:0,scrollLeft:0,scrollTop:0,getAttribute(){return null;},setAttribute(){},querySelector(){return null;},getBoundingClientRect(){const l=Number.parseFloat(style.left),t=Number.parseFloat(style.top),x=Number.isFinite(l)?l:left,y=Number.isFinite(t)?t:top;return {left:x,top:y,right:x+width,bottom:y+height,width,height};}};return el;}
+
+
+
+
+
+
+
+
+
+  const document={readyState:'loading',addEventListener(){},querySelector(){return null;},getElementById(){return null;},documentElement:{style:{getPropertyValue(){return '0';}}}};let now=1000;const store=new Map(),stateObj={coins:20000,frontline1944:{}};
+
+
+
+
+
+
+
+
+
+  const sb={console,document,navigator:{maxTouchPoints:1},location:{hostname:'localhost',search:'',origin:'http://localhost'},Math,Date,URLSearchParams,innerWidth:1000,innerHeight:500,performance:{now:()=>now},isAdmin:()=>true,state:stateObj,addCoins(n){stateObj.coins+=Number(n)||0;},saveState(){stateObj.saved=(stateObj.saved||0)+1;},authPushSave(){},setTimeout(fn){fn();return 1;},clearTimeout(){},setInterval(){return 1;},clearInterval(){},requestAnimationFrame(){return 1},cancelAnimationFrame(){},localStorage:{getItem(k){return store.get(k)||null;},setItem(k,v){store.set(k,String(v));}},addEventListener(){},removeEventListener(){},getComputedStyle(){return {position:'absolute',left:'0px',top:'0px',right:'auto',bottom:'auto',transform:'none',getPropertyValue(){return '0';}}}};sb.window=sb;sb.THREE={Vector3:Vec3};vm.createContext(sb);vm.runInContext(source,sb);const T=sb.Frontline1944._t,G=T.G;
+
+
+
+
+
+
+
+
+
+  const fakeTank=(level=1,pitch=0)=>{const L=2.75,base={x:0,y:3.25,z:-3.55},tip={x:0,y:base.y+Math.sin(pitch)*L,z:base.z-Math.cos(pitch)*L};return {tankUpgradeLevel:level,world:{x:0,z:0},group:{updateMatrixWorld(){},visible:true,position:{set(){}},rotation:{y:0}},barrel:{getWorldPosition(v){return v.set(base.x,base.y,base.z);}},cannonTip:{getWorldPosition(v){return v.set(tip.x,tip.y,tip.z);}},playerId:'p',mainWeaponId:'main_cannon_lv'+String(level).padStart(2,'0'),hullRotation:0,turretRotation:0,barrelPitch:pitch,speed:0,hp:1000,maxHp:1000,hull:{rotation:{y:0}},turret:{rotation:{y:0}},gunPivot:{rotation:{x:0}}};};
+
+
+
+
+
+
+
+
+
+  check('authoritative 10-tier prices, names and ranges match approved progression',()=>{assert.strictEqual(T.R7_ARSENAL.id,'P2.1R7-d7f119');assert.strictEqual(T.TANK_UPGRADE_LEVELS.length,10);assert.deepStrictEqual(Array.from(T.TANK_UPGRADE_LEVELS,v=>v.cost),[100,250,500,900,1400,2000,2800,4000,6000,10000]);assert.deepStrictEqual(Array.from(T.TANK_UPGRADE_LEVELS,v=>v.rangeMeters),[500,750,1000,1500,2000,3000,4000,5500,7500,10000]);assert.strictEqual(T.tankUpgradeSpec(10).name,'LEGEND');assert.strictEqual(T.tankUpgradeSpec(10).mgLabel,'Premium');});
+
+
+
+
+
+
+
+
+
+  check('real cannon range solution is level-bound at LV1, LV5 and LV10',()=>{G.enemies=[];G.fortress=null;G.collision={hitSolidOnly(){return null;}};for(const [level,meters] of [[1,500],[5,2000],[10,10000]]){const tank=fakeTank(level,0);G.player=tank;G.tankRuntime=null;const sol=T.projectedShotSolution(tank);assert.strictEqual(Math.round(sol.distance*T.R7_ARSENAL.metersPerWorldUnit),meters);assert.strictEqual(T.tankCannonRangeMeters(tank),meters);}});
+
+
+
+
+
+
+
+
+
+  check('sequential coin purchase deducts exact next-tier cost, persists, and blocks insufficient funds',()=>{G.player=null;G.progressHydrated=false;sb.state.frontline1944={};sb.state.coins=1000;let r=T.purchaseNextTankLevel(2);assert(r.ok);assert.strictEqual(sb.state.coins,750);assert.strictEqual(sb.state.frontline1944.tankUpgradeLevel,2);assert(stateObj.saved>0);r=T.purchaseNextTankLevel(4);assert.strictEqual(r.ok,false);assert.strictEqual(r.reason,'sequential');sb.state.coins=100;r=T.purchaseNextTankLevel(3);assert.strictEqual(r.ok,false);assert.strictEqual(r.reason,'insufficient');assert.strictEqual(sb.state.frontline1944.tankUpgradeLevel,2);assert.strictEqual(sb.state.coins,100);});
+
+
+
+
+
+
+
+
+
+  check('MG is a separate real rapid-fire weapon whose controlled stats improve with level',()=>{const a=T.tankUpgradeSpec(1),b=T.tankUpgradeSpec(10);assert(b.mgDamage>a.mgDamage);assert(b.mgIntervalMs<a.mgIntervalMs);assert(b.mgRangeMeters>a.mgRangeMeters);assert(b.mgSpread<a.mgSpread);const tank=fakeTank(5,0);G.player=tank;G.running=true;G.mgFireAt=0;let shot=null;G.pools={mgProjectiles:{acquire(spec){shot=spec;return spec;}},fx:{active:[],acquire(){}}};now=5000;assert(T.fireMachineGun(now));assert(shot);assert.strictEqual(shot.weaponId,'machine_gun_lv05');assert.strictEqual(shot.damage,T.tankUpgradeSpec(5).mgDamage);assert(Math.abs(shot.lifetime*shot.speed*T.R7_ARSENAL.metersPerWorldUnit-T.tankUpgradeSpec(5).mgRangeMeters)<1e-6);assert.notStrictEqual(shot.weaponId,tank.mainWeaponId);G.running=false;});
+
+
+
+
+
+
+
+
+
+  check('Global Mobile Router gives MG its own pointer without stealing FIRE',()=>{const root=fakeEl(0,0,1000,500,'vw-frontline1944','');root.querySelector=()=>null;const drive=fakeEl(60,350,96,96,'fl44-stick'),aim=fakeEl(700,350,82,82,'fl44-aim-stick'),fire=fakeEl(900,350,68,68,'fl44-fire'),mg=fakeEl(820,350,62,48,'fl44-mg');for(const el of [drive,aim,fire,mg])el.parentElement=root;G.root=root;G.specialControls={autoMove:0,targetLockMode:false,lockedTarget:null,scopeMode:false};let mgHeld=false,fireHeld=false;const router=new T.GlobalMobileTouchRouter({root,driveEl:drive,driveKnob:fakeEl(0,0,1,1),aimEl:aim,aimKnob:fakeEl(0,0,1,1),fireEl:fire,mgEl:mg,driveState:{},aimState:{},onMgChange:v=>mgHeld=v,onFireChange:v=>fireHeld=v,protectedPointAt:()=>false,onDiagnostic:()=>{}}),mc=T.rectCenter(T.elementUsableRect(mg)),fc=T.rectCenter(T.elementUsableRect(fire));assert.strictEqual(router.begin(1,mc.x,mc.y,mg,'pointer'),'mg');assert(mgHeld);assert.strictEqual(router.begin(2,fc.x,fc.y,fire,'pointer'),'fire');const dc=T.rectCenter(T.elementUsableRect(drive)),ac=T.rectCenter(T.elementUsableRect(aim));assert.strictEqual(router.begin(3,dc.x,dc.y,drive,'pointer'),'drive');assert.strictEqual(router.begin(4,ac.x,ac.y,aim,'pointer'),'aim');assert.strictEqual(router.rolePointers.mg,1);assert.strictEqual(router.rolePointers.fire,2);assert.strictEqual(router.rolePointers.drive,3);assert.strictEqual(router.rolePointers.aim,4);assert.strictEqual(router.activeCount(),4);router.end(1,mc.x,mc.y,mg,'pointer');assert(!mgHeld);assert.strictEqual(router.rolePointers.fire,2);assert.strictEqual(router.rolePointers.drive,3);assert.strictEqual(router.rolePointers.aim,4);router.end(4,ac.x,ac.y,aim,'pointer');router.end(3,dc.x,dc.y,drive,'pointer');router.end(2,fc.x,fc.y,fire,'pointer');assert(!fireHeld);});
+
+
+
+
+
+
+
+
+
+  check('approved premium Garage and large rounded-rectangle tank Scope are present',()=>{for(const token of ['TANK GARAGE · R10','fl44-garage-cards','fl44-garage-card','fl44-mg','fl44-scope-capability','width:min(92vw,1440px)!important','height:min(80vh,840px)!important','border-radius:24px!important','RANGE '+"'+capability.rangeMeters.toLocaleString()+'"+' m','AP READY · MG LV'])assert(source.includes(token),token);assert(source.includes("DEFAULT_STEEL:0x5d6468"));assert(source.includes("r.dataset.patchTask=R10_SYSTEM.id"));assert(source.includes("r.dataset.baselineTask=R9_SYSTEM.id"));});
+
+
+
+
+
+
+
+
+
+  check('R6C aiming, HP 1000, target lock and safe respawn architecture remain locked in',()=>{assert.strictEqual(T.R6C_AIM.id,'P2.1R6C-a3a5cf');assert.strictEqual(T.CFG.playerHP,1000);for(const token of ['barrelTargetPitch','targetLockHeading()','r3PlayerEmbedded()','mobileAimRepositionHoldMs','class GlobalMobileTouchRouter','DRIVE','AIM','FIRE'])assert(source.includes(token),token);});
+
+
+
+
+
+
+
+
+
+  console.log('PASS R7 '+checks+' focused groups. Deterministic source/runtime tests; physical phone, WebGL appearance, Studio build/import and deployment remain separate acceptance steps.');
+
+
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

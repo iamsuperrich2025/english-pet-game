@@ -1,0 +1,210 @@
+function runPhase21R10Tests(){
+
+
+
+
+
+
+
+
+
+  const source=fs.readFileSync('js/frontline1944.js','utf8');let checks=0;const check=(name,fn)=>{fn();checks++;console.log('PASS R10 '+name);};
+
+
+
+
+
+
+
+
+
+  class Vec3{constructor(x=0,y=0,z=0){this.set(x,y,z);}set(x,y,z){this.x=x;this.y=y;this.z=z;return this;}setScalar(v){return this.set(v,v,v);}copy(v){return this.set(v.x,v.y,v.z);}clone(){return new Vec3(this.x,this.y,this.z);}lerp(v,t){return this.set(this.x+(v.x-this.x)*t,this.y+(v.y-this.y)*t,this.z+(v.z-this.z)*t);}project(){return this;}}
+
+
+
+
+
+
+
+
+
+  class Group{constructor(){this.children=[];this.parent=null;this.name='';this.userData={};this.position=new Vec3();this.rotation={x:0,y:0,z:0};}add(o){if(o.parent&&o.parent.remove)o.parent.remove(o);this.children.push(o);o.parent=this;return this;}remove(o){const i=this.children.indexOf(o);if(i>=0)this.children.splice(i,1);o.parent=null;return this;}updateMatrixWorld(){}}
+
+
+
+
+
+
+
+
+
+  function classList(){const set=new Set();return {add(...xs){xs.forEach(x=>set.add(x));},remove(...xs){xs.forEach(x=>set.delete(x));},contains(x){return set.has(x);},toggle(x,on){if(on===undefined)on=!set.has(x);on?set.add(x):set.delete(x);return !!on;}};}
+
+
+
+
+
+
+
+
+
+  function fakeEl(left,top,width,height,id='',className=''){const style={left:'',top:'',right:'',bottom:'',transform:'',removeProperty(k){this[k]='';}},dataset={},cl=classList(),el={id,className,hidden:false,style,dataset,classList:cl,parentElement:null,offsetParent:null,clientLeft:0,clientTop:0,scrollLeft:0,scrollTop:0,getAttribute(name){if(name==='aria-hidden')return null;return null;},setAttribute(){},querySelectorAll(){return [];},getBoundingClientRect(){const l=Number.parseFloat(style.left),t=Number.parseFloat(style.top),x=Number.isFinite(l)?l:left,y=Number.isFinite(t)?t:top;return {left:x,top:y,right:x+width,bottom:y+height,width,height};}};return el;}
+
+
+
+
+
+
+
+
+
+  const document={readyState:'loading',addEventListener(){},querySelector(){return null;},getElementById(){return null;},documentElement:{style:{getPropertyValue(){return '0';}}}};let now=1000,timerSerial=0;const timers=new Map(),store=new Map(),coinCalls=[],stateObj={coins:5000,frontline1944:{tankUpgradeLevel:1,tankArmorLevel:0,tank:{level:1,armorTier:0}}};
+
+
+
+
+
+
+
+
+
+  const runDue=()=>{let progressed=true;while(progressed){progressed=false;for(const [id,t] of [...timers])if(t.at<=now){timers.delete(id);t.fn();progressed=true;}}};const advance=ms=>{now+=Number(ms)||0;runDue();};
+
+
+
+
+
+
+
+
+
+  const sb={console,document,navigator:{maxTouchPoints:1},location:{hostname:'localhost',search:'',origin:'http://localhost'},Math,Date,URLSearchParams,innerWidth:1000,innerHeight:500,performance:{now:()=>now},isAdmin:()=>true,state:stateObj,addCoins(n){n=Number(n)||0;coinCalls.push(n);stateObj.coins+=n;},saveState(){stateObj.saved=(stateObj.saved||0)+1;},authPushSave(){},setTimeout(fn,ms=0){const id=++timerSerial;timers.set(id,{fn,at:now+(Number(ms)||0)});return id;},clearTimeout(id){timers.delete(id);},setInterval(){return 1;},clearInterval(){},requestAnimationFrame(){return 1;},cancelAnimationFrame(){},localStorage:{getItem(k){return store.has(k)?store.get(k):null;},setItem(k,v){store.set(k,String(v));}},addEventListener(){},removeEventListener(){},getComputedStyle(){return {position:'absolute',left:'0px',top:'0px',right:'auto',bottom:'auto',transform:'none',getPropertyValue(){return '0';}}}};sb.window=sb;sb.THREE={Vector3:Vec3,Group};vm.createContext(sb);vm.runInContext(source,sb);const T=sb.Frontline1944._t,G=T.G;
+
+
+
+
+
+
+
+
+
+  const makeRouter=()=>{const root=fakeEl(0,0,1000,500,'vw-frontline1944',''),drive=fakeEl(55,345,96,96,'fl44-stick','fl44-stick'),driveKnob=fakeEl(0,0,1,1,'','fl44-knob'),aim=fakeEl(700,330,82,82,'fl44-aim-stick','fl44-aim-stick'),aimKnob=fakeEl(0,0,1,1,'','fl44-aim-knob'),fire=fakeEl(880,350,68,68,'fl44-fire','fl44-fire'),mg=fakeEl(805,360,56,44,'fl44-mg','fl44-mg'),map={'#fl44-mg':mg};root.querySelector=sel=>map[sel]||null;for(const el of [drive,driveKnob,aim,aimKnob,fire,mg])el.parentElement=root;G.root=root;G.specialControls={autoMove:0,targetLockMode:false,lockedTarget:null,scopeMode:false};const router=new T.GlobalMobileTouchRouter({root,driveEl:drive,driveKnob,aimEl:aim,aimKnob,fireEl:fire,mgEl:mg,driveState:G.joy,aimState:G.aim,storage:sb.localStorage,onAimVector:v=>T.latchMobileAimVector(v.x,v.y),onFireChange:on=>{G.firing=!!on;},onFirePulse:()=>{},protectedPointAt:()=>false,onDiagnostic:()=>{}});return {root,drive,driveKnob,aim,aimKnob,fire,mg,router};};
+
+
+
+
+
+
+
+
+
+  const fakeAimTank=()=>{const tank={tankUpgradeLevel:1,tankArmorLevel:0,world:{x:0,z:0},playerId:'p1',displayName:'P1',hullRotation:0,turretRotation:0,turretTargetRotation:0,barrelPitch:0,barrelTargetPitch:0,speed:0,footprint:{halfWidth:T.CFG.tankFootprintHalfWidth,halfLength:T.CFG.tankFootprintHalfLength},hp:1000,maxHp:1000,invuln:0,hull:{rotation:{y:0}},turret:{rotation:{y:0}},gunPivot:{rotation:{x:0}},mgPivot:{rotation:{x:0}},group:{visible:true,position:new Vec3(),rotation:{y:0},updateMatrixWorld(){}},damageStatistic:{match:0,lifetime:0},activeWeapon:'main',fireEvent:0};tank.barrel={getWorldPosition(v){const h=tank.turret.rotation.y,p=tank.gunPivot.rotation.x,f={x:Math.sin(h),z:-Math.cos(h)},cp=Math.cos(p);return v.set(tank.world.x+f.x*2.0,3.2+Math.sin(p)*2.0,tank.world.z+f.z*2.0*cp);}};tank.cannonTip={getWorldPosition(v){const h=tank.turret.rotation.y,p=tank.gunPivot.rotation.x,f={x:Math.sin(h),z:-Math.cos(h)},cp=Math.cos(p);return v.set(tank.world.x+f.x*6.0,3.2+Math.sin(p)*6.0,tank.world.z+f.z*6.0*cp);}};return tank;};
+
+
+
+
+
+
+
+
+
+  check('R10 identity/config keeps R9 baseline and deliberate DRIVE long-hold timing',()=>{assert.strictEqual(T.R10_SYSTEM.id,'P2.1R10-b4eb7b');assert.strictEqual(T.R10_SYSTEM.taskId,'VW-20260906-160054-b4eb7b');assert.strictEqual(T.R10_SYSTEM.baselineTaskId,T.R9_SYSTEM.taskId);assert(T.CFG.mobileDriveRepositionHoldMs>=500&&T.CFG.mobileDriveRepositionHoldMs<=800);assert.strictEqual(T.CFG.mobileDrivePositionStorageKey,'vw.frontline1944.drive-position.v1');assert(source.includes("r.dataset.baselineTask=R9_SYSTEM.id")||source.includes("r.dataset.baselineTask=R10_SYSTEM.id"));assert.strictEqual(T.CFG.playerHP,1000);});
+
+
+
+
+
+
+
+
+
+  check('DRIVE base stays fixed during ordinary 8-direction use, long-hold repositions/persists, and release is immediately clean',()=>{const {drive,router}=makeRouter(),start=T.elementUsableRect(drive),c=T.rectCenter(start),dirs=[[0,-1],[0,1],[-1,0],[1,0],[-1,-1],[1,-1],[-1,1],[1,1]];let id=10;for(const [x,y] of dirs){const cc=T.rectCenter(T.elementUsableRect(drive));assert.strictEqual(router.begin(id,cc.x,cc.y,drive,'pointer'),'drive');advance(40);router.move(id,cc.x+x*34,cc.y+y*34,drive,'pointer');assert(Math.abs(T.elementUsableRect(drive).left-start.left)<1e-9);assert(Math.abs(T.elementUsableRect(drive).top-start.top)<1e-9);router.end(id,cc.x+x*34,cc.y+y*34,drive,'pointer');assert.strictEqual(G.joy.active,false);id++;}const forwardHold=T.rectCenter(T.elementUsableRect(drive));assert.strictEqual(router.begin(79,forwardHold.x,forwardHold.y-34,drive,'pointer'),'drive');advance(T.CFG.mobileDriveRepositionHoldMs+20);assert(router.driveGesture&&!router.driveGesture.repositioning);assert.strictEqual(router.driveGesture.intent,'drive');assert(G.joy.active&&G.joy.y<0);assert(Math.abs(T.elementUsableRect(drive).left-start.left)<1e-9);router.end(79,forwardHold.x,forwardHold.y-34,drive,'pointer');const holdCenter=T.rectCenter(T.elementUsableRect(drive));assert.strictEqual(router.begin(80,holdCenter.x,holdCenter.y,drive,'pointer'),'drive');advance(T.CFG.mobileDriveRepositionHoldMs+5);assert(router.driveGesture&&router.driveGesture.repositioning);router.move(80,holdCenter.x+120,holdCenter.y-35,drive,'pointer');const moved=T.elementUsableRect(drive);assert(Math.abs(moved.left-start.left)>30);assert.strictEqual(G.joy.x,0);assert.strictEqual(G.joy.y,0);router.end(80,holdCenter.x+120,holdCenter.y-35,drive,'pointer');assert(sb.localStorage.getItem(T.CFG.mobileDrivePositionStorageKey));assert.strictEqual(G.joy.active,false);const movedCenter=T.rectCenter(moved);assert.strictEqual(router.begin(81,movedCenter.x,movedCenter.y,drive,'pointer'),'drive');router.move(81,movedCenter.x,movedCenter.y-30,drive,'pointer');assert(G.joy.active&&G.joy.y<0);router.end(81,movedCenter.x,movedCenter.y-30,drive,'pointer');});
+
+
+
+
+
+
+
+
+
+  check('lostpointercapture performs ownership cleanup and does not leave DRIVE/AIM stale',()=>{const {drive,aim,router}=makeRouter(),dc=T.rectCenter(T.elementUsableRect(drive)),ac=T.rectCenter(T.elementUsableRect(aim));assert.strictEqual(router.begin(101,dc.x,dc.y,drive,'pointer'),'drive');assert.strictEqual(router.noteLostCapture(101,drive,'pointer'),'drive');assert.strictEqual(router.rolePointers.drive,null);assert.strictEqual(G.joy.active,false);assert.strictEqual(router.begin(102,ac.x,ac.y,aim,'pointer'),'aim');router.move(102,ac.x+28,ac.y-22,aim,'pointer');assert(G.aim.active);assert.strictEqual(router.noteLostCapture(102,aim,'pointer'),'aim');assert.strictEqual(router.rolePointers.aim,null);assert.strictEqual(G.aim.active,false);assert.strictEqual(router.begin(103,ac.x,ac.y,aim,'pointer'),'aim');router.end(103,ac.x,ac.y,aim,'pointer');});
+
+
+
+
+
+
+
+
+
+  check('after repeated DRIVE activity AIM updates the real turret/barrel and projected marker solution remains gun-derived',()=>{const env=makeRouter(),tank=fakeAimTank();G.player=tank;G.collision={resolveTankSweep(from,to){return {x:to.x,z:to.z,heading:to.heading,blocked:false,contact:null};},hitSolidOnly(){return null;}};G.terrain={sample(){return {speed:1};}};G.enemies=[];G.fortress=null;G.tankRuntime=new T.TankRuntime(tank,G.collision,G.terrain);G.inputAdapter=new T.UnifiedTankInputAdapter();let pid=200;for(let cycle=0;cycle<3;cycle++)for(const [x,y] of [[0,-1],[0,1],[-1,0],[1,0],[-1,-1],[1,-1],[-1,1],[1,1]]){const dc=T.rectCenter(T.elementUsableRect(env.drive));env.router.begin(pid,dc.x,dc.y,env.drive,'pointer');advance(25);env.router.move(pid,dc.x+x*32,dc.y+y*32,env.drive,'pointer');env.router.end(pid,dc.x+x*32,dc.y+y*32,env.drive,'pointer');pid++;}const ac=T.rectCenter(T.elementUsableRect(env.aim)),beforeH=G.tankRuntime.turretHeading,beforeP=G.tankRuntime.barrelPitch;assert.strictEqual(env.router.begin(299,ac.x,ac.y,env.aim,'pointer'),'aim');env.router.move(299,ac.x+34,ac.y-30,env.aim,'pointer');let cmd=G.inputAdapter.sample(G.tankRuntime);assert(Number.isFinite(cmd.turretTargetHeading));assert(Number.isFinite(cmd.barrelTargetPitch));for(let i=0;i<45;i++){cmd=G.inputAdapter.sample(G.tankRuntime);G.tankRuntime.step(cmd,1/60);}assert(Math.abs(T.wrapPi?T.wrapPi(G.tankRuntime.turretHeading-beforeH):G.tankRuntime.turretHeading-beforeH)>.01);assert(Math.abs(G.tankRuntime.barrelPitch-beforeP)>.002);assert(Math.abs(tank.turret.rotation.y-G.tankRuntime.turretHeading)<1e-9);assert(Math.abs(tank.gunPivot.rotation.x-G.tankRuntime.barrelPitch)<1e-9);const ray=T.cannonWorldRay(tank),sol=T.projectedShotSolution(tank);assert(sol);const dx=sol.x-ray.origin.x,dy=sol.y-ray.origin.y,dz=sol.z-ray.origin.z,L=Math.hypot(dx,dy,dz)||1,dot=(dx/L)*ray.direction.x+(dy/L)*ray.direction.y+(dz/L)*ray.direction.z;assert(dot>.999,'projected solution must follow real gun ray');env.router.end(299,ac.x+34,ac.y-30,env.aim,'pointer');assert(source.includes('if(lockedHeading!=null&&!G.aim.active)'));assert(source.includes('const t=G.player,ray=cannonWorldRay(t)'));assert(source.includes('function r4ScopeCameraFrame'));});
+
+
+
+
+
+
+
+
+
+  check('DRIVE + AIM + FIRE retain independent multitouch ownership and cancelling AIM leaves other controls intact',()=>{const {drive,aim,fire,router}=makeRouter(),dc=T.rectCenter(T.elementUsableRect(drive)),ac=T.rectCenter(T.elementUsableRect(aim)),fc=T.rectCenter(T.elementUsableRect(fire));assert.strictEqual(router.begin(401,dc.x,dc.y,drive,'pointer'),'drive');assert.strictEqual(router.begin(402,ac.x,ac.y,aim,'pointer'),'aim');assert.strictEqual(router.begin(403,fc.x,fc.y,fire,'pointer'),'fire');assert.strictEqual(router.activeCount(),3);router.move(401,dc.x,dc.y-25,drive,'pointer');router.move(402,ac.x+20,ac.y-16,aim,'pointer');router.noteLostCapture(402,aim,'pointer');assert.strictEqual(router.rolePointers.aim,null);assert.strictEqual(router.rolePointers.drive,401);assert.strictEqual(router.rolePointers.fire,403);assert.strictEqual(router.activeCount(),2);router.end(403,fc.x,fc.y,fire,'pointer');router.end(401,dc.x,dc.y-25,drive,'pointer');assert.strictEqual(router.activeCount(),0);});
+
+
+
+
+
+
+
+
+
+  check('current tank configurations are purchasable/equippable with canonical MAIN coins and ownership persists without double charge',()=>{G.player=null;G.progressHydrated=false;G.upgradeBusy=false;stateObj.coins=5000;stateObj.frontline1944={tankUpgradeLevel:1,tankArmorLevel:0,tank:{level:1,armorTier:0}};coinCalls.length=0;let owned=T.tankVehicleOwnedLevels();assert.deepStrictEqual(Array.from(owned),[1]);let r=T.purchaseTankVehicleModel(3);assert(r.ok);assert.strictEqual(r.cost,500);assert.strictEqual(stateObj.coins,4500);assert.deepStrictEqual(coinCalls,[-500]);assert(stateObj.frontline1944.tankVehicleOwnedLevels.includes(3));assert.strictEqual(stateObj.frontline1944.tankVehicleEquippedLevel,3);const rapidCoins=stateObj.coins,rapidCalls=coinCalls.length,rapid=T.purchaseTankVehicleModel(4);assert.strictEqual(rapid.ok,false);assert.strictEqual(rapid.reason,'busy');assert.strictEqual(stateObj.coins,rapidCoins);assert.strictEqual(coinCalls.length,rapidCalls);advance(250);const calls=coinCalls.length;r=T.equipTankVehicleModel(1);assert(r.ok);assert.strictEqual(stateObj.coins,4500);assert.strictEqual(coinCalls.length,calls);r=T.purchaseTankVehicleModel(3);assert(r.ok&&r.equipped);assert.strictEqual(stateObj.coins,4500);assert.strictEqual(coinCalls.length,calls);G.progressHydrated=false;owned=T.tankVehicleOwnedLevels();assert(owned.includes(3));assert.strictEqual(T.currentTankVehicleModelLevel(),3);advance(250);stateObj.coins=100;coinCalls.length=0;r=T.purchaseTankVehicleModel(10);assert.strictEqual(r.ok,false);assert.strictEqual(r.reason,'insufficient');assert.strictEqual(stateObj.coins,100);assert.strictEqual(coinCalls.length,0);});
+
+
+
+
+
+
+
+
+
+  check('weapon, armor and tank purchase paths share one MAIN coin gateway; production still refuses fake Frontline-only money',()=>{G.player=null;G.progressHydrated=false;G.upgradeBusy=false;stateObj.coins=1000;stateObj.frontline1944={tankUpgradeLevel:1,tankArmorLevel:0,tank:{level:1,armorTier:0}};coinCalls.length=0;let r=T.purchaseNextTankLevel(2);assert(r.ok);advance(250);r=T.purchaseNextArmorLevel(1);assert(r.ok);advance(250);assert.strictEqual(stateObj.coins,650);assert.deepStrictEqual(coinCalls,[-250,-100]);const canonical=sb.addCoins;delete sb.addCoins;sb.location.hostname='vocabworld.web.app';stateObj.coins=500;r=T.spendTankUpgradeCoins(100);assert.strictEqual(r.ok,false);assert.strictEqual(r.reason,'coin-api-unavailable');assert.strictEqual(stateObj.coins,500);sb.addCoins=canonical;sb.location.hostname='localhost';assert(source.includes("source:gateway.addCoins?'main-game-addCoins':'local-preview'"));});
+
+
+
+
+
+
+
+
+
+  check('R9 visual/equipment baselines remain intact and R10 adds no new heavy tank asset family',()=>{assert.strictEqual(T.R9_TANK_WEAPON_ASSETS.length,10);assert.strictEqual(T.R9_TANK_ARMOR_ASSETS.length,11);assert.strictEqual(T.R10_TANK_VEHICLE_MODELS.length,10);for(let i=1;i<=10;i++){assert.strictEqual(T.tankVehicleSpec(i).cost,T.tankUpgradeSpec(i).cost);assert.strictEqual(T.tankVehicleSpec(i).previewLevel,i);}for(const token of ['fl44-drive-light','เดินหน้า','ถอยหลัง','R9_TANK_WEAPON_ASSETS','R9_TANK_ARMOR_ASSETS','barrelTargetPitch','r3PlayerEmbedded()','fl44-scope-capability','fl44-mg','DEFAULT_STEEL','TANK GARAGE · R10'])assert(source.includes(token),token);});
+
+
+
+
+
+
+
+
+
+  console.log('PASS R10 '+checks+' focused groups. DRIVE fixed/movable-base lifecycle, AIM recovery/real-gun linkage, multitouch cleanup and shared MAIN-coin tank purchase logic verified. Physical phone/WebGL appearance and Studio import/build remain final acceptance steps.');
+
+
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+

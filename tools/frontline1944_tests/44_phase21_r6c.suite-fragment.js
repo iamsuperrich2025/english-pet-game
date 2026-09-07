@@ -1,0 +1,620 @@
+function runPhase21R6CTests(){
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // Phase 2.1 R6C deterministic source/runtime tests. Physical-device multitouch and actual WebGL visual acceptance remain manual checks.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const source=fs.readFileSync('js/frontline1944.js','utf8');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  let checks=0;const check=(name,fn)=>{fn();checks++;console.log('PASS R6C '+name);};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  class Vec3{constructor(x=0,y=0,z=0){this.set(x,y,z);}set(x,y,z){this.x=x;this.y=y;this.z=z;return this;}setScalar(v){return this.set(v,v,v);}copy(v){return this.set(v.x,v.y,v.z);}clone(){return new Vec3(this.x,this.y,this.z);}lerp(v,t){return this.set(this.x+(v.x-this.x)*t,this.y+(v.y-this.y)*t,this.z+(v.z-this.z)*t);}project(){return this;}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const document={readyState:'loading',addEventListener(){},querySelector(){return null;},getElementById(){return null;},documentElement:{style:{getPropertyValue(){return '0';}}}};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const sb={console,document,navigator:{maxTouchPoints:1},location:{hostname:'localhost',search:'',origin:'http://localhost'},Math,Date,URLSearchParams,innerWidth:1000,innerHeight:500,performance:{now:()=>1000},isAdmin:()=>true,setTimeout(){return 1},clearTimeout(){},setInterval(){return 1},clearInterval(){},requestAnimationFrame(){return 1},cancelAnimationFrame(){},localStorage:{getItem(){return null;},setItem(){}},addEventListener(){},removeEventListener(){},getComputedStyle(){return {position:'absolute',left:'0px',top:'0px',right:'auto',bottom:'auto',transform:'none',getPropertyValue(){return '0';}}}};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  sb.window=sb;sb.THREE={Vector3:Vec3};vm.createContext(sb);vm.runInContext(source,sb);const T=sb.Frontline1944._t,G=T.G;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  function fakeTank(pitch=0){const L=2.75,base={x:0,y:3.25,z:-3.55},tip={x:0,y:base.y+Math.sin(pitch)*L,z:base.z-Math.cos(pitch)*L};return {world:{x:0,z:0},group:{updateMatrixWorld(){},visible:true,position:{set(){}},rotation:{y:0}},barrel:{getWorldPosition(v){return v.set(base.x,base.y,base.z);}},cannonTip:{getWorldPosition(v){return v.set(tip.x,tip.y,tip.z);}},playerId:'p',ownerId:'p',hullRotation:0,turretRotation:0,turretTargetRotation:0,barrelPitch:pitch,barrelTargetPitch:pitch,speed:0,hp:1000,maxHp:1000,invuln:0,footprint:{halfWidth:T.CFG.tankFootprintHalfWidth,halfLength:T.CFG.tankFootprintHalfLength},hull:{rotation:{y:0}},turret:{rotation:{y:0}},gunPivot:{rotation:{x:0}}};}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('identity, HP, steel default and believable pitch limits',()=>{assert.strictEqual(T.R6C_AIM.id,'P2.1R6C-a3a5cf');assert(Math.abs(T.R6C_AIM.barrelMinPitch*180/Math.PI+10)<1e-9);assert(Math.abs(T.R6C_AIM.barrelMaxPitch*180/Math.PI-18)<1e-9);assert.strictEqual(T.CFG.playerHP,1000);assert(source.includes('DEFAULT_STEEL:0x5d6468'));});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('mobile X controls yaw while Y independently controls elevation/depression',()=>{const pose={turretHeading:.4,barrelPitch:.02};const right=T.mobileAimTargets({x:.8,y:0},pose,false),up=T.mobileAimTargets({x:0,y:-.8},pose,false),down=T.mobileAimTargets({x:0,y:.8},pose,false);assert(right.heading<pose.turretHeading);assert(Math.abs(right.barrelPitch-pose.barrelPitch)<1e-12);assert(Math.abs(up.heading-pose.turretHeading)<1e-12&&up.barrelPitch>pose.barrelPitch);assert(Math.abs(down.heading-pose.turretHeading)<1e-12&&down.barrelPitch<pose.barrelPitch);});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('barrel pitch responds immediately, damps smoothly, scopes slower and clamps',()=>{let a=T.barrelPitchMotionStep(0,.2,0,1/60,false,1),b=T.barrelPitchMotionStep(0,.2,0,1/60,true,1);assert(a.pitch>0&&a.velocity>0);assert(b.pitch>0&&b.velocity>0&&b.pitch<a.pitch);let p=0,v=0;for(let i=0;i<240;i++){const q=T.barrelPitchMotionStep(p,9,v,1/60,false,1);p=q.pitch;v=q.velocity;}assert(p<=T.R6C_AIM.barrelMaxPitch+1e-12);for(let i=0;i<120;i++){const q=T.barrelPitchMotionStep(p,p,v,1/60,false,0);p=q.pitch;v=q.velocity;}assert(Math.abs(v)<1e-9);});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('TankRuntime owns authoritative pitch and drives the real gun pivot',()=>{const tank=fakeTank(0),collision={resolveTankSweep(from,to){return {x:to.x,z:to.z,heading:to.heading,blocked:false,contact:null};}},terrain={sample(){return {speed:1};}},rt=new T.TankRuntime(tank,collision,terrain);rt.step({barrelTargetPitch:.15,barrelInputStrength:1},1/60);assert(rt.barrelPitch>0);assert.strictEqual(tank.barrelPitch,rt.barrelPitch);assert.strictEqual(rt.pose().barrelPitch,rt.barrelPitch);assert(Math.abs(tank.gunPivot.rotation.x-rt.barrelPitch)<1e-12);});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('cannon ray and Scope camera share the same normalized 3D gun direction',()=>{const pitch=10*Math.PI/180,tank=fakeTank(pitch);G.player=tank;G.tankRuntime=null;const ray=T.cannonWorldRay(tank);assert(Math.abs(Math.hypot(ray.direction.x,ray.direction.y,ray.direction.z)-1)<1e-10);assert(Math.abs(ray.direction.y-Math.sin(pitch))<1e-10);const f=T.r4ScopeCameraFrame(tank),dx=f.look.x-f.position.x,dy=f.look.y-f.position.y,dz=f.look.z-f.position.z,L=Math.hypot(dx,dy,dz);assert(Math.abs(dx/L-ray.direction.x)<1e-10);assert(Math.abs(dy/L-ray.direction.y)<1e-10);assert(Math.abs(dz/L-ray.direction.z)<1e-10);});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('projected shot solution follows elevation and depression reaches terrain',()=>{G.enemies=[];G.fortress=null;G.collision={hitSolidOnly(){return null;}};let tank=fakeTank(10*Math.PI/180);tank.tankUpgradeLevel=10;G.player=tank;let sol=T.projectedShotSolution(tank);assert(sol.kind==='range'&&sol.y>tank.cannonTip.getWorldPosition(new Vec3()).y);tank=fakeTank(-10*Math.PI/180);tank.tankUpgradeLevel=10;G.player=tank;sol=T.projectedShotSolution(tank);assert.strictEqual(sol.kind,'terrain');assert(sol.distance>5&&sol.distance<40);});
+
+
+
+
+
+
+
+
+
+  check('projectile stepping preserves vertical direction',()=>{G.enemies=[];G.fortress=null;G.collision={hitSolidOnly(){return null;}};const p={lifetime:2,speed:10,world:{x:0,y:2,z:0},direction:{x:0,y:.2,z:-Math.sqrt(.96)},collisionRadius:.2,ownerId:'p',team:'player',group:{position:{x:0,y:2,z:0}}};const pool={active:[p],release(){throw new Error('should not release');}};T.tickProjectilePool(pool,.1,true);assert(p.world.y>2);assert.strictEqual(p.group.position.y,p.world.y);});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('Scope presentation remains tank-optic oriented while R7 replaces the circular window',()=>{for(const token of ['fl44-scope-overlay:before','fl44-r7-style','width:min(92vw,1440px)!important','height:min(80vh,840px)!important','border-radius:24px!important','EL +0.0°','· EL '])assert(source.includes(token),token);assert(source.includes("drawer.innerHTML='<b>FRONTLINE 1944 · R9</b>"));assert(source.includes("r.dataset.patchTask=R10_SYSTEM.id"));assert(source.includes("r.dataset.baselineTask=R9_SYSTEM.id"));});
+
+
+
+
+
+
+
+
+
+  check('Target Lock remains a yaw-only override so manual pitch is not frozen',()=>{assert(source.includes("cmd=normalizeTankCommand({...cmd,turretTargetHeading:lockedHeading,turretInputStrength:1,source:String(cmd.source||'shared')+'+target-lock'})"));assert(!source.includes('barrelTargetPitch:lockedHeading'));});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  check('accepted Global Mobile Router and long-hold AIM architecture remain present',()=>{assert(source.includes('class GlobalMobileTouchRouter'));assert(T.CFG.mobileAimRepositionHoldMs>=650&&T.CFG.mobileAimRepositionHoldMs<=800);assert(source.includes('onAimVector:v=>latchMobileAimVector(v.x,v.y)'));assert(source.includes("const SPECIAL_CONTROL_ROLES=Object.freeze(['autoForward','autoReverse','targetLock','scope'])"));});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  console.log('PASS R6C '+checks+' focused groups. Deterministic source/runtime math only; physical phone, actual WebGL visual acceptance, build/deploy and hosting delivery remain user acceptance checks.');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

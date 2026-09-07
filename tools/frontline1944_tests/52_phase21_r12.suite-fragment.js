@@ -1,0 +1,87 @@
+// Phase 2.1 R12 a8e36a — mission flow / streamed battlefield / fortress progression.
+
+(function testR12MissionExpansion(){
+
+ const source=fs.readFileSync('js/frontline1944.js','utf8'),css=fs.readFileSync('css/frontline1944.css','utf8'),html=fs.readFileSync('index_classic.html','utf8');
+
+ assert(source.includes("const R12_SYSTEM=Object.freeze({id:'P2.1R12-a8e36a'"),'R12 system identity');
+
+ assert(source.includes("taskId:'VW-20260906-200047-a8e36a'"),'R12 task identity');
+
+ assert(source.includes('const R12_MISSION_STATES=Object.freeze'),'centralized mission state controller');
+
+ assert(source.includes('const R12_SECTOR_PLAN=Object.freeze(['),'deterministic battlefield sector plan');
+
+ for(const label of ['Rural Approach','Forest Road','River Crossing','Trench Line','Ruined Village','Open Battlefield','Defensive Bunkers','Industrial Ruins','Fortress Approach','Final Fortress'])assert(source.includes(label),label+' sector exists');
+
+ assert(source.includes('new Set([current-1,current,current+1])'),'streamer keeps previous/current/next active');
+
+ assert(source.includes('function r12CheckpointPose()'),'checkpoint respawn helper');
+
+ assert(source.includes("r3RequestSafeSpawn(cp||"),'death respawn uses latest mission checkpoint with existing safe-spawn validation');
+
+ assert(source.includes('function r12MissionComplete()'),'mission completion is centralized and idempotent');
+
+ assert(source.includes("target=r12Mission()?r12SectorForStep(9)"),'fortress is routed to final mission sector');
+
+ assert(source.includes("if(r12Mission()&&r12Mission().complete"),'completed mission does not spawn another fortress');
+
+ assert(source.includes("targetType==='ENEMY_TANK'||targetType==='ZOMBIE'"),'R11.3 combat-score allowlist retained');
+
+ assert(source.includes("protected:true,destructible:false")||source.includes("kind:'fortress_wall'"),'protected fortress geometry retained');
+
+ assert(css.includes('--fl44-css-runtime-id:"P2.1R15-cf4076-CSS"'),'R12 CSS identity');
+
+ assert(css.includes('.fl44-arrow[data-offscreen="true"]'),'off-screen objective guidance styling');
+
+ assert(html.includes("var FRONTLINE_RUNTIME_ID='P2.1R15-cf4076';"),'R12 loader identity');
+
+ console.log('PASS R12 mission expansion: sectors, mission ordering, checkpoint safety, final fortress routing, objective guidance, score/wallet baseline preserved.');
+
+})();
+
+
+
+
+
+(function testR12BootHotfixMissionInitialization(){
+
+ const source=fs.readFileSync('js/frontline1944.js','utf8');
+
+ assert(source.includes("const savedBaseRaw=saved?saved.baseSector:undefined"),'R12 boot hotfix guards null/absent saved mission before reading baseSector');
+
+ const start=source.indexOf('const R12_SYSTEM='),end=source.indexOf('const R111_VIEWPORTS=',start);assert(start>=0&&end>start,'R12 mission definitions available');
+
+ const defs=source.slice(start,end);
+
+ function init(savedMode,savedValue,playerSector){
+
+   const state={frontline1944:{}};
+
+   if(savedMode==='null')state.frontline1944.r12Mission=null;
+
+   if(savedMode==='value')state.frontline1944.r12Mission=savedValue;
+
+   const sb={console,state,window:null,globalThis:null};sb.window=sb;sb.globalThis=sb;vm.createContext(sb);
+
+   vm.runInContext(`const G={player:{world:{z:${Number(playerSector)*100+5}}},r12Mission:null,fortress:null};const CFG={sectorLength:180};function clamp(v,a,b){return Math.max(a,Math.min(b,v));}const WorldSpace={sectorIndexAtZ(z){return Math.floor(Number(z)/100);},sectorCenterZ(i){return Number(i)*100;}};function ensureProgress(){return state.frontline1944;}${defs}globalThis.__r12={G,r12InitMission};`,sb);
+
+   return {mission:sb.__r12.r12InitMission(),state};
+
+ }
+
+ let out=init('absent',null,7);assert.strictEqual(out.mission.baseSector,7,'absent r12Mission starts from current player sector');assert.strictEqual(out.mission.step,0);assert.strictEqual(out.state.frontline1944.r12Mission.baseSector,7,'fresh mission is persisted safely');
+
+ out=init('null',null,7);assert.strictEqual(out.mission.baseSector,7,'null r12Mission starts from current player sector without throwing');
+
+ out=init('value',{baseSector:6,step:2,checkpointStep:1,complete:false,rewarded:true},6);assert.strictEqual(out.mission.baseSector,6,'valid saved baseSector is preserved');assert.strictEqual(out.mission.step,2,'valid saved mission step is preserved');assert.strictEqual(out.mission.checkpointStep,1);assert.strictEqual(out.mission.rewarded,true);
+
+ out=init('value',{baseSector:'not-a-sector',step:3,checkpointStep:2},9);assert.strictEqual(out.mission.baseSector,9,'non-numeric saved baseSector falls back to current player sector');assert.strictEqual(out.mission.step,3,'other valid saved mission progress remains intact when only baseSector is invalid');
+
+ out=init('value',{baseSector:null,step:1},4);assert.strictEqual(out.mission.baseSector,4,'null baseSector is invalid and falls back to current player sector');
+
+ console.log('PASS R12 boot hotfix: absent/null save, valid saved baseSector, invalid/non-numeric baseSector.');
+
+})();
+
+

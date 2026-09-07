@@ -1,0 +1,190 @@
+function runPhase21R8Tests(){
+
+
+
+
+
+
+
+
+
+  const source=fs.readFileSync('js/frontline1944.js','utf8');let checks=0;const check=(name,fn)=>{fn();checks++;console.log('PASS R8 '+name);};
+
+
+
+
+
+
+
+
+
+  class Vec3{constructor(x=0,y=0,z=0){this.set(x,y,z);}set(x,y,z){this.x=x;this.y=y;this.z=z;return this;}setScalar(v){return this.set(v,v,v);}copy(v){return this.set(v.x,v.y,v.z);}clone(){return new Vec3(this.x,this.y,this.z);}lerp(v,t){return this.set(this.x+(v.x-this.x)*t,this.y+(v.y-this.y)*t,this.z+(v.z-this.z)*t);}project(){return this;}}
+
+
+
+
+
+
+
+
+
+  class Group{constructor(){this.children=[];this.parent=null;this.name='';this.userData={};this.position=new Vec3();this.rotation={x:0,y:0,z:0};}add(o){if(o.parent&&o.parent.remove)o.parent.remove(o);this.children.push(o);o.parent=this;return this;}remove(o){const i=this.children.indexOf(o);if(i>=0)this.children.splice(i,1);o.parent=null;return this;}updateMatrixWorld(){}}
+
+
+
+
+
+
+
+
+
+  const document={readyState:'loading',addEventListener(){},querySelector(){return null;},getElementById(){return null;},documentElement:{style:{getPropertyValue(){return '0';}}}};let now=1000;const store=new Map(),stateObj={coins:30000,frontline1944:{tankUpgradeLevel:1,tankArmorLevel:0,tank:{level:1,armorTier:0}}};
+
+
+
+
+
+
+
+
+
+  const sb={console,document,navigator:{maxTouchPoints:1},location:{hostname:'localhost',search:'',origin:'http://localhost'},Math,Date,URLSearchParams,innerWidth:1000,innerHeight:500,performance:{now:()=>now},isAdmin:()=>true,state:stateObj,addCoins(n){stateObj.coins+=Number(n)||0;},saveState(){stateObj.saved=(stateObj.saved||0)+1;},authPushSave(){},setTimeout(fn){fn();return 1;},clearTimeout(){},setInterval(){return 1;},clearInterval(){},requestAnimationFrame(){return 1;},cancelAnimationFrame(){},localStorage:{getItem(k){return store.get(k)||null;},setItem(k,v){store.set(k,String(v));}},addEventListener(){},removeEventListener(){},getComputedStyle(){return {position:'absolute',left:'0px',top:'0px',right:'auto',bottom:'auto',transform:'none',getPropertyValue(){return '0';}}}};sb.window=sb;sb.THREE={Vector3:Vec3,Group};vm.createContext(sb);vm.runInContext(source,sb);const T=sb.Frontline1944._t,G=T.G;
+
+
+
+
+
+
+
+
+
+  const fakeTank=(weapon=1,armor=0,pitch=0)=>{const L=2.75,base={x:0,y:3.25,z:-3.55},tip={x:0,y:base.y+Math.sin(pitch)*L,z:base.z-Math.cos(pitch)*L};return {tankUpgradeLevel:weapon,tankArmorLevel:armor,armorTier:armor,world:{x:0,z:0},group:{updateMatrixWorld(){},visible:true,position:{set(){}},rotation:{y:0}},barrel:{getWorldPosition(v){return v.set(base.x,base.y,base.z);}},cannonTip:{getWorldPosition(v){return v.set(tip.x,tip.y,tip.z);}},playerId:'p',mainWeaponId:'main_cannon_lv'+String(weapon).padStart(2,'0'),hullRotation:0,turretRotation:0,barrelPitch:pitch,speed:0,hp:1000,maxHp:1000,hull:{rotation:{y:0}},turret:{rotation:{y:0}},gunPivot:{rotation:{x:0}}};};
+
+
+
+
+
+
+
+
+
+  check('task identity and exact x10 cannon progression',()=>{assert.strictEqual(T.R8_SYSTEM.id,'P2.1R8-b62279');assert.strictEqual(T.R8_SYSTEM.taskId,'VW-20260906-132741-b62279');assert.deepStrictEqual(Array.from(T.TANK_UPGRADE_LEVELS,v=>v.rangeMeters),[500,750,1000,1500,2000,3000,4000,5500,7500,10000]);assert.deepStrictEqual(Array.from(T.TANK_UPGRADE_LEVELS,v=>v.cost),[100,250,500,900,1400,2000,2800,4000,6000,10000]);});
+
+
+
+
+
+
+
+
+
+  check('real projectile/marker solution honors LV1 500m, LV5 2000m, LV10 10000m',()=>{G.enemies=[];G.fortress=null;G.collision={hitSolidOnly(){return null;}};for(const [level,meters] of [[1,500],[5,2000],[10,10000]]){const tank=fakeTank(level,0,0);G.player=tank;G.tankRuntime=null;const sol=T.projectedShotSolution(tank);assert.strictEqual(Math.round(sol.distance*T.R7_ARSENAL.metersPerWorldUnit),meters);assert.strictEqual(T.tankCannonRangeMeters(tank),meters);}});
+
+
+
+
+
+
+
+
+
+  check('independent 10-level Armor model has approved costs and controlled real protection',()=>{assert.strictEqual(T.ARMOR_LEVELS.length,10);assert.deepStrictEqual(Array.from(T.ARMOR_LEVELS,v=>v.cost),[100,250,500,900,1400,2000,2800,4000,6000,10000]);for(let i=1;i<T.ARMOR_LEVELS.length;i++)assert(T.ARMOR_LEVELS[i].damageReduction>T.ARMOR_LEVELS[i-1].damageReduction);assert(T.ARMOR_LEVELS[9].damageReduction<.5);const a=T.tankArmorDamageResult(100,fakeTank(3,1)),z=T.tankArmorDamageResult(100,fakeTank(3,10));assert.strictEqual(a.effective,96);assert.strictEqual(z.effective,62);assert(z.effective<a.effective);});
+
+
+
+
+
+
+
+
+
+  check('Armor and Weapon purchases remain sequential inside their own systems but independent from each other',()=>{G.player=null;G.progressHydrated=false;G.upgradeBusy=false;sb.state.frontline1944={tankUpgradeLevel:1,tankArmorLevel:0,tank:{level:1,armorTier:0}};sb.state.coins=30000;let r=T.purchaseNextArmorLevel(1);assert(r.ok);assert.strictEqual(sb.state.frontline1944.tankArmorLevel,1);assert.strictEqual(sb.state.frontline1944.tankUpgradeLevel,1);assert.strictEqual(sb.state.coins,29900);r=T.purchaseNextTankLevel(2);assert(r.ok);assert.strictEqual(sb.state.frontline1944.tankUpgradeLevel,2);assert.strictEqual(sb.state.frontline1944.tankArmorLevel,1);assert.strictEqual(sb.state.coins,29650);r=T.purchaseNextArmorLevel(3);assert.strictEqual(r.ok,false);assert.strictEqual(r.reason,'sequential');const before=sb.state.coins;sb.state.coins=10;r=T.purchaseNextArmorLevel(2);assert.strictEqual(r.ok,false);assert.strictEqual(r.reason,'insufficient');assert.strictEqual(sb.state.coins,10);assert.strictEqual(sb.state.frontline1944.tankArmorLevel,1);sb.state.coins=before;});
+
+
+
+
+
+
+
+
+
+  check('armor persistence keeps HP baseline 1000 and stores Armor separately from Weapon',()=>{G.player=null;G.progressHydrated=false;sb.state.frontline1944={tankUpgradeLevel:7,tankArmorLevel:4,tank:{level:7,armorTier:4}};const p=T.G.progressHydrated=false,snap=T.tankArmorSpec(4);assert.strictEqual(T.CFG.playerHP,1000);assert.strictEqual(snap.level,4);assert.strictEqual(T.currentTankArmorLevel(),4);assert.strictEqual(T.currentTankUpgradeLevel(),7);});
+
+
+
+
+
+
+
+
+
+  check('visible 3D armor assembly is cumulative and explicitly decoupled from the weapon visual tier',()=>{for(const token of ["fl44-r8-armor-hull-lv","r8-front-applique","r8-forward-side-plate","r8-turret-cheek","r8-side-skirt","r8-mantlet-frame","r8-heavy-skirt","r8-elite-side-block","r8-legend-front-trim","t.tankArmorLevel=level;t.armorTier=level"] )assert(source.includes(token),token);assert(!source.includes("t.hullVisualTier=level;t.armorTier=level;t.turretTier=level"));G.resources={mesh(kind,color,scale,mode){return {kind,color,scale,mode,name:'',position:new Vec3(),rotation:{x:0,y:0,z:0},parent:null};}};const tank={tankUpgradeLevel:3,tankArmorLevel:0,armorTier:0,hull:new Group(),turret:new Group(),group:new Group(),world:{x:0,z:0},hullRotation:0,turretRotation:0,barrelPitch:0,gunPivot:{rotation:{x:0}}};let v=T.applyTankArmorVisual(tank,1);assert(v&&v.hullRoot.children.some(x=>x.name==='r8-front-applique'));assert(!v.hullRoot.children.some(x=>x.name==='r8-heavy-skirt'));const oldHull=v.hullRoot;v=T.applyTankArmorVisual(tank,10);assert.strictEqual(oldHull.parent,null);assert.strictEqual(tank.armorTier,10);assert(v.hullRoot.children.some(x=>x.name==='r8-heavy-skirt'));assert(v.turretRoot.children.some(x=>x.name==='r8-legend-front-trim'));});
+
+
+
+
+
+
+
+
+
+  check('Garage exposes separate WEAPONS/ARMOR controls and layered tank preview with fallback',()=>{for(const token of ['TANK GARAGE · R10','fl44-garage-tab-weapon','fl44-garage-tab-armor','fl44-garage-tank-image','fl44-garage-armor-image','LOADING WEBP PREVIEW','GARAGE · W',"G.garageMode==='armor'"])assert(source.includes(token),token);assert(source.includes('RANGE 500 m'));assert(source.includes("r.dataset.patchTask=R10_SYSTEM.id"));assert(source.includes("r.dataset.baselineTask=R9_SYSTEM.id"));assert(source.includes("DEFAULT_STEEL:0x5d6468"));});
+
+
+
+
+
+
+
+
+
+  check('20 lightweight transparent WebP tank assets are wired and present',()=>{assert.strictEqual(T.R9_TANK_WEAPON_ASSETS.length,10);assert.strictEqual(T.R9_TANK_ARMOR_ASSETS.length,11);const paths=[...Array.from(T.R9_TANK_WEAPON_ASSETS),...Array.from(T.R9_TANK_ARMOR_ASSETS).filter(Boolean)];assert.strictEqual(paths.length,20);for(const p of paths){assert(fs.existsSync(p),p);const b=fs.readFileSync(p);assert.strictEqual(b.subarray(0,4).toString('ascii'),'RIFF',p);assert.strictEqual(b.subarray(8,12).toString('ascii'),'WEBP',p);assert(b.length>100&&b.length<250000,p+' size '+b.length);}});
+
+
+
+
+
+
+
+
+
+  check('R7 aim/scope/MG/multitouch/target-lock and safe-spawn baselines are still present',()=>{assert.strictEqual(T.R6C_AIM.id,'P2.1R6C-a3a5cf');assert.strictEqual(T.R7_ARSENAL.id,'P2.1R7-d7f119');for(const token of ['barrelTargetPitch','targetLockHeading()','r3PlayerEmbedded()','mobileAimRepositionHoldMs','class GlobalMobileTouchRouter','fl44-scope-capability','fl44-mg','DRIVE','AIM','FIRE'])assert(source.includes(token),token);});
+
+
+
+
+
+
+
+
+
+  console.log('PASS R8 '+checks+' focused groups. Source/runtime/assets verified; physical phone, rendered WebGL appearance and Studio import/build remain final acceptance steps.');
+
+
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
