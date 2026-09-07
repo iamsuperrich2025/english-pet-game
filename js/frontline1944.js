@@ -36373,7 +36373,7 @@ const CFG={
 
 
 
-  runtimeVersion:'P2.1R12.2-54385a',
+  runtimeVersion:'P2.1R13-09cfa9',
 
 
 
@@ -883709,32 +883709,16 @@ const R12_MISSION_STATES=Object.freeze({MISSION_START:'MISSION_START',ADVANCE:'A
 
 
 const R12_SECTOR_PLAN=Object.freeze([
-
-
- Object.freeze({key:'rural',label:'Rural Approach',visual:0,landmark:'WINDMILL',objective:'ADVANCE TO VILLAGE'}),
-
-
- Object.freeze({key:'village',label:'Village',visual:3,landmark:'WATER TOWER',objective:'CROSS THE VILLAGE'}),
-
-
- Object.freeze({key:'woodland',label:'Forest / Woodland',visual:2,landmark:'SMOKE COLUMN',objective:'FOLLOW THE WOODLAND ROAD'}),
-
-
- Object.freeze({key:'bridge',label:'Bridge / River Approach',visual:5,landmark:'BRIDGE',objective:'REACH THE BRIDGE'}),
-
-
- Object.freeze({key:'ruins',label:'Damaged Town / Ruins',visual:4,landmark:'RUINED TOWER',objective:'ADVANCE THROUGH THE RUINS'}),
-
-
- Object.freeze({key:'defense',label:'Defensive Line',visual:6,landmark:'BUNKER LINE',objective:'BREAK THROUGH THE DEFENSIVE LINE'}),
-
-
- Object.freeze({key:'fortress_approach',label:'Fortress Approach',visual:9,landmark:'FORTRESS GATE',objective:'REACH FORTRESS APPROACH'}),
-
-
- Object.freeze({key:'fortress_outer',label:'Fortress Outer Area',visual:9,landmark:'FORTRESS CORE',objective:'ASSAULT THE FORTRESS'})
-
-
+ Object.freeze({key:'rural',label:'Rural Approach',visual:0,landmark:'WINDMILL',objective:'ADVANCE THROUGH THE RURAL APPROACH'}),
+ Object.freeze({key:'forest',label:'Forest Road',visual:2,landmark:'FOREST WATCHTOWER',objective:'FOLLOW THE FOREST ROAD'}),
+ Object.freeze({key:'bridge',label:'River Crossing',visual:5,landmark:'STONE BRIDGE',objective:'SECURE THE RIVER CROSSING'}),
+ Object.freeze({key:'trenches',label:'Trench Line',visual:6,landmark:'TRENCH COMMAND POST',objective:'BREAK THROUGH THE TRENCH LINE'}),
+ Object.freeze({key:'ruined_village',label:'Ruined Village',visual:4,landmark:'RUINED VILLAGE TOWER',objective:'ADVANCE THROUGH THE RUINED VILLAGE'}),
+ Object.freeze({key:'open_battlefield',label:'Open Battlefield',visual:7,landmark:'DESTROYED MILL',objective:'CROSS THE OPEN BATTLEFIELD'}),
+ Object.freeze({key:'bunkers',label:'Defensive Bunkers',visual:6,landmark:'BUNKER COMPLEX',objective:'BREACH THE BUNKER LINE'}),
+ Object.freeze({key:'industrial',label:'Industrial Ruins',visual:8,landmark:'INDUSTRIAL CHIMNEY',objective:'CLEAR THE INDUSTRIAL RUINS'}),
+ Object.freeze({key:'fortress_approach',label:'Fortress Approach',visual:9,landmark:'FORTRESS GATE',objective:'REACH THE FORTRESS'}),
+ Object.freeze({key:'final_fortress',label:'Final Fortress',visual:9,landmark:'FORTRESS CORE',objective:'ASSAULT THE FINAL FORTRESS'})
 ]);
 
 
@@ -883756,7 +883740,7 @@ function r12InitMission(){
  if(start<base-1||start>base+R12_SECTOR_PLAN.length+1){base=start;step=0;complete=false;}
 
 
- G.r12Mission={baseSector:base,step,state:complete?R12_MISSION_STATES.MISSION_COMPLETE:(step>=6?R12_MISSION_STATES.FORTRESS_APPROACH:R12_MISSION_STATES.ADVANCE),complete,advanceSerial:0,checkpointStep:clamp(Math.floor(Number(saved&&saved.checkpointStep)||0),0,step),rewarded:!!(saved&&saved.rewarded)};
+ G.r12Mission={baseSector:base,step,state:complete?R12_MISSION_STATES.MISSION_COMPLETE:(step>=8?R12_MISSION_STATES.FORTRESS_APPROACH:R12_MISSION_STATES.ADVANCE),complete,advanceSerial:0,checkpointStep:clamp(Math.floor(Number(saved&&saved.checkpointStep)||0),0,step),rewarded:!!(saved&&saved.rewarded)};
 
 
  r12PersistMission();return G.r12Mission;
@@ -883777,10 +883761,10 @@ function r12SectorForStep(step){const m=r12Mission();return (m?m.baseSector:0)+c
 function r12CurrentObjective(){
 
 
- const m=r12Mission();if(!m)return null;if(m.complete)return {label:'MISSION COMPLETE',detail:'ภารกิจสำเร็จ',sectorIndex:r12SectorForStep(7),world:G.fortress&&G.fortress.world};
+ const m=r12Mission();if(!m)return null;if(m.complete)return {label:'MISSION COMPLETE',detail:'ภารกิจสำเร็จ',sectorIndex:r12SectorForStep(9),world:G.fortress&&G.fortress.world};
 
 
- const plan=r12PlanAtStep(m.step),sectorIndex=r12SectorForStep(m.step),world=(m.step>=7&&G.fortress)?G.fortress.world:{x:0,z:WorldSpace.sectorCenterZ(sectorIndex)};
+ const plan=r12PlanAtStep(m.step),sectorIndex=r12SectorForStep(m.step),world=(m.step>=9&&G.fortress)?G.fortress.world:{x:0,z:WorldSpace.sectorCenterZ(sectorIndex)};
 
 
  return {label:plan.objective,detail:plan.landmark+' · '+plan.label,sectorIndex,world};
@@ -883795,7 +883779,7 @@ function r12CheckpointPose(){const m=r12Mission();if(!m)return null;const step=c
 function r12AdvanceMission(){
 
 
- const m=r12Mission();if(!m||m.complete)return false;const old=m.step;if(old>=7)return false;m.state=R12_MISSION_STATES.OBJECTIVE_COMPLETE;m.step=old+1;m.advanceSerial++;if(m.step===1||m.step===3||m.step===6)m.checkpointStep=m.step;m.state=m.step>=7?R12_MISSION_STATES.FORTRESS_ASSAULT:(m.step>=6?R12_MISSION_STATES.FORTRESS_APPROACH:R12_MISSION_STATES.NEXT_SECTOR);r12PersistMission();persist();updateHud();return true;
+ const m=r12Mission();if(!m||m.complete)return false;const old=m.step;if(old>=9)return false;m.state=R12_MISSION_STATES.OBJECTIVE_COMPLETE;m.step=old+1;m.advanceSerial++;if(m.step===1||m.step===3||m.step===5||m.step===8)m.checkpointStep=m.step;m.state=m.step>=7?R12_MISSION_STATES.FORTRESS_ASSAULT:(m.step>=8?R12_MISSION_STATES.FORTRESS_APPROACH:R12_MISSION_STATES.NEXT_SECTOR);r12PersistMission();persist();updateHud();return true;
 
 
 }
@@ -883807,16 +883791,16 @@ function r12TickMission(){
  const m=r12Mission();if(!m||m.complete||!G.player)return;const idx=WorldSpace.sectorIndexAtZ(G.player.world.z),target=r12SectorForStep(m.step);
 
 
- if(m.step<7&&idx>=target){m.state=R12_MISSION_STATES.ACTIVE_OBJECTIVE;const center=WorldSpace.sectorCenterZ(target),passed=G.player.world.z>=center+CFG.sectorLength*.24;if(passed)r12AdvanceMission();}
+ if(m.step<9&&idx>=target){m.state=R12_MISSION_STATES.ACTIVE_OBJECTIVE;const center=WorldSpace.sectorCenterZ(target),passed=G.player.world.z>=center+CFG.sectorLength*.24;if(passed)r12AdvanceMission();}
 
 
- if(m.step>=7&&G.fortress){m.state=R12_MISSION_STATES.FORTRESS_ASSAULT;}
+ if(m.step>=9&&G.fortress){m.state=R12_MISSION_STATES.FORTRESS_ASSAULT;}
 
 
 }
 
 
-function r12MissionComplete(){const m=r12Mission();if(!m||m.complete)return false;m.complete=true;m.state=R12_MISSION_STATES.MISSION_COMPLETE;m.checkpointStep=7;r12PersistMission();persist();return true;}
+function r12MissionComplete(){const m=r12Mission();if(!m||m.complete)return false;m.complete=true;m.state=R12_MISSION_STATES.MISSION_COMPLETE;m.checkpointStep=9;r12PersistMission();persist();return true;}
 
 
 
@@ -912976,7 +912960,65 @@ function phase21PopulateSector(rt){
 
 
 
+
+// Phase 2.1 R13 — Battlefield & Sector Expansion. Extends CURRENT SectorStreamer; does not replace controls/physics/wallet.
+const R13_SYSTEM=Object.freeze({id:'P2.1R13-09cfa9',taskId:'VW-20260906-232412-09cfa9',sectorCount:10,streamingPolicy:'CURRENT_PREVIOUS_CURRENT_NEXT',mobileSafe:true});
+const R13_SECTOR_SET=Object.freeze([
+ Object.freeze({id:'rural_approach',landmark:'windmill',combat:'open-medium',ground:'grass-dirt'}),
+ Object.freeze({id:'forest_road',landmark:'watchtower',combat:'short-cover',ground:'forest-floor'}),
+ Object.freeze({id:'river_crossing',landmark:'bridge',combat:'controlled-crossing',ground:'river-bank'}),
+ Object.freeze({id:'trench_line',landmark:'command-post',combat:'broken-defensive',ground:'cratered-mud'}),
+ Object.freeze({id:'ruined_village',landmark:'village-tower',combat:'close-medium',ground:'rubble-road'}),
+ Object.freeze({id:'open_battlefield',landmark:'destroyed-mill',combat:'long-range',ground:'rolling-cratered'}),
+ Object.freeze({id:'defensive_bunkers',landmark:'bunker-complex',combat:'multi-lane',ground:'earthworks'}),
+ Object.freeze({id:'industrial_ruins',landmark:'chimney',combat:'mixed-lanes',ground:'concrete-rubble'}),
+ Object.freeze({id:'fortress_approach',landmark:'outer-gate',combat:'layered-defense',ground:'damaged-road'}),
+ Object.freeze({id:'final_fortress',landmark:'fortress',combat:'final-arena',ground:'fortress'}),
+]);
+function r13CampaignOffset(index){const m=r12Mission();if(!m)return -1;const d=(index|0)-(m.baseSector|0);return d>=0&&d<R13_SECTOR_SET.length?d:-1;}
+function r13AddSolidBox(rt,x,z,w,h,y,color,kind='r13-solid'){
+ const m=sharedMesh('box',color,w,y,h);m.position.set(x,y*.5,z);addToSector(rt,LAYER.GAMEPLAY_PROPS,m);
+ G.collision.registerAABB(rt.index,x,z,w+.5,h+.5,{ownerId:rt.ownerId,kind});G.terrain.registerRect(rt.index,x,z,w+.5,h+.5,'FORTIFICATION',84,kind);return m;
+}
+function r13AddLandmarkTower(rt,x,z,height=10,color=0x665f51,kind='r13-landmark'){
+ const g=new THREE.Group(),shaft=sharedMesh('box',color,4.2,height,4.2),cap=sharedMesh('cone4',0x4e473e,3.8,2.4,3.8);shaft.position.y=height*.5;cap.position.y=height+1.1;cap.rotation.y=Math.PI/4;g.add(shaft);g.add(cap);g.position.set(x,0,z);addToSector(rt,LAYER.GAMEPLAY_PROPS,g);G.collision.registerAABB(rt.index,x,z,4.8,4.8,{ownerId:rt.ownerId,kind});return g;
+}
+function r13AddChimney(rt,x,z){const m=sharedMesh('cylinder',0x625c55,2.3,14,2.3);m.position.set(x,7,z);addToSector(rt,LAYER.GAMEPLAY_PROPS,m);G.collision.registerCircle(rt.index,x,z,2.8,{ownerId:rt.ownerId,kind:'r13-industrial-chimney'});return m;}
+function r13ScatterTrees(rt,count,x0,x1,z0,z1){const rng=rt.rng;for(let i=0;i<count;i++){let x=lerp(x0,x1,rng()),z=lerp(z0,z1,rng());if(Math.abs(x)<15)x=x<0?x-14:x+14;addTree(rt,x,z,.78+rng()*.32);}}
+function r13AddTrenchBand(rt,z){for(let x=-76;x<=76;x+=19){if(Math.abs(x)<16)continue;addMudPatch(rt,x,z,14,6);const lip=sharedMesh('box',0x514a3c,13,.45,1.1);lip.position.set(x,.22,z+(x%38?2.5:-2.5));addToSector(rt,LAYER.GROUND_DECOR,lip);}}
+function r13PopulateSector(rt){
+ const off=r13CampaignOffset(rt.index);if(off<0)return false;const spec=R13_SECTOR_SET[off],plan=R12_SECTOR_PLAN[off],t=SECTOR_TEMPLATES[plan.visual]||SECTOR_TEMPLATES[0],rng=rt.rng,cz=rt.desc.centerZ;
+ rt.r13={offset:off,id:spec.id,landmark:spec.landmark,combat:spec.combat};addBaseSectorArt(rt,t);
+ // Keep a broad authoritative center corridor free for hull-forward tank movement and safe respawn.
+ const crater=(n,spread=72)=>{for(let i=0;i<n;i++){let x=-spread+rng()*spread*2;if(Math.abs(x)<17)x+=x<0?-18:18;addCrater(rt,x,cz-66+rng()*132,1.5+rng()*2.4);}};
+ switch(off){
+  case 0: // rural approach
+   addFieldRows(rt,-53,cz-28,42,52,t.fieldA);addFieldRows(rt,55,cz+30,44,48,t.fieldB);r13ScatterTrees(rt,14,-86,-58,cz-70,cz+70);addHouse(rt,-52,cz+18,false);addHouse(rt,57,cz-38,false);r13AddLandmarkTower(rt,68,cz+48,9,0x746a51,'r13-rural-windmill');break;
+  case 1: // forest road
+   r13ScatterTrees(rt,34,-86,-22,cz-72,cz+72);r13ScatterTrees(rt,32,22,86,cz-72,cz+72);addMudPatch(rt,-32,cz+15,18,34);r13AddLandmarkTower(rt,-60,cz+52,11,0x56604a,'r13-forest-watchtower');break;
+  case 2: // river crossing
+   addBridgeCrossing(rt);r13ScatterTrees(rt,13,-88,-60,cz-72,cz+72);r13ScatterTrees(rt,12,60,88,cz-72,cz+72);addBunker(rt,-48,cz+32);addBunker(rt,50,cz+34);crater(5,70);break;
+  case 3: // trench line
+   addMudPatch(rt,0,cz,CFG.sectorWidth*.96,CFG.sectorLength*.92);r13AddTrenchBand(rt,cz-34);r13AddTrenchBand(rt,cz+16);for(let x=-70;x<=70;x+=28){if(Math.abs(x)<17)addCrater(rt,x+24,cz+48,2.5);else addWall(rt,x,cz+48,12,1.2,0,'r13-trench-sandbag');}addBunker(rt,58,cz+55);crater(10,76);break;
+  case 4: // ruined village
+   for(let i=0;i<10;i++){const side=i%2?-1:1,x=side*(34+(i%3)*10),z=cz-62+Math.floor(i/2)*26;addHouse(rt,x,z,true);}r13AddLandmarkTower(rt,-63,cz+51,12,0x655b50,'r13-ruined-village-tower');crater(8,76);addSmoke(rt,54,cz+18,.9);break;
+  case 5: // open battlefield
+   crater(15,80);addMudPatch(rt,-52,cz+24,26,38);addMudPatch(rt,55,cz-35,30,34);r13ScatterTrees(rt,6,-88,-68,cz-70,cz+70);r13AddLandmarkTower(rt,70,cz+55,8,0x6e6552,'r13-destroyed-mill');break;
+  case 6: // defensive bunkers
+   for(let x=-72;x<=72;x+=24){if(Math.abs(x)<17)continue;addWall(rt,x,cz+6,16,1.5,(x%48?-.08:.08),'r13-defensive-wall');}addBunker(rt,-54,cz+38);addBunker(rt,54,cz+38);addBunker(rt,-45,cz-42);addBunker(rt,48,cz-44);crater(6,72);break;
+  case 7: // industrial ruins
+   addMudPatch(rt,0,cz,CFG.sectorWidth*.94,CFG.sectorLength*.88);for(const q of [[-55,-48,18,11],[-52,28,24,12],[54,-30,20,10],[58,42,22,13]])r13AddSolidBox(rt,q[0],cz+q[1],q[2],q[3],3.2,0x69645c,'r13-industrial-ruin');r13AddChimney(rt,-70,cz+58);r13AddChimney(rt,68,cz-58);crater(7,76);addSmoke(rt,-66,cz+54,.8);break;
+  case 8: // fortress approach
+   for(let zoff=-48;zoff<=42;zoff+=45){for(let x=-76;x<=76;x+=22){if(Math.abs(x)<18)continue;addWall(rt,x,cz+zoff,15,1.35,0,'r13-approach-wall');}}addBunker(rt,-54,cz+50);addBunker(rt,54,cz+50);r13AddLandmarkTower(rt,70,cz+60,13,0x5b5c4f,'r13-fortress-gate-tower');crater(8,76);break;
+  case 9: // final fortress arena; authoritative makeFortress remains mission-critical objective.
+   addMudPatch(rt,0,cz,CFG.sectorWidth*.92,CFG.sectorLength*.9);for(let x=-78;x<=78;x+=26){if(Math.abs(x)<19)continue;addWall(rt,x,cz-42,17,1.5,0,'r13-final-outer-defense');}addBunker(rt,-58,cz-10);addBunker(rt,58,cz-10);r13AddLandmarkTower(rt,-72,cz+56,14,0x55594d,'r13-final-tower');r13AddLandmarkTower(rt,72,cz+56,14,0x55594d,'r13-final-tower');crater(10,78);break;
+ }
+ return true;
+}
+function r13SectorDiagnostics(){const m=r12Mission();return {system:R13_SYSTEM.id,sectorCount:R13_SECTOR_SET.length,ids:R13_SECTOR_SET.map(s=>s.id),active:G.sectorStreamer?G.sectorStreamer.stats():null,baseSector:m?m.baseSector:null,current:m?m.step:null};}
+
 function populateSector(rt){
+  if(r13PopulateSector(rt))return;
 
 
 
@@ -1119814,7 +1119856,7 @@ function activateNextFortress(initial){
 
 
 
-  else target=r12Mission()?r12SectorForStep(7):Math.max(current+1,Number.isFinite(oldSector)?oldSector+1:current+1);
+  else target=r12Mission()?r12SectorForStep(9):Math.max(current+1,Number.isFinite(oldSector)?oldSector+1:current+1);
 
 
 
@@ -1225227,7 +1225269,7 @@ function updateObjective(){if(!G.player)return;const objective=r12CurrentObjecti
 
 
 
-function fortressStateText(){const mission=r12Mission();if(mission&&mission.complete)return 'MISSION COMPLETE';if(mission&&mission.step<7){const o=r12CurrentObjective();return o?o.detail:'ADVANCE';}if(r3SpawnState.pending)return 'กำลังค้นหาจุดเกิดปลอดภัย · รอพื้นที่ว่าง';if(localTargetLockTestRangeEnabled()&&G.localTargetLockTestStatus&&G.localTargetLockTestStatus.state==='error')return 'LOCAL TEST ERROR · เล่นต่อได้ · ตรวจ console';const f=G.fortress;if(f&&f.testRange&&f.state!=='destroyed')return 'LOCAL TEST · NO REWARDS · '+({defenders:'ทำลายศัตรู 3 ตัว',boss:'กำจัดบอส',core:'ทำลาย Core'}[f.state]||f.state);if(!f)return 'กำลังค้นหาเป้าหมาย';if(f.testRange&&f.state==='destroyed')return 'Local Target Lock test complete · กำลังสร้างชุดใหม่';return ({dormant:'เดินทางไปยังฐานเป้าหมาย',defenders:'ทำลายหน่วยป้องกัน',boss:'กำจัดบอสประจำฐาน',core:'บอสพ่ายแล้ว · ทำลาย Fortress Core',destroyed:'ฐานถูกทำลาย · รับตัวอักษร'})[f.state]||f.state;}
+function fortressStateText(){const mission=r12Mission();if(mission&&mission.complete)return 'MISSION COMPLETE';if(mission&&mission.step<9){const o=r12CurrentObjective();return o?o.detail:'ADVANCE';}if(r3SpawnState.pending)return 'กำลังค้นหาจุดเกิดปลอดภัย · รอพื้นที่ว่าง';if(localTargetLockTestRangeEnabled()&&G.localTargetLockTestStatus&&G.localTargetLockTestStatus.state==='error')return 'LOCAL TEST ERROR · เล่นต่อได้ · ตรวจ console';const f=G.fortress;if(f&&f.testRange&&f.state!=='destroyed')return 'LOCAL TEST · NO REWARDS · '+({defenders:'ทำลายศัตรู 3 ตัว',boss:'กำจัดบอส',core:'ทำลาย Core'}[f.state]||f.state);if(!f)return 'กำลังค้นหาเป้าหมาย';if(f.testRange&&f.state==='destroyed')return 'Local Target Lock test complete · กำลังสร้างชุดใหม่';return ({dormant:'เดินทางไปยังฐานเป้าหมาย',defenders:'ทำลายหน่วยป้องกัน',boss:'กำจัดบอสประจำฐาน',core:'บอสพ่ายแล้ว · ทำลาย Fortress Core',destroyed:'ฐานถูกทำลาย · รับตัวอักษร'})[f.state]||f.state;}
 
 
 
@@ -1525676,7 +1525718,7 @@ function foundationDiagnostics(){return {runtimeVersion:CFG.runtimeVersion,runti
 
 
 
-window.Frontline1944={VERSION:CFG.runtimeVersion,open,close,setViewportSuspended,auditVocabulary,adminAllowed,_t:{R3_SPAWN,r3SpawnDiagnostics,r3ResetSpawnState,r3SpawnRadius,r3DiskHitsZone,r3SpawnDiskClear,r3ValidateSpawn,r3FindSafeSpawn,r3CommitSafeSpawn,r3RequestSafeSpawn,r3PlayerEmbedded,r3TickSpawnSafety,r3SharedTexture,r3TextureDiagnostics,r3DisposeTextureCache,r2Surface,damagePlayer,makePlayer,registerFortressCollision,buildWorld,clearScene,loop,R2_VIEW,R5_AIM,R4_AIM,R6C_AIM,R2_EXTRA_ASSETS,Phase21R2SectorArt,r2CameraFrame,r4ScopeCameraFrame,r2UpdateCamera,R7_ARSENAL,R8_SYSTEM,R9_SYSTEM,R10_SYSTEM,R11_SYSTEM,R111_SYSTEM,R112_SYSTEM,R113_SYSTEM,R111_VIEWPORTS,R111_LAYOUT_TIERS,R11_FACTION,frontlineResponsiveTier,frontlineResponsiveMetrics,frontlineResponsiveLayoutModel,frontlineCombatSafeRect,applyFrontlineResponsiveTier,frontlineCriticalLayoutRects,validateFrontlineLayoutRects,validateFrontlineLayout,layoutBossBarUnderWord,layoutObjectiveUnderCoins,layoutExitTopRight,layoutFixedHudClusters,reflowFrontlineResponsiveLayout,R10_TANK_VEHICLE_MODELS,tankVehicleSpec,sanitizeTankVehicleOwnedLevels,currentTankVehicleModelLevel,tankVehicleOwnedLevels,tankVehicleIsOwned,purchaseTankVehicleModel,equipTankVehicleModel,applyTankVehicleModel,R8_TANK_WEAPON_ASSETS,R8_TANK_ARMOR_ASSETS,R9_TANK_WEAPON_ASSETS,R9_TANK_ARMOR_ASSETS,TANK_UPGRADE_LEVELS,ARMOR_LEVELS,normalizeTankUpgradeLevel,tankUpgradeSpec,currentTankUpgradeLevel,tankCannonRangeMeters,tankCannonRangeWorld,tankMachineGunSpec,normalizeTankArmorLevel,normalizeTankArmorSelection,tankArmorSpec,currentTankArmorLevel,tankArmorDamageReduction,tankArmorDamageResult,tankWeaponAssetForLevel,tankArmorAssetForLevel,mainGameCoinGateway,currentCoinBalance,syncMainCoinReadouts,restoreMainCoinBalance,spendTankUpgradeCoins,purchaseNextTankLevel,purchaseNextArmorLevel,applyTankUpgradeVisual,applyTankUpgradeLevel,applyTankArmorVisual,applyTankArmorLevel,setGarageMode,purchaseGarageSelection,updateGarageTankPreview,openGarage,closeGarage,renderGarage,machineGunWorldRay,machineGunVisibleRangeWorld,machineGunVisibleRangeMeters,fireMachineGun,tickMachineGun,precisionTurretStep,mobileAimStrength,mobileAimAxisStrength,mobileAimTargets,barrelPitchMotionStep,clampBarrelPitch,barrelPitchFromScreenY,turretMotionStep,scopeModeActive,scopeCameraFov,syncScopeProjection,setScopeMode,targetLockSameTarget,rememberTargetTapAction,targetLockLastTapWas,armTargetLockFireDeadline,noteTargetLockCannonFire,updateTargetLockIdleTimeout,holdCurrentTurretOrientation,r4CannonWorldRay,projectedShotSolution,updateProjectedShotMarker,r4ResetSession,r2VisualDiagnostics,r2InstallHud,r2FortressShell,r2RefineTank,r2Dispose,ResourceCache,PHASE21_ASSETS,Phase21SectorArt,phase21Diagnostics,phase21PopulateSector,phase21ResetSession,CFG,G,setViewportSuspended,refreshFrontlineViewport,hideFrontlineToast,showToast,TERRAIN,LAYER,SECTOR_TEMPLATES,WorldSpace,TerrainSystem,CollisionSystem,R113_ENV,r113RegisterEnvironment,r113RegisterEnvironmentCircle,r113RegisterEnvironmentAABB,r113DestroyEnvironmentByCollider,r113DisposeEnvironmentPrefix,SectorStreamer,ObjectPool,TankRuntime,DesktopTankInputAdapter,MobileTankInputAdapter,UnifiedTankInputAdapter,GlobalMobileTouchRouter,visualIdFor,sectorDescriptor,chooseWord,claim,awardLetter,activateNextFortress,tankStateSnapshot,interpolateRemoteTank,authoritativeTankPose,forwardFromRotation,rightFromRotation,rotationFromForward,driveDelta,normalizeTankCommand,desktopCommandFromState,mobileCommandFromState,mergeTankCommands,stickVectorFromRect,driveDirectionFromVector,syncDriveDirectionUI,resetStickState,pointInRect,rectFromEdges,rectFromDomRect,rectCenter,expandRect,rectIntersects,viewportRectFor,safeAreaInsetsFor,safeGameplayRect,elementUsableRect,protectedFrontlineRects,mobileControlRegions,aimPlacementBlockers,aimPlacementBlockedRects,findSafeAimRect,aimOffsetParentPosition,aimDomPositionSnapshot,applyAimRect,pointOverProtectedFrontlineUI,isProtectedFrontlineTarget,firePlacementBlockedRects,fireRectIsValid,findSafeFireRect,applyFireRect,drivePlacementBlockedRects,findSafeDriveRect,applyDriveRect,readDrivePositionStore,writeDrivePositionStore,saveDrivePositionPreference,restoreDrivePositionPreference,fireOrientationKey,readFirePositionStore,writeFirePositionStore,normalizedFirePosition,saveFirePositionPreference,restoreFirePositionPreference,readAimPositionStore,writeAimPositionStore,normalizedAimPosition,aimRectIsValid,saveAimPositionPreference,restoreAimPositionPreference,queueMobileFirePulse,consumeMobileFirePulse,eventTargetLabel,specialControlElements,specialControlRects,specialControlState,layoutSpecialControls,autoMoveThrottleIntent,setAutoMoveMode,setTargetLockMode,toggleSpecialControl,targetLockTargetValid,makeDom,bindTargetLockTapFireBridge,targetLockLabel,targetLockDetails,targetLockSelectionPointAllowed,targetLockScreenBounds,renderTargetLockFeedback,updateTargetLockMarker,clearTargetLock,bindTargetLockDesktopControls,bindCanvasAim,pointerAimFromEvent,privatePreviewHostname,localTargetLockTestRangeEnabled,activateLocalTargetLockTestRange,safeActivateLocalTargetLockTestRange,spawnEnemy,spawnDefenders,spawnBoss,enemyFire,zombiePlayerContactDamage,zombieGooBurst,recordCombatDamage,recordDamage,killZombie,tankZombieOverlap,tickZombieRamming,damageEnemy,destroyCore,removeFortress,tickTank,tickFortress,tickProjectilePool,targetLockWorld,targetLockCandidates,targetLockRaycastCandidateAtScreen,pickTargetLockAtScreen,selectTargetLockAtScreen,targetLockHeading,targetLockRoots,manualAimLastInputAt,noteDesktopAimInput,turretForwardReturnDue,defaultForwardTurretCommand,bindGlobalMobileTouchRouter,markTouchLikeInput,hasRecentTouchLikeInput,latchMobileAimVector,clearMobileAimLatch,mobileAimLatchedHeading,mobileAimLatchedPitch,shouldAcceptDesktopAimEvent,inputDiagnosticsEnabled,cannonWorldPosition,cannonWorldDirection,cannonWorldRay,runtimeIdentity,frontlineDeliveryIdentity,renderRuntimeIdentity,occlusionAcceptance,foundationDiagnostics,updateHud,updateInputDiagnostics}};
+window.Frontline1944={VERSION:CFG.runtimeVersion,open,close,setViewportSuspended,auditVocabulary,adminAllowed,_t:{R3_SPAWN,r3SpawnDiagnostics,r3ResetSpawnState,r3SpawnRadius,r3DiskHitsZone,r3SpawnDiskClear,r3ValidateSpawn,r3FindSafeSpawn,r3CommitSafeSpawn,r3RequestSafeSpawn,r3PlayerEmbedded,r3TickSpawnSafety,r3SharedTexture,r3TextureDiagnostics,r3DisposeTextureCache,r2Surface,damagePlayer,makePlayer,registerFortressCollision,buildWorld,clearScene,loop,R2_VIEW,R5_AIM,R4_AIM,R6C_AIM,R2_EXTRA_ASSETS,Phase21R2SectorArt,r2CameraFrame,r4ScopeCameraFrame,r2UpdateCamera,R7_ARSENAL,R8_SYSTEM,R9_SYSTEM,R10_SYSTEM,R11_SYSTEM,R111_SYSTEM,R112_SYSTEM,R113_SYSTEM,R13_SYSTEM,R13_SECTOR_SET,r13CampaignOffset,r13PopulateSector,r13SectorDiagnostics,R111_VIEWPORTS,R111_LAYOUT_TIERS,R11_FACTION,frontlineResponsiveTier,frontlineResponsiveMetrics,frontlineResponsiveLayoutModel,frontlineCombatSafeRect,applyFrontlineResponsiveTier,frontlineCriticalLayoutRects,validateFrontlineLayoutRects,validateFrontlineLayout,layoutBossBarUnderWord,layoutObjectiveUnderCoins,layoutExitTopRight,layoutFixedHudClusters,reflowFrontlineResponsiveLayout,R10_TANK_VEHICLE_MODELS,tankVehicleSpec,sanitizeTankVehicleOwnedLevels,currentTankVehicleModelLevel,tankVehicleOwnedLevels,tankVehicleIsOwned,purchaseTankVehicleModel,equipTankVehicleModel,applyTankVehicleModel,R8_TANK_WEAPON_ASSETS,R8_TANK_ARMOR_ASSETS,R9_TANK_WEAPON_ASSETS,R9_TANK_ARMOR_ASSETS,TANK_UPGRADE_LEVELS,ARMOR_LEVELS,normalizeTankUpgradeLevel,tankUpgradeSpec,currentTankUpgradeLevel,tankCannonRangeMeters,tankCannonRangeWorld,tankMachineGunSpec,normalizeTankArmorLevel,normalizeTankArmorSelection,tankArmorSpec,currentTankArmorLevel,tankArmorDamageReduction,tankArmorDamageResult,tankWeaponAssetForLevel,tankArmorAssetForLevel,mainGameCoinGateway,currentCoinBalance,syncMainCoinReadouts,restoreMainCoinBalance,spendTankUpgradeCoins,purchaseNextTankLevel,purchaseNextArmorLevel,applyTankUpgradeVisual,applyTankUpgradeLevel,applyTankArmorVisual,applyTankArmorLevel,setGarageMode,purchaseGarageSelection,updateGarageTankPreview,openGarage,closeGarage,renderGarage,machineGunWorldRay,machineGunVisibleRangeWorld,machineGunVisibleRangeMeters,fireMachineGun,tickMachineGun,precisionTurretStep,mobileAimStrength,mobileAimAxisStrength,mobileAimTargets,barrelPitchMotionStep,clampBarrelPitch,barrelPitchFromScreenY,turretMotionStep,scopeModeActive,scopeCameraFov,syncScopeProjection,setScopeMode,targetLockSameTarget,rememberTargetTapAction,targetLockLastTapWas,armTargetLockFireDeadline,noteTargetLockCannonFire,updateTargetLockIdleTimeout,holdCurrentTurretOrientation,r4CannonWorldRay,projectedShotSolution,updateProjectedShotMarker,r4ResetSession,r2VisualDiagnostics,r2InstallHud,r2FortressShell,r2RefineTank,r2Dispose,ResourceCache,PHASE21_ASSETS,Phase21SectorArt,phase21Diagnostics,phase21PopulateSector,phase21ResetSession,CFG,G,setViewportSuspended,refreshFrontlineViewport,hideFrontlineToast,showToast,TERRAIN,LAYER,SECTOR_TEMPLATES,WorldSpace,TerrainSystem,CollisionSystem,R113_ENV,r113RegisterEnvironment,r113RegisterEnvironmentCircle,r113RegisterEnvironmentAABB,r113DestroyEnvironmentByCollider,r113DisposeEnvironmentPrefix,SectorStreamer,ObjectPool,TankRuntime,DesktopTankInputAdapter,MobileTankInputAdapter,UnifiedTankInputAdapter,GlobalMobileTouchRouter,visualIdFor,sectorDescriptor,chooseWord,claim,awardLetter,activateNextFortress,tankStateSnapshot,interpolateRemoteTank,authoritativeTankPose,forwardFromRotation,rightFromRotation,rotationFromForward,driveDelta,normalizeTankCommand,desktopCommandFromState,mobileCommandFromState,mergeTankCommands,stickVectorFromRect,driveDirectionFromVector,syncDriveDirectionUI,resetStickState,pointInRect,rectFromEdges,rectFromDomRect,rectCenter,expandRect,rectIntersects,viewportRectFor,safeAreaInsetsFor,safeGameplayRect,elementUsableRect,protectedFrontlineRects,mobileControlRegions,aimPlacementBlockers,aimPlacementBlockedRects,findSafeAimRect,aimOffsetParentPosition,aimDomPositionSnapshot,applyAimRect,pointOverProtectedFrontlineUI,isProtectedFrontlineTarget,firePlacementBlockedRects,fireRectIsValid,findSafeFireRect,applyFireRect,drivePlacementBlockedRects,findSafeDriveRect,applyDriveRect,readDrivePositionStore,writeDrivePositionStore,saveDrivePositionPreference,restoreDrivePositionPreference,fireOrientationKey,readFirePositionStore,writeFirePositionStore,normalizedFirePosition,saveFirePositionPreference,restoreFirePositionPreference,readAimPositionStore,writeAimPositionStore,normalizedAimPosition,aimRectIsValid,saveAimPositionPreference,restoreAimPositionPreference,queueMobileFirePulse,consumeMobileFirePulse,eventTargetLabel,specialControlElements,specialControlRects,specialControlState,layoutSpecialControls,autoMoveThrottleIntent,setAutoMoveMode,setTargetLockMode,toggleSpecialControl,targetLockTargetValid,makeDom,bindTargetLockTapFireBridge,targetLockLabel,targetLockDetails,targetLockSelectionPointAllowed,targetLockScreenBounds,renderTargetLockFeedback,updateTargetLockMarker,clearTargetLock,bindTargetLockDesktopControls,bindCanvasAim,pointerAimFromEvent,privatePreviewHostname,localTargetLockTestRangeEnabled,activateLocalTargetLockTestRange,safeActivateLocalTargetLockTestRange,spawnEnemy,spawnDefenders,spawnBoss,enemyFire,zombiePlayerContactDamage,zombieGooBurst,recordCombatDamage,recordDamage,killZombie,tankZombieOverlap,tickZombieRamming,damageEnemy,destroyCore,removeFortress,tickTank,tickFortress,tickProjectilePool,targetLockWorld,targetLockCandidates,targetLockRaycastCandidateAtScreen,pickTargetLockAtScreen,selectTargetLockAtScreen,targetLockHeading,targetLockRoots,manualAimLastInputAt,noteDesktopAimInput,turretForwardReturnDue,defaultForwardTurretCommand,bindGlobalMobileTouchRouter,markTouchLikeInput,hasRecentTouchLikeInput,latchMobileAimVector,clearMobileAimLatch,mobileAimLatchedHeading,mobileAimLatchedPitch,shouldAcceptDesktopAimEvent,inputDiagnosticsEnabled,cannonWorldPosition,cannonWorldDirection,cannonWorldRay,runtimeIdentity,frontlineDeliveryIdentity,renderRuntimeIdentity,occlusionAcceptance,foundationDiagnostics,updateHud,updateInputDiagnostics}};
 
 
 

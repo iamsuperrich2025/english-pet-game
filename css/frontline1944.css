@@ -94,7 +94,7 @@
 
 
 
-#vw-frontline1944{--fl44-css-runtime-id:"P2.1R12.2-54385a-CSS";--fl44-safe-top:env(safe-area-inset-top,0px);--fl44-safe-right:env(safe-area-inset-right,0px);--fl44-safe-bottom:env(safe-area-inset-bottom,0px);--fl44-safe-left:env(safe-area-inset-left,0px);position:fixed;inset:0;z-index:2147481800;background:#0c1511;color:#fff;font-family:Kanit,system-ui,sans-serif;overflow:hidden;touch-action:none!important;overscroll-behavior:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#vw-frontline1944{--fl44-css-runtime-id:"P2.1R13-09cfa9-CSS";--fl44-safe-top:env(safe-area-inset-top,0px);--fl44-safe-right:env(safe-area-inset-right,0px);--fl44-safe-bottom:env(safe-area-inset-bottom,0px);--fl44-safe-left:env(safe-area-inset-left,0px);position:fixed;inset:0;z-index:2147481800;background:#0c1511;color:#fff;font-family:Kanit,system-ui,sans-serif;overflow:hidden;touch-action:none!important;overscroll-behavior:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 
 
 
@@ -4127,7 +4127,7 @@ body:has(#vw-frontline1944) #btn-rail-frontline1944,body:has(#vw-frontline1944) 
 
 
 /* R12.2 54385a — EXIT top-right HUD slot; bottom-right is released for combat controls. */
-#vw-frontline1944[data-runtime-version="P2.1R12.2-54385a"] .fl44-exit{
+#vw-frontline1944[data-runtime-version="P2.1R13-09cfa9"] .fl44-exit{
   top:max(var(--fl44-top-side),env(safe-area-inset-top))!important;
   right:calc(max(var(--fl44-top-side),env(safe-area-inset-right)) + var(--fl44-coins-width) + var(--fl44-hud-gap))!important;
   bottom:auto!important;left:auto!important;

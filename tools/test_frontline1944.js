@@ -20754,7 +20754,7 @@ const versionPath='version.json',buildVersion=fs.existsSync(versionPath)?JSON.pa
 
 
 
-const RUNTIME_ID='P2.1R12.2-54385a';
+const RUNTIME_ID='P2.1R13-09cfa9';
 
 
 
@@ -471184,11 +471184,11 @@ function runPhase21R3Tests(){
 
   assert(source.includes('id="fl44-objective-state"'),'state information is relocated into right mission panel');
 
-  assert(css.includes('--fl44-css-runtime-id:"P2.1R12.2-54385a-CSS"'),'current CSS identity synchronized after R12');
+  assert(css.includes('--fl44-css-runtime-id:"P2.1R13-09cfa9-CSS"'),'current CSS identity synchronized after R12');
 
   assert(css.includes('data-task-id="VW-20260906-182626-c85cc6"'),'R11.2 CSS task marker synchronized');
 
-  assert(html.includes("var FRONTLINE_RUNTIME_ID='P2.1R12.2-54385a';"),'current HTML loader identity synchronized after R12');
+  assert(html.includes("var FRONTLINE_RUNTIME_ID='P2.1R13-09cfa9';"),'current HTML loader identity synchronized after R12');
 
 
 
@@ -471294,15 +471294,15 @@ function runPhase21R3Tests(){
 
   const source=fs.readFileSync('js/frontline1944.js','utf8'),css=fs.readFileSync('css/frontline1944.css','utf8'),html=fs.readFileSync('index_classic.html','utf8');
 
-  assert(source.includes("runtimeVersion:'P2.1R12.2-54385a'"),'current JS runtime identity is R12');
+  assert(source.includes("runtimeVersion:'P2.1R13-09cfa9'"),'current JS runtime identity is R12');
 
   assert(source.includes("const R113_SYSTEM=Object.freeze({id:'P2.1R11.3-c08371'"),'R11.3 system marker');
 
   assert(source.includes("taskId:'VW-20260906-191254-c08371'"),'R11.3 Task identity');
 
-  assert(css.includes('--fl44-css-runtime-id:"P2.1R12.2-54385a-CSS"'),'current CSS identity is R12');
+  assert(css.includes('--fl44-css-runtime-id:"P2.1R13-09cfa9-CSS"'),'current CSS identity is R12');
 
-  assert(html.includes("var FRONTLINE_RUNTIME_ID='P2.1R12.2-54385a';"),'current loader identity is R12');
+  assert(html.includes("var FRONTLINE_RUNTIME_ID='P2.1R13-09cfa9';"),'current loader identity is R12');
 
   assert(css.includes('.fl44-telemetry{display:none!important')||css.includes('.fl44-telemetry{display:none!important'), 'upper-middle telemetry rail hidden');
 
@@ -471400,7 +471400,7 @@ function runPhase21R3Tests(){
 
  assert(source.includes('const R12_SECTOR_PLAN=Object.freeze(['),'deterministic battlefield sector plan');
 
- for(const label of ['Rural Approach','Village','Forest / Woodland','Bridge / River Approach','Damaged Town / Ruins','Defensive Line','Fortress Approach','Fortress Outer Area'])assert(source.includes(label),label+' sector exists');
+ for(const label of ['Rural Approach','Forest Road','River Crossing','Trench Line','Ruined Village','Open Battlefield','Defensive Bunkers','Industrial Ruins','Fortress Approach','Final Fortress'])assert(source.includes(label),label+' sector exists');
 
  assert(source.includes('new Set([current-1,current,current+1])'),'streamer keeps previous/current/next active');
 
@@ -471410,7 +471410,7 @@ function runPhase21R3Tests(){
 
  assert(source.includes('function r12MissionComplete()'),'mission completion is centralized and idempotent');
 
- assert(source.includes("target=r12Mission()?r12SectorForStep(7)"),'fortress is routed to final mission sector');
+ assert(source.includes("target=r12Mission()?r12SectorForStep(9)"),'fortress is routed to final mission sector');
 
  assert(source.includes("if(r12Mission()&&r12Mission().complete"),'completed mission does not spawn another fortress');
 
@@ -471418,11 +471418,11 @@ function runPhase21R3Tests(){
 
  assert(source.includes("protected:true,destructible:false")||source.includes("kind:'fortress_wall'"),'protected fortress geometry retained');
 
- assert(css.includes('--fl44-css-runtime-id:"P2.1R12.2-54385a-CSS"'),'R12 CSS identity');
+ assert(css.includes('--fl44-css-runtime-id:"P2.1R13-09cfa9-CSS"'),'R12 CSS identity');
 
  assert(css.includes('.fl44-arrow[data-offscreen="true"]'),'off-screen objective guidance styling');
 
- assert(html.includes("var FRONTLINE_RUNTIME_ID='P2.1R12.2-54385a';"),'R12 loader identity');
+ assert(html.includes("var FRONTLINE_RUNTIME_ID='P2.1R13-09cfa9';"),'R12 loader identity');
 
  console.log('PASS R12 mission expansion: sectors, mission ordering, checkpoint safety, final fortress routing, objective guidance, score/wallet baseline preserved.');
 
@@ -471476,9 +471476,9 @@ function runPhase21R3Tests(){
 // R12.1 0a2900 — direct target selection / automatic 5-second hull-forward turret return / visible-range MG.
 (function testR121DirectTargetForwardReturnAndMgRange(){
   const source=fs.readFileSync('js/frontline1944.js','utf8'),css=fs.readFileSync('css/frontline1944.css','utf8'),html=fs.readFileSync('index_classic.html','utf8');
-  assert(source.includes("runtimeVersion:'P2.1R12.2-54385a'"),'R12.1 JS delivery identity');
-  assert(css.includes('--fl44-css-runtime-id:"P2.1R12.2-54385a-CSS"'),'R12.1 CSS delivery identity');
-  assert(html.includes("var FRONTLINE_RUNTIME_ID='P2.1R12.2-54385a';"),'R12.1 loader identity');
+  assert(source.includes("runtimeVersion:'P2.1R13-09cfa9'"),'R12.1 JS delivery identity');
+  assert(css.includes('--fl44-css-runtime-id:"P2.1R13-09cfa9-CSS"'),'R12.1 CSS delivery identity');
+  assert(html.includes("var FRONTLINE_RUNTIME_ID='P2.1R13-09cfa9';"),'R12.1 loader identity');
   assert(!source.includes('id="fl44-target-lock"'),'TARGET LOCK button DOM is removed');
   assert(!source.includes('TARGET<br>LOCK'),'obsolete TARGET LOCK button label is removed');
   assert(!source.includes('FORWARD LOCK')&&!source.includes('fl44-forward-lock'),'no FORWARD LOCK button/mode is introduced');
@@ -471523,7 +471523,7 @@ function runPhase21R3Tests(){
 // R12.2 54385a — EXIT top-right / same-target deselect / selected-target must-fire timer / SCOPE idle exception.
 (function testR122ExitTargetTimerAndScopeException(){
   const source=fs.readFileSync('js/frontline1944.js','utf8'),css=fs.readFileSync('css/frontline1944.css','utf8'),html=fs.readFileSync('index_classic.html','utf8');
-  const ID='P2.1R12.2-54385a';
+  const ID='P2.1R13-09cfa9';
   assert(source.includes("runtimeVersion:'"+ID+"'"),'R12.2 JS delivery identity');
   assert(css.includes('--fl44-css-runtime-id:"'+ID+'-CSS"'),'R12.2 CSS delivery identity');
   assert(html.includes("var FRONTLINE_RUNTIME_ID='"+ID+"';"),'R12.2 loader identity');
@@ -471562,4 +471562,38 @@ function runPhase21R3Tests(){
 
   T.rememberTargetTapAction('deselect',321,222,7000);assert(T.targetLockLastTapWas('deselect',321,222,7050),'same-target deselect gesture is recognizable by touch bridge');assert(!T.targetLockLastTapWas('deselect',325,222,7050),'unrelated tap is not suppressed');
   console.log('PASS R12.2 EXIT top-right / same-target deselect / 5-second selected-target timer / SCOPE idle exception.');
+})();
+
+
+// R13 09cfa9 — 10-sector battlefield expansion / streaming-preservation regression.
+(function testR13BattlefieldSectorExpansion(){
+  const source=fs.readFileSync('js/frontline1944.js','utf8'),css=fs.readFileSync('css/frontline1944.css','utf8'),html=fs.readFileSync('index_classic.html','utf8');
+  const ID='P2.1R13-09cfa9';
+  assert(source.includes("runtimeVersion:'"+ID+"'"),'R13 JS delivery identity');
+  assert(css.includes('--fl44-css-runtime-id:"'+ID+'-CSS"'),'R13 CSS delivery identity');
+  assert(html.includes("var FRONTLINE_RUNTIME_ID='"+ID+"';"),'R13 loader identity');
+  assert(source.includes("sectorCount:10"),'R13 declares ten-sector campaign architecture');
+  const ids=['rural_approach','forest_road','river_crossing','trench_line','ruined_village','open_battlefield','defensive_bunkers','industrial_ruins','fortress_approach','final_fortress'];
+  for(const id of ids)assert(source.includes("id:'"+id+"'"),'R13 sector definition exists: '+id);
+  assert.strictEqual(new Set(ids).size,10,'R13 sector IDs are unique');
+  assert(source.includes("streamingPolicy:'CURRENT_PREVIOUS_CURRENT_NEXT'"),'R13 explicitly preserves CURRENT streaming policy');
+  assert(source.includes('if(r13PopulateSector(rt))return;'),'R13 sector composition is a minimal populate hook');
+  assert(source.includes('addBridgeCrossing(rt)'),'bridge sector uses authoritative traversable bridge helper');
+  assert(source.includes("'r13-trench-sandbag'")&&source.includes('r13AddTrenchBand'),'trench sector has distinct defensive earthwork composition');
+  assert(source.includes('r13AddChimney'),'industrial sector has strong chimney landmark');
+  assert(source.includes("'r13-final-outer-defense'")&&source.includes('authoritative makeFortress remains mission-critical objective'),'final sector preserves authoritative fortress objective architecture');
+  assert(source.includes('if(Math.abs(x)<15)x=x<0?x-14:x+14'),'tree placement protects center tank corridor');
+  assert(source.includes('if(Math.abs(x)<17)x+=x<0?-18:18'),'crater placement protects center tank corridor');
+  assert(source.includes('m.step<9')&&source.includes('m.step>=9')&&source.includes('r12SectorForStep(9)'),'mission progression now reaches sector 10 before fortress assault');
+  assert(source.includes('m.step===1||m.step===3||m.step===5||m.step===8'),'R13 checkpoints remain sparse and deterministic across the longer route');
+  assert(source.includes('class SectorStreamer')&&source.includes('this.active=new Map()')&&source.includes('this.preloaded=new Map()'),'CURRENT SectorStreamer remains present');
+  assert(source.includes('disposeSectorRuntime(rt)')&&source.includes('G.collision.clearSector(rt.index,rt.ownerId)'),'sector disposal still clears collision state');
+  assert(source.includes('r113DisposeEnvironmentPrefix(rt&&rt.ownerId)'),'sector disposal still clears destructible environment state');
+  assert(source.includes("destructibleKinds:Object.freeze(['tree','house','ruin','tent','phase21_fence'])"),'accepted destructible allowlist remains unchanged');
+  assert(source.includes("protectedKinds:Object.freeze(['fortress_wall','fortress_core','bunker','bridge_rail','r2-bridge-parapet'])"),'mission-critical protection allowlist remains unchanged');
+  assert(source.includes("allowed=targetType==='ENEMY_TANK'||targetType==='ZOMBIE'"),'combat damage accounting remains enemy-only');
+  assert(source.includes('targetSelectionFireTimeoutMs:5000'),'R12.2 five-second target timeout preserved');
+  assert(source.includes('if(s.scopeMode)holdCurrentTurretOrientation();else s.forceHullForward=true'),'R12.2 SCOPE timeout exception preserved');
+  assert(source.includes('1253,553'),'accepted responsive regression viewport remains in matrix');
+  console.log('PASS R13 ten-sector battlefield expansion / streaming / mission / R12.2 preservation regression.');
 })();
