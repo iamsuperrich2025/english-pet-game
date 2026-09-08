@@ -10,6 +10,9 @@
 
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 > ผู้ใช้เริ่มใช้ Codex ช่วยงานคู่ขนานกับ session Claude (4 ส.ค. 2026 เหตุ: Claude ติด rate limit) — Codex ไม่เห็น `img/`/`sound/` (ไม่อยู่ใน git) และ **deploy Firebase เองไม่ได้** ต้องรอผู้ใช้รันบนเครื่องเอง
+- **รอบ 1359 · Home V2 ไม่โชว์ข้อความ/ภาพสัตว์ชั่วคราว:** ถ้ายังไม่มีสัตว์ ซ่อน speech bubble + ชื่อ/สถานะใต้เวที และลบมาสคอต SVG สำรองออกจาก runtime
+- ทุกชนิดสัตว์เริ่มจากเวทีว่างระหว่างโหลด ค่อยเผยเฉพาะภาพจริงหลัง `load`; โหลดพลาดกลับเป็นเวทีว่าง ไม่ค้างภาพเก่าหรือ fallback
+- syntax + regression Home V2 เดิม/ใหม่ผ่าน; isolated production build `2026-09-08.1224` 9,401 files และ PWA/cache/TWA validator ผ่าน (แยกจาก dirty files รอบ 1357)
 - **รอบ 1358 · ทุกเกมเข้าเล่นฟรี:** ตั้ง `WORLD_ENTRY_FEE=0`, ให้ `worldEntryInfo()` คืน free ทุกโหมด และตัดการตรวจ/หัก `state.coins` ออกจาก `startWorldEntry()` แม้ได้รับ fee เก่า; ระบบเหรียญอื่นและ legacy refund คงเดิม
 - Lobby/Home V2/ข้อความคืนตั๋วแสดง “ฟรี/ไม่มีการหักเหรียญ”; โบนัสชวนเพื่อน 100 เหรียญยังอยู่แต่เปลี่ยนคำจาก “เงินคืน” เป็น “โบนัส” · แก้ `items/calendar/ui/home-v2/main/online` + `GAME_RULES`
 - Regression ค่าเข้าครบ 11 โลก + hostile fee, Home V2, Sky beta/character, syntax/diff ผ่าน; production build 9,384 ไฟล์และ PWA/cache/TWA validator ผ่าน พร้อม audit hashed dist ไม่พบ fee 500/ทางหักเหรียญ

@@ -451,7 +451,7 @@ gradeChangeTo:64 · gradeLockNote:91 · openGradeChange:100
 
 ## js/hauntedhotelsession.js (255 บรรทัด · 0 รายการ)
 
-## js/home-v2.js (2,098 บรรทัด · 0 รายการ)
+## js/home-v2.js (2,110 บรรทัด · 0 รายการ)
 
 ## js/hotel3d.js (1,526 บรรทัด · 62 รายการ)
 ### 🗂️ สารบัญโซน js/hotel3d.js (Read/Edit เฉพาะช่วง)
