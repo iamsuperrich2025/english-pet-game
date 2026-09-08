@@ -233,30 +233,6 @@
     }
     return `<span class="vw2-grade-identity neutral"><span class="vw2-grade-copy"><strong>${safe}</strong></span></span>`;
   }
-  function mascotDragon(){
-    return `<svg class="vw2-dragon-art" viewBox="0 0 220 220" aria-hidden="true" focusable="false">
-      <defs>
-        <linearGradient id="vw2dg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#aaf3dc"/><stop offset="1" stop-color="#59caa8"/></linearGradient>
-        <linearGradient id="vw2wing" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d8c8ff"/><stop offset="1" stop-color="#9e82ed"/></linearGradient>
-      </defs>
-      <ellipse cx="110" cy="198" rx="61" ry="14" fill="#7761b5" opacity=".18"/>
-      <path d="M58 95C31 77 26 111 45 129c10 9 24 7 37-2z" fill="url(#vw2wing)" stroke="#fff" stroke-width="6"/>
-      <path d="M162 95c27-18 32 16 13 34-10 9-24 7-37-2z" fill="url(#vw2wing)" stroke="#fff" stroke-width="6"/>
-      <path d="M85 62l-16-26 26 13M135 62l16-26-26 13" fill="#ffd7a7" stroke="#fff" stroke-width="6" stroke-linejoin="round"/>
-      <path d="M78 126c-18 26-14 62 8 75 17 10 55 10 72-5 19-18 16-50-5-72z" fill="url(#vw2dg)" stroke="#fff" stroke-width="7"/>
-      <ellipse cx="113" cy="158" rx="31" ry="37" fill="#fff3c9" opacity=".95"/>
-      <path d="M79 139c-18 7-25 22-18 30 6 7 19 1 28-10M148 139c18 7 25 22 18 30-6 7-19 1-28-10" fill="none" stroke="#57b99d" stroke-width="13" stroke-linecap="round"/>
-      <ellipse cx="110" cy="95" rx="66" ry="56" fill="url(#vw2dg)" stroke="#fff" stroke-width="8"/>
-      <path d="M87 55l8-18 10 19M116 53l10-18 9 20" fill="#8fe2c6" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
-      <ellipse cx="84" cy="96" rx="17" ry="21" fill="#283653"/><ellipse cx="137" cy="96" rx="17" ry="21" fill="#283653"/>
-      <circle cx="79" cy="89" r="7" fill="#fff"/><circle cx="132" cy="89" r="7" fill="#fff"/><circle cx="89" cy="104" r="3" fill="#fff" opacity=".8"/><circle cx="142" cy="104" r="3" fill="#fff" opacity=".8"/>
-      <ellipse cx="65" cy="119" rx="13" ry="7" fill="#ff9fbd" opacity=".7"/><ellipse cx="155" cy="119" rx="13" ry="7" fill="#ff9fbd" opacity=".7"/>
-      <path d="M101 116c5 5 13 5 18 0M104 126c5 6 14 6 20 0" fill="none" stroke="#4b6b69" stroke-width="4" stroke-linecap="round"/>
-      <path d="M107 150h11M106 161h13M106 173h13" stroke="#e7c887" stroke-width="4" stroke-linecap="round" opacity=".75"/>
-      <path d="M82 193c-5 14 16 15 27 4M139 193c5 14-16 15-27 4" fill="#8fe2c6" stroke="#fff" stroke-width="5"/>
-      <path d="M50 68l4 11 11 4-11 4-4 11-4-11-11-4 11-4zM169 54l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" fill="#ffe47c" stroke="#fff" stroke-width="2"/>
-    </svg>`;
-  }
   function knightFallback(){
     return `<svg class="vw2-knight-art" viewBox="0 0 100 120" aria-hidden="true" focusable="false">
       <path d="M25 45V30c0-19 50-19 50 0v15" fill="#dfe9f3" stroke="#fff" stroke-width="6"/>
@@ -377,9 +353,8 @@
     box.dataset.src = h.url;
     box.innerHTML = `<img src="${htmlEscape(h.url)}" alt="" decoding="async">`;
   }
-  function petVisualUrl(){
+  function petVisualUrl(p){
     try{
-      const p = (typeof activePet === 'function') ? activePet() : null;
       const fns = [
         (typeof currentPetImg === 'function') ? currentPetImg : null,
         (typeof petStateImg === 'function') ? petStateImg : null
@@ -404,17 +379,50 @@
   function syncPetVisual(){
     const box = document.getElementById('vw2-pet');
     if(!box) return;
-    const url = petVisualUrl();
-    if(url){
-      if(box.dataset.src !== url){
-        box.dataset.src = url;
-        box.innerHTML = `<img class="vw2-owned-pet" src="${htmlEscape(url)}" alt="สัตว์เลี้ยงของผู้เล่น">`;
-      }
-      box.classList.add('has-owned-pet');
-    }else{
-      if(!box.dataset.src){ box.innerHTML = mascotDragon(); }
-      box.classList.remove('has-owned-pet');
+    let p = null;
+    try{ p = (typeof activePet === 'function') ? activePet() : null; }catch(_){ }
+    const url = p ? petVisualUrl(p) : '';
+
+    // ไม่มีสัตว์/URL ภาพจริงยังไม่พร้อม = เวทีว่าง ห้ามใช้มาสคอตหรือภาพสำรองชั่วคราว
+    if(!p || !url){
+      box.dataset.src = '';
+      box.style.display = 'none';
+      box.replaceChildren();
+      box.classList.remove('has-owned-pet','is-loading');
+      return;
     }
+
+    const current = box.querySelector('img.vw2-owned-pet');
+    if(box.dataset.src === url && current) return;
+
+    box.dataset.src = url;
+    box.style.display = 'none';
+    box.classList.remove('has-owned-pet');
+    box.classList.add('is-loading');
+    const img = document.createElement('img');
+    img.className = 'vw2-owned-pet';
+    img.alt = p.name ? `สัตว์เลี้ยง ${cleanText(p.name,24)}` : 'สัตว์เลี้ยงของผู้เล่น';
+    img.decoding = 'async';
+    img.style.visibility = 'hidden';
+    const reveal = ()=>{
+      if(box.dataset.src !== url || !box.contains(img)) return;
+      img.style.visibility = '';
+      box.style.display = '';
+      box.classList.remove('is-loading');
+      box.classList.add('has-owned-pet');
+    };
+    const clearFailed = ()=>{
+      if(box.dataset.src !== url || !box.contains(img)) return;
+      box.dataset.src = '';
+      box.style.display = 'none';
+      box.replaceChildren();
+      box.classList.remove('has-owned-pet','is-loading');
+    };
+    img.addEventListener('load', reveal, {once:true});
+    img.addEventListener('error', clearFailed, {once:true});
+    box.replaceChildren(img);
+    img.src = url;
+    if(img.complete && img.naturalWidth > 0) reveal();
   }
   function syncNewWordCard(){
     const card = document.getElementById('vw2-newword');
@@ -1148,18 +1156,18 @@
               <img class="vw2-world-scene" src="img/home-v2/r1279_fantasy_world.webp" alt="" aria-hidden="true" decoding="async" fetchpriority="high">
               <div class="vw2-stage-depth" aria-hidden="true"><div class="vw2-stage-castle">${castleArtwork()}</div></div>
               <div class="vw2-atmosphere" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
-              <div class="vw2-speech"><span id="vw2-pet-greeting">น้องดีใจที่ได้เจอหนูอีกครั้ง!</span><small>ยินดีต้อนรับกลับ Vocab World — ไปผจญภัยด้วยกันนะ</small></div>
+              <div class="vw2-speech" style="display:none"><span id="vw2-pet-greeting"></span><small>ยินดีต้อนรับกลับ Vocab World — ไปผจญภัยด้วยกันนะ</small></div>
               <button type="button" class="vw2-reward-card" data-vw2-action="trophy" data-vw2-source="#btn-rail-trophy">${icon('trophy')}<div><b id="vw2-reward-title">ตู้เข็ม</b><small id="vw2-reward-info" hidden></small></div></button>
               <div class="vw2-pet-halo" aria-hidden="true"></div>
               <div class="vw2-pedestal-aura" aria-hidden="true"></div>
               <div class="vw2-pet-platform" aria-hidden="true"></div>
-              <button type="button" class="vw2-pet" id="vw2-pet" data-vw2-pat aria-label="แตะเพื่อลูบสัตว์เลี้ยง กดค้างเพื่อลูบยาว" title="แตะสั้น: เล่นกับน้องและเปิดโปรไฟล์ · กดค้าง: ลูบยาวรับ EXP">${mascotDragon()}</button>
+              <button type="button" class="vw2-pet" id="vw2-pet" data-vw2-pat aria-label="แตะเพื่อลูบสัตว์เลี้ยง กดค้างเพื่อลูบยาว" title="แตะสั้น: เล่นกับน้องและเปิดโปรไฟล์ · กดค้าง: ลูบยาวรับ EXP" style="display:none"></button>
               <div class="vw2-pet-sparkles" aria-hidden="true"><i>♥</i><i>★</i><i>✦</i><i>♥</i></div>
               <button type="button" class="vw2-house-preview" data-vw2-action="home" data-vw2-source=".lobby-rail [data-panel=&quot;panel-home&quot;]" aria-label="เปิดบ้านที่เลือกอยู่">
                 <div class="vw2-house-preview-head">${icon('home')}<span id="vw2-house-label">ยังไม่มีบ้าน</span></div>
                 <div class="vw2-house-backdrop is-empty" id="vw2-house-visual" aria-hidden="true"></div>
               </button>
-              <div class="vw2-stage-copy"><b id="vw2-pet-name">ออกผจญภัยกับน้อง</b><span id="vw2-pet-state">ฝึกคำศัพท์ · สะสมเหรียญ · เติบโตไปด้วยกัน</span></div>
+              <div class="vw2-stage-copy" style="display:none"><b id="vw2-pet-name"></b><span id="vw2-pet-state"></span></div>
               <div class="vw2-stage-foreground" aria-hidden="true"></div>
             </div>
             <div class="vw2-feature-actions">
@@ -1725,9 +1733,13 @@
       if(typeof activePet === 'function'){
         const p=activePet();
         const petName = p && p.name ? cleanText(p.name,24) : 'น้องของฉัน';
-        setText('vw2-pet-name', petName);
-        setText('vw2-pet-greeting', `${petName} ดีใจที่ได้เจอหนูอีกครั้ง!`);
-        setText('vw2-pet-state', petStatusText(p));
+        const speech = root?.querySelector('.vw2-speech');
+        if(speech) speech.style.display = p ? '' : 'none';
+        const stageCopy = root?.querySelector('.vw2-stage-copy');
+        if(stageCopy) stageCopy.style.display = p ? '' : 'none';
+        setText('vw2-pet-name', p ? petName : '');
+        setText('vw2-pet-greeting', p ? `${petName} ดีใจที่ได้เจอหนูอีกครั้ง!` : '');
+        setText('vw2-pet-state', p ? petStatusText(p) : '');
         setText('vw2-action-pet-name', p ? petName : 'ยังไม่มีสัตว์');
         const renameButton = root?.querySelector('[data-vw2-action="petRename"]');
         if(renameButton){
