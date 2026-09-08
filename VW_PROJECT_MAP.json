@@ -1,10 +1,10 @@
 {
   "schema_version": 4,
   "project": "english-pet-game",
-  "structure_signature": "262181864eafb119a1786e55c7359a6cd9f9a2e75a26f479444b8ecccba78fff",
-  "structure_entry_count": 2875,
+  "structure_signature": "23012e8f16ccaf48e9e5b7f3b937066a5d83e2b1252d4b622ee35ab4ee291747",
+  "structure_entry_count": 2838,
   "generated_by": "VW Dev Studio Local Token Saver",
-  "generated_at": "2026-09-08T09:47:53",
+  "generated_at": "2026-09-08T17:11:13",
   "generation_mode": "local_no_ai_no_api",
   "areas": {
     "main_world": [
@@ -163,7 +163,6 @@
       "tools/test_hauntedhotel_session_reset.js",
       "tools/test_player_character_style.js",
       "js/data/players.js",
-      "tools/frontline1944_tests/12_tank_runtime_and_multiplayer.suite-fragment.js",
       "work/archive-fallback-1145/delete-account.html",
       "work/auth-cloud-recovery-dist/delete-account.html",
       "work/letter-cannon-dist/delete-account.html",
@@ -171,7 +170,8 @@
       "work/letter-cannon-tester-dist/delete-account.html",
       "js/data/band/b6_business_accountability-catalogue.js",
       "js/data/band/b6_sports_quarterfinal-substituteplayer.js",
-      "js/data/band/b6_toeic_accountspayable-executivecommittee.js"
+      "js/data/band/b6_toeic_accountspayable-executivecommittee.js",
+      "js/data/band/b6_toeic_warehouse-workshopsession.js"
     ],
     "ui": [
       "NOTE_URLBAR_FULLSCREEN.md",
@@ -192,8 +192,8 @@
       "img/home-v2/r9_screen_backdrop.svg",
       "js/data/fruits.js",
       "store/android/rebuild_apk.py",
-      "tools/frontline1944_tests/00_baselines_r11_and_cli.suite-fragment.js",
-      "tools/frontline1944_tests/10_runtime_delivery_and_access.suite-fragment.js"
+      ".claude/worktrees/busy-robinson-b9aaa3/NOTE_URLBAR_FULLSCREEN.md",
+      ".claude/worktrees/busy-robinson-b9aaa3/PROMPTS_BUILDINGS.md"
     ],
     "firebase": [
       "work/auth-cloud-recovery-dist/js/data/firebase-config.js",
