@@ -2,7 +2,7 @@
 
 > วิธีใช้: หาชื่อฟังก์ชัน/ค่าคงที่/selector ในไฟล์นี้ (Grep หรือกวาดตา) → `Read` ไฟล์จริง `offset=<บรรทัด>` `limit=40`
 > 🗂️ ไฟล์อ้วนมี **สารบัญโซน** (`st-end ชื่อโซน`) — งานทั้งระบบ/โลก 3D: Grep ชื่อโซน → Read/Edit เฉพาะช่วงนั้น **ห้ามอ่านทั้งไฟล์** · เพิ่มระบบใหม่ในไฟล์อ้วนต้องครอบ banner `/* ==== */`+ชื่อโซน (สารบัญเจนเอง)
-> css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: 2026-09-04
+> css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: 2026-09-08
 
 ## js/account-deletion.js (235 บรรทัด · 0 รายการ)
 
@@ -415,36 +415,6 @@ removeSelector:60 · openSelector:66
 
 ## js/fpsweapon.js (194 บรรทัด · 0 รายการ)
 
-## js/frontline1944.js (18,514 บรรทัด · 168 รายการ)
-FRONTLINE_EXECUTING_SCRIPT_URL:189 · CFG:229 · LAYER:1274 · TERRAIN:1514 · SECTOR_TEMPLATES:1734 · approach:2294
-rotateToward:2314 · listen:2334 · hash32:2354 · randFrom:2374 · adminAllowed:2414 · lockNotice:2554
-syncAdminEntry:2574 · claimTankRuntimeOwnership:2754 · releaseTankRuntimeOwnership:2894 · runtimeIdentity:2994 · frontlineAssetLabel:3002 · frontlineDeliveryIdentity:3026
-renderRuntimeIdentity:3062 · normalizeWord:3118 · vocabPool:3258 · auditVocabulary:3418 · ensureProgress:3558 · persist:3738
-claim:3918 · chooseWord:3938 · pronounce:4078 · awardLetter:4098 · loadThree:4378 · makeDom:4518
-showToast:4818 · sharedMesh:5698 · addToLayer:5718 · addToSector:5738 · setWorldPos:5758 · visualIdFor:7658
-sectorDescriptor:7678 · createSectorGroups:7718 · removeSectorGroups:7738 · registerOccluder:7758 · updateOcclusionOrder:7778 · addBaseSectorArt:7898
-addFieldRows:8118 · addCrater:8138 · addMudPatch:8158 · addTree:8178 · addHouse:8338 · addBunker:8458
-addCampTent:8478 · addWall:8498 · addBridgeCrossing:8618 · addSmoke:8818 · makeSmokeTexture:8898 · populateSector:8978
-disposeSectorRuntime:9398 · instantiateSector:9498 · createProjectilePool:10378 · createFxPool:10538 · initPools:10598 · disposePools:10618
-makeTank:10658 · playerIdentity:11138 · makePlayer:11238 · authoritativeTankPose:11358 · syncTankVisual:11438 · tankStateSnapshot:11458
-interpolateRemoteTank:11518 · makeEnemyFigure:11578 · makeBossTank:11638 · spawnEnemy:11658 · registerFortressCollision:11738 · makeFortress:11938
-removeFortress:12078 · activateNextFortress:12098 · spawnDefenders:12238 · spawnBoss:12298 · recordDamage:12338 · damageEnemy:12358
-damagePlayer:12378 · destroyCore:12398 · cannonWorldPosition:12438 · cannonWorldRay:12458 · cannonWorldDirection:12538 · spawnProjectile:12558
-firePlayer:12578 · enemyFire:12698 · projectileImpact:12778 · tickProjectilePool:12798 · burst:13098 · tickFx:13178
-forwardFromRotation:13338 · rightFromRotation:13358 · rotationFromForward:13378 · driveDelta:13398 · normalizeTankCommand:13418 · steeringForTravelDirection:13438
-desktopCommandFromState:13458 · mobileCommandFromState:13558 · mergeTankCommands:13658 · screenAimDirection:13718 · tickTank:14378 · tickFortress:14438
-tickEnemies:14498 · cameraTick:14598 · updateObjective:14678 · fortressStateText:14698 · updateHud:14718 · inputNow:14962
-markTouchLikeInput:14982 · hasRecentTouchLikeInput:15002 · mobileAimLatchValid:15022 · mobileAimLatchedHeading:15042 · latchMobileAimWorldDirection:15062 · latchMobileAimVector:15082
-clearMobileAimLatch:15102 · shouldAcceptDesktopAimEvent:15122 · explicitInputDiagnosticsRequested:15142 · coarseInputEnvironment:15162 · inputDiagnosticsEnabled:15182 · preventControlDefault:15202
-queueMobileFirePulse:15222 · consumeMobileFirePulse:15242 · stickVectorFromRect:15262 · resetStickState:15322 · pointInRect:15382 · rectFromEdges:15402
-rectFromDomRect:15422 · rectCenter:15442 · expandRect:15462 · rectIntersects:15482 · viewportRectFor:15502 · safeAreaInsetsFor:15522
-safeGameplayRect:15542 · elementUsableRect:15562 · protectedFrontlineRects:15582 · mobileControlRegions:15602 · pointOverProtectedFrontlineUI:15702 · eventTargetLabel:15722
-isProtectedFrontlineTarget:15802 · firePlacementBlockedRects:15862 · fireRectWithinSafe:15882 · fireRectIsValid:15902 · fireRectAtCenter:15922 · findSafeFireRect:15942
-applyFireRect:16082 · fireOrientationKey:16102 · fireStorage:16122 · readFirePositionStore:16142 · writeFirePositionStore:16162 · normalizedFirePosition:16182
-saveFirePositionPreference:16202 · restoreFirePositionPreference:16222 · updateInputDiagnostics:17087 · bindGlobalMobileTouchRouter:17191 · bindControls:17571 · pointerToGround:17715
-bindCanvasAim:17735 · resize:17815 · buildLayers:17835 · buildWorld:17855 · initThree:17955 · loop:18015
-clearScene:18095 · open:18155 · close:18275 · routeCheck:18335 · occlusionAcceptance:18375 · foundationDiagnostics:18395
-
 ## js/game.js (1,230 บรรทัด · 91 รายการ)
 ### 🗂️ สารบัญโซน js/game.js (Read/Edit เฉพาะช่วง)
 - 2-633 เกมจับคู่คำศัพท์ + หมวดคำศัพท์ & แบบทดสอบ
@@ -481,7 +451,7 @@ gradeChangeTo:64 · gradeLockNote:91 · openGradeChange:100
 
 ## js/hauntedhotelsession.js (255 บรรทัด · 0 รายการ)
 
-## js/home-v2.js (2,105 บรรทัด · 0 รายการ)
+## js/home-v2.js (2,098 บรรทัด · 0 รายการ)
 
 ## js/hotel3d.js (1,526 บรรทัด · 62 รายการ)
 ### 🗂️ สารบัญโซน js/hotel3d.js (Read/Edit เฉพาะช่วง)
@@ -846,17 +816,17 @@ openPhotoCrop:224
 
 ## js/specialmission.js (223 บรรทัด · 0 รายการ)
 
-## js/state.js (1,392 บรรทัด · 96 รายการ)
+## js/state.js (1,397 บรรทัด · 96 รายการ)
 ### 🗂️ สารบัญโซน js/state.js (Read/Edit เฉพาะช่วง)
 - 2-246 STATE + LocalStorage + กติกากลางของเกม
 - 247-303 🗄️🐾 ระบบชั้นอาหาร + เงินช่วยปรับตัว
-- 304-796 👍 รอบ 701: รีแอ็กชันฟีด (กดค้างปุ่มถูกใจแล้วเลือกได้เหมือน Facebook)
-- 797-852 Daily Quest (item 3 backlog): ภารกิจรายวัน 3 อย่าง สุ่มตามวันที่
-- 853-963 มูลค่าทรัพย์สินสุทธิ (net worth) — ฐานของระบบแรงค์
-- 964-1013 🚫🍽️ สัตว์ป่วยเพราะหิว = ซื้อของกินไม่ได้ (รอบ 952)
-- 1014-1107 เครื่องยนต์บิลรายเดือน (กลาง — ค่าบำรุงบ้านตอนนี้ / ค่าไฟ-น้ำ-เน็ต เสียบเพิ่มได้)
-- 1108-1232 🍖 เงินค่าอาหารสัตว์รายเดือน — ทุกวันที่ 1 ของเดือน จ่ายตามจำนวนสัตว์ที่เลี้ยงอยู่
-- 1233-1392 โรงงานผลิตสินค้า: จ่ายค่าผลิตด้วย "แต้มคำศัพท์"
+- 304-801 👍 รอบ 701: รีแอ็กชันฟีด (กดค้างปุ่มถูกใจแล้วเลือกได้เหมือน Facebook)
+- 802-857 Daily Quest (item 3 backlog): ภารกิจรายวัน 3 อย่าง สุ่มตามวันที่
+- 858-968 มูลค่าทรัพย์สินสุทธิ (net worth) — ฐานของระบบแรงค์
+- 969-1018 🚫🍽️ สัตว์ป่วยเพราะหิว = ซื้อของกินไม่ได้ (รอบ 952)
+- 1019-1112 เครื่องยนต์บิลรายเดือน (กลาง — ค่าบำรุงบ้านตอนนี้ / ค่าไฟ-น้ำ-เน็ต เสียบเพิ่มได้)
+- 1113-1237 🍖 เงินค่าอาหารสัตว์รายเดือน — ทุกวันที่ 1 ของเดือน จ่ายตามจำนวนสัตว์ที่เลี้ยงอยู่
+- 1238-1397 โรงงานผลิตสินค้า: จ่ายค่าผลิตด้วย "แต้มคำศัพท์"
 ### รายการ js/state.js
 STORAGE_KEY:6 · QUIZ_PASS_REWARD:11 · CURE_COST:13 · HUNGRY_SICK_MS:14 · MEAL_HOUR:16 · MEAL_FULL:17
 SLEEP_FROM_HOUR:18 · SLEEP_SICK_HOUR:19 · WAKE_HOUR:20 · DINNER_COST:21 · TOXIN_FULL:23 · DETOX_COST:24
@@ -864,16 +834,16 @@ FOODQUIZ_Q:26 · FOODQUIZ_COIN:27 · FOODQUIZ_BONUS:28 · FOODQUIZ_MAX_PLAYS:29 
 SHAPE_MISS_MEALS:33 · SHAPE_EXP_BONUS:34 · HEAT_SICK_MS:35 · THIRST_SICK_MS:36 · DEFAULT_STATE:38 · migratePetShoppingState:252
 FEED_CATS:296 · FEED_REACTIONS:310 · feedRx:318 · FEED_QUICK_CM:320 · SLOT_MS:332 · currentSlotStart:333
 nextSlotStart:339 · mealDayKey:341 · nightKeyOf:343 · isNightNow:351 · newPet:356 · loadState:381
-saveState:754 · activePet:764 · petStage:765 · isAdult:770 · abilityOn:771 · hasPetType:772
-todayStr:775 · dailyTick:779 · addCoins:782 · QUEST_POOL:802 · QUEST_PER_DAY:811 · questsToday:812
-questTick:819 · questEvent:823 · assetValue:859 · netWorth:883 · assetCount:885 · grantRankPromotionRewards:903
-refreshRank:933 · heatProtected:951 · rainProtected:955 · petHungry:958 · petCanEat:962 · hungerSickLock:970
-hungerSickMsg:978 · petShapeOf:986 · updatePetShape:992 · shapeMealDone:999 · heatPct:1009 · ymStr:1018
-billOutstanding:1022 · UTILITIES:1029 · HOME_UTILITIES:1035 · homeDecayed:1037 · billTick:1040 · PET_FOOD_PER_PET:1112
-petFoodTick:1113 · myCar:1139 · carLoanDue:1144 · carLoanOverdue:1149 · carLoanPayable:1154 · carLoanPay:1161
-compTick:1174 · ONLINE_RATE:1188 · onlineEarnActive:1189 · onlineEarnTick:1193 · onlineEarnFlush:1204 · marketTick:1214
-addCraft:1238 · ORDER_MAX:1257 · ORDER_LIFE_MS:1258 · ORDER_GAP_MIN_MS:1259 · ORDER_GAP_SPAN_MS:1260 · ORDER_TIER_WEIGHT:1261
-newOrder:1262 · orderTick:1275 · careTick:1283 · expNeed:1363 · addExp:1368 · addRP:1388
+saveState:759 · activePet:769 · petStage:770 · isAdult:775 · abilityOn:776 · hasPetType:777
+todayStr:780 · dailyTick:784 · addCoins:787 · QUEST_POOL:807 · QUEST_PER_DAY:816 · questsToday:817
+questTick:824 · questEvent:828 · assetValue:864 · netWorth:888 · assetCount:890 · grantRankPromotionRewards:908
+refreshRank:938 · heatProtected:956 · rainProtected:960 · petHungry:963 · petCanEat:967 · hungerSickLock:975
+hungerSickMsg:983 · petShapeOf:991 · updatePetShape:997 · shapeMealDone:1004 · heatPct:1014 · ymStr:1023
+billOutstanding:1027 · UTILITIES:1034 · HOME_UTILITIES:1040 · homeDecayed:1042 · billTick:1045 · PET_FOOD_PER_PET:1117
+petFoodTick:1118 · myCar:1144 · carLoanDue:1149 · carLoanOverdue:1154 · carLoanPayable:1159 · carLoanPay:1166
+compTick:1179 · ONLINE_RATE:1193 · onlineEarnActive:1194 · onlineEarnTick:1198 · onlineEarnFlush:1209 · marketTick:1219
+addCraft:1243 · ORDER_MAX:1262 · ORDER_LIFE_MS:1263 · ORDER_GAP_MIN_MS:1264 · ORDER_GAP_SPAN_MS:1265 · ORDER_TIER_WEIGHT:1266
+newOrder:1267 · orderTick:1280 · careTick:1288 · expNeed:1368 · addExp:1373 · addRP:1393
 
 ## js/thaitime.js (52 บรรทัด · 13 รายการ)
 TH_TZ_MIN:22 · TH_DAY_MS:23 · thShift:28 · thMs:30 · thDate:31 · thHour:32
@@ -884,7 +854,7 @@ thLocaleOpt:46
 
 ## js/typing.js (370 บรรทัด · 0 รายการ)
 
-## js/ui.js (10,333 บรรทัด · 445 รายการ)
+## js/ui.js (10,298 บรรทัด · 445 รายการ)
 ### 🗂️ สารบัญโซน js/ui.js (Read/Edit เฉพาะช่วง)
 - 2-77 UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
 - 78-144 🎬 เวทีน้องน่ารัก (Cute Pet Show) — รอบ 604 (ผู้ใช้สั่ง 26 ก.ค. 2026)
@@ -927,19 +897,19 @@ thLocaleOpt:46
 - 7230-7691 ☁️📚 รอบ 1229 — Vocab Sky Playground
 - 7692-7711 🌍 ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย (ผู้ใช้สั่ง 9 ก.ค. 2026)
 - 7712-7777 🔒 รอบ 1070/1132: โลกที่ยังไม่เปิดสาธารณะ — เปิดให้บัญชีทดสอบ 2 ชื่อเท่านั้น
-- 7778-7916 ↩️🪙 รอบ 1143 — ธุรกรรมค่าเข้าเกม + คืนเงินเมื่อเกมเปิดไม่สำเร็จ
-- 7917-8010 ☁️🧸 รอบ 1258 — เลือกตัวละคร Sky ก่อนเข้าโลก
-- 8011-8194 🧭 ป้ายบอกทางของรางเมนูซ้าย (รอบ 601 · ผู้ใช้สั่ง 26 ก.ค. 2026)
-- 8195-8364 การ์ดสวนผลไม้ (ข้อ 12): ซื้อต้นไม้ปลูกได้ไม่จำกัด แต่ละต้นออกผล
-- 8365-8379 โรงงานผลิตสินค้า 🏭 + ตลาดขายต่อ (แนวคิดใหม่ 5 ก.ค. 2026)
-- 8380-8403 โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
-- 8404-8678 ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
-- 8679-9687 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
-- 9688-9751 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
-- 9752-9788 เลเวลอัพ (รายตัว)
-- 9789-9894 สถิติผลการเรียนรู้
-- 9895-9932 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
-- 9933-10333 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
+- 7778-7895 ↩️🪙 Legacy recovery — คืนค่าเข้าที่เวอร์ชันเก่าอาจหักค้างไว้ก่อนเปลี่ยนเป็นเข้าฟรี
+- 7896-7980 ☁️🧸 รอบ 1258 — เลือกตัวละคร Sky ก่อนเข้าโลก
+- 7981-8159 🧭 ป้ายบอกทางของรางเมนูซ้าย (รอบ 601 · ผู้ใช้สั่ง 26 ก.ค. 2026)
+- 8160-8329 การ์ดสวนผลไม้ (ข้อ 12): ซื้อต้นไม้ปลูกได้ไม่จำกัด แต่ละต้นออกผล
+- 8330-8344 โรงงานผลิตสินค้า 🏭 + ตลาดขายต่อ (แนวคิดใหม่ 5 ก.ค. 2026)
+- 8345-8368 โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
+- 8369-8643 ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
+- 8644-9652 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
+- 9653-9716 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
+- 9717-9753 เลเวลอัพ (รายตัว)
+- 9754-9859 สถิติผลการเรียนรู้
+- 9860-9897 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
+- 9898-10298 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
 ### รายการ js/ui.js
 startHTML:10 · PET_ANIM:30 · petAnimHTML:35 · petVisualHTML:50 · PET_SHOW:91 · PET_SHOW_STAGE:96
 PET_SHOW_H:99 · petShowBgHTML:102 · petBondLine:153 · PET_HEALTH_TIPS:177 · nextPetHealthTip:215 · petBondActionLine:223
@@ -1000,22 +970,22 @@ advBusyMsg:7193 · advResetLoad:7205 · loadAdv3d:7211 · loadVocabArena3d:7227 
 ensureSkyBetaAccess:7238 · enterSkyPlayground3D:7246 · enterAdventure3D:7263 · pickAdvMap:7286 · enterHaunted3D:7321 · enterHeli3D:7344
 pickHeliMap:7371 · enterDrone3D:7407 · confirmPetShoppingEntry:7428 · enterPetShopping3D:7454 · enterDrive3D:7506 · pickDriveMap:7545
 enterMotoMapAsCar:7581 · enterSoccer3D:7600 · enterMoto3D:7620 · enterF1_3D:7643 · enterInvasion3D:7671 · WORLD3D:7699
-WORLD3D_COMING_SOON:7716 · world3DComingSoon:7717 · gotoRobotShop:7720 · openHealDialog:7726 · world3DFail:7747 · worldEntryStarted:7783
-worldEntryStopped:7784 · GAME_ENTRY_STABLE_MS:7785 · gameEntryCommit:7787 · gameEntryRefund:7795 · recoverInterruptedGameEntry:7812 · showGameEntryRefundNotice:7820
-startWorldEntry:7847 · railWorldClick:7892 · skyEntryCatalog:7921 · skyEntryPickerHTML:7925 · openWorldEntryDialog:7936 · railScrollHint:8016
-railScrollTop:8024 · initRailScroll:8029 · renderRailWorlds:8049 · tinvOnlineFriends:8132 · refreshTinvOnlineUI:8136 · tinvNoticeHTML:8147
-openTinvPicker:8156 · fruitCountdown:8200 · renderFarmCard:8212 · renderFarmClock:8287 · buyFruit:8303 · sellFruit:8323
-sellAllFruit:8344 · collectImg:8373 · renderFactoryCard:8384 · renderMarketCard:8408 · updateWishBadge:8466 · openWishlistDialog:8477
-bindStripArrows:8524 · renderMarketBrowse:8538 · openMarketBuyDialog:8565 · carImg:8685 · renderVehicleShop:8686 · CS_CYCLE_MS:8738
-carInteriorImg:8739 · carStatHtml:8741 · renderCarShowroom:8748 · csShowBig:8775 · csInit:8802 · RS_CYCLE_MS:8825
-robotImg:8826 · renderRobotShop:8827 · renderPetMarketShop:8851 · rsShowBig:8869 · rsInit:8890 · buyRobot:8909
-enterMecha3D:8934 · pickMechaRobot:8962 · pickDriveCar:8994 · openCarBuyDialog:9037 · buyCarInsurance:9098 · payCarLoanMonthly:9117
-payCarLoanFull:9129 · carDriveBlock:9148 · gotoVehicleShop:9153 · gotoMyStock:9158 · showNeedCarDialog:9164 · craftDiscount:9176
-renderFactory:9179 · renderOrdersUI:9248 · startProduce:9267 · buyCollectible:9295 · cancelProduce:9325 · deliverOrder:9339
-renderOrderClock:9356 · renderCollectMine:9366 · openListDialog:9415 · cancelListing:9472 · buyMarketItem:9496 · showCollectReveal:9561
-buyAC:9599 · openHomeShop:9618 · openPetPurchase:9692 · renderPetShop:9730 · showLevelUp:9755 · renderStats:9792
-showTeacherCard:9899 · CALL_REACT_EMOS:9943 · CALL_TALK_MIN:9946 · CALL_TALK_HOLD:9947 · CALL_ORDER_GAP:9949 · CALL_TONES:9955
-startCall:10329
+WORLD3D_COMING_SOON:7716 · world3DComingSoon:7717 · gotoRobotShop:7720 · openHealDialog:7726 · world3DFail:7747 · worldEntryStarted:7782
+worldEntryStopped:7783 · GAME_ENTRY_STABLE_MS:7784 · gameEntryCommit:7786 · gameEntryRefund:7794 · recoverInterruptedGameEntry:7811 · showGameEntryRefundNotice:7819
+startWorldEntry:7846 · railWorldClick:7871 · skyEntryCatalog:7900 · skyEntryPickerHTML:7904 · openWorldEntryDialog:7914 · railScrollHint:7986
+railScrollTop:7994 · initRailScroll:7999 · renderRailWorlds:8019 · tinvOnlineFriends:8097 · refreshTinvOnlineUI:8101 · tinvNoticeHTML:8112
+openTinvPicker:8121 · fruitCountdown:8165 · renderFarmCard:8177 · renderFarmClock:8252 · buyFruit:8268 · sellFruit:8288
+sellAllFruit:8309 · collectImg:8338 · renderFactoryCard:8349 · renderMarketCard:8373 · updateWishBadge:8431 · openWishlistDialog:8442
+bindStripArrows:8489 · renderMarketBrowse:8503 · openMarketBuyDialog:8530 · carImg:8650 · renderVehicleShop:8651 · CS_CYCLE_MS:8703
+carInteriorImg:8704 · carStatHtml:8706 · renderCarShowroom:8713 · csShowBig:8740 · csInit:8767 · RS_CYCLE_MS:8790
+robotImg:8791 · renderRobotShop:8792 · renderPetMarketShop:8816 · rsShowBig:8834 · rsInit:8855 · buyRobot:8874
+enterMecha3D:8899 · pickMechaRobot:8927 · pickDriveCar:8959 · openCarBuyDialog:9002 · buyCarInsurance:9063 · payCarLoanMonthly:9082
+payCarLoanFull:9094 · carDriveBlock:9113 · gotoVehicleShop:9118 · gotoMyStock:9123 · showNeedCarDialog:9129 · craftDiscount:9141
+renderFactory:9144 · renderOrdersUI:9213 · startProduce:9232 · buyCollectible:9260 · cancelProduce:9290 · deliverOrder:9304
+renderOrderClock:9321 · renderCollectMine:9331 · openListDialog:9380 · cancelListing:9437 · buyMarketItem:9461 · showCollectReveal:9526
+buyAC:9564 · openHomeShop:9583 · openPetPurchase:9657 · renderPetShop:9695 · showLevelUp:9720 · renderStats:9757
+showTeacherCard:9864 · CALL_REACT_EMOS:9908 · CALL_TALK_MIN:9911 · CALL_TALK_HOLD:9912 · CALL_ORDER_GAP:9914 · CALL_TONES:9920
+startCall:10294
 
 ## js/util.js (1,473 บรรทัด · 57 รายการ)
 ### 🗂️ สารบัญโซน js/util.js (Read/Edit เฉพาะช่วง)
@@ -1085,12 +1055,6 @@ vbRender:148 · vbCardHTML:194
 .xsp-best-row:218 · .xsp-best:219 · .xsp-hist:221,222 · .xsp-hist-svg:223 · .xsp-btns:224 · .xsp-go:225,229,230,233(+1)
 .xsp-foot:235 · .xsb-box:250,277 · .xsb-head:255,256 · .xsb-grid:257 · .xsb-card:258,262 · .xsb-emoji:263
 .xsb-name:264 · .xsb-info:265 · .xsb-done:266 · .onet-picker:270,271,272,273(+3) · .onet-board:278,279,280
-
-## css/frontline1944.css (630 บรรทัด · 22 selector)
-#vw-frontline1944:19,37,55,613 · .fl44-hud:73 · .fl44-top:91 · .fl44-panel:109 · .fl44-player:127 · .fl44-bar:145
-.fl44-word:163 · .fl44-coins:181 · .fl44-boss:199 · .fl44-objective:217 · .fl44-state:235 · .fl44-exit:253
-.fl44-controls:271 · .fl44-stick:289,307,325 · .fl44-knob:343 · .fl44-aim-knob:361 · .fl44-aim-stick:373 · .fl44-fire:391,403
-.fl44-input-diag:421,433 · .fl44-toast:451 · .fl44-loading:469 · #btn-rail-frontline1944:487,505
 
 ## css/home-v2.css (2,481 บรรทัด · 136 selector)
 :root:9,2469 · #screen-dashboard:36,46 · #vw-home-v2-root:48,49,59,60(+112) · .vw2-screen-frame:81 · .vw2-sky:82,83,92,99(+1) · .vw2-shell:102,107,591
