@@ -23,7 +23,7 @@ ok(JSON.stringify(vm.runInContext('TEACHER_EMAILS.slice()',authCtx))===JSON.stri
 const ui=read('js/ui.js'),online=read('js/online.js'),sky=read('js/skyplay3d.js'),net=read('js/netroom.js');
 ok(/PRIVATE BETA/.test(ui)&&/b\.hidden = !betaVisible/.test(ui),'Lobby card is beta-only and carries the PRIVATE BETA badge');
 ok(/enterSkyPlayground3D\(\)\{\s*if\(!ensureSkyBetaAccess\(\)\)/.test(ui),'direct Sky entry checks beta access before ticket/loading');
-ok(/startWorldEntry\(w, info, unlocked, overlay, button\)\{\s*if\(w && w\.mode === 'sky'/.test(ui),'paid entry path rechecks before charging');
+ok(/startWorldEntry\(w, info, unlocked, overlay, button\)\{\s*if\(w && w\.mode === 'sky'/.test(ui),'free entry path rechecks beta access before starting');
 ok(/railWorldClick\(w\)\{\s*if\(w && w\.mode === 'sky'/.test(ui),'Lobby entry path rechecks beta access');
 ok(/openTinvPicker\(map\)\{\s*if\(map === 'sky'/.test(ui)&&/function tinvSend[\s\S]*map === 'sky'/.test(online),'invitation UI and direct sender recheck beta access');
 ok(/v\.map !== 'sky'[\s\S]*canAccessSkyBeta/.test(online),'ordinary accounts do not surface Sky invitations');

@@ -114,14 +114,7 @@
   function worldPriceText(sourceSelector){
     const match = String(sourceSelector || '').match(/^#btn-world-([a-z0-9_-]+)$/i);
     if(!match) return '';
-    try{
-      if(typeof worldEntryInfo === 'function'){
-        const info = worldEntryInfo(match[1]);
-        if(info) return info.free ? '🎉 ฟรี!' : `🪙${fmt(info.fee)}`;
-      }
-    }catch(_){ }
-    try{ return typeof WORLD_ENTRY_FEE !== 'undefined' ? `🪙${fmt(WORLD_ENTRY_FEE)}` : ''; }
-    catch(_){ return ''; }
+    return '🎉 ฟรี!';
   }
   function fmtTopValue(v){
     const n = Number(v);

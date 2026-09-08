@@ -10,6 +10,13 @@
 
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 > ผู้ใช้เริ่มใช้ Codex ช่วยงานคู่ขนานกับ session Claude (4 ส.ค. 2026 เหตุ: Claude ติด rate limit) — Codex ไม่เห็น `img/`/`sound/` (ไม่อยู่ใน git) และ **deploy Firebase เองไม่ได้** ต้องรอผู้ใช้รันบนเครื่องเอง
+- **รอบ 1358 · ทุกเกมเข้าเล่นฟรี:** ตั้ง `WORLD_ENTRY_FEE=0`, ให้ `worldEntryInfo()` คืน free ทุกโหมด และตัดการตรวจ/หัก `state.coins` ออกจาก `startWorldEntry()` แม้ได้รับ fee เก่า; ระบบเหรียญอื่นและ legacy refund คงเดิม
+- Lobby/Home V2/ข้อความคืนตั๋วแสดง “ฟรี/ไม่มีการหักเหรียญ”; โบนัสชวนเพื่อน 100 เหรียญยังอยู่แต่เปลี่ยนคำจาก “เงินคืน” เป็น “โบนัส” · แก้ `items/calendar/ui/home-v2/main/online` + `GAME_RULES`
+- Regression ค่าเข้าครบ 11 โลก + hostile fee, Home V2, Sky beta/character, syntax/diff ผ่าน; production build 9,384 ไฟล์และ PWA/cache/TWA validator ผ่าน พร้อม audit hashed dist ไม่พบ fee 500/ทางหักเหรียญ
+- **รอบ 1357 · ลบโมดูลสนามรบปี 1944 เดิมทั้งชุด (ไม่สร้างใหม่/ไม่ deploy):** ถอด runtime/CSS/route/admin buttons/build aliases+guard, 61 assets, 30 tests, 4 reports และล้าง generated caches/maps
+- `state.js` ลบ namespace เก่าจาก local/cloud hydrate + 4 control-position localStorage keys; คง MAIN coins/login/profile/Firebase/launcher/shared games ทุกตัว
+- asset/undefined refs + representative game regressions + syntax + isolated build 9,385 files + official PWA validator + Chrome primary/classic login smoke ผ่าน; `worlds3d`/`netroom` เป็น browser harness ไม่ใช่ standalone Node
+- ปิดงานโดยไม่ commit/deploy ตามคำสั่งผู้ใช้; ย้าย stale generated `dist` ออกแล้ว canonical build ปกติสำเร็จ 9,384 รายการ + PWA validator และสแกน runtime/assets/routes เก่าเป็นศูนย์
 - **รอบ 1356 · แก้ถูกป้ายตอนเข้าโรงแรม + จัดคำเป้าหมายใหม่ตามภาพ:** ต้นเหตุป้ายหายคือทางเข้าเรียก generic `showBanner()` ซึ่ง CSS จางใน 2.4 วินาที ไม่ใช่ป้าย login ที่แก้รอบก่อน
 - เปลี่ยนป้ายเข้าโรงแรมเป็น persistent entry hint: หยุดเกม, ไม่มีกากบาท, Escape/คลิกฉากหลังไม่ปิด และเริ่มเล่นต่อเมื่อกด “รับทราบ”; แก้คำแนะนำเก่า 4 คำ/ไม่มี Game Over ให้ตรงกติกา 5 คำ/10 ครั้ง
 - ย่อคำเป้าหมายเฉพาะโรงแรมและวางเป็น HUD ด้านบน: 1372×627 = top 62px/238×74, 812×375 = top 94px/170×56; ไม่ชน HP/ปุ่ม/ป้ายภารกิจ/กระดาน/แผนที่และไม่บังกลางฉาก
@@ -50,7 +57,7 @@
 - การตรวจภาพผ่าน in-app browser ถูก Windows sandbox ปฏิเสธก่อนเปิดหน้า จึงยังต้องยืนยันภาพบนเครื่องจริงหลัง deploy
 - **รอบ 1343 · Dragon Sky Siege HUD auditor hotfix:** ตามคำสั่งล่าสุดคืนเฉพาะคำเป้าหมาย+คำแปล+ช่องตัวอักษรไว้ด้านบน และคงสถานะ 6 ช่องไว้ด้านล่าง
 - ต้นเหตุภาพแหว่ง/คำหายคือ inherited grid row ชนกัน + fixed 46/60px พร้อม overflow hidden; เปลี่ยนสถานะเป็น auto height/ไม่ตัด และคำแปลยาวขึ้นบรรทัดได้
-- ResizeObserver วัดความสูงสถานะจริงเพื่อยก AUTO FIRE/แถบกระสุนให้พ้นอัตโนมัติ; ยกชั้นเกมเหนือปุ่ม Frontline admin ซึ่งไม่ควรลอยทับเกมอื่น
+- ResizeObserver วัดความสูงสถานะจริงเพื่อยก AUTO FIRE/แถบกระสุนให้พ้นอัตโนมัติ; ยกชั้นเกมเหนือปุ่ม admin แบบ fixed ซึ่งไม่ควรลอยทับเกมอื่น
 - `test_letter_cannon`, syntax, Home V2 regression, production build และ source/dist contract ผ่าน; Browser/Computer Use visual QA ยังถูก Windows ACL บล็อก ต้องยืนยันภาพจริงหลัง deploy
 - **รอบ 1344 · คืนเพลง Beyond the Stars:** ต้นเหตุ BGM ถูกผูกผิดกับ `state.sound`; ปิดเสียงยิงจึงทำให้ปุ่มขึ้น “เพลง ปิด” และเพลงหยุดทั้งที่ music preference ยังเปิด
 - แยก BGM จาก SFX สมบูรณ์, ปุ่ม autoplay-blocked แตะแล้ว retry โดยไม่สลับ preference เป็นปิด; ยัง lazy `preload=metadata`, ใช้ Audio เดิม, loop และ fade/rewind ตอนออก

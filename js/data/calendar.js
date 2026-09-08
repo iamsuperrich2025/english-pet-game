@@ -1,6 +1,6 @@
 "use strict";
 /* ============================================================
-   📅 รอบ 822 (ผู้ใช้สั่ง 30 ก.ค. 2026): ปฏิทินวันสำคัญไทย — คิดราคาเข้าโลก 3D
+   📅 Legacy calendar — ค่าเข้าเกมถูกยกเลิกแล้ว ทุกเกมเข้าเล่นฟรีเสมอ
    วันหยุดราชการ/วันสำคัญ → ลดครึ่งราคา (WORLD_ENTRY_FEE)
    วันเด็กแห่งชาติ (เสาร์ที่ 2 ของเดือนมกราคม) + ผู้เล่นระดับชั้น ป.1-ป.6 → เข้าฟรี เฉพาะวันนั้น
    ที่มา: ปฏิทินวันหยุดราชการปี 2569 (infoquest.co.th / calendar.kapook.com)
@@ -47,6 +47,8 @@ const YOUNG_GRADES = ['ป.1','ป.2','ป.3','ป.4','ป.5','ป.6'];
    mode (optional) = w.mode จาก WORLD3D — ใช้เช็กส่วนลดเจ้าของหุ่น/รถเท่านั้น ไม่ใส่ = ไม่มีส่วนลดนี้
    reason/ownerReason = โชว์บนหน้าจ่ายค่าเข้าเสมอ ตามกฎ "ห้ามลดราคา/ฟรีเงียบๆ" */
 function worldEntryInfo(mode){
+  return {fee:0, free:true, discount:false, reason:'ทุกเกมเข้าเล่นฟรี', ownerDiscount:false, ownerReason:''};
+  /* Legacy fee calendar kept below for historical reference only; unreachable by policy. */
   const today = todayYMD();
   if(today === CHILDREN_DAY && YOUNG_GRADES.includes(typeof myGrade==='function' ? myGrade() : '')){
     return {fee:0, free:true, discount:false, reason:'🧒 วันเด็กแห่งชาติ — นักเรียน ป.1-ป.6 เล่นฟรี!', ownerDiscount:false, ownerReason:''};

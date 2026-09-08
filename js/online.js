@@ -930,7 +930,7 @@ function marketSoldWatch(){
 /* ============================================================
    คำเชิญเล่นโลก 3D ด้วยกัน — /tinv/<toUid>/<fromUid> = {map,n,ts}
    ผู้ชวนจำคำเชิญที่ส่งใน state.tinvSent · ผู้ถูกชวนเห็นจาก watch นี้
-   เจอกันใน map จริงทั้งคู่ → ต่างคนต่างรับเงินคืน TINV_CASHBACK (ครั้งเดียว/map)
+   เจอกันใน map จริงทั้งคู่ → ต่างคนต่างรับโบนัส TINV_CASHBACK (ครั้งเดียว/map)
    ============================================================ */
 function tinvSend(toUid, map){
   if(!Online.ready || !Online.db) return Promise.reject();
@@ -1043,7 +1043,7 @@ function tinvReconcile(render=true){
     }
     if(Online.tinvSeen[uid] === fp) return;
     Online.tinvSeen[uid] = fp;
-    toast(`📨 ${live[uid].n} ชวนหนูไปเล่น${TINV_WORLD_LABEL[live[uid].map]}ด้วยกัน! เล่นจบด้วยกันรับเงินคืน 🪙${fmtNum(TINV_CASHBACK)}`, 0, ()=>{
+    toast(`📨 ${live[uid].n} ชวนหนูไปเล่น${TINV_WORLD_LABEL[live[uid].map]}ด้วยกัน! เล่นจบด้วยกันรับโบนัส 🪙${fmtNum(TINV_CASHBACK)}`, 0, ()=>{
       if(!state.tinvDismissed || typeof state.tinvDismissed !== 'object') state.tinvDismissed = {};
       state.tinvDismissed[uid] = fp;
       saveState();

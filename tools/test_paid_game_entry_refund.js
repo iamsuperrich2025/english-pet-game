@@ -6,10 +6,12 @@ const vm = require('vm');
 const ui = fs.readFileSync('js/ui.js', 'utf8');
 const stateSrc = fs.readFileSync('js/state.js', 'utf8');
 const main = fs.readFileSync('js/main.js', 'utf8');
+const items = fs.readFileSync('js/data/items.js', 'utf8');
+const calendar = fs.readFileSync('js/data/calendar.js', 'utf8');
 
 const blockStart = ui.indexOf('function worldEntryStarted()');
 const blockEnd = ui.indexOf('function railWorldClick(', blockStart);
-assert.ok(blockStart >= 0 && blockEnd > blockStart, 'paid-entry transaction block must exist');
+assert.ok(blockStart >= 0 && blockEnd > blockStart, 'free-entry and legacy-refund block must exist');
 
 const ctx = {
   console,
@@ -44,7 +46,7 @@ assert.strictEqual(ctx.state.gameEntryRefundNotice.reason, 'โหลดไม�
 assert.strictEqual(ctx.gameEntryRefund(tx, 'ซ้ำ'), false);
 assert.strictEqual(ctx.state.coins, 1500, 'same transaction must never refund twice');
 
-// เส้นทางเปิดเกมล้มเหลว: หักก่อน แล้วคืนเต็มจำนวนพร้อม notice
+// แม้ข้อมูลราคาเก่าหลุดเข้ามา เส้นทางเปิดเกมล้มเหลวต้องไม่หักเหรียญหรือสร้าง refund notice ใหม่
 ctx.state = {coins:1000, gameEntryTx:null, gameEntryRefundNotice:null, advTicket:false};
 const overlay = {removed:false, remove(){ this.removed=true; }};
 const button = {disabled:false};
@@ -53,15 +55,15 @@ const worldFail = {mode:'adv', label:'ทดสอบ', ticketKey:'advTicket', e
   await ctx.startWorldEntry(worldFail, {free:false, fee:500}, false, overlay, button);
   assert.strictEqual(ctx.state.coins, 1000);
   assert.strictEqual(ctx.state.gameEntryTx, null);
-  assert.strictEqual(ctx.state.gameEntryRefundNotice.amount, 500);
-  assert.strictEqual(ctx.state.gameEntryRefundNotice.reason, 'เครื่องเล่นไม่ได้');
-  assert.strictEqual(ctx.noticeCount, 1);
+  assert.strictEqual(ctx.state.gameEntryRefundNotice, null);
+  assert.strictEqual(ctx.state.advTicket, false);
+  assert.strictEqual(ctx.noticeCount, 0);
 
-  // เส้นทางสำเร็จ: เก็บค่าเข้า, ปิด tx และบันทึกการปลดล็อก
+  // เส้นทางสำเร็จ: เข้าได้ฟรีแม้ caller ส่ง fee เก่ามา และยังบันทึกว่าเคยเข้าโลก
   ctx.state = {coins:1000, gameEntryTx:null, gameEntryRefundNotice:null, advTicket:false};
   const worldOk = {mode:'adv', label:'ทดสอบ', ticketKey:'advTicket', enter:async()=>ctx.worldEntryStarted()};
   await ctx.startWorldEntry(worldOk, {free:false, fee:500}, false, {remove(){}}, {disabled:false});
-  assert.strictEqual(ctx.state.coins, 500);
+  assert.strictEqual(ctx.state.coins, 1000);
   assert.strictEqual(ctx.state.gameEntryTx, null);
   assert.strictEqual(ctx.state.advTicket, true);
   assert.strictEqual(ctx.sellCount, 1);
@@ -70,10 +72,16 @@ const worldFail = {mode:'adv', label:'ทดสอบ', ticketKey:'advTicket', e
   assert.match(stateSrc, /gameEntryTx:null/);
   assert.match(stateSrc, /gameEntryRefundNotice:null/);
   assert.ok(main.indexOf('recoverInterruptedGameEntry()') < main.indexOf('careTick();'));
-  assert.match(main, /showGameEntryRefundNotice\(\(\)=>showPetShoppingGrantNotice\(showRankRewardNotice\)\)/);
-  assert.match(ui, /GAME_ENTRY_STABLE_MS\s*=\s*15000/);
-  assert.match(ui, /tx\.startedAt\s*=\s*Date\.now\(\)[\s\S]{0,140}setTimeout\(\(\)=>gameEntryCommit\(tx\)/);
-  for(const fn of ['enterAdventure3D','enterHaunted3D','enterHeli3D','enterDrone3D','enterDrive3D',
+  assert.match(main, /showGameEntryRefundNotice\(\(\)=>showPetShoppingGrantNotice\(/);
+  const startEntry = ui.slice(ui.indexOf('async function startWorldEntry('), ui.indexOf('function railWorldClick('));
+  assert.doesNotMatch(startEntry, /state\.coins|gameEntryTx|\.fee/);
+  assert.match(items, /const WORLD_ENTRY_FEE\s*=\s*0\s*;/);
+  const calendarCtx = {};
+  vm.runInNewContext(`${calendar};globalThis.results=['adv','sky','haunt','heli','drone','drive','soccer','moto','invasion','mecha','f1'].map(worldEntryInfo);`, calendarCtx);
+  for(const result of calendarCtx.results){
+    assert.deepStrictEqual(JSON.parse(JSON.stringify(result)), {fee:0,free:true,discount:false,reason:'ทุกเกมเข้าเล่นฟรี',ownerDiscount:false,ownerReason:''});
+  }
+  for(const fn of ['enterSkyPlayground3D','enterAdventure3D','enterHaunted3D','enterHeli3D','enterDrone3D','enterDrive3D',
     'enterSoccer3D','enterMoto3D','enterF1_3D','enterInvasion3D','enterMecha3D']){
     const start=ui.indexOf(`async function ${fn}(`);
     const end=ui.indexOf('\nasync function ',start+16)>0 ? ui.indexOf('\nasync function ',start+16) : ui.length;
@@ -94,5 +102,6 @@ const worldFail = {mode:'adv', label:'ทดสอบ', ticketKey:'advTicket', e
   assert.strictEqual((notice.match(/ov\.remove\(\)/g)||[]).length, 1,
     'refund notice may be removed only by the acknowledge button');
 
-  console.log('PASS paid game entry refund, crash recovery, acknowledgement-only notice, and coin sound');
+  assert.match(main, /ทุกโลกเข้าเล่นฟรี ไม่มีการหักเหรียญ/);
+  console.log('PASS all game entries are free, hostile legacy fees cannot deduct coins, and pending legacy charges still refund safely');
 })().catch(err=>{ console.error(err); process.exitCode=1; });

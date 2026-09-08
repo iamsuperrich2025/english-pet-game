@@ -391,14 +391,14 @@ must(css.includes("#screen-dashboard.vw2-primary.active>:not(script):not(style)"
 const initBlock = home.slice(home.indexOf("function init()"), home.indexOf("if(document.readyState"));
 must(home.includes("function observeDashboardActivation()") && home.includes("attributeFilter:['class']") && home.includes("record.attributeName === 'class'") && initBlock.indexOf("build();") < initBlock.indexOf("wakeTick();") && initBlock.indexOf("observeDashboardActivation();") < initBlock.indexOf("wakeTick();"), "R41 Home is not prebuilt/observed before the first visibility tick");
 must(home.includes("if(dashboard()) init();") && home.indexOf("if(dashboard()) init();") < home.indexOf("DOMContentLoaded', init"), "R41 bootstrap still waits for DOMContentLoaded after dashboard markup already exists");
-must(home.includes("function worldPriceText(sourceSelector)") && home.includes("typeof worldEntryInfo === 'function'") && home.includes("WORLD_ENTRY_FEE") && home.includes('class="vw2-rail-price"'), "R41 vertical world buttons do not derive their initial price from the authoritative game pricing");
+must(home.includes("function worldPriceText(sourceSelector)") && home.includes("return '🎉 ฟรี!';") && home.includes('class="vw2-rail-price"'), "R41 vertical world buttons do not show the free-entry policy");
 must(home.includes("source.querySelector('.rail-price')") && home.includes("sourcePriceText || worldPriceText(selector)") && home.includes("price.classList.toggle('afford'"), "R41 vertical world prices do not mirror the live Classic rail price/affordability state");
 must(css.includes("#vw-home-v2-root .vw2-rail-price{") && css.includes("#vw-home-v2-root .vw2-rail-price.afford") && css.includes("#vw-home-v2-root .vw2-rail-price[hidden]"), "R41 vertical world price presentation/hidden-state guard missing");
-const priceContext = {worldEntryInfo:mode=>({free:mode==='free',fee:mode==='adv'?500:250}),WORLD_ENTRY_FEE:500,fmtNum:value=>String(value)};
+const priceContext = {fmtNum:value=>String(value)};
 vm.createContext(priceContext);
 const priceFunctions = home.slice(home.indexOf("function fmt(v)"), home.indexOf("function fmtTopValue(v)"));
 vm.runInContext(`${priceFunctions};priceProbe=[worldPriceText('#btn-world-adv'),worldPriceText('#btn-world-free'),worldPriceText('#btn-stats')]`,priceContext);
-must(JSON.stringify(priceContext.priceProbe) === JSON.stringify(['🪙500','🎉 ฟรี!','']), `R41 authoritative price formatter mismatch: ${JSON.stringify(priceContext.priceProbe)}`);
+must(JSON.stringify(priceContext.priceProbe) === JSON.stringify(['🎉 ฟรี!','🎉 ฟรี!','']), `R41 free-entry formatter mismatch: ${JSON.stringify(priceContext.priceProbe)}`);
 must(home.includes("function adminWorldAllowed()") && home.includes("typeof isAdmin === 'function' && isAdmin() === true"), "R40 admin role resolver changed/missing");
 must(actionBlock.includes("if(ADMIN_ONLY_WORLD_ACTIONS.has(name) && !adminWorldAllowed())") && actionBlock.indexOf("ADMIN_ONLY_WORLD_ACTIONS.has(name)") < actionBlock.indexOf("const direct ="), "R40 admin-world authorization does not run before route dispatch");
 must(actionBlock.includes("โลกนี้เปิดให้ผู้ดูแลระบบเท่านั้น") && actionBlock.includes("return false;"), "R40 denied admin-world route lacks explicit refusal");

@@ -7691,10 +7691,10 @@ async function enterInvasion3D(){
 
 /* ============================================================
    🌍 ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย (ผู้ใช้สั่ง 9 ก.ค. 2026)
-   🎫→💰 รอบ 823 (ผู้ใช้สั่ง 30 ก.ค. 2026): ยกเลิกตั๋วราคาแพงจ่ายทีเดียว — กดปุ่มเข้าโลกเด้งหน้าจ่ายค่าเข้าทันที
-   (ไม่มีการ์ดตั๋วแยกในตลาดแล้ว) ราคาวันนี้เดียวกันทุกโลกจาก worldEntryInfo() (js/data/calendar.js — คิดวันหยุด/วันเด็ก)
+   🎮 ทุกโลกเข้าเล่นฟรี ไม่มีค่าปกติ ค่าวันหยุด หรือส่วนลดค่าเข้า
+   worldEntryInfo() คงไว้เป็น compatibility API และคืน fee:0/free:true เสมอ
    ปุ่มทุกใบสร้างจาก WORLD3D ก้อนเดียว → มีโลก 3D ใหม่ในอนาคตแค่ "เพิ่ม 1 บรรทัด" ที่นี่แล้วปุ่มจะโผล่ในรางเอง
-   🔓 รอบ 943 (ผู้ใช้สั่ง 3 ส.ค. 2026): ยกเลิกลำดับปลดล็อกโลก (prereq) — จ่ายค่าเข้า 500 เข้าโลกไหนก็ได้ทันที
+   🔓 รอบ 943 (ผู้ใช้สั่ง 3 ส.ค. 2026): ยกเลิกลำดับปลดล็อกโลก (prereq) — เข้าโลกไหนก็ได้ทันที
    ไม่มีหุ่น/รถของตัวเอง = ระบบให้ยืมฟรีสำหรับรอบนั้น (ดู enterMecha3D / enterDrive3D) */
 const WORLD3D = [
   { mode:'adv',   ico:'🌍', label:'ผจญภัย', ticketKey:'advTicket',   doneKey:'advDone',   enter:enterAdventure3D },
@@ -7776,9 +7776,8 @@ function world3DFail(label, err){
 }
 
 /* ============================================================
-   ↩️🪙 รอบ 1143 — ธุรกรรมค่าเข้าเกม + คืนเงินเมื่อเกมเปิดไม่สำเร็จ
-   หักเหรียญและเก็บ tx ใน state ก่อนเริ่มโหลด; ล้าง tx เมื่อ start() สำเร็จเท่านั้น
-   ถ้า throw/โหลดพัง/ยกเลิกก่อนเกมเริ่ม ให้คืนเต็มจำนวน; ถ้าเครื่องค้างกลางทาง bootGame กู้ tx ให้
+   ↩️🪙 Legacy recovery — คืนค่าเข้าที่เวอร์ชันเก่าอาจหักค้างไว้ก่อนเปลี่ยนเป็นเข้าฟรี
+   ระบบใหม่ห้ามสร้างธุรกรรมหรือหักเหรียญเมื่อเข้าเกมทุกกรณี
    ============================================================ */
 function worldEntryStarted(){ return {started:true}; }
 function worldEntryStopped(reason, err){ return {started:false, reason:String(reason||'เกมไม่ตอบสนองก่อนเปิดสำเร็จ'), error:err||null}; }
@@ -7847,31 +7846,16 @@ function showGameEntryRefundNotice(next){
 async function startWorldEntry(w, info, unlocked, overlay, button){
   if(w && w.mode === 'sky' && !ensureSkyBetaAccess()) return;
   if(button) button.disabled = true;
-  let tx = null;
-  if(!info.free){
-    if(state.coins < info.fee){
-      if(button) button.disabled = false;
-      sfx.wrong(); toast(`เหรียญยังไม่พอ ต้องมี 🪙${fmtNum(info.fee)}`); return;
-    }
-    tx = {id:`${Date.now()}-${Math.random().toString(36).slice(2,9)}`, mode:w.mode,
-      game:`โลก${w.label}`, amount:info.fee, ticketKey:w.ticketKey, wasUnlocked:!!unlocked, ts:Date.now()};
-    state.gameEntryTx = tx;
-    state.coins -= info.fee;
-  }
+  // info คงอยู่ใน signature เพื่อ compatibility เท่านั้น — ห้ามใช้ราคา/หักเหรียญเมื่อเข้าเกม
   state[w.ticketKey] = true; // ฟังก์ชัน enter ใช้เป็น guard; ถ้าล้มเหลวจะ rollback ให้
   saveState();
   renderRailWorlds();
   overlay.remove();
-  if(!info.free) sfx.buy();
   let out;
   try{ out = await w.enter(); }
   catch(err){ out = worldEntryStopped('เกมเกิดข้อผิดพลาดก่อนเปิดให้เล่นได้', err); }
   if(out && out.started === true){
-    if(tx && state.gameEntryTx && state.gameEntryTx.id === tx.id){
-      tx.startedAt = Date.now();
-      saveState();
-      setTimeout(()=>gameEntryCommit(tx), GAME_ENTRY_STABLE_MS);
-    }else if(!unlocked && typeof sellInc === 'function'){
+    if(!unlocked && typeof sellInc === 'function'){
       sellInc('tk_'+w.mode); saveState();
     }
     return;
@@ -7879,14 +7863,9 @@ async function startWorldEntry(w, info, unlocked, overlay, button){
   const reason = out && out.reason ? out.reason : 'เกมไม่ตอบสนองก่อนเปิดให้เล่นได้';
   if(out && out.error) console.error('world entry failed', w.mode, out.error);
   advResetLoad();
-  if(tx){
-    gameEntryRefund(tx, reason);
-    showGameEntryRefundNotice();
-  }else{
-    if(!unlocked) state[w.ticketKey] = false;
-    saveState();
-    sfx.wrong(); toast(`⚠️ เข้าโลก${w.label}ไม่ได้ — ${reason}`);
-  }
+  if(!unlocked) state[w.ticketKey] = false;
+  saveState();
+  sfx.wrong(); toast(`⚠️ เข้าโลก${w.label}ไม่ได้ — ${reason}`);
 }
 
 function railWorldClick(w){
@@ -7931,8 +7910,7 @@ function skyEntryPickerHTML(w, characters){
   </section>`;
 }
 
-/* 🎫→💰 รอบ 823: หน้าจ่ายค่าเข้าโลก 3D กลาง — แทนที่การ์ดตั๋วแยก 8 ใบเดิม
-   ราคาวันนี้ (worldEntryInfo) + ปุ่มชวนเพื่อนเล่นด้วยกัน (openTinvPicker) รวมอยู่ในหน้าเดียว */
+/* 🎮 หน้ายืนยันเข้าโลก 3D ฟรี + ปุ่มชวนเพื่อนเล่นด้วยกัน (openTinvPicker) */
 function openWorldEntryDialog(w){
   if(w && w.mode === 'sky' && !ensureSkyBetaAccess()) return;
   const isSky = !!(w && w.mode === 'sky');
@@ -7950,14 +7928,8 @@ function openWorldEntryDialog(w){
     });
     return;
   }
-  const info = worldEntryInfo(w.mode);
   const unlocked = !!state[w.ticketKey];
-  // 🤖🚗 รอบ 945: ส่วนลดเจ้าของหุ่น/รถทบกับส่วนลดวันหยุดได้ — โชว์ทุกเหตุผลที่ลด ห้ามลดเงียบๆ
-  const feeHTML = info.free
-    ? `<div style="font-size:14px;font-weight:700;color:#2e9e4a;margin:6px 0">🎉 ${escapeHTML(info.reason)}<br>เข้าฟรีวันนี้!</div>`
-    : (info.discount || info.ownerDiscount)
-      ? `<p style="font-size:14px;margin:6px 0">${info.discount ? `🎊 ${escapeHTML(info.reason)} — ลดครึ่งราคา!<br>` : ''}${info.ownerDiscount ? `${escapeHTML(info.ownerReason)}<br>` : ''}ค่าเข้าวันนี้ <b>🪙${fmtNum(info.fee)}</b> <s style="opacity:.55">🪙${fmtNum(WORLD_ENTRY_FEE)}</s></p>`
-      : `<p style="font-size:14px;margin:6px 0">ค่าเข้า <b>🪙${fmtNum(info.fee)}</b></p>`;
+  const feeHTML = '<div style="font-size:14px;font-weight:700;color:#2e9e4a;margin:6px 0">🎉 ทุกเกมเข้าเล่นฟรี<br>ไม่มีการหักเหรียญ</div>';
   /* 🔓 รอบ 943: โน้ต "ปลดล็อกโลกถัดไป" เลิกใช้ (ไม่มีลำดับโลกแล้ว) → แจ้งเรื่องยืมหุ่น/รถฟรีแทนเมื่อยังไม่มีของตัวเอง */
   const loanNote = (w.mode === 'drive' && !myCar())
     ? '<p style="font-size:12px;color:#8a7a9a;margin:4px 0">🚗 ยังไม่มีรถของตัวเอง — รอบนี้ระบบให้ยืมรถขับฟรี 1 คัน (อยากได้คันเก่งกว่า ซื้อได้ที่หมวดยานพาหนะ)</p>'
@@ -7966,9 +7938,7 @@ function openWorldEntryDialog(w){
       : '';
   const skyPicker = skyEntryPickerHTML(w, skyCharacters);
   const selectedSky = isSky ? (skyCharacters.find(c=>c.id === state.skyCharacter) || skyCharacters[0]) : null;
-  const enterLabel = selectedSky
-    ? `${info.free?'🚪 เข้าเป็น':'🪙 จ่ายแล้วเข้าเป็น'} ${escapeHTML(selectedSky.name)}`
-    : (info.free?'🚪 เข้าเลย!':'🪙 จ่ายแล้วเข้าเลย!');
+  const enterLabel = selectedSky ? `🚪 เข้าเป็น ${escapeHTML(selectedSky.name)}` : '🚪 เข้าเลย!';
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay';
   overlay.innerHTML = `<div class="levelup-box${isSky?' sky-entry-box':''}" style="${isSky?'max-width:780px;padding:12px 14px':'max-width:340px;padding:20px 24px'}">
@@ -7979,7 +7949,7 @@ function openWorldEntryDialog(w){
     ${skyPicker}
     <div class="${isSky?'sky-entry-actions':''}">
       <button class="big-btn green home-btn" id="we-enter" style="width:100%;margin:4px 0">${enterLabel}</button>
-      ${tinvOnlineFriends().length ? `<button class="big-btn blue home-btn" id="we-invite" style="width:100%;margin:4px 0">📨 ชวนเพื่อนเล่นด้วยกัน (เงินคืนคนละ 🪙${fmtNum(TINV_CASHBACK)})</button>` : ''}
+      ${tinvOnlineFriends().length ? `<button class="big-btn blue home-btn" id="we-invite" style="width:100%;margin:4px 0">📨 ชวนเพื่อนเล่นด้วยกัน (โบนัสคนละ 🪙${fmtNum(TINV_CASHBACK)})</button>` : ''}
       <button class="big-btn" id="we-cancel" style="width:100%;font-size:14px;padding:8px;margin:4px 0 0">ยกเลิก</button>
     </div>
   </div>`;
@@ -8002,10 +7972,10 @@ function openWorldEntryDialog(w){
         item.setAttribute('aria-pressed',String(active));
       });
       if(nameEl) nameEl.textContent = character.name;
-      enterBtn.textContent = `${info.free?'🚪 เข้าเป็น':'🪙 จ่ายแล้วเข้าเป็น'} ${character.name}`;
+      enterBtn.textContent = `🚪 เข้าเป็น ${character.name}`;
     }));
   }
-  enterBtn.addEventListener('click', ()=>startWorldEntry(w, info, unlocked, overlay, enterBtn));
+  enterBtn.addEventListener('click', ()=>startWorldEntry(w, {fee:0, free:true}, unlocked, overlay, enterBtn));
 }
 
 /* ============================================================
@@ -8069,9 +8039,8 @@ function renderRailWorlds(){
     });
     rail.appendChild(box);
   }
-  // 🎫→💰 รอบ 823: ราคาวันนี้ (คิดวันหยุด/วันเด็กแล้ว) · 🤖🚗 รอบ 945: mecha/drive ราคาต่างกันได้ถ้ามีของตัวเอง → คำนวณแยกต่อโลก
+  // 🎮 ทุกโลกเข้าเล่นฟรี — ป้ายราคาเป็นสถานะฟรีคงที่และไม่ขึ้นกับยอดเหรียญ
   WORLD3D.forEach(w=>{
-    const info = worldEntryInfo(w.mode);
     const b = document.getElementById('btn-world-' + w.mode);
     if(!b) return;
     const betaVisible = w.mode !== 'sky' || (typeof canAccessSkyBeta === 'function' && canAccessSkyBeta());
@@ -8107,16 +8076,12 @@ function renderRailWorlds(){
       lk.style.display = carBlock ? '' : 'none';
       if(carBlock){ lk.textContent = '🔐'; lk.title = 'ค้างค่างวดรถ — จ่ายก่อนถึงขับได้'; }
     }
-    // ปลดล็อกแล้ว (เข้าได้) → โชว์ราคาวันนี้เสมอ (จ่ายทุกครั้ง) + จำนวนคำที่พิชิต (ถ้ามี)
+    // ปลดล็อกแล้ว (เข้าได้) → โชว์ป้ายฟรี + จำนวนคำที่พิชิต (ถ้ามี)
     if(pr){
       pr.style.display = '';
-      pr.textContent = info.free ? '🎉 ฟรี!' : '🪙' + fmtNum(info.fee);
-      const afford = info.free || state.coins >= info.fee;
-      pr.classList.toggle('afford', afford);
-      pr.title = info.free ? info.reason
-        : info.ownerDiscount ? (info.discount ? info.reason + ' + ' : '') + info.ownerReason
-        : info.discount ? info.reason
-        : (afford ? 'เหรียญพอเข้าได้แล้ว!' : '');
+      pr.textContent = '🎉 ฟรี!';
+      pr.classList.add('afford');
+      pr.title = 'ทุกเกมเข้าเล่นฟรี ไม่มีการหักเหรียญ';
     }
     if(cnt){
       cnt.style.display = (done > 0 && !carBlock) ? '' : 'none';
@@ -8128,7 +8093,7 @@ function renderRailWorlds(){
   railScrollHint();
 }
 
-/* ---------- คำเชิญเล่นด้วยกัน (เงินคืนคนละ TINV_CASHBACK เมื่อเจอกันใน map) ---------- */
+/* ---------- คำเชิญเล่นด้วยกัน (โบนัสคนละ TINV_CASHBACK เมื่อเจอกันใน map) ---------- */
 function tinvOnlineFriends(){
   if(!(window.Online && Online.ready && Online.presenceReady)) return [];
   return (Online.myFriends || []).filter(f=>typeof tinvPeerOnline === 'function' && tinvPeerOnline(f.uid));
@@ -8151,7 +8116,7 @@ function tinvNoticeHTML(map){
   const from = Object.values(Online.tinv).filter(v=>v.map===map);
   if(!from.length) return '';
   return `<div class="tinv-note">📨 <b>${escapeHTML(from[0].n)}</b> ชวนหนูไปเล่นด้วยกัน!
-    เข้าโลกไปเจอกัน แล้วเล่นจบด้วยกัน (อยู่ด้วยกันต่อเนื่อง) รับเงินคืนคนละ <b>🪙${fmtNum(TINV_CASHBACK)}</b></div>`;
+    เข้าโลกไปเจอกัน แล้วเล่นจบด้วยกัน (อยู่ด้วยกันต่อเนื่อง) รับโบนัสคนละ <b>🪙${fmtNum(TINV_CASHBACK)}</b></div>`;
 }
 function openTinvPicker(map){
   if(map === 'sky' && !ensureSkyBetaAccess()) return;
@@ -8163,7 +8128,7 @@ function openTinvPicker(map){
   overlay.className = 'levelup-overlay';
   overlay.innerHTML = `<div class="levelup-box" style="max-width:340px">
     <h2 style="font-size:18px">📨 ชวนเพื่อนไปเล่น${w}</h2>
-    <p style="font-size:13px;margin:4px 0">เล่นจบด้วยกัน (อยู่ด้วยกันต่อเนื่อง) รับเงินคืน<b>คนละ 🪙${fmtNum(TINV_CASHBACK)}</b></p>
+    <p style="font-size:13px;margin:4px 0">เล่นจบด้วยกัน (อยู่ด้วยกันต่อเนื่อง) รับโบนัส<b>คนละ 🪙${fmtNum(TINV_CASHBACK)}</b></p>
     <div style="max-height:44vh;overflow-y:auto;margin:8px 0">
       ${friends.map(f=>{
         const sent = state.tinvSent[f.uid] && state.tinvSent[f.uid].map===map;
