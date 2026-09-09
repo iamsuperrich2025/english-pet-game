@@ -2,7 +2,7 @@
 
 > วิธีใช้: หาชื่อฟังก์ชัน/ค่าคงที่/selector ในไฟล์นี้ (Grep หรือกวาดตา) → `Read` ไฟล์จริง `offset=<บรรทัด>` `limit=40`
 > 🗂️ ไฟล์อ้วนมี **สารบัญโซน** (`st-end ชื่อโซน`) — งานทั้งระบบ/โลก 3D: Grep ชื่อโซน → Read/Edit เฉพาะช่วงนั้น **ห้ามอ่านทั้งไฟล์** · เพิ่มระบบใหม่ในไฟล์อ้วนต้องครอบ banner `/* ==== */`+ชื่อโซน (สารบัญเจนเอง)
-> css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: 2026-09-08
+> css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: 2026-09-09
 
 ## js/account-deletion.js (235 บรรทัด · 0 รายการ)
 
@@ -197,16 +197,16 @@ beginPlay:12952 · start:12954 · exitWorld:13187 · mechaRecapLine:13264
 
 ## js/assetaward.js (21 บรรทัด · 0 รายการ)
 
-## js/auth.js (550 บรรทัด · 52 รายการ)
+## js/auth.js (553 บรรทัด · 53 รายการ)
 AUTH_PUSH_MS:23 · AUTH_SDK_TIMEOUT_MS:24 · AUTH_CLOUD_SLOW_MS:25 · AUTH_CLOUD_TIMEOUT_MS:26 · SKY_BETA_OPEN:31 · SKY_BETA_EMAILS:32
 skyBetaEmail:37 · canAccessSkyBeta:40 · ADMIN_NAME_EMAILS:46 · adminReservedNameKey:51 · isReservedAdminName:56 · canUseReservedAdminName:60
-isAdmin:65 · checkProfileName:68 · TEACHER_EMAILS:77 · isTeacher:78 · syncAdminAccess:82 · TESTER_EMAILS:96
-TESTER_COINS:97 · isTester:98 · RANK_EXCLUDED_TESTER_NAMES:104 · rankUserExcluded:105 · testerBoost:111 · authSetStatus:144
-authLocalSaveSafe:161 · authShowLogin:164 · authGateOffline:168 · authSaveRef:175 · authFetchCloud:176 · authWriteCloud:196
-authDeleteCloud:197 · authWriteProfileName:198 · authPushProfile:205 · authApplyProfileName:213 · authEnsureProfileName:237 · authAskProfileName:255
-authEditProfileName:269 · authStart:281 · updateOfflinePill:313 · authEnterOffline:318 · authLateSync:335 · authIsAppMode:355
-AUTH_REDIRECT_CODES:363 · authLoginClick:365 · authOnLogin:385 · authSyncOnLogin:411 · authFreshStart:440 · authAskLink:449
-authEnterGame:499 · authPushSaveAwait:515 · authPushSave:522 · authLogout:527
+isAdmin:65 · checkProfileName:68 · TEACHER_EMAILS:77 · isTeacher:78 · syncAdminAccess:82 · TESTER_EMAILS:95
+TESTER_COINS:96 · TESTER_PET_GROWTH_FIX_VERSION:97 · isTester:98 · RANK_EXCLUDED_TESTER_NAMES:104 · rankUserExcluded:105 · testerBoost:111
+authSetStatus:147 · authLocalSaveSafe:164 · authShowLogin:167 · authGateOffline:171 · authSaveRef:178 · authFetchCloud:179
+authWriteCloud:199 · authDeleteCloud:200 · authWriteProfileName:201 · authPushProfile:208 · authApplyProfileName:216 · authEnsureProfileName:240
+authAskProfileName:258 · authEditProfileName:272 · authStart:284 · updateOfflinePill:316 · authEnterOffline:321 · authLateSync:338
+authIsAppMode:358 · AUTH_REDIRECT_CODES:366 · authLoginClick:368 · authOnLogin:388 · authSyncOnLogin:414 · authFreshStart:443
+authAskLink:452 · authEnterGame:502 · authPushSaveAwait:518 · authPushSave:525 · authLogout:530
 
 ## js/award.js (279 บรรทัด · 0 รายการ)
 
@@ -451,7 +451,7 @@ gradeChangeTo:64 · gradeLockNote:91 · openGradeChange:100
 
 ## js/hauntedhotelsession.js (255 บรรทัด · 0 รายการ)
 
-## js/home-v2.js (2,110 บรรทัด · 0 รายการ)
+## js/home-v2.js (2,156 บรรทัด · 0 รายการ)
 
 ## js/hotel3d.js (1,526 บรรทัด · 62 รายการ)
 ### 🗂️ สารบัญโซน js/hotel3d.js (Read/Edit เฉพาะช่วง)
@@ -816,17 +816,17 @@ openPhotoCrop:224
 
 ## js/specialmission.js (223 บรรทัด · 0 รายการ)
 
-## js/state.js (1,397 บรรทัด · 96 รายการ)
+## js/state.js (1,392 บรรทัด · 96 รายการ)
 ### 🗂️ สารบัญโซน js/state.js (Read/Edit เฉพาะช่วง)
 - 2-246 STATE + LocalStorage + กติกากลางของเกม
 - 247-303 🗄️🐾 ระบบชั้นอาหาร + เงินช่วยปรับตัว
-- 304-801 👍 รอบ 701: รีแอ็กชันฟีด (กดค้างปุ่มถูกใจแล้วเลือกได้เหมือน Facebook)
-- 802-857 Daily Quest (item 3 backlog): ภารกิจรายวัน 3 อย่าง สุ่มตามวันที่
-- 858-968 มูลค่าทรัพย์สินสุทธิ (net worth) — ฐานของระบบแรงค์
-- 969-1018 🚫🍽️ สัตว์ป่วยเพราะหิว = ซื้อของกินไม่ได้ (รอบ 952)
-- 1019-1112 เครื่องยนต์บิลรายเดือน (กลาง — ค่าบำรุงบ้านตอนนี้ / ค่าไฟ-น้ำ-เน็ต เสียบเพิ่มได้)
-- 1113-1237 🍖 เงินค่าอาหารสัตว์รายเดือน — ทุกวันที่ 1 ของเดือน จ่ายตามจำนวนสัตว์ที่เลี้ยงอยู่
-- 1238-1397 โรงงานผลิตสินค้า: จ่ายค่าผลิตด้วย "แต้มคำศัพท์"
+- 304-796 👍 รอบ 701: รีแอ็กชันฟีด (กดค้างปุ่มถูกใจแล้วเลือกได้เหมือน Facebook)
+- 797-852 Daily Quest (item 3 backlog): ภารกิจรายวัน 3 อย่าง สุ่มตามวันที่
+- 853-963 มูลค่าทรัพย์สินสุทธิ (net worth) — ฐานของระบบแรงค์
+- 964-1013 🚫🍽️ สัตว์ป่วยเพราะหิว = ซื้อของกินไม่ได้ (รอบ 952)
+- 1014-1107 เครื่องยนต์บิลรายเดือน (กลาง — ค่าบำรุงบ้านตอนนี้ / ค่าไฟ-น้ำ-เน็ต เสียบเพิ่มได้)
+- 1108-1232 🍖 เงินค่าอาหารสัตว์รายเดือน — ทุกวันที่ 1 ของเดือน จ่ายตามจำนวนสัตว์ที่เลี้ยงอยู่
+- 1233-1392 โรงงานผลิตสินค้า: จ่ายค่าผลิตด้วย "แต้มคำศัพท์"
 ### รายการ js/state.js
 STORAGE_KEY:6 · QUIZ_PASS_REWARD:11 · CURE_COST:13 · HUNGRY_SICK_MS:14 · MEAL_HOUR:16 · MEAL_FULL:17
 SLEEP_FROM_HOUR:18 · SLEEP_SICK_HOUR:19 · WAKE_HOUR:20 · DINNER_COST:21 · TOXIN_FULL:23 · DETOX_COST:24
@@ -834,16 +834,16 @@ FOODQUIZ_Q:26 · FOODQUIZ_COIN:27 · FOODQUIZ_BONUS:28 · FOODQUIZ_MAX_PLAYS:29 
 SHAPE_MISS_MEALS:33 · SHAPE_EXP_BONUS:34 · HEAT_SICK_MS:35 · THIRST_SICK_MS:36 · DEFAULT_STATE:38 · migratePetShoppingState:252
 FEED_CATS:296 · FEED_REACTIONS:310 · feedRx:318 · FEED_QUICK_CM:320 · SLOT_MS:332 · currentSlotStart:333
 nextSlotStart:339 · mealDayKey:341 · nightKeyOf:343 · isNightNow:351 · newPet:356 · loadState:381
-saveState:759 · activePet:769 · petStage:770 · isAdult:775 · abilityOn:776 · hasPetType:777
-todayStr:780 · dailyTick:784 · addCoins:787 · QUEST_POOL:807 · QUEST_PER_DAY:816 · questsToday:817
-questTick:824 · questEvent:828 · assetValue:864 · netWorth:888 · assetCount:890 · grantRankPromotionRewards:908
-refreshRank:938 · heatProtected:956 · rainProtected:960 · petHungry:963 · petCanEat:967 · hungerSickLock:975
-hungerSickMsg:983 · petShapeOf:991 · updatePetShape:997 · shapeMealDone:1004 · heatPct:1014 · ymStr:1023
-billOutstanding:1027 · UTILITIES:1034 · HOME_UTILITIES:1040 · homeDecayed:1042 · billTick:1045 · PET_FOOD_PER_PET:1117
-petFoodTick:1118 · myCar:1144 · carLoanDue:1149 · carLoanOverdue:1154 · carLoanPayable:1159 · carLoanPay:1166
-compTick:1179 · ONLINE_RATE:1193 · onlineEarnActive:1194 · onlineEarnTick:1198 · onlineEarnFlush:1209 · marketTick:1219
-addCraft:1243 · ORDER_MAX:1262 · ORDER_LIFE_MS:1263 · ORDER_GAP_MIN_MS:1264 · ORDER_GAP_SPAN_MS:1265 · ORDER_TIER_WEIGHT:1266
-newOrder:1267 · orderTick:1280 · careTick:1288 · expNeed:1368 · addExp:1373 · addRP:1393
+saveState:754 · activePet:764 · petStage:765 · isAdult:770 · abilityOn:771 · hasPetType:772
+todayStr:775 · dailyTick:779 · addCoins:782 · QUEST_POOL:802 · QUEST_PER_DAY:811 · questsToday:812
+questTick:819 · questEvent:823 · assetValue:859 · netWorth:883 · assetCount:885 · grantRankPromotionRewards:903
+refreshRank:933 · heatProtected:951 · rainProtected:955 · petHungry:958 · petCanEat:962 · hungerSickLock:970
+hungerSickMsg:978 · petShapeOf:986 · updatePetShape:992 · shapeMealDone:999 · heatPct:1009 · ymStr:1018
+billOutstanding:1022 · UTILITIES:1029 · HOME_UTILITIES:1035 · homeDecayed:1037 · billTick:1040 · PET_FOOD_PER_PET:1112
+petFoodTick:1113 · myCar:1139 · carLoanDue:1144 · carLoanOverdue:1149 · carLoanPayable:1154 · carLoanPay:1161
+compTick:1174 · ONLINE_RATE:1188 · onlineEarnActive:1189 · onlineEarnTick:1193 · onlineEarnFlush:1204 · marketTick:1214
+addCraft:1238 · ORDER_MAX:1257 · ORDER_LIFE_MS:1258 · ORDER_GAP_MIN_MS:1259 · ORDER_GAP_SPAN_MS:1260 · ORDER_TIER_WEIGHT:1261
+newOrder:1262 · orderTick:1275 · careTick:1283 · expNeed:1363 · addExp:1368 · addRP:1388
 
 ## js/thaitime.js (52 บรรทัด · 13 รายการ)
 TH_TZ_MIN:22 · TH_DAY_MS:23 · thShift:28 · thMs:30 · thDate:31 · thHour:32
@@ -854,7 +854,7 @@ thLocaleOpt:46
 
 ## js/typing.js (370 บรรทัด · 0 รายการ)
 
-## js/ui.js (10,298 บรรทัด · 445 รายการ)
+## js/ui.js (10,297 บรรทัด · 445 รายการ)
 ### 🗂️ สารบัญโซน js/ui.js (Read/Edit เฉพาะช่วง)
 - 2-77 UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
 - 78-144 🎬 เวทีน้องน่ารัก (Cute Pet Show) — รอบ 604 (ผู้ใช้สั่ง 26 ก.ค. 2026)
@@ -905,11 +905,11 @@ thLocaleOpt:46
 - 8345-8368 โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
 - 8369-8643 ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
 - 8644-9652 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
-- 9653-9716 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
-- 9717-9753 เลเวลอัพ (รายตัว)
-- 9754-9859 สถิติผลการเรียนรู้
-- 9860-9897 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
-- 9898-10298 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
+- 9653-9715 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
+- 9716-9752 เลเวลอัพ (รายตัว)
+- 9753-9858 สถิติผลการเรียนรู้
+- 9859-9896 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
+- 9897-10297 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
 ### รายการ js/ui.js
 startHTML:10 · PET_ANIM:30 · petAnimHTML:35 · petVisualHTML:50 · PET_SHOW:91 · PET_SHOW_STAGE:96
 PET_SHOW_H:99 · petShowBgHTML:102 · petBondLine:153 · PET_HEALTH_TIPS:177 · nextPetHealthTip:215 · petBondActionLine:223
@@ -983,9 +983,9 @@ enterMecha3D:8899 · pickMechaRobot:8927 · pickDriveCar:8959 · openCarBuyDialo
 payCarLoanFull:9094 · carDriveBlock:9113 · gotoVehicleShop:9118 · gotoMyStock:9123 · showNeedCarDialog:9129 · craftDiscount:9141
 renderFactory:9144 · renderOrdersUI:9213 · startProduce:9232 · buyCollectible:9260 · cancelProduce:9290 · deliverOrder:9304
 renderOrderClock:9321 · renderCollectMine:9331 · openListDialog:9380 · cancelListing:9437 · buyMarketItem:9461 · showCollectReveal:9526
-buyAC:9564 · openHomeShop:9583 · openPetPurchase:9657 · renderPetShop:9695 · showLevelUp:9720 · renderStats:9757
-showTeacherCard:9864 · CALL_REACT_EMOS:9908 · CALL_TALK_MIN:9911 · CALL_TALK_HOLD:9912 · CALL_ORDER_GAP:9914 · CALL_TONES:9920
-startCall:10294
+buyAC:9564 · openHomeShop:9583 · openPetPurchase:9657 · renderPetShop:9694 · showLevelUp:9719 · renderStats:9756
+showTeacherCard:9863 · CALL_REACT_EMOS:9907 · CALL_TALK_MIN:9910 · CALL_TALK_HOLD:9911 · CALL_ORDER_GAP:9913 · CALL_TONES:9919
+startCall:10293
 
 ## js/util.js (1,473 บรรทัด · 57 รายการ)
 ### 🗂️ สารบัญโซน js/util.js (Read/Edit เฉพาะช่วง)
@@ -1056,8 +1056,8 @@ vbRender:148 · vbCardHTML:194
 .xsp-foot:235 · .xsb-box:250,277 · .xsb-head:255,256 · .xsb-grid:257 · .xsb-card:258,262 · .xsb-emoji:263
 .xsb-name:264 · .xsb-info:265 · .xsb-done:266 · .onet-picker:270,271,272,273(+3) · .onet-board:278,279,280
 
-## css/home-v2.css (2,481 บรรทัด · 136 selector)
-:root:9,2469 · #screen-dashboard:36,46 · #vw-home-v2-root:48,49,59,60(+112) · .vw2-screen-frame:81 · .vw2-sky:82,83,92,99(+1) · .vw2-shell:102,107,591
+## css/home-v2.css (2,497 บรรทัด · 136 selector)
+:root:9,2469 · #screen-dashboard:36,46 · #vw-home-v2-root:48,49,59,60(+114) · .vw2-screen-frame:81 · .vw2-sky:82,83,92,99(+1) · .vw2-shell:102,107,591
 .vw2-glass:111 · .vw2-top:124,641,788,977(+2) · .vw2-profile:129,143,147,291(+3) · .vw2-kanok-corner:148 · .vw2-profile-crown:149 · .vw2-profile-kicker:150,151
 .vw2-avatar-frame:152,157,297,298(+1) · .vw2-avatar:158,159,1974,1978(+3) · .vw2-avatar-edit:160,2031 · .vw2-profile-main:161,1893 · .vw2-name-row:162,163,1894 · .vw2-pencil:164,165,166
 .vw2-profile-meta:167,1829,1895 · .vw2-profile-meta-chip:168,169,170,171(+12) · .vw2-grade-identity:172 · .vw2-grade-copy:173 · .vw2-profile-chips:174,1908 · .vw2-achievement-mark:175,1909
