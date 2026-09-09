@@ -73,10 +73,10 @@ NOTES: `petshopping3d.js` is lazy-loaded. Food stock is consumable and excluded 
 SYSTEM: Vocab Arena
 PURPOSE: Lightweight combat-first vocabulary world with player/pet/bots, co-op boss state, pickups, HUD, and its own renderer lifecycle.
 PRIMARY FILE: `js/arena3d.js`
-RELATED FILES: `css/arena3d.css`, `js/ui.js`, `js/state.js`
+RELATED FILES: `js/arena-heroes.js`, `js/arena-portrait.js`, `css/arena-heroes.css`, `img/arena-heroes/`, `js/arena-elements.js`, `js/arena-field-visuals.js`, `css/arena3d.css`, `js/ui.js`, `js/state.js`, `docs/ARENA_FIELD.md`, `tools/test_arena_field.cjs`
 PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.VocabArena3D`, `start`, `stop`, `loop`, `updatePlayer`, `startBoss`
 DEPENDENCIES: `THREE`, shared state/progression, optional online state.
-NOTES: Intentionally loads without the large Adventure3D engine for the normal adventure entry.
+NOTES: Admin-only engine/entry guards. Small articulated heroes, pooled spells, personal home banking through `state.arenaHome`; six carried letters, persistent vault. Intentionally loads without the large Adventure3D engine. See `docs/ARENA_FIELD.md`.
 
 SYSTEM: Vocab Sky Playground
 PURPOSE: Bright fantasy social plaza with shared Letter Hunt, Word Race, timed Sky Obby, six-floor Vocabulary Tower, rotating Daily Sky Missions, badges, checkpoints, vocabulary rewards, pets, and up to six nearby players.
@@ -133,6 +133,15 @@ RELATED FILES: `css/lettercannon.css`, `assets/images/letter_cannon/dragon_gunne
 PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.LetterCannon`, `open`, `close`
 DEPENDENCIES: `vocabForStudent`, shared state/rewards/audio, Canvas 2D.
 NOTES: Canvas 2D solo gameplay with drag/WASD free flight, animated tail, a procedurally scrolling battlefield, Tracer/Heavy/Piercer rounds, homing missiles, layered ballistic SFX, streak powers, retained coin rewards, touch-only portrait lock/fullscreen lifecycle, and no WebGL lifecycle.
+
+SYSTEM: Frontline 1944 V1 isolated development world
+ADDITIONAL MODULES: `tools/frontline-v1/frontline-lobby.js` (numeric overflow rooms), `frontline-commands.js` (host input reducer), `preview-admission.mjs` (local conditional seat admission), `frontline-effects.js` (pooled toy fireworks), `frontline-audio.js` (synthesized cues). Target/Thai data comes from `js/data/vocab.js`, the same source as ShootWord. Inputs use `frontline_v1_dev/<session>/inputs/<room>/<seat>`; only the seat owner writes its mailbox and the elected host writes room simulation state.
+PURPOSE: Competitive four-seat word raid with vacant-seat bots, two neutral anti-collusion guards, A-Z ram pickups, private destructible vaults, projectile/PvP combat, timed bombs, and winner-only central coin rewards.
+PRIMARY FILE: `tools/frontline-v1/frontline-main.js`
+RELATED FILES: `tools/frontline-v1/frontline-{config,input,tank,combat,bombs,letters,bases,words,bots,guards,room,network,economy,shapes,map,scene,ui}.js`, `tools/frontline-v1/assets/tank-cute.glb`, `tools/frontline-v1/build_tank_glb.py`, `frontline.css`, `index.html`, `preview.mjs`, `preview-proxy.mjs`, `database.rules.json`, `README.md`, `js/vendor/GLTFLoader.js`
+PUBLIC ENTRY POINTS / KEY SYMBOLS: Local-only `/__dev/frontline` via `node tools/frontline-v1/preview.mjs`; `window.Frontline`, `admit`, `drive`, `commitFire`, `placeBomb`, `tickLetters`, `creditReward`, `connect`.
+DEPENDENCIES: Existing Three.js and shared items/homes/thaitime/state; Firebase RTDB compat SDK with demo emulator only.
+NOTES: Entire directory remains under production-excluded `tools/`; no public shell/menu/world registration. Browsers use one LAN port (19444); mobile clients force HTTP long-poll while desktop may use WebSocket, and the restricted gateway keeps RTDB on loopback 19445. Demo namespace `frontline_v1_dev/<preview-session>/rooms/<CODE>`, four fixed seats with bot substitution plus two non-seat guards. Central `addCoins`/`saveState` is unchanged and uses a preview-only save key. The field recycles 15 procedural chunks; all tanks share one 129,852-byte texture-free cute GLB and rotate continuously. Tests: `frontline.test.mjs`, `browser.test.mjs`, `check-production.mjs`. No legacy Frontline code reused and no production deploy.
 
 ## Player, camera, collision, animation, and NPCs
 

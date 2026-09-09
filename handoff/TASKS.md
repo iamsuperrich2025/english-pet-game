@@ -12,10 +12,10 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
-- **รอบ 1384 · คริสตัล A–Z + MEGA 5 ครั้ง:** แท่นตกแต่ง6จุดเปลี่ยนเป็นคริสตัลเก็บได้/เกิดใหม่18วินาทีเกม; รวมคริสตัลจากศัตรู เก็บครบ5ได้MEGA5ครั้ง ใช้ครั้งละ1และตัวอักษรยังอยู่ครบ ใช้หมดเริ่มสะสมชุดใหม่
-- วงธาตุตามฮีโร่รัศมี18 โจมตีจริง3ระลอกเฉพาะในวง; ป้ายเหลือ N แยกคูลดาวน์ N วิ; กระเป๋าเต็มไม่กินคริสตัล/ไม่เติมเกจ, ตัวอักษรทำตกไม่เติมเกจซ้ำ; ลงสนามใหม่หรือล้มล้างเกจและจำนวนครั้ง; admin-only/บ้าน/HPเดิม
-- Crystal/MEGA53 checks บน dist + Arena26 + Elements50 + HomeV2/build9,490files614.6MiB/web validator/syntax/diff ผ่าน; predeploy undefined/template บน HEAD+3JS patch ผ่านunknown0, missing-assets306ครบ; no production test writes, ไม่มี asset/network schema ใหม่
-- พร้อมส่ง manifest เฉพาะ8ไฟล์ผ่าน COMMIT_DEPLOY.bat; ยังไม่ยืนยัน deploy1384; รายละเอียด docs/ARENA_FIELD.md และ tools/test_arena_crystals.cjs, ภาพตัวอย่าง outputs/mega-five-uses.webp ของแชทนี้
+- **รอบ 1385 · ภาพใหญ่ขยับอัตโนมัติ:** ลบปุ่มและข้อความ `ภาพเคลื่อนไหว` ออกจากหน้าเลือกฮีโร่ พร้อมจัดหัวเรื่องกลับกึ่งกลาง; ภาพใหญ่เล่นเองแม้เปิดธงลดเอฟเฟกต์ของสนาม
+- เพิ่มระยะขยับผม/ผ้าคลุมและธาตุให้สังเกตได้ชัด เพิ่มอนุภาค 18→24 โดยยังตรึงใบหน้าและเท้าเพื่อไม่ให้ตัวละครบิด; hidden tab และ OS reduced-motion ยังหยุด loop ตามเดิม
+- Hero picker 32 checks ผ่าน 4 viewport: hair/cape/fire มี pixel motion, face/boots=0, errors=[]; build 2026-09-09.1237 (9,490 files, 614.6 MiB), dist test, web validator, undefined/template/syntax/diff ผ่าน; ไม่มี asset หรือ network schema ใหม่
+- พร้อมส่ง manifest เฉพาะ 6 ไฟล์ผ่าน COMMIT_DEPLOY.bat; ยังไม่ยืนยัน deploy รอบ 1385
 
 - **รอบ 1383 · แก้ Deploy ติด async():** ยืนยันตัวตรวจ undefined-call เข้าใจ async arrow callback ใน `js/ui.js:7284` เป็นฟังก์ชันไม่มีนิยาม; เปลี่ยนเป็น named async function `preloadArenaScene` โดยไม่แก้หรือข้ามตัวตรวจ และคง preload/cancel/entry behavior
 - ด่าน undefined-call/template-backtick ผ่านบน git HEAD JavaScript + UI patch (unknown0), missing-assets --git306ครบ, syntax/diff + hero browser31 checks + build9,490files614.6MiB + web validator ผ่าน; เตรียม SHIP เฉพาะ ui.js/TASKS.md และเปิด launcher รอบใหม่; ยังไม่ยืนยันผล deploy1383
