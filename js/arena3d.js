@@ -8,7 +8,7 @@
    ============================================================ */
 (function(){
   const TAU=Math.PI*2, ARENA_R=32, BOT_TARGET=8, ENERGY_MAX=10;
-  const SKILL_CD={basic:.34,arc:4,nova:7,ult:15};
+  const SKILL_CD={basic:.34,arc:4,nova:7,ult:15,...Object.fromEntries(ArenaElements.skills.map(s=>[s.id,s.cd]))};
   /* ============================================================
      🤝👑 รอบ 1048 — CO-OP PVE + CHAPTER BOSSES
      ใช้ NetRoom/Firebase fields เดิมเท่านั้น: ห้องละ 2–4 คน, ผู้นำห้อง
@@ -31,7 +31,9 @@
   const ALPHABET='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
   let root,canvas,renderer,scene,camera,clock,raf=0,running=false,paused=false,built=false;
-  let player,petComp,aimRing,arenaMotes,fieldFx,home;
+  let player,petComp,aimRing,arenaMotes,fieldFx,home,elements;
+  let spellSlots=['fire','wind'],editingSlot=0,selectedHero=null;
+  const skillSeconds=kind=>SKILL_CD[kind]*(selectedHero && kind===selectedHero.id ? .8 : 1);
   let cargo=[],homeRoute=false,lastHomePaint=0,fullHintAt=0,basicHeld=false;
   const HOME_SPOTS=[[-12,13],[12,13],[-12,-13],[12,-13]], CARGO_MAX=6;
   const pendingTimers=new Set();
@@ -47,6 +49,8 @@
   let downed=false,downUntil=0,reviveHold=null,reviveSignal='-',reviveSeq=0,revivesGiven=0,lastReviveSent=0;
   let chapter=1,waveBase=0,bossPhase='wave',boss=null,bossEncounter='',bossMax=0,bossHp=0,bossWord='',bossContribution=0,bossWordSolved=false,bossVictoryAt=0,bossReward=0;
   const ui={};
+  const vitalNodes=new Map(),vitalLive=new Set();
+  const hudPoint=new THREE.Vector3();
 
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   const rnd=(a,b)=>a+Math.random()*(b-a);
@@ -71,6 +75,8 @@
     const old=state.arenaHome.letters||{},letters={};
     for(const ch of ALPHABET){const n=Number(old[ch]);if(Number.isFinite(n)&&n>0)letters[ch]=Math.min(999,Math.floor(n));}
     state.arenaHome.letters=letters;
+    selectedHero=typeof ArenaHeroes!=='undefined'?ArenaHeroes.get(state.arenaHero):null;
+    spellSlots=ArenaElements.normalizeSlots(state.arenaLoadout);state.arenaLoadout=spellSlots.slice();
     state.arenaHome.cargo=(Array.isArray(state.arenaHome.cargo)?state.arenaHome.cargo:[]).filter(ch=>typeof ch==='string'&&/^[A-Z]$/.test(ch)).slice(0,CARGO_MAX);
   }
 
@@ -80,10 +86,10 @@
     root=document.createElement('div'); root.id='va-root';
     const av=profileAvatar(), p=petInfo(), online=typeof Online!=='undefined'&&Online.ready;
     root.innerHTML=`
-      <canvas id="va-canvas"></canvas><div class="va-vignette"></div><div class="va-scan"></div>
+      <canvas id="va-canvas"></canvas><div class="va-vitals-layer" id="va-vitals-layer"></div><div class="va-vignette"></div><div class="va-scan"></div>
       <div class="va-top">
         <button class="va-exit" id="va-exit" aria-label="ออกจากสนาม">← ออก</button>
-        <div class="va-player-card va-glass"><span class="va-avatar-icon" aria-hidden="true">⚔</span><div class="va-player-name">${esc(state.profileName||'นักผจญภัย')}</div><div class="va-online${online?'':' off'}">● ADMIN · ${online?'ONLINE PvE':'PvE ฝึกซ้อม'}</div></div>
+        <div class="va-player-card va-glass"><span class="va-avatar-icon" aria-hidden="true">${selectedHero?.icon||'⚔'}</span><div class="va-player-name">${esc(state.profileName||'นักผจญภัย')}</div><div class="va-online${online?'':' off'}">● ADMIN · ${online?'ONLINE PvE':'PvE ฝึกซ้อม'}</div></div>
         <div class="va-word-card va-glass"><div class="va-word-th" id="va-word-th">เป้าหมายคำศัพท์</div><div class="va-word-en" id="va-word-en">READY</div><div class="va-word-slots" id="va-word-slots"></div></div>
         <div class="va-coins va-glass">🪙 <span id="va-coins">${fmt(state.coins||0)}</span></div>
         <button class="va-shop-btn" id="va-shop-open">🛒 พลังพิเศษ</button>
@@ -94,10 +100,10 @@
       <div class="va-boss va-glass" id="va-boss"><div class="va-boss-head"><span id="va-boss-chapter">บท 1</span><b id="va-boss-name">ผู้พิทักษ์คำศัพท์</b><em id="va-boss-hp-text">100%</em></div><div class="va-boss-track"><div class="va-boss-fill" id="va-boss-fill"></div></div><div class="va-boss-word" id="va-boss-word"></div></div>
       <div class="va-hp va-glass" id="va-hp"><b>HP</b><div class="va-hp-track"><div class="va-hp-fill" id="va-hp-fill"></div></div></div>
       <div class="va-stick" id="va-stick"><div class="va-stick-knob" id="va-stick-knob"></div></div>
-      <div class="va-skills">
+      <div class="va-skills"><button class="va-spell-toggle va-glass" id="va-spells-open">✨ คลังธาตุ <small>E</small></button>
         <button class="va-skill ult" data-skill="ult" aria-label="Wordstorm"><span class="ico">🌈</span><span class="key">3 WORDSTORM</span><span class="cd"></span></button>
-        <button class="va-skill nova" data-skill="nova" aria-label="Nova"><span class="ico">🌀</span><span class="key">2 NOVA</span><span class="cd"></span></button>
-        <button class="va-skill arc" data-skill="arc" aria-label="Arc"><span class="ico">⚡</span><span class="key">1 ARC</span><span class="cd"></span></button>
+        <button class="va-skill nova" data-slot="1" data-skill="nova" aria-label="Nova"><span class="ico">🌀</span><span class="key">2 NOVA</span><span class="cd"></span></button>
+        <button class="va-skill arc" data-slot="0" data-skill="arc" aria-label="Arc"><span class="ico">⚡</span><span class="key">1 ARC</span><span class="cd"></span></button>
         <button class="va-skill basic" data-skill="basic" aria-label="ยิงพลัง"><span class="ico">✦</span><span class="key">ยิง</span><span class="cd"></span></button>
       </div>
       <button class="va-home-nav va-glass" id="va-home-nav"><b>⌂ บ้านของคุณ</b><span id="va-home-hint">เดินเข้าวงเพื่อฝากอักษร</span></button><div class="va-cargo" id="va-cargo" aria-hidden="true"></div><div class="va-feed" id="va-feed"></div>
@@ -110,17 +116,21 @@
       </div></div>
       <div class="va-modal" id="va-intro"><div class="va-panel va-intro-panel">
         <div class="va-intro-logo">VOCAB ARENA</div><div class="va-intro-sub">ตัวเล็ก · เวทมนตร์ใหญ่ · ขนอักษรกลับบ้าน</div>
-        <div class="va-intro-steps"><div class="va-intro-step"><b>⚔️</b>เดินจอยซ้าย · สู้ปุ่มขวา</div><div class="va-intro-step"><b>🔤</b>เก็บอักษรได้ครั้งละ 6 ตัว</div><div class="va-intro-step"><b>🏠</b>กลับบ้านเพื่อฝากและสะกดคำ</div><div class="va-intro-step"><b>👑</b>ครบ 3 คำ ต่อสู้บอสด้วยกัน</div><div class="va-intro-step"><b>💾</b>คลังบ้านจำไว้ข้ามการเข้าเกม</div></div>
+        <div class="va-intro-steps"><div class="va-intro-step"><b>⚔️</b>เดินจอยซ้าย · สู้ปุ่มขวา</div><div class="va-intro-step"><b>🔤</b>เก็บอักษรได้ครั้งละ 6 ตัว</div><div class="va-intro-step"><b>🏠</b>กลับบ้านเพื่อฝากและสะกดคำ</div><div class="va-intro-step"><b>👑</b>ครบ 3 คำ ต่อสู้บอสด้วยกัน</div><div class="va-intro-step"><b>✨</b>คลังธาตุเลือกพลังช่อง 1–2</div></div>
         <button class="va-start" id="va-start">เริ่มภารกิจ ✦</button>
       </div></div>
-      <div class="va-portrait"><div><b>📱↻</b>หมุนเครื่องเป็นแนวนอนเพื่อเข้าสนามครับ</div></div>`;
+      <div class="va-modal" id="va-spellbook"><div class="va-panel va-spell-panel">
+        <div class="va-panel-head"><div><div class="va-panel-title">✨ คลังพลังธาตุ</div><div class="va-panel-sub">เลือกช่อง 1 หรือ 2 แล้วแตะพลังที่ต้องการ · สลับได้ฟรี คูลดาวน์ยังนับต่อ</div></div><button class="va-close" id="va-spells-close" aria-label="ปิดคลังธาตุ">✕</button></div>
+        <div class="va-slot-tabs" id="va-slot-tabs"></div><div class="va-spell-grid" id="va-spell-grid"></div>
+        <div class="va-spell-footer">WASD / จอย: เดิน · 1 / 2: พลังที่เลือก · 3: WORDSTORM · Space: โจมตีค้าง</div>
+      </div></div><div class="va-portrait"><div><b>📱↻</b>หมุนเครื่องเป็นแนวนอนเพื่อเข้าสนามครับ</div></div>`;
     document.body.appendChild(root);
     canvas=root.querySelector('#va-canvas');
-    ['homeHint','cargo','wordTh','wordEn','wordSlots','coins','energy','energyFill','energyPower','bagList','party','partyStatus','partyList','boss','bossChapter','bossName','bossHpText','bossFill','bossWord','hp','hpFill','feed','pop','downed','downTime','revive','reviveFill','reviveName','shop','shopCoins','storeGrid','intro','stick','stickKnob'].forEach(k=>{
+    ['vitalsLayer','spellbook','spellGrid','slotTabs','homeHint','cargo','wordTh','wordEn','wordSlots','coins','energy','energyFill','energyPower','bagList','party','partyStatus','partyList','boss','bossChapter','bossName','bossHpText','bossFill','bossWord','hp','hpFill','feed','pop','downed','downTime','revive','reviveFill','reviveName','shop','shopCoins','storeGrid','intro','stick','stickKnob'].forEach(k=>{
       const id='va-'+k.replace(/[A-Z]/g,m=>'-'+m.toLowerCase()); ui[k]=root.querySelector('#'+id);
     });
     bindDom();
-    renderShop();
+    renderShop();syncLoadoutButtons();
     if(p) feed(`🐾 ${p.name||((typeof PETS!=='undefined'&&PETS[p.type])?PETS[p.type].name:'น้อง')} จะวิ่งตามและช่วยโจมตี`, 'gold');
   }
 
@@ -133,6 +143,11 @@
     addListener(window,'blur',clearInput);addListener(document,'visibilitychange',()=>{clearInput();lastFrame=0;if(document.hidden&&audioCtx)audioCtx.suspend();});
     addListener(root.querySelector('#va-shop-open'),'click',()=>toggleShop(true));
     addListener(root.querySelector('#va-shop-close'),'click',()=>toggleShop(false));
+    addListener(root.querySelector('#va-spells-open'),'click',()=>toggleSpellbook(true));
+    addListener(root.querySelector('#va-spells-close'),'click',()=>toggleSpellbook(false));
+    addListener(ui.spellbook,'click',e=>{if(e.target===ui.spellbook)toggleSpellbook(false);});
+    addListener(ui.slotTabs,'click',e=>{const b=e.target.closest('[data-equip-slot]');if(b){editingSlot=Number(b.dataset.equipSlot);renderSpellbook();}});
+    addListener(ui.spellGrid,'click',e=>{const b=e.target.closest('[data-equip-spell]');if(b)equipSpell(editingSlot,b.dataset.equipSpell);});
     addListener(root.querySelector('#va-party-friends'),'click',()=>{ if(room&&room.online)room.openFriends();else feed('📡 ต้องออนไลน์ก่อน จึงจะชวนหรือไปหาเพื่อนได้','bad'); });
     addListener(ui.shop,'click',e=>{ if(e.target===ui.shop) toggleShop(false); });
     addListener(ui.storeGrid,'click',e=>{ const b=e.target.closest('[data-buy]'); if(b) buyItem(b.dataset.buy); });
@@ -164,12 +179,13 @@
       keys.add(e.code);
       if(e.repeat) return;
       if(e.code==='Space') castSkill('basic');
-      else if(e.code==='Digit1') castSkill('arc');
-      else if(e.code==='Digit2') castSkill('nova');
+      else if(e.code==='Digit1') castSkill(spellSlots[0]);
+      else if(e.code==='Digit2') castSkill(spellSlots[1]);
       else if(e.code==='Digit3') castSkill('ult');
+      else if(e.code==='KeyE')toggleSpellbook(!ui.spellbook.classList.contains('on'));
       else if(e.code==='KeyH'){homeRoute=!homeRoute;paintHome();}
       else if(e.code==='KeyB') toggleShop(!ui.shop.classList.contains('on'));
-      else if(e.code==='Escape'){ if(ui.shop.classList.contains('on')) toggleShop(false); else stop(); }
+      else if(e.code==='Escape'){ if(ui.spellbook.classList.contains('on'))toggleSpellbook(false);else if(ui.shop.classList.contains('on')) toggleShop(false); else stop(); }
     };
     const ku=e=>keys.delete(e.code);
     addListener(window,'keydown',kd,{passive:false}); addListener(window,'keyup',ku);
@@ -186,7 +202,9 @@
     scene=new THREE.Scene(); scene.background=new THREE.Color(0x14243d); scene.fog=new THREE.FogExp2(0x14243d,.006);
     camera=new THREE.PerspectiveCamera(48,innerWidth/innerHeight,.1,120);
     clock=new THREE.Clock(); texLoader=new THREE.TextureLoader();
-    buildArena(); ArenaFieldVisuals.compactStatic(scene); fieldFx=ArenaFieldVisuals.createFx(scene,fxLow); buildPlayer(); buildPet(); buildHome(); ArenaFieldVisuals.garden(scene);
+    buildArena(); ArenaFieldVisuals.compactStatic(scene); fieldFx=ArenaFieldVisuals.createFx(scene,fxLow);
+    elements=ArenaElements.create({fx:fieldFx,enemies:()=>bots,hit:hitBot,storm:()=>own('storm'),heal:(health,guard)=>{const before=hp;hp=Math.min(maxHp,hp+health);shield=Math.min(Math.max(maxShield,20),shield+guard);floatText(player.pos,`+${Math.round(hp-before)} HP · โล่ +${guard}`,0xd5ffac);updateHud();}});
+    buildPlayer(); buildPet(); buildHome(); ArenaFieldVisuals.garden(scene);
     built=true; resize();
   }
 
@@ -243,7 +261,7 @@
     const aura=new THREE.Mesh(new THREE.RingGeometry(.9,1.45,48),new THREE.MeshBasicMaterial({color:0x5de8ff,transparent:true,opacity:.63,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,depthWrite:false}));
     aura.rotation.x=-Math.PI/2; aura.position.y=.06; group.add(aura);
     const shadow=new THREE.Mesh(new THREE.CircleGeometry(1.05,32),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.3,depthWrite:false})); shadow.rotation.x=-Math.PI/2; shadow.position.y=.025; group.add(shadow);
-    const spr=ArenaFieldVisuals.hero();spr.scale.setScalar(1.12);group.add(spr);
+    const spr=ArenaFieldVisuals.hero(selectedHero?.tint,selectedHero);spr.scale.setScalar(1.12);group.add(spr);
     const crown=makeTextSprite('✦',0x8ef3ff,120,120);crown.scale.set(.65,.65,1);crown.position.y=2.32;group.add(crown);
     player={group,spr,aura,crown,pos:group.position,vel:new THREE.Vector3(),facing:new THREE.Vector3(0,0,-1)};
     aimRing=new THREE.Mesh(new THREE.RingGeometry(.85,1.15,40),new THREE.MeshBasicMaterial({color:0xffe873,transparent:true,opacity:.8,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,depthWrite:false}));
@@ -285,8 +303,8 @@
     const shadow=new THREE.Mesh(new THREE.CircleGeometry(.86,28),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.24,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.position.y=.02;group.add(shadow);
     const spr=ArenaFieldVisuals.hero(0xc08aff);spr.scale.setScalar(1.12);group.add(spr);
     const name=makeTextSprite(String(d.n||'เพื่อน').slice(0,18),0xdffbff,320,80);name.scale.set(2.7,.68,1);name.position.y=2.9;group.add(name);
-    const hpBack=new THREE.Mesh(new THREE.PlaneGeometry(2.2,.13),new THREE.MeshBasicMaterial({color:0x170e24,transparent:true,opacity:.84,side:THREE.DoubleSide}));hpBack.position.y=2.38;group.add(hpBack);
-    const hpBar=new THREE.Mesh(new THREE.PlaneGeometry(2.12,.08),new THREE.MeshBasicMaterial({color:0x56efa7,side:THREE.DoubleSide}));hpBar.position.set(0,2.38,.01);group.add(hpBar);
+    const hpBack=new THREE.Mesh(new THREE.PlaneGeometry(2.2,.13),new THREE.MeshBasicMaterial({color:0x170e24,transparent:true,opacity:.84,side:THREE.DoubleSide}));hpBack.position.y=2.38;hpBack.visible=false;group.add(hpBack);
+    const hpBar=new THREE.Mesh(new THREE.PlaneGeometry(2.12,.08),new THREE.MeshBasicMaterial({color:0x56efa7,side:THREE.DoubleSide}));hpBar.position.set(0,2.38,.01);hpBar.visible=false;group.add(hpBar);
     const peerHome=ArenaFieldVisuals.house(0xad82dd,String(d.n||'เพื่อน').slice(0,12),makeTextSprite);scene.add(peerHome);
     return peerActors[uid]={uid,group,home:peerHome,spr,aura,name,hpBar,target:new THREE.Vector3(group.position.x,0,group.position.z),phase:Math.random()*TAU};
   }
@@ -346,8 +364,8 @@
     const eye=new THREE.Mesh(new THREE.TorusGeometry(elite?.76:.57,.10,8,28),eyeMat);eye.position.set(0,1.38,.88);group.add(eye);
     for(let i=0;i<(elite?8:5);i++){ const spike=new THREE.Mesh(new THREE.ConeGeometry(.18,elite?1.3:.9,5),coreMat);const a=i/(elite?8:5)*TAU;spike.position.set(Math.sin(a)*(elite?1.25:.92),1.2,Math.cos(a)*(elite?1.25:.92));spike.rotation.z=Math.sin(a)*1.1;spike.rotation.x=Math.cos(a)*1.1;group.add(spike); }
     const letter=makeTextSprite(ch,col);letter.scale.set(elite?2.2:1.65,elite?1.1:.84,1);letter.position.y=3.25;group.add(letter);
-    const barBack=new THREE.Mesh(new THREE.PlaneGeometry(elite?2.7:2.1,.18),new THREE.MeshBasicMaterial({color:0x180e20,transparent:true,opacity:.9,side:THREE.DoubleSide}));barBack.position.y=2.62;group.add(barBack);
-    const bar=new THREE.Mesh(new THREE.PlaneGeometry(elite?2.62:2.02,.11),new THREE.MeshBasicMaterial({color:elite?0xffc24d:0x61f5b3,side:THREE.DoubleSide}));bar.position.set(0,2.62,.012);group.add(bar);
+    const barBack=new THREE.Mesh(new THREE.PlaneGeometry(elite?2.7:2.1,.18),new THREE.MeshBasicMaterial({color:0x180e20,transparent:true,opacity:.9,side:THREE.DoubleSide}));barBack.position.y=2.62;barBack.visible=false;group.add(barBack);
+    const bar=new THREE.Mesh(new THREE.PlaneGeometry(elite?2.62:2.02,.11),new THREE.MeshBasicMaterial({color:elite?0xffc24d:0x61f5b3,side:THREE.DoubleSide}));bar.position.set(0,2.62,.012);bar.visible=false;group.add(bar);
     const a=Math.random()*TAU,r=rnd(17,28);group.position.set(Math.sin(a)*r,0,Math.cos(a)*r);group.scale.setScalar(.68);scene.add(group);
     const mhp=elite?180:80+rnd(-8,16),bot={group,body,letter,bar,col,ch,elite,hp:mhp,maxHp:mhp,vel:new THREE.Vector3(),attackAt:rnd(.3,1.2),phase:Math.random()*TAU,dead:false,slow:0};
     bots.push(bot);return bot;
@@ -455,6 +473,12 @@
     const aim=targetNearest(18);if(aim)player.facing.copy(aim.group.position).sub(player.pos).setY(0).normalize();
     if(!SKILL_CD[kind])return;
     if(kind==='ult'&&energy<5){ feed(`ต้องเก็บอักษรอีก ${5-energy} ตัว เพื่อเปิด WORDSTORM`,'bad');pulseButton('ult');return; }
+    if(ArenaElements.byId[kind]&&kind!=='arc'&&kind!=='nova'){
+      if(elements.cast(kind,player.pos,player.facing,aim,mult)){
+        const def=ArenaElements.byId[kind];cooldown[kind]=now+skillSeconds(kind)*1000;ArenaFieldVisuals.strike(player.spr,now);feed(`${def.icon} ${def.name} · ${def.detail}`,'gold');tone(def.tone,.35,.13,kind==='light'||kind==='ice'?'sine':'triangle');haptic(25);updateHud();
+      }
+      return;
+    }
     if(kind==='basic'){
       const b=targetNearest(15);if(!b){feed('เข้าใกล้ปีศาจอีกนิดครับ');return;}
       ArenaFieldVisuals.strike(player.spr,now);fieldFx.slash(player.pos,Math.atan2(player.facing.x,player.facing.z));cooldown.basic=now+SKILL_CD.basic*1000;fireBolt(b,24*mult,0x7ff3ff,false);
@@ -583,9 +607,23 @@
     ui.storeGrid.innerHTML=STORE.map(it=>`<button class="va-store-item${own(it.id)?' owned':''}" data-buy="${it.id}"><span class="va-store-ico">${it.ico}</span><div class="va-store-name">${it.name}</div><div class="va-store-desc">${it.desc}</div><div class="va-store-price">${own(it.id)?'✓ มีแล้ว':`🪙 ${fmt(it.price)}`}</div></button>`).join('');
   }
   function toggleShop(on){
-    if(!running)return;ui.shop.classList.toggle('on',!!on);paused=!!on||ui.intro.classList.contains('on');
-    if(on)renderShop();else{paused=false;clock.getDelta();}
+    if(!running)return;basicHeld=false;keys.clear();ui.shop.classList.toggle('on',!!on);syncPause();if(on)renderShop();
   }
+
+  /* ==== 🔥 Round 1381 — two persistent elemental slots ==== */
+  function syncPause(){paused=ui.shop.classList.contains('on')||ui.intro.classList.contains('on')||ui.spellbook.classList.contains('on');lastFrame=0;if(clock)clock.getDelta();}
+  function syncLoadoutButtons(){
+    if(!root)return;root.querySelectorAll('[data-slot]').forEach(b=>{const slot=Number(b.dataset.slot),def=ArenaElements.byId[spellSlots[slot]];b.dataset.skill=def.id;b.style.setProperty('--element',def.color);b.querySelector('.ico').textContent=def.icon;b.querySelector('.key').textContent=`${slot+1} ${def.name}`;b.setAttribute('aria-label',`${slot+1} ${def.name}`);});
+  }
+  function equipSpell(slot,id){
+    if(![0,1].includes(slot)||!ArenaElements.byId[id])return false;
+    const other=1-slot;if(spellSlots[other]===id)spellSlots[other]=spellSlots[slot];spellSlots[slot]=id;state.arenaLoadout=spellSlots.slice();saveState();syncLoadoutButtons();renderSpellbook();return true;
+  }
+  function renderSpellbook(){
+    ui.slotTabs.innerHTML=spellSlots.map((id,i)=>`<button data-equip-slot="${i}" class="${editingSlot===i?'selected':''}" aria-pressed="${editingSlot===i}">${i+1} · ${ArenaElements.byId[id].icon} ${ArenaElements.byId[id].name}</button>`).join('');
+    ui.spellGrid.innerHTML=ArenaElements.skills.map(def=>{const slot=spellSlots.indexOf(def.id);return `<button class="va-spell-card${slot>=0?' equipped':''}" data-equip-spell="${def.id}" style="--element:${def.color}" aria-label="${def.name} ${def.desc}"><span class="va-element-icon">${def.icon}</span><b>${def.name}</b><small>${def.desc}</small><em>${slot>=0?'ช่อง '+(slot+1)+' · ':''}${Number(skillSeconds(def.id).toFixed(1))} วิ</em></button>`;}).join('');
+  }
+  function toggleSpellbook(on){if(!running)return;basicHeld=false;keys.clear();joy.x=joy.z=0;homeRoute=false;ui.spellbook.classList.toggle('on',!!on);if(on)renderSpellbook();syncPause();}
 
   function updatePlayer(dt,t){
     let x=joy.x,z=joy.z;
@@ -638,7 +676,7 @@
   function damagePlayer(n){
     if(downed||(home&&flatDist(player.pos,home.position)<3.3))return true;
     if(shield>0){const use=Math.min(shield,n);shield-=use;n-=use;if(use)floatText(player.pos,`โล่ -${Math.ceil(use)}`,0x79dfff);}
-    if(n>0)hp=Math.max(0,hp-n);lastHitAt=performance.now();ui.hp.animate([{opacity:1},{opacity:.5},{opacity:1}],{duration:220});tone(95,.12,.12,'square');haptic(28);
+    if(n>0){const lost=Math.min(hp,n);hp=Math.max(0,hp-n);floatText(player.pos,`−${Math.ceil(lost)}`,0xff7f95);}lastHitAt=performance.now();ui.hp.animate([{opacity:1},{opacity:.5},{opacity:1}],{duration:220});tone(95,.12,.12,'square');haptic(28);
     const fell=hp<=0;if(fell)downPlayer();updateHud();return fell;
   }
   function downPlayer(){
@@ -669,7 +707,12 @@
     for(let i=drops.length-1;i>=0;i--){const d=drops[i];d.life-=dt;if(d.life<=0){scene.remove(d.group);disposeTree(d.group);drops.splice(i,1);continue;}d.gem.rotation.y+=dt*2.6;d.gem.rotation.x+=dt*.8;d.group.position.y=.35+Math.sin(t*.004+d.phase)*.16;d.halo.rotation.z+=dt*1.8;if(!downed&&flatDist(d.group.position,player.pos)<1.4)collectDrop(d);}
   }
   function updateEffects(dt){
-    for(let i=effects.length-1;i>=0;i--){const f=effects[i];f.life-=dt;if(f.vel)f.mesh.position.addScaledVector(f.vel,dt);if(f.spin)f.mesh.rotation.z+=dt*f.spin;
+    for(let i=effects.length-1;i>=0;i--){const f=effects[i];f.life-=dt;
+      if(f.kind==='number'){
+        if(f.life<=0){f.node.remove();effects.splice(i,1);continue;}
+        f.pos.y+=dt*1.8;f.pos.x+=dt*f.drift;hudPoint.copy(f.pos).project(camera);const k=f.life/f.max,scale=1+Math.sin((1-k)*Math.PI)*.18;f.node.style.opacity=Math.min(1,k*1.5);f.node.style.transform=`translate(${(hudPoint.x*.5+.5)*innerWidth}px,${(-hudPoint.y*.5+.5)*innerHeight}px) translate(-50%,-50%) scale(${scale})`;continue;
+      }
+      if(f.vel)f.mesh.position.addScaledVector(f.vel,dt);if(f.spin)f.mesh.rotation.z+=dt*f.spin;
       const k=clamp(f.life/f.max,0,1);if(f.kind==='burst'){f.vel.y-=dt*2.8;f.mesh.scale.setScalar(Math.max(.01,k));}
       else if(f.kind==='ring'){const s=1+(1-k)*(f.to-1);f.mesh.scale.setScalar(s);}
       else if(f.kind==='float'){f.mesh.position.y+=dt*.9;}
@@ -686,9 +729,9 @@
   function loop(t){
     if(!running)return;raf=requestAnimationFrame(loop);const dt=Math.min(.034,lastFrame?(t-lastFrame)/1000:.016);lastFrame=t;
     if(document.hidden)return;
-    if(!paused){if((basicHeld||keys.has('Space'))&&targetNearest(15))castSkill('basic');updatePlayer(dt,t);updatePet(dt,t);updateBots(dt,t);updateShots(dt,t);updateDrops(dt,t);updateHome(dt,t);updateEffects(dt);fieldFx.tick(dt);ensureBots(t);cameraTick(dt);
+    if(!paused){if((basicHeld||keys.has('Space'))&&targetNearest(15))castSkill('basic');updatePlayer(dt,t);updatePet(dt,t);elements.tick(dt);updateBots(dt,t);updateShots(dt,t);updateDrops(dt,t);updateHome(dt,t);updateEffects(dt);fieldFx.tick(dt);ensureBots(t);cameraTick(dt);
       if(maxShield&&t-lastHitAt>4200)shield=Math.min(maxShield,shield+dt*4.5);if(arenaMotes)arenaMotes.rotation.y+=dt*.015;updateCooldownUi(t);}
-    tickCoop(t);
+    tickCoop(t);updateVitals();
     renderer.render(scene,camera);
   }
 
@@ -697,7 +740,22 @@
   function spark(pos,color){if(fieldFx)fieldFx.burst(pos,color,1,.3);}
   function ringFx(pos,color,to=5,life=.5){if(fieldFx)fieldFx.ring(pos,color,to,life);}
   function beam(a,b,color,life=.25){if(fieldFx)fieldFx.beam(a,b,color,life);}
-  function floatText(pos,text,color){if(effects.length>=24)return;const mesh=makeTextSprite(text,color,256,100);mesh.scale.set(1.55,.62,1);mesh.position.copy(pos);mesh.position.y=3.4;scene.add(mesh);effects.push({mesh,life:.72,max:.72,kind:'float',opacity:1});}
+  function floatText(pos,text,color){
+    if(!ui.vitalsLayer||effects.length>=32)return;const node=document.createElement('span');node.className='va-damage-number';node.textContent=text;node.style.color='#'+new THREE.Color(color).getHexString();ui.vitalsLayer.appendChild(node);effects.push({node,pos:pos.clone().setY(2.15),drift:rnd(-.55,.55),life:1.15,max:1.15,kind:'number'});
+  }
+  function updateVitals(){
+    if(!ui.vitalsLayer||!camera)return;vitalLive.clear();
+    function paint(key,pos,y,value,max,kind){
+      vitalLive.add(key);let node=vitalNodes.get(key);if(!node){node=document.createElement('div');node.className='va-vital '+kind;node.innerHTML='<b></b><span><i></i></span>';node._text=node.querySelector('b');node._fill=node.querySelector('i');vitalNodes.set(key,node);ui.vitalsLayer.appendChild(node);}
+      const v=Math.max(0,Math.ceil(value)),top=Math.max(1,Math.ceil(max)),label=`${v} / ${top}`;if(node._text.textContent!==label){node._text.textContent=label;node._fill.style.width=Math.min(100,v/top*100)+'%';node.classList.toggle('low',v/top<.3);node.setAttribute('aria-label',`HP ${label}`);}
+      hudPoint.copy(pos);hudPoint.y+=y;hudPoint.project(camera);node.hidden=hudPoint.z>1||hudPoint.z< -1||Math.abs(hudPoint.x)>1.08||Math.abs(hudPoint.y)>1.08;node.style.transform=`translate(${(hudPoint.x*.5+.5)*innerWidth}px,${(-hudPoint.y*.5+.5)*innerHeight}px) translate(-50%,-100%)`;
+    }
+    if(player)paint(player,player.pos,2.8,hp,maxHp,'self');
+    for(const b of bots)if(!b.dead)paint(b,b.group.position,4.15*b.group.scale.y,b.boss?bossHp:b.hp,b.maxHp,b.boss?'boss':'enemy');
+    for(const uid in peerActors){const a=peerActors[uid],st=parseArenaStatus((peers[uid]||{}).hp);if(st)paint(a,a.group.position,3.05,st.hp,100,'peer');}
+    for(const [key,node] of vitalNodes)if(!vitalLive.has(key)){node.remove();vitalNodes.delete(key);}
+  }
+
   function disposeTree(obj){obj.traverse&&obj.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{if(m.map)m.map.dispose();m.dispose();});}});}
 
   function feed(text,kind=''){
@@ -710,12 +768,12 @@
   }
   function updateHud(){
     if(!root)return;ui.coins.textContent=fmt(state.coins||0);ui.shopCoins.textContent=fmt(state.coins||0);ui.energyFill.style.width=(energy/ENERGY_MAX*100)+'%';ui.energy.classList.toggle('hot',energy>=5);ui.energyPower.textContent='×'+powerMult().toFixed(1);
-    ui.hpFill.style.width=(hp/maxHp*100)+'%';ui.hp.classList.toggle('low',hp/maxHp<.3);ui.hp.querySelector('b').textContent=maxShield?`HP ${Math.ceil(hp)} · 🛡${Math.ceil(shield)}`:`HP ${Math.ceil(hp)}`;
+    ui.hpFill.style.width=(hp/maxHp*100)+'%';ui.hp.classList.toggle('low',hp/maxHp<.3);ui.hp.querySelector('b').textContent=(maxShield||shield>0)?`HP ${Math.ceil(hp)} · 🛡${Math.ceil(shield)}`:`HP ${Math.ceil(hp)}`;
     const entries=Object.entries(cargo.reduce((a,ch)=>(a[ch]=(a[ch]||0)+1,a),{}));ui.bagList.innerHTML=entries.length?entries.map(([ch,n])=>`<span class="va-bag-letter">${ch}${n>1?`<small>×${n}</small>`:''}</span>`).join(''):'<span style="font-size:9px;color:#7795aa">ยังไม่มีอักษร</span>';
     root.querySelectorAll('[data-skill]').forEach(b=>b.classList.toggle('down',downed));root.querySelector('[data-skill="ult"]').classList.toggle('ready',energy>=5&&!downed);root.querySelector('[data-skill="ult"]').classList.toggle('locked',energy<5||downed);updateWord();updateBossHud();paintHome();
   }
   function updateCooldownUi(t){
-    root.querySelectorAll('[data-skill]').forEach(b=>{const k=b.dataset.skill,left=Math.max(0,cooldown[k]-t),total=SKILL_CD[k]*1000;b.classList.toggle('cool',left>0);b.style.setProperty('--cd',Math.round(left/total*100)+'%');b.querySelector('.cd').textContent=left>0?(left/1000).toFixed(left>950?0:1):'';});
+    root.querySelectorAll('[data-skill]').forEach(b=>{const k=b.dataset.skill,left=Math.max(0,cooldown[k]-t),total=skillSeconds(k)*1000;b.classList.toggle('cool',left>0);b.style.setProperty('--cd',Math.round(left/total*100)+'%');b.querySelector('.cd').textContent=left>0?(left/1000).toFixed(left>950?0:1):'';});
   }
   function pulseButton(k){const b=root.querySelector(`[data-skill="${k}"]`);if(b)b.animate([{transform:'scale(1)'},{transform:'scale(.84)'},{transform:'scale(1)'}],{duration:240});}
 
@@ -726,7 +784,7 @@
   function resize(){if(!renderer||!camera)return;const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
 
   function resetRound(){
-    bots=[];drops=[];shots=[];effects=[];respawns=[];bag=state.arenaHome.letters;cargo=state.arenaHome.cargo.slice();homeRoute=false;recentLetters=[];energy=0;kills=0;sessionWords=0;sessionCoins=0;cooldown={basic:0,arc:0,nova:0,ult:0};hp=maxHp;shield=maxShield;wordBusy=false;lastPetStrike=performance.now();lastHitAt=0;downed=false;downUntil=0;reviveHold=null;reviveSignal='-';reviveSeq=0;revivesGiven=0;chapter=state.arenaChapter||1;waveBase=0;bossPhase='wave';boss=null;bossEncounter='';bossMax=bossHp=bossContribution=0;bossWord='';bossWordSolved=false;bossVictoryAt=0;bossReward=0;onPeer._seen.clear();
+    bots=[];drops=[];shots=[];effects=[];respawns=[];bag=state.arenaHome.letters;cargo=state.arenaHome.cargo.slice();homeRoute=false;recentLetters=[];energy=0;kills=0;sessionWords=0;sessionCoins=0;cooldown=Object.fromEntries(Object.keys(SKILL_CD).map(k=>[k,0]));if(elements)elements.clear();hp=maxHp;shield=maxShield;wordBusy=false;lastPetStrike=performance.now();lastHitAt=0;downed=false;downUntil=0;reviveHold=null;reviveSignal='-';reviveSeq=0;revivesGiven=0;chapter=state.arenaChapter||1;waveBase=0;bossPhase='wave';boss=null;bossEncounter='';bossMax=bossHp=bossContribution=0;bossWord='';bossWordSolved=false;bossVictoryAt=0;bossReward=0;onPeer._seen.clear();
     player.pos.set(home.position.x+2,0,home.position.z-4);player.vel.set(0,0,0);if(petComp){petComp.group.position.set(-1.8,0,9);petComp.vel.set(0,0,0);}nextWord();for(let i=0;i<BOT_TARGET;i++)buildBot(chooseBotLetter(),false);updateHud();
   }
 
@@ -741,17 +799,17 @@
   }
 
   function stop(){
-    if(!running)return;running=false;paused=false;cancelAnimationFrame(raf);raf=0;pendingTimers.forEach(clearTimeout);pendingTimers.clear();persistHome();if(audioCtx){audioCtx.close();audioCtx=null;}if(fieldFx){fieldFx.dispose();fieldFx=null;}listeners.splice(0).forEach(fn=>{try{fn();}catch(e){}});keys.clear();joy={x:0,z:0,id:null};basicHeld=false;
+    if(!running)return;running=false;paused=false;cancelAnimationFrame(raf);raf=0;pendingTimers.forEach(clearTimeout);pendingTimers.clear();persistHome();if(audioCtx){audioCtx.close();audioCtx=null;}if(elements){elements.clear();elements=null;}if(fieldFx){fieldFx.dispose();fieldFx=null;}listeners.splice(0).forEach(fn=>{try{fn();}catch(e){}});keys.clear();joy={x:0,z:0,id:null};basicHeld=false;
     if(room){room.leave();room=null;}Object.keys(peerActors).forEach(removePeerActor);peers={};peerActors={};
     for(const s of shots){if(s.mesh.parent)scene.remove(s.mesh);disposeTree(s.mesh);}if(scene)disposeTree(scene);if(renderer){renderer.dispose();renderer.forceContextLoss&&renderer.forceContextLoss();renderer.setSize(2,2,false);}
-    if(root)root.remove();root=null;built=false;renderer=scene=camera=clock=null;bots=[];drops=[];shots=[];effects=[];petComp=null;player=null;home=null;
+    if(root)root.remove();vitalNodes.clear();vitalLive.clear();root=null;built=false;renderer=scene=camera=clock=null;bots=[];drops=[];shots=[];effects=[];petComp=null;player=null;home=null;
     saveState();if(typeof Music!=='undefined')Music.resumeBg();if(typeof renderDashboard==='function')renderDashboard();
     if(typeof toast==='function')toast(`🌀 กลับจาก Vocab Arena — สำเร็จ ${sessionWords} คำ · +${fmt(sessionCoins)} 🪙`);
   }
 
   window.VocabArena3D={start,stop,_t:{
     get running(){return running},get bots(){return bots},get drops(){return drops},get bag(){return bag},get target(){return target},get cargo(){return cargo},home:()=>home,bank:bankCargo,stats:()=>({draws:renderer.info.render.calls,triangles:renderer.info.render.triangles,textures:renderer.info.memory.textures,fx:fieldFx.stats()}),get energy(){return energy},
-    cast:castSkill,kill:(i=0)=>bots[i]&&hitBot(bots[i],9999),collect:(i=0)=>drops[i]&&collectDrop(drops[i]),complete:()=>{if(target){for(const ch of target.en)bag[ch]=(bag[ch]||0)+1;checkWord();}},
+    get slots(){return spellSlots.slice()},get cooldowns(){return {...cooldown}},elementStats:()=>elements.stats(),equip:equipSpell,spellbook:toggleSpellbook,health:()=>({hp,shield}),hero:()=>selectedHero?.id,skillSeconds,damage:damagePlayer,cast:castSkill,kill:(i=0)=>bots[i]&&hitBot(bots[i],9999),collect:(i=0)=>drops[i]&&collectDrop(drops[i]),complete:()=>{if(target){for(const ch of target.en)bag[ch]=(bag[ch]||0)+1;checkWord();}},
     buy:buyItem,player:()=>player,resize,down:downPlayer,recover:()=>recoverPlayer('เพื่อนช่วยชุบ'),boss:()=>({phase:bossPhase,chapter,encounter:bossEncounter,hp:bossHp,max:bossMax,word:bossWord,contribution:bossContribution}),triggerBoss:()=>{if(bossPhase==='wave')startBossAsLeader();},wire:applyLeaderWire,peer:onPeer,gone:onPeerGone,party:()=>({leader:leaderId(),members:partyUids(),online:!!(room&&room.online)}),
     /* ทดสอบแยกเฟสเมื่อ WebView เครื่องใดสร้างฉากไม่ผ่าน — ไม่ทำงานเองในเกมจริง */
     stage(part){
@@ -760,6 +818,6 @@
       if(part==='reset'){if(!built){if(!root){ensureState();createDom();}initThree();}resetRound();return 'reset';}
       return 'unknown';
     },
-    frame:(ms=16)=>{const t=performance.now();updatePlayer(ms/1000,t);updatePet(ms/1000,t);updateBots(ms/1000,t);updateShots(ms/1000,t);updateDrops(ms/1000,t);updateHome(ms/1000,t);updateEffects(ms/1000);fieldFx.tick(ms/1000);cameraTick(ms/1000);renderer.render(scene,camera);}
+    frame:(ms=16)=>{const t=performance.now();updatePlayer(ms/1000,t);updatePet(ms/1000,t);elements.tick(ms/1000);updateBots(ms/1000,t);updateShots(ms/1000,t);updateDrops(ms/1000,t);updateHome(ms/1000,t);updateEffects(ms/1000);fieldFx.tick(ms/1000);cameraTick(ms/1000);updateVitals();renderer.render(scene,camera);}
   }};
 })();

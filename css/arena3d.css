@@ -235,3 +235,34 @@
  #va-root .va-feed{top:111px}#va-root .va-hp{width:130px;left:115px}
 }
 @media(max-width:720px){#va-root .va-top{grid-template-columns:47px 73px minmax(132px,1fr) 78px 74px;gap:4px}#va-root .va-online{font-size:6px}#va-root .va-word-th{font-size:7px}#va-root .va-avatar-icon{font-size:19px}#va-root .va-player-card{grid-template-columns:20px 1fr}#va-root .va-home-nav{width:175px;bottom:46px}#va-root .va-home-nav span{font-size:8px}#va-root .va-bag-label{font-size:7px}#va-root .va-bag-letter{width:17px;height:20px;font-size:10px}}
+/* ==== 🔥🌪 Round 1381 — two equipped spells and the elemental library ==== */
+#va-root .va-skill[data-slot]{background:radial-gradient(circle at 32% 25%,#f1fcff,var(--element) 32%,#17244b 85%);border-color:var(--element)}
+#va-root .va-skill[data-slot] .key{font-size:clamp(6px,.9vw,9px);bottom:5px;white-space:nowrap}
+.va-spell-toggle{position:absolute;right:0;bottom:calc(clamp(83px,11vw,110px) + clamp(57px,7.6vw,75px) + 8px);width:154px;height:30px;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;pointer-events:auto;color:#fae7b5!important}
+.va-spell-toggle small{font-size:9px;opacity:.7;margin-left:6px;border:1px solid #86afc5;border-radius:4px;padding:0 4px}
+#va-root .va-spell-panel{width:min(900px,96vw);max-height:94vh;padding:clamp(8px,2vh,16px);display:flex;flex-direction:column;gap:8px}
+.va-spell-panel .va-panel-head{margin:0}.va-spell-panel .va-close{margin-left:auto;flex-shrink:0}
+.va-slot-tabs{display:flex;gap:8px}.va-slot-tabs button{flex:1;border:1px solid #6f8fab;background:#12283e;border-radius:9px;padding:6px;font-weight:800;font-size:12px;cursor:pointer}
+.va-slot-tabs button.selected{border-color:#ffd28e;background:#4a3a46;color:#ffe7af!important;box-shadow:inset 0 0 12px #ffaa4426}
+.va-spell-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+.va-spell-card{position:relative;min-width:0;height:clamp(84px,25vh,128px);padding:7px 5px;border:1px solid #45627c;border-radius:11px;background:linear-gradient(155deg,#253b56,#10182f);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer}
+.va-spell-card.equipped{border-color:var(--element);box-shadow:inset 0 -2px var(--element)}
+.va-element-icon{width:39px;height:39px;display:grid;place-items:center;border-radius:50%;font-size:27px;background:radial-gradient(circle at 34% 25%,#ffffffad,var(--element) 15%,#171c30 78%);box-shadow:0 0 10px #0005}
+.va-spell-card b{font-size:13px;line-height:1.1;color:#f3f8ff}.va-spell-card small{font-size:9px;color:#c8d9e8;line-height:1.2;text-align:center}.va-spell-card em{font-size:9px;font-style:normal;color:var(--element);line-height:1.1}
+.va-spell-card:hover{background:linear-gradient(150deg,#345775,#182039)}.va-spell-card:active{transform:scale(.97)}
+.va-spell-footer{font-size:10px;line-height:1.2;color:#a9c6db;text-align:center}
+#va-root .va-feed{max-height:80px;overflow:hidden}
+@media(max-height:480px){.va-spell-toggle{height:27px;width:132px;font-size:11px}#va-root .va-spell-panel{gap:6px}.va-spell-panel .va-panel-title{font-size:18px}.va-spell-panel .va-panel-sub{font-size:9px}.va-slot-tabs button{padding:4px;font-size:11px}.va-spell-card{gap:3px;padding:5px 3px}.va-element-icon{width:29px;height:29px;font-size:23px}.va-spell-card b{font-size:11px}.va-spell-card small{font-size:8px}.va-spell-card em{font-size:8px}.va-spell-footer{font-size:8px}}
+@media(max-width:720px){.va-spell-grid{gap:4px}.va-spell-panel .va-panel-sub{font-size:8px}.va-spell-card small{font-size:7px}.va-spell-card b{font-size:10px}.va-spell-toggle{width:125px}}
+/* Round 1381 — projected HP and evaporating combat numbers stay crisp at small hero scale. */
+.va-vitals-layer{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.va-vital{position:absolute;left:0;top:0;width:49px;pointer-events:none;text-align:center;will-change:transform}
+.va-vital b{display:block;color:#f4fbff;font-size:9px;line-height:11px;font-weight:900;text-shadow:0 1px 2px #020615,1px 0 2px #020615,-1px 0 2px #020615}
+.va-vital>span{height:4px;display:block;border:1px solid #08182b;border-radius:3px;background:#101729d9;overflow:hidden}
+.va-vital i{height:100%;display:block;background:#6cebb0;border-radius:2px}.va-vital.self i{background:#57dfff}.va-vital.peer i{background:#ba8aff}.va-vital.boss{width:69px}.va-vital.boss i{background:#ffcb5d}.va-vital.low i{background:#ff627d}
+.va-vital.self b::before{content:'HP ';color:#7eeaff}
+.va-damage-number{position:absolute;left:0;top:0;white-space:nowrap;font-size:16px;font-weight:900;line-height:1;pointer-events:none;text-shadow:0 2px 2px #0a1020,0 0 6px #091322;will-change:transform,opacity;z-index:3}
+@media(max-height:480px){.va-vital{width:43px}.va-vital b{font-size:8px;line-height:10px}.va-damage-number{font-size:13px}}
+.va-vital b{white-space:nowrap}.va-vital.self{width:60px}
+
+#va-root .va-feed{max-height:56px}

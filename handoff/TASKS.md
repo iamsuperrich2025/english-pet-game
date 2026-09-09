@@ -11,6 +11,12 @@
 > ประวัติ Frontline 1372–1373: `handoff/archive/frontline-1372-1373.md`
 
 ### 📌 สรุปสถานะล่าสุด
+
+- **รอบ 1381 · Arena ธาตุ + เลือกฮีโร่:** พลังธาตุใหม่ 8 ชนิด/คลัง 10 พลัง, HP เหนือหัวและดาเมจลอยจาง; หน้าเลือกชาย4หญิง4 ภาพเจนเต็มตัว WebP, ผม/ผ้าคลุม/ธาตุขยับเฉพาะภาพที่เลือก; คง admin-only
+- ฮีโร่มีพลังเริ่มต้นต่างกัน+คูลดาวน์ธาตุประจำตัวลด20%; preload ไฟล์สนามระหว่างเลือก, cancel/retry/ลดแอนิเมชัน/cleanup; ตัวในสนามยังเล็กและเบา; รายละเอียด+prompt/asset bytes: docs/ARENA_FIELD.md, docs/ARENA_HERO_ASSETS.json
+- Source/dist ผ่าน Arena26+ธาตุ50+ฮีโร่31 checks, HomeV2, syntax/diff, build9,490files614.6MiB และ web validator; ไม่มี browser error; pixel QA ใบหน้า/เท้าคงที่ ผม/ผ้าคลุม/ไฟขยับ; ไม่เขียนข้อมูลทดสอบ production
+- พร้อมส่งผ่าน COMMIT_DEPLOY.bat ตาม FILE manifest; ยังไม่ยืนยัน deploy รอบ1381. คงไฟล์เปลี่ยนค้างนอก scope รวม docs/PROJECT_MAP.md+CURRENT_STATE.md ไว้ในเครื่อง (มีงาน Frontline อื่นปนอยู่); mapping Arena อัปเดตในเครื่องและ docs/ARENA_FIELD.md มี routing ครบ
+
 - **รอบ 1380 · Arena Field (โลกผจญภัยเฉพาะแอดมิน):** ตัวละคร articulated ขนาดเล็ก/กดโจมตีค้าง + กล้องกว้าง + pooled เวท/สายฟ้า/โดม; `arena-field-visuals.js` ใหม่ โหลดก่อน `arena3d.js`; ไม่มี raster/GLB/audio asset ใหม่
 - เก็บอักษรได้ 6 ตัว → ขนกลับวงบ้านเพื่อฝาก/ประกอบคำ, `state.arenaHome` จำคลัง+ของที่ขนข้ามเข้าเกม; ล้มทำของตกแต่คลังไม่หาย; มี H กลับบ้าน/บ้านเพื่อน และคง boss/revive/รางวัลเดิม; guard isAdmin ทั้ง entry+engine
 - source browser 24 / dist browser 26 checks ผ่าน (touch+hold/เซฟ/ซ้ำ/ลงบ้าน/low-power/812×375,667×320,1366×768), Home V2 + syntax + build9,470files612.9MiB + validator ผ่าน; สกิลใหญ่ old/new peak402/138 draws (ไม่ใช่ FPS มือถือจริง); รายละเอียด `docs/ARENA_FIELD.md`

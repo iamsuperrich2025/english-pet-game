@@ -7226,6 +7226,7 @@ async function loadAdv3d(){
    ============================================================ */
 async function loadVocabArena3d(){
   await loadScriptOnce('js/arena-field-visuals.js');
+  await loadScriptOnce('js/arena-elements.js');
   await loadScriptOnce('js/arena3d.js');
 }
 /* ============================================================
@@ -7272,9 +7273,17 @@ async function enterAdventure3D(){
   advLoading = Date.now();
   toast(map==='heli'?'🚁 กำลังเปิดเมืองเฮลิคอปเตอร์...':'🌀 กำลังเปิด Vocab Arena...');
   try{
-    await loadScriptOnce('js/vendor/three.min.js');
-    if(map==='heli') await loadAdv3d();
-    else await loadVocabArena3d();
+    if(map==='heli'){
+      await loadScriptOnce('js/vendor/three.min.js');await loadAdv3d();
+    }else{
+      // Round 1381: show selection first; load the arena scripts while reading hero details.
+      if(!document.getElementById('arena-heroes-css'))await new Promise((resolve,reject)=>{const link=document.createElement('link');link.id='arena-heroes-css';link.rel='stylesheet';link.href='css/arena-heroes.css';link.onload=resolve;link.onerror=()=>{link.remove();reject(new Error('Hero selection styles unavailable'));};document.head.appendChild(link);});
+      await loadScriptOnce('js/arena-elements.js');
+      await loadScriptOnce('js/arena-portrait.js');
+      await loadScriptOnce('js/arena-heroes.js');
+      const hero=await ArenaHeroes.choose(async()=>{await loadScriptOnce('js/vendor/three.min.js');await loadVocabArena3d();});
+      if(!hero){advLoading=false;return worldEntryStopped('ยกเลิกการเลือกตัวละครก่อนเกมเริ่ม');}
+    }
   }catch(e){
     advLoading = false;
     return worldEntryStopped('โหลดไฟล์โลกผจญภัยไม่สำเร็จ อาจเกิดจากเน็ตหรือหน่วยความจำเครื่อง', e);

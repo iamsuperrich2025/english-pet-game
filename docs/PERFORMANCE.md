@@ -92,3 +92,10 @@ Do not implement these without a scoped task, baseline measurements, and visual 
 
 - Static arena meshes merge once; runtime spells reuse 640 particles/48 meshes (low-power 256/28), floating text cap 24. Original DPR 1.45 and no-shadow policy remain. No new image/model/audio downloads.
 - Desktop Edge, 812x375, eight enemies: old/new ultimate peak 402/138 calls; idle 127/136; peak triangles 10,394/17,062. This measures rendering work, not physical-device FPS. More triangles buy articulated figures, a wider field and spell domes while burst draw calls fall. See `docs/ARENA_FIELD.md`.
+
+### Arena elements and vitals (round 1381)
+
+- Eight new spell forms reuse the 640-point / 48-mesh pool (256/28 low-power); gameplay zones cap at 12. Shapes allocate once at scene creation. No new raster, model or audio downloads and no DPR/shadow change.
+- Projected HP bars replace enemy/peer 3D bar draw calls. Damage/heal numbers use bounded DOM labels (32 maximum), replacing per-hit CanvasTexture/Sprite allocation. Individual spell screenshot samples: 118–136 calls / 18–22k triangles at 812x375, desktop Edge.
+
+- Round 1381 hero picker: 8 alpha WebP portraits (768x1152, total 1,578,258 bytes) plus small 160x240 thumbnails; only selected full portrait is requested. One 30 FPS shader/18-particle overlay, capped DPR1.5; frame loop stops on hidden/reduced-motion/close. Tiny battle actors remain procedural. `tools/test_arena_heroes.cjs` covers image decode, responsive layout, pinned face/feet and cleanup.
