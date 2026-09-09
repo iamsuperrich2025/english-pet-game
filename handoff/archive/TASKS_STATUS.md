@@ -5858,3 +5858,12 @@
 - เทียบโค้ด6bb1b6f5: position/quaternion/ขอบสนาม/ขนาดตัวละครพิกเซลตรงกันบน1015/812/1366 ทั้ง3map; source maps82/field26/grimoire209, dist maps82, build9,517ไฟล์616.6MiB/validator/assets306/undefined0/backtick0/syntax/diffผ่าน; ตรวจภาพกลางและขอบเวทีแล้ว
 - ภาพเทียบ work/arena-camera-compare-1389; รายละเอียด docs/ARENA_FIELD.md/PERFORMANCE.md/PROJECT_MAP.md/CURRENT_STATE.md; ผู้ใช้ยืนยัน [SUCCESS] และตรวจแล้ว commit009a0887/handoff26f7684e, HEAD=origin/main; เว็บจริง version2026-09-10.1242 ตรงเครื่อง — commit/deploy/push1389สำเร็จ
 
+
+
+## ⏬ ย้ายเมื่อ 2026-09-10 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1390 · แก้ไฟเป็นแท่งซ้ำ:** เปลี่ยน shader/การวางเปลวใน js/arena-field-visuals.js เป็นเปลวแตกตัว8กลุ่ม (low5) พร้อมควัน/พื้นร้อน/สะเก็ด/คลื่นกระแทก; ส่ง phase+fade แยกทุก draw แก้ opacity เดิมไม่เข้า shader; ไฟ MEGA ใช้คลื่นไฟแทนโดมฟ้า
+- ใช้ pool640/48 และ low256/28 เดิม; lazy shared shader/forceSinglePass ไม่มีภาพหรือวิดีโอ runtime เพิ่ม; ordinary fire peak120draws/sustain118/กลับ105/18textures; คงดาเมจและ5ครั้งMEGA (js/arena-elements.js เปลี่ยนเฉพาะทางเรียกภาพ pulse)
+- Source/dist fire31 ผ่าน; crystals53/grimoire209 ผ่าน; build9,517ไฟล์616.6MiB/validator/assets306/undefined0/backtick0/syntax/diffผ่าน; ตรวจรูปทุกช่วงบน3map/มือถือและคลิปจริง1280×720 10.72วินาที 1.50MB ที่ work/arena-fire-1390
+- docs/ARENA_FIELD.md/PERFORMANCE.md/PROJECT_MAP.md + tools/test_arena_fire.cjs; เตรียม SHIP7ไฟล์และเปิด COMMIT_DEPLOY.bat รอบ1390; ยังไม่ยืนยัน commit/deploy รอบนี้
+

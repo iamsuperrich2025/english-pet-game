@@ -27,11 +27,6 @@
 - tools/test_arena_audio.cjs ผ่านsource39+dist39 (desktop/mobile touch, missing/corrupt audio, peer revive); grimoire209/crystals53; build9,529ไฟล์616.6MiB+validator/assets306/undefined0/backtick0/syntax/diffผ่าน; native Android/TWA ยังต้องตรวจบนเครื่องจริง
 - ผู้ใช้อนุญาตและเปิด COMMIT_DEPLOY1ครั้ง; commit790cadb4/handoff8341470c+pushสำเร็จ; live2026-09-10.1244 ยืนยันversion/loader/engine200 + managerและMP3ทั้ง11ตรงsourceทุกbyte; แอดมินตรวจได้ที่ vocabworld.web.app/index_classic.html
 
-- **รอบ 1390 · แก้ไฟเป็นแท่งซ้ำ:** เปลี่ยน shader/การวางเปลวใน js/arena-field-visuals.js เป็นเปลวแตกตัว8กลุ่ม (low5) พร้อมควัน/พื้นร้อน/สะเก็ด/คลื่นกระแทก; ส่ง phase+fade แยกทุก draw แก้ opacity เดิมไม่เข้า shader; ไฟ MEGA ใช้คลื่นไฟแทนโดมฟ้า
-- ใช้ pool640/48 และ low256/28 เดิม; lazy shared shader/forceSinglePass ไม่มีภาพหรือวิดีโอ runtime เพิ่ม; ordinary fire peak120draws/sustain118/กลับ105/18textures; คงดาเมจและ5ครั้งMEGA (js/arena-elements.js เปลี่ยนเฉพาะทางเรียกภาพ pulse)
-- Source/dist fire31 ผ่าน; crystals53/grimoire209 ผ่าน; build9,517ไฟล์616.6MiB/validator/assets306/undefined0/backtick0/syntax/diffผ่าน; ตรวจรูปทุกช่วงบน3map/มือถือและคลิปจริง1280×720 10.72วินาที 1.50MB ที่ work/arena-fire-1390
-- docs/ARENA_FIELD.md/PERFORMANCE.md/PROJECT_MAP.md + tools/test_arena_fire.cjs; เตรียม SHIP7ไฟล์และเปิด COMMIT_DEPLOY.bat รอบ1390; ยังไม่ยืนยัน commit/deploy รอบนี้
-
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
