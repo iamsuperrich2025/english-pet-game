@@ -1,10 +1,10 @@
 "use strict";
-/* ==== Round 1387 — three illustrated arenas; one selected plate, grouped four-seat rooms ==== */
+/* ==== Rounds 1387/1389 — three world-ground arenas; one selected texture, grouped four-seat rooms ==== */
 (function(){
   const maps=[
-    {id:'sky',name:'Sky Citadel',thai:'ปราสาทลอยฟ้า',desc:'ลานหินอ่อนเหนือเมฆ · คริสตัลสีฟ้า',accent:'#75eaff',light:0xe5f6ff,ambient:0x91b7d9,art:'img/arena-maps/sky.avif',fallback:'img/arena-maps/sky.webp',thumb:'img/arena-maps/sky-thumb.webp',rx:.345,ry:.30,cy:.51},
-    {id:'crystal',name:'Crystal Hollow',thai:'ถ้ำคริสตัล',desc:'แสงอัญมณีม่วง · น้ำตกในถ้ำเวทมนตร์',accent:'#c59aff',light:0xb9b6ff,ambient:0x69729f,art:'img/arena-maps/crystal.avif',fallback:'img/arena-maps/crystal.webp',thumb:'img/arena-maps/crystal-thumb.webp',rx:.34,ry:.30,cy:.50},
-    {id:'forest',name:'Moonleaf Ruins',thai:'ป่าโบราณ',desc:'ซากวิหารกลางป่า · ผีเสื้อและแสงจันทร์',accent:'#87f2ce',light:0xffefd0,ambient:0x90bba3,art:'img/arena-maps/forest.avif',fallback:'img/arena-maps/forest.webp',thumb:'img/arena-maps/forest-thumb.webp',rx:.345,ry:.31,cy:.54}
+    {id:'sky',name:'Sky Citadel',thai:'ปราสาทลอยฟ้า',desc:'ลานหินอ่อนเหนือเมฆ · คริสตัลสีฟ้า',accent:'#75eaff',light:0xe5f6ff,ambient:0x91b7d9,art:'img/arena-maps/sky.avif',fallback:'img/arena-maps/sky.webp',thumb:'img/arena-maps/sky-thumb.webp'},
+    {id:'crystal',name:'Crystal Hollow',thai:'ถ้ำคริสตัล',desc:'แสงอัญมณีม่วง · น้ำตกในถ้ำเวทมนตร์',accent:'#c59aff',light:0xb9b6ff,ambient:0x69729f,art:'img/arena-maps/crystal.avif',fallback:'img/arena-maps/crystal.webp',thumb:'img/arena-maps/crystal-thumb.webp'},
+    {id:'forest',name:'Moonleaf Ruins',thai:'ป่าโบราณ',desc:'ซากวิหารกลางป่า · ผีเสื้อและแสงจันทร์',accent:'#87f2ce',light:0xffefd0,ambient:0x90bba3,art:'img/arena-maps/forest.avif',fallback:'img/arena-maps/forest.webp',thumb:'img/arena-maps/forest-thumb.webp'}
   ];
   const FIRST=21,GROUPS=5,PER_MAP=4;let selectedImage=null,pending=null,picker=null;
   const get=id=>maps.find(m=>m.id===id)||maps[0];
@@ -37,18 +37,31 @@
   }
   function decorate(root,id){
     const map=get(id);root.dataset.map=map.id;root.style.setProperty('--map-accent',map.accent);
-    const art=document.createElement('img');art.className='va-map-art';art.alt='';art.draggable=false;art.src=selectedImage?.id===map.id?selectedImage.image.src:map.art;
-    art.onerror=()=>{art.onerror=null;art.src=map.fallback;};root.prepend(art);
-    const ambience=document.createElement('div');ambience.className='va-map-ambience';ambience.setAttribute('aria-hidden','true');for(let i=0;i<12;i++){const p=document.createElement('i');p.style.cssText='--i:'+i+';left:'+(4+(i*23)%92)+'%;top:'+(12+(i*37)%76)+'%;';ambience.append(p);}art.after(ambience);
-  }
-  function camera(camera,id,w,h){
-    const m=get(id),elevation=.68,r=30,halfW=r/(2*m.rx),halfH=r*elevation/(2*m.ry);
-    camera.left=-halfW;camera.right=halfW;camera.top=halfH*2*m.cy;camera.bottom=-halfH*2*(1-m.cy);
-    camera.position.set(0,68,Math.sqrt(10000-68*68));camera.lookAt(0,0,0);camera.updateProjectionMatrix();camera.updateMatrixWorld();
+    const ambience=document.createElement('div');ambience.className='va-map-ambience';ambience.setAttribute('aria-hidden','true');for(let i=0;i<12;i++){const p=document.createElement('i');p.style.cssText='--i:'+i+';left:'+(4+(i*23)%92)+'%;top:'+(12+(i*37)%76)+'%;';ambience.append(p);}root.prepend(ambience);
   }
   function scenery(scene,id){
-    const m=get(id);scene.background=null;scene.fog=null;
+    const m=get(id),back=id==='sky'?0xb4dff4:id==='crystal'?0x151433:0x18352c;
+    scene.background=new THREE.Color(back);scene.fog=new THREE.FogExp2(back,.004);
+    const texture=selectedImage?.id===id?new THREE.Texture(selectedImage.image):new THREE.TextureLoader().load(m.art);
+    if('colorSpace' in texture&&THREE.SRGBColorSpace)texture.colorSpace=THREE.SRGBColorSpace;else texture.encoding=THREE.sRGBEncoding;
+    texture.needsUpdate=true;texture.anisotropy=2;
+    const size=id==='sky'?96:90,centerY=id==='sky'?.46:.478;
+    // Repeat only the outer terrain strip beyond the painted map; keep the arena itself unchanged.
+    texture.repeat.set(2.6,2.6);texture.offset.set(-.8,-.8);
+    const floorMat=new THREE.MeshBasicMaterial({map:texture,toneMapped:false});
+    floorMat.onBeforeCompile=shader=>{const sample=`vec2 outside=max(max(-vUv,vUv-1.0),0.0);
+      vec2 border=0.1-abs(mod(outside,0.2)-0.1);
+      vec2 terrainUv=mix(vUv,border,step(vUv,vec2(0.0)));
+      terrainUv=mix(terrainUv,1.0-border,step(vec2(1.0),vUv));
+      vec4 sampledDiffuseColor=texture2D(map,terrainUv);
+      sampledDiffuseColor.rgb*=1.0-${id==='sky'?'0.08':'0.35'}*smoothstep(0.0,0.3,max(outside.x,outside.y));`;
+      shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>',THREE.ShaderChunk.map_fragment.replace('vec4 sampledDiffuseColor = texture2D( map, vUv );',sample));};
+    const floor=new THREE.Mesh(new THREE.PlaneGeometry(size*2.6,size*2.6),floorMat);floor.name='arena-ground';floor.rotation.x=-Math.PI/2;floor.position.set(0,-.025,(.5-centerY)*size);scene.add(floor);
     scene.add(new THREE.HemisphereLight(m.light,m.ambient,.7));const sun=new THREE.DirectionalLight(m.light,1.0);sun.position.set(-15,30,20);scene.add(sun);
+    // A few instanced perimeter crystals give depth while the detailed terrain stays one draw.
+    const stone=new THREE.MeshStandardMaterial({color:new THREE.Color(id==='sky'?0xe1e6e4:id==='crystal'?0x33345b:0x7b8e78).convertSRGBToLinear(),roughness:.82}),gold=new THREE.MeshStandardMaterial({color:new THREE.Color(id==='crystal'?0x77628e:0xb8a46d).convertSRGBToLinear(),roughness:.6});
+    const shaft=new THREE.InstancedMesh(new THREE.CylinderGeometry(.72,.94,3.6,8),stone,8),caps=new THREE.InstancedMesh(new THREE.CylinderGeometry(1.12,1.12,.32,8),gold,16),gems=new THREE.InstancedMesh(new THREE.OctahedronGeometry(.85,0),new THREE.MeshStandardMaterial({color:new THREE.Color(m.accent).convertSRGBToLinear(),emissive:new THREE.Color(m.accent).convertSRGBToLinear(),emissiveIntensity:.22,roughness:.22}),8),dummy=new THREE.Object3D();
+    for(let i=0;i<8;i++){const a=i/8*Math.PI*2+.2,x=Math.cos(a)*32.8,z=Math.sin(a)*32.8;dummy.position.set(x,1.8,z);dummy.scale.set(1,1,1);dummy.updateMatrix();shaft.setMatrixAt(i,dummy.matrix);for(let j=0;j<2;j++){dummy.position.y=j?3.65:.15;dummy.updateMatrix();caps.setMatrixAt(i*2+j,dummy.matrix);}dummy.position.y=4.75;dummy.scale.set(1,1.6,1);dummy.updateMatrix();gems.setMatrixAt(i,dummy.matrix);}scene.add(shaft,caps,gems);
     const nodes=[],mat=new THREE.MeshBasicMaterial({color:0x3b6788,toneMapped:false}),baseGeo=new THREE.CylinderGeometry(1.15,1.5,.7,12);
     for(let i=0;i<6;i++){const a=i/6*Math.PI*2+.25,pos=new THREE.Vector3(Math.sin(a)*22.8,0,Math.cos(a)*22.8),base=new THREE.Mesh(baseGeo,mat);base.position.copy(pos);base.position.y=.3;scene.add(base);nodes.push({pos,remaining:0,drop:null});}
     return nodes;
@@ -91,5 +104,5 @@
       busy=true;paint();play.textContent='กำลังเตรียมแผนที่…';try{await prepare(choice);const a=await inspect(choice);if(closed)return;snapshot=a;if(a.full){busy=false;paint();note.textContent='แผนที่เต็มระหว่างเตรียม · เลือกแผนที่ที่ยังว่าง';play.textContent='เข้าสู่แผนที่ →';return;}state.arenaMap=choice;if(typeof saveState==='function')saveState();close(choice);}catch(err){if(closed)return;busy=false;play.textContent='ลองโหลดอีกครั้ง';note.textContent='โหลดฉากไม่สำเร็จ · กดเพื่อลองใหม่';paint();}});
     document.addEventListener('keydown',keys);root.querySelector('[data-close]').focus();paint();refresh();timer=setInterval(refresh,5000);return promise;
   }
-  window.ArenaMaps={maps,get,prepare,choose,decorate,camera,scenery,slime,actor,house,crystal,inspect,roomOptions,availability,countData,FIRST,GROUPS,PER_MAP};
+  window.ArenaMaps={maps,get,prepare,choose,decorate,scenery,slime,actor,house,crystal,inspect,roomOptions,availability,countData,FIRST,GROUPS,PER_MAP};
 })();

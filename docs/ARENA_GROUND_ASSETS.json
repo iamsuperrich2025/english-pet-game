@@ -1,0 +1,115 @@
+{
+  "round": 1389,
+  "created": "2026-09-10",
+  "generator": "OpenAI imagegen",
+  "supersedes": "Round-1387 full map plates and thumbnails in docs/ARENA_MAP_ASSETS.json; home.webp remains unchanged.",
+  "intent": "User requested the original oblique following camera and lightweight fantasy arenas. Generated overhead images are world-ground textures, never screen-fixed backgrounds.",
+  "sourceRoot": "C:/Users/rober/.codex/generated_images/01a0862e-4a6b-7743-85f8-4a54c624140b/",
+  "sources": [
+    {
+      "id": "sky",
+      "file": "exec-f69025f3-fc16-421f-817d-1059ab801f78.png",
+      "prompt": "Create a production game GROUND TEXTURE, square 1536x1536. Exact orthographic overhead view, camera looking straight down 90 degrees, like a beautiful RPG battlemat. All circles must be perfect circles, never ellipses. It will be laid flat on a real 3D ground plane and viewed through a following perspective camera, so do not bake any oblique camera perspective. One circular playable arena centered exactly at image center, outer arena ring diameter exactly 50 percent of image width. The other 50 percent is generous surrounding terrain extending to every edge. Arena interior is completely flat, clear, traversable and uncluttered, beautiful fine stone tiles and a subtle elegant eight-point arcane star inlaid in the center. Avoid raised objects inside the circular playable arena. Surroundings can be richly ornamented but viewed strictly from overhead with roofs and tops only, no visible side faces. Stylized polished fantasy MMORPG environment art, luminous jewel colors, delicate detail, attractive clear readable shapes, gentle shadows. No characters, monsters, houses, words, letters, captions, numbers, UI, HUD, health bars, interface, watermark, grid overlay, or photographic blur. Ground texture only. Theme SKY CITADEL: pure ivory white marble circular floor, fine golden inlaid rings and blue sapphire motifs. Outside the centered arena, a broad marble terrace with elegant blue-and-gold geometric paving, small ivory balustrade tops, sapphire crystal clusters seen from above, tiny green garden beds, and soft blue-white clouds around distant terrace corners. White/azure/gold palette, heavenly clean sunlight. The entire arena floor remains readable and spacious. Cloudy blue edges.",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceAlpha": false,
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "avifBytes": 217521,
+      "webpBytes": 326872,
+      "thumbBytes": 23766,
+      "candidate1200Bytes": 257581,
+      "planeCalibration": {
+        "paintedSize": 96,
+        "paintedCenterY": 0.46
+      }
+    },
+    {
+      "id": "crystal",
+      "file": "exec-243f50f2-1440-4fd6-a688-3879ad77e9d5.png",
+      "prompt": "Create a production game GROUND TEXTURE, square 1536x1536. Exact orthographic overhead view, camera looking straight down 90 degrees, like a beautiful RPG battlemat. All circles must be perfect circles, never ellipses. It will be laid flat on a real 3D ground plane and viewed through a following perspective camera, so do not bake any oblique camera perspective. One circular playable arena centered exactly at image center, outer arena ring diameter exactly 50 percent of image width. The other 50 percent is generous surrounding terrain extending to every edge. Arena interior is completely flat, clear, traversable and uncluttered, beautiful fine stone tiles and a subtle elegant eight-point arcane star inlaid in the center. Avoid raised objects inside the circular playable arena. Surroundings can be richly ornamented but viewed strictly from overhead with roofs and tops only, no visible side faces. Stylized polished fantasy MMORPG environment art, luminous jewel colors, delicate detail, attractive clear readable shapes, gentle shadows. No characters, monsters, houses, words, letters, captions, numbers, UI, HUD, health bars, interface, watermark, grid overlay, or photographic blur. Ground texture only. Theme CRYSTAL HOLLOW: circular dark indigo stone arena with luminous but subtle lavender rune inlays and violet amethyst mosaic star. Outside the centered arena, a broad cavern stone terrace, violet/blue crystal clusters seen from above, tiny warm golden lantern tops, turquoise underground streams, stone pathways among dark mineral rock. Saturated elegant midnight purple and sapphire, bright amethyst accents. Dark indigo natural rock and gentle purple mist at image edges. Flat floor, NO sky or horizon.",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceAlpha": false,
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "avifBytes": 245070,
+      "webpBytes": 356726,
+      "thumbBytes": 22656,
+      "candidate1200Bytes": 292033,
+      "planeCalibration": {
+        "paintedSize": 90,
+        "paintedCenterY": 0.478
+      }
+    },
+    {
+      "id": "forest",
+      "file": "exec-1dc78eb2-ed8d-4c0a-bb44-9c2457fa9888.png",
+      "prompt": "Create a production game GROUND TEXTURE, square 1536x1536. Exact orthographic overhead view, camera looking straight down 90 degrees, like a beautiful RPG battlemat. All circles must be perfect circles, never ellipses. It will be laid flat on a real 3D ground plane and viewed through a following perspective camera, so do not bake any oblique camera perspective. One circular playable arena centered exactly at image center, outer arena ring diameter exactly 50 percent of image width. The other 50 percent is generous surrounding terrain extending to every edge. Arena interior is completely flat, clear, traversable and uncluttered, beautiful fine stone tiles and a subtle elegant eight-point arcane star inlaid in the center. Avoid raised objects inside the circular playable arena. Surroundings can be richly ornamented but viewed strictly from overhead with roofs and tops only, no visible side faces. Stylized polished fantasy MMORPG environment art, luminous jewel colors, delicate detail, attractive clear readable shapes, gentle shadows. No characters, monsters, houses, words, letters, captions, numbers, UI, HUD, health bars, interface, watermark, grid overlay, or photographic blur. Ground texture only. Theme MOONLEAF RUINS: circular weathered pale gray-green stone arena, subtle turquoise and gold floral star inlay, moss only at joints and outer edge. Outside the centered arena, generous dense enchanted woodland surroundings, ancient stone paths and ruined wall tops, lush green canopy viewed from overhead, small white and blue flowers, turquoise streams and tiny pools, glowing moonstone details. Fresh emerald/cyan/cream palette, dappled soft sun, magical welcoming forest. The interior stone arena is clear and bright. Dense vegetation at image edges.",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "sourceAlpha": false,
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "avifBytes": 274132,
+      "webpBytes": 431698,
+      "thumbBytes": 29032,
+      "candidate1200Bytes": 323917,
+      "planeCalibration": {
+        "paintedSize": 90,
+        "paintedCenterY": 0.478
+      }
+    }
+  ],
+  "encoding": {
+    "avif": {
+      "quality": 65,
+      "effort": 6,
+      "chromaSubsampling": "4:4:4"
+    },
+    "webp": {
+      "quality": 85
+    },
+    "thumb": {
+      "dimensions": [
+        384,
+        216
+      ],
+      "fit": "cover",
+      "quality": 78
+    },
+    "alpha": false
+  },
+  "validation": "Decoded formats/dimensions/alpha/bytes verified with Sharp. Enlarged source-detail crops and real 1015x481 / 812x375 / 1366x768 rendered comparisons reviewed against 1200 candidates; selected 1024 retains readable floor detail with 15-16% smaller AVIF and 27% fewer pixels. No PNG enters runtime.",
+  "composition": "Prompts requested a centered arena occupying 50% width; generated results occupied approximately 65-70% and were slightly above center. World scale and center were calibrated to actual output, not assumed from prompt. The outer 10% terrain strips are reflected beyond the image boundary in a single opaque ground shader to cover following-camera edge views without another texture or draw.",
+  "camera": {
+    "type": "PerspectiveCamera",
+    "fov": 48,
+    "near": 0.1,
+    "far": 120,
+    "wideAspectThreshold": 1.8,
+    "wide": {
+      "height": 33,
+      "trailingOffset": 20
+    },
+    "other": {
+      "height": 36,
+      "trailingOffset": 23
+    },
+    "lookAhead": 2.3,
+    "baselineCommit": "6bb1b6f5",
+    "verified": "Actual baseline code and current camera positions, quaternions, projected radius-30 point, and articulated hero bounding-box pixel dimensions match across all 3 viewports and 3 maps."
+  }
+}

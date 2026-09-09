@@ -1,10 +1,12 @@
-# Arena Field — current behavior (round 1388)
+# Arena Field — current behavior (round 1389)
 
 The Adventure / Vocab Arena entry remains admin-only. `js/home-v2.js` renders its small fantasy-house lobby icon; `js/ui.js` loads the hero picker, map picker, catalogue and battle engine in dependency order. The eight existing animated full-body portraits are preserved. Confirming a hero keeps the owned loadout instead of granting free signature spells.
 
 ## Maps and rooms
 
-Choose Sky Citadel, Crystal Hollow or Moonleaf Ruins. The map picker loads three small WebP thumbnails; only the confirmed map loads a full AVIF plate, with WebP fallback. Round 1388 restores the original small articulated 3D heroes for both the player and peers, with the original 1.12 model scale and matching overhead label heights. Large portraits remain in character selection and the HUD; battle actors no longer use portrait sprites. Round slimes, collectible letter gems, home rings, HP labels, movement and combat remain dynamic above the illustrated floor. The house is a 213×256 alpha WebP, with no full 3D model.
+Choose Sky Citadel, Crystal Hollow or Moonleaf Ruins. The map picker loads three small WebP thumbnails; only the confirmed map loads a 1024×1024 AVIF ground texture, with WebP fallback. Round 1388 restores the original small articulated 3D heroes for both the player and peers, with the original 1.12 model scale and matching overhead label heights. Large portraits remain in character selection and the HUD; battle actors no longer use portrait sprites. Round slimes, collectible letter gems, home rings, HP labels, movement and combat remain dynamic above the illustrated floor. The house is a 213×256 alpha WebP, with no full 3D model.
+
+Round 1389 restores the original following perspective camera: FOV 48°, near/far 0.1/120; aspect >1.8 uses height 33 and trailing offset 20, otherwise height 36 and offset 23. Both look 2.3 units ahead of the player and retain the original eased follow. Entry and resize snap to the correct framing. New overhead terrain art is mapped onto a horizontal world plane, so its visible angle comes from that original camera; it is not a screen-fixed background. The three low-poly instanced perimeter meshes supply actual vertical depth. A shader reflects only the outer 10% terrain strips beyond the image bounds, covering the following camera's view without another image or draw call. Painted centers and diameters are calibrated per map; this does not change the playable field radius.
 
 `ArenaMaps` reserves the existing `adv` room indices r21–r35: five groups of three map rooms, four players per map. A new group becomes available only after all three maps in the preceding group are full. If the chosen map is full while a sibling map has space, the picker offers that space or waits. Current Rules permit **five groups / 60 seats total**; exhaustion is displayed rather than inventing out-of-range rooms. This is not an unlimited-capacity promise. The legacy Adventure range currently ends before r21; revisit this reservation before expanding that engine's room limit.
 
@@ -26,11 +28,11 @@ The wallet shows total coins and a separate **รอบนี้ +N** for coins 
 
 `ArenaElements` owns the original effects and shared 12-zone gameplay budget. `arena-spell-catalog.js` stores only small metadata, then loads `arena-spell-engine.js` plus the selected family from `js/arena-spells/`. Fifty recipes use 13 actual attack patterns with different trajectories, timing, collision, pull/push/slow/heal behavior. `arena-field-visuals.js` reuses 640 particles / 48 meshes (low-power 256 / 28) and creates the procedural moving flame shader on first fire use. No video or spell image sequences are downloaded.
 
-Both inventories pause local combat and redundant scene rendering while preserving room activity. DPR remains capped at 1.45; shadows/antialias remain off. Map changes and exit release renderer resources. See `docs/PERFORMANCE.md` and `docs/ARENA_MAP_ASSETS.json` for asset and measurement details.
+Both inventories pause local combat and redundant scene rendering while preserving room activity. DPR remains capped at 1.45; shadows/antialias remain off. Map changes and exit release renderer resources. See `docs/PERFORMANCE.md` and `docs/ARENA_GROUND_ASSETS.json` for current asset and measurement details; `docs/ARENA_MAP_ASSETS.json` records the superseded round-1387 plates and retained home art.
 
 ## Validation
 
-- `tools/test_arena_maps.cjs`: room grouping, lane isolation, full-room races, admin guard, responsive layouts, selected-only image downloads, fallback, movement, MEGA counter, map-change cleanup, letters and session coins.
+- `tools/test_arena_maps.cjs`: original camera height/FOV/projection and following movement on three landscape viewports, world-bound ground, edge-view screenshots, room grouping, lane isolation, full-room races, admin guard, responsive layouts, selected-only image downloads, fallback, movement, MEGA counter, map-change cleanup, letters and session coins.
 - `tools/test_arena_grimoire.cjs`: all 50 recipes and 13 patterns, lazy loading/retry, both permanent shops, prices, real bonuses, saved ownership reload, free admin access, inventory layout/render pause and GPU caps.
 - Existing field/crystal/hero harnesses retain combat, banking, MEGA five-use behavior, animated portraits and cleanup coverage. Fixtures use isolated saves and fake networking; no production account writes.
 

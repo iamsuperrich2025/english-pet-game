@@ -273,7 +273,6 @@
 #va-crystal-count{text-shadow:0 1px 3px #000,0 0 5px #102038}
 
 /* ==== Round 1387 — illustrated map plates and jewel-glass HUD, no blur passes ==== */
-.va-map-art{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none}
 .va-map-ambience{position:absolute;inset:0;overflow:hidden;pointer-events:none}
 .va-map-ambience i{position:absolute;width:4px;height:4px;background:#d5fcff;border-radius:50%;box-shadow:0 0 8px 2px var(--map-accent);animation:vaMapMote 6s ease-in-out infinite;animation-delay:calc(var(--i)*-.7s);opacity:.6}
 @keyframes vaMapMote{0%,100%{transform:translate(0,6px) scale(.5);opacity:.15}50%{transform:translate(5px,-13px) scale(1);opacity:.85}}

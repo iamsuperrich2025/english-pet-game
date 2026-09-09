@@ -61,8 +61,9 @@ Snapshot verified 2026-08-09. Keep only durable facts here.
 
 Kart is public and shares the Racing engine through isolated game closures. Its tropical scene and selected-colour vehicle/cockpit are procedural 3D; top speed is 110 km/h (8% DRS boost) and pit limit 40 km/h. Drawn walls and continuous swept collision use identical segments; Kart has no portal. Authenticated room/rank writes remain UID-owned. A once-per-player lobby invitation skips previous Kart players. Existing F1 retains its original behavior and records. Details and QA: `docs/KART_PREVIEW.md`.
 
-## Arena Field (round 1387)
+## Arena Field (round 1389)
 
+- The original following perspective camera and small articulated heroes are restored (rounds 1388–1389). Ground art lives on a horizontal world mesh; its apparent angle comes from the 48° camera, with the original aspect-dependent height and trailing distance. Only the selected 1024×1024 AVIF/WebP terrain texture loads; bounded outer-strip sampling fills the view near the arena edge.
 - Adventure remains admin-only. Three selectable AVIF/WebP illustrated maps support four players each; the next three-map group opens when all three fill (five groups / 60 seats within current Rules). Small live actors, home banking, HP/damage labels and bounded VFX remain. See `docs/ARENA_FIELD.md`.
 
 - Eight animated full-body heroes remain. The 60-spell library loads only selected extra family code; 50 relics have real cached bonuses. Ordinary accounts start shot/light and buy permanent unlocks for 3,000–5,000 coins; admins use every spell/relic free. Existing purchased IDs persist in state.arenaItems. Session-earned coins survive map changes, reset at new entry. Inventory rendering pauses scene drawing.
