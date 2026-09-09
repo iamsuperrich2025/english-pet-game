@@ -11,6 +11,9 @@
 > ประวัติ Frontline 1372–1373: `handoff/archive/frontline-1372-1373.md`
 
 ### 📌 สรุปสถานะล่าสุด
+- **รอบ 1382 · ชื่อฮีโร่ภาษาอังกฤษ:** เปลี่ยนชื่อแสดงผล 8 ตัวใน `js/arena-heroes.js` เป็น Zevrakin/Kirevon/Vaelkorin/Oryndel/Elyzavia/Lyravyn/Nirelya/Zirelia ตามภาพผู้ใช้; เอาไอคอนซ้ำหน้าชื่อบนการ์ดออกให้ชื่อยาวพอดีมือถือ โดยคง ID/save/พลังเดิม
+- Syntax/diff + hero browser31 checks (4 viewports) + build9,490files614.6MiB + web validator ผ่าน; hash source/dist ตรงกัน; เตรียม SHIP เฉพาะ js/arena-heroes.js และ TASKS.md, ยังไม่ยืนยัน deploy รอบ1382
+
 
 - **รอบ 1381 · Arena ธาตุ + เลือกฮีโร่:** พลังธาตุใหม่ 8 ชนิด/คลัง 10 พลัง, HP เหนือหัวและดาเมจลอยจาง; หน้าเลือกชาย4หญิง4 ภาพเจนเต็มตัว WebP, ผม/ผ้าคลุม/ธาตุขยับเฉพาะภาพที่เลือก; คง admin-only
 - ฮีโร่มีพลังเริ่มต้นต่างกัน+คูลดาวน์ธาตุประจำตัวลด20%; preload ไฟล์สนามระหว่างเลือก, cancel/retry/ลดแอนิเมชัน/cleanup; ตัวในสนามยังเล็กและเบา; รายละเอียด+prompt/asset bytes: docs/ARENA_FIELD.md, docs/ARENA_HERO_ASSETS.json
