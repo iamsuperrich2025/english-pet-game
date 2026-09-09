@@ -15,7 +15,7 @@
 - **รอบ 1396 · Arena public + เพลง default-on:** แยก state.arenaMusicOff=false จาก lobby musicOff; รับ entry gesture อัตโนมัติ, optional switch แตะ/เลื่อน/keyboard ปิดได้และจำค่า; คง master mute/content-hash cache/เสียงผู้ใช้เดิม
 - เปิด Home V2/Classic/hero/map/engine ให้ผู้เล่นทั่วไป รวมผู้เล่นไม่มีสัตว์โต; คงสิทธิ์สกิล/ไอเทมและโลก private อื่น; แก้ปกที่ CSS grid บีบเหลือเส้น ใช้ fire-thumb+crystal-thumb WebP เดิม ไม่มี asset ใหม่
 - QA source: music67/entry34/public26/field26/heroes32/maps82/grimoire209/HomeV2 ผ่าน; screenshot ปกมือถือ/desktop ตรวจจริง, build9,526files620.1MiB + validator/public26/entry34 ในdist ผ่าน; syntax/undefined0/template0/diff ผ่าน; docs PROJECT_MAP/ARENA_FIELD อัปเดต
-- เตรียม SHIP เฉพาะไฟล์รอบ1396; ผู้ใช้อนุญาตปลดล็อกทุกคนและ deploy แล้ว; รอส่งและยืนยัน live
+- SHIP19paths/COMMIT_DEPLOY1ครั้ง ส่งตามสิทธิ์ผู้ใช้สำเร็จ; live2026-09-10.1249/code1cef9dca+handoffcbb703ca+push; ตรวจlive11filesตรงtested build (normalizeเฉพาะgenerated F1/Karthashในui.js)
 
 - **รอบ 1395 · Arena เพลงไม่เริ่ม:** reproduce browser entryมีuserActivationแต่Audio.unlocked=false และmusicOffจากล็อบบี้ทำให้SFXดัง/เพลงเงียบ; js/arena-audio.jsรับactivationตอนstart+retryในgestureทันทีแทนรอ10s
 - เพิ่ม #va-music-toggle ในarena3d.js/CSS แสดงเพลงปิด/โหลด/แตะเล่น/error และเปิดกลับด้วยtapเดียว; เคารพmuteเดิมจนผู้ใช้แตะ, saveState/syncMusicBtn, ไม่โหลดเพลงซ้ำ; ตรวจviewport812×375/1366×768ไม่มีทับHUD
