@@ -5771,3 +5771,10 @@
 
 - regression performance + production build .1176 + PWA validate ผ่าน; พิกเซลลด 43.75%, render high-Hz ลด 50–58%, trail ลด 68.73%; scope js/lettercannon.js, tools/test_letter_cannon.js
 - **รอบ 1305 · Home V2 visual cleanup:** แยก New Word ออกจาก speech, ใส่ภาพโปรไฟล์กลับในกรอบ, ทำปุ่มสัตว์ 4 ปุ่มเต็มใบ และคงสัดส่วนกรอบ Global Feed
+
+
+## ⏬ ย้ายเมื่อ 2026-09-09 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- จอ 812×375 แยกการ์ดอันดับ/minimap/พวงมาลัยไม่ให้ชนกัน; F1 regression ทั้งชุด + syntax + production build `.1190` ผ่าน, Browser visual QA ถูก Windows ACL บล็อก
+- **รอบ 1306 · Dragon Sky Siege ลื่นขึ้น:** ต้นตอคือ render ตาม 120/144 Hz, DPR 2, trail/blur/audio buffer/HUD allocation ซ้ำทุกนัดและทุกเฟรม
+- ล็อก active 60 FPS, pause 10/countdown 30, DPR 1.5, trail อิงเวลา, particle ring 140, cache noise/gradient และไม่ rebuild HUD ตอน autofire; gameplay/อาวุธ/ฉาก/หางมังกรครบ

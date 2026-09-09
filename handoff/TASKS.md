@@ -228,9 +228,6 @@
 - **รอบ 1326 · Letter Cannon Top 100 + รางวัลรายเดือน:** สะสมคะแนนทุกภารกิจครั้งเดียวเมื่อจบ/ออก → `/leaderboard.lc`, query แยก Top 100 จริง, เพิ่มแท็บ/โพเดียม/รางวัล 10,000–1,000 และฟีดอันดับดีขึ้น
 - เพิ่ม `lcAward`/state กันจ่ายซ้ำ/Rules index+validation พร้อม artifact ปุ่มคัดลอกทั้งก้อน; syntax + runtime idempotency + leaderboard/award regression + production build/PWA/cache/TWA validator ผ่าน
 - **รอบ 1324 · Racing R4 อันดับสด:** เพิ่ม timing-tower เลขใหญ่ `อันดับ/ผู้เล่นทั้งหมด` พร้อมธงตาหมากรุก; เรียงจริงจากจำนวนรอบ + ระยะบนแทร็ก และ fallback จากพิกัดสำหรับ client รุ่นเก่า
-- จอ 812×375 แยกการ์ดอันดับ/minimap/พวงมาลัยไม่ให้ชนกัน; F1 regression ทั้งชุด + syntax + production build `.1190` ผ่าน, Browser visual QA ถูก Windows ACL บล็อก
-- **รอบ 1306 · Dragon Sky Siege ลื่นขึ้น:** ต้นตอคือ render ตาม 120/144 Hz, DPR 2, trail/blur/audio buffer/HUD allocation ซ้ำทุกนัดและทุกเฟรม
-- ล็อก active 60 FPS, pause 10/countdown 30, DPR 1.5, trail อิงเวลา, particle ring 140, cache noise/gradient และไม่ rebuild HUD ตอน autofire; gameplay/อาวุธ/ฉาก/หางมังกรครบ
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`
