@@ -218,7 +218,7 @@
 - **รอบ 1378 · Kart ถนนโล่ง/ขอบแข็ง/ไอคอนรถ:** ฉากข้างโค้งเดิมทับถนนอีกช่วง; ตรวจ footprint กับทุก track+pit segment และย้ายเกาะประภาคารออกจนพ้นถนน; ซ่อนกองแจ้งเตือน lobby/ปิดทั้งหมดระหว่าง Kart แล้วคืนเมื่อออกโดยไม่ลบข้อความเงิน
 - ตัด portal เฉพาะ Kart; ขอบสนามคิดขนาดรถ+sweep≤0.75ม./step สะท้อนแรงชน48%; Racingเดิมยังวาร์ปได้; ปุ่ม Classic/HomeV2 ใช้ภาพรถจริง WebP96×96 alpha10,534B (เล็กกว่าAVIF14,602B), lazy+immutableและผู้เล่นทั่วไปไม่โหลดภาพ
 - ผ่าน Three.js raycast2,025ช่วงไม่ชนฉาก/footprintครบ92กลุ่ม, collision146ทั้งสองฝั่ง+ฟิสิกส์เด้งจริง+F1portalเดิม, notification lifecycle2viewport, lobby/icon12 source+dist, gameplay29, F1ทั้ง19+entry17+HomeV2+build9,469files612.9MiB+validator; รายละเอียด `docs/KART_PREVIEW.md` และ `tools/kart/clearance.mjs`
-- พร้อมส่งรุ่นใหม่ผ่าน COMMIT_DEPLOY; ยังไม่ยืนยัน live รอบ1378
+- COMMIT_DEPLOY เปิด1ครั้งสำเร็จ; live **2026-09-09.1231**, source6920bf7c/handoff4156ec06 pushแล้ว; live code+icon200/hashตรง/immutable, menuซ่อนและ5privatepaths401, ไม่มีJSerror
 
 - **รอบ 1377 · Vocab World Kart (admin preview):** แยกเกมจาก Racing ด้วย shared engine/profile; รถของเล่น 5 สี+cockpitจริง, สนามเกาะ/ปาล์ม/ประภาคาร/น้ำตก, 110 กม./ชม.; room/save/ghost/rank แยก F1; รายละเอียด `docs/KART_PREVIEW.md`
 - ปุ่มรางซ้าย Classic/Home V2 เฉพาะ verified admin; fresh server admission + RTDB rules คุม kartAccess/wroom/kart/winfo/kart/kartRank และปิด legacy; publish rules สำเร็จและเทียบสดครบ44โซนแล้ว; ไม่มี runtime raster/model/audio ใหม่ ใช้ lazy hashed modules+geometry batching/cache
