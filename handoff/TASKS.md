@@ -229,10 +229,6 @@
 - ผ่าน entry17/browser29 (5สี, touch, speed109.91, CAT66coins, F1เดิม)/rules45/สองbrowser7/lobby8 source+dist; F1ทั้ง19+HomeV2+build9,467files612.9MiB+validatorผ่าน; COMMIT_DEPLOY เปิด1ครั้งและผู้ใช้เห็น[SUCCESS]; Hosting live **2026-09-09.1230**, source48636383/handoffafde5e43 pushแล้ว; rulesสดตรงครบ44โซน; live匿名5paths401/menuซ่อน/hashedassets200+immutable/noJSerror
 
 - **รอบ 1329 · ด่านซื้ออาหาร/แฟชั่นไม่มีค่าปรับ:** ถอดการสะสม/หักเหรียญจากไม่คาดเข็มขัด ขับเกิน 90 และชนทั้งหมด; ยังคงไฟเตือน เสียง/แรงเด้ง และป้ายย้ำว่าไม่เสียค่าปรับ
-- เซฟเดิมรับชดเชยครั้งเดียว 1,600 เหรียญ (เพดานเดิมต่อรอบ เพราะระบบเก่าไม่มี ledger) พร้อมกล่องแจ้ง; เซฟใหม่ไม่รับซ้ำ และ cache key ด่านบัมพ์เป็น 1329
-- syntax + targeted coin invariance + pet-shopping integration + production build/PWA/cache/TWA validator ผ่าน; regression รวมยังหยุดที่ GPS-route assertion เดิมซึ่งอยู่นอกส่วนค่าปรับ*รอบ 1328 · Home V2 zero-flash + ราคาโลกเดิม:** preload/runtime ใช้ hashed URL เดียว, prebuild ก่อน dashboard active และ class-only observer สลับใน microtask; source HTML ซ่อน Classic ตั้งแต่เฟรมแรก จึงไม่รอ polling 0–10 วินาที
-- ปุ่มโลกแนวตั้งอ่าน `worldEntryInfo()`/`.rail-price` เดิม (ปกติ 🪙500 รวมวันลด/ฟรี/ส่วนลดเจ้าของ) โดยคง admin gate 6 โลก; R41 regression + price probe + syntax + production build `.1194` + PWA/cache/TWA validator ผ่าน, Browser QA ยังถูก Windows ACL บล็อก
-- **รอบ 1327 · Home V2 เป็น Lobby หลัก:** เปิด Home V2 ให้ผู้เล่นทุกคนทันทีเมื่อ dashboard active, ลบ Admin Preview/ทางสลับกลับ Classic และเก็บ Classic DOM ซ่อนไว้เป็น state/action source; panel เดิมเปิดทับ Home ได้
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`
