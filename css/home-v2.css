@@ -2479,3 +2479,19 @@ body.vw2-home-active #screen-dashboard.vw2-active>#panel-overlay.open{
 @media (max-width:760px),(max-height:420px){
   #vw-home-v2-root .vw2-rail-price{font-size:8.5px;min-height:9px}
 }
+
+/* ======================== R42 / รอบ 1372 — PET GROWTH + PEDESTAL FOOTING ======================== */
+/* ผิววงกลมของแท่น desktop อยู่ราว 25% จากขอบล่างของฉาก ภาพสัตว์ยึดฐานตัวจริง
+   หลังชดเชยช่องโปร่งใสด้วย JS จึงไม่ตกลงไปยืนทับหัวใจหน้าแท่นอีก */
+#vw-home-v2-root .vw2-pet{bottom:25%!important}
+#vw-home-v2-root .vw2-pet .vw2-owned-pet{
+  transform:translate(var(--vw2-pet-align-x,0%),var(--vw2-pet-align-y,0%))!important;
+  transform-origin:center bottom;
+}
+/* เวทีถูกย่อและเลื่อนต่ำใน landscape/mobile profiles: ผิววงกลมอยู่ราว 20% จากล่าง */
+@media (max-width:1180px),(max-height:520px){
+  #vw-home-v2-root .vw2-pet{bottom:20%!important}
+}
+@media (max-height:390px){
+  #vw-home-v2-root .vw2-pet{bottom:20.5%!important}
+}

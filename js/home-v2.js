@@ -376,12 +376,57 @@
     const src = document.querySelector('#pet-card .pet-wrap img.pet-img, #pet-card img.pet-img, .stage-hero .pet-wrap img.pet-img, .stage-hero img.pet-img');
     return src ? (src.currentSrc || src.getAttribute('src') || '') : '';
   }
+
+  /* รอบ 1372: ไฟล์สัตว์แต่ละวัยมีช่องโปร่งใสรอบตัวไม่เท่ากัน โดยเฉพาะ 6 ชนิดใหม่
+     จึงวัดขอบ alpha ของภาพจริงขนาดย่อ แล้วชดเชยกึ่งกลาง+ฐานเท้าก่อนเผยภาพ */
+  const petPlatformMetrics = new Map();
+  function alignPetToPlatform(img){
+    if(!img || !img.naturalWidth || !img.naturalHeight || !img.style?.setProperty) return;
+    const key = img.currentSrc || img.src || '';
+    let metric = petPlatformMetrics.get(key);
+    if(!metric){
+      try{
+        const maxSide = 96;
+        const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+        const width = Math.max(1, Math.round(img.naturalWidth * scale));
+        const height = Math.max(1, Math.round(img.naturalHeight * scale));
+        const canvas = document.createElement('canvas');
+        if(!canvas) return;
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d', {willReadFrequently:true});
+        if(!ctx) return;
+        ctx.clearRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+        const rgba = ctx.getImageData(0, 0, width, height).data;
+        let left = width, right = -1, bottom = -1;
+        for(let y=0;y<height;y++){
+          for(let x=0;x<width;x++){
+            if(rgba[(y * width + x) * 4 + 3] < 32) continue;
+            if(x < left) left = x;
+            if(x > right) right = x;
+            if(y > bottom) bottom = y;
+          }
+        }
+        if(right < left || bottom < 0) return;
+        metric = {centerX:(left + right + 1) / (2 * width), footY:(bottom + 1) / height};
+        petPlatformMetrics.set(key, metric);
+      }catch(_){ return; } // URL ภายนอกอาจทำให้ canvas อ่าน alpha ไม่ได้ — ใช้ตำแหน่งกลางเดิม
+    }
+    img.style.setProperty('--vw2-pet-align-x', `${((.5 - metric.centerX) * 100).toFixed(2)}%`);
+    img.style.setProperty('--vw2-pet-align-y', `${((1 - metric.footY) * 100).toFixed(2)}%`);
+  }
+
   function syncPetVisual(){
     const box = document.getElementById('vw2-pet');
     if(!box) return;
     let p = null;
     try{ p = (typeof activePet === 'function') ? activePet() : null; }catch(_){ }
     const url = p ? petVisualUrl(p) : '';
+    let stage = '';
+    try{ stage = p && typeof petStage === 'function' ? (petStage(p) || '') : ''; }catch(_){ }
+    box.dataset.petType = p?.type || '';
+    box.dataset.petStage = stage;
 
     // ไม่มีสัตว์/URL ภาพจริงยังไม่พร้อม = เวทีว่าง ห้ามใช้มาสคอตหรือภาพสำรองชั่วคราว
     if(!p || !url){
@@ -406,6 +451,7 @@
     img.style.visibility = 'hidden';
     const reveal = ()=>{
       if(box.dataset.src !== url || !box.contains(img)) return;
+      alignPetToPlatform(img);
       img.style.visibility = '';
       box.style.display = '';
       box.classList.remove('is-loading');

@@ -86,15 +86,15 @@ function syncAdminAccess(){
 }
 
 /* ---------- บัญชีผู้ทดสอบเกม (รอบ 56 + 59) ----------
-   สิทธิ์: (1) เหรียญต่ำกว่าเพดาน → เติมให้อัตโนมัติ — พอตั๋วโลก 3D ครบ 3 โลก
-   (5,000+10,000+15,000) + สัตว์เลี้ยง/อาหาร/รักษา
-   (2) สัตว์เลี้ยงทุกตัวโตเต็มวัย (Lv.3) ทันที — ตั๋ว 3D ปลดล็อกเมื่อมีตัวเต็มวัย
-   เรียกตอน login (authEnterGame) + หลังซื้อสัตว์ (ui.js) — ซื้อปุ๊บโตปั๊บไม่ต้อง login ใหม่
+   สิทธิ์: (1) เหรียญต่ำกว่าเพดาน → เติมให้อัตโนมัติ
+   (2) เปิดสิทธิ์ทดสอบทุกระดับชั้นและโลก Coming soon
+   สัตว์ทุกตัวต้องเติบโตตาม EXP จริงเหมือนผู้เล่นทั่วไป — ห้ามเร่งวัยหลังซื้อ
    เพิ่มผู้ทดสอบ: เติมอีเมลต่อท้าย array (ตัวพิมพ์เล็ก) */
 /* 🧪 รอบ 1070 (ผู้ใช้สั่ง 7 ส.ค. 2026): เติมเหรียญเป็น 10,000,000 วันละครั้ง ทั้ง 2 บัญชี
    + ฝัง testerAccess ในเซฟ เพื่อให้ Lobby เมือง 3D (standalone ไม่มี Firebase Auth) รู้สิทธิ์บัญชีจริง */
 const TESTER_EMAILS = ['sumpajitshami@gmail.com', 'freddommun@gmail.com'];
 const TESTER_COINS  = 10000000;
+const TESTER_PET_GROWTH_FIX_VERSION = 1;
 function isTester(){
   return !!(Auth.user && Auth.user.email
     && TESTER_EMAILS.includes(String(Auth.user.email).toLowerCase()));
@@ -122,22 +122,25 @@ function testerBoost(){
     state.testerAccess = true;
     got.push('เปิดสิทธิ์ทดสอบทุกระดับชั้นและโลก Coming soon');
   }
-  (state.pets || []).forEach(p=>{
-    if(p.level >= 3) return;
-    if(p.level < 2){                    // side-effect ช่วงฟักไข่→ลืมตา (เหมือนใน addExp)
-      p.fedUpTo = currentSlotStart(Date.now());
-      p.fullness = MEAL_FULL; p.mealSlot = p.fedUpTo;
-      p.heatFrom = null; p.sick = false; p.sickCause = null;
-    }
-    p.level = 3; p.exp = 0;             // โตเต็มวัย — ไม่ผ่าน addExp กัน overlay ฉลองเด้งซ้อนตอน login
-    got.push(`${p.name || 'น้อง'} โตเต็มวัย 🌟`);
-  });
+  /* รอบ 1372: booster รุ่นเก่าตั้งสัตว์ทุกตัวเป็น Lv.3/EXP 0 แบบไม่มี marker รายตัว
+     คืนเฉพาะลายเซ็นนั้นให้เริ่ม Lv.1 หนึ่งครั้ง แล้วปล่อยให้ EXP เป็นผู้กำหนดวัยตามปกติ */
+  if(state.testerPetGrowthFixVersion !== TESTER_PET_GROWTH_FIX_VERSION){
+    const restored = [];
+    (state.pets || []).forEach(p=>{
+      if(Number(p.level) !== 3 || Number(p.exp || 0) !== 0) return;
+      p.level = 1;
+      p.exp = 0;
+      restored.push(p.name || PETS[p.type]?.name || 'น้อง');
+    });
+    state.testerPetGrowthFixVersion = TESTER_PET_GROWTH_FIX_VERSION;
+    got.push(restored.length ? `คืนวัยแรกเกิดให้ ${restored.join(', ')}` : 'เปิดการเติบโตตาม EXP จริง');
+  }
   if(!got.length) return;
   saveState();
   if(typeof renderDashboard === 'function') renderDashboard();
   if(typeof onlinePushScore === 'function') onlinePushScore();
   if(typeof authPushSave === 'function') authPushSave(true);
-  setTimeout(()=>toast(`🧪 บัญชีผู้ทดสอบเกม — ${got.join(' · ')} เข้าทดสอบโลก 3D ได้เลย!`), 900);
+  setTimeout(()=>toast(`🧪 บัญชีผู้ทดสอบเกม — ${got.join(' · ')}`), 900);
 }
 
 /* ---------- หน้าจอ login: สลับสถานะ เชื่อมต่อ/พร้อม/ออฟไลน์ ---------- */

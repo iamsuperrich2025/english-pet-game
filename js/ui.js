@@ -9679,7 +9679,6 @@ function openPetPurchase(key){
           if(typeof sellInc==='function') sellInc('pet_'+key);
           saveState();
           if(typeof feedEvent === 'function') feedEvent('other', `รับน้องใหม่ ${conf.emoji||'🐾'} "${name}" มาเลี้ยงแล้ว 🥰`);
-          if(typeof testerBoost === 'function') testerBoost();
           sfx.levelup();
           toast(conf.startKey === 'egg'
             ? `ได้ ${name} มาแล้ว! เล่นเกมเพื่อฟักไข่กันเถอะ 🎉`

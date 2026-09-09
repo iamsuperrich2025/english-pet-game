@@ -5,6 +5,7 @@ const path = require("path");
 const vm = require("vm");
 const root = path.resolve(__dirname, "..");
 const home = fs.readFileSync(path.join(root, "js", "home-v2.js"), "utf8");
+const css = fs.readFileSync(path.join(root, "css", "home-v2.css"), "utf8");
 const fail = [];
 const must = (ok, message) => { if(!ok) fail.push(message); };
 
@@ -15,6 +16,9 @@ must(home.includes("p ? `${petName} ดีใจที่ได้เจอห�
 must(home.includes('class="vw2-stage-copy" style="display:none"><b id="vw2-pet-name"></b><span id="vw2-pet-state"></span>'), "pet caption can flash before the active-pet state is known");
 must(home.includes("if(stageCopy) stageCopy.style.display = p ? '' : 'none';") && home.includes("setText('vw2-pet-name', p ? petName : '');") && home.includes("setText('vw2-pet-state', p ? petStatusText(p) : '');"), "no-pet caption text is not hidden and cleared");
 must(home.includes('id="vw2-pet" data-vw2-pat') && home.includes('style="display:none"></button>'), "pet stage does not start empty while the real image loads");
+must(home.includes("function alignPetToPlatform(img)") && home.includes("rgba[(y * width + x) * 4 + 3] < 32") && home.includes("alignPetToPlatform(img);"), "pet alpha-bound pedestal alignment is missing");
+must(home.includes("box.dataset.petType = p?.type || '';") && home.includes("box.dataset.petStage = stage;"), "pet type/stage metadata is not synced to Home V2");
+must(css.includes("R42 / รอบ 1372") && css.includes("#vw-home-v2-root .vw2-pet{bottom:25%!important}") && css.includes("--vw2-pet-align-y"), "pet pedestal surface baseline contract is missing");
 
 const cleanStart = home.indexOf("function cleanText(");
 const cleanEnd = home.indexOf("function completeText(", cleanStart);
