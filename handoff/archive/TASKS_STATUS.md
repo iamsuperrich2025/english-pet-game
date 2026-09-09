@@ -5794,3 +5794,12 @@
 - syntax + targeted coin invariance + pet-shopping integration + production build/PWA/cache/TWA validator ผ่าน; regression รวมยังหยุดที่ GPS-route assertion เดิมซึ่งอยู่นอกส่วนค่าปรับ*รอบ 1328 · Home V2 zero-flash + ราคาโลกเดิม:** preload/runtime ใช้ hashed URL เดียว, prebuild ก่อน dashboard active และ class-only observer สลับใน microtask; source HTML ซ่อน Classic ตั้งแต่เฟรมแรก จึงไม่รอ polling 0–10 วินาที
 - ปุ่มโลกแนวตั้งอ่าน `worldEntryInfo()`/`.rail-price` เดิม (ปกติ 🪙500 รวมวันลด/ฟรี/ส่วนลดเจ้าของ) โดยคง admin gate 6 โลก; R41 regression + price probe + syntax + production build `.1194` + PWA/cache/TWA validator ผ่าน, Browser QA ยังถูก Windows ACL บล็อก
 - **รอบ 1327 · Home V2 เป็น Lobby หลัก:** เปิด Home V2 ให้ผู้เล่นทุกคนทันทีเมื่อ dashboard active, ลบ Admin Preview/ทางสลับกลับ Classic และเก็บ Classic DOM ซ่อนไว้เป็น state/action source; panel เดิมเปิดทับ Home ได้
+
+
+## ⏬ ย้ายเมื่อ 2026-09-09 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1380 · Arena Field (โลกผจญภัยเฉพาะแอดมิน):** ตัวละคร articulated ขนาดเล็ก/กดโจมตีค้าง + กล้องกว้าง + pooled เวท/สายฟ้า/โดม; `arena-field-visuals.js` ใหม่ โหลดก่อน `arena3d.js`; ไม่มี raster/GLB/audio asset ใหม่
+- เก็บอักษรได้ 6 ตัว → ขนกลับวงบ้านเพื่อฝาก/ประกอบคำ, `state.arenaHome` จำคลัง+ของที่ขนข้ามเข้าเกม; ล้มทำของตกแต่คลังไม่หาย; มี H กลับบ้าน/บ้านเพื่อน และคง boss/revive/รางวัลเดิม; guard isAdmin ทั้ง entry+engine
+- source browser 24 / dist browser 26 checks ผ่าน (touch+hold/เซฟ/ซ้ำ/ลงบ้าน/low-power/812×375,667×320,1366×768), Home V2 + syntax + build9,470files612.9MiB + validator ผ่าน; สกิลใหญ่ old/new peak402/138 draws (ไม่ใช่ FPS มือถือจริง); รายละเอียด `docs/ARENA_FIELD.md`
+- เปิด COMMIT_DEPLOY แล้ว 1 ครั้ง; รอผู้ใช้ตอบ y / หลักฐาน [SUCCESS] ยังไม่ยืนยัน commit/deploy. `SHIP.txt` pin8ไฟล์ Arena; PROJECT_MAP/CURRENT_STATE ปรับ route ในเครื่องแต่ไม่รวมส่งเพราะมี diff Frontline เดิม. ภาพ/รายงาน `work/arena-field-dist/`; ไม่ทดสอบบัญชีจริงหรือเขียน production DB
+

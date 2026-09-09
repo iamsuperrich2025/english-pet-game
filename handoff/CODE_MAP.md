@@ -193,15 +193,15 @@ beginPlay:12952 · start:12954 · exitWorld:13187 · mechaRecapLine:13264
 
 ## js/app-update.js (214 บรรทัด · 0 รายการ)
 
-## js/arena-elements.js (58 บรรทัด · 0 รายการ)
+## js/arena-elements.js (71 บรรทัด · 0 รายการ)
 
-## js/arena-field-visuals.js (137 บรรทัด · 0 รายการ)
+## js/arena-field-visuals.js (145 บรรทัด · 0 รายการ)
 
 ## js/arena-heroes.js (42 บรรทัด · 0 รายการ)
 
 ## js/arena-portrait.js (32 บรรทัด · 0 รายการ)
 
-## js/arena3d.js (823 บรรทัด · 0 รายการ)
+## js/arena3d.js (834 บรรทัด · 0 รายการ)
 
 ## js/assetaward.js (21 บรรทัด · 0 รายการ)
 
@@ -1039,8 +1039,8 @@ vbRender:148 · vbCardHTML:194
 ## css/arena-heroes.css (8 บรรทัด · 3 selector)
 #ah-picker:2,3 · .ah-layout:4 · .ah-info:5
 
-## css/arena3d.css (268 บรรทัด · 75 selector)
-#va-root:5,7,9,203(+23) · #va-canvas:8 · .va-vignette:11 · .va-scan:15 · .va-top:18 · .va-glass:20
+## css/arena3d.css (273 บรรทัด · 77 selector)
+#va-root:5,7,9,203(+24) · #va-canvas:8 · .va-vignette:11 · .va-scan:15 · .va-top:18 · .va-glass:20
 .va-exit:23,26 · .va-player-card:27,29 · .va-player-name:30 · .va-online:31 · .va-word-card:32,34,36 · .va-word-th:37
 .va-word-en:38 · .va-word-slots:40,41,43 · .va-coins:44 · .va-shop-btn:46 · .va-energy:48,54 · .va-energy-label:50
 .va-energy-track:51 · .va-energy-fill:52 · .va-energy-power:55 · .va-bag:57 · .va-bag-label:59 · .va-bag-list:60
@@ -1052,7 +1052,7 @@ vbRender:148 · vbCardHTML:194
 .va-store-price:168 · .va-intro-panel:169 · .va-intro-logo:170 · .va-intro-sub:172 · .va-intro-steps:173 · .va-intro-step:174
 .va-start:176,178 · .va-portrait:180 · .va-avatar-icon:206 · .va-home-nav:220,221,222 · .va-cargo:223 · .va-spell-toggle:241,242
 .va-spell-panel:244 · .va-slot-tabs:245,246 · .va-spell-grid:247 · .va-spell-card:248,249,251,252 · .va-element-icon:250 · .va-spell-footer:253
-.va-vitals-layer:258 · .va-vital:259,260,261,262(+2) · .va-damage-number:264
+.va-vitals-layer:258 · .va-vital:259,260,261,262(+2) · .va-damage-number:264 · .va-mega-uses:272 · #va-crystal-count:273
 
 ## css/bubble.css (60 บรรทัด · 25 selector)
 #bb-overlay:4 · #bb-board:5,9,10,11 · .no-anim:12,49 · .bb-head:13 · .bb-title:14 · .bb-stat:15,16
