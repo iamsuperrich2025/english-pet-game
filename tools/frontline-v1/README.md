@@ -81,4 +81,10 @@ The browser suite runs five Chromium clients at 812×375, verifies four-seat cap
 
 ## Deferred beyond V1
 
-Public release requires authenticated server-authoritative combat and reward claims, abuse review, real-device multi-network testing, and production product approval. Scope, target lock, on-foot play, Titan, multiple tank classes, destructible buildings, a large streamed map service, upgrades, heavy effects, advanced missions, and production deployment remain deferred. Do not run commit/deploy or shipping scripts for this local prototype.
+Public release is authorized and uses the live adapters documented above. Real-device multi-network testing and ongoing abuse monitoring remain follow-up work. Scope, target lock, on-foot play, Titan, multiple tank classes, destructible buildings, a large streamed map service, upgrades and advanced missions remain deferred.
+
+## Solid tank bumpers (round 1375)
+
+`frontline-collision.js` resolves equal-mass hull contact in 0.2-unit movement steps, including bots and guards. Tanks push each other without collision damage, while arena edges and intact rival bases constrain both bodies. Disabled tanks do not block; respawns select clear ground. Production applies the same reducer on the server. Local input mailboxes carry a bump revision so stale pre-impact positions cannot undo a push; the receiving client reconciles its position and plays a soft synthesized bumper sound. Decorative bushes/grass remain passable. No physics engine or extra asset is loaded.
+
+Validation: 9 collision reducer checks plus existing 49 gameplay/input/economy checks; native two-browser public-adapter tests and Android long-poll emulator tests confirm a stationary peer is pushed, minimum separation remains 3.3 units, and FIRE/BOMB still work.

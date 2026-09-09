@@ -26,7 +26,7 @@
     if(change.error){if(audio)audio.cue('error');if(ui)ui.message(change.error);status.textContent=change.error;if(input)input.reset();}
     if(change.missing){local=null;if(input)input.reset();if(ui)ui.message('กำลังกลับเข้าห้อง…');}
     if(!change.room)return;
-    const priorRoom=room;room=change.room;
+    const priorRoom=room;room=structuredClone(change.room);
     if(!connected||change.missing)return;
     const p=room.players&&room.players[change.id];
     if(!p||p.bot){local=null;if(input)input.reset();return;}
@@ -41,6 +41,8 @@
     }
     if(!local||local.id!==p.id||local.slot!==p.slot||(local.hp<=0&&p.hp>0)){local={...p};if(input)input.reset();}
     local.hp=p.hp;local.carried=p.carried;local.carriedRevision=p.carriedRevision||0;local.dropSeq=p.dropSeq||0;
+    if((local.bumpSeq||0)!==(p.bumpSeq||0))Object.assign(local,{x:p.x,z:p.z});
+    local.bumpSeq=p.bumpSeq||0;
     if(F.live&&Math.hypot(local.x-p.x,local.z-p.z)>2.5)Object.assign(local,F.tankPose(p));
     if(priorHp>p.hp&&ui)ui.message('TANK HIT · -'+Math.ceil(priorHp-p.hp)+' HP'+(priorCarried?' · '+priorCarried+' DROPPED':''));
     else if(!priorCarried&&p.carried&&ui)ui.message('PICKED UP '+p.carried+' · RETURN TO YOUR BASE');
@@ -75,6 +77,7 @@
     if(local&&room&&network){
       const active=connected&&room.players?.[network.id]?.id===local.id&&!room.players[network.id].bot;
       const motion=active?F.drive(local,input.value,dt,room,network.id):'';
+      if(motion==='tank'&&audio)audio.cue('bump');
       const fire=active&&local.hp>0&&now-lastShot>=F.C.fireMs+20&&input.take('fire');
       const bomb=active&&local.hp>0&&now-lastBomb>=F.C.bombCooldown&&input.take('bomb');
       const dropTap=input.take('drop'),drop=dropTap&&active&&local.hp>0&&local.carried?{letter:local.carried,revision:local.carriedRevision||0}:null;

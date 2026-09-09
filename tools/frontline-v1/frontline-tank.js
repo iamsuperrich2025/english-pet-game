@@ -19,7 +19,8 @@
     if(!speed||!dt)return '';
     // Only the real arena edge and intact rival vaults block driving. Garden props are visual.
     if(room&&F.canOccupy&&!F.canOccupy(room,key,nx,nz))return 'base';
-    tank.x=nx;tank.z=nz;
+    if(room&&F.moveTank){if(F.moveTank(tank,room,key,nx,nz))return 'tank';}
+    else{tank.x=nx;tank.z=nz;}
     return Math.abs(rawX-nx)>1e-8||Math.abs(rawZ-nz)>1e-8?'edge':'';
   };
   F.tankPose=p=>({x:F.round(p.x),z:F.round(p.z),hull:F.round(p.hull),turret:F.round(p.turret)});

@@ -9,6 +9,10 @@
 บั๊ก "ของขวัญโดนบัง" ปิดจบรอบ 31 · **ผู้ใช้ทดสอบจริงยืนยันแล้ว 7 ก.ค.** (กล่องยืนยันเด้งหน้าแผง picker ถูกต้อง ไม่บวม)
 
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
+- **รอบ 1375 · Frontline รถถังชน/ดันกัน:** collision module แยก, equal-mass bumpers/substeps, ป้อม/ขอบกั้นแรงดัน, spawn หลบรถ/รถตายไม่กั้น, ไม่ลด HP; bumpSeq ป้องกัน mailbox เก่าลบแรงชน + client reconcile + เสียงชน synth
+- ผ่าน 58 unit checks, server auth/economy, native public 2-browser และ Android long-poll Local ชน/dัน peer/ไม่มีทะลุ (ระยะต่ำสุด 3.3)/FIRE+BOMB; build9,463files612.8MiB+validator ผ่าน
+- แก้ส่งงาน1374ไม่ครบ: COMMIT_DEPLOY เปิดแล้วแต่ไม่มี tty ทำให้ stale-file guard ข้าม Frontline modules/assets; commit f73cc3a1 มีเพียงบางส่วน ยังไม่ยืนยัน deploy สำเร็จ; รอบนี้รวบรวม manifest Frontline ทั้งชุดที่ตรวจแล้วและส่งต่อด้วย finish_round ตาม workflow เดิม
+- namespace production `frontline_v1_live/v1`, Local `frontline_v1_dev/<token>` แยก; บันทึกผล live หลัง deploy และคงงานไม่เกี่ยวข้องไว้
 - **รอบ 1374 · Frontline public + เสียงต้นฉบับ:** ผู้ใช้ยืนยันยกเลิก Local-only และสั่ง commit/deploy จริง; ปุ่มรางซ้าย Classic/Home V2 ทุกบัญชี → `/frontline/index.html`; ไม่มี admin gate
 - เพิ่ม callable `frontlineV1` คำนวณ controls/movement/combat/คำบน server, ห้อง 4 คน/บอท/overflow; namespace `frontline_v1_live/v1/{rooms,claims}` default-deny เดิม, จ่าย 1,000 เข้าก้อน save หลักแบบ receipt+private ledger; dev namespace แยกเหมือนเดิม
 - เสียง synth/score/audio แยกโมดูล: เพลง+เครื่องยนต์+FIRE/BOMB/fuse/impact/pickup/drop/bank/HP/respawn/win/control; gesture init, immutable cache, mute จำค่า, hidden suspend, dispose; ทดสอบ waveform จริง/ปิดเสียงศูนย์/ไม่มี audio download และ peak12จาก cap24 ผ่าน

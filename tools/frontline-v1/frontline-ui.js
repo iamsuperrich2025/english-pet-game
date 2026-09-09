@@ -67,7 +67,7 @@
         q('fl-hp').textContent=p&&p.hp>0?'HP '+Math.ceil(p.hp):'REPAIRING…';
         q('fl-party').textContent=Object.keys(room.players||{}).length+'/4';
         q('fl-coins').textContent=F.sessionCoins().toLocaleString();
-        q('fl-drive').textContent=motion==='edge'?'EDGE · TURN':motion==='base'?'BASE LOCKED':input.auto===1?'FORWARD':input.auto===-1?'REVERSE':'STOPPED';
+        q('fl-drive').textContent=motion==='tank'?'BUMP · PUSH':motion==='edge'?'EDGE · TURN':motion==='base'?'BASE LOCKED':input.auto===1?'FORWARD':input.auto===-1?'REVERSE':'STOPPED';
         if(motion!==lastMotion){
           lastMotion=motion;
           if(motion==='edge')message('ถึงขอบสนามแล้ว · เลี้ยวหรือถอยกลับ');

@@ -1,0 +1,172 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "frontline_v1_dev": {
+      "$session": {
+        "inputs": {
+          "$room": {
+            ".read": "auth != null",
+            "$slot": {
+              ".write": "auth != null && root.child('frontline_v1_dev').child($session).child('rooms').child($room).child('players').child($slot).child('id').val() == auth.uid",
+              ".validate": "newData.hasChildren(['uid','t','x','z','hull','turret','fireSeq','bombSeq']) && newData.child('uid').val() == auth.uid && newData.child('t').isNumber() && newData.child('x').isNumber() && newData.child('x').val() >= -89 && newData.child('x').val() <= 89 && newData.child('z').isNumber() && newData.child('z').val() >= -89 && newData.child('z').val() <= 89 && newData.child('hull').isNumber() && newData.child('turret').isNumber() && newData.child('fireSeq').isNumber() && newData.child('fireSeq').val() >= 0 && newData.child('bombSeq').isNumber() && newData.child('bombSeq').val() >= 0",
+              "dropSeq": {
+                ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() % 1 == 0"
+              },
+              "dropLetter": {
+                ".validate": "newData.isString() && newData.val().length <= 1"
+              },
+              "dropRevision": {
+                ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() % 1 == 0"
+              },
+              "bumpSeq": {
+                ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() % 1 == 0"
+              }
+            }
+          }
+        },
+        "rooms": {
+          "$room": {
+            ".read": "auth != null",
+            ".write": "auth != null && (data.child('players/s0/id').val() == auth.uid || data.child('players/s1/id').val() == auth.uid || data.child('players/s2/id').val() == auth.uid || data.child('players/s3/id').val() == auth.uid || newData.child('players/s0/id').val() == auth.uid || newData.child('players/s1/id').val() == auth.uid || newData.child('players/s2/id').val() == auth.uid || newData.child('players/s3/id').val() == auth.uid)",
+            ".validate": "newData.hasChildren(['run','word','letters','players','bases','guards','tickAt'])",
+            "players": {
+              "$slot": {
+                ".validate": "($slot == 's0' || $slot == 's1' || $slot == 's2' || $slot == 's3') && newData.hasChildren(['id','slot','bot','x','z','hull','turret','hp','carried','t','fireSeq','lastFire','bombSeq','lastBomb','respawnAt']) && $slot == 's' + newData.child('slot').val()",
+                "id": {
+                  ".validate": "newData.isString()"
+                },
+                "slot": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 3"
+                },
+                "bot": {
+                  ".validate": "newData.isBoolean()"
+                },
+                "x": {
+                  ".validate": "newData.isNumber() && newData.val() >= -89 && newData.val() <= 89"
+                },
+                "z": {
+                  ".validate": "newData.isNumber() && newData.val() >= -89 && newData.val() <= 89"
+                },
+                "hull": {
+                  ".validate": "newData.isNumber() && newData.val() >= -3.15 && newData.val() <= 3.15"
+                },
+                "turret": {
+                  ".validate": "newData.isNumber() && newData.val() >= -3.15 && newData.val() <= 3.15"
+                },
+                "hp": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 5000"
+                },
+                "carried": {
+                  ".validate": "newData.isString() && newData.val().length <= 1"
+                },
+                "t": {
+                  ".validate": "newData.isNumber()"
+                },
+                "fireSeq": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0"
+                },
+                "lastFire": {
+                  ".validate": "newData.isNumber()"
+                },
+                "bombSeq": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0"
+                },
+                "lastBomb": {
+                  ".validate": "newData.isNumber()"
+                },
+                "respawnAt": {
+                  ".validate": "newData.isNumber()"
+                },
+                "$other": {
+                  ".validate": false
+                },
+                "carriedRevision": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() % 1 == 0"
+                },
+                "dropSeq": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() % 1 == 0"
+                },
+                "dropResult": {
+                  ".validate": "newData.isString() && newData.val().length <= 7"
+                },
+                "bumpSeq": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() % 1 == 0"
+                }
+              }
+            },
+            "bases": {
+              "$slot": {
+                ".validate": "($slot == 's0' || $slot == 's1' || $slot == 's2' || $slot == 's3') && newData.hasChildren(['ownerId','slot','x','z','hp','stored'])",
+                "ownerId": {
+                  ".validate": "newData.isString()"
+                },
+                "slot": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 3"
+                },
+                "x": {
+                  ".validate": "newData.isNumber()"
+                },
+                "z": {
+                  ".validate": "newData.isNumber()"
+                },
+                "hp": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 5000"
+                },
+                "stored": {
+                  ".validate": "newData.isString()"
+                },
+                "$other": {
+                  ".validate": false
+                }
+              }
+            },
+            "guards": {
+              "$guard": {
+                ".validate": "($guard == 'g0' || $guard == 'g1') && newData.hasChildren(['id','slot','bot','x','z','hull','turret','hp','t','fireSeq','lastFire','respawnAt'])",
+                "hp": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 5000"
+                },
+                "bumpSeq": {
+                  ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() % 1 == 0"
+                }
+              }
+            },
+            "letters": {
+              "$letter": {
+                ".validate": "newData.hasChildren(['letter','x','z','serial']) && newData.child('letter').isString() && newData.child('letter').val().length == 1 && newData.child('x').isNumber() && newData.child('z').isNumber() && newData.child('serial').isNumber() && (!newData.child('blockedId').exists() || newData.child('blockedId').isString()) && (!newData.child('blockedUntil').exists() || newData.child('blockedUntil').isNumber())"
+              }
+            },
+            "bombs": {
+              "$bomb": {
+                ".validate": "newData.hasChildren(['id','owner','x','z','explodeAt','explodedAt']) && newData.parent().parent().child('players').child(newData.child('owner').val()).exists() && $bomb == newData.child('owner').val() + '_' + newData.child('id').val() && newData.child('id').isNumber() && newData.child('x').isNumber() && newData.child('z').isNumber() && newData.child('explodeAt').isNumber() && newData.child('explodedAt').isNumber()"
+              }
+            },
+            "run": {
+              ".validate": "newData.isString()"
+            },
+            "tickAt": {
+              ".validate": "newData.isNumber()"
+            },
+            "word": {
+              ".validate": "newData.hasChildren(['target','round','completedAt','winnerId']) && newData.child('target').isString() && newData.child('round').isNumber() && newData.child('completedAt').isNumber() && newData.child('winnerId').isString()"
+            },
+            "events": {
+              "$actor": {
+                ".validate": "(newData.parent().parent().child('players').child($actor).exists() || newData.parent().parent().child('guards').child($actor).exists()) && newData.hasChildren(['id','x','z','endX','endZ','targetType','targetId','kind','dropped','at','hitAt'])"
+              }
+            },
+            "rewards": {
+              "$slot": {
+                ".validate": "newData.isNumber() && newData.val() >= 0 && newData.parent().parent().child('players').child($slot).exists()"
+              }
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

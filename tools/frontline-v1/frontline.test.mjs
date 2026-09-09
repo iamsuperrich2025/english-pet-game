@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 const dir=new URL('./',import.meta.url);
 const context=vm.createContext({window:{},state:{student:null},Date,Math,Uint8Array,crypto:{getRandomValues(bytes){for(let i=0;i<bytes.length;i++)bytes[i]=i;return bytes;}}});
 vm.runInContext(readFileSync(new URL('../../js/data/vocab.js',dir),'utf8'),context);
-for(const name of ['config','words','bases','tank','letters','drop','bots','guards','combat','bombs','room','commands','lobby']){
+for(const name of ['config','words','bases','collision','tank','letters','drop','bots','guards','combat','bombs','room','commands','lobby']){
   vm.runInContext(readFileSync(new URL('frontline-'+name+'.js',dir),'utf8'),context);
 }
 const F=context.window.Frontline,close=(a,b,t=1e-9)=>assert.ok(Math.abs(a-b)<=t,a+' != '+b);
@@ -192,7 +192,7 @@ test('host selection ignores suspended, mismatched, bot, and future mailbox owne
 
 
 test('open-field driving never stops for decorative scenery in either direction at all speeds',()=>{
- const r=room();r.decorations=[{kind:'bush',x:0,z:0},{kind:'grass',x:0,z:0},{kind:'fence',x:0,z:0}];
+ const r=room();r.players={};r.guards={};r.decorations=[{kind:'bush',x:0,z:0},{kind:'grass',x:0,z:0},{kind:'fence',x:0,z:0}];
  for(const hull of [0,Math.PI/2,-Math.PI/3])for(const auto of [-1,1])for(let speedLevel=0;speedLevel<3;speedLevel++){
   const p=F.newTank('p',0,100000);p.x=-Math.sin(hull)*auto*2;p.z=Math.cos(hull)*auto*2;p.hull=hull;
   const start={x:p.x,z:p.z},speed=auto===1?F.C.speeds[speedLevel]:F.C.reverseSpeeds[speedLevel];

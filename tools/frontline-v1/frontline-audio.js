@@ -19,7 +19,7 @@
     }
     function cue(name,strength=1,pan=0){
       if(!ready()||strength<.015)return;
-      const now=context.currentTime,gap={shot:.065,impact:.1,explosion:.16,hit:.18,click:.08,fuse:.18}[name]||.06;
+      const now=context.currentTime,gap={shot:.065,impact:.1,explosion:.16,hit:.18,bump:.3,click:.08,fuse:.18}[name]||.06;
       if(now-(cooldowns.get(name)??-10)<gap)return;cooldowns.set(name,now);counts[name]=(counts[name]||0)+1;
       const t=(f,d=0,len=.14,v=.06,type='sine',end=f)=>synth.tone(f,d,len,v*strength,type,end,pan);
       const notes=(list,step=.09,v=.065)=>list.forEach((f,i)=>t(f,i*step,.25,v,'triangle'));
@@ -32,6 +32,7 @@
         case 'pickup':notes([659,880,1318]);break;
         case 'drop':notes([880,659,440],.065);break;
         case 'bank':notes([523,659,784,1046],.085);break;
+        case 'bump':t(190,0,.12,.055,'sine',75);t(370,.03,.09,.025,'triangle',180);break;
         case 'hit':t(230,0,.22,.085,'triangle',110);t(380,.05,.16,.04,'sine',210);break;
         case 'down':notes([523,392,330,262],.12);break;
         case 'respawn':notes([392,523,659,784],.09);break;

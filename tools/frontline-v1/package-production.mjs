@@ -3,7 +3,7 @@ import {promises as fs} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 const DIR=path.dirname(fileURLToPath(import.meta.url)),ROOT=path.resolve(DIR,'../..');
-const reducers=['config','words','bases','tank','letters','drop','bots','guards','combat','bombs','commands','room'];
+const reducers=['config','words','bases','collision','tank','letters','drop','bots','guards','combat','bombs','commands','room'];
 export async function packageServer(){
   const out=path.join(ROOT,'functions/frontline-runtime');await fs.mkdir(out,{recursive:true});
   for(const name of reducers)await fs.copyFile(path.join(DIR,'frontline-'+name+'.js'),path.join(out,'frontline-'+name+'.js'));
