@@ -5778,3 +5778,11 @@
 - จอ 812×375 แยกการ์ดอันดับ/minimap/พวงมาลัยไม่ให้ชนกัน; F1 regression ทั้งชุด + syntax + production build `.1190` ผ่าน, Browser visual QA ถูก Windows ACL บล็อก
 - **รอบ 1306 · Dragon Sky Siege ลื่นขึ้น:** ต้นตอคือ render ตาม 120/144 Hz, DPR 2, trail/blur/audio buffer/HUD allocation ซ้ำทุกนัดและทุกเฟรม
 - ล็อก active 60 FPS, pause 10/countdown 30, DPR 1.5, trail อิงเวลา, particle ring 140, cache noise/gradient และไม่ rebuild HUD ตอน autofire; gameplay/อาวุธ/ฉาก/หางมังกรครบ
+
+
+## ⏬ ย้ายเมื่อ 2026-09-09 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- โลก admin 6 รายการ render เป็น hidden+disabled ตั้งแต่เฟรมแรก, ตัด tab focus และมี action guard ก่อน dispatch; R40 regression 29 เมนู/13 เกม + syntax + production build .1193 + PWA/cache/TWA validator ผ่าน (Browser QA ยังถูก Windows ACL บล็อก)
+- **รอบ 1326 · Letter Cannon Top 100 + รางวัลรายเดือน:** สะสมคะแนนทุกภารกิจครั้งเดียวเมื่อจบ/ออก → `/leaderboard.lc`, query แยก Top 100 จริง, เพิ่มแท็บ/โพเดียม/รางวัล 10,000–1,000 และฟีดอันดับดีขึ้น
+- เพิ่ม `lcAward`/state กันจ่ายซ้ำ/Rules index+validation พร้อม artifact ปุ่มคัดลอกทั้งก้อน; syntax + runtime idempotency + leaderboard/award regression + production build/PWA/cache/TWA validator ผ่าน
+- **รอบ 1324 · Racing R4 อันดับสด:** เพิ่ม timing-tower เลขใหญ่ `อันดับ/ผู้เล่นทั้งหมด` พร้อมธงตาหมากรุก; เรียงจริงจากจำนวนรอบ + ระยะบนแทร็ก และ fallback จากพิกัดสำหรับ client รุ่นเก่า

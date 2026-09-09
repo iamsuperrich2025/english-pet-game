@@ -229,10 +229,6 @@
 - syntax + targeted coin invariance + pet-shopping integration + production build/PWA/cache/TWA validator ผ่าน; regression รวมยังหยุดที่ GPS-route assertion เดิมซึ่งอยู่นอกส่วนค่าปรับ*รอบ 1328 · Home V2 zero-flash + ราคาโลกเดิม:** preload/runtime ใช้ hashed URL เดียว, prebuild ก่อน dashboard active และ class-only observer สลับใน microtask; source HTML ซ่อน Classic ตั้งแต่เฟรมแรก จึงไม่รอ polling 0–10 วินาที
 - ปุ่มโลกแนวตั้งอ่าน `worldEntryInfo()`/`.rail-price` เดิม (ปกติ 🪙500 รวมวันลด/ฟรี/ส่วนลดเจ้าของ) โดยคง admin gate 6 โลก; R41 regression + price probe + syntax + production build `.1194` + PWA/cache/TWA validator ผ่าน, Browser QA ยังถูก Windows ACL บล็อก
 - **รอบ 1327 · Home V2 เป็น Lobby หลัก:** เปิด Home V2 ให้ผู้เล่นทุกคนทันทีเมื่อ dashboard active, ลบ Admin Preview/ทางสลับกลับ Classic และเก็บ Classic DOM ซ่อนไว้เป็น state/action source; panel เดิมเปิดทับ Home ได้
-- โลก admin 6 รายการ render เป็น hidden+disabled ตั้งแต่เฟรมแรก, ตัด tab focus และมี action guard ก่อน dispatch; R40 regression 29 เมนู/13 เกม + syntax + production build .1193 + PWA/cache/TWA validator ผ่าน (Browser QA ยังถูก Windows ACL บล็อก)
-- **รอบ 1326 · Letter Cannon Top 100 + รางวัลรายเดือน:** สะสมคะแนนทุกภารกิจครั้งเดียวเมื่อจบ/ออก → `/leaderboard.lc`, query แยก Top 100 จริง, เพิ่มแท็บ/โพเดียม/รางวัล 10,000–1,000 และฟีดอันดับดีขึ้น
-- เพิ่ม `lcAward`/state กันจ่ายซ้ำ/Rules index+validation พร้อม artifact ปุ่มคัดลอกทั้งก้อน; syntax + runtime idempotency + leaderboard/award regression + production build/PWA/cache/TWA validator ผ่าน
-- **รอบ 1324 · Racing R4 อันดับสด:** เพิ่ม timing-tower เลขใหญ่ `อันดับ/ผู้เล่นทั้งหมด` พร้อมธงตาหมากรุก; เรียงจริงจากจำนวนรอบ + ระยะบนแทร็ก และ fallback จากพิกัดสำหรับ client รุ่นเก่า
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`
