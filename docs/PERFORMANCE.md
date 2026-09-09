@@ -88,7 +88,14 @@ Do not implement these without a scoped task, baseline measurements, and visual 
 - Check low landscape (812x375), a high-DPR phone profile, and desktop regression.
 - Update this document only when the durable strategy changes.
 
-### Arena Field (round 1380)
+### Arena maps and permanent catalogues (round 1387)
+
+- Only the selected full plate loads: sky 208,695 / crystal 201,361 / forest 229,678 bytes AVIF, 1536×864. WebP fallback loads only on failure. Three picker thumbnails total 70,920 bytes; alpha home WebP 29,822 bytes. Battle actors reuse existing hero thumbnails. No PNG runtime assets were added.
+- Spell SVG atlas 26,239 bytes, relic atlas 25,163 bytes; shared external symbols and paged DOM cards. The 50 extra spells load one selected family pack plus a shared runner, not all combat code. Relic bonuses compile on entry/purchase only. An open inventory stops redundant scene draws (verified unchanged frame counter).
+- Shared budget remains 12 combat zones, 640/48 default particles/meshes or 256/28 low-power. Flame shader compiles only on first fire use and shares one material. DPR/shadow policy unchanged. Room presence frequency unchanged; picker occupancy polls only while open.
+- Desktop Edge sample for illustrated maps: 93–95 calls, about 11.2–11.4k triangles, 19 textures. Artificial 50-spell sequence remains inside 640/48 pools (175–181 calls / 28.4–30.5k triangles across samples). These are scene costs from isolated desktop fixtures, not physical-phone FPS or production multiplayer measurements.
+
+### Arena Field (round 1380, historical baseline)
 
 - Static arena meshes merge once; runtime spells reuse 640 particles/48 meshes (low-power 256/28), floating text cap 24. Original DPR 1.45 and no-shadow policy remain. No new image/model/audio downloads.
 - Desktop Edge, 812x375, eight enemies: old/new ultimate peak 402/138 calls; idle 127/136; peak triangles 10,394/17,062. This measures rendering work, not physical-device FPS. More triangles buy articulated figures, a wider field and spell domes while burst draw calls fall. See `docs/ARENA_FIELD.md`.

@@ -7225,8 +7225,12 @@ async function loadAdv3d(){
    🤝👑 รอบ 1048 — Co-op PvE 2–4 คน + บอสคำศัพท์รายบท + revive + รางวัลทีม
    ============================================================ */
 async function loadVocabArena3d(){
+  await loadScriptOnce('js/arena-maps.js');
   await loadScriptOnce('js/arena-field-visuals.js');
   await loadScriptOnce('js/arena-elements.js');
+  await loadScriptOnce('js/arena-spell-catalog.js');
+  await loadScriptOnce('js/arena-grimoire.js');
+  await loadScriptOnce('js/arena-relics.js');
   await loadScriptOnce('js/arena3d.js');
 }
 /* ============================================================
@@ -7283,6 +7287,7 @@ async function enterAdventure3D(){
       await loadScriptOnce('js/arena-heroes.js');
       const hero=await ArenaHeroes.choose(async function preloadArenaScene(){await loadScriptOnce('js/vendor/three.min.js');await loadVocabArena3d();});
       if(!hero){advLoading=false;return worldEntryStopped('ยกเลิกการเลือกตัวละครก่อนเกมเริ่ม');}
+      if(typeof ArenaMaps!=='undefined'&&!await ArenaMaps.choose()){advLoading=false;return worldEntryStopped('ยกเลิกการเลือกแผนที่ก่อนเกมเริ่ม');}
     }
   }catch(e){
     advLoading = false;
@@ -7306,9 +7311,9 @@ function pickAdvMap(){
         <div style="display:flex;gap:clamp(8px,2vw,14px)">
           <button class="am-c" data-m="field" style="flex:1;background:linear-gradient(145deg,rgba(38,202,225,.18),rgba(115,75,224,.2));border:2px solid #69e3ff;border-radius:14px;
                   padding:clamp(8px,2vh,14px) 6px;color:#e8fbff;cursor:pointer;box-shadow:inset 0 0 18px rgba(93,222,255,.08)">
-            <div style="font-size:clamp(26px,7vh,38px)">🌀</div>
+            <img src="img/arena-maps/sky-thumb.webp" alt="" width="192" height="108" style="width:100%;height:clamp(55px,17vh,100px);object-fit:cover;border-radius:9px;margin-bottom:5px">
             <div style="font-weight:800;font-size:clamp(13px,3vh,16px)">Vocab Arena</div>
-            <div style="font-size:clamp(10px,2.3vh,12px);opacity:.85;line-height:1.35">Co-op 2–4 คน 🤝 บอสคำศัพท์รายบท 👑<br>ตัวละครเล็ก · เวทมนตร์ใหญ่ · ขนอักษรกลับบ้าน</div>
+            <div style="font-size:clamp(10px,2.3vh,12px);opacity:.85;line-height:1.35">เลือก 3 แผนที่ · แผนที่ละ 4 คน<br>60 เวทมนตร์ · เก็บคริสตัลและขนอักษรกลับบ้าน</div>
           </button>
           <button class="am-c" data-m="heli" style="flex:1;background:rgba(41,182,246,.13);border:2px solid #4fc3f7;border-radius:14px;
                   padding:clamp(8px,2vh,14px) 6px;color:#e5f6ff;cursor:pointer">

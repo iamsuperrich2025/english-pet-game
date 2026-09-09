@@ -270,6 +270,7 @@
     examstd:'📋',onet:'🇹🇭',rank:'🥇',market:'🏪',friends:'👥',gifts:'🎁',stats:'📊',trophy:'🏆',racing:'🏎️'
   });
   function classicRailGlyph(actionName, sourceSelector){
+    if(actionName==='worldAdv')return adminWorldAllowed()?'<span class="vw2-classic-rail-ico vw2-arena-entry-art" aria-hidden="true"><img src="img/arena-maps/home.webp" alt="" width="38" height="44"></span>':'';
     if(actionName==='worldKart'&&typeof kartLobbyIconHTML==='function')return '<span class="vw2-classic-rail-ico" aria-hidden="true">'+kartLobbyIconHTML()+'</span>';
     let glyph = '';
     if(sourceSelector){
@@ -1097,7 +1098,7 @@
     const railItems = [
       ['cure','heart','รักษา','#btn-rail-cure'],
       ['city','city','เมือง 3D','#btn-rail-city'],
-      ['worldAdv','adventure','โลกผจญภัย','#btn-world-adv'],
+      ['worldAdv','adventure','Vocab Arena','#btn-world-adv'],
       ['worldSky','skyplay','Sky Playground','#btn-world-sky'],
       ['worldHaunt','ghost','โลกผีสิง','#btn-world-haunt'],
       ['worldHeli','helicopter','โลกเฮลิคอปเตอร์','#btn-world-heli'],
@@ -1410,6 +1411,7 @@
           else btn.removeAttribute('tabindex');
           btn.title = locked ? (source.title || 'โลกนี้ยังล็อกอยู่')
             : btn.textContent.trim() + (adminOnly ? ' · เฉพาะแอดมิน' : ' · ผู้เล่นทุกคนเข้าได้');
+          if(btn.dataset.vw2Action==='worldAdv')btn.title='Vocab Arena · 3 แผนที่ · 60 เวทมนตร์ · เฉพาะแอดมิน';
           const price = btn.querySelector('.vw2-rail-price');
           if(price){
             const sourcePrice = source && source.querySelector ? source.querySelector('.rail-price') : null;

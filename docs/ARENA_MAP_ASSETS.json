@@ -1,0 +1,114 @@
+{
+  "round": 1387,
+  "created": "2026-09-10",
+  "generator": "OpenAI imagegen",
+  "referenceUse": "Original reference-inspired scenes generated from text descriptions; reference files were not supplied to imagegen because of tool filesystem access. No attached screenshot UI was reused.",
+  "referenceFiles": [
+    "C:/Users/rober/Downloads/InVWDev/ChatGPT Image Sep 9, 2026, 10_55_41 PM (2).png",
+    "C:/Users/rober/Downloads/InVWDev/ChatGPT Image Sep 9, 2026, 10_55_41 PM (3).png",
+    "C:/Users/rober/Downloads/InVWDev/ChatGPT Image Sep 9, 2026, 10_55_40 PM (1).png"
+  ],
+  "sourceRoot": "C:/Users/rober/.codex/generated_images/01a0862e-4a6b-7743-85f8-4a54c624140b/",
+  "sources": [
+    {
+      "id": "sky",
+      "file": "exec-1b73864a-3022-4aef-8dbd-a4dfd89f6dcb.png",
+      "promptSummary": "Elevated circular white marble fantasy arena above clouds, gold inlay, sapphire crystals, distant floating castles, clear central floor, no UI/actors/houses.",
+      "sourceDimensions": [
+        1672,
+        941
+      ],
+      "avifBytes": 208695,
+      "webpBytes": 319406,
+      "thumbBytes": 23380
+    },
+    {
+      "id": "crystal",
+      "file": "exec-c89c8a8e-85bb-48b1-8473-44ae2d306639.png",
+      "promptSummary": "Circular purple crystal cavern arena, ornate dark stone floor, violet waterfalls, luminous crystals and warm lanterns at perimeter, clear floor, no UI/actors/houses.",
+      "sourceDimensions": [
+        1672,
+        941
+      ],
+      "avifBytes": 201361,
+      "webpBytes": 292368,
+      "thumbBytes": 21384
+    },
+    {
+      "id": "forest",
+      "file": "exec-ac629ec5-73a6-4053-933c-9bf086657ecc.png",
+      "promptSummary": "Ancient circular forest ruin arena with moss, flowering vines, cyan waterfalls and fairy lights, open center, no UI/actors/houses.",
+      "sourceDimensions": [
+        1672,
+        941
+      ],
+      "avifBytes": 229678,
+      "webpBytes": 346900,
+      "thumbBytes": 26156
+    },
+    {
+      "id": "home",
+      "file": "exec-35936f8b-4656-491a-b23f-1d9c641703ca.png",
+      "promptSummary": "Cute ornate miniature fantasy house with bright blue roof, warm windows, transparent background, full building visible.",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "runtimeDimensions": [
+        213,
+        256
+      ],
+      "webpBytes": 29822,
+      "alpha": true
+    }
+  ],
+  "encoding": {
+    "tool": "sharp",
+    "plate": {
+      "dimensions": [
+        1536,
+        864
+      ],
+      "alpha": false,
+      "avif": {
+        "quality": 63,
+        "effort": 6,
+        "chromaSubsampling": "4:4:4"
+      },
+      "webpFallback": {
+        "quality": 86
+      }
+    },
+    "thumbnail": {
+      "dimensions": [
+        384,
+        216
+      ],
+      "format": "WebP",
+      "quality": 78
+    },
+    "home": {
+      "format": "WebP",
+      "quality": 88,
+      "alphaQuality": 100,
+      "trimmed": true
+    }
+  },
+  "inspection": "Real encoded dimensions/alpha/bytes checked. Selected plates and alpha house visually inspected in rendered gameplay at 1366x768, 812x375 and 667x320. AVIF selected for lower bytes, WebP retained as compatibility fallback. PNG originals are outside the repository and are not runtime assets.",
+  "runtimeDirectories": [
+    "img/arena-maps/",
+    "img/arena-icons/"
+  ],
+  "vectorAtlases": [
+    {
+      "file": "img/arena-icons/spells.svg",
+      "symbols": 60,
+      "bytes": 26239
+    },
+    {
+      "file": "img/arena-icons/relics.svg",
+      "symbols": 50,
+      "bytes": 25163
+    }
+  ]
+}

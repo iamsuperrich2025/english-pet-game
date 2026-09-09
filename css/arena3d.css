@@ -271,3 +271,116 @@
 #va-root .va-skill.ult .key{top:4px;bottom:auto;z-index:3;font-size:8px}
 .va-mega-uses{position:absolute;bottom:6px;left:12%;width:76%;padding:1px 0;border-radius:8px;background:#10243e;color:#ffec94;font-size:9px;font-weight:900;line-height:1.3;z-index:4;white-space:nowrap;border:1px solid #efd48688;pointer-events:none}
 #va-crystal-count{text-shadow:0 1px 3px #000,0 0 5px #102038}
+
+/* ==== Round 1387 — illustrated map plates and jewel-glass HUD, no blur passes ==== */
+.va-map-art{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none}
+.va-map-ambience{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.va-map-ambience i{position:absolute;width:4px;height:4px;background:#d5fcff;border-radius:50%;box-shadow:0 0 8px 2px var(--map-accent);animation:vaMapMote 6s ease-in-out infinite;animation-delay:calc(var(--i)*-.7s);opacity:.6}
+@keyframes vaMapMote{0%,100%{transform:translate(0,6px) scale(.5);opacity:.15}50%{transform:translate(5px,-13px) scale(1);opacity:.85}}
+#va-root[data-map] .va-glass{background:linear-gradient(135deg,#173f70e8,#071d4be8);border:1px solid #80dfff;box-shadow:0 0 5px #75dbff99,inset 0 1px 5px #b2f6ff55,0 5px 10px #10275833;border-radius:18px;backdrop-filter:none}
+#va-root[data-map] .va-top{top:clamp(8px,2vh,22px);left:clamp(10px,1.8vw,30px);right:clamp(10px,1.8vw,30px);height:clamp(47px,10vh,96px);grid-template-columns:clamp(50px,7vw,110px) clamp(91px,17vw,260px) minmax(150px,1fr) clamp(90px,15vw,240px) clamp(88px,12vw,195px);gap:clamp(5px,1vw,16px)}
+#va-root[data-map] .va-exit,#va-root[data-map] .va-shop-btn{border:1px solid #a7edff;border-radius:18px;background:linear-gradient(145deg,#1c76b9,#092151 80%);box-shadow:inset 0 0 8px #79dcff77,0 0 6px #44c7ff;font-size:clamp(10px,1.4vw,22px)}
+#va-root[data-map] .va-player-card{grid-template-columns:clamp(24px,5vw,75px) minmax(0,1fr);gap:4px;padding:4px 7px}
+#va-root[data-map] .va-avatar-icon{height:100%;overflow:hidden;border-radius:50%;background:radial-gradient(circle,#8979ea,#132959);border:1px solid #b5f4ff}
+#va-root[data-map] .va-avatar-icon img{width:100%;height:100%;object-fit:cover;object-position:center 20%;transform:scale(1.75);transform-origin:50% 23%}
+#va-root[data-map] .va-avatar-icon{position:relative;min-height:0;height:auto;display:block}
+#va-root[data-map] .va-avatar-icon img{position:absolute;inset:0;max-height:100%}
+#va-root[data-map] .va-top>*{min-height:0;overflow:hidden}
+#va-root[data-map] .va-avatar-icon{align-self:stretch}
+#va-root[data-map] .va-top .va-word-th{font-size:clamp(7px,1.4vh,15px)}
+#va-root[data-map] .va-top .va-word-en{font-size:clamp(16px,3.8vh,34px)}
+#va-root[data-map] .va-top .va-word-slots i{height:clamp(10px,2.6vh,25px);line-height:clamp(9px,2.5vh,24px);font-size:clamp(8px,1.9vh,18px)}
+#va-root[data-map] .va-player-name{font-size:clamp(10px,1.4vw,23px)}#va-root[data-map] .va-online{font-size:clamp(6px,.8vw,13px);color:#71ffe0}
+#va-root[data-map] .va-word-card{padding:5px;border-radius:20px;display:flex;flex-direction:column;justify-content:center}
+#va-root[data-map] .va-word-th{font-size:clamp(8px,1.05vw,17px);line-height:1.2}
+#va-root[data-map] .va-word-en{font-size:clamp(17px,2.4vw,38px);line-height:1.1;letter-spacing:.17em}
+#va-root[data-map] .va-word-slots i{width:clamp(13px,2.1vw,34px);height:clamp(12px,2.1vw,32px);line-height:clamp(10px,2vw,30px);font-size:clamp(8px,1.35vw,22px);border-radius:6px;background:#164773;border-color:#66d6ff;color:#b8edff}
+#va-root[data-map] .va-word-slots i.got{background:#6cf1ff;color:#084667;box-shadow:0 0 9px #2adfff}
+#va-root[data-map] .va-coins{font-size:clamp(11px,1.45vw,24px);color:#ffe47a}
+#va-root[data-map] .va-energy{top:clamp(61px,14.6vh,136px);width:36vw;max-width:none;height:clamp(20px,4.3vh,42px);padding-top:4px;padding-bottom:4px}
+#va-root[data-map] .va-energy-label,#va-root[data-map] .va-energy-power{font-size:clamp(8px,1.2vw,19px);top:14%}
+#va-root[data-map] .va-bag{top:clamp(61px,14.8vh,139px);left:1.8vw;width:27vw;max-width:none;min-height:clamp(27px,5.1vh,49px);padding:4px 8px}
+#va-root[data-map] .va-bag-label{font-size:clamp(7px,1vw,16px)}#va-root[data-map] .va-bag-list{font-size:clamp(8px,1vw,16px)}
+#va-root[data-map] .va-party{top:clamp(60px,13.3vh,126px);right:1.8vw;width:27vw;max-width:none;min-height:clamp(34px,8.7vh,83px)}
+#va-root[data-map] .va-party b{font-size:clamp(8px,1.05vw,18px);line-height:1.3}#va-root[data-map] .va-party-list span{font-size:clamp(7px,.95vw,16px)}
+#va-root[data-map] .va-party-find{width:clamp(27px,3.7vw,58px);height:clamp(27px,3.7vw,58px);flex-basis:clamp(27px,3.7vw,58px);font-size:clamp(16px,2.5vw,37px)}
+.va-map-change{position:absolute;top:25vh;right:1.8vw;max-width:27vw;padding:5px 10px;font-size:clamp(8px,1vw,16px)!important;cursor:pointer}
+#va-root[data-map] .va-feed{top:32vh;right:1.8vw;max-width:25vw;max-height:54px}#va-root[data-map] .va-feed-line{font-size:clamp(8px,.9vw,15px)}
+#va-root[data-map] .va-boss{top:21vh;width:36vw;max-width:none}
+#va-root[data-map] .va-vignette{background:radial-gradient(ellipse,transparent 65%,#07143820)}
+#va-root[data-map] .va-stick{width:clamp(91px,16vw,240px);height:clamp(91px,16vw,240px);bottom:10vh;left:1.8vw;border:1px solid #96ebff;background:radial-gradient(circle,#2ad6ff22 25%,#176f9940 40%,#1c719d80 65%,#44ceff38);box-shadow:inset 0 0 14px #83eaff55,0 0 12px #83dfff55}
+#va-root[data-map] .va-stick-knob{background:radial-gradient(circle at 36% 28%,#efffff,#16d0f5 35%,#006398 80%);border:3px solid #c4ffff;box-shadow:0 0 12px #00c8ff}
+#va-root[data-map] .va-hp{left:1.8vw;bottom:3vh;width:clamp(135px,23vw,375px);height:clamp(24px,4.8vh,46px)}
+#va-root[data-map] .va-home-nav{bottom:3vh;width:clamp(170px,29vw,470px);min-height:clamp(37px,10vh,96px);display:flex;flex-direction:column;justify-content:center}
+#va-root[data-map] .va-home-nav b{font-size:clamp(11px,1.55vw,27px);color:#8df5ff}#va-root[data-map] .va-home-nav span{font-size:clamp(8px,1.05vw,18px)}
+#va-root[data-map] .va-skills{right:1.8vw;bottom:10vh;width:21vw;height:30vh;min-width:165px;min-height:115px}
+#va-root[data-map] .va-skill{border-color:#c6f4ff;box-shadow:inset 0 0 14px #ffffff55,0 0 9px #66dbff88}
+#va-root[data-map] .va-skill.basic{width:clamp(65px,10.5vw,170px);height:clamp(65px,10.5vw,170px);background:radial-gradient(circle at 35% 28%,#ffffcc,#ffc543 40%,#dd622f 72%,#69155e)}
+#va-root[data-map] .va-skill.arc,#va-root[data-map] .va-skill.nova,#va-root[data-map] .va-skill.ult{width:clamp(48px,8vw,135px);height:clamp(48px,8vw,135px)}
+#va-root[data-map] .va-skill.arc{right:11.5vw;bottom:0}#va-root[data-map] .va-skill.nova{right:10vw;bottom:12vw}#va-root[data-map] .va-skill.ult{right:0;bottom:13.5vw}
+#va-root[data-map] .va-skill .ico{font-size:clamp(25px,4.4vw,65px)}#va-root[data-map] .va-skill .key{font-size:clamp(7px,1vw,16px)}
+#va-root[data-map] .va-spell-toggle{bottom:23vw;right:0;width:19vw;min-width:128px;height:clamp(27px,6.5vh,62px);font-size:clamp(11px,1.6vw,25px)}
+#va-root[data-map] .va-mega-uses{font-size:clamp(8px,1vw,16px)}#va-root[data-map] .va-vital{width:clamp(43px,5vw,82px)}#va-root[data-map] .va-vital b{font-size:clamp(8px,1vw,16px);line-height:1.1}#va-root[data-map] .va-vital>span{height:clamp(4px,.7vh,7px)}
+@media(max-aspect-ratio:18/10){#va-root[data-map] .va-skills{bottom:10vh}#va-root[data-map] .va-spell-toggle{bottom:23vw}}
+@media(min-aspect-ratio:21/10){#va-root[data-map] .va-skill.nova{bottom:21vh}#va-root[data-map] .va-skill.ult{bottom:25vh}#va-root[data-map] .va-spell-toggle{bottom:44vh}#va-root[data-map] .va-feed{display:none}}
+@media(prefers-reduced-motion:reduce){.va-map-ambience i{animation:none!important}}
+
+#va-map-picker{position:fixed;inset:0;z-index:3900;background:radial-gradient(ellipse at 50% 10%,#213f77,#070f23 78%);color:#f0faff;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:clamp(8px,2vh,22px);padding:clamp(12px,3vh,32px) clamp(14px,4vw,64px);font-family:'Kanit','Segoe UI',sans-serif;box-sizing:border-box}
+#va-map-picker *{box-sizing:border-box}#va-map-picker button{font:inherit;color:inherit;cursor:pointer}#va-map-picker button:focus-visible{outline:3px solid #fff;outline-offset:3px}
+#va-map-picker header{display:flex;align-items:center;justify-content:space-between;gap:10px}#va-map-picker header>div{text-align:center}#va-map-picker header small{letter-spacing:.22em;font-size:clamp(8px,1vw,13px);color:#94d6ff}#va-map-picker h1{font-size:clamp(18px,3.4vh,34px);margin:2px 0}#va-map-picker header>span{font-size:clamp(8px,1vw,12px);color:#98b5d5}
+#va-map-picker [data-close]{border:1px solid #6899b6;border-radius:12px;background:#1b3651;padding:7px 13px;font-size:12px}
+.vam-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(9px,1.6vw,25px);min-height:0;max-width:1440px;width:100%;justify-self:center}
+.vam-card{border:1px solid #54758c;border-radius:clamp(13px,1.8vw,27px);overflow:hidden;background:#0e2039;display:grid;grid-template-rows:minmax(0,1fr) auto;padding:0;text-align:left;min-width:0;min-height:0;transition:border-color .15s,box-shadow .15s}
+.vam-card.selected{border:2px solid var(--accent);box-shadow:0 0 22px color-mix(in srgb,var(--accent) 24%,transparent),inset 0 0 0 2px #ffffff11}
+.vam-card>img{width:100%;height:100%;object-fit:cover;min-height:0;display:block}.vam-card>div{padding:clamp(9px,2vh,23px);background:linear-gradient(130deg,#173452,#0d192e)}
+.vam-card small{font-size:clamp(9px,1.1vw,14px);color:var(--accent)}.vam-card h2{margin:2px 0 4px;font-size:clamp(16px,2vw,31px);line-height:1.2}.vam-card p{margin:0 0 8px;color:#bed2e6;font-size:clamp(8px,1vw,14px);line-height:1.3}.vam-count{display:inline-block;border:1px solid #617e92;border-radius:20px;padding:3px 10px;color:#e0f5f6;font-size:clamp(9px,1vw,14px)}
+#va-map-picker footer{display:flex;justify-content:space-between;align-items:center;gap:14px;min-height:44px}#va-map-picker footer strong{color:#a0e9ff;font-size:clamp(12px,1.4vw,19px)}#va-map-picker footer p{margin:3px 0 0;font-size:clamp(8px,1vw,13px);color:#bad0e2}
+#vam-play{flex-shrink:0;border:1px solid #a0eeff;border-radius:14px;background:linear-gradient(100deg,#137aa4,#3557c6);padding:clamp(8px,2vh,16px) clamp(15px,3vw,45px);font-size:clamp(12px,1.5vw,19px)!important;font-weight:bold!important;box-shadow:0 0 20px #41bdfb33}#vam-play:disabled{opacity:.45;cursor:default}
+@media(max-height:420px){#va-map-picker{padding:10px 18px;gap:8px}.vam-card>div{padding:7px 9px}.vam-card p{margin-bottom:4px}.vam-card h2{font-size:17px}.vam-card small{font-size:9px}.vam-count{padding:2px 7px;font-size:9px}#va-map-picker h1{font-size:20px}#va-map-picker header small{font-size:8px}}
+
+#va-root .va-coins{flex-direction:column;gap:2px;line-height:1.2}#va-root .va-coin-total{white-space:nowrap}#va-session-coins{display:block;font-size:clamp(7px,1vw,11px);font-weight:700;color:#a3ffe0;white-space:nowrap}
+
+/* Round 1387: fifty relics use a small SVG atlas and paged layout. */
+#va-root .va-relic-panel{width:min(1080px,96vw);height:min(650px,92vh);max-height:92vh;display:flex;flex-direction:column;gap:8px;padding:12px}
+#va-root .va-relic-panel .va-panel-head{margin:0;flex-shrink:0}
+#va-root .va-relic-panel .va-store-grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-auto-rows:minmax(0,1fr);gap:7px;overflow:auto}
+#va-root .va-relic-panel .va-store-item{min-height:72px;display:grid;grid-template-columns:37px minmax(0,1fr);grid-template-rows:auto 1fr auto;gap:3px 7px;padding:9px 7px;align-items:center;background:linear-gradient(155deg,#24394d,#0c162b);border:1px solid #60738a;border-radius:9px;text-align:left}
+#va-root .va-relic-panel .va-store-ico{position:static;grid-column:1;grid-row:1/4;width:37px;height:37px;background:none;box-shadow:none;border-radius:0;display:block}
+#va-root .va-relic-panel .va-store-name{grid-column:2;grid-row:1;min-width:0;font-size:11px;line-height:1.15;overflow-wrap:anywhere}
+#va-root .va-relic-panel .va-store-desc{grid-column:2;grid-row:2;min-width:0;font-size:9px;line-height:1.4;color:#c7d7e7}
+#va-root .va-relic-panel .va-store-price{grid-column:2;grid-row:3;min-width:0;font-size:10px;margin:0;color:#ffe0a1}
+#va-root .va-relic-panel .va-store-item.owned{border-color:#52cfb2;background:linear-gradient(145deg,#153c41,#0f1d2e);opacity:1}
+#va-root .va-relic-panel .va-store-item.owned .va-store-price{color:#7ff0ce}
+@media(max-width:700px){#va-root .va-relic-panel .va-store-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:500px){#va-root .va-relic-panel .va-store-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-height:500px){#va-root .va-relic-panel{gap:6px;padding:10px;height:94vh}#va-root .va-relic-panel .va-panel-title{font-size:18px}#va-root .va-relic-panel .va-panel-sub{font-size:9px}#va-root .va-relic-panel .va-store-item{min-height:67px;padding:6px;grid-template-columns:30px minmax(0,1fr);gap:2px 5px}#va-root .va-relic-panel .va-store-ico{width:30px;height:30px}#va-root .va-relic-panel .va-store-name{font-size:10px}#va-root .va-relic-panel .va-store-desc{font-size:8px}#va-root .va-relic-panel .va-store-price{font-size:9px}}
+
+#va-root .va-skill[hidden]{display:none!important}.va-empty-slot{color:#a8bfd6;font-size:20px}.va-spell-card.locked .va-spell-icon{opacity:.78}#va-root .va-spell-card.locked em{color:#ffdda4}.va-spell-cd{font-size:8px;color:#95afc7}
+/* Round 1387 — compact fantasy grimoire. Filtered pages keep the DOM small. */
+#va-root .va-spell-panel{width:min(1080px,96vw);height:min(680px,94vh);max-height:94vh;gap:8px;background:radial-gradient(ellipse at 65% 0,#1c3555,#09152a 70%);border-color:#8ba2bf}
+#va-root .va-spell-grid{grid-template-columns:repeat(6,minmax(0,1fr));grid-auto-rows:minmax(0,1fr);flex:1;min-height:0;overflow:auto;align-content:stretch}
+#va-root .va-spell-card{height:auto;min-height:88px;display:grid;grid-template-columns:38px minmax(0,1fr);grid-template-rows:auto 1fr auto;text-align:left;align-items:center;gap:3px 6px;padding:9px 7px;background:linear-gradient(150deg,#20334c,#0b162b 72%);border-color:#4b607a;border-radius:9px}
+#va-root .va-spell-card:hover{border-color:var(--element);background:linear-gradient(150deg,#304966,#112139)}
+#va-root .va-spell-card.equipped{border-color:var(--element);box-shadow:inset 0 -2px var(--element)}
+#va-root .va-spell-card .va-element-icon{grid-row:1/4;width:38px;height:38px;background:none;box-shadow:none;border-radius:0}
+.va-spell-icon{display:block;width:100%;height:100%;overflow:visible;pointer-events:none}
+#va-root .va-spell-card b{font-size:11px;line-height:1.15;overflow-wrap:anywhere}
+#va-root .va-spell-card small{font-size:9px;text-align:left;line-height:1.4;color:#c0d1e4}
+#va-root .va-spell-card em{font-size:9px}
+#va-root .va-slot-tabs button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:35px}
+.va-slot-tabs .va-spell-icon{width:26px;height:26px;flex:none}
+.va-grimoire-tools{display:flex;align-items:end;gap:9px;flex-shrink:0}
+.va-grimoire-tools label{display:flex;flex-direction:column;gap:3px;min-width:0}
+.va-grimoire-tools label>span{font-size:9px;letter-spacing:.3px;color:#aec7df}
+.va-grimoire-tools select,.va-grimoire-tools input{height:30px;padding:4px 9px;color:#e9f4ff;background:#101f36;border:1px solid #536c87;border-radius:7px;font:inherit;font-size:11px;min-width:0}
+.va-grimoire-tools select{width:140px}.va-grimoire-search{flex:1}.va-grimoire-tools b{color:#dfc58c;font-size:10px;letter-spacing:1.6px;align-self:center}
+.va-grimoire-nav{display:flex;align-items:center;gap:10px;min-height:25px;flex-shrink:0}
+.va-grimoire-nav button{width:34px;height:25px;border:1px solid #758aa4;background:#20364f;color:#f0dfb8;border-radius:6px;cursor:pointer}
+.va-grimoire-nav button:disabled{opacity:.35;cursor:default}.va-grimoire-nav span{font-size:10px;color:#c4d8e9;min-width:88px;text-align:center}
+.va-grimoire-nav small{font-size:10px;color:#ffe2a0;margin-left:auto}.va-spell-empty{grid-column:1/-1;color:#d3dfec;text-align:center}
+#va-root .va-skill[data-slot]{background:radial-gradient(circle at 50% 45%,#233d65,#0b1632 78%);border-color:#9cafc9}
+#va-root .va-skill[data-slot] .ico{width:65%;height:65%;font-size:initial;display:block;margin:0 auto;filter:none}
+@media(max-height:500px){#va-root .va-spell-panel{gap:5px;padding:9px 12px}#va-root .va-spell-card{min-height:65px;grid-template-columns:31px minmax(0,1fr);padding:5px;gap:2px 5px}#va-root .va-spell-card .va-element-icon{width:31px;height:31px}#va-root .va-spell-card b{font-size:10px}#va-root .va-spell-card small{font-size:8px;line-height:1.25}#va-root .va-spell-card em{font-size:8px}.va-grimoire-tools label>span{display:none}.va-grimoire-tools select,.va-grimoire-tools input{height:26px;font-size:10px}#va-root .va-slot-tabs button{min-height:28px;padding:2px 6px}.va-slot-tabs .va-spell-icon{width:23px;height:23px}#va-root .va-spell-panel .va-panel-title{font-size:17px}.va-grimoire-nav{min-height:21px}.va-grimoire-nav button{height:21px}.va-spell-footer{font-size:8px}}
+@media(max-width:720px){#va-root .va-spell-grid{grid-template-columns:repeat(5,minmax(0,1fr))}#va-root .va-spell-card{grid-template-columns:27px minmax(0,1fr);gap:2px 4px}#va-root .va-spell-card .va-element-icon{width:27px;height:27px}.va-grimoire-tools select{width:110px}.va-grimoire-tools b{font-size:8px;letter-spacing:.5px}#va-root .va-spell-card small{font-size:7.5px}}
+
+@media(orientation:portrait){#va-map-picker{padding:14px;gap:10px}.vam-cards{grid-template-columns:1fr;grid-template-rows:repeat(3,minmax(0,1fr))}.vam-card{grid-template-columns:42% minmax(0,1fr);grid-template-rows:1fr}.vam-card>div{align-self:center;padding:9px}.vam-card p{font-size:10px}#va-map-picker header>span{display:none}#va-map-picker footer{align-items:stretch;flex-direction:column;gap:8px}.vam-card h2{font-size:20px}}

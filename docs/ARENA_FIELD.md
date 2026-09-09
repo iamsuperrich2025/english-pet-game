@@ -1,4 +1,43 @@
-# Arena Field — rounds 1380–1384
+# Arena Field — current behavior (round 1387)
+
+The Adventure / Vocab Arena entry remains admin-only. `js/home-v2.js` renders its small fantasy-house lobby icon; `js/ui.js` loads the hero picker, map picker, catalogue and battle engine in dependency order. The eight existing animated full-body portraits are preserved. Confirming a hero keeps the owned loadout instead of granting free signature spells.
+
+## Maps and rooms
+
+Choose Sky Citadel, Crystal Hollow or Moonleaf Ruins. The map picker loads three small WebP thumbnails; only the confirmed map loads a full AVIF plate, with WebP fallback. Tiny live hero sprites reuse the existing WebP thumbnails. Round slimes, collectible letter gems, home rings, HP labels, movement and combat remain dynamic above the illustrated floor. The house is a 213×256 alpha WebP, with no full 3D model.
+
+`ArenaMaps` reserves the existing `adv` room indices r21–r35: five groups of three map rooms, four players per map. A new group becomes available only after all three maps in the preceding group are full. If the chosen map is full while a sibling map has space, the picker offers that space or waits. Current Rules permit **five groups / 60 seats total**; exhaustion is displayed rather than inventing out-of-range rooms. This is not an unlimited-capacity promise. The legacy Adventure range currently ends before r21; revisit this reservation before expanding that engine's room limit.
+
+NetRoom's optional `roomIndices`, `roomPicker`, `roomFmt` and `legacy:false` keep joins, peers and friend navigation in the selected map lane. Existing worlds keep their default behavior. A generation guard discards late admission after exit/map change. Seat contention uses the existing deterministic verification loop: seven simultaneous arrivals settle at four admitted seats; it is eventual admission, not an atomic server reservation. No Firebase Rules, data schema paths or production accounts were changed. Real-account co-op still needs live-user verification.
+
+## Permanent shops and admin entitlement
+
+The elemental catalogue contains **60 spells**: the original ten plus 50 new spells in ten family packs. The relic shop contains **50 permanent items**, retaining the original four IDs. Both use small external SVG atlases, search, categories and pagination. All priced definitions are 3,000–5,000 coins; utility/compact effects cost less than wide, repeated or finishing effects. Exact metadata lives in `js/arena-spell-catalog.js` and `js/arena-relics.js`.
+
+Ordinary accounts start with **basic shot and Light / แสงฟื้นฟู only**; their second slot is empty. Light is the starter exception to purchasing. Bought spells persist as `state.arenaItems['spell_'+id]`; relics retain `state.arenaItems[id]`. Existing genuine purchases remain owned. Hero selection cannot bypass ownership. A spell's script must load successfully before charging; failed loads, late responses after exit, insufficient funds and repeat purchases cannot spend coins. Casting an owned spell is free, subject to its cooldown.
+
+**Admins have all 60 spells and all 50 relic bonuses immediately, with no coin deduction and no fabricated purchased flags.** Entitlement is derived from the existing `isAdmin()` check. Shop cards display ADMIN. Selected spells still load on demand. Basic shot and Light remain the initial equipped controls; admins can equip any spell.
+
+Relic effects include bounded attack/critical/echo bonuses, ten element sigils, cooldowns, healing, armor, recovery, HP/shield, movement, pickup distance, cargo, drop lifetime, ordinary-word reward, pet attacks and revive time. Bonuses compile only on entry/purchase, not each frame. With all current relics: 145 maximum HP, 60 maximum shield and nine carried letters. A2's existing 28-character HP field optionally appends maximum HP; older messages default to 100.
+
+The wallet shows total coins and a separate **รอบนี้ +N** for coins actually earned this play session. Purchases do not alter this earned counter. Map changes preserve it and carried letters; exit/reentry resets earned coins to zero.
+
+## Effects and loading
+
+`ArenaElements` owns the original effects and shared 12-zone gameplay budget. `arena-spell-catalog.js` stores only small metadata, then loads `arena-spell-engine.js` plus the selected family from `js/arena-spells/`. Fifty recipes use 13 actual attack patterns with different trajectories, timing, collision, pull/push/slow/heal behavior. `arena-field-visuals.js` reuses 640 particles / 48 meshes (low-power 256 / 28) and creates the procedural moving flame shader on first fire use. No video or spell image sequences are downloaded.
+
+Both inventories pause local combat and redundant scene rendering while preserving room activity. DPR remains capped at 1.45; shadows/antialias remain off. Map changes and exit release renderer resources. See `docs/PERFORMANCE.md` and `docs/ARENA_MAP_ASSETS.json` for asset and measurement details.
+
+## Validation
+
+- `tools/test_arena_maps.cjs`: room grouping, lane isolation, full-room races, admin guard, responsive layouts, selected-only image downloads, fallback, movement, MEGA counter, map-change cleanup, letters and session coins.
+- `tools/test_arena_grimoire.cjs`: all 50 recipes and 13 patterns, lazy loading/retry, both permanent shops, prices, real bonuses, saved ownership reload, free admin access, inventory layout/render pause and GPU caps.
+- Existing field/crystal/hero harnesses retain combat, banking, MEGA five-use behavior, animated portraits and cleanup coverage. Fixtures use isolated saves and fake networking; no production account writes.
+
+## Historical implementation notes (rounds 1380–1384)
+
+The following records describe their original rounds. Where they differ (procedural map art, free starter pairs, ten spells, six-letter maximum), the current behavior above takes precedence.
+
 
 The admin-only Adventure entry loads `js/arena-field-visuals.js` and `js/arena-elements.js` before `js/arena3d.js`. The main engine still owns combat, words, rewards, co-op/boss state and lifecycle. The visual module owns compact articulated heroes, original procedural houses, merged static scenery, and bounded spell pools. `css/arena3d.css` owns its landscape HUD.
 

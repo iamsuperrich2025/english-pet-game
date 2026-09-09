@@ -197,6 +197,11 @@ function create(opt){
   /* 🚦 รอบ 684 + Phase 3: เพดานคนต่อสนามเฉพาะโลกนั้น ๆ (โรงแรมส่งค่ากำหนดของตัวเอง)
      ไม่ใส่ = ใช้ค่ากลาง ROOM_MAX เหมือนเดิมทุกโลก · เกินเพดาน = ระบบพาไปสนามถัดไปให้เอง */
   const ROOM_MAX = Math.max(1, Math.min(CFG.ROOM_MAX, opt.roomMax || CFG.ROOM_MAX));
+  // Optional isolated arena room lanes; default worlds keep their existing allocation.
+  const roomIndices=Array.isArray(opt.roomIndices)?opt.roomIndices.filter(i=>Number.isInteger(i)&&i>=0&&i<CFG.ROOMS_MAX):null;
+  const allowedRoom=i=>!roomIndices||roomIndices.includes(i);
+  const searchRooms=()=>roomIndices||Array.from({length:roomsAllowed(ROOM_MAX)},(_,i)=>i);
+  let joinGeneration=0;
 
   const peers = {};             // uid → {hot,cold,seen,legacy}
   let myUid='', idx=-1, count=0, full=false, legacy=false, joined=false, netOk=false, startedEmpty=false;
@@ -237,6 +242,7 @@ function create(opt){
      ห้ามสุ่มกระจาย! เด็ก 2 คนกดเข้าโลกพร้อมกันต้องได้สนามเดียวกัน ไม่งั้นเพื่อนไม่มีวันเจอกัน
      ปกติอ่านแค่ 1 สนาม (~1KB) · แย่สุดเท่าจำนวนสนามที่เปิด */
   function pickRoom(from){
+    if(opt.roomPicker)return opt.roomPicker(countRoom,from);
     const N=roomsAllowed(ROOM_MAX), start=Math.max(0, Math.min(N-1, from||0));
     let k=0;
     function step(){
@@ -264,6 +270,7 @@ function create(opt){
 
   /* ── เข้าสนาม i จริง (ต่อ listener + เริ่มส่ง) ───────────────── */
   function attach(i, n){
+    if(!allowedRoom(i))return;
     idx=i; count=n; full=false; joined=true; netOk=true;
     // Preserve the authoritative pre-join count. Consumers can use this once
     // per seat occupancy to start a fresh shared activity after a room emptied.
@@ -322,6 +329,7 @@ function create(opt){
   /* ── 🧓 สะพานเครื่องเก่า (อ่านอย่างเดียว · จำกัดจำนวน) ─────────────
      เครื่องใหม่ไม่เขียนลง /world เด็ดขาด (ดูหัวไฟล์ ข้อ ②) */
   function bridgeOn(){
+    if(opt.legacy===false)return;
     if(!CFG.LEGACY_BRIDGE || lgRef) return;
     try{
       lgRef=legacyRefOf().orderByKey().limitToFirst(CFG.LEGACY_WATCH);
@@ -375,17 +383,19 @@ function create(opt){
   /* ── หาสนาม + เข้า (ใช้ทั้งตอนเริ่มและตอนลองใหม่) ───────────── */
   function joinNow(first, from){
     if(!skyMapAllowed(map) || busy || joined || !envReady()) return;
+    const generation=joinGeneration;
     busy=true; retryAt=performance.now(); myUid=onlineKey();
     /* 🤝 นัดกันไว้ = พาไปสนามเดียวกับเพื่อนเลย ไม่ต้องให้เด็กกด "ไปหาเพื่อน" เอง
        (หาไม่เจอ/เต็ม → เข้าสนามปกติ แล้วค่อยตามอีกไม่กี่วินาที เผื่อเพื่อนกดเข้าช้ากว่า) */
     const pre = (first && from===undefined) ? findMet() : Promise.resolve(null);
     pre.catch(function(){ return null; }).then(function(met){
+      if(generation!==joinGeneration)return null;
       if(met && met.count<ROOM_MAX){
         busy=false; meetLeft=0;
         const was=full; full=false;
         attach(met.room, met.count);
         toast('🤝 <b>พาเข้าสนามเดียวกับ '+esc(met.n)+' แล้ว!</b>'+
-              '<br><span class="ib-sub">อยู่สนาม '+(met.room+1)+' ด้วยกัน เจอกันในนี้เลย</span>', 2600);
+              '<br><span class="ib-sub">อยู่'+ROOM_FMT(met.room+1)+' ด้วยกัน เจอกันในนี้เลย</span>', 2600);
         return null;
       }
       if(met){                                   // เจอเพื่อนแต่สนามเขาเต็ม — ห้ามเงียบ
@@ -397,10 +407,12 @@ function create(opt){
       }
       return pickRoom(from);
     }).then(function(r){
+      if(generation!==joinGeneration)return;
       if(r===null && joined) return;             // เข้าสนามเพื่อนไปแล้ว
       busy=false;
       if(!r){                                        // ทุกสนามเต็ม → สนามฝึกส่วนตัว (เล่นต่อได้ครบทุกอย่าง)
         const was=full; full=true; joined=false; dropAll(); onStat();
+        if(opt.fullMessage){if(!was)toast(esc(opt.fullMessage),3500);return;}
         if(!was) toast('🧯 <b>สนามเต็มทุกสนามตอนนี้</b><br><span class="ib-sub">'+
           (first?'เล่นใน <b>สนามฝึกส่วนตัว</b> ได้ครบทุกอย่าง แค่ยังไม่เห็นเพื่อน'
                 :'ยังไม่มีที่ว่าง — เล่นสนามฝึกส่วนตัวไปก่อน')+
@@ -409,9 +421,10 @@ function create(opt){
       }
       const was=full;
       attach(r.idx, r.count);
-      if(was) toast('✅ <b>มีที่ว่างแล้ว — พาเข้าสนาม '+(r.idx+1)+' ให้อัตโนมัติ</b>'+
+      if(was) toast('✅ <b>มีที่ว่างแล้ว — พาเข้า'+ROOM_FMT(r.idx+1)+' ให้อัตโนมัติ</b>'+
         '<br><span class="ib-sub">เห็นเพื่อนคนอื่นได้ตามปกติแล้ว</span>', 2200);
     }).catch(function(e){
+      if(generation!==joinGeneration)return;
       busy=false;
       if(isDenied(e)) goLegacy();                    // rules ยังไม่ publish → เล่นสนามเดียวแบบเดิม
       else { full=false; onStat(); }
@@ -424,6 +437,7 @@ function create(opt){
      เกมเล่นได้ครบทุกอย่าง แค่ไม่มีหลายสนาม → "ยังไม่ publish = ไม่พัง"
      ============================================================ */
   function goLegacy(){
+    if(opt.legacy===false){detachRoom();bridgeOff();dropAll();full=false;joined=false;netOk=false;onStat();return;}
     if(legacy || map==='kart') return;
     legacy=true; detachRoom(); bridgeOff(); dropAll();
     idx=-1; myUid=onlineKey();
@@ -547,7 +561,7 @@ function create(opt){
       }
       goToRoom(met.room).then(function(r){
         if(r.ok) toast('🤝 <b>ย้ายไปสนามเดียวกับ '+esc(met.n)+' แล้ว!</b>'+
-                       '<br><span class="ib-sub">อยู่สนาม '+(met.room+1)+' ด้วยกัน</span>', 2600);
+                       '<br><span class="ib-sub">อยู่'+ROOM_FMT(met.room+1)+' ด้วยกัน</span>', 2600);
       });
     }).catch(function(){});
   }
@@ -558,11 +572,11 @@ function create(opt){
     const list=(typeof Online!=='undefined' && Online.friends) ? Online.friends : [];
     list.forEach(function(f){ if(f && f.id) ids[f.id]=f.n||'เพื่อน'; });
     if(!envReady() || legacy || !Object.keys(ids).length) return Promise.resolve([]);
-    const N=roomsAllowed(ROOM_MAX), out=[], now=Date.now();
+    const indices=searchRooms(),N=indices.length, out=[], now=Date.now();
     let i=0;
     function step(){
       if(i>=N) return Promise.resolve(out);
-      const at=i++;
+      const at=indices[i++];
       return infoRefOf(at).once('value').then(function(snap){
         const v=snap.val()||{};
         for(const uid in v){
@@ -583,11 +597,11 @@ function create(opt){
     const want=metUids(map);
     const keys=Object.keys(want);
     if(!envReady() || legacy || !keys.length) return Promise.resolve(null);
-    const N=roomsAllowed(ROOM_MAX), now=Date.now();
+    const indices=searchRooms(),N=indices.length, now=Date.now();
     let i=0;
     function step(){
       if(i>=N) return Promise.resolve(null);
-      const at=i++;
+      const at=indices[i++];
       return infoRefOf(at).once('value').then(function(snap){
         const v=snap.val()||{};
         let n=0, hit=null;
@@ -607,18 +621,21 @@ function create(opt){
   /* ── 🏃 ไปหาเพื่อน: ย้ายเข้าสนามที่เพื่อนอยู่ ────────────────
      เต็ม = คืน {ok:false,reason:'full'} ให้โลกขึ้นป้ายบอกเหตุผล (ห้ามเงียบ) */
   function goToRoom(i){
+    if(!allowedRoom(i))return Promise.resolve({ok:false,reason:'map'});
     if(!skyMapAllowed(map)) return Promise.resolve({ok:false, reason:'private-beta'});
     if(legacy) return Promise.resolve({ok:false, reason:'legacy'});
     if(i===idx && joined) return Promise.resolve({ok:true, same:true});
     if(busy) return Promise.resolve({ok:false, reason:'busy'});
     busy=true;
+    const generation=joinGeneration;
     return countRoom(i).then(function(n){
+      if(generation!==joinGeneration)return {ok:false,reason:'closed'};
       busy=false;
       if(n>=ROOM_MAX) return {ok:false, reason:'full', count:n, room:i};
       detachRoom(); dropAll(); full=false;
       attach(i, n);
       return {ok:true, room:i};
-    }).catch(function(){ busy=false; return {ok:false, reason:'error'}; });
+    }).catch(function(){ if(generation!==joinGeneration)return {ok:false,reason:'closed'};busy=false; return {ok:false, reason:'error'}; });
   }
 
   /* ── 🏷️ ป้ายบอกสถานะบนจอ (กฎทอง #1: ห้ามเงียบ เด็กต้องรู้ว่าทำไมไม่เห็นเพื่อน) ──
@@ -673,8 +690,8 @@ function create(opt){
       '<div style="font-weight:800;font-size:clamp(14px,3.6vh,18px);margin-bottom:2px">👥 ไปหาเพื่อน</div>'+
       '<div id="nr-sub" style="opacity:.75;font-size:clamp(10px,2.4vh,12px);margin-bottom:8px">'+
         (innerHeight<430
-          ? 'เราอยู่ <b>'+ROOM_NOUN+' '+(idx+1)+'</b> · แตะ “ไปหา” เพื่อย้ายไป'+ROOM_NOUN+'เดียวกัน'
-          : 'ตอนนี้เราอยู่ <b>'+ROOM_NOUN+' '+(idx+1)+'</b> · เพื่อนที่อยู่คนละ'+ROOM_NOUN+'จะไม่เห็นกัน แตะ “ไปหา” เพื่อย้ายไป'+ROOM_NOUN+'เดียวกัน')+'</div>'+
+          ? 'เราอยู่ <b>'+ROOM_FMT(idx+1)+'</b> · แตะ “ไปหา” เพื่อย้ายไป'+ROOM_NOUN+'เดียวกัน'
+          : 'ตอนนี้เราอยู่ <b>'+ROOM_FMT(idx+1)+'</b> · เพื่อนที่อยู่คนละ'+ROOM_NOUN+'จะไม่เห็นกัน แตะ “ไปหา” เพื่อย้ายไป'+ROOM_NOUN+'เดียวกัน')+'</div>'+
       '<div id="nr-list" style="font-size:clamp(11px,2.7vh,14px)">⏳ กำลังหาเพื่อนในโลกนี้…</div>'+
       '<div id="nr-note" style="margin-top:8px;font-size:clamp(10px,2.4vh,12px);min-height:1em"></div>'+
       '<button id="nr-close" style="margin-top:10px;width:100%;padding:8px;border-radius:11px;border:0;'+
@@ -698,7 +715,7 @@ function create(opt){
         return '<div style="display:flex;align-items:center;gap:8px;padding:6px 4px;border-top:1px solid rgba(255,255,255,.09)">'+
           '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+
             esc(f.n)+' <small style="opacity:.6">'+tag(f.uid)+'</small></span>'+
-          '<span style="opacity:.85;white-space:nowrap">'+ROOM_NOUN+' '+(f.room+1)+'</span>'+
+          '<span style="opacity:.85;white-space:nowrap">'+ROOM_FMT(f.room+1)+'</span>'+
           (f.here ? '<span style="color:#7ee39a;font-weight:700;white-space:nowrap">✅ '+ROOM_NOUN+'เดียวกัน</span>'
                   : '<button data-room="'+f.room+'" class="nr-jump" style="padding:4px 10px;border-radius:9px;border:0;'+
                     'background:#3a86c8;color:#fff;font-weight:800;cursor:pointer;white-space:nowrap">ไปหา</button>')+
@@ -724,14 +741,14 @@ function create(opt){
           b.disabled=true; b.textContent='กำลังย้าย…';
           goToRoom(to).then(function(r){
             if(r.ok){
-              if(note){ note.style.color='#7ee39a'; note.innerHTML='✅ ย้ายเข้า <b>'+ROOM_NOUN+' '+(to+1)+'</b> แล้ว!'; }
+              if(note){ note.style.color='#7ee39a'; note.innerHTML='✅ ย้ายเข้า <b>'+ROOM_FMT(to+1)+'</b> แล้ว!'; }
               setTimeout(closeFriends,900);
             }else{
               b.disabled=false; b.textContent='ไปหา';
               /* ❗ ห้ามเงียบ — ต้องบอกเหตุผลบนจอเสมอ (กฎทอง #1) */
               if(note){ note.style.color='#ffb3a0';
                 note.innerHTML = (r.reason==='full')
-                  ? '🧯 <b>'+ROOM_NOUN+' '+(to+1)+' เต็มแล้ว</b> ('+r.count+'/'+ROOM_MAX+' คน) — ย้ายเข้าไม่ได้ตอนนี้<br>'+
+                  ? '🧯 <b>'+ROOM_FMT(to+1)+' เต็มแล้ว</b> ('+r.count+'/'+ROOM_MAX+' คน) — ย้ายเข้าไม่ได้ตอนนี้<br>'+
                     '<span style="opacity:.8">ลองใหม่อีกครั้งเมื่อมีคนออก หรือให้เพื่อนกด “ไปหา” มาที่'+ROOM_NOUN+'เราแทน</span>'
                   : '⚠️ ย้ายไม่สำเร็จตอนนี้ ลองใหม่อีกครั้งนะ';
               }
@@ -758,6 +775,7 @@ function create(opt){
     return true;
   }
   function leave(){
+    joinGeneration++;
     closeFriends();
     if(aimGet(map)) aimClear();          // 🎯 ออกจากโลกแล้ว = เป้า "ตามเพื่อน" ของโลกนี้หมดหน้าที่
     detachRoom(); bridgeOff(); dropAll();

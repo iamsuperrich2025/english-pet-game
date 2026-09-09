@@ -73,10 +73,10 @@ NOTES: `petshopping3d.js` is lazy-loaded. Food stock is consumable and excluded 
 SYSTEM: Vocab Arena
 PURPOSE: Lightweight combat-first vocabulary world with player/pet/bots, co-op boss state, pickups, HUD, and its own renderer lifecycle.
 PRIMARY FILE: `js/arena3d.js`
-RELATED FILES: `js/arena-heroes.js`, `js/arena-portrait.js`, `css/arena-heroes.css`, `img/arena-heroes/`, `js/arena-elements.js`, `js/arena-field-visuals.js`, `css/arena3d.css`, `js/ui.js`, `js/state.js`, `docs/ARENA_FIELD.md`, `tools/test_arena_field.cjs`
+RELATED FILES: `js/arena-heroes.js`, `js/arena-portrait.js`, `js/arena-maps.js`, `js/arena-elements.js`, `js/arena-field-visuals.js`, `js/arena-spell-catalog.js`, `js/arena-spell-engine.js`, `js/arena-spells/`, `js/arena-grimoire.js`, `js/arena-relics.js`, `js/netroom.js`, `css/arena3d.css`, `css/arena-heroes.css`, `js/ui.js`, `js/home-v2.js`, `img/arena-heroes/`, `img/arena-maps/`, `img/arena-icons/`, `docs/ARENA_FIELD.md`, `tools/test_arena_maps.cjs`, `tools/test_arena_grimoire.cjs`
 PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.VocabArena3D`, `start`, `stop`, `loop`, `updatePlayer`, `startBoss`
 DEPENDENCIES: `THREE`, shared state/progression, optional online state.
-NOTES: Admin-only engine/entry guards. Small articulated heroes, pooled spells, personal home banking through `state.arenaHome`; six carried letters, persistent vault. Intentionally loads without the large Adventure3D engine. See `docs/ARENA_FIELD.md`.
+NOTES: Admin-only; three selectable illustrated maps, four players/map, five groups in adv r21–r35. Sixty spells (50 lazy recipe extensions), 50 relics, permanent 3,000–5,000 coin ownership in state.arenaItems; admins use all free. Ordinary starter shot/light. Session-earned wallet counter, pooled VFX and home banking. See `docs/ARENA_FIELD.md`.
 
 SYSTEM: Vocab Sky Playground
 PURPOSE: Bright fantasy social plaza with shared Letter Hunt, Word Race, timed Sky Obby, six-floor Vocabulary Tower, rotating Daily Sky Missions, badges, checkpoints, vocabulary rewards, pets, and up to six nearby players.

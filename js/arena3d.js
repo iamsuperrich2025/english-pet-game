@@ -21,7 +21,7 @@
     {id:3,ico:'🌙',name:'หอคอยประโยค',boss:'จอมเวทพจนานุกรม',min:5,max:6,color:0xbe72ff},
     {id:4,ico:'☀️',name:'แกนปริซึม',boss:'ราชันคำศัพท์',min:6,max:8,color:0xffcf62},
   ];
-  const STORE=[
+  const STORE=typeof ArenaRelics!=='undefined'?ArenaRelics.items:[
     {id:'prism',ico:'💠',name:'แกนปริซึม',price:250,desc:'พลังโจมตีทุกสกิล +25%'},
     {id:'storm',ico:'🌀',name:'ตราวายุ',price:600,desc:'วงระเบิด Nova กว้างขึ้น 35%'},
     {id:'echo',ico:'🔮',name:'ลูกแก้วสะท้อน',price:1200,desc:'ยิงพลังพื้นฐานแยกไปหาอีก 1 เป้าหมาย'},
@@ -32,10 +32,11 @@
 
   let root,canvas,renderer,scene,camera,clock,raf=0,running=false,paused=false,built=false;
   let player,petComp,aimRing,arenaMotes,fieldFx,home,elements;
-  let spellSlots=['fire','wind'],editingSlot=0,selectedHero=null;
-  const skillSeconds=kind=>SKILL_CD[kind]*(selectedHero && kind===selectedHero.id ? .8 : 1);
+  let spellSlots=['light',null],editingSlot=0,selectedHero=null,equipRequest=0;const spellPurchases=new Map();
+  let activeMap=null,sceneDrawn=false,relicMods={"damage":0,"crit":0,"critDamage":0,"echoDamage":0,"cooldown":0,"megaCooldown":0,"heal":0,"hp":0,"armor":0,"regen":0,"shield":0,"speed":0,"pickup":0,"cargo":0,"dropLife":0,"wordReward":0,"petDamage":0,"petCooldown":0,"revive":0,"elements":{}};
+  const skillSeconds=kind=>SKILL_CD[kind]*(selectedHero && kind===selectedHero.id ? .8 : 1)*(kind==='ult'?1-relicMods.megaCooldown:kind==='basic'?1:1-relicMods.cooldown);
   let cargo=[],homeRoute=false,lastHomePaint=0,fullHintAt=0,basicHeld=false;
-  const HOME_SPOTS=[[-12,13],[12,13],[-12,-13],[12,-13]], CARGO_MAX=6;
+  const HOME_SPOTS=[[-12,13],[12,13],[-12,-13],[12,-13]];let CARGO_MAX=6;
   const pendingTimers=new Set();
   function schedule(fn,ms){const id=setTimeout(()=>{pendingTimers.delete(id);if(running)fn();},ms);pendingTimers.add(id);return id;}
   let bots=[],drops=[],shots=[],effects=[],respawns=[];
@@ -57,8 +58,9 @@
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   const rnd=(a,b)=>a+Math.random()*(b-a);
   const fmt=n=>(typeof fmtNum==='function'?fmtNum(n):Math.round(n).toLocaleString());
-  const own=id=>!!(state.arenaItems&&state.arenaItems[id]);
-  const powerMult=()=> (own('prism')?1.25:1)*(1+energy*.11);
+  const own=id=>!!(state.arenaItems&&state.arenaItems[id])||!!(typeof ArenaRelics!=='undefined'&&ArenaRelics.byId[id]&&typeof isAdmin==='function'&&isAdmin());
+  const powerMult=()=> ((own('prism')?1.25:1)+relicMods.damage)*(1+energy*.11);
+  function refreshRelics(){if(typeof ArenaRelics!=='undefined')relicMods=ArenaRelics.compile(state.arenaItems,typeof isAdmin==='function'&&isAdmin());CARGO_MAX=6+relicMods.cargo;maxHp=100+relicMods.hp;maxShield=(own('wing')?30:0)+relicMods.shield;hp=Math.min(hp,maxHp);shield=Math.min(shield,maxShield);}
   const profileAvatar=()=>{
     if(typeof lobbyBlk==='function') return lobbyBlk();
     if(/^blk([1-9]|[1-7][0-9]|8[0-8])$/.test(state.profAv||'')) return state.profAv;
@@ -69,6 +71,7 @@
   function addListener(el,type,fn,opt){ el.addEventListener(type,fn,opt); listeners.push(()=>el.removeEventListener(type,fn,opt)); }
   function ensureState(){
     if(!state.arenaItems||typeof state.arenaItems!=='object'||Array.isArray(state.arenaItems)) state.arenaItems={};
+    refreshRelics();
     if(!state.arenaStats||typeof state.arenaStats!=='object') state.arenaStats={words:0,kills:0,bestCombo:0,bossWins:0,revives:0,coopWords:0,fairCoins:0,bestChapter:0};
     for(const k of ['words','kills','bestCombo','bossWins','revives','coopWords','fairCoins','bestChapter']) if(typeof state.arenaStats[k]!=='number') state.arenaStats[k]=0;
     if(!Number.isInteger(state.arenaChapter)||state.arenaChapter<1||state.arenaChapter>CHAPTERS.length) state.arenaChapter=1;
@@ -78,6 +81,7 @@
     for(const ch of ALPHABET){const n=Number(old[ch]);if(Number.isFinite(n)&&n>0)letters[ch]=Math.min(999,Math.floor(n));}
     state.arenaHome.letters=letters;
     selectedHero=typeof ArenaHeroes!=='undefined'?ArenaHeroes.get(state.arenaHero):null;
+    activeMap=typeof ArenaMaps!=='undefined'?ArenaMaps.get(state.arenaMap):null;
     spellSlots=ArenaElements.normalizeSlots(state.arenaLoadout);state.arenaLoadout=spellSlots.slice();
     state.arenaHome.cargo=(Array.isArray(state.arenaHome.cargo)?state.arenaHome.cargo:[]).filter(ch=>typeof ch==='string'&&/^[A-Z]$/.test(ch)).slice(0,CARGO_MAX);
   }
@@ -93,7 +97,7 @@
         <button class="va-exit" id="va-exit" aria-label="ออกจากสนาม">← ออก</button>
         <div class="va-player-card va-glass"><span class="va-avatar-icon" aria-hidden="true">${selectedHero?.icon||'⚔'}</span><div class="va-player-name">${esc(state.profileName||'นักผจญภัย')}</div><div class="va-online${online?'':' off'}">● ADMIN · ${online?'ONLINE PvE':'PvE ฝึกซ้อม'}</div></div>
         <div class="va-word-card va-glass"><div class="va-word-th" id="va-word-th">เป้าหมายคำศัพท์</div><div class="va-word-en" id="va-word-en">READY</div><div class="va-word-slots" id="va-word-slots"></div></div>
-        <div class="va-coins va-glass">🪙 <span id="va-coins">${fmt(state.coins||0)}</span></div>
+        <div class="va-coins va-glass"><span class="va-coin-total">🪙 <span id="va-coins">${fmt(state.coins||0)}</span></span><small id="va-session-coins" aria-label="เหรียญที่ได้รับในรอบนี้">รอบนี้ +0</small></div>
         <button class="va-shop-btn" id="va-shop-open">🛒 พลังพิเศษ</button>
       </div>
       <div class="va-energy va-glass" id="va-energy"><span class="va-energy-label" id="va-crystal-count">◆ 0 / 5 · เก็บคริสตัล</span><div class="va-energy-track"><div class="va-energy-fill" id="va-energy-fill"></div></div><span class="va-energy-power" id="va-energy-power">×1.0</span></div>
@@ -118,15 +122,21 @@
       </div></div>
       <div class="va-modal" id="va-intro"><div class="va-panel va-intro-panel">
         <div class="va-intro-logo">VOCAB ARENA</div><div class="va-intro-sub">ตัวเล็ก · เวทมนตร์ใหญ่ · ขนอักษรกลับบ้าน</div>
-        <div class="va-intro-steps"><div class="va-intro-step"><b>⚔️</b>เดินจอยซ้าย · สู้ปุ่มขวา</div><div class="va-intro-step"><b>💎</b>คริสตัลมี A–Z · ขนได้ 6 ตัว</div><div class="va-intro-step"><b>🏠</b>กลับบ้านเพื่อฝากและสะกดคำ</div><div class="va-intro-step"><b>👑</b>ครบ 3 คำ ต่อสู้บอสด้วยกัน</div><div class="va-intro-step"><b>✨</b>ครบ 5 คริสตัล · ได้ MEGA 5 ครั้ง</div></div>
+        <div class="va-intro-steps"><div class="va-intro-step"><b>⚔️</b>เดินจอยซ้าย · สู้ปุ่มขวา</div><div class="va-intro-step"><b>💎</b>คริสตัลมี A–Z · ขนได้ ${CARGO_MAX} ตัว</div><div class="va-intro-step"><b>🏠</b>กลับบ้านเพื่อฝากและสะกดคำ</div><div class="va-intro-step"><b>👑</b>ครบ 3 คำ ต่อสู้บอสด้วยกัน</div><div class="va-intro-step"><b>✨</b>ครบ 5 คริสตัล · ได้ MEGA 5 ครั้ง</div></div>
         <button class="va-start" id="va-start">เริ่มภารกิจ ✦</button>
       </div></div>
-      <div class="va-modal" id="va-spellbook"><div class="va-panel va-spell-panel">
-        <div class="va-panel-head"><div><div class="va-panel-title">✨ คลังพลังธาตุ</div><div class="va-panel-sub">เลือกช่อง 1 หรือ 2 แล้วแตะพลังที่ต้องการ · สลับได้ฟรี คูลดาวน์ยังนับต่อ</div></div><button class="va-close" id="va-spells-close" aria-label="ปิดคลังธาตุ">✕</button></div>
+      <div class="va-modal" id="va-spellbook" role="dialog" aria-modal="true" aria-label="คลังพลังธาตุ"><div class="va-panel va-spell-panel">
+        <div class="va-panel-head"><div><div class="va-panel-title">✨ คลังพลังธาตุ</div><div class="va-panel-sub">เริ่มด้วย ยิง + แสงฟื้นฟู · ซื้อ 3,000–5,000 เหรียญ ใช้ถาวร · เลือกได้ 2 ช่อง</div></div><button class="va-close" id="va-spells-close" aria-label="ปิดคลังธาตุ">✕</button></div>
         <div class="va-slot-tabs" id="va-slot-tabs"></div><div class="va-spell-grid" id="va-spell-grid"></div>
         <div class="va-spell-footer">WASD / จอย: เดิน · 1 / 2: พลังที่เลือก · 3: MEGA (คริสตัล 5 อัน) · Space: โจมตีค้าง</div>
       </div></div><div class="va-portrait"><div><b>📱↻</b>หมุนเครื่องเป็นแนวนอนเพื่อเข้าสนามครับ</div></div>`;
     document.body.appendChild(root);
+    if(activeMap){
+      ArenaMaps.decorate(root,activeMap.id);
+      const switcher=document.createElement('button');switcher.id='va-map-change';switcher.className='va-map-change va-glass';switcher.textContent='◇ '+activeMap.name+' · เปลี่ยน';root.append(switcher);
+      addListener(switcher,'click',async function changeArenaMap(){if(paused)return;paused=true;const id=await ArenaMaps.choose();if(!running)return;if(!id){paused=false;return;}const earned=sessionCoins;stop({mapSwitch:true});start({earned});});
+      if(selectedHero){const avatar=root.querySelector('.va-avatar-icon');avatar.textContent='';const image=document.createElement('img');image.src=selectedHero.thumb;image.alt='';avatar.append(image);}
+    }
     canvas=root.querySelector('#va-canvas');
     ['vitalsLayer','spellbook','spellGrid','slotTabs','homeHint','cargo','wordTh','wordEn','wordSlots','coins','energy','energyFill','energyPower','bagList','party','partyStatus','partyList','boss','bossChapter','bossName','bossHpText','bossFill','bossWord','hp','hpFill','feed','pop','downed','downTime','revive','reviveFill','reviveName','shop','shopCoins','storeGrid','intro','stick','stickKnob'].forEach(k=>{
       const id='va-'+k.replace(/[A-Z]/g,m=>'-'+m.toLowerCase()); ui[k]=root.querySelector('#'+id);
@@ -149,7 +159,7 @@
     addListener(root.querySelector('#va-spells-close'),'click',()=>toggleSpellbook(false));
     addListener(ui.spellbook,'click',e=>{if(e.target===ui.spellbook)toggleSpellbook(false);});
     addListener(ui.slotTabs,'click',e=>{const b=e.target.closest('[data-equip-slot]');if(b){editingSlot=Number(b.dataset.equipSlot);renderSpellbook();}});
-    addListener(ui.spellGrid,'click',e=>{const b=e.target.closest('[data-equip-spell]');if(b)equipSpell(editingSlot,b.dataset.equipSpell);});
+    addListener(ui.spellGrid,'click',e=>{const b=e.target.closest('[data-equip-spell]');if(b){const id=b.dataset.equipSpell;if(ArenaElements.owned(id))equipSpell(editingSlot,id);else buySpell(editingSlot,id);}});
     addListener(root.querySelector('#va-party-friends'),'click',()=>{ if(room&&room.online)room.openFriends();else feed('📡 ต้องออนไลน์ก่อน จึงจะชวนหรือไปหาเพื่อนได้','bad'); });
     addListener(ui.shop,'click',e=>{ if(e.target===ui.shop) toggleShop(false); });
     addListener(ui.storeGrid,'click',e=>{ const b=e.target.closest('[data-buy]'); if(b) buyItem(b.dataset.buy); });
@@ -195,23 +205,24 @@
   }
 
   function initThree(){
-    renderer=new THREE.WebGLRenderer({canvas,antialias:false,powerPreference:'high-performance'});
+    renderer=new THREE.WebGLRenderer({canvas,alpha:!!activeMap,antialias:false,powerPreference:'high-performance'});
     renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.45));
     renderer.setSize(innerWidth,innerHeight,false);
     if('outputColorSpace' in renderer&&THREE.SRGBColorSpace) renderer.outputColorSpace=THREE.SRGBColorSpace;
     else if('outputEncoding' in renderer&&THREE.sRGBEncoding) renderer.outputEncoding=THREE.sRGBEncoding;
     if('toneMapping' in renderer&&THREE.ACESFilmicToneMapping){ renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=.85; }
     scene=new THREE.Scene(); scene.background=new THREE.Color(0x14243d); scene.fog=new THREE.FogExp2(0x14243d,.006);
-    camera=new THREE.PerspectiveCamera(48,innerWidth/innerHeight,.1,120);
+    camera=activeMap?new THREE.OrthographicCamera(-45,45,30,-30,.1,180):new THREE.PerspectiveCamera(48,innerWidth/innerHeight,.1,120);
     clock=new THREE.Clock(); texLoader=new THREE.TextureLoader();
     buildArena(); ArenaFieldVisuals.compactStatic(scene); fieldFx=ArenaFieldVisuals.createFx(scene,fxLow);
-    elements=ArenaElements.create({fx:fieldFx,enemies:()=>bots,hit:hitBot,storm:()=>own('storm'),heal:(health,guard)=>{const before=hp;hp=Math.min(maxHp,hp+health);shield=Math.min(Math.max(maxShield,20),shield+guard);floatText(player.pos,`+${Math.round(hp-before)} HP · โล่ +${guard}`,0xd5ffac);updateHud();}});
-    buildPlayer(); buildPet(); buildHome(); ArenaFieldVisuals.garden(scene);
+    elements=ArenaElements.create({fx:fieldFx,enemies:()=>bots,hit:hitBot,storm:()=>own('storm'),heal:(health,guard)=>{const before=hp;health*=1+relicMods.heal;hp=Math.min(maxHp,hp+health);shield=Math.min(Math.max(maxShield,20),shield+guard);floatText(player.pos,`+${Math.round(hp-before)} HP · โล่ +${guard}`,0xd5ffac);updateHud();}});
+    buildPlayer(); buildPet(); buildHome();if(!activeMap)ArenaFieldVisuals.garden(scene);
     built=true; resize();
   }
 
   function buildArena(){
     crystalNodes=[];
+    if(activeMap){arenaMotes=null;crystalNodes=ArenaMaps.scenery(scene,activeMap.id);return;}
     scene.add(new THREE.HemisphereLight(0x8bdcff,0x130d2c,.75));
     const sun=new THREE.DirectionalLight(0xc9f5ff,1.1); sun.position.set(-12,24,11); scene.add(sun);
     const fill=new THREE.PointLight(0xb44cff,.7,55); fill.position.set(10,8,-10); scene.add(fill);
@@ -252,9 +263,9 @@
   }
 
   function loadSprite(url,onReady){
-    const mat=new THREE.SpriteMaterial({transparent:true,depthWrite:false,alphaTest:.03});
+    const sceneAtLoad=scene,mat=new THREE.SpriteMaterial({transparent:true,depthWrite:false,alphaTest:.03});
     const spr=new THREE.Sprite(mat);
-    texLoader.load(url,t=>{ if('colorSpace' in t&&THREE.SRGBColorSpace)t.colorSpace=THREE.SRGBColorSpace;else if('encoding'in t&&THREE.sRGBEncoding)t.encoding=THREE.sRGBEncoding;mat.map=t;mat.needsUpdate=true;if(onReady)onReady(spr,t); },undefined,()=>{});
+    texLoader.load(url,t=>{if(scene!==sceneAtLoad){t.dispose();return;} if('colorSpace' in t&&THREE.SRGBColorSpace)t.colorSpace=THREE.SRGBColorSpace;else if('encoding'in t&&THREE.sRGBEncoding)t.encoding=THREE.sRGBEncoding;mat.map=t;mat.needsUpdate=true;if(onReady)onReady(spr,t); },undefined,()=>{});
     return spr;
   }
 
@@ -263,12 +274,12 @@
     const aura=new THREE.Mesh(new THREE.RingGeometry(.9,1.45,48),new THREE.MeshBasicMaterial({color:0x5de8ff,transparent:true,opacity:.63,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,depthWrite:false}));
     aura.rotation.x=-Math.PI/2; aura.position.y=.06; group.add(aura);
     const shadow=new THREE.Mesh(new THREE.CircleGeometry(1.05,32),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.3,depthWrite:false})); shadow.rotation.x=-Math.PI/2; shadow.position.y=.025; group.add(shadow);
-    const spr=ArenaFieldVisuals.hero(selectedHero?.tint,selectedHero);spr.scale.setScalar(1.12);group.add(spr);
-    const crown=makeTextSprite('✦',0x8ef3ff,120,120);crown.scale.set(.65,.65,1);crown.position.y=2.32;group.add(crown);
+    const spr=activeMap&&selectedHero?ArenaMaps.actor(selectedHero,loadSprite):ArenaFieldVisuals.hero(selectedHero?.tint,selectedHero);spr.scale.setScalar(1.12);group.add(spr);
+    const crown=makeTextSprite('✦',0x8ef3ff,120,120);crown.scale.set(.65,.65,1);crown.position.y=activeMap?6.9:2.32;group.add(crown);
     player={group,spr,aura,crown,pos:group.position,vel:new THREE.Vector3(),facing:new THREE.Vector3(0,0,-1)};
     aimRing=new THREE.Mesh(new THREE.RingGeometry(.85,1.15,40),new THREE.MeshBasicMaterial({color:0xffe873,transparent:true,opacity:.8,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,depthWrite:false}));
     aimRing.rotation.x=-Math.PI/2;aimRing.position.y=.08;aimRing.visible=false;scene.add(aimRing);
-    maxShield=own('wing')?30:0;shield=maxShield;
+    maxShield=(own('wing')?30:0)+relicMods.shield;shield=maxShield;
   }
 
   function petImage(p){
@@ -291,23 +302,23 @@
   function safeAvatar(v){return /^blk([1-9]|[1-7][0-9]|8[0-8])$/.test(v||'')?v:'blk1';}
   function parseArenaStatus(v){
     const p=String(v||'').split(':');
-    return p[0]==='A2'?{hp:clamp(parseInt(p[1],10)||0,0,100),down:p[2]==='1',enc:p[3]||'-'}:null;
+    const max=clamp(parseInt(p[4],10)||100,100,180);return p[0]==='A2'?{hp:clamp(parseInt(p[1],10)||0,0,max),max,down:p[2]==='1',enc:p[3]||'-'}:null;
   }
   function isArenaPeer(d){return !!(d&&parseArenaStatus(d.hp));}
   function partyUids(){return [myUid].concat(Object.keys(peers).filter(uid=>isArenaPeer(peers[uid]))).sort();}
   function leaderId(){return partyUids()[0]||myUid;}
   function isLeader(){return leaderId()===myUid;}
   function partyWords(){let n=sessionWords;for(const uid in peers)if(isArenaPeer(peers[uid]))n+=Math.max(0,Number(peers[uid].w)||0);return n;}
-  function packArenaStatus(){return `A2:${Math.ceil(hp)}:${downed?1:0}:${bossEncounter||'-'}`.slice(0,28);}
+  function packArenaStatus(){return `A2:${Math.ceil(hp)}:${downed?1:0}:${bossEncounter||'-'}${maxHp>100?':'+maxHp:''}`.slice(0,28);}
   function buildPeerActor(uid,d){
     const group=new THREE.Group();group.position.set(Number(d.x)||0,0,Number(d.z)||0);scene.add(group);
     const aura=new THREE.Mesh(new THREE.RingGeometry(.72,1.12,36),new THREE.MeshBasicMaterial({color:0x7be8ff,transparent:true,opacity:.42,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,depthWrite:false}));aura.rotation.x=-Math.PI/2;aura.position.y=.05;group.add(aura);
     const shadow=new THREE.Mesh(new THREE.CircleGeometry(.86,28),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.24,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.position.y=.02;group.add(shadow);
-    const spr=ArenaFieldVisuals.hero(0xc08aff);spr.scale.setScalar(1.12);group.add(spr);
-    const name=makeTextSprite(String(d.n||'เพื่อน').slice(0,18),0xdffbff,320,80);name.scale.set(2.7,.68,1);name.position.y=2.9;group.add(name);
+    const peerHero=typeof ArenaHeroes!=='undefined'?ArenaHeroes.get(String(d.av||'').startsWith('AH:')?d.av.slice(3):'wind'):null;const spr=activeMap&&peerHero?ArenaMaps.actor(peerHero,loadSprite):ArenaFieldVisuals.hero(0xc08aff);spr.scale.setScalar(1.12);group.add(spr);
+    const name=makeTextSprite(String(d.n||'เพื่อน').slice(0,18),0xdffbff,320,80);name.scale.set(2.7,.68,1);name.position.y=activeMap?7.8:2.9;group.add(name);
     const hpBack=new THREE.Mesh(new THREE.PlaneGeometry(2.2,.13),new THREE.MeshBasicMaterial({color:0x170e24,transparent:true,opacity:.84,side:THREE.DoubleSide}));hpBack.position.y=2.38;hpBack.visible=false;group.add(hpBack);
     const hpBar=new THREE.Mesh(new THREE.PlaneGeometry(2.12,.08),new THREE.MeshBasicMaterial({color:0x56efa7,side:THREE.DoubleSide}));hpBar.position.set(0,2.38,.01);hpBar.visible=false;group.add(hpBar);
-    const peerHome=ArenaFieldVisuals.house(0xad82dd,String(d.n||'เพื่อน').slice(0,12),makeTextSprite);scene.add(peerHome);
+    const peerHome=activeMap?ArenaMaps.house(0xad82dd,String(d.n||'เพื่อน').slice(0,12),loadSprite,makeTextSprite):ArenaFieldVisuals.house(0xad82dd,String(d.n||'เพื่อน').slice(0,12),makeTextSprite);scene.add(peerHome);
     return peerActors[uid]={uid,group,home:peerHome,spr,aura,name,hpBar,target:new THREE.Vector3(group.position.x,0,group.position.z),phase:Math.random()*TAU};
   }
   function removePeerActor(uid){const a=peerActors[uid];if(!a)return;if(scene){scene.remove(a.group);scene.remove(a.home);}disposeTree(a.group);disposeTree(a.home);delete peerActors[uid];}
@@ -324,12 +335,12 @@
   function setupCoop(){
     myUid=coopReady()?onlineKey():'local';renderPartyHud();
     if(!coopReady()){feed('📡 โหมดฝึกเดี่ยว — ล็อกอินออนไลน์เพื่อเล่น Co-op 2–4 คน','bad');return;}
-    room=NetRoom.create({map:'adv',roomMax:PARTY_MAX,sendMs:170,push:()=>netSend(true),onPeer,onPeerGone,onStatus:renderPartyHud,toast:netToast,roomNoun:'ปาร์ตี้',roomIcon:'🤝',roomFmt:i=>'ปาร์ตี้ '+i});
+    room=NetRoom.create({map:'adv',roomMax:PARTY_MAX,sendMs:170,push:()=>netSend(true),onPeer,onPeerGone,onStatus:renderPartyHud,toast:netToast,roomNoun:'ปาร์ตี้',roomIcon:'🤝',roomFmt:i=>'ปาร์ตี้ '+i,...(activeMap?ArenaMaps.roomOptions(activeMap.id):{})});
     room.join();
   }
   function netSend(force){
     if(!room||!player)return;
-    const yaw=Math.atan2(player.facing.x,player.facing.z),payload={n:String(state.profileName||'นักผจญภัย').slice(0,40),x:+player.pos.x.toFixed(2),z:+player.pos.z.toFixed(2),y:Math.round(bossContribution),yaw:+yaw.toFixed(3),av:profileAvatar(),m:downed?1:0,w:sessionWords,c:reviveSignal||'-',ct:revivesGiven,cw:isLeader()?bossWire():'',hp:packArenaStatus()};
+    const yaw=Math.atan2(player.facing.x,player.facing.z),payload={n:String(state.profileName||'นักผจญภัย').slice(0,40),x:+player.pos.x.toFixed(2),z:+player.pos.z.toFixed(2),y:Math.round(bossContribution),yaw:+yaw.toFixed(3),av:activeMap&&selectedHero?'AH:'+selectedHero.id:profileAvatar(),m:downed?1:0,w:sessionWords,c:reviveSignal||'-',ct:revivesGiven,cw:isLeader()?bossWire():'',hp:packArenaStatus()};
     room.send(payload,!!force);
   }
   function tickCoop(t){
@@ -338,7 +349,7 @@
     if(t-lastPartyPaint>350){lastPartyPaint=t;renderPartyHud();}
   }
   function updatePeerActors(t){
-    for(const uid in peerActors){const a=peerActors[uid],d=peers[uid]||{},st=parseArenaStatus(d.hp),isDown=!!(st&&st.down),speed=a.group.position.distanceTo(a.target)*6;a.group.position.lerp(a.target,.16);ArenaFieldVisuals.animate(a.spr,t,speed,Number(d.yaw)||0,isDown);a.aura.material.color.setHex(isDown?0xff5d75:0x7be8ff);a.hpBar.scale.x=st?clamp(st.hp/100,0,1):1;a.hpBar.position.x=-(1-a.hpBar.scale.x)*1.06;}
+    for(const uid in peerActors){const a=peerActors[uid],d=peers[uid]||{},st=parseArenaStatus(d.hp),isDown=!!(st&&st.down),speed=a.group.position.distanceTo(a.target)*6;a.group.position.lerp(a.target,.16);ArenaFieldVisuals.animate(a.spr,t,speed,Number(d.yaw)||0,isDown);a.aura.material.color.setHex(isDown?0xff5d75:0x7be8ff);a.hpBar.scale.x=st?clamp(st.hp/st.max,0,1):1;a.hpBar.position.x=-(1-a.hpBar.scale.x)*1.06;}
 
   }
   function renderPartyHud(){
@@ -346,6 +357,7 @@
     for(const uid of Object.keys(peers))if(isArenaPeer(peers[uid])){const st=parseArenaStatus(peers[uid].hp);members.push({uid,n:peers[uid].n||'เพื่อน',hp:st.hp,down:st.down});}
     let status;if(!coopReady())status='สนามฝึกเดี่ยว · ออฟไลน์';else if(!room||!room.joined)status='กำลังหาปาร์ตี้ Co-op…';else status=`Co-op ${members.length}/${PARTY_MAX} · ปาร์ตี้ ${room.roomLabel}${members.length<2?' · รอเพื่อนได้':''}`;
     ui.partyStatus.textContent=status;ui.partyList.innerHTML=members.slice(0,PARTY_MAX).map(m=>`<span class="${m.down?'down':''}${m.self?' self':''}" title="${esc(m.n)}">${m.down?'🆘':'●'} ${esc(m.self?'เรา':m.n)}</span>`).join('');
+    if(activeMap&&room)ui.partyStatus.textContent=room.full?'แผนที่เต็ม · กดเปลี่ยนแผนที่':room.joined?`Co-op ${members.length}/4 · ห้อง ${Math.floor((room.room-ArenaMaps.FIRST)/3)+1} · ${activeMap.name}`:'กำลังเชื่อมต่อห้อง…';
     const btn=root&&root.querySelector('#va-party-friends');if(btn)btn.classList.toggle('off',!room||!room.online);
   }
 
@@ -361,14 +373,16 @@
   function buildBot(ch,elite=false){
     const group=new THREE.Group(),col=BOT_COLORS[(ch.charCodeAt(0)+kills)%BOT_COLORS.length];
     const coreMat=new THREE.MeshStandardMaterial({color:0x142342,emissive:col,emissiveIntensity:.42,metalness:.68,roughness:.26});
-    const body=new THREE.Mesh(new THREE.IcosahedronGeometry(elite?1.45:1.08,1),coreMat);body.scale.y=1.18;body.position.y=1.25;group.add(body);
+    const body=activeMap?ArenaMaps.slime(col,elite):new THREE.Mesh(new THREE.IcosahedronGeometry(elite?1.45:1.08,1),coreMat);if(!activeMap)body.scale.y=1.18;else coreMat.dispose();body.position.y=1.25;group.add(body);
+    if(!activeMap){
     const eyeMat=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.92,blending:THREE.AdditiveBlending});
     const eye=new THREE.Mesh(new THREE.TorusGeometry(elite?.76:.57,.10,8,28),eyeMat);eye.position.set(0,1.38,.88);group.add(eye);
     for(let i=0;i<(elite?8:5);i++){ const spike=new THREE.Mesh(new THREE.ConeGeometry(.18,elite?1.3:.9,5),coreMat);const a=i/(elite?8:5)*TAU;spike.position.set(Math.sin(a)*(elite?1.25:.92),1.2,Math.cos(a)*(elite?1.25:.92));spike.rotation.z=Math.sin(a)*1.1;spike.rotation.x=Math.cos(a)*1.1;group.add(spike); }
+    }
     const letter=makeTextSprite(ch,col);letter.scale.set(elite?2.2:1.65,elite?1.1:.84,1);letter.position.y=3.25;group.add(letter);
     const barBack=new THREE.Mesh(new THREE.PlaneGeometry(elite?2.7:2.1,.18),new THREE.MeshBasicMaterial({color:0x180e20,transparent:true,opacity:.9,side:THREE.DoubleSide}));barBack.position.y=2.62;barBack.visible=false;group.add(barBack);
     const bar=new THREE.Mesh(new THREE.PlaneGeometry(elite?2.62:2.02,.11),new THREE.MeshBasicMaterial({color:elite?0xffc24d:0x61f5b3,side:THREE.DoubleSide}));bar.position.set(0,2.62,.012);bar.visible=false;group.add(bar);
-    const a=Math.random()*TAU,r=rnd(17,28);group.position.set(Math.sin(a)*r,0,Math.cos(a)*r);group.scale.setScalar(.68);scene.add(group);
+    const a=Math.random()*TAU,r=rnd(17,28);group.position.set(Math.sin(a)*r,0,Math.cos(a)*r);group.scale.setScalar(activeMap?1.3:.68);scene.add(group);
     const mhp=elite?180:80+rnd(-8,16),bot={group,body,letter,bar,col,ch,elite,hp:mhp,maxHp:mhp,vel:new THREE.Vector3(),attackAt:rnd(.3,1.2),phase:Math.random()*TAU,dead:false,slow:0};
     bots.push(bot);return bot;
   }
@@ -471,9 +485,10 @@
   function castSkill(kind){
     if(!running||paused||document.hidden||downed||performance.now()<cooldown[kind]) return;
     ensureAudio();
-    const now=performance.now(),mult=powerMult();
+    const now=performance.now(),mult=powerMult()*(1+(relicMods.elements[ArenaElements.byId[kind]?.family||kind]||0));
     const aim=targetNearest(18);if(aim)player.facing.copy(aim.group.position).sub(player.pos).setY(0).normalize();
-    if(!SKILL_CD[kind])return;
+    if(!SKILL_CD[kind])return;if(kind!=='basic'&&kind!=='ult'&&!ArenaElements.owned(kind))return;
+    if(ArenaElements.byId[kind]?.pack&&!ArenaElements.isReady(kind)){const at=root;ArenaElements.prepare(kind).then(()=>{if(root===at&&running)feed('พร้อมใช้ '+ArenaElements.byId[kind].name,'gold');}).catch(()=>{if(root===at&&running)feed('โหลดธาตุไม่สำเร็จ · กดลองใหม่','bad');});return;}
     if(kind==='ult'&&megaUses===0){ feed(`เก็บคริสตัลอีก ${CRYSTAL_NEED-crystalCharge} อัน เพื่อปล่อย MEGA`,'bad');pulseButton('ult');return; }
     if(ArenaElements.byId[kind]&&kind!=='arc'&&kind!=='nova'){
       if(elements.cast(kind,player.pos,player.facing,aim,mult)){
@@ -484,21 +499,21 @@
     if(kind==='basic'){
       const b=targetNearest(15);if(!b){feed('เข้าใกล้ปีศาจอีกนิดครับ');return;}
       ArenaFieldVisuals.strike(player.spr,now);fieldFx.slash(player.pos,Math.atan2(player.facing.x,player.facing.z));cooldown.basic=now+SKILL_CD.basic*1000;fireBolt(b,24*mult,0x7ff3ff,false);
-      if(own('echo')){const b2=targetNearest(15,b);if(b2)schedule(()=>{if(running&&!b2.dead)fireBolt(b2,16*mult,0xcb7cff,false);},85);}
+      if(own('echo')){const b2=targetNearest(15,b);if(b2)schedule(()=>{if(running&&!b2.dead)fireBolt(b2,16*mult*(1+relicMods.echoDamage),0xcb7cff,false);},85);}
       tone(480,.05,.08,'sine');
     }else if(kind==='arc'){
       const first=targetNearest(17);if(!first){feed('ไม่มีปีศาจในระยะ ARC');return;}
-      ArenaFieldVisuals.strike(player.spr,now);fieldFx.spell(player.pos,'arc');cooldown.arc=now+SKILL_CD.arc*1000;let cur=first,seen=new Set();
+      ArenaFieldVisuals.strike(player.spr,now);fieldFx.spell(player.pos,'arc');cooldown.arc=now+skillSeconds('arc')*1000;let cur=first,seen=new Set();
       for(let i=0;i<3&&cur;i++){seen.add(cur);const from=i?Array.from(seen)[i-1].group.position:player.pos;beam(from,cur.group.position,i?0xa777ff:0x66eeff,.23);hitBot(cur,(42-i*8)*mult);cur=bots.filter(b=>!b.dead&&!seen.has(b)&&flatDist(b.group.position,cur.group.position)<7).sort((a,b)=>flatDist(a.group.position,cur.group.position)-flatDist(b.group.position,cur.group.position))[0];}
       burst(first.group.position,0x77e9ff,22,5);tone(720,.13,.16,'sawtooth');haptic(22);
     }else if(kind==='nova'){
-      ArenaFieldVisuals.strike(player.spr,now);fieldFx.spell(player.pos,'nova');cooldown.nova=now+SKILL_CD.nova*1000;const rad=own('storm')?8.2:6.1;ringFx(player.pos,0xb55cff,rad,.62);
+      ArenaFieldVisuals.strike(player.spr,now);fieldFx.spell(player.pos,'nova');cooldown.nova=now+skillSeconds('nova')*1000;const rad=own('storm')?8.2:6.1;ringFx(player.pos,0xb55cff,rad,.62);
       let n=0;for(const b of bots.slice()){if(!b.dead&&flatDist(player.pos,b.group.position)<=rad){hitBot(b,48*mult);burst(b.group.position,0xd27cff,10,3);n++;}}
       feed(n?`🌀 NOVA โดน ${n} เป้าหมาย`:'🌀 NOVA ยังไม่ถึงตัวปีศาจ');tone(235,.32,.18,'sawtooth');haptic(35);
     }else if(kind==='ult'){
       const kind=selectedHero?.id||'fire';
-      if(!elements.castMega(kind,player.pos,player.facing,powerMult()))return;
-      megaUses--;if(megaUses===0)crystalCharge=0;cooldown.ult=now+SKILL_CD.ult*1000;ArenaFieldVisuals.strike(player.spr,now);
+      if(!elements.castMega(kind,player.pos,player.facing,powerMult()*(1+(relicMods.elements[kind]||0))))return;
+      megaUses--;if(megaUses===0)crystalCharge=0;cooldown.ult=now+skillSeconds('ult')*1000;ArenaFieldVisuals.strike(player.spr,now);
       showPop('MEGA '+kind.toUpperCase(),megaUses?`เหลือพลังวงใหญ่อีก ${megaUses} ครั้ง`:'ใช้ครบแล้ว · เก็บคริสตัลใหม่ 5 อัน');tone(110,.7,.24,'sawtooth');schedule(()=>tone(660,.38,.16,'sine'),120);haptic([30,45,60]);
     }
     updateHud();
@@ -518,6 +533,7 @@
   }
   function hitBot(b,dmg){
     if(!b||b.dead)return;
+    if(relicMods.crit&&Math.random()<relicMods.crit)dmg*=1.5+relicMods.critDamage;
     if(b.boss){
       bossContribution=Math.min(bossMax*1.5,bossContribution+Math.max(0,dmg));
       b.body.material.emissiveIntensity=2.4;schedule(()=>{if(b&&!b.dead)b.body.material.emissiveIntensity=.78;},70);
@@ -537,11 +553,11 @@
 
   function dropLetter(pos,ch,col,options={}){
     const group=new THREE.Group();group.position.copy(pos);group.position.y=.35;
-    const gem=new THREE.Mesh(new THREE.OctahedronGeometry(.58,0),new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:1.65,metalness:.3,roughness:.18,transparent:true,opacity:.9}));gem.scale.y=1.3;group.add(gem);
-    const spr=makeTextSprite(ch,0xffffff,180,180);spr.scale.set(.9,.9,1);spr.position.y=.08;spr.material.depthTest=false;spr.renderOrder=8;group.add(spr);
-    const halo=new THREE.Mesh(new THREE.RingGeometry(.55,.82,30),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.68,side:THREE.DoubleSide,blending:THREE.AdditiveBlending}));halo.rotation.x=-Math.PI/2;halo.position.y=.08;group.add(halo);
+    const gem=new THREE.Mesh(new THREE.OctahedronGeometry(.58,0),new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:activeMap?.18:1.65,metalness:.3,roughness:.18,transparent:true,opacity:.9}));gem.scale.y=1.3;group.add(gem);
+    if(activeMap)ArenaMaps.crystal(gem);const spr=makeTextSprite(ch,activeMap?0x154f89:0xffffff,180,180);spr.scale.set(.9,.9,1);spr.position.y=.08;spr.material.depthTest=false;spr.renderOrder=8;group.add(spr);
+    const halo=new THREE.Mesh(new THREE.RingGeometry(.55,.82,30),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.68,side:THREE.DoubleSide,blending:THREE.AdditiveBlending}));halo.rotation.x=-Math.PI/2;halo.position.y=.08;if(activeMap)halo.material.blending=THREE.NormalBlending;group.add(halo);
     if(options.node){group.scale.setScalar(1.85);group.position.y=2.3;}
-    const d={group,gem,halo,ch,col,phase:Math.random()*TAU,life:options.node?Infinity:45,node:options.node||null,chargeable:options.chargeable!==false};
+    const d={group,gem,halo,ch,col,phase:Math.random()*TAU,life:options.node?Infinity:45+relicMods.dropLife,node:options.node||null,chargeable:options.chargeable!==false};
     scene.add(group);drops.push(d);return d;
   }
   /* ==== 💎 Round 1384: letter crystals charge a five-pickup elemental MEGA ==== */
@@ -560,7 +576,7 @@
   }
 
   /* ==== 🏡 Round 1380: collect → carry → return → bank ==== */
-  function buildHome(){home=ArenaFieldVisuals.house(0x58baff,'บ้านของคุณ',makeTextSprite);scene.add(home);placeHome();}
+  function buildHome(){home=activeMap?ArenaMaps.house(0x58baff,'บ้านของคุณ',loadSprite,makeTextSprite):ArenaFieldVisuals.house(0x58baff,'บ้านของคุณ',makeTextSprite);scene.add(home);placeHome();}
   function placeHome(){if(!home)return;const spot=HOME_SPOTS[Math.max(0,partyUids().indexOf(myUid))%4];home.position.set(spot[0],0,spot[1]);for(const uid in peerActors){const peer=peerActors[uid],p=HOME_SPOTS[Math.max(0,partyUids().indexOf(uid))%4];peer.home.position.set(p[0],0,p[1]);}}
   function persistHome(){state.arenaHome.letters=bag;state.arenaHome.cargo=cargo.slice();saveState();}
   function bankCargo(){
@@ -573,7 +589,7 @@
   function updateHome(dt,t){
     placeHome();if(!downed&&flatDist(player.pos,home.position)<3.3){bankCargo();checkWord();if(hp<maxHp){hp=Math.min(maxHp,hp+dt*7);if(t-lastHomePaint>200)updateHud();}}
     if(t-lastHomePaint>200){lastHomePaint=t;paintHome();}
-    cargoScreen.copy(player.pos);cargoScreen.y=2.9;cargoScreen.project(camera);ui.cargo.style.transform=`translate(${(cargoScreen.x*.5+.5)*innerWidth}px,${(-cargoScreen.y*.5+.5)*innerHeight}px) translate(-50%,-50%)`;
+    cargoScreen.copy(player.pos);cargoScreen.y=activeMap?8.8:2.9;cargoScreen.project(camera);ui.cargo.style.transform=`translate(${(cargoScreen.x*.5+.5)*innerWidth}px,${(-cargoScreen.y*.5+.5)*innerHeight}px) translate(-50%,-50%)`;
   }
 
   function nextWord(){
@@ -591,7 +607,7 @@
   function completeWord(){
     if(target&&target.boss)return completeBossWord();
     wordBusy=true;for(const ch of target.en)bag[ch]--;persistHome();
-    const reward=40+target.en.length*15+Math.min(100,energy*5),word=target.en,meaning=target.th;
+    const reward=Math.round((40+target.en.length*15+Math.min(100,energy*5))*(1+relicMods.wordReward)),word=target.en,meaning=target.th;
     if(!Array.isArray(state.advDone))state.advDone=[];if(!state.advDone.includes(word.toLowerCase()))state.advDone.push(word.toLowerCase());
     addCoins(reward);sessionWords++;sessionCoins+=reward;state.arenaStats.words=(state.arenaStats.words||0)+1;if(partyUids().length>1)state.arenaStats.coopWords=(state.arenaStats.coopWords||0)+1;saveState();
     showPop(word,`${meaning} · +${fmt(reward)} 🪙`);feed(`🎉 ประกอบ ${word} สำเร็จ ได้ ${fmt(reward)} เหรียญ`,'gold');
@@ -608,12 +624,12 @@
     ensureState();const it=STORE.find(x=>x.id===id);if(!it||own(id))return;
     if((state.coins||0)<it.price){feed(`เหรียญยังไม่พอซื้อ ${it.name} — ขาด ${fmt(it.price-(state.coins||0))} 🪙`,'bad');tone(150,.13,.11,'square');return;}
     state.coins-=it.price;state.arenaItems[id]=true;saveState();
-    if(id==='wing'){maxShield=30;shield=maxShield;}
+    const beforeHp=maxHp,beforeShield=maxShield;refreshRelics();hp=Math.min(maxHp,hp+maxHp-beforeHp);shield=Math.min(maxShield,shield+maxShield-beforeShield);
     renderShop();updateHud();feed(`✨ ซื้อ ${it.name} แล้ว ใช้พลังทันที`,'gold');showPop(it.ico,it.name);tone(660,.22,.14,'sine');
     if(typeof sfx!=='undefined'&&sfx.buy)sfx.buy();
   }
   function renderShop(){
-    if(!ui.storeGrid)return;ui.shopCoins.textContent=fmt(state.coins||0);
+    if(!ui.storeGrid)return;ui.shopCoins.textContent=fmt(state.coins||0);if(typeof ArenaRelics!=='undefined'){ArenaRelics.render(root,{own,fmt});return;}
     ui.storeGrid.innerHTML=STORE.map(it=>`<button class="va-store-item${own(it.id)?' owned':''}" data-buy="${it.id}"><span class="va-store-ico">${it.ico}</span><div class="va-store-name">${it.name}</div><div class="va-store-desc">${it.desc}</div><div class="va-store-price">${own(it.id)?'✓ มีแล้ว':`🪙 ${fmt(it.price)}`}</div></button>`).join('');
   }
   function toggleShop(on){
@@ -623,17 +639,39 @@
   /* ==== 🔥 Round 1381 — two persistent elemental slots ==== */
   function syncPause(){paused=ui.shop.classList.contains('on')||ui.intro.classList.contains('on')||ui.spellbook.classList.contains('on');lastFrame=0;if(clock)clock.getDelta();}
   function syncLoadoutButtons(){
-    if(!root)return;root.querySelectorAll('[data-slot]').forEach(b=>{const slot=Number(b.dataset.slot),def=ArenaElements.byId[spellSlots[slot]];b.dataset.skill=def.id;b.style.setProperty('--element',def.color);b.querySelector('.ico').textContent=def.icon;b.querySelector('.key').textContent=`${slot+1} ${def.name}`;b.setAttribute('aria-label',`${slot+1} ${def.name}`);});
+    if(!root)return;root.querySelectorAll('[data-slot]').forEach(b=>{const slot=Number(b.dataset.slot),def=ArenaElements.byId[spellSlots[slot]];b.hidden=!def;if(!def){b.dataset.skill='empty';return;}b.dataset.skill=def.id;b.style.setProperty('--element',def.color);if(typeof ArenaGrimoire!=='undefined')b.querySelector('.ico').innerHTML=ArenaGrimoire.icon(def);else b.querySelector('.ico').textContent=def.icon;b.querySelector('.key').textContent=`${slot+1} ${def.name}`;b.setAttribute('aria-label',`${slot+1} ${def.name}`);});
   }
   function equipSpell(slot,id){
-    if(![0,1].includes(slot)||!ArenaElements.byId[id])return false;
+    if(![0,1].includes(slot)||!ArenaElements.byId[id]||!ArenaElements.owned(id))return false;
+    const request=++equipRequest;
+    if(ArenaElements.byId[id].pack&&!ArenaElements.isReady(id)){const at=root;ArenaGrimoire.status(root,'กำลังเตรียม '+ArenaElements.byId[id].name+'…');return ArenaElements.prepare(id).then(()=>{if(root!==at||!running||request!==equipRequest)return false;ArenaGrimoire.status(root,'พร้อมใช้งาน');return equipSpell(slot,id);}).catch(()=>{if(root===at&&request===equipRequest)ArenaGrimoire.status(root,'โหลดไม่สำเร็จ · แตะเพื่อลองใหม่');return false;});}
     const other=1-slot;if(spellSlots[other]===id)spellSlots[other]=spellSlots[slot];spellSlots[slot]=id;state.arenaLoadout=spellSlots.slice();saveState();syncLoadoutButtons();renderSpellbook();return true;
   }
+  async function buySpell(slot,id){
+    const def=ArenaElements.byId[id];if(!def||!Number.isFinite(def.price)||![0,1].includes(slot))return false;
+    if(ArenaElements.owned(id))return equipSpell(slot,id);
+    if(spellPurchases.has(id))return spellPurchases.get(id);
+    if((state.coins||0)<def.price){feed('เหรียญไม่พอซื้อ '+def.name,'bad');return false;}
+    const at=root;ArenaGrimoire.status(root,'กำลังเตรียม '+def.name+'…');
+    const purchase=(async function purchaseArenaSpell(){
+      try{
+        if(typeof ArenaElements.prepare==='function')await ArenaElements.prepare(id);
+        if(root!==at||!running)return false;
+        if(ArenaElements.owned(id))return equipSpell(slot,id);
+        if((state.coins||0)<def.price){ArenaGrimoire.status(root,'เหรียญไม่พอ · ยังไม่ได้ซื้อ');return false;}
+        state.coins-=def.price;state.arenaItems['spell_'+id]=true;saveState();
+        const applied=await equipSpell(slot,id);updateHud();ArenaGrimoire.status(root,'ซื้อ '+def.name+' แล้ว · ใช้ได้ถาวร');tone(660,.2,.12,'sine');return applied;
+      }catch(e){if(root===at)ArenaGrimoire.status(root,'โหลดไม่สำเร็จ · ไม่หักเหรียญ · แตะเพื่อลองใหม่');return false;}
+      finally{spellPurchases.delete(id);}
+    })();
+    spellPurchases.set(id,purchase);return purchase;
+  }
   function renderSpellbook(){
-    ui.slotTabs.innerHTML=spellSlots.map((id,i)=>`<button data-equip-slot="${i}" class="${editingSlot===i?'selected':''}" aria-pressed="${editingSlot===i}">${i+1} · ${ArenaElements.byId[id].icon} ${ArenaElements.byId[id].name}</button>`).join('');
+    if(typeof ArenaGrimoire!=='undefined'){ArenaGrimoire.render(root,{slots:spellSlots,editing:editingSlot,seconds:skillSeconds,own:ArenaElements.owned});return;}
+    ui.slotTabs.innerHTML=spellSlots.map((id,i)=>`<button data-equip-slot="${i}" class="${editingSlot===i?'selected':''}" aria-pressed="${editingSlot===i}">${i+1} · ${ArenaElements.byId[id]?.icon||'+'} ${ArenaElements.byId[id]?.name||'เลือกพลัง'}</button>`).join('');
     ui.spellGrid.innerHTML=ArenaElements.skills.map(def=>{const slot=spellSlots.indexOf(def.id);return `<button class="va-spell-card${slot>=0?' equipped':''}" data-equip-spell="${def.id}" style="--element:${def.color}" aria-label="${def.name} ${def.desc}"><span class="va-element-icon">${def.icon}</span><b>${def.name}</b><small>${def.desc}</small><em>${slot>=0?'ช่อง '+(slot+1)+' · ':''}${Number(skillSeconds(def.id).toFixed(1))} วิ</em></button>`;}).join('');
   }
-  function toggleSpellbook(on){if(!running)return;basicHeld=false;keys.clear();joy.x=joy.z=0;homeRoute=false;ui.spellbook.classList.toggle('on',!!on);if(on)renderSpellbook();syncPause();}
+  function toggleSpellbook(on){if(!running)return;basicHeld=false;keys.clear();joy.x=joy.z=0;homeRoute=false;ui.spellbook.classList.toggle('on',!!on);if(on){if(!spellSlots[1])editingSlot=1;renderSpellbook();}syncPause();}
 
   function updatePlayer(dt,t){
     let x=joy.x,z=joy.z;
@@ -642,7 +680,7 @@
     if(Math.hypot(x,z)>.1)homeRoute=false;
     if(homeRoute&&home&&!downed){const dx=home.position.x-player.pos.x,dz=home.position.z+1.7-player.pos.z,d=Math.hypot(dx,dz);if(d<1.5)homeRoute=false;else{x=dx/d;z=dz/d;}}
     const len=Math.hypot(x,z);if(len>1){x/=len;z/=len;}
-    const petSpeed=petComp&&petComp.type==='dog'?1.08:1,speed=7.5*petSpeed*(downed?.24:1);
+    const petSpeed=petComp&&petComp.type==='dog'?1.08:1,speed=7.5*petSpeed*(1+relicMods.speed)*(downed?.24:1);
     player.vel.x+=(x*speed-player.vel.x)*Math.min(1,dt*10);player.vel.z+=(z*speed-player.vel.z)*Math.min(1,dt*10);
     if(len<.05){player.vel.x*=Math.max(0,1-dt*7);player.vel.z*=Math.max(0,1-dt*7);}
     player.pos.x+=player.vel.x*dt;player.pos.z+=player.vel.z*dt;
@@ -658,7 +696,7 @@
     const goal=player.pos.clone().add(behind).add(side);const delta=goal.sub(petComp.group.position);petComp.vel.addScaledVector(delta,dt*14);petComp.vel.multiplyScalar(Math.pow(.035,dt));petComp.group.position.addScaledVector(petComp.vel,dt);
     const d=flatDist(petComp.group.position,player.pos);if(d>7){petComp.group.position.lerp(player.pos,.3);petComp.vel.set(0,0,0);burst(petComp.group.position,0x83f5d3,12,2);}
     const pace=Math.min(1,petComp.vel.length()/7);petComp.spr.position.y=.65+Math.abs(Math.sin(t*.014+petComp.phase))*.18*pace+Math.sin(t*.004)*.035;petComp.spr.scale.x=Math.abs(petComp.spr.scale.x)*(petComp.vel.x<-.12?-1:1);petComp.glow.rotation.z-=dt*1.6;
-    if(t-lastPetStrike>4600&&bots.length){const b=targetNearest(11);if(b){lastPetStrike=t;const bonus=petComp.type==='dragon'?26:petComp.type==='cat'?20:15;fireBolt(b,bonus*(own('prism')?1.25:1),petComp.type==='dragon'?0xff784d:0x7fffd2,true);feed(`🐾 ${petComp.data.name||'น้อง'} ช่วยโจมตี!`);}}
+    if(t-lastPetStrike>4600*(1-relicMods.petCooldown)&&bots.length){const b=targetNearest(11);if(b){lastPetStrike=t;const bonus=petComp.type==='dragon'?26:petComp.type==='cat'?20:15;fireBolt(b,bonus*(own('prism')?1.25:1)*(1+relicMods.petDamage),petComp.type==='dragon'?0xff784d:0x7fffd2,true);feed(`🐾 ${petComp.data.name||'น้อง'} ช่วยโจมตี!`);}}
   }
 
   function updateBots(dt,t){
@@ -669,7 +707,7 @@
       if(d>8.5)desired.copy(dir).multiplyScalar(b.elite?3.5:2.7);else if(d<5.2)desired.copy(dir).multiplyScalar(-1.8);else desired.set(-dir.z,0,dir.x).multiplyScalar(Math.sin(t*.001+b.phase)>0?1.4:-1.4);
       if(b.slow>t)desired.multiplyScalar(.45);b.vel.lerp(desired,Math.min(1,dt*2.8));b.group.position.addScaledVector(b.vel,dt);
       const rr=Math.hypot(b.group.position.x,b.group.position.z);if(rr>ARENA_R-1){b.group.position.multiplyScalar((ARENA_R-1)/rr);}
-      b.body.rotation.y+=dt*(b.elite?1.7:1.1);b.body.position.y=1.25+Math.sin(t*.003+b.phase)*.16;b.letter.position.y=3.25+Math.sin(t*.004+b.phase)*.13;
+      if(!activeMap)b.body.rotation.y+=dt*(b.elite?1.7:1.1);b.body.position.y=1.25+Math.sin(t*.003+b.phase)*.16;b.letter.position.y=3.25+Math.sin(t*.004+b.phase)*.13;
       b.group.lookAt(camera.position.x,b.group.position.y,camera.position.z);
       if(d<9.5&&t>b.attackAt&&!downed){enemyBolt(b);if(b.boss&&b.chapter>=2)schedule(()=>{if(running&&boss===b&&!b.dead&&!downed)enemyBolt(b);},230);b.attackAt=t+(b.boss?Math.max(850,1750-b.chapter*140):(b.elite?1500:rnd(2200,3200)));}
     }
@@ -685,6 +723,7 @@
   function removeShot(i){const s=shots[i];if(!s)return;scene.remove(s.mesh);s.mesh.geometry.dispose();s.mesh.material.dispose();shots.splice(i,1);}
   function damagePlayer(n){
     if(downed||(home&&flatDist(player.pos,home.position)<3.3))return true;
+    n*=1-relicMods.armor;
     if(shield>0){const use=Math.min(shield,n);shield-=use;n-=use;if(use)floatText(player.pos,`โล่ -${Math.ceil(use)}`,0x79dfff);}
     if(n>0){const lost=Math.min(hp,n);hp=Math.max(0,hp-n);floatText(player.pos,`−${Math.ceil(lost)}`,0xff7f95);}lastHitAt=performance.now();ui.hp.animate([{opacity:1},{opacity:.5},{opacity:1}],{duration:220});tone(95,.12,.12,'square');haptic(28);
     const fell=hp<=0;if(fell)downPlayer();updateHud();return fell;
@@ -710,12 +749,12 @@
     if(!ui.revive)return;
     if(downed){ui.revive.classList.remove('on');ui.downTime.textContent=`รอเพื่อนมาชุบ ${Math.max(0,Math.ceil((downUntil-t)/1000))} วิ`;if(t>=downUntil)recoverPlayer('พลังสำรองอัตโนมัติ');return;}
     const p=nearestDownedPeer(),show=!!p&&t-lastReviveSent>1100;ui.revive.classList.toggle('on',show);if(!show){reviveHold=null;ui.reviveFill.style.width='0%';return;}
-    ui.reviveName.textContent=`${p.d.n||'เพื่อน'} · ต้องอยู่ใกล้ตลอด`;if(reviveHold&&reviveHold.uid===p.uid){const k=clamp((t-reviveHold.at)/REVIVE_HOLD_MS,0,1);ui.reviveFill.style.width=(k*100)+'%';if(k>=1)finishRevive(p);}else{reviveHold=null;ui.reviveFill.style.width='0%';}
+    ui.reviveName.textContent=`${p.d.n||'เพื่อน'} · ต้องอยู่ใกล้ตลอด`;if(reviveHold&&reviveHold.uid===p.uid){const k=clamp((t-reviveHold.at)/(REVIVE_HOLD_MS*(1-relicMods.revive)),0,1);ui.reviveFill.style.width=(k*100)+'%';if(k>=1)finishRevive(p);}else{reviveHold=null;ui.reviveFill.style.width='0%';}
   }
 
   function updateDrops(dt,t){
     updateCrystalNodes(dt);
-    for(let i=drops.length-1;i>=0;i--){const d=drops[i];d.life-=dt;if(d.life<=0){scene.remove(d.group);disposeTree(d.group);drops.splice(i,1);continue;}d.gem.rotation.y+=dt*2.6;d.gem.rotation.x+=dt*.8;d.group.position.y=(d.node?2.3:.65)+Math.sin(t*.004+d.phase)*.16;d.halo.rotation.z+=dt*1.8;if(!downed&&flatDist(d.group.position,player.pos)<(d.node?2.5:1.4))collectDrop(d);}
+    for(let i=drops.length-1;i>=0;i--){const d=drops[i];d.life-=dt;if(d.life<=0){scene.remove(d.group);disposeTree(d.group);drops.splice(i,1);continue;}d.gem.rotation.y+=dt*(activeMap?.8:2.6);if(!activeMap)d.gem.rotation.x+=dt*.8;d.group.position.y=(d.node?2.3:.65)+Math.sin(t*.004+d.phase)*.16;d.halo.rotation.z+=dt*1.8;if(!downed&&flatDist(d.group.position,player.pos)<(d.node?2.5:1.4)*(1+relicMods.pickup))collectDrop(d);}
   }
   function updateEffects(dt){
     for(let i=effects.length-1;i>=0;i--){const f=effects[i];f.life-=dt;
@@ -733,6 +772,7 @@
   }
 
   function cameraTick(dt){
+    if(activeMap){const b=targetNearest(15);aimRing.visible=!!b;if(b){aimRing.position.set(b.group.position.x,.08,b.group.position.z);aimRing.scale.setScalar(b.elite?1.35:1);}return;}
     const aspect=innerWidth/innerHeight,wide=aspect>1.8;const want=new THREE.Vector3(player.pos.x,wide?33:36,player.pos.z+(wide?20:23));camera.position.lerp(want,1-Math.pow(.002,dt));camera.lookAt(player.pos.x,0,player.pos.z-2.3);
     const b=targetNearest(15);aimRing.visible=!!b;if(b){aimRing.position.x=b.group.position.x;aimRing.position.z=b.group.position.z;aimRing.scale.setScalar(b.elite?1.35:1);aimRing.material.opacity=.55+Math.sin(performance.now()*.008)*.25;}
   }
@@ -741,9 +781,9 @@
     if(!running)return;raf=requestAnimationFrame(loop);const dt=Math.min(.034,lastFrame?(t-lastFrame)/1000:.016);lastFrame=t;
     if(document.hidden)return;
     if(!paused){if((basicHeld||keys.has('Space'))&&targetNearest(15))castSkill('basic');updatePlayer(dt,t);updatePet(dt,t);elements.tick(dt);updateBots(dt,t);updateShots(dt,t);updateDrops(dt,t);updateHome(dt,t);updateEffects(dt);fieldFx.tick(dt);ensureBots(t);cameraTick(dt);
-      if(maxShield&&t-lastHitAt>4200)shield=Math.min(maxShield,shield+dt*4.5);if(arenaMotes)arenaMotes.rotation.y+=dt*.015;updateCooldownUi(t);}
-    tickCoop(t);updateVitals();
-    renderer.render(scene,camera);
+      if(!downed&&relicMods.regen&&t-lastHitAt>4000)hp=Math.min(maxHp,hp+dt*relicMods.regen);if(maxShield&&t-lastHitAt>4200)shield=Math.min(maxShield,shield+dt*4.5);if(arenaMotes)arenaMotes.rotation.y+=dt*.015;updateCooldownUi(t);}
+    tickCoop(t);if(!paused||!sceneDrawn)updateVitals();
+    if(!paused||!sceneDrawn){renderer.render(scene,camera);sceneDrawn=true;}
   }
 
   function flatDist(a,b){const x=a.x-b.x,z=a.z-b.z;return Math.hypot(x,z);}
@@ -761,9 +801,9 @@
       const v=Math.max(0,Math.ceil(value)),top=Math.max(1,Math.ceil(max)),label=`${v} / ${top}`;if(node._text.textContent!==label){node._text.textContent=label;node._fill.style.width=Math.min(100,v/top*100)+'%';node.classList.toggle('low',v/top<.3);node.setAttribute('aria-label',`HP ${label}`);}
       hudPoint.copy(pos);hudPoint.y+=y;hudPoint.project(camera);node.hidden=hudPoint.z>1||hudPoint.z< -1||Math.abs(hudPoint.x)>1.08||Math.abs(hudPoint.y)>1.08;node.style.transform=`translate(${(hudPoint.x*.5+.5)*innerWidth}px,${(-hudPoint.y*.5+.5)*innerHeight}px) translate(-50%,-100%)`;
     }
-    if(player)paint(player,player.pos,2.8,hp,maxHp,'self');
+    if(player)paint(player,player.pos,activeMap?7.1:2.8,hp,maxHp,'self');
     for(const b of bots)if(!b.dead)paint(b,b.group.position,4.15*b.group.scale.y,b.boss?bossHp:b.hp,b.maxHp,b.boss?'boss':'enemy');
-    for(const uid in peerActors){const a=peerActors[uid],st=parseArenaStatus((peers[uid]||{}).hp);if(st)paint(a,a.group.position,3.05,st.hp,100,'peer');}
+    for(const uid in peerActors){const a=peerActors[uid],st=parseArenaStatus((peers[uid]||{}).hp);if(st)paint(a,a.group.position,activeMap?7.1:3.05,st.hp,st.max,'peer');}
     for(const [key,node] of vitalNodes)if(!vitalLive.has(key)){node.remove();vitalNodes.delete(key);}
   }
 
@@ -778,13 +818,13 @@
     const have={...bag};ui.wordSlots.innerHTML=Array.from(target.en).map(ch=>{const got=have[ch]>0;if(got)have[ch]--;return `<i class="${got?'got':''}">${ch}</i>`;}).join('');
   }
   function updateHud(){
-    if(!root)return;ui.coins.textContent=fmt(state.coins||0);ui.shopCoins.textContent=fmt(state.coins||0);ui.energyFill.style.width=(crystalCharge/CRYSTAL_NEED*100)+'%';ui.energy.classList.toggle('hot',crystalCharge>=CRYSTAL_NEED);root.querySelector('#va-crystal-count').textContent=megaUses?`💎 MEGA เหลือ ${megaUses} ครั้ง`:`◆ ${crystalCharge}/5 · เก็บคริสตัล`;ui.energyPower.textContent='×'+powerMult().toFixed(1);
+    if(!root)return;ui.coins.textContent=fmt(state.coins||0);root.querySelector('#va-session-coins').textContent='รอบนี้ +'+fmt(sessionCoins);ui.shopCoins.textContent=fmt(state.coins||0);ui.energyFill.style.width=(crystalCharge/CRYSTAL_NEED*100)+'%';ui.energy.classList.toggle('hot',crystalCharge>=CRYSTAL_NEED);root.querySelector('#va-crystal-count').textContent=megaUses?`💎 MEGA เหลือ ${megaUses} ครั้ง`:`◆ ${crystalCharge}/5 · เก็บคริสตัล`;ui.energyPower.textContent='×'+powerMult().toFixed(1);
     ui.hpFill.style.width=(hp/maxHp*100)+'%';ui.hp.classList.toggle('low',hp/maxHp<.3);ui.hp.querySelector('b').textContent=(maxShield||shield>0)?`HP ${Math.ceil(hp)} · 🛡${Math.ceil(shield)}`:`HP ${Math.ceil(hp)}`;
     const entries=Object.entries(cargo.reduce((a,ch)=>(a[ch]=(a[ch]||0)+1,a),{}));ui.bagList.innerHTML=entries.length?entries.map(([ch,n])=>`<span class="va-bag-letter">${ch}${n>1?`<small>×${n}</small>`:''}</span>`).join(''):'<span style="font-size:9px;color:#7795aa">ยังไม่มีอักษร</span>';
     root.querySelectorAll('[data-skill]').forEach(b=>b.classList.toggle('down',downed));root.querySelector('[data-skill="ult"]').classList.toggle('ready',crystalCharge>=CRYSTAL_NEED&&!downed);root.querySelector('[data-skill="ult"]').classList.toggle('locked',crystalCharge<CRYSTAL_NEED||downed);root.querySelector('#va-mega-uses').textContent=`เหลือ ${megaUses}`;root.querySelector('[data-skill="ult"]').setAttribute('aria-label',megaUses?`MEGA เหลือใช้ได้ ${megaUses} ครั้ง`:`MEGA คริสตัล ${crystalCharge} จาก 5`);updateWord();updateBossHud();paintHome();
   }
   function updateCooldownUi(t){
-    root.querySelectorAll('[data-skill]').forEach(b=>{const k=b.dataset.skill,left=Math.max(0,cooldown[k]-t),total=skillSeconds(k)*1000;b.classList.toggle('cool',left>0);b.style.setProperty('--cd',Math.round(left/total*100)+'%');b.querySelector('.cd').textContent=left>0?(left/1000).toFixed(left>950?0:1)+(k==='ult'?' วิ':''):'';});
+    root.querySelectorAll('[data-skill]').forEach(b=>{if(b.hidden)return;const k=b.dataset.skill,left=Math.max(0,cooldown[k]-t),total=skillSeconds(k)*1000;b.classList.toggle('cool',left>0);b.style.setProperty('--cd',Math.round(left/total*100)+'%');b.querySelector('.cd').textContent=left>0?(left/1000).toFixed(left>950?0:1)+(k==='ult'?' วิ':''):'';});
   }
   function pulseButton(k){const b=root.querySelector(`[data-skill="${k}"]`);if(b)b.animate([{transform:'scale(1)'},{transform:'scale(.84)'},{transform:'scale(1)'}],{duration:240});}
 
@@ -792,36 +832,37 @@
   function tone(freq,dur=.1,vol=.1,type='sine'){if(!state.sound)return;ensureAudio();if(!audioCtx)return;const t=audioCtx.currentTime,o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type;o.frequency.setValueAtTime(freq,t);o.frequency.exponentialRampToValueAtTime(Math.max(45,freq*.55),t+dur);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);o.connect(g);g.connect(audioCtx.destination);o.start(t);o.stop(t+dur+.02);}
   function haptic(v){if(state.haptic&&navigator.vibrate)try{navigator.vibrate(v);}catch(e){}}
 
-  function resize(){if(!renderer||!camera)return;const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+  function resize(){if(!renderer||!camera)return;sceneDrawn=false;const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);if(activeMap)ArenaMaps.camera(camera,activeMap.id,w,h);else{camera.aspect=w/h;camera.updateProjectionMatrix();}}
 
   function resetRound(){
     bots=[];drops=[];shots=[];effects=[];respawns=[];bag=state.arenaHome.letters;cargo=state.arenaHome.cargo.slice();homeRoute=false;recentLetters=[];energy=0;crystalCharge=0;megaUses=0;crystalLetterIndex=Math.floor(Math.random()*26);kills=0;sessionWords=0;sessionCoins=0;cooldown=Object.fromEntries(Object.keys(SKILL_CD).map(k=>[k,0]));if(elements)elements.clear();hp=maxHp;shield=maxShield;wordBusy=false;lastPetStrike=performance.now();lastHitAt=0;downed=false;downUntil=0;reviveHold=null;reviveSignal='-';reviveSeq=0;revivesGiven=0;chapter=state.arenaChapter||1;waveBase=0;bossPhase='wave';boss=null;bossEncounter='';bossMax=bossHp=bossContribution=0;bossWord='';bossWordSolved=false;bossVictoryAt=0;bossReward=0;onPeer._seen.clear();
     player.pos.set(home.position.x+2,0,home.position.z-4);player.vel.set(0,0,0);if(petComp){petComp.group.position.set(-1.8,0,9);petComp.vel.set(0,0,0);}nextWord();for(const node of crystalNodes)spawnCrystal(node);for(let i=0;i<BOT_TARGET;i++)buildBot(chooseBotLetter(),false);updateHud();
   }
 
-  function start(){
+  function start(session){
     if(running)return;
     if(typeof isAdmin!=='function'||!isAdmin()){if(typeof toast==='function')toast('โลกผจญภัยเปิดให้แอดมินเท่านั้น');return false;}
     ensureState();fxLow=!!state.noAnim||(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4);
     if(typeof clearWarnToasts==='function')clearWarnToasts();if(typeof Music!=='undefined')Music.suspendBg();
-    createDom();initThree();resetRound();running=true;paused=!state.arenaHomeIntro;lastFrame=0;setupCoop();
+    sceneDrawn=false;createDom();initThree();resetRound();if(session&&Number.isFinite(session.earned))sessionCoins=Math.max(0,session.earned);updateHud();running=true;paused=!state.arenaHomeIntro;lastFrame=0;setupCoop();
     if(!state.arenaHomeIntro)ui.intro.classList.add('on');else feed('เก็บอักษรแล้วขนกลับบ้าน · H หรือปุ่มบ้านพากลับไปฝาก','gold');
     raf=requestAnimationFrame(loop);
   }
 
-  function stop(){
-    if(!running)return;running=false;paused=false;cancelAnimationFrame(raf);raf=0;pendingTimers.forEach(clearTimeout);pendingTimers.clear();persistHome();if(audioCtx){audioCtx.close();audioCtx=null;}if(elements){elements.clear();elements=null;}if(fieldFx){fieldFx.dispose();fieldFx=null;}listeners.splice(0).forEach(fn=>{try{fn();}catch(e){}});keys.clear();joy={x:0,z:0,id:null};basicHeld=false;
+  function stop(options){
+    if(!running)return;running=false;equipRequest++;paused=false;cancelAnimationFrame(raf);raf=0;pendingTimers.forEach(clearTimeout);pendingTimers.clear();persistHome();if(audioCtx){audioCtx.close();audioCtx=null;}if(elements){elements.clear();elements=null;}if(fieldFx){fieldFx.dispose();fieldFx=null;}listeners.splice(0).forEach(fn=>{try{fn();}catch(e){}});keys.clear();joy={x:0,z:0,id:null};basicHeld=false;
     if(room){room.leave();room=null;}Object.keys(peerActors).forEach(removePeerActor);peers={};peerActors={};
     for(const s of shots){if(s.mesh.parent)scene.remove(s.mesh);disposeTree(s.mesh);}if(scene)disposeTree(scene);if(renderer){renderer.dispose();renderer.forceContextLoss&&renderer.forceContextLoss();renderer.setSize(2,2,false);}
     if(root)root.remove();vitalNodes.clear();vitalLive.clear();root=null;built=false;renderer=scene=camera=clock=null;bots=[];drops=[];shots=[];effects=[];petComp=null;player=null;home=null;crystalNodes=[];crystalCharge=0;megaUses=0;
-    saveState();if(typeof Music!=='undefined')Music.resumeBg();if(typeof renderDashboard==='function')renderDashboard();
+    saveState();if(options?.mapSwitch)return;if(typeof Music!=='undefined')Music.resumeBg();if(typeof renderDashboard==='function')renderDashboard();
     if(typeof toast==='function')toast(`🌀 กลับจาก Vocab Arena — สำเร็จ ${sessionWords} คำ · +${fmt(sessionCoins)} 🪙`);
   }
 
   window.VocabArena3D={start,stop,_t:{
-    get running(){return running},get bots(){return bots},get drops(){return drops},get bag(){return bag},get target(){return target},get cargo(){return cargo},home:()=>home,bank:bankCargo,stats:()=>({draws:renderer.info.render.calls,triangles:renderer.info.render.triangles,textures:renderer.info.memory.textures,fx:fieldFx.stats()}),get energy(){return energy},get crystalCharge(){return crystalCharge},get megaUses(){return megaUses},get crystalNodes(){return crystalNodes},tickDrops:updateDrops,drop:dropLetter,
-    get slots(){return spellSlots.slice()},get cooldowns(){return {...cooldown}},elementStats:()=>elements.stats(),equip:equipSpell,spellbook:toggleSpellbook,health:()=>({hp,shield}),hero:()=>selectedHero?.id,skillSeconds,damage:damagePlayer,cast:castSkill,kill:(i=0)=>bots[i]&&hitBot(bots[i],9999),collect:(i=0)=>drops[i]&&collectDrop(drops[i]),complete:()=>{if(target){for(const ch of target.en)bag[ch]=(bag[ch]||0)+1;checkWord();}},
-    buy:buyItem,player:()=>player,resize,down:downPlayer,recover:()=>recoverPlayer('เพื่อนช่วยชุบ'),boss:()=>({phase:bossPhase,chapter,encounter:bossEncounter,hp:bossHp,max:bossMax,word:bossWord,contribution:bossContribution}),triggerBoss:()=>{if(bossPhase==='wave')startBossAsLeader();},wire:applyLeaderWire,peer:onPeer,gone:onPeerGone,party:()=>({leader:leaderId(),members:partyUids(),online:!!(room&&room.online)}),
+    map:()=>activeMap?.id,room:()=>room,project:p=>new THREE.Vector3(p.x,p.y||0,p.z).project(camera),
+    get sessionCoins(){return sessionCoins},get running(){return running},get bots(){return bots},get drops(){return drops},get bag(){return bag},get target(){return target},get cargo(){return cargo},home:()=>home,bank:bankCargo,stats:()=>({frames:renderer.info.render.frame,draws:renderer.info.render.calls,triangles:renderer.info.render.triangles,textures:renderer.info.memory.textures,fx:fieldFx.stats()}),get energy(){return energy},get crystalCharge(){return crystalCharge},get megaUses(){return megaUses},get crystalNodes(){return crystalNodes},tickDrops:updateDrops,drop:dropLetter,
+    get slots(){return spellSlots.slice()},get cooldowns(){return {...cooldown}},elementStats:()=>elements.stats(),equip:equipSpell,spellbook:toggleSpellbook,refreshRelics,relics:()=>({...relicMods,maxHp,maxShield,cargoMax:CARGO_MAX}),health:()=>({hp,shield}),hero:()=>selectedHero?.id,skillSeconds,damage:damagePlayer,cast:castSkill,kill:(i=0)=>bots[i]&&hitBot(bots[i],9999),collect:(i=0)=>drops[i]&&collectDrop(drops[i]),complete:()=>{if(target){for(const ch of target.en)bag[ch]=(bag[ch]||0)+1;checkWord();}},
+    buy:buyItem,buySpell,player:()=>player,resize,down:downPlayer,recover:()=>recoverPlayer('เพื่อนช่วยชุบ'),boss:()=>({phase:bossPhase,chapter,encounter:bossEncounter,hp:bossHp,max:bossMax,word:bossWord,contribution:bossContribution}),triggerBoss:()=>{if(bossPhase==='wave')startBossAsLeader();},wire:applyLeaderWire,peer:onPeer,gone:onPeerGone,party:()=>({leader:leaderId(),members:partyUids(),online:!!(room&&room.online)}),
     /* ทดสอบแยกเฟสเมื่อ WebView เครื่องใดสร้างฉากไม่ผ่าน — ไม่ทำงานเองในเกมจริง */
     stage(part){
       if(part==='dom'){ensureState();createDom();return 'dom';}

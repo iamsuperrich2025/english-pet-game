@@ -14,15 +14,17 @@
     {id:'nova',name:'โนวา',icon:'🌀',color:'#d37cff',cd:7,desc:'ระเบิดพลังเวทรอบตัว'}
   ];
   const byId=Object.fromEntries(skills.map(s=>[s.id,s]));
-  function normalizeSlots(value){const a=Array.isArray(value)?value:[];const first=byId[a[0]]?a[0]:'fire';let second=byId[a[1]]?a[1]:'wind';if(second===first)second=first==='wind'?'fire':'wind';return [first,second];}
+  function owned(id){return !!byId[id]&&((typeof isAdmin==='function'&&isAdmin())||id==='light'||!!(typeof state!=='undefined'&&state.arenaItems&&state.arenaItems['spell_'+id]===true));}
+  function normalizeSlots(value){const a=Array.isArray(value)?value:[],first=byId[a[0]]&&owned(a[0])?a[0]:'light',second=byId[a[1]]&&owned(a[1])&&a[1]!==first?a[1]:null;return [first,second];}
   function create(api){
-    const zones=[],MAX_ZONES=12;let elapsed=0;
+    const zones=[],MAX_ZONES=12;let elapsed=0,expanded=null;
     const distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
     function enemies(pos,r,fn){for(const b of api.enemies().slice())if(!b.dead&&distance(pos,b.group.position)<=r)fn(b);}
     function push(b,pos,strength){if(b.boss)strength*=.22;const p=b.group.position,dx=p.x-pos.x,dz=p.z-pos.z,d=Math.hypot(dx,dz)||1;p.x+=dx/d*strength;p.z+=dz/d*strength;const r=Math.hypot(p.x,p.z);if(r>30){p.x*=30/r;p.z*=30/r;}}
     function zone(kind,pos,dir,mult,life,r){const z={kind,pos:pos.clone(),dir:dir.clone(),mult,life,max:life,age:0,lastPulse:0,r,hit:new Set(),index:0,visual:null};if(zones.length>=MAX_ZONES)zones.shift();zones.push(z);return z;}
     function cast(kind,pos,dir,target,mult){
       if(!byId[kind]||kind==='arc'||kind==='nova')return false;
+      if(byId[kind].pack){if(!ArenaElements.isReady(kind))return false;expanded=expanded||ArenaSpellEngine.create({...api,zone,enemies,push,allEnemies:api.enemies});return expanded.cast(byId[kind],pos,dir,target,mult);}
       const aim=target?target.group.position.clone():pos.clone().addScaledVector(dir,7),now=performance.now();aim.y=0;
       if(kind==='fire'){const z=zone(kind,aim,dir,mult,3.4,7.4);z.visual=api.fx.element(kind,z.pos,{life:3.4,r:z.r});}
       else if(kind==='wind'){const z=zone(kind,pos.clone().addScaledVector(dir,3),dir,mult,4.5,api.storm()?7.2:5.6);z.visual=api.fx.element(kind,z.pos,{life:4.5,r:z.r});}
@@ -43,6 +45,7 @@
     function tick(dt){
       elapsed+=dt;
       for(let i=zones.length-1;i>=0;i--){const z=zones[i],previous=z.age;z.age+=dt;z.life-=dt;
+        if(z.kind==='expanded')expanded.tick(z,dt);
         if(z.kind==='mega'){
           if(z.element==='gravity'||z.element==='wind')enemies(z.pos,z.r,b=>push(b,z.pos,-Math.min(distance(b.group.position,z.pos),dt*3.8)));
           for(const impact of [.35,1.05,1.75])if(previous<impact&&z.age>=impact){
@@ -67,5 +70,5 @@
     }
     return {cast,castMega,tick,clear:()=>{zones.length=0;},stats:()=>({active:zones.length,cap:MAX_ZONES,time:elapsed,mega:zones.filter(z=>z.kind==='mega').map(z=>({element:z.element,radius:z.r}))})};
   }
-  window.ArenaElements={skills,byId,normalizeSlots,create};
+  window.ArenaElements={skills,byId,owned,normalizeSlots,create};
 })();
