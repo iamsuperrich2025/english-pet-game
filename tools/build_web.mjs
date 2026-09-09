@@ -301,7 +301,7 @@ async function sourceFiles() {
 
 
 
-      'js/data/f1_vocab.js',
+      'js/data/f1_vocab.js', 'js/kart-access.js', 'js/kart3d.js',
 
 
 
@@ -1569,7 +1569,7 @@ async function main() {
 
 
 
-  await fs.writeFile(uiFile, uiText.replace(TOKEN_F1_ENGINE, f1EngineUrl));
+  await fs.writeFile(uiFile, uiText.replaceAll(TOKEN_F1_ENGINE, f1EngineUrl).replaceAll('js/kart-access.js', await makeImmutableAlias('js/kart-access.js')).replaceAll('js/kart3d.js', await makeImmutableAlias('js/kart3d.js')));
 
 
 

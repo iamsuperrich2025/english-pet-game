@@ -41,6 +41,7 @@ class FakeAudioContext{
 async function main(){
   let failFetch=false, warnings=0;
   const context={
+    IS_KART:false, // explicit default profile for the extracted shared-engine audio closure
     state:{sound:true},
     window:{AudioContext:FakeAudioContext},
     fetch:async()=>{if(failFetch)throw new Error('offline');return {ok:true,arrayBuffer:async()=>new ArrayBuffer(16)};},

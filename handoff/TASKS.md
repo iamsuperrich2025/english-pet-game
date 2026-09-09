@@ -215,6 +215,10 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### ### 📌 สรุปสถานะล่าสุด (31 ส.ค.) — อ่านก่อน
+- **รอบ 1377 · Vocab World Kart (admin preview):** แยกเกมจาก Racing ด้วย shared engine/profile; รถของเล่น 5 สี+cockpitจริง, สนามเกาะ/ปาล์ม/ประภาคาร/น้ำตก, 110 กม./ชม.; room/save/ghost/rank แยก F1; รายละเอียด `docs/KART_PREVIEW.md`
+- ปุ่มรางซ้าย Classic/Home V2 เฉพาะ verified admin; fresh server admission + RTDB rules คุม kartAccess/wroom/kart/winfo/kart/kartRank และปิด legacy; publish rules สำเร็จและเทียบสดครบ44โซนแล้ว; ไม่มี runtime raster/model/audio ใหม่ ใช้ lazy hashed modules+geometry batching/cache
+- ผ่าน entry17/browser29 (5สี, touch, speed109.91, CAT66coins, F1เดิม)/rules45/สองbrowser7/lobby8 source+dist; F1ทั้ง19+HomeV2+build9,467files612.9MiB+validatorผ่าน; พร้อมส่ง Hosting ผ่าน COMMIT_DEPLOY (ยังไม่ยืนยันliveรุ่นใหม่)
+
 - **รอบ 1329 · ด่านซื้ออาหาร/แฟชั่นไม่มีค่าปรับ:** ถอดการสะสม/หักเหรียญจากไม่คาดเข็มขัด ขับเกิน 90 และชนทั้งหมด; ยังคงไฟเตือน เสียง/แรงเด้ง และป้ายย้ำว่าไม่เสียค่าปรับ
 - เซฟเดิมรับชดเชยครั้งเดียว 1,600 เหรียญ (เพดานเดิมต่อรอบ เพราะระบบเก่าไม่มี ledger) พร้อมกล่องแจ้ง; เซฟใหม่ไม่รับซ้ำ และ cache key ด่านบัมพ์เป็น 1329
 - syntax + targeted coin invariance + pet-shopping integration + production build/PWA/cache/TWA validator ผ่าน; regression รวมยังหยุดที่ GPS-route assertion เดิมซึ่งอยู่นอกส่วนค่าปรับ*รอบ 1328 · Home V2 zero-flash + ราคาโลกเดิม:** preload/runtime ใช้ hashed URL เดียว, prebuild ก่อน dashboard active และ class-only observer สลับใน microtask; source HTML ซ่อน Classic ตั้งแต่เฟรมแรก จึงไม่รอ polling 0–10 วินาที

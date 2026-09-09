@@ -132,8 +132,9 @@ function aimClear(){ aim=null; }
    อ่าน node เย็น "โลกละ 1 ครั้ง" (rules ให้ `.read` ที่ระดับ $map อยู่แล้ว) = 9 อ่าน/ครั้ง
    ไม่ใช่ไล่ทีละสนาม (จะกลายเป็น 9×สนาม) · ความถี่คุมอีกชั้นที่ js/ui.js
    คืน {found:{uid:{map,room,n,t}}, denied:true ถ้าอ่านไม่ได้ (rules ยังไม่ publish)} */
-const MAPS3D = ['adv','sky','haunt','heli','drone','drive','soccer','moto','invasion','mecha','f1','lettercannon'];
+const MAPS3D = ['adv','sky','haunt','heli','drone','drive','soccer','moto','invasion','mecha','f1','kart','lettercannon'];
 function skyMapAllowed(map){
+  if(map==='kart')return typeof canAccessKartBeta==='function'&&canAccessKartBeta();
   return map !== 'sky' || (typeof canAccessSkyBeta === 'function' && canAccessSkyBeta());
 }
 function whereFriends(uids){
@@ -424,7 +425,7 @@ function create(opt){
      เกมเล่นได้ครบทุกอย่าง แค่ไม่มีหลายสนาม → "ยังไม่ publish = ไม่พัง"
      ============================================================ */
   function goLegacy(){
-    if(legacy) return;
+    if(legacy || map==='kart') return;
     legacy=true; detachRoom(); bridgeOff(); dropAll();
     idx=-1; myUid=onlineKey();
     const ref=legacyRefOf();

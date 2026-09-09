@@ -5,7 +5,7 @@
    · ฟิสิกส์โมเมนตัมจริง: แรงเครื่อง∝กำลัง/ความเร็ว · แรงต้านอากาศ v² · downforce เพิ่มกริปตามความเร็ว
      ยางมีลิมิตแรงเข้าโค้ง — เร็วเกิน = ไถล (understeer/drift) · ออกนอกแทร็ก = runoff → ทราย ลื่น+หน่วง
    · บรรยากาศ night race ใต้แสงไฟสปอตไลต์ (เอกลักษณ์สนามนี้) + ทะเลทราย + ต้นปาล์ม
-   · เก็บตัวอักษรบนแทร็กประกอบคำ (REWARD 60🪙) + จับเวลาต่อรอบ / Best Lap (state.f1Best)
+   · เก็บตัวอักษรบนแทร็กประกอบคำ (REWARD 60🪙) + จับเวลาต่อรอบ / Best Lap (state[BEST_KEY])
    · 🚦 ออกสตาร์ทจริง (รอบ 902): ไฟแดง 5 ดวงบนซุ้มติดทีละดวง → ดับพร้อมกัน = ออกตัว (ล็อกคันเร่งก่อนไฟดับ)
    · 👻 รถเงา (รอบ 902): บันทึกเส้นทาง Best Lap ลง localStorage แล้วปล่อยรถโปร่งแสงวิ่งซ้ำให้ไล่แข่งกับตัวเอง
    · multiplayer ผ่าน NetRoom map 'f1' (สนามละ 10 คน) — เห็นรถเพื่อน+ชื่อ+แชท+กระดานคำ
@@ -15,6 +15,15 @@
    ───────────────────────────────────────────────────────────────────── */
 (function(){
 'use strict';
+/* 🏝️ รอบ 1377: one engine source, isolated closures and DOM namespaces per game. */
+function createRacingWorld(P){
+const IS_KART=!!P;
+const BEST_KEY=IS_KART?'kartBest':'f1Best';
+const RANK_PATH=IS_KART?'kartRank':'f1Rank';
+const RANK_STATUS=IS_KART?'kartRankOk':'frOk';
+const domSelector=s=>IS_KART?s.replace(/#f1-/g,'#kart-'):s;
+const q=s=>wrapEl.querySelector(domSelector(s));
+const qa=s=>wrapEl.querySelectorAll(domSelector(s));
 
 /* ============================================================
    ⚙️ ค่าคงที่ (TUNE ZONE)
@@ -22,8 +31,8 @@
 const REWARD       = 60;      // 🪙 ประกอบคำสำเร็จ
 const LETTER_COIN  = 2;       // 🪙 เก็บตัวอักษร 1 ตัว
 const COLLECT_R    = 8;       // รัศมีเก็บ (รถเร็ว ต้องกว้าง)
-const DONE_KEY     = 'f1Done';
-const RECENT_KEY   = 'f1Recent';
+const DONE_KEY     = IS_KART?'kartDone':'f1Done';
+const RECENT_KEY   = IS_KART?'kartRecent':'f1Recent';
 const HALF_W       = 7.5;     // ครึ่งความกว้างแทร็ก (เมตร) — F1 จริง 12-15ม.
 const KERB_W       = 1.6;     // ความกว้างขอบ kerb
 const RUNOFF_W     = 9;       // runoff ยางมะตอยข้างแทร็ก (สไตล์ Bahrain)
@@ -32,7 +41,7 @@ const BARRIER_BOUNCE=.48;     // คืนแรงด้านข้าง 48% 
 /* 🏎️💥 รอบ 1208 — กล่องชนรถ F1 จริง (แกนตาม yaw) + impulse/แรงเสียดทานตอนเบียด */
 /* รอบ 1210: footprint ตามชิ้นโมเดลจริง ไม่ใช้กล่องใหญ่ครอบอากาศรอบรถ
    [x,z,halfWidth,halfLength] — ปีก, chassis และยางตรงกับ buildPeerF1Car */
-const CAR_HIT_PARTS=[
+const CAR_HIT_PARTS=IS_KART?P.hitParts:[
   [0,3.34,1.00,.25],            // front wing
   [0,2.18,.29,.92],             // nose
   [0,.48,.76,1.14],             // monocoque + sidepods
@@ -165,7 +174,7 @@ const CHAT_PRESETS = ['เร็วจัด! 🔥','แซงสวยมาก
 const F1_ROLL_WIRE='F1R:';
 /* 🎨 รอบ 1216: สีรถชุดเดียวกันทั้ง cockpit, รถเรา และรถที่เพื่อนเห็น
    จำกัดไว้เฉพาะสีที่มี cockpit ครบ 3 เฟรม เพื่อไม่ให้ภาพคนขับกับโมเดลสลับสี */
-const CAR_COLOR_KEY='vwF1CarColor';
+const CAR_COLOR_KEY=IS_KART?'vwKartCarColor':'vwF1CarColor';
 /* NetRoom ส่งเฉพาะชื่อฟิลด์กลางที่ประกาศไว้: cw จะถูกบีบเป็น q แล้วประกอบคืนครบ
    และผ่าน rules ของ legacy /world ด้วย; ตัวรับยังอ่าน cl เพื่อรองรับ packet ช่วงเปลี่ยนผ่าน */
 const F1_COLOR_WIRE='f1c:';
@@ -206,7 +215,8 @@ const RACE_BGM_EXIT_FADE_MS=1100;
 /* 👻 รถเงา Best Lap (รอบ 902) */
 const GHOST_HZ     = 10;      // บันทึกเส้นทาง 10 จุด/วินาที
 const GHOST_MAX    = 3000;    // เพดานจุด (5 นาที) — ยาวกว่านี้ไม่บันทึก
-const GHOST_KEY    = 'vwF1Ghost';   // เก็บใน localStorage (ไม่ยัดลง state — กัน cloud save บวม)
+const GHOST_KEY    = 'vwF1Ghost';
+const ACTIVE_GHOST_KEY=IS_KART?'vwKartGhost':GHOST_KEY;   // เก็บใน localStorage (ไม่ยัดลง state — กัน cloud save บวม)
 const PIT_HALF_W   = 6;       // ครึ่งความกว้างเลนพิท (เมตร)
 const SURF_PIT     = {grip:1.0, drag:0.25};   // ผิวเลนพิท: ยึดเกาะเต็ม หน่วงนิดเดียว
 const PIT_LIMIT    = 22.2;    // จำกัดความเร็วในเลนพิท 80 กม./ชม. (ลิมิตเตอร์อัตโนมัติ)
@@ -341,6 +351,7 @@ function storedCarStyle(){
 }
 function saveCarStyle(){try{localStorage.setItem(CAR_COLOR_KEY,playerCarStyle.key);}catch(_){}}
 function cockpitAsset(pose,style=playerCarStyle){
+  if(IS_KART)return '';
   const set=COCKPIT_ASSETS[style.key]||COCKPIT_ASSETS.red;
   return set[pose]||set.center;
 }
@@ -379,6 +390,7 @@ const Snd=(function(){
     synthEng=synthHi=synthGain=null;
   }
   async function sampleStart(a,token){
+    if(IS_KART)return;
     try{
       const response=await fetch(ENGINE_URL,{cache:'force-cache'});
       if(!response.ok) throw new Error('HTTP '+response.status);
@@ -457,7 +469,7 @@ const Snd=(function(){
     /* sample หนึ่งชั้น: pitch 0.70×..1.60× + low-pass เปิดตามคันเร่ง/รอบ และนุ่มด้วย AudioParam */
     const rate=0.70+rpm*0.90;
     if(engineSrc) engineSrc.playbackRate.setTargetAtTime(rate,ac.currentTime,0.045);
-    const f=62+rpm*rpm*610+thr*26;
+    const f=IS_KART?45+rpm*rpm*145+thr*12:62+rpm*rpm*610+thr*26;
     if(synthEng) synthEng.frequency.setTargetAtTime(f,ac.currentTime,0.035);
     if(synthHi) synthHi.frequency.setTargetAtTime(f*2.01,ac.currentTime,0.035);
     const cockpit=cameraMode==='cockpit', cameraK=cockpit?1:0.78;
@@ -593,7 +605,8 @@ function raceMusicVisibilityChange(){
   else if(raceMusicUnlocked())raceMusicStart();
 }
 const GEARS=[0,13,21,30,40,52,65,79,93];      // ขอบบนความเร็วแต่ละเกียร์ (m/s)
-function gearOf(v){ for(let i=1;i<GEARS.length;i++){ if(v<=GEARS[i]) return i; } return 8; }
+function gearOf(v){
+  if(IS_KART)return P.gearOf(v); for(let i=1;i<GEARS.length;i++){ if(v<=GEARS[i]) return i; } return 8; }
 
 /* ============================================================
    🖼️ texture: probe img/f1/*.jpg ก่อน → ไม่มีใช้ canvas วาดเอง
@@ -626,6 +639,7 @@ function texFromCanvas(draw,w,h,rx,ry){
   return t;
 }
 function texProbe(file,fallbackTex,onOk){
+  if(IS_KART)return fallbackTex;
   const im=new Image();
   im.onload=()=>{
     const t=new THREE.Texture(im); t.needsUpdate=true;
@@ -701,7 +715,7 @@ function makeTextSprite(text,bg,fg,emoji,grade){
 }
 
 /* ============================================================
-   🛣️ เส้นแทร็ก: F1_MAP.track (จุดจริง OSM) → sample ทุก 5 ม.
+   🛣️ เส้นแทร็ก: (IS_KART?P.map:F1_MAP).track (จุดจริง OSM) → sample ทุก 5 ม.
    + tangent/normal/curvature + ตารางแฮชหาผิวเร็ว
    ============================================================ */
 function cr(p0,p1,p2,p3,t){
@@ -709,8 +723,8 @@ function cr(p0,p1,p2,p3,t){
   return 0.5*((2*p1)+(-p0+p2)*t+(2*p0-5*p1+4*p2-p3)*t2+(-p0+3*p1-3*p2+p3)*t3);
 }
 function buildLine(){
-  const src=F1_MAP.track, n=src.length, pts=[];
-  let sfSrc=F1_MAP.sf||0;
+  const src=(IS_KART?P.map:F1_MAP).track, n=src.length, pts=[];
+  let sfSrc=(IS_KART?P.map:F1_MAP).sf||0;
   for(let i=0;i<n;i++){
     const p0=src[(i-1+n)%n],p1=src[i],p2=src[(i+1)%n],p3=src[(i+2)%n];
     const L=Math.hypot(p2[0]-p1[0],p2[1]-p1[1]);
@@ -1179,7 +1193,7 @@ function buildBuildings(){
       const beacon=new THREE.Mesh(new THREE.SphereGeometry(.65,8,6),m.accent);beacon.position.y=58.2;tw.add(beacon);tw.userData.beacon=beacon;
       tw.position.set(c[0],0,c[1]);g.add(tw);g.userData.tower=tw;
     }else{
-      const pitNear=F1_MAP.pit&&F1_MAP.pit.length?F1_MAP.pit[F1_MAP.pit.length>>1]:null;
+      const pitNear=(IS_KART?P.map:F1_MAP).pit&&(IS_KART?P.map:F1_MAP).pit.length?(IS_KART?P.map:F1_MAP).pit[(IS_KART?P.map:F1_MAP).pit.length>>1]:null;
       const isPit=!pitDone&&pitNear&&Math.hypot(c[0]-pitNear[0],c[1]-pitNear[1])<120;
       const h=isPit?11:7.2+(bi%4)*.85; if(isPit) pitDone=true;
       g.add(extrudeFootprint(b.p,h*.62,m.concrete,0));
@@ -1623,6 +1637,11 @@ function buildRealisticCircuit(tier){
 }
 function buildTrackScene(){
   prepareFantasyJumps();
+  if(IS_KART){
+    P.buildTrack({scene,LINE,TOTAL,sfIdx,HALF_W,RUNOFF_W,TexLib,ribbonGeo,kerbStrips,buildFantasyCircuit,
+      setLights(value){startLights=value;},setFantasy(value){fantasyRoot=value;}});
+    return;
+  }
   /* พื้นทะเลทราย */
   const sand=new THREE.Mesh(new THREE.PlaneGeometry(4200,4200),matLam('sand'));
   sand.rotation.x=-Math.PI/2; sand.position.y=-0.25; scene.add(sand);
@@ -1738,8 +1757,8 @@ function buildTrackScene(){
     scene.add(t);
   }
   /* pit lane */
-  if(F1_MAP.pit&&F1_MAP.pit.length>2){
-    const p=F1_MAP.pit,pos=[],uv=[],idx=[];
+  if((IS_KART?P.map:F1_MAP).pit&&(IS_KART?P.map:F1_MAP).pit.length>2){
+    const p=(IS_KART?P.map:F1_MAP).pit,pos=[],uv=[],idx=[];
     for(let i=0;i<p.length;i++){
       const q=p[Math.min(i+1,p.length-1)],r=p[Math.max(i-1,0)];
       let dx=q[0]-r[0],dz=q[1]-r[1];
@@ -1767,6 +1786,7 @@ function buildTrackScene(){
    🏎️ รถประกอบ procedural สำหรับ Best-Lap ghost/fallback (รถผู้เล่นจริงใช้ VR-X1 ด้านล่าง)
    ============================================================ */
 function buildF1Car(color){
+  if(IS_KART)return P.buildCar(color);
   /* รถ F1 ประกอบเอง: โมโนค็อก+จมูก+ปีกหน้า/หลัง+sidepod+halo+ล้อ — แกน +Z = หน้า */
   const g=new THREE.Group();
   const body=new THREE.MeshLambertMaterial({color});
@@ -1975,6 +1995,7 @@ function peerF1KitGet(){
   return peerF1Kit;
 }
 function buildPeerF1Car(color){
+  if(IS_KART)return P.buildCar(color);
   const k=peerF1KitGet(),g=new THREE.Group();
   const bodyMat=new THREE.MeshLambertMaterial({color,flatShading:true});
   const body=new THREE.Mesh(k.body,bodyMat);g.add(body);
@@ -2008,10 +2029,11 @@ function replacePlayerCar(){
   if(!scene) return;
   const old=carGrp,oldVisible=old?old.visible:(camMode==='chase');
   const g=buildPeerF1Car(playerCarStyle.value);
-  g.userData.modelKind='vrx1-faceted-low-poly';g.userData.playerStyle=playerCarStyle.key;
+  if(!IS_KART)g.userData.modelKind='vrx1-faceted-low-poly';g.userData.playerStyle=playerCarStyle.key;
   addPlayerContactShadow(g);attachDrsGlow(g);
   g.position.set(px,py,pz);g.rotation.set(old?old.rotation.x:0,yaw,old?old.rotation.z:0);
   g.visible=oldVisible;scene.add(g);carGrp=g;
+  if(IS_KART)P.carView(g,camMode);
   wheels=g.userData.wheels||[];steerParts=g.userData.front||[];
   if(old){
     scene.remove(old);
@@ -2026,11 +2048,11 @@ function paintPlayerStyle(key){
   if(wrapEl){
     wrapEl.style.setProperty('--f1-cockpit-center',"url('"+cockpitAsset('center')+"')");
     wrapEl.style.setProperty('--f1-car-color',playerCarStyle.hex);
-    wrapEl.querySelectorAll('[data-car-color]').forEach(b=>{
+    qa('[data-car-color]').forEach(b=>{
       const on=b.dataset.carColor===playerCarStyle.key;b.classList.toggle('sel',on);
       b.setAttribute('aria-checked',on?'true':'false');
     });
-    const name=wrapEl.querySelector('#f1-garage-color-name');if(name)name.textContent='VR-X1 รุ่นใหม่ · '+playerCarStyle.label;
+    const name=q('#f1-garage-color-name');if(name)name.textContent='VR-X1 รุ่นใหม่ · '+playerCarStyle.label;
     if(carProofEl){
       carProofEl.textContent='🏎️ VR-X1 รุ่นใหม่ · '+playerCarStyle.label;
       carProofEl.title=cockpitAsset('center');
@@ -2038,9 +2060,11 @@ function paintPlayerStyle(key){
     cockpitTurnSrc='';if(cockpitTurnEl){cockpitTurnEl.src='';cockpitTurnEl.style.opacity='0';}
   }
   replacePlayerCar();
+  if(IS_KART&&wrapEl){P.paintDom(wrapEl,playerCarStyle);if(renderer)P.preview(renderer,playerCarStyle.value,wrapEl);}
   if(room&&room.online)netSend(true);
 }
 function primePlayerCockpit(){
+  if(IS_KART)return;
   for(const pose of ['left','right']){const im=new Image();im.src=cockpitAsset(pose);}
 }
 
@@ -2465,8 +2489,8 @@ const CSS=`
   #f1-drs small{font-size:10px}
 }`;
 function buildDom(){
-  const st=document.createElement('style'); st.textContent=CSS; document.head.appendChild(st);
-  wrapEl=document.createElement('div'); wrapEl.id='f1-wrap';
+  const st=document.createElement('style'); st.textContent=IS_KART?CSS.replace(/#f1-/g,'#kart-'):CSS; document.head.appendChild(st);
+  wrapEl=document.createElement('div'); wrapEl.id=IS_KART?'kart-wrap':'f1-wrap';
   wrapEl.style.setProperty('--f1-cockpit-center',"url('"+cockpitAsset('center')+"')");
   wrapEl.style.setProperty('--f1-car-color',playerCarStyle.hex);
   wrapEl.innerHTML=`
@@ -2551,63 +2575,67 @@ function buildDom(){
       <div style="font-size:17px;font-weight:800;margin-bottom:4px">ออกจากสนามแข่ง?</div>
       <button id="f1-stay">🏎️ แข่งต่อ</button><button id="f1-leave">🚪 ออกเลย</button>
     </div></div>`;
+  if(IS_KART){
+    wrapEl.innerHTML=wrapEl.innerHTML.replace(/((?:id|aria-labelledby)=")f1-/g,'$1kart-');
+    P.decorateDom(wrapEl);
+  }
   document.body.appendChild(wrapEl);
   screenEl=wrapEl;
-  wordEl=wrapEl.querySelector('#f1-word');
-  coinsEl=wrapEl.querySelector('#f1-coins');
-  banEl=wrapEl.querySelector('#f1-ban');
-  introEl=wrapEl.querySelector('#f1-intro');
-  garageEl=wrapEl.querySelector('#f1-garage');
-  exitBox=wrapEl.querySelector('#f1-exitbox');
-  boardEl=wrapEl.querySelector('#f1-board');
-  carProofEl=wrapEl.querySelector('#f1-car-proof');
-  positionEl=wrapEl.querySelector('#f1-position');
+  wordEl=q('#f1-word');
+  coinsEl=q('#f1-coins');
+  banEl=q('#f1-ban');
+  introEl=q('#f1-intro');
+  garageEl=q('#f1-garage');
+  exitBox=q('#f1-exitbox');
+  boardEl=q('#f1-board');
+  carProofEl=q('#f1-car-proof');
+  positionEl=q('#f1-position');
   /* 👥 รอบ 939: ปุ่ม "ไปหาเพื่อน" ที่ NetRoom ฝังมากับป้ายสถานะ — เดิม F1 วาดปุ่มแต่ไม่ได้ดักคลิก (กดแล้วเงียบ) */
   boardEl.addEventListener('click',e=>{ if(e.target.closest('.nr-go')&&room) room.openFriends(); });
-  chatBarEl=wrapEl.querySelector('#f1-chatbar');
-  selfMsgEl=wrapEl.querySelector('#f1-selfmsg');
-  speedEl=wrapEl.querySelector('#f1-speed');
-  gearEl=wrapEl.querySelector('#f1-gear');
-  lapEl=wrapEl.querySelector('#f1-laps');
-  raceBgmBtn=wrapEl.querySelector('#f1-musicbtn');
+  chatBarEl=q('#f1-chatbar');
+  selfMsgEl=q('#f1-selfmsg');
+  speedEl=q('#f1-speed');
+  gearEl=q('#f1-gear');
+  lapEl=q('#f1-laps');
+  raceBgmBtn=q('#f1-musicbtn');
   raceBgmBtn.addEventListener('click',raceMusicToggle);
   raceMusicSyncButton();
-  wrongEl=wrapEl.querySelector('#f1-wrong');
-  portalEl=wrapEl.querySelector('#f1-portal');
+  wrongEl=q('#f1-wrong');
+  portalEl=q('#f1-portal');
   portalViewCv=portalEl.querySelector('.destination');
-  drsEl=wrapEl.querySelector('#f1-drs');
-  knobEl=wrapEl.querySelector('#f1-knob');
+  drsEl=q('#f1-drs');
+  knobEl=q('#f1-knob');
   /* 🚦👻 รอบ 902 */
-  lightsEl=wrapEl.querySelector('#f1-lights');
+  lightsEl=q('#f1-lights');
   lightDots=[].slice.call(lightsEl.querySelectorAll('i'));
   lightNoteEl=lightsEl.querySelector('b');
-  gapEl=wrapEl.querySelector('#f1-gap');
-  mapCv=wrapEl.querySelector('#f1-map'); mapCtx=mapCv.getContext('2d');
+  gapEl=q('#f1-gap');
+  mapCv=q('#f1-map'); mapCtx=mapCv.getContext('2d');
   garageEl.querySelectorAll('[data-car-color]').forEach(b=>b.addEventListener('click',()=>paintPlayerStyle(b.dataset.carColor)));
-  wrapEl.querySelector('#f1-garage-confirm').addEventListener('click',()=>{
+  q('#f1-garage-confirm').addEventListener('click',()=>{
     saveCarStyle();primePlayerCockpit();garageEl.classList.remove('on');introEl.style.display='flex';netSend(true);
   });
-  wrapEl.querySelector('#f1-garage-back').addEventListener('click',exitWorld);
-  wrapEl.querySelector('#f1-go').addEventListener('click',()=>{ introEl.style.display='none'; Snd.start(); beginLights(); });
-  const legalEl=wrapEl.querySelector('#f1-legal');
-  wrapEl.querySelector('#f1-legalbtn').addEventListener('click',()=>legalEl.classList.add('on'));
-  wrapEl.querySelector('#f1-legalclose').addEventListener('click',()=>legalEl.classList.remove('on'));
-  wrapEl.querySelector('#f1-exitbtn').addEventListener('click',()=>exitBox.classList.add('on'));
-  wrapEl.querySelector('#f1-stay').addEventListener('click',()=>exitBox.classList.remove('on'));
-  wrapEl.querySelector('#f1-leave').addEventListener('click',exitWorld);
+  q('#f1-garage-back').addEventListener('click',exitWorld);
+  q('#f1-go').addEventListener('click',()=>{ introEl.style.display='none'; Snd.start(); beginLights(); });
+  const legalEl=q('#f1-legal');
+  q('#f1-legalbtn').addEventListener('click',()=>legalEl.classList.add('on'));
+  q('#f1-legalclose').addEventListener('click',()=>legalEl.classList.remove('on'));
+  q('#f1-exitbtn').addEventListener('click',()=>exitBox.classList.add('on'));
+  q('#f1-stay').addEventListener('click',()=>exitBox.classList.remove('on'));
+  q('#f1-leave').addEventListener('click',exitWorld);
   /* 🪖 รอบ 901: ปุ่มสลับมุมมอง คนขับ ↔ เห็นรถทั้งคัน */
-  cockpitEl=wrapEl.querySelector('#f1-cockpit');
-  cockpitTurnEl=wrapEl.querySelector('#f1-cockpit-turn');
-  qualityWheelEl=wrapEl.querySelector('#f1-quality-wheel');
-  camBtnEl=wrapEl.querySelector('#f1-cambtn');
+  cockpitEl=q('#f1-cockpit');
+  cockpitTurnEl=q('#f1-cockpit-turn');
+  qualityWheelEl=q('#f1-quality-wheel');
+  camBtnEl=q('#f1-cambtn');
   /* รอบ 1332: ชุด cockpit สีใหม่มีพวงมาลัย/มือครบแล้ว ไม่โหลดหรือ fallback ภาพแดงรุ่นเก่าอีก */
-  wheelEl=wrapEl.querySelector('#f1-wheel');
+  wheelEl=q('#f1-wheel');
   wheelEl.style.display='none';
   buildLeds(); ledsOff();
   /* โหลดซ้าย/ขวาเฉพาะสีที่ยืนยัน ไม่ preload รถทุกสีเข้า RAM มือถือ */
   paintPlayerStyle(playerCarStyle.key);
   /* 🔢 รอบ 916: จอตัวเลขจริงบนพวงมาลัย — เครื่องที่ไม่มี canvas 2d ก็ปล่อยจอในภาพไปตามเดิม ไม่ให้ทั้งโลกพัง */
-  dashEl=wrapEl.querySelector('#f1-dash');
+  dashEl=q('#f1-dash');
   dashCtx=(dashEl&&dashEl.getContext)?dashEl.getContext('2d'):null;
   if(!dashCtx) dashEl=null;
   camBtnEl.addEventListener('click',cycleCamMode);   // 🛣️ รอบ 914 — วน 3 มุม
@@ -2616,12 +2644,12 @@ function buildDom(){
   chatBarEl.querySelectorAll('button').forEach((b,i)=>b.addEventListener('click',()=>{
     sendChat(CHAT_PRESETS[i]); chatBarEl.classList.remove('on');
   }));
-  wrapEl.querySelector('#f1-chatbtn').addEventListener('click',()=>chatBarEl.classList.toggle('on'));
+  q('#f1-chatbtn').addEventListener('click',()=>chatBarEl.classList.toggle('on'));
   /* 🎮 รอบ 1217: floating steering pad — แตะ/ลากตรงไหนก็ได้ในครึ่งจอซ้าย
      ศูนย์พวงมาลัยย้ายใต้จุดแตะ, pointer capture ทำให้ลากออกนอกวงแล้วยังคุมต่อเนื่อง */
-  const steerBox=wrapEl.querySelector('#f1-steer');
+  const steerBox=q('#f1-steer');
   let sid=null,steerAnchorX=0,steerRadius=60;
-  const steerBlock='button,#f1-board,#f1-map,#f1-word,#f1-laps,#f1-garage,#f1-intro,#f1-exitbox,#f1-legal,#f1-chatbar';
+  const steerBlock=domSelector('button,#f1-board,#f1-map,#f1-word,#f1-laps,#f1-garage,#f1-intro,#f1-exitbox,#f1-legal,#f1-chatbar');
   function placeSteer(cx,cy){
     const wr=wrapEl.getBoundingClientRect(),r=steerBox.getBoundingClientRect();
     const hx=r.width*.5,hy=r.height*.5,pad=6;
@@ -2655,11 +2683,11 @@ function buildDom(){
   steerBox._f1Reset=()=>resetSteer(true);
   /* คันเร่ง/เบรก */
   /* ⏪ รอบ 911: ปุ่มเกียร์ถอยหลัง */
-  const revB=wrapEl.querySelector('#f1-reverse');
+  const revB=q('#f1-reverse');
   revB.addEventListener('pointerdown',e=>{ e.preventDefault(); padRev=true; Snd.start(); });
   revB.addEventListener('pointerup',()=>padRev=false);
   revB.addEventListener('pointercancel',()=>padRev=false);
-  const thrB=wrapEl.querySelector('#f1-throttle'), brB=wrapEl.querySelector('#f1-brake');
+  const thrB=q('#f1-throttle'), brB=q('#f1-brake');
   thrB.addEventListener('pointerdown',e=>{ e.preventDefault(); padThr=1; Snd.start();
     if(garageEl.classList.contains('on')){padThr=0;return;}
     if(introEl.style.display!=='none') introEl.style.display='none';
@@ -2689,7 +2717,7 @@ function build(){
   camera=new THREE.PerspectiveCamera(64,16/9,0.3,2100);
   thermalMobile=isThermalMobile();
   /* MSAA คิดทุกพิกเซลทุกเฟรมและเครื่องมือถือมี DPR สูงอยู่แล้ว — ปิดเฉพาะมือถือเพื่อลดความร้อน */
-  renderer=new THREE.WebGLRenderer({canvas:wrapEl.querySelector('#f1-cv'),antialias:!thermalMobile});
+  renderer=new THREE.WebGLRenderer({canvas:q('#f1-cv'),antialias:!thermalMobile});
   renderer.setPixelRatio(Math.min(devicePixelRatio||1,thermalMobile?1.25:2));
   /* แสงจัดแบบสนามไฟสปอตไลต์: ขาวนวลจ้าจากบน (ไฟสนาม) + อุ่นชดเชย + hemisphere หนา */
   const hemi=new THREE.HemisphereLight(0x9aabdf,0x40361f,0.72); scene.add(hemi);
@@ -2712,7 +2740,7 @@ function build(){
     g.fillStyle='#111a24';g.fillRect(-88,16,176,16);g.fillRect(-58,-5,116,15);
     g.fillStyle='#07090d';for(const x of [-65,65]){g.beginPath();g.ellipse(x,24,20,28,0,0,Math.PI*2);g.fill();}
   },256,160);
-  new THREE.TextureLoader().load('img/f1/peer_car_25d.webp',t=>{
+  if(!IS_KART)new THREE.TextureLoader().load('img/f1/peer_car_25d.webp',t=>{
     t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping;
     if('colorSpace' in t&&THREE.SRGBColorSpace) t.colorSpace=THREE.SRGBColorSpace;
     applyTex('peerCar',t);
@@ -3203,6 +3231,7 @@ function jumpPhysicsTick(dt,forwardSpeed,preProbe){
   return jumpMissed;
 }
 function physTick(dt){
+  const tuning=IS_KART?P.physics:null;
   /* วาร์ปกำลังทำงาน: ล็อกแรงขับ/การเก็บรอบชั่วคราว แล้วปล่อยกลับหลังจบแสง */
   if(portalActive){portalTick(dt);return;}
   /* 🚦 รอบ 902: ก่อนไฟดับ คันเร่งไม่ทำงาน (เบรก/พวงมาลัยยังได้ — เร่งเครื่องรอได้ตามปกติ) */
@@ -3211,7 +3240,7 @@ function physTick(dt){
   const reving=padRev&&!braking&&!lightsLocked();   // ⏪ รอบ 911 — เบรกชนะเกียร์ถอย · ก่อนไฟดับห้ามถอย
   /* พวงมาลัย: นิ่ม + ลิมิตตามความเร็ว */
   const sIn=clamp(steerCtl+(kL?-1:0)+(kR?1:0),-1,1);
-  const sMax=lerp(STEER_MAX,STEER_HI,clamp(spd/85,0,1));
+  const sMax=lerp(tuning?tuning.steer:STEER_MAX,tuning?tuning.steerHi:STEER_HI,clamp(spd/(tuning?tuning.top:85),0,1));
   steer=lerp(steer,sIn*sMax,clamp(dt*7,0,1));
   /* ผิวใต้รถ */
   const s=surfAt(px,pz,myIdx);
@@ -3234,32 +3263,34 @@ function physTick(dt){
   spd=Math.hypot(vx,vz);
   /* แรงตามยาว */
   let aF=0;
-  if(thr>0) aF+=Math.min(ACC_CAP,PWR_A/Math.max(spd,6))*thr*(surf==='track'||surf==='jump'?1:sc.grip)*(airborne?.06:1);
+  if(thr>0) aF+=Math.min(tuning?tuning.accel:ACC_CAP,(tuning?tuning.power:PWR_A)/Math.max(spd,6))*thr*(surf==='track'||surf==='jump'?1:sc.grip)*(airborne?.06:1);
   /* ⏪ รอบ 911: เกียร์ถอยหลัง — ยังไหลไปหน้าอยู่ให้หน่วงก่อน แล้วค่อยถอย (เร็วสุด REV_MAX) */
   if(reving) aF-=vF>0.5?BRAKE_A*0.5:REV_A*(surf==='track'||surf==='jump'?1:sc.grip)*(airborne?.08:1);
-  if(braking) aF-=(BRAKE_A+BRAKE_DF*spd*spd)
+  if(braking) aF-=(tuning?tuning.brake:BRAKE_A+BRAKE_DF*spd*spd)
     *Math.sign(vF||1)*(surf==='track'||surf==='jump'?1:sc.grip*0.9)*(airborne?.12:1);
-  aF-=DRAG_K*(drsOn?DRS_DRAG_K:1)*spd*spd*Math.sign(vF||0);   // 🪽 DRS เปิด = แรงต้านลด
+  aF-=(tuning?tuning.drag:DRAG_K)*(drsOn?DRS_DRAG_K:1)*spd*spd*Math.sign(vF||0);   // 🪽 DRS เปิด = แรงต้านลด
   aF-=(ROLL_A+sc.drag)*Math.sign(vF||0)*(Math.abs(vF)>0.5?1:Math.abs(vF)*2);
   /* 🛑 รอบ 921: ปล่อยคันเร่ง (ไม่เบรก ไม่ถอย) = หน่วงเพิ่มเองเบา ๆ จนหยุด — ผู้ใช้ขอ "ยกมือออกแล้วค่อย ๆ เบรก"
      คิดหลังแรงต้านอากาศ/ยาง เพื่อให้บวกกันตรง ๆ · ผิวลื่น (ทราย/runoff) หน่วงได้น้อยลงตามกริป เหมือนเบรกจริง */
   const coasting=thr===0&&!braking&&!reving;
-  if(coasting&&Math.abs(vF)>COAST_STOP) aF-=COAST_A*Math.sign(vF)*(surf==='track'||surf==='jump'?1:sc.grip)*(airborne?.12:1);
+  if(coasting&&Math.abs(vF)>COAST_STOP) aF-=(tuning?tuning.coast:COAST_A)*Math.sign(vF)*(surf==='track'||surf==='jump'?1:sc.grip)*(airborne?.12:1);
   vF+=aF*dt;
+  if(tuning)vF=Math.min(vF,tuning.top*(drsOn?1.08:1));
   if(braking&&Math.abs(vF)<0.6&&thr===0) vF=0;
   if(coasting&&Math.abs(vF)<=COAST_STOP) vF=0;   // 🛑 รอบ 921 — จอดสนิท ไม่คืบต่อเอง
   if(vF<-REV_MAX) vF=-REV_MAX;                         // ถอยได้ช้าๆ พอ (⏪ รอบ 911 ย้ายเป็นค่าคงที่)
   /* 🚧 รอบ 905: ลิมิตเตอร์เลนพิท 80 กม./ชม. (อัตโนมัติเหมือนของจริง — เด็กไม่ต้องกดเอง) */
   pitLimited=false;
-  if(pitLaneNow&&vF>PIT_LIMIT){
+  if(pitLaneNow&&vF>(IS_KART?P.physics.pit:PIT_LIMIT)){
     pitLimited=true;
-    vF=Math.max(PIT_LIMIT,vF-Math.max(16,(vF-PIT_LIMIT)*7)*dt);
+    const limit=IS_KART?P.physics.pit:PIT_LIMIT;
+    vF=Math.max(limit,vF-Math.max(16,(vF-limit)*7)*dt);
   }
   /* เลี้ยว: yaw rate จากมุมล้อ + จำกัดด้วยกริป (โมเมนตัม!) */
-  const gripMax=Math.min(GRIP_CAP,(GRIP_BASE+GRIP_DF*spd*spd))*sc.grip*(airborne?.08:1);
+  const gripMax=(tuning?tuning.grip:Math.min(GRIP_CAP,(GRIP_BASE+GRIP_DF*spd*spd)))*sc.grip*(airborne?.08:1);
   /* 🔄 รอบ 911: ใส่ลบ — แกนจอ: หันหน้า +Z แล้ว "ขวามือ" คือ −X ดังนั้น steer บวก (ปุ่มขวา) ต้องลด yaw
      (ของเดิมกดขวาแล้วรถเลี้ยวซ้าย — กลับด้านทุกมุมกล้องตั้งแต่รอบ 896) */
-  let yawRate=Math.abs(vF)>0.4?-(vF*Math.tan(steer)/WB):0;
+  let yawRate=Math.abs(vF)>0.4?-(vF*Math.tan(steer)/(tuning?tuning.wheelbase:WB)):0;
   if(airborne) yawRate*=.12;                           // กลางอากาศหมุนหัวได้เพียงเล็กน้อย ไม่หักฉับเหมือนยางแตะพื้น
   const latNeed=Math.abs(yawRate*vF);
   slide=0;
@@ -3327,7 +3358,7 @@ function progressTick(dt){
     /* 🛞 รอบ 905: รอบที่แวะเลนพิท = ไม่นับสถิติ (กติกาจริง) แต่ยังได้เหรียญครบรอบ */
     if(!lapPitted&&(!lapBest||t<lapBest)){
       lapBest=t;
-      if(!state.f1Best||t<state.f1Best){ state.f1Best=t; saveState(); frSubmit(t); }
+      if(!state[BEST_KEY]||t<state[BEST_KEY]){ state[BEST_KEY]=t; saveState(); frSubmit(t); }
       /* รอบ 1216: สถิติยังบันทึก/อยู่ใน HUD แต่ไม่ขึ้น BEST LAP กลางจอ เพราะบังถนน */
     }
     if(!lapPitted)ghostKeep(t);
@@ -3351,7 +3382,7 @@ function progressTick(dt){
   if(lapStartAt) lapNow=(performance.now()-lapStartAt)/1000;
   lapEl.innerHTML='⏱️ <b>'+fmtLap(lapNow)+'</b> · รอบ '+lapCount
     +(lapBest?'<br>⭐ Best '+fmtLap(lapBest):'')
-    +((state.f1Best&&(!lapBest||state.f1Best<lapBest))?'<br>🏆 สถิติ '+fmtLap(state.f1Best):'');
+    +((state[BEST_KEY]&&(!lapBest||state[BEST_KEY]<lapBest))?'<br>🏆 สถิติ '+fmtLap(state[BEST_KEY]):'');
 }
 function fmtLap(t){
   if(!t) return '--:--.-';
@@ -3383,10 +3414,10 @@ function smokeTick(dt){
 
 /* ============================================================
    🏆 รอบ 903: กระดานอันดับ Best Lap ออนไลน์ (/f1Rank)
-   · เขียนจาก progressTick() เฉพาะตอนทำ Best Lap ใหม่ของตัวเอง (state.f1Best) — 1 แถวต่อคน
+   · เขียนจาก progressTick() เฉพาะตอนทำ Best Lap ใหม่ของตัวเอง (state[BEST_KEY]) — 1 แถวต่อคน
      rules ฝั่งเขียนบังคับว่า "ต้องดีกว่าแถวเดิม" อยู่แล้ว จึงยิง set() ทับได้เลยไม่ต้องเทียบก่อน
    · อ่าน orderByChild('sec').limitToFirst(FR_READ) — เวลาน้อยสุดมาก่อน (คนละทิศกับ examRank ที่คะแนนมากก่อน)
-   · แถวของตัวเอง fallback จาก state.f1Best เสมอ (ออฟไลน์/rules ยังไม่ publish ก็ยังเห็นสถิติตัวเอง)
+   · แถวของตัวเอง fallback จาก state[BEST_KEY] เสมอ (ออฟไลน์/rules ยังไม่ publish ก็ยังเห็นสถิติตัวเอง)
    · โชว์ใน #f1-rankbox ของหน้า intro (เรียก frMount() ใน start()) — ไม่มีป็อปอัปแยก
    ============================================================ */
 const FR_READ=50, FR_TOP=10;
@@ -3396,7 +3427,7 @@ function frSubmit(sec){
   const uid=(typeof onlineKey==='function')?onlineKey():'';
   if(!uid||!(sec>0)) return Promise.resolve(false);
   if(typeof isTester==='function'&&isTester())
-    return Online.db.ref('f1Rank/'+uid).remove().then(()=>false).catch(()=>false);
+    return Online.db.ref(RANK_PATH+'/'+uid).remove().then(()=>false).catch(()=>false);
   const bs=(typeof badgeSuffix==='function')?badgeSuffix():'';
   const row={
     sec,
@@ -3404,18 +3435,18 @@ function frSubmit(sec){
     g:(state.student&&state.student.grade)||'',
     ts:Date.now(),
   };
-  return Online.db.ref('f1Rank/'+uid).set(row).then(()=>{
-    Online.frOk=true; __frCache=null; return true;
-  }).catch(()=>{ Online.frOk=false; return false; });   // rules ยังไม่ publish / ออฟไลน์ → กระดานยังเห็นสถิติตัวเองจาก state.f1Best
+  return Online.db.ref(RANK_PATH+'/'+uid).set(row).then(()=>{
+    Online[RANK_STATUS]=true; __frCache=null; return true;
+  }).catch(()=>{ Online[RANK_STATUS]=false; return false; });   // rules ยังไม่ publish / ออฟไลน์ → กระดานยังเห็นสถิติตัวเองจาก state[BEST_KEY]
 }
 function frMerge(rows){
   const me=(typeof onlineKey==='function')?onlineKey():'me';
   const visible=rows.filter(r=>!(typeof rankUserExcluded==='function'&&rankUserExcluded(r.uid,r.name)));
   const out=visible.filter(r=>r.uid!==me);
   let my=visible.find(r=>r.uid===me)||null;
-  if(state.f1Best&&(!my||state.f1Best<my.sec)){
+  if(state[BEST_KEY]&&(!my||state[BEST_KEY]<my.sec)){
     my={uid:me, name:(typeof onlineDisplayName==='function'?onlineDisplayName():'')||(state.student&&state.student.name)||'หนู',
-        g:(state.student&&state.student.grade)||'', sec:state.f1Best, ts:0};
+        g:(state.student&&state.student.grade)||'', sec:state[BEST_KEY], ts:0};
   }
   if(my&&!(typeof isTester==='function'&&isTester())){ my.me=true; out.push(my); }
   return out.sort((a,b)=>a.sec-b.sec);
@@ -3425,16 +3456,16 @@ function frFetch(){
   if(__frPend) return __frPend;
   const fin=rows=>{ __frCache=rows; __frPend=null; return rows; };
   if(typeof Online==='undefined'||!Online.ready||!Online.db) return Promise.resolve(fin(frMerge([])));
-  const p=Online.db.ref('f1Rank').orderByChild('sec').limitToFirst(FR_READ+2).get().then(s=>{
+  const p=Online.db.ref(RANK_PATH).orderByChild('sec').limitToFirst(FR_READ+2).get().then(s=>{
     const v=(s&&s.val())||{}, out=[];
     Object.keys(v).forEach(u=>{
       const r=v[u];
       if(!r||typeof r.sec!=='number') return;
       out.push({uid:u, name:r.n||'เพื่อน', g:r.g||'', sec:r.sec, ts:r.ts||0});
     });
-    Online.frOk=true;
+    Online[RANK_STATUS]=true;
     return fin(frMerge(out));
-  }).catch(()=>{ Online.frOk=false; return fin(frMerge([])); });
+  }).catch(()=>{ Online[RANK_STATUS]=false; return fin(frMerge([])); });
   __frPend=p;
   return p;
 }
@@ -3458,11 +3489,11 @@ function frBodyHTML(){
 }
 function frNote(){
   if(typeof Online==='undefined'||!Online.ready) return '📴 ออฟไลน์ — เห็นสถิติของหนูเองเท่านั้น';
-  if(Online.frOk===false) return '⚠️ กระดานกลางยังไม่เปิด (รออัปเดตกฎ /f1Rank) — เห็นสถิติของหนูเองเท่านั้น';
+  if(Online[RANK_STATUS]===false) return '⚠️ กระดานกลางยังไม่เปิด (รออัปเดตกฎ /f1Rank) — เห็นสถิติของหนูเองเท่านั้น';
   return '🏆 อันดับ Best Lap ตลอดกาลของทุกคน';
 }
 function frMount(){
-  const box=wrapEl&&wrapEl.querySelector('#f1-rankbox');
+  const box=wrapEl&&q('#f1-rankbox');
   if(!box) return;
   const listEl=box.querySelector('.fr-list'), noteEl=box.querySelector('.fr-note');
   listEl.innerHTML=frBodyHTML(); noteEl.textContent=frNote();
@@ -3580,14 +3611,14 @@ function ghostHide(){
 function ghostLoad(){
   ghostBest=null;
   try{
-    const d=JSON.parse(localStorage.getItem(GHOST_KEY)||'null');
+    const d=JSON.parse(localStorage.getItem(ACTIVE_GHOST_KEY)||'null');
     if(!d||!d.x||!d.z||!d.y||!d.p||d.x.length<8||!d.t) return;
     if(Math.abs((d.v||0)-Math.round(TOTAL))>3) return;      // แทร็กเปลี่ยนสูตร = เส้นทางเก่าใช้ไม่ได้
     ghostBest=d;
   }catch(e){}
 }
 function ghostSave(){
-  try{ localStorage.setItem(GHOST_KEY,JSON.stringify(ghostBest)); }catch(e){}
+  try{ localStorage.setItem(ACTIVE_GHOST_KEY,JSON.stringify(ghostBest)); }catch(e){}
 }
 function ghostReset(){
   ghostRec={t:0,v:Math.round(TOTAL),x:[],z:[],y:[],p:[]};
@@ -3648,7 +3679,7 @@ function ghostTick(dt){
 /* ---- เส้นกึ่งกลางเลนพิท: resample ทุก SAMPLE_M เมตร ---- */
 function buildPitLine(){
   PITL=null;
-  const src=(typeof F1_MAP!=='undefined'&&F1_MAP.pit)||null;
+  const src=(typeof F1_MAP!=='undefined'&&(IS_KART?P.map:F1_MAP).pit)||null;
   if(!src||src.length<3) return;
   const pts=[];
   for(let i=0;i<src.length-1;i++){
@@ -3843,7 +3874,7 @@ function netReady(){
 function netJoin(){
   if(!netReady()) return;
   room=NetRoom.create({
-    map:'f1', sendMs:NET_SEND_MS, roomMax:ROOM_MAX,
+    map:IS_KART?'kart':'f1', sendMs:NET_SEND_MS, roomMax:ROOM_MAX,
     roomNoun:'สนาม', roomIcon:'🏁',
     push(){ lastNetSend=0; netSend(true); },
     onPeer:onPeer, onPeerGone:dropPeer,
@@ -4107,7 +4138,8 @@ function applyCamMode(){
   const fp=camMode==='cockpit';
   wrapEl.classList.toggle('fp',fp);
   if(camBtnEl) camBtnEl.textContent=CAM_NEXT_LABEL[camMode]||'📷 มุมรถ';
-  if(carGrp) carGrp.visible=(camMode==='chase');   // 🛣️ มุมถนนก็ซ่อนรถ (นั่งในรถเหมือนกัน)
+  if(carGrp) carGrp.visible=(camMode==='chase');
+  if(IS_KART&&carGrp)P.carView(carGrp,camMode);   // 🛣️ มุมถนนก็ซ่อนรถ (นั่งในรถเหมือนกัน)
   camInit=false;
   if(fp) layoutWheel();   // 🎡 รอบ 913 — ตอนซ่อนอยู่วัดขนาดไม่ได้ (0×0) ต้องวัดใหม่ทุกครั้งที่กลับมามุมคนขับ
 }
@@ -4124,6 +4156,7 @@ function cockpitBox(){
   return {w,h,left:0,top:bh+bh*.01-h,sy:1};
 }
 function layoutWheel(){
+  if(IS_KART)return;
   const b=cockpitBox(); if(!b) return;
   layoutDash(b);                 // 🔢 รอบ 916 — จอตัวเลขวางได้แม้ภาพพวงมาลัยแยกชั้นจะโหลดไม่ขึ้น
   if(!wheelEl||!wheelEl.naturalWidth) return;
@@ -4146,6 +4179,7 @@ function layoutWheel(){
    🫨 รอบ 914: บวกอาการมือสั่นบน kerb/ทราย — ใช้ shakeT/SHAKE_HZ ตัวเดียวกับกล้อง (รอบ 907, อัปเดตใน camTick ก่อนหน้านี้แล้วในเฟรมเดียวกัน)
    จึงสั่นจังหวะเดียวกับที่กล้อง/โลกสั่น ไม่ใช่คนละจังหวะที่ดูหลอน */
 function wheelTick(){
+  if(IS_KART){P.steer(carGrp,steer);return;}
   if(camMode!=='cockpit') return;
   const deg=clamp(steer*(180/Math.PI)*WHEEL_RATIO,-WHEEL_MAX_DEG,WHEEL_MAX_DEG);
   const shakeAmp=surfNow==='kerb'?WHEEL_SHAKE_KERB_PX:(surfNow==='sand'?WHEEL_SHAKE_SAND_PX:0);
@@ -4303,7 +4337,7 @@ function drawDash(d){
    ดวงไฟจริงเป็น <i> วางทับตำแหน่งเดิมในภาพ → หมุน/ย่อ-ขยายไปกับพวงมาลัยเสมอ (layoutWheel/wheelTick)
    ============================================================ */
 function buildLeds(){
-  ledsEl=wrapEl.querySelector('#f1-leds'); if(!ledsEl) return;
+  ledsEl=q('#f1-leds'); if(!ledsEl) return;
   ledsEl.innerHTML=F1_LEDS.map(([x,y,w,h])=>
     `<i style="left:${x}%;top:${y}%;width:${w}%;height:${h}%"></i>`).join('');
   ledEls=[...ledsEl.querySelectorAll('i')];
@@ -4342,6 +4376,7 @@ function ledTick(dt){
   }
 }
 function camTick(dt){
+  if(IS_KART&&P.camera(camera,carGrp,camMode,{px,py,pz,yaw,spd,pitch,roll:bodyRoll},dt))return;
   let landingOy=0;
   if(jumpLandKickT>0){
     const t=1-jumpLandKickT/.28;
@@ -4432,6 +4467,7 @@ function thermalRenderDue(now){
   thermalRenderAt=thermalRenderAt?Math.max(now-interval,thermalRenderAt+interval):now;thermalRendered++;return true;
 }
 function frame(dt,now){
+  if(IS_KART&&!P.authorized()){exitWorld();return;}
   thermalGovernorTick(dt);
   const visualDue=thermalRenderDue(now);
   lightsTick(dt);          // 🚦 รอบ 902 — ต้องมาก่อน physTick (ล็อกคันเร่งจนไฟดับ)
@@ -4443,14 +4479,15 @@ function frame(dt,now){
   camTick(dt);
   if(visualDue){
     wheelTick();           // 🎡 รอบ 913 — พวงมาลัยหมุนตาม steer
-    dashTick(dt);          // 🔢 จอ canvas วาดเฉพาะเฟรมที่จะขึ้นจอ ลด CPU/GPU upload ตอน idle
-    ledTick(dt);
+    if(!IS_KART)dashTick(dt);          // 🔢 จอ canvas วาดเฉพาะเฟรมที่จะขึ้นจอ ลด CPU/GPU upload ตอน idle
+    if(!IS_KART)ledTick(dt);
     hudTick();
   }
   if(room)room.tick(now);    // 🏟️ รอบ 1224: retry/verify/ตามหาเพื่อน/กวาดผี ต้องเดินเหมือนโลก 3D อื่น
   netSend(false);
   if(visualDue&&now-mapAt>100){ mapAt=now; drawMap(); }
   if(now-relocAt>3000){ relocAt=now; relocTick(); }
+  if(visualDue&&IS_KART)P.animate(dt,now);
   if(visualDue) renderer.render(scene,camera);
 }
 function tick(now){
@@ -4473,6 +4510,11 @@ function fit(){
    🚪 เข้า/ออกโลก
    ============================================================ */
 function applyEnvironmentProfile(profile,mode){
+  if(IS_KART){
+    activeGraphicsMode='kart';activeEnvironmentProfile=P.environment;
+    P.applyEnvironment(scene,renderer,camera,envLights,thermalMobile);
+    thermalBasePR=renderer.getPixelRatio();thermalLevel=0;return;
+  }
   if(!profile||profile.contract!=='vw.f1.environment-profile/v1') return;
   const r=profile.renderer||{}, e=profile.environment||{};
   activeGraphicsMode=mode||profile.id||'battery';
@@ -4517,11 +4559,15 @@ function applyEnvironmentProfile(profile,mode){
   }
 }
 function start(options){
+  if(IS_KART&&!P.authorized())throw new Error('Kart is restricted to signed-in administrators');
   if(running) return;
+  const other=IS_KART?window.F1World:window.KartWorld;
+  if(other&&other._t.running)other._t.exitWorld();
   if(!built) build();
   options=options||{};
+  if(IS_KART)applyEnvironmentProfile(options.environmentProfile,options.graphicsMode);
   paintPlayerStyle(storedCarStyle().key);
-  applyEnvironmentProfile(options.environmentProfile,options.graphicsMode);
+  if(!IS_KART)applyEnvironmentProfile(options.environmentProfile,options.graphicsMode);
   if(!Array.isArray(state[DONE_KEY])) state[DONE_KEY]=[];
   thermalRenderAt=0;thermalRendered=0;thermalSkipped=0;
   wrapEl.classList.add('on');
@@ -4551,7 +4597,7 @@ function start(options){
   inPit=false; pitLaneNow=false; pitLimited=false; lapPitted=false;
   resetLights();            // 🚦 รอบ 902 — ตั้งลำดับไฟใหม่ทุกครั้งที่เข้าสนาม
   ghostLoad(); ghostReset(); ghostHide();
-  const steerBox=wrapEl.querySelector('#f1-steer');
+  const steerBox=q('#f1-steer');
   if(steerBox&&steerBox._f1Reset)steerBox._f1Reset();
   netJoin();
   settleStartGrid(true);
@@ -4616,10 +4662,10 @@ function exitWorld(){
   saveState();
   if(typeof renderDashboard==='function') renderDashboard();
   if(sessionWords>0||sessionCoins>0)
-    toast(`🏎️ กลับจาก Vocab World Racing — ได้ ${sessionWords} คำ · +${fmtNum(sessionCoins)} 🪙`);
+    toast(`🏎️ กลับจาก ${IS_KART?'Vocab World Kart':'Vocab World Racing'} — ได้ ${sessionWords} คำ · +${fmtNum(sessionCoins)} 🪙`);
 }
 
-window.F1World={
+return {
   start,
   _t:{
     get running(){return running}, set running(v){running=v},
@@ -4684,7 +4730,7 @@ window.F1World={
       rec:ghostRec?ghostRec.x.length:0,vis:ghostShown,gap:ghostGap,
       pos:(ghostGrp&&ghostShown)?{x:ghostGrp.position.x,z:ghostGrp.position.z,yaw:ghostGrp.rotation.y}:null,
       hud:gapEl?{cls:gapEl.className,txt:gapEl.textContent}:null}},
-    setGhost(d){ ghostBest=d; if(d) ghostSave(); else { try{localStorage.removeItem(GHOST_KEY);}catch(e){} } },
+    setGhost(d){ ghostBest=d; if(d) ghostSave(); else { try{localStorage.removeItem(ACTIVE_GHOST_KEY);}catch(e){} } },
     ghostLoad, ghostReset, ghostKeep, ghostTick,
     get pit(){return {inPit,limited:pitLimited,lapPitted,
       line:PITL?{n:PITL.n,len:PITL.len}:null}},
@@ -4750,4 +4796,7 @@ window.F1World={
     exitWorld, fit,
   }
 };
+}
+window.createVocabRacingWorld=createRacingWorld;
+window.F1World=createRacingWorld(null);
 })();

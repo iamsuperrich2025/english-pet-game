@@ -7640,6 +7640,28 @@ async function enterMoto3D(){
 
 /* 🏎️ รอบ 896: เข้าโลกแข่งรถ F1 สนามซาเคียร์ (Bahrain) — engine แยก (js/f1_3d.js)
    + ข้อมูลสนามจริงจาก OSM (js/data/f1_bahrain.js) + GLTFLoader เผื่อผู้ใช้วางโมเดล f1_car.glb */
+/* ============================================================
+   🏝️ รอบ 1377 — KART ADMIN PREVIEW (separate entry and persistent keys)
+   ============================================================ */
+async function enterKart3D(){
+  if(typeof canAccessKartBeta!=='function'||!canAccessKartBeta())return worldEntryStopped('เกมนี้เปิดให้แอดมินเท่านั้น');
+  if(!state.kartTicket||state.advHurt)return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
+  if(advLoading)return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่');
+  advLoading=Date.now();toast('🏝️ กำลังเปิด Vocab World Kart...');
+  try{
+    await loadScriptOnce('js/kart-access.js');
+    await KartAccess.authorize();
+    await loadScriptOnce('js/vendor/three.min.js');
+    await loadScriptOnce('js/data/f1_bahrain.js');
+    const engineUrl='__VW_F1_ENGINE_URL__';
+    await loadScriptOnce(engineUrl.startsWith('__VW_')?'js/f1_3d.js':engineUrl);
+    await loadScriptOnce('js/kart3d.js');
+    if(!KartAccess.valid())return worldEntryStopped('สิทธิ์แอดมินเปลี่ยน กรุณาเข้าใหม่');
+    KartWorld.start();return worldEntryStarted();
+  }catch(error){return worldEntryStopped('เปิด Kart ไม่สำเร็จ: '+String(error.message||error),error);}
+  finally{advLoading=false;}
+}
+
 async function enterF1_3D(){
   if(!state.f1Ticket || state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
   if(advLoading){ advBusyMsg(enterF1_3D); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
@@ -7707,6 +7729,7 @@ const WORLD3D = [
   { mode:'moto',  ico:'🏍️', label:'มอไซค์', ticketKey:'motoTicket', doneKey:'motoDone',  enter:enterMoto3D },
   { mode:'invasion',ico:'🛸',label:'ยานแม่', ticketKey:'invasionTicket',doneKey:'invasionDone', enter:enterInvasion3D },
   { mode:'mecha', ico:'🤖', label:'หุ่นรบ', ticketKey:'mechaTicket', doneKey:'mechaDone', enter:enterMecha3D },
+  { mode:'kart', ico:'🏝️', label:'Vocab World Kart', ticketKey:'kartTicket', doneKey:'kartDone', enter:enterKart3D },
   { mode:'f1',    ico:'🏎️', label:'Vocab World Racing', ticketKey:'f1Ticket',  doneKey:'f1Done',    enter:enterF1_3D },   // internal keys kept for compatibility
 ];
 /* ============================================================
@@ -7844,6 +7867,7 @@ function showGameEntryRefundNotice(next){
 }
 
 async function startWorldEntry(w, info, unlocked, overlay, button){
+  if(w && w.mode==='kart' && !(typeof canAccessKartBeta==='function'&&canAccessKartBeta())){toast('🔒 เกมนี้เปิดให้แอดมินเท่านั้น');return;}
   if(w && w.mode === 'sky' && !ensureSkyBetaAccess()) return;
   if(button) button.disabled = true;
   // info คงอยู่ใน signature เพื่อ compatibility เท่านั้น — ห้ามใช้ราคา/หักเหรียญเมื่อเข้าเกม
@@ -7869,6 +7893,7 @@ async function startWorldEntry(w, info, unlocked, overlay, button){
 }
 
 function railWorldClick(w){
+  if(w && w.mode==='kart' && !(typeof canAccessKartBeta==='function'&&canAccessKartBeta())){toast('🔒 เกมนี้เปิดให้แอดมินเท่านั้น');return;}
   if(w && w.mode === 'sky' && !ensureSkyBetaAccess()) return;
   if(world3DComingSoon(w)){
     sfx.wrong(); toast('🔒 Coming soon'); return;
@@ -7912,6 +7937,7 @@ function skyEntryPickerHTML(w, characters){
 
 /* 🎮 หน้ายืนยันเข้าโลก 3D ฟรี + ปุ่มชวนเพื่อนเล่นด้วยกัน (openTinvPicker) */
 function openWorldEntryDialog(w){
+  if(w && w.mode==='kart' && !(typeof canAccessKartBeta==='function'&&canAccessKartBeta())){toast('🔒 เกมนี้เปิดให้แอดมินเท่านั้น');return;}
   if(w && w.mode === 'sky' && !ensureSkyBetaAccess()) return;
   const isSky = !!(w && w.mode === 'sky');
   const skyCharacters = isSky ? skyEntryCatalog() : [];
@@ -8057,8 +8083,13 @@ function renderRailWorlds(){
   WORLD3D.forEach(w=>{
     const b = document.getElementById('btn-world-' + w.mode);
     if(!b) return;
-    const betaVisible = w.mode !== 'sky' || (typeof canAccessSkyBeta === 'function' && canAccessSkyBeta());
+    const betaVisible = (w.mode !== 'sky' || (typeof canAccessSkyBeta === 'function' && canAccessSkyBeta()))
+      && (w.mode !== 'kart' || (typeof canAccessKartBeta === 'function' && canAccessKartBeta()));
     b.hidden = !betaVisible;
+    if(w.mode==='kart'){
+      b.disabled=!betaVisible;b.style.display=betaVisible?'':'none';b.setAttribute('aria-hidden',String(!betaVisible));
+      if(b.dataset.kartAllowed!==String(betaVisible)){b.dataset.kartAllowed=String(betaVisible);window.dispatchEvent(new Event('vw-kart-access-changed'));}
+    }
     if(!betaVisible) return;
     const done = Array.isArray(state[w.doneKey]) ? state[w.doneKey].length : 0;
     const lk = b.querySelector('.rail-lock');

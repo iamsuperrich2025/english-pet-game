@@ -279,8 +279,8 @@
     return `<span class="vw2-classic-rail-ico" aria-hidden="true">${htmlEscape(glyph)}</span>`;
   }
   function navButton(actionName, iconName, label, sourceSelector=''){
-    const adminOnly = ADMIN_ONLY_WORLD_ACTIONS.has(actionName);
-    const adminBlocked = adminOnly && !adminWorldAllowed();
+    const adminOnly = ADMIN_ONLY_WORLD_ACTIONS.has(actionName) || actionName==='worldKart';
+    const adminBlocked = adminOnly && !adminWorldAllowed() || (actionName==='worldKart' && !(typeof canAccessKartBeta==='function'&&canAccessKartBeta()));
     const roleAttrs = adminOnly ? ' data-vw2-admin-only-world="1"' : '';
     const blockedAttrs = adminBlocked ? ' hidden disabled aria-hidden="true" aria-disabled="true" tabindex="-1"' : '';
     const priceText = worldPriceText(sourceSelector);
@@ -808,6 +808,8 @@
   }
   function syncRuntimeActionParity(){
     if(!root) return;
+    const kart=root.querySelector('[data-vw2-action="worldKart"]');
+    if(kart){const allowed=typeof canAccessKartBeta==='function'&&canAccessKartBeta();kart.hidden=!allowed;kart.style.display=allowed?'':'none';kart.disabled=!allowed;kart.setAttribute('aria-hidden',String(!allowed));}
     const racing = root.querySelector('[data-vw2-action="racing"]');
     if(racing){
       const ready = authoritativeRacingReady();
@@ -817,6 +819,7 @@
     }
   }
   function action(name){
+    if(name==='worldKart'&&!(typeof canAccessKartBeta==='function'&&canAccessKartBeta()))return false;
     if(ADMIN_ONLY_WORLD_ACTIONS.has(name) && !adminWorldAllowed()){
       try{ if(typeof showToast === 'function') showToast('โลกนี้เปิดให้ผู้ดูแลระบบเท่านั้น'); }catch(_){ }
       return false;
@@ -827,7 +830,7 @@
       worldHeli:'#btn-world-heli', worldDrone:'#btn-world-drone', worldDrive:'#btn-world-drive',
       worldSoccer:'#btn-world-soccer', worldMoto:'#btn-world-moto',
       worldInvasion:'#btn-world-invasion', worldMecha:'#btn-world-mecha',
-      worldFrontline:'#btn-world-frontline',
+      worldFrontline:'#btn-world-frontline', worldKart:'#btn-world-kart',
       typing:'#btn-rail-typing', bubble:'#btn-rail-bubble', shoot:'#btn-rail-shootword',
       cannon:'#btn-rail-lettercannon', examstd:'#btn-rail-examstd', onet:'#btn-rail-onet',
       rank:'#btn-rail-rank', stats:'#btn-stats', trophy:'#btn-rail-trophy', chat:'#btn-chat',
@@ -1122,6 +1125,7 @@
       ['trophy','pinboard','ตู้เข็ม','#btn-rail-trophy'],
       ['racing','racecar','Vocab World Racing',''],
     ];
+    railItems.splice(2,0,['worldKart','racecar','Vocab World Kart · Admin','#btn-world-kart']);
     railItems.splice(2,0,['worldFrontline','tank','Frontline 1944','#btn-world-frontline']);
     const railButtons = railItems.map(x=>navButton(x[0],x[1],x[2],x[3])).join('');
     const learningModes = [
@@ -1389,7 +1393,7 @@
     root.querySelectorAll('[data-vw2-source]').forEach(btn=>{
       const selector = btn.dataset.vw2Source || '';
       const source = selector ? document.querySelector(selector) : null;
-      const adminBlocked = btn.dataset.vw2AdminOnlyWorld === '1' && !adminWorldAllowed();
+      const adminBlocked = (btn.dataset.vw2AdminOnlyWorld === '1' && !adminWorldAllowed()) || (btn.dataset.vw2Action==='worldKart' && !(typeof canAccessKartBeta==='function'&&canAccessKartBeta()));
       const disabled = !!(source && source.disabled) || adminBlocked;
       btn.disabled = disabled;
       btn.setAttribute('aria-disabled', disabled ? 'true' : 'false');
@@ -2147,6 +2151,7 @@
     build();
     observeDashboardActivation();
     window.addEventListener('focus', wakeTick);
+    window.addEventListener('vw-kart-access-changed', syncSourceParity);
     window.addEventListener('vw2-profile-name-changed', sync);
     window.addEventListener('resize', scheduleLocalPreviewReport);
     document.addEventListener('visibilitychange', handlePageVisibility);

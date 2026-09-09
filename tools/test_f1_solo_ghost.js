@@ -36,7 +36,7 @@ for (const pattern of [
   /id="f1-tyre"/, /id="f1-pit"/, /Math\.round\(tyre\*100\)/,
   /จอดนิ่ง 3 วิ = ยางใหม่/, /Snd\.(?:wrench|tyreDone)\(/
 ]) ok(!has(pattern), `removed tyre degradation: ${pattern}`);
-ok(has('const gripMax=Math.min(GRIP_CAP,(GRIP_BASE+GRIP_DF*spd*spd))*sc.grip*(airborne?.08:1);'),
+ok(has('const gripMax=(tuning?tuning.grip:Math.min(GRIP_CAP,(GRIP_BASE+GRIP_DF*spd*spd)))*sc.grip*(airborne?.08:1);'),
   'player grip depends only on surface/downforce and the grounded state, never tyre wear');
 
 // Lap completion may update persistent/HUD state but must never cover the road with a center banner.

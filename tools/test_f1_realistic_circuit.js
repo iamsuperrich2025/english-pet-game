@@ -188,7 +188,7 @@ assert.ok(/px\+=vx\*dt; pz\+=vz\*dt;\s*resolvePeerCars\(dt\);[\s\S]*postMoveSurf
   'peer separation must run after movement and before the conditional outer track barrier clamp');
 assert.ok(/vx:Math\.round\(vx\*10\)\/10, vz:Math\.round\(vz\*10\)\/10/.test(f1),
   'network payload must provide relative velocity for physical impacts');
-const hitPartsSrc=f1.match(/const CAR_HIT_PARTS=(\[[\s\S]*?\]);/)[1];
+const hitPartsSrc=f1.match(/const CAR_HIT_PARTS=(?:IS_KART\?P.hitParts:)?(\[[\s\S]*?\]);/)[1];
 const hitRadius=Number(f1.match(/const CAR_HIT_RADIUS=([.\d]+)/)[1]);
 const contactSrc=f1.slice(f1.indexOf('function carPartContact'),f1.indexOf('function resolvePeerCars'));
 const carContact=Function(`const CAR_HIT_PARTS=${hitPartsSrc},CAR_HIT_RADIUS=${hitRadius};${contactSrc};return carContact;`)();
