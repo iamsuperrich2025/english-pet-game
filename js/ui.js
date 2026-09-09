@@ -7268,12 +7268,11 @@ async function enterSkyPlayground3D(){
 }
 let advLoading = false;
 async function enterAdventure3D(){
-  if(typeof isAdmin!=='function'||!isAdmin())return worldEntryStopped('โลกผจญภัยเปิดให้แอดมินเท่านั้น');
   if(!state.advTicket || state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
   if(advLoading){ advBusyMsg(enterAdventure3D); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
   // 🗺️ รอบ 1045: เลือกแผนที่ก่อน แล้วค่อยโหลดเฉพาะเอนจินที่ใช้จริง
   // Vocab Arena เบากว่า adventure3d.js มาก จึงไม่บังคับมือถือโหลดโลกเฮลิคอปเตอร์ทั้งก้อนก่อนเข้าต่อสู้
-  const map = await pickAdvMap();
+  const map = typeof isAdmin==='function'&&isAdmin()?await pickAdvMap():'field';
   if(!map) return worldEntryStopped('ยกเลิกการเลือกแผนที่ก่อนเกมเริ่ม');
   advLoading = Date.now();
   toast(map==='heli'?'🚁 กำลังเปิดเมืองเฮลิคอปเตอร์...':'🌀 กำลังเปิด Vocab Arena...');
@@ -7752,7 +7751,7 @@ const WORLD3D = [
    🔒 รอบ 1070/1132: โลกที่ยังไม่เปิดสาธารณะ — เปิดให้บัญชีทดสอบ 2 ชื่อเท่านั้น
    เทียบชื่อแบบ NFC + ตัดช่องว่าง กันชื่อไทยจากคนละคีย์บอร์ด/มีช่องว่างหลุดแล้วสิทธิ์ไม่ตรง
    ============================================================ */
-const WORLD3D_COMING_SOON = new Set(['adv','drive','moto','invasion','mecha']);
+const WORLD3D_COMING_SOON = new Set(['drive','moto','invasion','mecha']);
 function world3DComingSoon(w){
   return !!(w && WORLD3D_COMING_SOON.has(w.mode) && !(typeof isTester === 'function' && isTester()));
 }
@@ -7915,9 +7914,6 @@ function railWorldClick(w){
   /* 🔓 รอบ 943: ยกเลิกด่าน "ต้องปลดล็อกโลกก่อนหน้า" + ด่าน "ต้องมีหุ่น/รถก่อน" — จ่ายค่าเข้าแล้วเข้าได้ทุกโลก
      ไม่มีหุ่น/รถ = ระบบให้ยืมฟรีสำหรับรอบนั้น (enterMecha3D / enterDrive3D จัดการ) */
   if(state.advHurt){ sfx.wrong(); openHealDialog(); return; }
-  if(w.mode === 'adv' && !state.advTicket && !state.pets.some(p=>isAdult(p))){
-    sfx.wrong(); toast('🔒 ต้องมีสัตว์โตเต็มวัย (Lv.3) อย่างน้อย 1 ตัวก่อนถึงจะเข้าโลกผจญภัยได้นะ'); return;
-  }
   if(w.mode === 'drive' && carDriveBlock() === 'overdue'){  // 🔐 ค้างงวดรถ = ขับไม่ได้จนกว่าจะจ่าย (ไม่มีรถไม่บล็อกแล้ว — ยืมรถระบบ)
     sfx.wrong(); showNeedCarDialog('overdue'); return;
   }
@@ -8117,16 +8113,8 @@ function renderRailWorlds(){
       if(pr) pr.style.display = 'none';
       return;
     }
-    /* 🔓 รอบ 943: ยกเลิกลำดับปลดล็อกโลก (prereq) + หุ่นรบเข้าระบบค่าเข้าเดียวกับโลกอื่น (ไม่มีหุ่น=ยืมฟรี)
-       ล็อก 🔒 เหลือเคสเดียว: โลกผจญภัยยังไม่มีสัตว์โตเต็มวัย */
-    const locked = w.mode === 'adv' && !state.advTicket && !state.pets.some(p=>isAdult(p));
-    b.classList.toggle('locked', locked);
-    if(locked){
-      if(lk){ lk.style.display = ''; lk.textContent = '🔒'; }
-      if(cnt) cnt.style.display = 'none';
-      if(pr) pr.style.display = 'none';
-      return;
-    }
+    // Round 1396: public Arena does not require an adult pet.
+    b.classList.remove('locked');
     // 🔐 ค้างค่างวดรถ → กุญแจเหลืองล็อกทับ (ไม่มีรถไม่ล็อกแล้ว — ระบบให้ยืมรถฟรี)
     const carBlock = (w.mode === 'drive' && carDriveBlock() === 'overdue') ? 'overdue' : '';
     if(lk){

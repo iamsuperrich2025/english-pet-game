@@ -275,8 +275,8 @@ const semanticRailIcons = [
   ['trophy','pinboard']
 ];
 semanticRailIcons.forEach(([action, iconName])=>must(home.includes(`['${action}','${iconName}'`), `left rail icon does not explain its destination: ${action}`));
-const adminOnlyWorlds = ["worldAdv","worldSky","worldDrive","worldMoto","worldInvasion","worldMecha"];
-const publicWorlds = ["worldHaunt","worldHeli","worldDrone","worldSoccer"];
+const adminOnlyWorlds = ["worldSky","worldDrive","worldMoto","worldInvasion","worldMecha"];
+const publicWorlds = ["worldAdv","worldHaunt","worldHeli","worldDrone","worldSoccer"];
 const adminWorldSetBlock = (home.match(/const ADMIN_ONLY_WORLD_ACTIONS = new Set\(\[([\s\S]*?)\]\)/) || [])[1] || "";
 const adminWorldSetNames = Array.from(adminWorldSetBlock.matchAll(/'([^']+)'/g), match=>match[1]);
 must(JSON.stringify(adminWorldSetNames) === JSON.stringify(adminOnlyWorlds), "R40 exact six-world admin set changed");
@@ -448,4 +448,4 @@ if(fail.length){
 }
 
 console.log("Home V2 R41 / รอบ 1328 validation PASS");
-console.log(`Checked zero-flash Primary Home activation, exact six-world admin gate, authoritative Classic routes; ${expectedRail.length} left destinations; and all ${expectedBottom.length} learning actions.`);
+console.log(`Checked zero-flash Primary Home activation, five-world admin gate with public Arena, authoritative Classic routes; ${expectedRail.length} left destinations; and all ${expectedBottom.length} learning actions.`);

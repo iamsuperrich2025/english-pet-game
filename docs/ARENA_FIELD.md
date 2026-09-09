@@ -1,6 +1,6 @@
-# Arena Field — current behavior (round 1390)
+# Arena Field — current behavior (round 1396)
 
-The Adventure / Vocab Arena entry remains admin-only. `js/home-v2.js` renders its small fantasy-house lobby icon; `js/ui.js` loads the hero picker, map picker, catalogue and battle engine in dependency order. The eight existing animated full-body portraits are preserved. Confirming a hero keeps the owned loadout instead of granting free signature spells.
+The Vocab Arena entry is public, including new players without an adult pet. `js/home-v2.js` renders an explicitly sized cover using the existing fire-hero and crystal-map WebP thumbnails; `js/ui.js` loads the hero picker, map picker, catalogue and battle engine in dependency order. The eight existing animated full-body portraits are preserved. Confirming a hero keeps the owned loadout instead of granting free signature spells.
 
 ## Maps and rooms
 
@@ -34,7 +34,7 @@ Both inventories pause local combat and redundant scene rendering while preservi
 
 ## Validation
 
-- `tools/test_arena_maps.cjs`: original camera height/FOV/projection and following movement on three landscape viewports, world-bound ground, edge-view screenshots, room grouping, lane isolation, full-room races, admin guard, responsive layouts, selected-only image downloads, fallback, movement, MEGA counter, map-change cleanup, letters and session coins.
+- `tools/test_arena_maps.cjs`: original camera height/FOV/projection and following movement on three landscape viewports, world-bound ground, edge-view screenshots, room grouping, lane isolation, full-room races, public entry, responsive layouts, selected-only image downloads, fallback, movement, MEGA counter, map-change cleanup, letters and session coins.
 - `tools/test_arena_fire.cjs`: before/after captures, ignition/sustain/dissipation on all three maps, low-power pools, per-draw phase/opacity, smoke/fire separation, expiry/disposal and MEGA charge. `VW_ARENA_VIDEO=1` additionally records a real game WebM through Playwright's optional ffmpeg runtime. No production account writes.
 - `tools/test_arena_grimoire.cjs`: all 50 recipes and 13 patterns, lazy loading/retry, both permanent shops, prices, real bonuses, saved ownership reload, free admin access, inventory layout/render pause and GPU caps.
 - Existing field/crystal/hero harnesses retain combat, banking, MEGA five-use behavior, animated portraits and cleanup coverage. Fixtures use isolated saves and fake networking; no production account writes.
@@ -44,7 +44,7 @@ Both inventories pause local combat and redundant scene rendering while preservi
 The following records describe their original rounds. Where they differ (procedural map art, free starter pairs, ten spells, six-letter maximum), the current behavior above takes precedence.
 
 
-The admin-only Adventure entry loads `js/arena-field-visuals.js` and `js/arena-elements.js` before `js/arena3d.js`. The main engine still owns combat, words, rewards, co-op/boss state and lifecycle. The visual module owns compact articulated heroes, original procedural houses, merged static scenery, and bounded spell pools. `css/arena3d.css` owns its landscape HUD.
+The public Arena entry loads `js/arena-field-visuals.js` and `js/arena-elements.js` before `js/arena3d.js`. The main engine still owns combat, words, rewards, co-op/boss state and lifecycle. The visual module owns compact articulated heroes, original procedural houses, merged static scenery, and bounded spell pools. `css/arena3d.css` owns its landscape HUD.
 
 Controls: WASD/arrows or left joystick to move; hold the attack button or Space for repeated attacks; 1/2 for the equipped elements, 3 for elemental MEGA, E for the elemental library; H or the house button to walk home. Manual steering interrupts the return route.
 
@@ -96,3 +96,9 @@ Five fresh crystals grant exactly **five MEGA uses**. Each cast consumes one use
 MEGA follows the selected hero's element, with a fixed 18-unit damage radius and matching luminous boundary, rune and dome. Three pulses at 0.35/1.05/1.75 seconds each deal 40 times the current letter/item multiplier to enemies inside the radius. Wind/gravity pull; ice slows; earth/water push; light also heals 30 and grants 20 shield. Targets outside the ring receive no damage. Spell zones cap at 12, and effects retain the existing 640-particle/48-mesh or 256/28 low-power pools. No image/model/audio files or network schema changes were added.
 
 `tools/test_arena_crystals.cjs` covers each element's actual inside/outside damage, matched VFX radius, five-pickup unlock, five-use countdown and recharging, full-cargo rejection, respawn, anti-recharge on spilled letters, home banking, cooldown/uses labels, viewport fit, pool bounds and cleanup. Fixtures are local and do not write production saves.
+
+## Public entry and default music (round 1396)
+
+Ordinary players enter Arena directly; admins retain the legacy map/heli choice. Hero selection, map selection and engine start no longer require admin entitlement. Other private worlds and paid spell/relic ownership retain their existing guards. `tools/test_arena_public.cjs` covers a new ordinary player from the home card through free entry, hero/map selection, independent default-on music and exit, on desktop and mobile.
+
+Music starts from the entry gesture and defaults on via `state.arenaMusicOff=false`, independently of lobby `musicOff`. The optional switch supports tap, drag and keyboard, persists only Arena mute, and reports blocked playback/load failure. Master sound remains authoritative. Compressed cached audio files and lifecycle cleanup are unchanged.

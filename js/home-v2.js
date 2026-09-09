@@ -261,7 +261,7 @@
     return ` data-vw2-source="${htmlEscape(sourceSelector)}"${mirrorVisibility ? ' data-vw2-mirror-visibility="1"' : ''}`;
   }
   const ADMIN_ONLY_WORLD_ACTIONS = new Set([
-    'worldAdv','worldSky','worldDrive','worldMoto','worldInvasion','worldMecha'
+    'worldSky','worldDrive','worldMoto','worldInvasion','worldMecha'
   ]);
   const CLASSIC_RAIL_GLYPHS = Object.freeze({
     cure:'💊',city:'🏙️',worldAdv:'🌍',worldSky:'☁️',worldHaunt:'👻',worldHeli:'🚁',worldDrone:'🛸',
@@ -270,7 +270,7 @@
     examstd:'📋',onet:'🇹🇭',rank:'🥇',market:'🏪',friends:'👥',gifts:'🎁',stats:'📊',trophy:'🏆',racing:'🏎️'
   });
   function classicRailGlyph(actionName, sourceSelector){
-    if(actionName==='worldAdv')return adminWorldAllowed()?'<span class="vw2-classic-rail-ico vw2-arena-entry-art" aria-hidden="true"><img src="img/arena-maps/home.webp" alt="" width="38" height="44"></span>':'';
+    if(actionName==='worldAdv')return '<span class="vw2-classic-rail-ico vw2-arena-entry-art" aria-hidden="true"><img src="img/arena-heroes/fire-thumb.webp" alt="" width="160" height="240" decoding="async"><span class="vw2-arena-sigil">⚔</span></span>';
     if(actionName==='worldKart'&&typeof kartLobbyIconHTML==='function')return '<span class="vw2-classic-rail-ico" aria-hidden="true">'+kartLobbyIconHTML()+'</span>';
     let glyph = '';
     if(sourceSelector){
@@ -1411,7 +1411,7 @@
           else btn.removeAttribute('tabindex');
           btn.title = locked ? (source.title || 'โลกนี้ยังล็อกอยู่')
             : btn.textContent.trim() + (adminOnly ? ' · เฉพาะแอดมิน' : ' · ผู้เล่นทุกคนเข้าได้');
-          if(btn.dataset.vw2Action==='worldAdv')btn.title='Vocab Arena · 3 แผนที่ · 60 เวทมนตร์ · เฉพาะแอดมิน';
+          if(btn.dataset.vw2Action==='worldAdv')btn.title='Vocab Arena · เข้าเล่นฟรีทุกคน · 3 แผนที่ · 60 เวทมนตร์';
           const price = btn.querySelector('.vw2-rail-price');
           if(price){
             const sourcePrice = source && source.querySelector ? source.querySelector('.rail-price') : null;

@@ -95,13 +95,13 @@
       <canvas id="va-canvas"></canvas><div class="va-vitals-layer" id="va-vitals-layer"></div><div class="va-vignette"></div><div class="va-scan"></div>
       <div class="va-top">
         <button class="va-exit" id="va-exit" aria-label="ออกจากสนาม">← ออก</button>
-        <div class="va-player-card va-glass"><span class="va-avatar-icon" aria-hidden="true">${selectedHero?.icon||'⚔'}</span><div class="va-player-name">${esc(state.profileName||'นักผจญภัย')}</div><div class="va-online${online?'':' off'}">● ADMIN · ${online?'ONLINE PvE':'PvE ฝึกซ้อม'}</div></div>
+        <div class="va-player-card va-glass"><span class="va-avatar-icon" aria-hidden="true">${selectedHero?.icon||'⚔'}</span><div class="va-player-name">${esc(state.profileName||'นักผจญภัย')}</div><div class="va-online${online?'':' off'}">● ${online?'ONLINE PvE':'PvE ฝึกซ้อม'}</div></div>
         <div class="va-word-card va-glass"><div class="va-word-th" id="va-word-th">เป้าหมายคำศัพท์</div><div class="va-word-en" id="va-word-en">READY</div><div class="va-word-slots" id="va-word-slots"></div></div>
         <div class="va-coins va-glass"><span class="va-coin-total">🪙 <span id="va-coins">${fmt(state.coins||0)}</span></span><small id="va-session-coins" aria-label="เหรียญที่ได้รับในรอบนี้">รอบนี้ +0</small></div>
         <button class="va-shop-btn" id="va-shop-open">🛒 พลังพิเศษ</button>
       </div>
       <div class="va-energy va-glass" id="va-energy"><span class="va-energy-label" id="va-crystal-count">◆ 0 / 5 · เก็บคริสตัล</span><div class="va-energy-track"><div class="va-energy-fill" id="va-energy-fill"></div></div><span class="va-energy-power" id="va-energy-power">×1.0</span></div>
-      <button class="va-music-toggle va-glass" id="va-music-toggle" type="button" aria-label="เปิดเพลงพื้นหลัง" aria-pressed="false">🎵 เพลง</button>
+      <button class="va-music-toggle va-glass" id="va-music-toggle" type="button" role="switch" aria-label="เพลงพื้นหลัง Arena" aria-checked="true"><span class="va-music-track" aria-hidden="true"><i></i></span><span class="va-music-label">เพลง</span></button>
       <div class="va-bag va-glass"><span class="va-bag-label">ขนกลับบ้าน</span><div class="va-bag-list" id="va-bag-list"></div></div>
       <div class="va-party va-glass" id="va-party"><button id="va-party-friends" class="va-party-find" aria-label="ไปหาเพื่อน">👥</button><div><b id="va-party-status">กำลังหาปาร์ตี้…</b><div class="va-party-list" id="va-party-list"></div></div></div>
       <div class="va-boss va-glass" id="va-boss"><div class="va-boss-head"><span id="va-boss-chapter">บท 1</span><b id="va-boss-name">ผู้พิทักษ์คำศัพท์</b><em id="va-boss-hp-text">100%</em></div><div class="va-boss-track"><div class="va-boss-fill" id="va-boss-fill"></div></div><div class="va-boss-word" id="va-boss-word"></div></div>
@@ -837,7 +837,6 @@
 
   function start(session){
     if(running)return;
-    if(typeof isAdmin!=='function'||!isAdmin()){if(typeof toast==='function')toast('โลกผจญภัยเปิดให้แอดมินเท่านั้น');return false;}
     ensureState();fxLow=!!state.noAnim||(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4);
     if(typeof clearWarnToasts==='function')clearWarnToasts();if(typeof Music!=='undefined')Music.suspendBg();
     sceneDrawn=false;createDom();if(window.ArenaAudio)ArenaAudio.start(root);initThree();resetRound();cameraTick(0,true);if(session&&Number.isFinite(session.earned))sessionCoins=Math.max(0,session.earned);updateHud();running=true;paused=!state.arenaHomeIntro;lastFrame=0;setupCoop();

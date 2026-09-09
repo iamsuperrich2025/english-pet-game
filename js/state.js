@@ -239,6 +239,7 @@ const DEFAULT_STATE = {
   spellWords:0,                       // 🌀 รอบ 174: จำนวนคำสะกดสำเร็จวันนี้ (5 คำแรกรางวัลเต็ม — ดู spellDayLeft ใน lobby3d.js)
   musicMode:'all',                    // 🎵 รอบ 181: โหมดวิทยุในรถ 'all'|'one'|'shuffle' (music.js)
   musicOff:false,                     // 🎵 รอบ 184: ปิดเพลงพื้นหลัง (ปุ่ม 🎵 ใน Lobby · แยกจากสวิตช์เสียง)
+  arenaMusicOff:false,                // Round 1396: Arena music defaults on independently of lobby music.
   feedShare:{coin:true, quiz:true, goods:true, other:true, assets:true},
                                       // 📰 รอบ 155 (default เปิดทุกหมวดตั้งแต่รอบ 565): หมวดกิจกรรมที่ยอมรายงานขึ้น profile/feed — ปิดเองได้ทีหลังในตั้งค่า
   follows:{},                         // 📰 รอบ 155: คนที่เรา follow {uid:{n:ชื่อ, g:ชั้น, ts}} — feed หน้า lobby รวมกิจกรรมของคนกลุ่มนี้

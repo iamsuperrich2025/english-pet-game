@@ -10,7 +10,7 @@
   ];
   let music=null,musicUrl='',musicBlob=null,musicLoad=null,musicPending=false,musicTimer=0,musicRetryAt=0;
   let musicTrack=null,musicDownloads=0,musicError='',musicButton=null;
-  function musicEnabled(){return enabled()&&unlocked&&!state.musicOff;}
+  function musicEnabled(){return enabled()&&unlocked&&!state.arenaMusicOff;}
   async function cachedAudioBlob(track,onDownload){
     let cache=null;const path='/sound/arena/'+track.file,key=location.origin+'/__vw_asset__'+path+'?v='+track.hash;
     try{cache=await caches.open('vw-assets-content-v1');const hit=await cache.match(key);if(hit)return await hit.blob();}catch(_){}
@@ -71,7 +71,7 @@
   function musicStatus(){
     if(!active)return 'stopped';
     if(!state.sound)return 'sound-off';
-    if(state.musicOff)return 'music-off';
+    if(state.arenaMusicOff)return 'music-off';
     if(!unlocked)return 'gesture';
     if(document.hidden)return 'hidden';
     if(musicError)return musicError;
@@ -80,12 +80,12 @@
   }
   function paintMusic(){
     if(!musicButton)return;
-    const status=musicStatus(),labels={'sound-off':'🔇 เปิดเสียง','music-off':'🎵 เพลงปิด',gesture:'🎵 แตะเปิดเพลง',blocked:'🎵 แตะเล่นเพลง',load:'🎵 โหลดเพลงใหม่',loading:'🎵 กำลังโหลด…',playing:'🎵 เพลงเปิด',hidden:'🎵 พักเพลง',stopped:'🎵 เพลง'};
-    if(musicButton.dataset.state!==status){
-      musicButton.dataset.state=status;musicButton.textContent=labels[status];
-      musicButton.setAttribute('aria-pressed',String(status==='playing'));
-      musicButton.setAttribute('aria-label',status==='playing'?'ปิดเพลงพื้นหลัง':status==='sound-off'?'เปิดเสียงและเพลงพื้นหลัง':'เปิดเพลงพื้นหลัง');
-      musicButton.title=status==='music-off'?'เพลงถูกปิดไว้จากการตั้งค่า แตะเพื่อเปิด':status==='load'?'โหลดเพลงไม่สำเร็จ แตะเพื่อลองใหม่':status==='blocked'?'เบราว์เซอร์รอการแตะเพื่อเล่นเพลง':musicButton.getAttribute('aria-label');
+    const status=musicStatus(),on=!state.arenaMusicOff;
+    const labels={'sound-off':'ปิดเสียงรวม','music-off':'เพลง',gesture:'เพลง',blocked:'แตะสนาม',load:'โหลดไม่สำเร็จ',loading:'โหลดเพลง…',playing:'เพลง',hidden:'เพลง',stopped:'เพลง'};
+    if(musicButton.dataset.state!==status||musicButton.getAttribute('aria-checked')!==String(on)){
+      musicButton.dataset.state=status;musicButton.querySelector('.va-music-label').textContent=labels[status];
+      musicButton.setAttribute('aria-checked',String(on));
+      musicButton.title=status==='load'?'โหลดเพลงไม่สำเร็จ แตะสนามเพื่อลองใหม่':status==='blocked'?'แตะสนามเพื่อเริ่มเพลง':status==='sound-off'?'ปิดเสียงทั้งหมดอยู่ในการตั้งค่า':on?'เลื่อนซ้ายเพื่อปิดเพลง Arena':'เลื่อนขวาเพื่อเปิดเพลง Arena';
     }
   }
   function beginMusic(element){
@@ -120,15 +120,16 @@
       paintMusic();
     }catch(_){musicPending=false;musicError='load';musicRetryAt=performance.now()+10000;paintMusic();}
   }
-  function toggleMusic(){
+  function setMusicOff(off){
     if(!active)return;
-    const turnOff=musicStatus()==='playing';
-    if(!turnOff){state.sound=true;unlocked=true;musicRetryAt=0;musicError='';}
-    state.musicOff=turnOff;
-    if(typeof saveState==='function')saveState();
-    if(typeof syncMusicBtn==='function')syncMusicBtn();
+    if(!!state.arenaMusicOff!==off){
+      state.arenaMusicOff=off;
+      if(typeof saveState==='function')saveState();
+    }
+    if(!off){unlocked=true;musicRetryAt=0;musicError='';}
     syncMusic();
   }
+  function toggleMusic(){setMusicOff(!state.arenaMusicOff);}
   function stopMusic(){
     clearInterval(musicTimer);musicTimer=0;pauseMusic();
     if(music){music.removeAttribute('src');music.load();music=null;}
@@ -139,14 +140,25 @@
     if(event.target.closest?.('#va-music-toggle'))return;
     if(!event.isTrusted||!enabled()||(event.type==='keydown'&&event.repeat))return;
     unlocked=true;
-    if(musicError==='blocked'){musicRetryAt=0;musicError='';}
+    if(musicError==='blocked'||musicError==='load'){musicRetryAt=0;musicError='';}
     element.prepare();shield.prepare();heal.prepare();lightning.prepare();fire.prepare();syncMusic();
   }
   function start(root){
     stop();active=true;
     const listen=(el,type,fn,options)=>{el.addEventListener(type,fn,options);detach.push(()=>el.removeEventListener(type,fn,options));};
     musicButton=root.querySelector('#va-music-toggle');
-    if(musicButton)listen(musicButton,'click',toggleMusic);
+    if(musicButton){
+      let dragX=null,ignoreClickUntil=0;
+      listen(musicButton,'pointerdown',event=>{dragX=event.clientX;ignoreClickUntil=0;musicButton.setPointerCapture(event.pointerId);});
+      listen(musicButton,'pointerup',event=>{
+        const dx=dragX===null?0:event.clientX-dragX;dragX=null;
+        if(Math.abs(dx)<10)return;
+        ignoreClickUntil=performance.now()+350;setMusicOff(dx<0);
+      });
+      listen(musicButton,'pointercancel',()=>{dragX=null;});
+      listen(musicButton,'keydown',event=>{if(!['Space','Enter','ArrowLeft','ArrowRight'].includes(event.code))return;event.preventDefault();event.stopPropagation();if(event.repeat)return;if(event.code==='ArrowLeft')setMusicOff(true);else if(event.code==='ArrowRight')setMusicOff(false);else toggleMusic();});
+      listen(musicButton,'click',event=>{if(event.detail===0||performance.now()>=ignoreClickUntil)toggleMusic();});
+    }
     listen(root,'pointerdown',unlock,{capture:true,passive:true});
     listen(root,'pointerup',unlock,{capture:true,passive:true});
     listen(root,'click',unlock,true);

@@ -90,7 +90,7 @@
     for(let i=0;i<geo.attributes.position.count;i++){c.setHex(palette[Math.floor(i/3)%4]).convertSRGBToLinear();colors.set([c.r,c.g,c.b],i*3);}geo.setAttribute('color',new THREE.BufferAttribute(colors,3));
   }
   function choose(){
-    if(typeof isAdmin!=='function'||!isAdmin())return Promise.resolve(null);if(picker)return picker.promise;
+    if(picker)return picker.promise;
     const before=document.activeElement,root=document.createElement('div');root.id='va-map-picker';root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');root.setAttribute('aria-label','เลือกแผนที่');
     let choice=get(state.arenaMap).id,closed=false,busy=false,polling=false,snapshot=null,timer=null,resolve;
     const promise=new Promise(r=>{resolve=r;});picker={promise};

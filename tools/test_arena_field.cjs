@@ -11,7 +11,7 @@ const server=http.createServer((req,res)=>{const url=new URL(req.url,'http://loc
 (async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));const browser=await chromium.launch({headless:true,channel:'msedge',args:['--disable-background-timer-throttling','--disable-renderer-backgrounding']});const page=await browser.newPage({viewport:{width:812,height:375},hasTouch:true}),errors=[],checks=[];page.on('pageerror',e=>errors.push(e.message));const url=`http://127.0.0.1:${server.address().port}/test`;
 const check=(name,result)=>{assert.ok(result,name);checks.push(name);};
 try{
- await page.goto(url);await page.evaluate(()=>{adminAllowed=false;VocabArena3D.start();});check('non-admin engine entry denied',await page.locator('#va-root').count()===0);
+ await page.goto(url);await page.evaluate(()=>{adminAllowed=false;VocabArena3D.start();});check('non-admin engine entry allowed',await page.locator('#va-root').count()===1);await page.evaluate(()=>VocabArena3D.stop());
  await page.evaluate(()=>{adminAllowed=true;VocabArena3D.start();});await page.waitForTimeout(600);
  check('small articulated hero replaces profile billboard',await page.evaluate(()=>!!VocabArena3D._t.player().spr.userData.rig));
  const initial=await page.evaluate(()=>VocabArena3D._t.stats());

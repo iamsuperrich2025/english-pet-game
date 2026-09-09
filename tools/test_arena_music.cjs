@@ -17,8 +17,9 @@ const server=http.createServer((req,res)=>{let p=new URL(req.url,'http://localho
   ok('single supported Opus download and quiet looping player',requests.length===1&&requests[0].endsWith('.ogg')&&await page.evaluate(()=>media.length===1&&media[0].loop&&media[0].volume===.16));
   await page.evaluate(()=>media[0].currentTime=media[0].duration-.2);await page.waitForTimeout(800);
   ok('natural track ending loops without another download',requests.length===1&&await page.evaluate(()=>media[0].currentTime<2&&!media[0].paused));
-  await page.evaluate(()=>state.musicOff=true);await page.waitForFunction(()=>media[0].paused);ok('music setting pauses music',true);
-  await page.evaluate(()=>state.musicOff=false);await page.waitForFunction(()=>!media[0].paused);await page.evaluate(()=>state.sound=false);await page.waitForFunction(()=>media[0].paused);ok('global sound setting pauses music',true);
+  await page.evaluate(()=>state.musicOff=true);await page.waitForTimeout(600);ok('lobby music mute does not silence Arena',await page.evaluate(()=>!media[0].paused));
+  await page.evaluate(()=>state.arenaMusicOff=true);await page.waitForFunction(()=>media[0].paused);ok('Arena switch pauses only its music',true);
+  await page.evaluate(()=>state.arenaMusicOff=false);await page.waitForFunction(()=>!media[0].paused);await page.evaluate(()=>state.sound=false);await page.waitForFunction(()=>media[0].paused);ok('global sound setting pauses music',true);
   await page.evaluate(()=>state.sound=true);await page.waitForFunction(()=>!media[0].paused);
   await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'));});ok('background silences immediately',await page.evaluate(()=>media[0].paused));
   await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:false});document.dispatchEvent(new Event('visibilitychange'));});await page.waitForFunction(()=>!media[0].paused);
