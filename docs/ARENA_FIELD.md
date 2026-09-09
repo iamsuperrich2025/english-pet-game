@@ -1,10 +1,10 @@
-# Arena Field — current behavior (round 1387)
+# Arena Field — current behavior (round 1388)
 
 The Adventure / Vocab Arena entry remains admin-only. `js/home-v2.js` renders its small fantasy-house lobby icon; `js/ui.js` loads the hero picker, map picker, catalogue and battle engine in dependency order. The eight existing animated full-body portraits are preserved. Confirming a hero keeps the owned loadout instead of granting free signature spells.
 
 ## Maps and rooms
 
-Choose Sky Citadel, Crystal Hollow or Moonleaf Ruins. The map picker loads three small WebP thumbnails; only the confirmed map loads a full AVIF plate, with WebP fallback. Tiny live hero sprites reuse the existing WebP thumbnails. Round slimes, collectible letter gems, home rings, HP labels, movement and combat remain dynamic above the illustrated floor. The house is a 213×256 alpha WebP, with no full 3D model.
+Choose Sky Citadel, Crystal Hollow or Moonleaf Ruins. The map picker loads three small WebP thumbnails; only the confirmed map loads a full AVIF plate, with WebP fallback. Round 1388 restores the original small articulated 3D heroes for both the player and peers, with the original 1.12 model scale and matching overhead label heights. Large portraits remain in character selection and the HUD; battle actors no longer use portrait sprites. Round slimes, collectible letter gems, home rings, HP labels, movement and combat remain dynamic above the illustrated floor. The house is a 213×256 alpha WebP, with no full 3D model.
 
 `ArenaMaps` reserves the existing `adv` room indices r21–r35: five groups of three map rooms, four players per map. A new group becomes available only after all three maps in the preceding group are full. If the chosen map is full while a sibling map has space, the picker offers that space or waits. Current Rules permit **five groups / 60 seats total**; exhaustion is displayed rather than inventing out-of-range rooms. This is not an unlimited-capacity promise. The legacy Adventure range currently ends before r21; revisit this reservation before expanding that engine's room limit.
 

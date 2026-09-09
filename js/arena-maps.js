@@ -64,9 +64,8 @@
     pair(0x54dfa2,[[-.17,.99,0],[.18,1.06,0]],[.38,.12,.19]);
     const mouth=new THREE.Mesh(new THREE.TorusGeometry(.13,.034,5,12,Math.PI),new THREE.MeshBasicMaterial({color:0x285279,toneMapped:false}));mouth.rotation.z=Math.PI;mouth.position.set(0,-.07,radius*.99);body.add(mouth);return body;
   }
-  function actor(spec,loadSprite){
-    const g=new THREE.Group(),body=new THREE.Group(),portrait=loadSprite(spec.thumb);portrait.scale.set(4,6,1);portrait.position.y=3;portrait.material.toneMapped=false;body.add(portrait);g.add(body);
-    g.userData.rig={body,portrait,legs:[new THREE.Group(),new THREE.Group()],arms:[new THREE.Group(),new THREE.Group()],attackUntil:0,attackAt:0,yaw:0};return g;
+  function actor(spec){
+    return ArenaFieldVisuals.hero(spec?.tint,spec);
   }
   function house(color,label,loadSprite,textSprite){
     const g=new THREE.Group(),art=loadSprite('img/arena-maps/home.webp');art.material.toneMapped=false;art.scale.set(7.5,8.3,1);art.position.set(0,4,-.4);g.add(art);
