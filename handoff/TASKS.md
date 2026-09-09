@@ -27,11 +27,6 @@
 - รายละเอียด docs/ARENA_FIELD.md, docs/ARENA_MAP_ASSETS.json, docs/PERFORMANCE.md; ผู้ใช้ยืนยัน [SUCCESS] แล้ว: commit9af6c115/handoff4adad2cf, HEAD=origin/main; ตรวจเว็บจริง version.json เป็น2026-09-10.1240 ตรงเครื่องเมื่อ10ก.ย.2026 — commit/deploy/push รอบ1387สำเร็จ
 
 - **รอบ 1386 · พลังอลังการ + ห้องอัตโนมัติ:** เพิ่มพลังธาตุทุกชนิดให้มีวง แสง อนุภาค และแรงกระแทกมากขึ้น; MEGA ขยายภาพเกือบเต็มสนาม (~26 หน่วย) แต่คงดาเมจรัศมีเดิม; Adventure จำกัด 4 คน/ห้องและไล่เข้าห้องถัดไปเมื่อเต็ม
-- แก้ `js/arena-elements.js`, `js/arena-field-visuals.js`, `js/adventure3d.js`; อัปเดต regression `tools/test_arena_crystals.cjs`; build 2026-09-09.1238 (9,490 files, 614.6 MiB)
-- Arena crystals 53 checks ผ่านทุกธาตุ, syntax ผ่าน; NetRoom logic เดิมมี `pickRoom()` ไล่ห้องว่าง/สร้างห้องเชิงตรรกะอัตโนมัติ (test harness ต้องรันใน browser จึงไม่ใช้ `node` ตรง)
-- พร้อมส่ง manifest เฉพาะ 6 ไฟล์ผ่าน COMMIT_DEPLOY.bat; ยังไม่ยืนยัน deploy รอบ 1386
-
-- **รอบ 1383 · แก้ Deploy ติด async():** ยืนยันตัวตรวจ undefined-call เข้าใจ async arrow callback ใน `js/ui.js:7284` เป็นฟังก์ชันไม่มีนิยาม; เปลี่ยนเป็น named async function `preloadArenaScene` โดยไม่แก้หรือข้ามตัวตรวจ และคง preload/cancel/entry behavior
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน

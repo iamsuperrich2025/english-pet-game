@@ -5822,3 +5822,12 @@
 - Syntax/diff + hero browser31 checks (4 viewports) + build9,490files614.6MiB + web validator ผ่าน; hash source/dist ตรงกัน; เตรียม SHIP เฉพาะ js/arena-heroes.js และ TASKS.md, ยังไม่ยืนยัน deploy รอบ1382
 
 
+
+
+## ⏬ ย้ายเมื่อ 2026-09-10 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- แก้ `js/arena-elements.js`, `js/arena-field-visuals.js`, `js/adventure3d.js`; อัปเดต regression `tools/test_arena_crystals.cjs`; build 2026-09-09.1238 (9,490 files, 614.6 MiB)
+- Arena crystals 53 checks ผ่านทุกธาตุ, syntax ผ่าน; NetRoom logic เดิมมี `pickRoom()` ไล่ห้องว่าง/สร้างห้องเชิงตรรกะอัตโนมัติ (test harness ต้องรันใน browser จึงไม่ใช้ `node` ตรง)
+- พร้อมส่ง manifest เฉพาะ 6 ไฟล์ผ่าน COMMIT_DEPLOY.bat; ยังไม่ยืนยัน deploy รอบ 1386
+
+- **รอบ 1383 · แก้ Deploy ติด async():** ยืนยันตัวตรวจ undefined-call เข้าใจ async arrow callback ใน `js/ui.js:7284` เป็นฟังก์ชันไม่มีนิยาม; เปลี่ยนเป็น named async function `preloadArenaScene` โดยไม่แก้หรือข้ามตัวตรวจ และคง preload/cancel/entry behavior

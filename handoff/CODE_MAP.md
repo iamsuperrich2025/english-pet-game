@@ -201,7 +201,7 @@ beginPlay:12952 · start:12954 · exitWorld:13187 · mechaRecapLine:13264
 
 ## js/arena-heroes.js (42 บรรทัด · 0 รายการ)
 
-## js/arena-maps.js (95 บรรทัด · 0 รายการ)
+## js/arena-maps.js (108 บรรทัด · 0 รายการ)
 
 ## js/arena-portrait.js (32 บรรทัด · 0 รายการ)
 
@@ -1049,7 +1049,7 @@ vbRender:148 · vbCardHTML:194
 ## css/arena-heroes.css (12 บรรทัด · 4 selector)
 #ah-picker:2,3 · .ah-layout:4 · .ah-info:5 · .ah-header:11,12
 
-## css/arena3d.css (386 บรรทัด · 87 selector)
+## css/arena3d.css (385 บรรทัด · 86 selector)
 #va-root:5,7,9,203(+91) · #va-canvas:8 · .va-vignette:11 · .va-scan:15 · .va-top:18 · .va-glass:20
 .va-exit:23,26 · .va-player-card:27,29 · .va-player-name:30 · .va-online:31 · .va-word-card:32,34,36 · .va-word-th:37
 .va-word-en:38 · .va-word-slots:40,41,43 · .va-coins:44 · .va-shop-btn:46 · .va-energy:48,54 · .va-energy-label:50
@@ -1061,10 +1061,10 @@ vbRender:148 · vbCardHTML:194
 .va-panel-title:157 · .va-panel-coins:158 · .va-store-grid:160 · .va-store-item:161,163,164 · .va-store-ico:165 · .va-store-name:167
 .va-store-price:168 · .va-intro-panel:169 · .va-intro-logo:170 · .va-intro-sub:172 · .va-intro-steps:173 · .va-intro-step:174
 .va-start:176,178 · .va-portrait:180 · .va-avatar-icon:206 · .va-home-nav:220,221,222 · .va-cargo:223 · .va-spell-toggle:241,242
-.va-spell-panel:244 · .va-slot-tabs:245,246,371 · .va-spell-grid:247 · .va-spell-card:248,249,251,252 · .va-element-icon:250 · .va-spell-footer:253
-.va-vitals-layer:258 · .va-vital:259,260,261,262(+2) · .va-damage-number:264 · .va-mega-uses:272 · #va-crystal-count:273 · .va-map-art:276
-.va-map-ambience:277,278 · .va-map-change:307 · #va-map-picker:328,329,330,331(+1) · .vam-cards:332 · .vam-card:333,334,335,336 · #vam-play:338
-.va-spell-icon:366 · .va-grimoire-tools:372,373,374,375(+1) · .va-grimoire-nav:377,378,379,380
+.va-spell-panel:244 · .va-slot-tabs:245,246,370 · .va-spell-grid:247 · .va-spell-card:248,249,251,252 · .va-element-icon:250 · .va-spell-footer:253
+.va-vitals-layer:258 · .va-vital:259,260,261,262(+2) · .va-damage-number:264 · .va-mega-uses:272 · #va-crystal-count:273 · .va-map-ambience:276,277
+.va-map-change:306 · #va-map-picker:327,328,329,330(+1) · .vam-cards:331 · .vam-card:332,333,334,335 · #vam-play:337 · .va-spell-icon:365
+.va-grimoire-tools:371,372,373,374(+1) · .va-grimoire-nav:376,377,378,379
 
 ## css/bubble.css (60 บรรทัด · 25 selector)
 #bb-overlay:4 · #bb-board:5,9,10,11 · .no-anim:12,49 · .bb-head:13 · .bb-title:14 · .bb-stat:15,16

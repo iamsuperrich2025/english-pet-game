@@ -55,7 +55,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/arena-field-visuals.js** (175 บรรทัด) — Round 1380 — small articulated heroes and bounded spell effects. · All visuals are original procedural geometry / canvas textures: no image downloads.
 - **js/arena-grimoire.js** (32 บรรทัด) — Round 1387: compact searchable spell cards; SVG symbols share one cached small shared file.
 - **js/arena-heroes.js** (42 บรรทัด) — Round 1381 — admin-only hero selection, eight generated full-body portraits, preload before entry.
-- **js/arena-maps.js** (95 บรรทัด) — ==== Round 1387 — three illustrated arenas; one selected plate, grouped four-seat rooms ====
+- **js/arena-maps.js** (108 บรรทัด) — ==== Rounds 1387/1389 — three world-ground arenas; one selected texture, grouped four-seat rooms ====
 - **js/arena-portrait.js** (32 บรรทัด) — Round 1381 — one live portrait: local hair/cape displacement, anchored face/feet, elemental particles.
 - **js/arena-relics.js** (581 บรรทัด) — Round 1387: permanent relic metadata + bonuses compiled only on entry/purchase.
 - **js/arena-spell-catalog.js** (377 บรรทัด) — Round 1387: metadata only. The selected family's recipes and runner load on demand.
@@ -122,7 +122,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/wsaward.js** (32 บรรทัด) — 🏆 wsaward.js — รางวัลรายเดือนของกระดานอันดับ 🔎 ค้นหาคำ (รอบ 592) · ผู้ใช้สั่ง 26 ก.ค. 2026: · ① Top 10 ได้เหรียญรางวัลทุกวันที่ 1 ของเดือน (10,000 ลดหลั่นถึง 1,000)
 - **css/account-deletion.css** (15 บรรทัด) — Protected account deletion — compact landscape-first dialogs
 - **css/arena-heroes.css** (12 บรรทัด) — Round 1381 — full-body hero selection. Portrait owns a single animation context.
-- **css/arena3d.css** (386 บรรทัด) — 🌀🔤 รอบ 1045 — Vocab Arena · HUD โลกผจญภัยแบบ MOBA-inspired ที่ออกแบบใหม่ทั้งหมดสำหรับ Vocab World
+- **css/arena3d.css** (385 บรรทัด) — 🌀🔤 รอบ 1045 — Vocab Arena · HUD โลกผจญภัยแบบ MOBA-inspired ที่ออกแบบใหม่ทั้งหมดสำหรับ Vocab World
 - **css/bubble.css** (60 บรรทัด) — 🫧 เกมฟองคำศัพท์ — เต็มจอ ไม่มี scrollbar ทั้ง desktop/mobile landscape
 - **css/dailybox.css** (24 บรรทัด) — 🎁🪙 กล่องสุ่มรายวัน — รอบ 1272 · CSS illustration ล้วน ไม่พึ่ง asset ภาพภายนอก
 - **css/exam.css** (377 บรรทัด) — 📋 exam.css — จอข้อสอบจริงแบบมาตรฐาน IELTS/TOEIC/TOEFL (รอบ 812 · js/examstd.js) · กฎทองข้อ 7: กล่องทั้งใบต้องอยู่ในจอ หน้าไม่เลื่อน — บทอ่านยาวจึงเลื่อน "ในกรอบตัวเอง" · (ข้อสอบการอ่านเลี่ยงไม่ได้ที่จะมีบทความยาว แต่กรอบนอกไม่มี scrollbar)
@@ -140,6 +140,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/style.css** (2,498 บรรทัด) — Pet Vocab Adventure — สไตล์พื้นฐานรุ่นแรกทั้งเกม (โดน lobby.css โหลดทับบางส่วน — แก้หน้าตาโซนล็อบบี้/UI ใหม่ให้ไปที่ lobby.css ก่อน) · ครอบคลุม: screens/login/dashboard · เกมจับคู่ .word-card + แบบทดสอบ .quiz-* · shop/ที่พัก/หมวดคำศัพท์ · หิว-ป่วย/สภาพอากาศ · ตั้งค่า/วิธีเล่น/level-up overlay · คลังของฉัน/กล่องขาย · เอฟเฟกต์ลอย/เหรียญ/rotate-overlay
 - **sw.js** (281 บรรทัด) — Vocab World service worker · Delivery contract: · - HTML navigations are network-first with the last valid shell as fallback.
 <!-- AUTO-FILES:END -->
+
 
 
 
