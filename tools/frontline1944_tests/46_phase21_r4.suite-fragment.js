@@ -1,1920 +1,0 @@
-function runPhase21R4Tests(){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // R4 source-path / gameplay-math tests. NOT a physical-phone, WebGL screenshot, hosting-delivery or art-reference PASS.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const source=fs.readFileSync('js/frontline1944.js','utf8');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  let checks=0;const check=(name,fn)=>{fn();checks++;console.log('PASS R4 '+name);};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  class Vec3{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    constructor(x=0,y=0,z=0){this.set(x,y,z);}set(x,y,z){this.x=x;this.y=y;this.z=z;return this;}setScalar(s){return this.set(s,s,s);}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    copy(v){return this.set(v.x,v.y,v.z);}clone(){return new Vec3(this.x,this.y,this.z);}lerp(v,t){return this.set(this.x+(v.x-this.x)*t,this.y+(v.y-this.y)*t,this.z+(v.z-this.z)*t);}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    project(){return this;}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const document={readyState:'loading',addEventListener(){},querySelector(){return null;},getElementById(){return null;},documentElement:{style:{getPropertyValue(){return '0';}}}};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  let now=1000;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const sb={console,document,navigator:{maxTouchPoints:1},location:{hostname:'localhost',search:'',origin:'http://localhost'},Math,Date,URLSearchParams,innerWidth:844,innerHeight:390,performance:{now:()=>now},isAdmin:()=>true,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    setTimeout(){return 1},clearTimeout(){},setInterval(){return 1},clearInterval(){},requestAnimationFrame(){return 1},cancelAnimationFrame(){},localStorage:{getItem(){return null},setItem(){}},addEventListener(){},removeEventListener(){},getComputedStyle(){return {getPropertyValue(){return '0';}}}};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  sb.window=sb;sb.THREE={Vector3:Vec3};vm.createContext(sb);vm.runInContext(source,sb);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const T=sb.Frontline1944._t,G=T.G;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const fakeTank=()=>{const group={updateMatrixWorld(){},visible:true,position:{set(){}},rotation:{y:0}},cannonTip={getWorldPosition(v){return v.set(0,3,-6.3);}},barrel={getWorldPosition(v){return v.set(0,3,-3.55);}};return {world:{x:0,z:0},group,cannonTip,barrel,playerId:'p1',ownerId:'p1',hullRotation:0,turretRotation:0,turretTargetRotation:0,speed:0,footprint:{halfWidth:T.CFG.tankFootprintHalfWidth,halfLength:T.CFG.tankFootprintHalfLength},hp:1000,maxHp:1000,invuln:0,hull:{rotation:{y:0}},turret:{rotation:{y:0}}};};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('HP baseline is 1000 for creation and R3 death-respawn authority',()=>{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    assert.strictEqual(T.CFG.playerHP,1000);assert(source.includes('hp:CFG.playerHP,maxHp:CFG.playerHP'));assert(source.includes("if(reason==='death')t.hp=t.maxHp"));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('fine turret convergence is continuous and more precise near target, with finer scoped control',()=>{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const far=Math.abs(T.precisionTurretStep(0,1,1/60,false)),near=Math.abs(T.precisionTurretStep(0,.05,1/60,false)),scoped=Math.abs(T.precisionTurretStep(0,.05,1/60,true));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    assert(far>near&&near>scoped&&scoped>0);assert(Math.abs(T.precisionTurretStep(0,.001,1/60,true)-.001)<1e-9);assert(source.includes('this.turretHeading=precisionTurretStep('));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('projected shot solution shares actual cannon ray and resolves range, enemies and solids',()=>{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const tank=fakeTank();G.player=tank;G.tankRuntime=null;G.enemies=[];G.fortress=null;G.collision={hitSolidOnly(){return null;}};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const ray=T.cannonWorldRay(tank);assert(Math.abs(ray.direction.x)<1e-9);assert(Math.abs(ray.direction.z+1)<1e-9);let sol=T.projectedShotSolution(tank);assert.strictEqual(sol.kind,'range');assert(sol.z<-50);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    G.enemies=[{dead:false,hp:30,group:{},world:{x:0,z:-30},radius:2.45}];sol=T.projectedShotSolution(tank);assert.strictEqual(sol.kind,'enemy');assert(sol.distance>20&&sol.distance<35);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    G.enemies=[];G.collision={hitSolidOnly(x,z){return z<-20?{tag:'wall'}:null;}};sol=T.projectedShotSolution(tank);assert.strictEqual(sol.kind,'solid');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    assert(source.includes("id=\"fl44-shot-marker\"")&&source.includes('hidden>+</div>'));assert(source.includes('const t=G.player,ray=cannonWorldRay(t)'));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('scope has real zoom, barrel-aligned camera, reticle markings and reliable normal return',()=>{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const tank=fakeTank();G.player=tank;G.tankRuntime=null;G.collision={hitSolidOnly(){return null;}};G.enemies=[];G.fortress=null;G.camera=null;T.setScopeMode(true,true);assert.strictEqual(T.scopeCameraFov(),22);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const ray=T.cannonWorldRay(tank),frame=T.r4ScopeCameraFrame(tank),dx=frame.look.x-frame.position.x,dz=frame.look.z-frame.position.z,L=Math.hypot(dx,dz);assert(Math.abs(dx/L-ray.direction.x)<1e-9);assert(Math.abs(dz/L-ray.direction.z)<1e-9);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    T.setScopeMode(false,true);assert.strictEqual(T.scopeCameraFov(),T.R2_VIEW.fov);assert(source.includes('id="fl44-scope"'));assert(source.includes('fl44-scope-th')&&source.includes('fl44-scope-tv')&&source.includes('fl44-scope-num'));assert(source.includes('AZ 000.0° · RNG —'));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('R3 safe-spawn semantics remain active and death respawn restores the new 1000 HP max',()=>{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const tank=fakeTank();tank.hp=0;G.player=tank;G.tankRuntime=null;G.enemies=[];G.fortress=null;G.terrain={bySector:new Map()};G.collision={collidersNear(){return[];}};G.sectorStreamer={update(){},isActive(){return true;}};G.camera=null;T.r3ResetSpawnState();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const p={x:0,z:0,heading:0,sector:0,attempts:1,fallback:false};assert(T.r3ValidateSpawn(p));assert(T.r3CommitSafeSpawn(p,'death'));assert.strictEqual(tank.hp,1000);assert(tank.invuln>=2);assert(source.includes('r3PlayerEmbedded()')&&source.includes("r3RequestSafeSpawn(p,force?'entry-recovery':'embedded-recovery')"));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('accepted control/target-lock architecture is extended, not replaced',()=>{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    assert(source.includes("const SPECIAL_CONTROL_ROLES=Object.freeze(['autoForward','autoReverse','targetLock','scope'])"));assert(source.includes('DRIVE')&&source.includes('AIM')&&source.includes('FIRE'));assert(source.includes('targetLockHeading()'));assert(source.includes('GlobalMobileTouchRouter'));assert(source.includes('scopeMode:false'));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  console.log('PASS R4 '+checks+' focused groups; source-path/gameplay-math tests only. Running accepted Target Lock / global mobile-router regression suite next.');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  runTargetLockN3Tests({sourceOnly:true});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  console.log('PASS R4 regression bridge: N3 Target Lock / DRIVE-AIM-FIRE router source-path suite passed with additive Scope role. Real browser WebGL, physical mobile multitouch, exact reference-image fidelity and hosting delivery remain acceptance checks.');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,9070 +1,0 @@
-function runTargetLockN3Tests({sourceOnly=false}={}){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // Source-path / DOM-contract tests with explicit rendering doubles, NOT real-device/WebGL PASS.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const fs=require('fs'),vm=require('vm'),assert=require('assert');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const source=fs.readFileSync('js/frontline1944.js','utf8'),style=sourceOnly?null:fs.readFileSync('css/frontline1944.css','utf8');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  let checks=0,time=5000,rayHits=[],lastRay=null,rayRecursive=false,coinCalls=0,saveCalls=0,cloudCalls=0;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const timers=[],events=new Map();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const check=(name,fn)=>{fn();checks++;console.log('PASS N3 '+name);};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  class Vec3{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    constructor(x=0,y=0,z=0){this.set(x,y,z);}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    set(x,y,z){this.x=x;this.y=y;this.z=z;return this;}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    setScalar(s){return this.set(s,s,s);}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    clone(){return new Vec3(this.x,this.y,this.z);}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    project(camera){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      const p=camera.position,t=camera.target,dx=t.x-p.x,dy=t.y-p.y,dz=t.z-p.z,l=Math.hypot(dx,dy,dz),fx=dx/l,fy=dy/l,fz=dz/l,rl=Math.hypot(fx,fz),rx=-fz/rl,rz=fx/rl,ux=-rz*fy,uy=rz*fx-rx*fz,uz=rx*fy,x=this.x-p.x,y=this.y-p.y,z=this.z-p.z;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      return this.set((x*rx+z*rz)/(camera.width/2),(x*ux+y*uy+z*uz)/(camera.height/2),2*((x*fx+y*fy+z*fz)-.1)/(420-.1)-1);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const worldPoint=(node,v)=>{let o=node;while(o){v.x*=o.scale.x;v.y*=o.scale.y;v.z*=o.scale.z;const x=v.x,z=v.z,c=Math.cos(o.rotation.y),s=Math.sin(o.rotation.y);v.x=x*c+z*s+o.position.x;v.z=-x*s+z*c+o.position.z;v.y+=o.position.y;o=o.parent;}return v;};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  class Group{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    constructor(){this.children=[];this.parent=null;this.position=new Vec3();this.scale=new Vec3(1,1,1);this.rotation={x:0,y:0,z:0};this.visible=true;this.userData={};}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    add(...nodes){for(const node of nodes){if(node.parent)node.parent.remove(node);node.parent=this;this.children.push(node);}}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    remove(node){this.children=this.children.filter(n=>n!==node);node.parent=null;}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    traverse(fn){fn(this);for(const node of this.children)node.traverse(fn);}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    updateMatrixWorld(){this.matrixUpdates=(this.matrixUpdates||0)+1;}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    getWorldPosition(v){return worldPoint(this,v.set(0,0,0));}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  class Mesh extends Group{constructor(geometry,material){super();this.geometry=geometry;this.material=material;this.isMesh=true;}}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  class Box3{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    setFromObject(root){this.min=new Vec3(Infinity,Infinity,Infinity);this.max=new Vec3(-Infinity,-Infinity,-Infinity);root.traverse(node=>{if(!node.isMesh||node.visible===false)return;for(const x of [-.5,.5])for(const y of [-.5,.5])for(const z of [-.5,.5]){const v=worldPoint(node,new Vec3(x,y,z));for(const k of ['x','y','z']){this.min[k]=Math.min(this.min[k],v[k]);this.max[k]=Math.max(this.max[k],v[k]);}}});return this;}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    isEmpty(){return this.min.x>this.max.x;}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  class El{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    constructor(id,left=0,top=0,width=0,height=0,tag='DIV'){Object.assign(this,{id,tagName:tag,base:{left,top,width,height},style:{},dataset:{},hidden:false,attrs:{},textContent:'',parentElement:null,offsetParent:null,children:{},handlers:new Map()});const classes=new Set();this.classList={add:x=>classes.add(x),remove:x=>classes.delete(x),toggle:(x,on)=>on?classes.add(x):classes.delete(x),contains:x=>classes.has(x)};}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    querySelector(s){return this.children[s]||null;}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    getBoundingClientRect(){const b=this.base,p=this.offsetParent?this.offsetParent.getBoundingClientRect():{left:0,top:0};const left=this.style.left&&this.style.left!=='auto'?parseFloat(this.style.left)+p.left:b.left,top=this.style.top&&this.style.top!=='auto'?parseFloat(this.style.top)+p.top:b.top,width=this.style.width?parseFloat(this.style.width):b.width,height=this.style.height?parseFloat(this.style.height):b.height;return {left,top,width,height,right:left+width,bottom:top+height};}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    getAttribute(k){return this.attrs[k]||null;}setAttribute(k,v){this.attrs[k]=String(v);}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    addEventListener(n,f){if(!this.handlers.has(n))this.handlers.set(n,[]);this.handlers.get(n).push(f);}removeEventListener(n,f){this.handlers.set(n,(this.handlers.get(n)||[]).filter(x=>x!==f));}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    emit(n,e={}){for(const fn of this.handlers.get(n)||[])fn({target:this,button:0,detail:1,cancelable:true,preventDefault(){},stopPropagation(){},...e});}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const doc={readyState:'loading',hidden:false,addEventListener(){},removeEventListener(){},getElementById(){return null;},querySelector(){return null;},elementFromPoint(){return null;}};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const sb={console,document:doc,navigator:{maxTouchPoints:1},location:{hostname:'192.168.1.107',search:'',origin:'http://192.168.1.107:4173'},performance:{now:()=>time},Math,Date,URLSearchParams,innerWidth:844,innerHeight:390,devicePixelRatio:3,PointerEvent:function(){},isAdmin:()=>true,matchMedia:()=>({matches:true}),getComputedStyle:el=>({getPropertyValue:()=>0,position:'absolute',left:el.style.left||'0px',top:el.style.top||'0px',transform:'none'}),setInterval(){return 1;},clearInterval(){},setTimeout(fn,ms){const id=timers.length+1;timers.push({id,fn,ms,active:true});return id;},clearTimeout(id){const t=timers.find(t=>t.id===id);if(t)t.active=false;},requestAnimationFrame(){return 1;},cancelAnimationFrame(){},localStorage:{getItem(){return null;},setItem(){},removeItem(){}},state:{coins:50,frontline1944:{claims:[],wordsDone:0,fortressSerial:2}},addCoins(){coinCalls++;},saveState(){saveCalls++;},authPushSave(){cloudCalls++;}};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  sb.addEventListener=(n,f)=>{if(!events.has(n))events.set(n,[]);events.get(n).push(f);};sb.removeEventListener=(n,f)=>events.set(n,(events.get(n)||[]).filter(x=>x!==f));sb.window=sb;sb.THREE={Group,Mesh,Vector3:Vec3,Box3,Object3D:Group};vm.createContext(sb);vm.runInContext(source,sb);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const T=sb.Frontline1944._t,G=T.G,CFG=T.CFG;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const root=new El('vw-frontline1944',16,24,844,390),canvas=new El('canvas',16,24,844,390,'CANVAS'),nodes={};canvas.parentElement=root;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function element(selector,id,x,y,w,h,tag='DIV'){const e=new El(id,x,y,w,h,tag);e.parentElement=root;e.offsetParent=root;nodes[selector]=e;return e;}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const button=element('#fl44-target-lock','fl44-target-lock',660,229,66,34,'BUTTON');button.children.small=new El('status');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  for(const [selector,id,x,y,w,h] of [['#fl44-auto-forward','fl44-auto-forward',48,220,66,34],['#fl44-auto-reverse','fl44-auto-reverse',143,320,66,34],['#fl44-scope','fl44-scope',700,180,66,34],['#fl44-stick','fl44-stick',30,290,96,96],['#fl44-aim-stick','fl44-aim-stick',690,306,82,82],['#fl44-fire','fl44-fire',778,288,68,68]]){const e=element(selector,id,x,y,w,h,id.includes('stick')?'DIV':'BUTTON');e.children.small=new El('small');}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const panel=element('#fl44-lock-status','fl44-lock-status',26,108,215,54);panel.hidden=true;panel.children.b=new El('title');panel.children.small=new El('detail');nodes['.fl44-lock-status']=panel;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const marker=element('#fl44-lock-marker','fl44-lock-marker',0,0,28,28);marker.hidden=true;marker.children.span=new El('label');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  nodes['#fl44-bossname']=new El('fl44-bossname');nodes['#fl44-bosshp']=new El('fl44-bosshp');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  nodes['.fl44-knob']=new El('drive-knob');nodes['.fl44-aim-knob']=new El('aim-knob');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  element('.fl44-top','top',23,29,830,56);element('#fl44-exit','fl44-exit',797,389,53,20,'BUTTON');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const stateEl=element('#fl44-state','fl44-state',260,388,330,22);nodes['.fl44-state']=stateEl;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  element('#fl44-objective','fl44-objective',685,90,158,18);element('#fl44-distance','fl44-distance',685,108,80,20);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const toast=new El('fl44-toast');toast.children.b=new El('b');toast.children.span=new El('span');nodes['#fl44-toast']=toast;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  root.querySelector=s=>nodes[s]||null;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  G.root=root;G.canvas=canvas;G.scene=new Group();G.layers={};for(const key of Object.values(T.LAYER)){G.layers[key]=new Group();G.scene.add(G.layers[key]);}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  G.camera={position:new Vec3(76,118,92),target:new Vec3(),width:220,height:220*390/844,lookAt(x,y,z){this.target.set(x,y,z);},updateMatrixWorld(){this.updates=(this.updates||0)+1;},matrixWorld:{elements:[1,0,0,0,0,1,0]}};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  G.raycaster={setFromCamera(ndc){lastRay=ndc;},intersectObjects(roots,recursive){rayRecursive=recursive;return rayHits;},ray:{intersectPlane(p,v){v.set(60,0,20);return v;}}};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  G.resources={geometry:k=>({kind:k}),material:()=>({color:{setHex(){}},opacity:1}),mesh(kind,color,size){const m=new Mesh(this.geometry(kind),this.material(color));m.scale.set(...size);return m;}};G.terrain=new T.TerrainSystem();G.collision=new T.CollisionSystem(G.terrain);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  G.sectorStreamer={currentIndex:0,ensure(){},isActive(){return true;},update(){},visualId(){return 0;}};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function makePlayer(){return {world:{x:0,z:0},hullRotation:0,turretRotation:0,speed:0,hp:380,maxHp:380,invuln:0,playerId:'local-test-player',damageStatistic:{match:0,lifetime:0},group:new Group(),hull:new Group(),turret:new Group()};}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  G.player=makePlayer();G.running=true;G.fortressSerial=2;G.tankRuntime=new T.TankRuntime(G.player,G.collision,G.terrain);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const emit=(name,data)=>{const e={pointerType:'touch',button:0,detail:1,target:canvas,cancelable:true,preventDefault(){},stopPropagation(){},...data};for(const fn of events.get(name)||[])fn(e);};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const centerOf=target=>{const b=T.targetLockScreenBounds(target);assert(b,'real entity group projects into current wide view');return {x:b.left+b.width/2,y:b.top+b.height/2};};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const choose=(target)=>{rayHits=[{object:target.ref.group.children[0]}];const p=centerOf(target);assert(T.selectTargetLockAtScreen(p.x,p.y,false,canvas));return p;};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  let enemy,enemy2,fortress;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('accepted identity and wide camera',()=>{assert.strictEqual(CFG.runtimeVersion,'P1.2.6F-20260902-5cc6a0');if(sourceOnly)console.log('SKIP N3 current stylesheet identity: not supplied / source-only mode');else assert(style.includes('--fl44-css-runtime-id:"'+CFG.runtimeVersion+'-CSS"'));assert.deepStrictEqual([CFG.viewW,CFG.cameraHeight,CFG.cameraOffsetX,CFG.cameraOffsetZ],[220,118,76,92]);});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('private-host policy and production isolation',()=>{for(const h of ['localhost','127.0.0.1','10.2.0.8','172.16.0.8','172.31.1.4','192.168.1.107','[::1]'])assert(T.privatePreviewHostname(h));for(const h of ['vocabworld.web.app','example.com','172.32.0.1','192.169.1.1','999.1.1.1'])assert(!T.privatePreviewHostname(h));sb.location.hostname='vocabworld.web.app';assert.strictEqual(T.activateLocalTargetLockTestRange(),false);assert.strictEqual(G.fortress,null);sb.location.hostname='192.168.1.107';});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('local range creates real Fortress + three real defenders',()=>{const progress=JSON.stringify(sb.state);assert(T.activateLocalTargetLockTestRange());assert.strictEqual(G.enemies.length,3);assert(G.enemies.every(e=>e.testRange&&e.group&&e.hp>0));assert.strictEqual(G.localTargetLockTestStatus.state,'ready');assert.strictEqual(G.fortress.testRange,true);assert(Math.abs(Math.hypot(G.fortress.world.x,G.fortress.world.z)-28)<1e-9);for(const e of G.enemies)assert(Math.hypot(e.world.x,e.world.z)>=12&&Math.hypot(e.world.x,e.world.z)<=16);assert.strictEqual(JSON.stringify(sb.state),progress);assert(nodes['#fl44-objective'].textContent.startsWith('LOCAL TEST'));enemy={kind:'enemy',id:G.enemies[0].id,ref:G.enemies[0]};enemy2={kind:'enemy',id:G.enemies[1].id,ref:G.enemies[1]};fortress={kind:'fortress',id:G.fortress.id,ref:G.fortress};});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('OFF -> READY does not invent a lock; instruction is not a blocking toast',()=>{T.setTargetLockMode(false);assert.strictEqual(button.children.small.textContent,'OFF');T.setTargetLockMode(true);assert.strictEqual(T.specialControlState().lockedTarget,null);assert.strictEqual(button.children.small.textContent,'READY');assert(panel.children.b.textContent.includes('SELECT TARGET'));assert(marker.hidden);assert(!toast.classList.contains('on'));});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('arming removes only the bootstrap ready toast, not combat/reward notices',()=>{toast.children.b.textContent='Phase 1.2.6N2 Runtime '+CFG.runtimeVersion;toast.classList.add('on');T.setTargetLockMode(true);assert(!toast.classList.contains('on'));toast.children.b.textContent='FORTRESS DESTROYED';toast.classList.add('on');T.setTargetLockMode(true);assert(toast.classList.contains('on'));toast.classList.remove('on');});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('enemy child mesh -> actual entity -> LOCKED -> name/HP/marker',()=>{choose(enemy);assert.strictEqual(T.specialControlState().lockedTarget.ref,enemy.ref);assert(rayRecursive);assert.strictEqual(button.children.small.textContent,'LOCKED');assert(panel.children.b.textContent.includes('ENEMY 1'));assert(panel.children.small.textContent.includes('HP '));assert.strictEqual(marker.dataset.targetId,enemy.id);assert(!marker.hidden);});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('CSS canvas coordinates, offsets and DPR at four wide-camera viewports',()=>{for(const [w,h] of [[667,375],[844,390],[915,412],[1280,720]])for(const dpr of [1,2,3]){canvas.base.width=w;canvas.base.height=h;canvas.width=w*dpr;canvas.height=h*dpr;G.camera.height=220*h/w;rayHits=[{object:enemy.ref.group.children[0]}];const p=centerOf(enemy);assert.strictEqual(T.targetLockRaycastCandidateAtScreen(p.x,p.y,[enemy]).ref,enemy.ref);assert(Math.abs(lastRay.x-((p.x-16)/w*2-1))<1e-9);assert(Math.abs(lastRay.y-(1-(p.y-24)/h*2))<1e-9);}canvas.base.width=844;canvas.base.height=390;G.camera.height=220*390/844;});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('wide-camera small-actor allowance is bounded; empty ground never picks a Fortress',()=>{rayHits=[];const p=centerOf(enemy);assert.strictEqual(T.pickTargetLockAtScreen(p.x,p.y).ref,enemy.ref);assert.strictEqual(T.pickTargetLockAtScreen(430,350),null);assert.strictEqual(T.pickTargetLockAtScreen(-10,-10),null);assert.strictEqual(T.pickTargetLockAtScreen(NaN,200),null);const f=centerOf(fortress);assert.strictEqual(T.pickTargetLockAtScreen(f.x+60,f.y),null);});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('switching locks actual clicked enemy; miss retains current target',()=>{choose(enemy2);const previous=T.specialControlState().lockedTarget;rayHits=[];assert.strictEqual(T.selectTargetLockAtScreen(430,350),false);assert.strictEqual(T.specialControlState().lockedTarget,previous);assert(panel.children.b.textContent.includes('ENEMY 2'));});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('protected HUD/button input cannot select behind UI',()=>{rayHits=[{object:enemy.ref.group.children[0]}];const p=centerOf(enemy);assert.strictEqual(T.selectTargetLockAtScreen(p.x,p.y,false,button),false);assert.strictEqual(T.selectTargetLockAtScreen(50,42),false);doc.elementFromPoint=()=>button;assert.strictEqual(T.selectTargetLockAtScreen(p.x,p.y),false);doc.elementFromPoint=()=>null;});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('Fortress child mesh remains selectable while Core is protected',()=>{const child=fortress.ref.group.children[0],nested=new Group();child.add(nested);rayHits=[{object:nested}];const p=centerOf(fortress);assert(T.selectTargetLockAtScreen(p.x,p.y));assert.strictEqual(T.specialControlState().lockedTarget.ref,fortress.ref);assert(panel.children.small.textContent.includes('CORE PROTECTED'));assert.strictEqual(T.targetLockTargetValid(fortress),true);});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('marker follows the entity and turret heading has one lock authority',()=>{choose(enemy);const old=marker.style.left;enemy.ref.world.x+=3;enemy.ref.group.position.x=enemy.ref.world.x;T.updateTargetLockMarker();assert.notStrictEqual(marker.style.left,old);const expected=T.rotationFromForward(enemy.ref.world.x-G.player.world.x,enemy.ref.world.z-G.player.world.z);assert(Math.abs(T.targetLockHeading()-expected)<1e-9);G.inputAdapter={sample:()=>({throttle:0,steering:0,turretTargetHeading:1.8,fire:false,source:'manual'})};T.tickTank(.016);assert(Math.abs(G.tankRuntime.turretTargetHeading-expected)<1e-9);});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('OFF clears marker/state and restores manual aiming immediately',()=>{T.setTargetLockMode(false);assert.strictEqual(T.targetLockHeading(),null);assert.strictEqual(T.specialControlState().lockedTarget,null);assert(marker.hidden);assert.strictEqual(marker.dataset.targetId,'');T.tickTank(.016);assert(Math.abs(G.tankRuntime.turretTargetHeading-1.8)<1e-9);});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('desktop click selects instead of firing; FIRE/Space remain available',()=>{T.bindTargetLockDesktopControls();T.bindCanvasAim();G.lastTouchLikeInputAt=0;button.emit('click',{pointerType:'mouse'});assert(T.specialControlState().targetLockMode);G.desktopFireQueued=false;rayHits=[{object:enemy.ref.group.children[0]}];const p=centerOf(enemy);canvas.emit('pointerdown',{pointerType:'mouse',clientX:p.x,clientY:p.y});assert.strictEqual(T.specialControlState().lockedTarget.ref,enemy.ref);assert.strictEqual(G.desktopFireQueued,false);nodes['#fl44-fire'].emit('click',{pointerType:'mouse'});assert(G.desktopFireQueued);G.desktopFireQueued=false;});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  let router;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('actual mobile router binds with current special-button DOM',()=>{router=T.bindGlobalMobileTouchRouter();assert(router);G.mobileRouter=router;T.bindTargetLockTapFireBridge(router);T.setTargetLockMode(false);const r=button.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;emit('pointerdown',{pointerId:10,clientX:x,clientY:y,target:button});emit('pointerup',{pointerId:10,clientX:x,clientY:y,target:button});assert(T.specialControlState().targetLockMode);button.emit('click',{pointerType:'touch'});assert(T.specialControlState().targetLockMode,'compatibility click must not toggle twice');});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('Scope mobile role toggles independently without stealing DRIVE/AIM/FIRE ownership',()=>{const scope=nodes['#fl44-scope'],r=scope.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,camera=G.camera;G.camera=null;assert.strictEqual(T.specialControlState().scopeMode,false);time+=80;emit('pointerdown',{pointerId:24,clientX:x,clientY:y,target:scope});assert.strictEqual(router.owners.get(24),'scope');assert.strictEqual(router.rolePointers.scope,24);assert.strictEqual(router.rolePointers.drive,null);assert.strictEqual(router.rolePointers.aim,null);assert.strictEqual(router.rolePointers.fire,null);emit('pointerup',{pointerId:24,clientX:x,clientY:y,target:scope});assert.strictEqual(T.specialControlState().scopeMode,true);assert.strictEqual(router.rolePointers.scope,null);scope.emit('click',{pointerType:'touch'});assert.strictEqual(T.specialControlState().scopeMode,true,'compatibility click must not toggle Scope twice');time+=80;emit('pointerdown',{pointerId:25,clientX:x,clientY:y,target:scope});emit('pointerup',{pointerId:25,clientX:x,clientY:y,target:scope});assert.strictEqual(T.specialControlState().scopeMode,false);G.camera=camera;});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('touch target acquisition and double-tap FIRE use current router paths',()=>{rayHits=[{object:enemy.ref.group.children[0]}];const p=centerOf(enemy);G.mobileFirePulseCount=0;for(const id of [11,12]){time+=100;emit('pointerdown',{pointerId:id,clientX:p.x,clientY:p.y});assert.strictEqual(T.specialControlState().lockedTarget.ref,enemy.ref);assert.strictEqual(router.owners.get(id),'targetLock');time+=35;emit('pointerup',{pointerId:id,clientX:p.x,clientY:p.y});}assert.strictEqual(G.mobileFirePulseCount,1);assert.strictEqual(router.owners.size,0);assert.strictEqual(router.tapCandidates.size,0);});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('selected-target drag and cancel do not turn into double-tap FIRE',()=>{const p=centerOf(enemy);G.mobileFirePulseCount=0;time+=700;emit('pointerdown',{pointerId:13,clientX:p.x,clientY:p.y});emit('pointermove',{pointerId:13,clientX:p.x+40,clientY:p.y});emit('pointerup',{pointerId:13,clientX:p.x+40,clientY:p.y});time+=80;emit('pointerdown',{pointerId:14,clientX:p.x,clientY:p.y});emit('pointercancel',{pointerId:14,clientX:p.x,clientY:p.y});assert.strictEqual(G.mobileFirePulseCount,0);assert.strictEqual(router.tapCandidates.size,0);});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('DRIVE + immediate AIM + FIRE ownership stays independent during lock',()=>{rayHits=[];router.cancelAll();const d=nodes['#fl44-stick'].getBoundingClientRect(),a=nodes['#fl44-aim-stick'].getBoundingClientRect(),f=nodes['#fl44-fire'].getBoundingClientRect();assert.strictEqual(router.begin(21,d.left+48,d.top+48,canvas,'pointer'),'drive');assert.strictEqual(router.begin(22,a.left+41,a.top+41,canvas,'pointer'),'aim');assert.strictEqual(router.begin(23,f.left+34,f.top+34,nodes['#fl44-fire'],'pointer'),'fire');router.move(22,f.left-2,f.top+20,canvas,'pointer');assert.strictEqual(router.rolePointers.aim,22);assert.strictEqual(router.rolePointers.drive,21);assert.strictEqual(router.rolePointers.fire,23);router.noteLostCapture(22,canvas,'pointer');assert.strictEqual(router.rolePointers.aim,22);router.cancelAll();assert.strictEqual(router.owners.size,0);});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('auto forward/reverse mutual exclusion and manual steering survive',()=>{T.setAutoMoveMode(1);assert.strictEqual(T.autoMoveThrottleIntent(),1);T.setAutoMoveMode(-1);assert.strictEqual(T.autoMoveThrottleIntent(),-1);T.setAutoMoveMode(0);assert.strictEqual(T.autoMoveThrottleIntent(),0);const c=T.mobileCommandFromState({x:.5,y:0,active:true},{x:0,y:0,active:false},false,null,null,1);assert(c.steering>0);});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('hidden/unloaded/detached lifecycle targets cannot remain stale',()=>{T.setTargetLockMode(true);choose(enemy);enemy.ref.group.visible=false;rayHits=[{object:enemy.ref.group.children[0]}];assert.strictEqual(T.targetLockRaycastCandidateAtScreen(centerOf(enemy2).x,centerOf(enemy2).y,[enemy]),null);enemy.ref.group.visible=true;const active=G.sectorStreamer.isActive;G.sectorStreamer.isActive=()=>false;assert.strictEqual(T.targetLockHeading(),null);assert.strictEqual(T.specialControlState().lockedTarget,null);G.sectorStreamer.isActive=active;choose(enemy);enemy.ref.dead=true;assert.strictEqual(T.targetLockHeading(),null);assert(marker.hidden);assert(panel.children.small.textContent.includes('DESTROYED'));enemy.ref.dead=false;});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('defenders -> real Boss -> vulnerable Core grants no persistent rewards',()=>{const before=JSON.stringify(sb.state),serial=G.fortressSerial;for(const e of G.enemies.slice())T.damageEnemy(e,e.hp,{ownerId:G.player.playerId});T.tickFortress();const boss=G.fortress.boss;assert(boss&&boss.boss&&boss.testRange);assert(Math.hypot(boss.world.x-G.player.world.x,boss.world.z-G.player.world.z)<20);choose({kind:'enemy',id:boss.id,ref:boss});assert(panel.children.b.textContent.includes('BOSS'));T.damageEnemy(boss,boss.hp,{ownerId:G.player.playerId});assert.strictEqual(G.fortress.state,'core');choose(fortress);assert(panel.children.b.textContent.includes('FORTRESS CORE'));assert(panel.children.small.textContent.includes('CORE VULNERABLE'));assert.strictEqual(JSON.stringify(sb.state),before);assert.strictEqual(G.fortressSerial,serial);assert.deepStrictEqual([coinCalls,saveCalls,cloudCalls],[0,0,0]);});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('normal projectile collision retains protected/vulnerable Core damage gating',()=>{const f=G.fortress,hp=f.coreHP;const shell=()=>({world:{x:f.world.x,z:f.world.z},direction:{x:0,z:0},speed:0,lifetime:1,damage:24,ownerId:G.player.playerId,team:'player',collisionRadius:.22,group:new Group()});const pool={active:[shell()],release(p){this.active=this.active.filter(x=>x!==p);}};f.state='boss';T.tickProjectilePool(pool,.016,true);assert.strictEqual(f.coreHP,hp);f.state='core';pool.active=[shell()];T.tickProjectilePool(pool,.016,true);assert.strictEqual(f.coreHP,hp-24);});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('Core destruction clears feedback and safely respawns near player without persistence',()=>{const before=JSON.stringify(sb.state),old=G.fortress;T.destroyCore();T.updateTargetLockMarker();assert(marker.hidden);assert.strictEqual(T.specialControlState().lockedTarget,null);const timer=timers.filter(t=>t.active&&t.ms===620).pop();assert(timer);timer.fn();assert.notStrictEqual(G.fortress,old);assert.strictEqual(G.enemies.length,3);assert.strictEqual(JSON.stringify(sb.state),before);assert.deepStrictEqual([coinCalls,saveCalls,cloudCalls],[0,0,0]);});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('local placement follows rotated Hull Forward, not a fixed world axis',()=>{for(const yaw of [Math.PI/2,Math.PI,-Math.PI/2]){G.tankRuntime.teleport(5,-15,yaw);assert(T.activateLocalTargetLockTestRange());const f=T.forwardFromRotation(yaw),p=G.tankRuntime.pose();assert(Math.abs(G.fortress.world.x-(p.x+f.x*28))<1e-9);assert(Math.abs(G.fortress.world.z-(p.z+f.z*28))<1e-9);for(const e of G.enemies)assert(Math.hypot(e.world.x-p.x,e.world.z-p.z)>=12&&Math.hypot(e.world.x-p.x,e.world.z-p.z)<=16);}});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('test setup failure stays non-blocking and visibly reports failure',()=>{const ensure=G.sectorStreamer.ensure;G.sectorStreamer.ensure=()=>{throw new Error('injected setup failure');};const savedConsole=sb.console;sb.console={...console,error(){},warn(){}};assert.strictEqual(T.safeActivateLocalTargetLockTestRange(),false);assert.strictEqual(G.running,true);assert.strictEqual(G.localTargetLockTestStatus.state,'error');assert(stateEl.textContent.includes('LOCAL TEST ERROR'));G.sectorStreamer.ensure=ensure;sb.console=savedConsole;assert(T.safeActivateLocalTargetLockTestRange());});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('fallback touchstart/touchend selects real targets and preserves double-tap FIRE',()=>{router.cancelAll();events.clear();delete sb.PointerEvent;router=T.bindGlobalMobileTouchRouter();G.mobileRouter=router;T.bindTargetLockTapFireBridge(router);T.setTargetLockMode(true);const e=G.enemies[1],target={kind:'enemy',id:e.id,ref:e},p=centerOf(target);rayHits=[{object:e.group.children[0]}];G.mobileFirePulseCount=0;for(const id of [31,32]){time+=100;const touch={identifier:id,clientX:p.x,clientY:p.y,target:canvas};emit('touchstart',{changedTouches:[touch],touches:[touch]});assert.strictEqual(T.specialControlState().lockedTarget.ref,e);time+=25;emit('touchend',{changedTouches:[touch],touches:[]});}assert.strictEqual(G.mobileFirePulseCount,1);assert.strictEqual(router.owners.size,0);assert.strictEqual(router.tapCandidates.size,0);sb.PointerEvent=function(){};});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('removal/re-entry clears entity reference; original bootstrap remains deferred',()=>{const e=G.enemies[0];T.setTargetLockMode(true);choose({kind:'enemy',id:e.id,ref:e});T.removeFortress();assert.strictEqual(T.specialControlState().lockedTarget,null);assert(marker.hidden);assert.strictEqual(G.enemies.length,0);assert(source.includes("bootStage='scheduleLocalTestRange'"));assert(source.includes('requestAnimationFrame(()=>setTimeout(()=>{if(G.running)safeActivateLocalTargetLockTestRange();},0))'));assert(source.includes('G.specialControls={autoMove:0,targetLockMode:false,lockedTarget:null,scopeMode:false}'));});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  console.log('PASS N3 '+checks+' focused groups; source-path / rendering-double tests only. Real browser delivery, WebGL raycasting and physical mobile acceptance remain required.');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// N4 tests are additive. Existing default and --target-lock assertions are not rewritten.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

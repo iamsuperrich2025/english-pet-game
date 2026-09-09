@@ -11,6 +11,9 @@
 > ประวัติ Frontline 1372–1373: `handoff/archive/frontline-1372-1373.md`
 
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
+- **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
+- เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
+- browser smoke ทั้ง source และ dist ผ่านที่ 812×375: ปุ่มเปิดกล่องยืนยันครบในจอ, ยืนยันแล้ว `f1Ticket=true` และ engine start; build 9,463 files/612.8 MiB + web validator ผ่าน
 - **รอบ 1375 · Frontline รถถังชน/ดันกัน:** collision module แยก, equal-mass bumpers/substeps, ป้อม/ขอบกั้นแรงดัน, spawn หลบรถ/รถตายไม่กั้น, ไม่ลด HP; bumpSeq ป้องกัน mailbox เก่าลบแรงชน + client reconcile + เสียงชน synth
 - ผ่าน 58 unit checks, server auth/economy, native public 2-browser และ Android long-poll Local ชน/dัน peer/ไม่มีทะลุ (ระยะต่ำสุด 3.3)/FIRE+BOMB; build9,463files612.8MiB+validator ผ่าน
 - ส่งครบด้วย commit fdeb4210 + handoff91928c6e; Firebase Functions/Hosting deploy สำเร็จและ push main แล้ว; live **2026-09-09.1228** → https://vocabworld.web.app/frontline/index.html (COMMIT_DEPLOY เปิด1ครั้ง แต่ไม่มี tty ข้าม stale files; กู้ครบด้วย finish_round pin manifest)

@@ -3,6 +3,7 @@ const assert=require('assert');
 const fs=require('fs');
 
 const ui=fs.readFileSync('js/ui.js','utf8');
+const home=fs.readFileSync('js/home-v2.js','utf8');
 const comingSoon=/const WORLD3D_COMING_SOON\s*=\s*new Set\(\[([^\]]+)]\)/.exec(ui);
 assert.ok(comingSoon,'WORLD3D coming-soon registry must exist');
 
@@ -18,5 +19,9 @@ assert.ok(ui.indexOf('if(world3DComingSoon(w))')<ui.indexOf("if(w.mode==='f1')")
   'Generic locks must resolve before the public F1 graphics selector or entry dialog');
 assert.match(ui,/const comingSoon = world3DComingSoon\(w\);[\s\S]{0,300}b\.classList\.add\(['"]locked['"]\)/,
   'Lobby renderer must show the same visual lock used by Motorbike');
+assert.match(home,/function openRacing\(\)[\s\S]{0,420}clickExisting\(['"]#btn-world-f1['"]\)/,
+  'Home V2 Racing must delegate to the Classic entry button that prepares f1Ticket');
+assert.doesNotMatch(home,/try\{\s*enterF1_3D\(\);\s*return true;\s*}/,
+  'Home V2 must not bypass the shared WORLD3D entry pipeline');
 
-console.log('PASS F1 stays public while Motorbike and Mothership keep the coming-soon gate');
+console.log('PASS F1 stays public and Home V2 uses the shared entry pipeline while locked worlds keep their gate');

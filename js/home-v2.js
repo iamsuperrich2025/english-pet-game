@@ -558,18 +558,19 @@
     return false;
   }
   function authoritativeRacingReady(){
-    return typeof enterF1_3D === 'function';
+    const source = document.getElementById('btn-world-f1');
+    return !!(source && !source.disabled);
   }
   function openRacing(){
+    /* Keep Classic's WORLD3D entry pipeline authoritative. It prepares the free
+       f1Ticket guard, opens the shared confirmation dialog, and awaits engine
+       failures instead of silently dropping the async result. */
+    if(clickExisting('#btn-world-f1')) return true;
     if(!authoritativeRacingReady()){
       try{ if(typeof showToast === 'function') showToast('Vocab World Racing ยังไม่พร้อมใน build นี้'); }catch(_){ }
       return false;
     }
-    try{ enterF1_3D(); return true; }
-    catch(_){
-      try{ if(typeof showToast === 'function') showToast('ไม่สามารถเปิด Vocab World Racing ได้'); }catch(__){ }
-      return false;
-    }
+    return false;
   }
   function openAvatarEditor(){
     // R11 functional-completion rule: photo.js remains the single authoritative upload/persistence owner.

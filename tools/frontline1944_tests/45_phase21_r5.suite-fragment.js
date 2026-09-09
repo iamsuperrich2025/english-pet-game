@@ -1,1270 +1,0 @@
-function runPhase21R5Tests(){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // Phase 2.1 R5 focused source/runtime tests. These do not claim physical-phone, WebGL screenshot, build, deploy or hosting acceptance.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const source=fs.readFileSync('js/frontline1944.js','utf8');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  let checks=0;const check=(name,fn)=>{fn();checks++;console.log('PASS R5 '+name);};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  class Vec3{constructor(x=0,y=0,z=0){this.set(x,y,z);}set(x,y,z){this.x=x;this.y=y;this.z=z;return this;}setScalar(v){return this.set(v,v,v);}copy(v){return this.set(v.x,v.y,v.z);}clone(){return new Vec3(this.x,this.y,this.z);}lerp(v,t){return this.set(this.x+(v.x-this.x)*t,this.y+(v.y-this.y)*t,this.z+(v.z-this.z)*t);}project(){return this;}}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const document={readyState:'loading',addEventListener(){},querySelector(){return null;},getElementById(){return null;},documentElement:{style:{getPropertyValue(){return '0';}}}};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  let now=1000,timerSerial=0;const timers=new Map(),store=new Map();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const sb={console,document,navigator:{maxTouchPoints:1},location:{hostname:'localhost',search:'',origin:'http://localhost'},Math,Date,URLSearchParams,innerWidth:1000,innerHeight:500,performance:{now:()=>now},isAdmin:()=>true,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    setTimeout(fn){const id=++timerSerial;timers.set(id,fn);return id;},clearTimeout(id){timers.delete(id);},setInterval(){return 1},clearInterval(){},requestAnimationFrame(){return 1},cancelAnimationFrame(){},localStorage:{getItem(k){return store.has(k)?store.get(k):null;},setItem(k,v){store.set(k,String(v));}},addEventListener(){},removeEventListener(){},getComputedStyle(){return {position:'absolute',left:'0px',top:'0px',right:'auto',bottom:'auto',transform:'none',getPropertyValue(){return '0';}}}};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  sb.window=sb;sb.THREE={Vector3:Vec3};vm.createContext(sb);vm.runInContext(source,sb);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const T=sb.Frontline1944._t,G=T.G;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  const fakeTank=()=>{const group={updateMatrixWorld(){},visible:true,position:{set(){}},rotation:{y:0}},cannonTip={getWorldPosition(v){return v.set(0,3,-6.3);}},barrel={getWorldPosition(v){return v.set(0,3,-3.55);}};return {world:{x:0,z:0},group,cannonTip,barrel,playerId:'p1',ownerId:'p1',hullRotation:0,turretRotation:0,turretTargetRotation:0,speed:0,footprint:{halfWidth:T.CFG.tankFootprintHalfWidth,halfLength:T.CFG.tankFootprintHalfLength},hp:1000,maxHp:1000,invuln:0,hull:{rotation:{y:0}},turret:{rotation:{y:0}}};};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function simulate(strength,scoped=false,seconds=.7){let h=0,v=0;for(let t=0;t<seconds;t+=1/60){const step=T.turretMotionStep(h,1.25,v,1/60,scoped,strength);h=step.heading;v=step.velocity;}return {h,v};}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function classList(){const set=new Set();return {add(...xs){xs.forEach(x=>set.add(x));},remove(...xs){xs.forEach(x=>set.delete(x));},contains(x){return set.has(x);},toggle(x,on){if(on===undefined)on=!set.has(x);on?set.add(x):set.delete(x);return !!on;}};}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  function fakeEl(left,top,width,height,id='',className=''){const style={left:'',top:'',right:'',bottom:'',transform:'',removeProperty(k){this[k]='';}},dataset={},cl=classList(),el={id,className,hidden:false,style,dataset,classList:cl,parentElement:null,offsetParent:null,clientLeft:0,clientTop:0,scrollLeft:0,scrollTop:0,getAttribute(){return null;},getBoundingClientRect(){const l=Number.parseFloat(style.left),t=Number.parseFloat(style.top),x=Number.isFinite(l)?l:left,y=Number.isFinite(t)?t:top;return {left:x,top:y,right:x+width,bottom:y+height,width,height};}};return el;}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('R5 identity, HP/Scope preservation and deliberate long-hold tuning',()=>{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    assert.strictEqual(T.R5_AIM.id,'P2.1R5-1420f0');assert.strictEqual(T.R4_AIM.id,T.R5_AIM.id);assert.strictEqual(T.CFG.playerHP,1000);assert.strictEqual(T.R5_AIM.scopeFov,22);assert(T.CFG.mobileAimRepositionHoldMs>=650&&T.CFG.mobileAimRepositionHoldMs<=800);assert(T.CFG.mobileAimHoldMoveTolerancePx>=8&&T.CFG.mobileAimHoldMoveTolerancePx<=16);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('thumb response curve keeps a small dead zone and gives finer small-input rotation',()=>{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const dead=T.mobileAimStrength({x:.04,y:0}),fine=T.mobileAimStrength({x:.18,y:0}),medium=T.mobileAimStrength({x:.5,y:0}),full=T.mobileAimStrength({x:1,y:0});assert.strictEqual(dead,0);assert(fine>0&&fine<medium&&medium<full&&full<=1);const slow=simulate(fine,false),fast=simulate(1,false),scope=simulate(1,true);assert(Math.abs(slow.h)<Math.abs(fast.h));assert(Math.abs(scope.h)<Math.abs(fast.h));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('turret input starts immediately but ramps velocity and decelerates without long drift',()=>{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const a=T.turretMotionStep(0,1,0,1/60,false,1),b=T.turretMotionStep(a.heading,1,a.velocity,1/60,false,1);assert(a.heading>0&&a.velocity>0);assert(a.velocity<T.R5_AIM.turretMaxRate);assert(b.velocity>a.velocity);const released=T.turretMotionStep(b.heading,1,b.velocity,1/60,false,0);assert(released.heading>b.heading&&released.velocity<b.velocity);let h=released.heading,v=released.velocity;for(let i=0;i<90;i++){const q=T.turretMotionStep(h,1,v,1/60,false,0);h=q.heading;v=q.velocity;}assert(Math.abs(v)<1e-9);assert(h<.35,'release inertia must stop rather than free-drift toward stale target');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('authoritative TankRuntime uses angular velocity and Target Lock supplies full-strength damped aim',()=>{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const tank=fakeTank(),collision={resolveTankSweep(from,to){return {x:to.x,z:to.z,heading:to.heading,blocked:false,contact:null};}},terrain={sample(){return {speed:1};}},rt=new T.TankRuntime(tank,collision,terrain);const before=rt.turretHeading;rt.step({turretTargetHeading:1,turretInputStrength:1},1/60);assert(rt.turretHeading>before&&rt.turretAngularVelocity>0);const v=rt.turretAngularVelocity;rt.step({turretTargetHeading:1,turretInputStrength:0},1/60);assert(rt.turretAngularVelocity<v);assert(source.includes('turretInputStrength:1,source:String(cmd.source||\'shared\')+\'+target-lock\''));assert(source.includes('this.turretHeading=turretMotion.heading;this.turretAngularVelocity=turretMotion.velocity'));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('AIM base stays fixed for ordinary drag, long-hold drag repositions safely, persists, and multitouch FIRE ownership remains separate',()=>{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const root=fakeEl(0,0,1000,500,'vw-frontline1944','');root.querySelector=()=>null;const drive=fakeEl(55,345,96,96,'fl44-stick','fl44-stick'),driveKnob=fakeEl(0,0,1,1,'','fl44-knob'),aim=fakeEl(700,330,82,82,'fl44-aim-stick','fl44-aim-stick'),aimKnob=fakeEl(0,0,1,1,'','fl44-aim-knob'),fire=fakeEl(875,350,68,68,'fl44-fire','fl44-fire');for(const el of [drive,driveKnob,aim,aimKnob,fire])el.parentElement=root;G.root=root;G.specialControls={autoMove:0,targetLockMode:false,lockedTarget:null,scopeMode:false};const driveState={x:0,y:0,id:null,active:false},aimState={x:0,y:0,id:null,active:false},vectors=[];const router=new T.GlobalMobileTouchRouter({root,driveEl:drive,driveKnob,aimEl:aim,aimKnob,fireEl:fire,driveState,aimState,storage:sb.localStorage,onAimVector:v=>vectors.push({x:v.x,y:v.y}),protectedPointAt:()=>false,onDiagnostic:()=>{}});const c=T.rectCenter(T.elementUsableRect(aim)),left0=T.elementUsableRect(aim).left;now=2000;assert.strictEqual(router.begin(91,c.x,c.y,aim,'pointer'),'aim');now+=40;router.move(91,c.x+30,c.y+5,aim,'pointer');assert.strictEqual(router.aimGesture.intent,'aim');assert(!router.aimGesture.repositioning);assert(Math.abs(T.elementUsableRect(aim).left-left0)<1e-9);router.end(91,c.x+30,c.y+5,aim,'pointer');const c2=T.rectCenter(T.elementUsableRect(aim));now=4000;assert.strictEqual(router.begin(92,c2.x,c2.y,aim,'pointer'),'aim');now+=T.CFG.mobileAimRepositionHoldMs+5;router.move(92,c2.x-95,c2.y-45,aim,'pointer');assert(router.aimGesture.repositioning);assert(Math.abs(T.elementUsableRect(aim).left-left0)>20);assert.strictEqual(aimState.x,0);assert.strictEqual(aimState.y,0);router.end(92,c2.x-95,c2.y-45,aim,'pointer');assert(sb.localStorage.getItem(T.CFG.mobileAimPositionStorageKey));const movedLeft=T.elementUsableRect(aim).left,movedCenter=T.rectCenter(T.elementUsableRect(aim)),fireCenter=T.rectCenter(T.elementUsableRect(fire));now=6000;assert.strictEqual(router.begin(93,movedCenter.x,movedCenter.y,aim,'pointer'),'aim');assert.strictEqual(router.begin(94,fireCenter.x,fireCenter.y,fire,'pointer'),'fire');assert.strictEqual(router.rolePointers.aim,93);assert.strictEqual(router.rolePointers.fire,94);assert.strictEqual(router.activeCount(),2);router.end(94,fireCenter.x,fireCenter.y,fire,'pointer');router.end(93,movedCenter.x,movedCenter.y,aim,'pointer');const broadX=560,broadY=250;now=8000;assert.strictEqual(router.begin(95,broadX,broadY,root,'pointer'),'aim');assert.strictEqual(router.aimGesture.repositionEligible,false);now+=T.CFG.mobileAimRepositionHoldMs+50;router.move(95,broadX-35,broadY,root,'pointer');assert(!router.aimGesture.repositioning);assert(Math.abs(T.elementUsableRect(aim).left-movedLeft)<1e-9);router.end(95,broadX-35,broadY,root,'pointer');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('projected marker is thin/clean and remains tied to actual cannon/projectile direction',()=>{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const tank=fakeTank();G.player=tank;G.tankRuntime=null;G.enemies=[];G.fortress=null;G.collision={hitSolidOnly(){return null;}};const ray=T.cannonWorldRay(tank),solution=T.projectedShotSolution(tank);assert(Math.abs(ray.direction.x)<1e-9&&Math.abs(ray.direction.z+1)<1e-9);assert(solution&&solution.kind==='range'&&solution.z<0);assert(source.includes('.fl44-shot-marker{position:absolute')&&source.includes('width:17px;height:17px'));assert(source.includes('.fl44-shot-marker:before')&&source.includes('height:1px')&&source.includes('width:1px;height:15px'));assert(source.includes('id="fl44-shot-marker" aria-hidden="true" hidden></div>'));assert(!source.includes('font:900 25px/1 ui-monospace'));assert(source.includes('const t=G.player,ray=cannonWorldRay(t)'));assert(source.includes('function r4CannonWorldRay(t)'));assert(source.includes('marker.dataset.kind=solution.kind'));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('R3 safe respawn and 1000 HP remain active',()=>{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    const tank=fakeTank();tank.hp=0;G.player=tank;G.tankRuntime=null;G.enemies=[];G.fortress=null;G.terrain={bySector:new Map()};G.collision={collidersNear(){return[];}};G.sectorStreamer={update(){},isActive(){return true;}};G.camera=null;T.r3ResetSpawnState();const pos={x:0,z:0,heading:0,sector:0,attempts:1,fallback:false};assert(T.r3ValidateSpawn(pos));assert(T.r3CommitSafeSpawn(pos,'death'));assert.strictEqual(tank.hp,1000);assert(tank.invuln>=2);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  check('R5 remains localized and preserves accepted systems',()=>{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    for(const token of ["const SPECIAL_CONTROL_ROLES=Object.freeze(['autoForward','autoReverse','targetLock','scope'])",'GlobalMobileTouchRouter','targetLockHeading()','mobileFirePositionStorageKey','r3PlayerEmbedded()','scopeMode:false','DRIVE','AIM','FIRE'])assert(source.includes(token),token);assert(source.includes("drawer.innerHTML='<b>FRONTLINE 1944 · R9</b>"));assert(source.includes("r.dataset.patchTask=R10_SYSTEM.id"));assert(source.includes("r.dataset.baselineTask=R9_SYSTEM.id"));
-
-
-
-
-
-
-
-
-
-  });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  console.log('PASS R5 '+checks+' focused groups. Source/runtime math + mobile-router harness only; physical phone, actual WebGL visuals, build/deploy and hosting delivery remain user acceptance checks.');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

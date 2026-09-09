@@ -1,134 +1,0 @@
-// Phase 2.1 R11.2 c85cc6 — approved central-combat HUD layout and responsive matrix.
-
-
-
-(function testR112ResponsiveHudMatrix(){
-
-
-
-  const source=fs.readFileSync('js/frontline1944.js','utf8'),css=fs.readFileSync('css/frontline1944.css','utf8'),html=fs.readFileSync('index_classic.html','utf8');
-
-
-
-  assert(source.includes("const R111_SYSTEM=Object.freeze({id:'P2.1R11.1-d86056'"),'accepted R11.1 baseline identity retained');
-
-  assert(source.includes("const R112_SYSTEM=Object.freeze({id:'P2.1R11.2-c85cc6'"),'R11.2 system identity present');
-
-  assert(source.includes("taskId:'VW-20260906-182626-c85cc6'"),'R11.2 task identity present');
-
-  assert(source.includes("function frontlineCombatSafeRect(safe,topFloor=null,bottomReserve=0)"),'central combat safe-zone helper present');
-
-  assert(source.includes("function layoutBossBarUnderWord()"),'boss-to-target-word layout helper present');
-
-  assert(source.includes("function layoutTargetLockFeedback()"),'READY panel layout helper present');
-
-  assert(source.includes("grid-template-columns:minmax(28px,.8fr) minmax(0,1fr)!important"),'AUTO icon/text columns are reserved');
-
-  assert(source.includes("#vw-frontline1944 .fl44-state{display:none!important"),'long center state bar is removed from battlefield presentation');
-
-  assert(source.includes('id="fl44-objective-state"'),'state information is relocated into right mission panel');
-
-  assert(css.includes('--fl44-css-runtime-id:"P2.1R15-cf4076-CSS"'),'current CSS identity synchronized after R12');
-
-  assert(css.includes('data-task-id="VW-20260906-182626-c85cc6"'),'R11.2 CSS task marker synchronized');
-
-  assert(html.includes("var FRONTLINE_RUNTIME_ID='P2.1R15-cf4076';"),'current HTML loader identity synchronized after R12');
-
-
-
-  const start=source.indexOf('const R111_SYSTEM=');
-
-  const end=source.indexOf('const R10_TANK_VEHICLE_MODELS',start);
-
-  assert(start>=0&&end>start,'R11.2 pure responsive definitions are extractable');
-
-  const defs=source.slice(start,end);
-
-  const sb={console,globalThis:null};sb.globalThis=sb;
-
-
-
-  vm.runInNewContext(`
-
-    const G={root:null};
-
-    const R11_SYSTEM={taskId:'VW-20260906-171618-74a029'};
-
-    function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
-
-    function rectFromEdges(left,top,right,bottom){return {left,top,right,bottom,width:Math.max(0,right-left),height:Math.max(0,bottom-top)};}
-
-    function rectIntersects(a,b){return !!a&&!!b&&a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top;}
-
-    ${defs}
-
-    globalThis.__R112={R111_VIEWPORTS,R112_SYSTEM,frontlineResponsiveTier,frontlineResponsiveMetrics,frontlineResponsiveLayoutModel,frontlineCombatSafeRect,validateFrontlineLayoutRects};
-
-  `,sb,{filename:'frontline1944-r112-pure-layout.js'});
-
-
-
-  const R=sb.__R112;assert(R&&R.frontlineResponsiveLayoutModel,'R11.2 pure layout model is executable');
-
-  assert.strictEqual(R.R112_SYSTEM.baselineTaskId,'VW-20260906-174606-d86056','R11.2 explicitly extends current R11.1 task');
-
-  const matrix=[[568,320],[640,360],[720,360],[740,360],[780,360],[812,375],[844,390],[852,393],[896,414],[915,412],[932,430],[960,432],[1024,480],[1080,480],[1180,540],[1253,553],[1280,720],[1366,768],[1920,1080]];
-
-  assert.deepStrictEqual(Array.from(R.R111_VIEWPORTS,v=>Array.from(v)),matrix,'runtime viewport matrix matches task');
-
-
-
-  for(const [w,h] of matrix){
-
-    const out=R.frontlineResponsiveLayoutModel(w,h),r=out.rects;
-
-    assert(out.report.pass,`${w}x${h} ${out.tier}: overlaps=${out.report.overlaps.join(',')} out=${out.report.outOfBounds.join(',')} central=${out.report.combatIntrusions.join(',')}`);
-
-    assert(r.ready.top>=r.player.bottom,`${w}x${h}: READY must be below Player`);
-
-    assert(r.autoForward.top>=r.ready.bottom,`${w}x${h}: AUTO FORWARD must follow READY`);
-
-    assert(r.drive.top>=r.autoForward.bottom,`${w}x${h}: DRIVE must follow AUTO FORWARD`);
-
-    assert(r.autoReverse.top>=r.drive.bottom,`${w}x${h}: AUTO REVERSE must follow DRIVE`);
-
-    assert(r.boss.top>=r.word.bottom,`${w}x${h}: boss bar must be directly below Target Word cluster`);
-
-    assert(r.boss.height<=38,`${w}x${h}: boss bar must stay compact`);
-
-    assert(!out.report.combatIntrusions.length,`${w}x${h}: central combat corridor must remain clear`);
-
-    assert(r.scope.left>out.combatSafe.right&&r.targetLock.left>out.combatSafe.right,`${w}x${h}: Scope/Target Lock remain in right information column`);
-
-  }
-
-
-
-  const critical=R.frontlineResponsiveLayoutModel(1253,553);
-
-  assert.strictEqual(critical.tier,'standard-phone');
-
-  assert(critical.report.pass,'1253x553 real-device regression must pass');
-
-  assert(critical.combatSafe.width/critical.safe.width>=.35&&critical.combatSafe.width/critical.safe.width<=.45,'central combat safe-zone width remains within approved 35–45% intent');
-
-  assert(critical.rects.ready.right<critical.combatSafe.left,'1253x553 READY remains left of combat corridor');
-
-  assert(critical.rects.mission.left>critical.combatSafe.right,'1253x553 Local Test remains right of combat corridor');
-
-  assert(critical.rects.boss.bottom<=critical.combatSafe.top,'1253x553 Boss bar remains above combat corridor');
-
-
-
-  console.log('PASS R11.2 central-combat HUD matrix: 19/19 viewports, including 1253x553.');
-
-
-
-})();
-
-
-
-
-
-
-

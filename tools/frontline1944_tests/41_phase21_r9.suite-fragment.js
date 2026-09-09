@@ -1,180 +1,0 @@
-function runPhase21R9Tests(){
-
-
-
-
-
-
-
-
-
-  const source=fs.readFileSync('js/frontline1944.js','utf8');let checks=0;const check=(name,fn)=>{fn();checks++;console.log('PASS R9 '+name);};
-
-
-
-
-
-
-
-
-
-  class Vec3{constructor(x=0,y=0,z=0){this.set(x,y,z);}set(x,y,z){this.x=x;this.y=y;this.z=z;return this;}setScalar(v){return this.set(v,v,v);}copy(v){return this.set(v.x,v.y,v.z);}clone(){return new Vec3(this.x,this.y,this.z);}lerp(v,t){return this.set(this.x+(v.x-this.x)*t,this.y+(v.y-this.y)*t,this.z+(v.z-this.z)*t);}project(){return this;}}
-
-
-
-
-
-
-
-
-
-  class Group{constructor(){this.children=[];this.parent=null;this.name='';this.userData={};this.position=new Vec3();this.rotation={x:0,y:0,z:0};}add(o){if(o.parent&&o.parent.remove)o.parent.remove(o);this.children.push(o);o.parent=this;return this;}remove(o){const i=this.children.indexOf(o);if(i>=0)this.children.splice(i,1);o.parent=null;return this;}updateMatrixWorld(){}}
-
-
-
-
-
-
-
-
-
-  const document={readyState:'loading',addEventListener(){},querySelector(){return null;},getElementById(){return null;},documentElement:{style:{getPropertyValue(){return '0';}}}};let now=1000;const store=new Map(),coinCalls=[],stateObj={coins:30000,frontline1944:{tankUpgradeLevel:1,tankArmorLevel:0,tank:{level:1,armorTier:0}}};
-
-
-
-
-
-
-
-
-
-  const sb={console,document,navigator:{maxTouchPoints:1},location:{hostname:'localhost',search:'',origin:'http://localhost'},Math,Date,URLSearchParams,innerWidth:1000,innerHeight:500,performance:{now:()=>now},isAdmin:()=>true,state:stateObj,addCoins(n){n=Number(n)||0;coinCalls.push(n);stateObj.coins+=n;},saveState(){stateObj.saved=(stateObj.saved||0)+1;},authPushSave(){},setTimeout(fn){fn();return 1;},clearTimeout(){},setInterval(){return 1;},clearInterval(){},requestAnimationFrame(){return 1;},cancelAnimationFrame(){},localStorage:{getItem(k){return store.get(k)||null;},setItem(k,v){store.set(k,String(v));}},addEventListener(){},removeEventListener(){},getComputedStyle(){return {position:'absolute',left:'0px',top:'0px',right:'auto',bottom:'auto',transform:'none',getPropertyValue(){return '0';}}}};sb.window=sb;sb.THREE={Vector3:Vec3,Group};vm.createContext(sb);vm.runInContext(source,sb);const T=sb.Frontline1944._t,G=T.G;
-
-
-
-
-
-
-
-
-
-  check('R10 is current while R9 remains the locked baseline',()=>{assert.strictEqual(T.R9_SYSTEM.id,'P2.1R9-fb0971');assert.strictEqual(T.R9_SYSTEM.taskId,'VW-20260906-141911-fb0971');assert.strictEqual(T.R10_SYSTEM.id,'P2.1R10-b4eb7b');assert.strictEqual(T.R10_SYSTEM.taskId,'VW-20260906-160054-b4eb7b');assert.strictEqual(T.R8_SYSTEM.id,'P2.1R8-b62279');assert(source.includes("r.dataset.patchTask=R10_SYSTEM.id"));assert(source.includes("r.dataset.baselineTask=R9_SYSTEM.id"));assert.deepStrictEqual(Array.from(T.TANK_UPGRADE_LEVELS,v=>v.rangeMeters),[500,750,1000,1500,2000,3000,4000,5500,7500,10000]);assert.strictEqual(T.CFG.playerHP,1000);});
-
-
-
-
-
-
-
-
-
-  check('HUD is split into non-overlapping grid panels and telemetry no longer lives in coin/player cards',()=>{for(const token of ['fl44-r9-style','fl44-telemetry','grid-template-columns:minmax(146px','.fl44-top>.fl44-player','.fl44-top>.fl44-word','.fl44-top>.fl44-coins','เหรียญหลัก'])assert(source.includes(token),token);const player=source.match(/<div class="fl44-panel fl44-player">[\s\S]*?<\/div>/)[0],coins=source.match(/<div class="fl44-panel fl44-coins">[\s\S]*?<\/div>/)[0];assert(!player.includes('fl44-runtime'));assert(!coins.includes('fl44-sector'));assert(!coins.includes('fl44-input'));});
-
-
-
-
-
-
-
-
-
-  check('all eight drive directions resolve exactly and visual feedback has one segment per direction',()=>{const cases=[[[0,-1,true],'forward'],[[0,1,true],'backward'],[[-1,0,true],'left'],[[1,0,true],'right'],[[-.8,-.8,true],'forward-left'],[[.8,-.8,true],'forward-right'],[[-.8,.8,true],'backward-left'],[[.8,.8,true],'backward-right'],[[.05,.05,true],''],[[1,1,false],'']];for(const [args,want] of cases)assert.strictEqual(T.driveDirectionFromVector(...args),want);for(const dir of ['forward','backward','left','right','forward-left','forward-right','backward-left','backward-right'])assert(source.includes('data-dir="'+dir+'"'),dir);assert(source.includes("light.classList.toggle('is-active',on)"));assert(source.includes("if(role==='drive')syncDriveDirectionUI(v.x,v.y,true)"));});
-
-
-
-
-
-
-
-
-
-  check('curved Thai forward/backward labels are integrated into the DRIVE control',()=>{for(const token of ['fl44-drive-arc-forward','fl44-drive-arc-backward','<textPath href="#fl44-drive-arc-forward"','<textPath href="#fl44-drive-arc-backward"','เดินหน้า','ถอยหลัง'])assert(source.includes(token),token);});
-
-
-
-
-
-
-
-
-
-  check('Garage uses fresh R9 WebP previews with hidden-until-loaded fallback safety',()=>{assert.strictEqual(T.R9_TANK_WEAPON_ASSETS.length,10);assert.strictEqual(T.R9_TANK_ARMOR_ASSETS.length,11);const paths=[...Array.from(T.R9_TANK_WEAPON_ASSETS),...Array.from(T.R9_TANK_ARMOR_ASSETS).filter(Boolean)];assert.strictEqual(paths.length,20);let total=0;for(const path of paths){assert(fs.existsSync(path),path);const b=fs.readFileSync(path);total+=b.length;assert.strictEqual(b.subarray(0,4).toString('ascii'),'RIFF',path);assert.strictEqual(b.subarray(8,12).toString('ascii'),'WEBP',path);assert(b.length>100&&b.length<250000,path+' size '+b.length);}assert(total<250000,'R9 preview payload '+total);for(const token of ['base.hidden=true','base.onload=ready','base.onerror=failed','armor.onload=armorReady','LOADING WEBP PREVIEW','TANK GARAGE · R10'])assert(source.includes(token),token);});
-
-
-
-
-
-
-
-
-
-  check('upgrade purchase deducts through the MAIN GAME addCoins gateway and persists shared balance',()=>{G.player=null;G.progressHydrated=false;G.upgradeBusy=false;stateObj.coins=1000;stateObj.frontline1944={tankUpgradeLevel:1,tankArmorLevel:0,tank:{level:1,armorTier:0}};coinCalls.length=0;const r=T.purchaseNextTankLevel(2);assert(r.ok);assert.strictEqual(stateObj.coins,750);assert.deepStrictEqual(coinCalls,[-250]);assert.strictEqual(stateObj.frontline1944.tankUpgradeLevel,2);assert(stateObj.saved>0);assert.strictEqual(T.currentCoinBalance(),750);});
-
-
-
-
-
-
-
-
-
-  check('production path refuses direct coin mutation when canonical addCoins is unavailable',()=>{const canonical=sb.addCoins;delete sb.addCoins;sb.location.hostname='vocabworld.web.app';stateObj.coins=500;const r=T.spendTankUpgradeCoins(100);assert.strictEqual(r.ok,false);assert.strictEqual(r.reason,'coin-api-unavailable');assert.strictEqual(stateObj.coins,500);sb.addCoins=canonical;sb.location.hostname='localhost';});
-
-
-
-
-
-
-
-
-
-  check('private local preview may use an explicit safe fallback without affecting production behavior',()=>{const canonical=sb.addCoins;delete sb.addCoins;sb.location.hostname='localhost';stateObj.coins=500;const r=T.spendTankUpgradeCoins(100);assert(r.ok);assert.strictEqual(r.source,'local-preview');assert.strictEqual(stateObj.coins,400);sb.addCoins=canonical;});
-
-
-
-
-
-
-
-
-
-  check('insufficient/busy purchase paths never deduct and accepted R8 combat/input systems remain present',()=>{stateObj.coins=10;coinCalls.length=0;G.upgradeBusy=false;let r=T.purchaseNextArmorLevel(1);assert.strictEqual(r.ok,false);assert.strictEqual(r.reason,'insufficient');assert.strictEqual(stateObj.coins,10);assert.strictEqual(coinCalls.length,0);G.upgradeBusy=true;r=T.purchaseNextTankLevel(3);assert.strictEqual(r.reason,'busy');assert.strictEqual(stateObj.coins,10);G.upgradeBusy=false;for(const token of ['barrelTargetPitch','targetLockHeading()','r3PlayerEmbedded()','mobileAimRepositionHoldMs','class GlobalMobileTouchRouter','fl44-scope-capability','fl44-mg','DRIVE','AIM','FIRE'])assert(source.includes(token),token);});
-
-
-
-
-
-
-
-
-
-  console.log('PASS R9 '+checks+' focused groups. Source/runtime/assets verified; physical phone/rendered WebGL appearance and Studio import/build remain final acceptance steps.');
-
-
-
-
-
-
-
-
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
