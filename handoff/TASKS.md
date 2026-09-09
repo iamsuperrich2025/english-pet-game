@@ -12,6 +12,11 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1391 · Arena SFX:** เพิ่ม js/arena-audio.js + Kenney CC0 MP3 11ไฟล์/12cue รวม24,111B, preload4ไฟล์6,804B; gesture unlock, shared mute, decode/cache, cap8เสียง, background/exit cleanup; SOURCE: SOUND_LICENSES.md
+- js/arena3d.js เชื่อมยิง/โดน/แตก/รับเหรียญจริง/อักษรถูก/การกระทำที่เกมปฏิเสธ/MEGA/โล่/UI; js/ui.js โหลดเฉพาะArena; คงกติกาและnetwork; docs/PROJECT_MAP.md ชี้owner
+- tools/test_arena_audio.cjs ผ่านsource39+dist39 (desktop/mobile touch, missing/corrupt audio, peer revive); grimoire209/crystals53; build9,529ไฟล์616.6MiB+validator/assets306/undefined0/backtick0/syntax/diffผ่าน; native Android/TWA ยังต้องตรวจบนเครื่องจริง
+- ผู้ใช้อนุญาตขึ้นเว็บภายหลัง; เตรียม SHIP18ไฟล์; ยังไม่ยืนยัน commit/deploy — รอผล launcher และตรวจ live
+
 - **รอบ 1390 · แก้ไฟเป็นแท่งซ้ำ:** เปลี่ยน shader/การวางเปลวใน js/arena-field-visuals.js เป็นเปลวแตกตัว8กลุ่ม (low5) พร้อมควัน/พื้นร้อน/สะเก็ด/คลื่นกระแทก; ส่ง phase+fade แยกทุก draw แก้ opacity เดิมไม่เข้า shader; ไฟ MEGA ใช้คลื่นไฟแทนโดมฟ้า
 - ใช้ pool640/48 และ low256/28 เดิม; lazy shared shader/forceSinglePass ไม่มีภาพหรือวิดีโอ runtime เพิ่ม; ordinary fire peak120draws/sustain118/กลับ105/18textures; คงดาเมจและ5ครั้งMEGA (js/arena-elements.js เปลี่ยนเฉพาะทางเรียกภาพ pulse)
 - Source/dist fire31 ผ่าน; crystals53/grimoire209 ผ่าน; build9,517ไฟล์616.6MiB/validator/assets306/undefined0/backtick0/syntax/diffผ่าน; ตรวจรูปทุกช่วงบน3map/มือถือและคลิปจริง1280×720 10.72วินาที 1.50MB ที่ work/arena-fire-1390
