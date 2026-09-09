@@ -7643,6 +7643,9 @@ async function enterMoto3D(){
 /* ============================================================
    🏝️ รอบ 1377 — KART ADMIN PREVIEW (separate entry and persistent keys)
    ============================================================ */
+function kartLobbyIconHTML(){
+  return '<img data-kart-icon src="img/kart/kart-menu.webp" width="40" height="40" loading="lazy" decoding="async" alt="" style="width:40px;height:40px;object-fit:contain;vertical-align:middle">';
+}
 async function enterKart3D(){
   if(typeof canAccessKartBeta!=='function'||!canAccessKartBeta())return worldEntryStopped('เกมนี้เปิดให้แอดมินเท่านั้น');
   if(!state.kartTicket||state.advHurt)return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
@@ -8069,7 +8072,7 @@ function renderRailWorlds(){
       const b = document.createElement('button');
       b.className = 'rail-btn rail-world';
       b.id = 'btn-world-' + w.mode;
-      b.innerHTML = `<span class="rail-ico">${w.ico}</span>${w.label}`
+      b.innerHTML = `<span class="rail-ico">${w.mode==='kart'?kartLobbyIconHTML():w.ico}</span>${w.label}`
         + (w.mode === 'sky' ? '<span class="rail-beta">PRIVATE BETA</span>' : '')
         + `<span class="rail-lock" style="display:none">🔒</span>`          // มุมขวาบน: ล็อกอยู่
         + `<span class="rail-count" style="display:none">0</span>`          // มุมขวาบน: จำนวนคำที่พิชิตแล้ว (ปลดล็อกแล้ว)

@@ -270,6 +270,7 @@
     examstd:'📋',onet:'🇹🇭',rank:'🥇',market:'🏪',friends:'👥',gifts:'🎁',stats:'📊',trophy:'🏆',racing:'🏎️'
   });
   function classicRailGlyph(actionName, sourceSelector){
+    if(actionName==='worldKart'&&typeof kartLobbyIconHTML==='function')return '<span class="vw2-classic-rail-ico" aria-hidden="true">'+kartLobbyIconHTML()+'</span>';
     let glyph = '';
     if(sourceSelector){
       try{ glyph = document.querySelector(sourceSelector)?.querySelector('.rail-ico')?.textContent?.trim() || ''; }

@@ -114,14 +114,69 @@ function applyEnvironment(scene,r,c,lights,mobile){
   lights.sun.color.setHex(0xfff1ce);lights.sun.intensity=.85;lights.sun.position.set(-80,180,60);
   lights.warm.visible=false;
 }
+// Solid Kart road corridor. Sweep movement in <=0.75 m steps, including peer pushes,
+// so a fast frame cannot tunnel through a roadside wall into a nearby track section.
+let boundarySegments=[];
+function boundaryPoint(x,z){
+  let best=null,gap=Infinity;
+  for(const b of boundarySegments){
+    const t=Math.max(0,Math.min(1,((x-b.x)*b.dx+(z-b.z)*b.dz)/b.len2));
+    const qx=b.x+t*b.dx,qz=b.z+t*b.dz,dx=x-qx,dz=z-qz,dist=Math.hypot(dx,dz),g=dist-b.limit;
+    if(g<gap){gap=g;best={x:qx,z:qz,dx,dz,dist,limit:b.limit,gap:g};}
+    if(g<=0)return null;
+  }
+  return best;
+}
+function collideBoundary(fromX,fromZ,x,z,vx,vz){
+  const steps=Math.max(1,Math.ceil(Math.hypot(x-fromX,z-fromZ)/.75));
+  for(let i=1;i<=steps;i++){
+    const qx=fromX+(x-fromX)*i/steps,qz=fromZ+(z-fromZ)*i/steps,b=boundaryPoint(qx,qz);
+    if(!b)continue;
+    const nx=b.dx/(b.dist||1),nz=b.dz/(b.dist||1),outward=vx*nx+vz*nz;
+    if(outward>0){vx-=nx*outward*1.48;vz-=nz*outward*1.48;}
+    const normal=vx*nx+vz*nz;
+    return {x:b.x+nx*(b.limit-.03),z:b.z+nz*(b.limit-.03),vx:vx*.88+nx*normal*.12,vz:vz*.88+nz*normal*.12};
+  }
+  return null;
+}
 function buildTrack(a){
   const {scene,LINE:L,sfIdx,HALF_W,RUNOFF_W,ribbonGeo,kerbStrips,TexLib}=a;
   const groups=new Map();waterfalls=[];TexLib.kerb.encoding=T.sRGBEncoding;
+  boundarySegments=[];
+  function boundarySegment(x,z,qx,qz,limit){const dx=qx-x,dz=qz-z,len2=dx*dx+dz*dz;if(len2>1e-8)boundarySegments.push({x,z,dx,dz,len2,limit});}
+  for(let i=0;i<L.n;i++){const j=(i+1)%L.n;boundarySegment(L.x[i],L.z[i],L.x[j],L.z[j],HALF_W+RUNOFF_W-1.45);}
+  for(let i=1;i<profile.map.pit.length;i++){const p=profile.map.pit[i-1],q=profile.map.pit[i];boundarySegment(p[0],p[1],q[0],q[1],4.5);}
+
   function part(c,g,p,r,s){const key=String(c);if(!groups.has(key))groups.set(key,[]);groups.get(key).push({c,g,p,r,s});}
   const cube=new T.BoxGeometry(1,1,1);
   function block(c,x,y,z,w,h,d,ry=0){part(c,cube,[x,y,z],[0,ry,0],[w,h,d]);}
   function point(i,lat){i=(i%L.n+L.n)%L.n;return {x:L.x[i]+L.nx[i]*lat,z:L.z[i]+L.nz[i]*lat,yaw:Math.atan2(L.tx[i],L.tz[i]),i};}
+  // Round 1378: validate scenery against EVERY road segment, including the pit lane.
+  // A nearby hairpin can pass through the outside of a different bend.
+  const roadSegments=[];
+  for(let i=0;i<L.n;i++){const j=(i+1)%L.n;roadSegments.push([L.x[i],L.z[i],L.x[j],L.z[j],HALF_W+RUNOFF_W+1]);}
+  for(let i=1;i<profile.map.pit.length;i++){const p=profile.map.pit[i-1],q=profile.map.pit[i];roadSegments.push([p[0],p[1],q[0],q[1],7.5]);}
+  const sceneryBounds=[];scene.userData.kartSceneryBounds=sceneryBounds;
+  function sceneryClear(x,z,w,d,yaw=0){
+    const c=Math.cos(yaw),s=Math.sin(yaw);
+    for(const [ax,az,bx,bz,margin] of roadSegments){
+      const x0=c*(ax-x)-s*(az-z),z0=s*(ax-x)+c*(az-z);
+      const dx=c*(bx-ax)-s*(bz-az),dz=s*(bx-ax)+c*(bz-az);
+      let lo=0,hi=1;
+      for(const [p,v,h] of [[x0,dx,w/2+margin],[z0,dz,d/2+margin]]){
+        if(Math.abs(v)<1e-8){if(Math.abs(p)>h){lo=2;break;}}
+        else{const a=(-h-p)/v,b=(h-p)/v;lo=Math.max(lo,Math.min(a,b));hi=Math.min(hi,Math.max(a,b));}
+      }
+      if(lo<=hi)return false;
+    }
+    return true;
+  }
+  function reserveScenery(kind,x,z,w,d,yaw=0){
+    if(!sceneryClear(x,z,w,d,yaw))return false;
+    sceneryBounds.push({kind,x,z,w,d,yaw});return true;
+  }
   function palm(x,z,scale=1){
+    if(!reserveScenery('palm',x,z,8*scale,8*scale))return;
     for(let j=0;j<5;j++)block(0x946035,x+j*.13*scale,(j*.85+.42)*scale,z,.72*scale,.92*scale,.76*scale,j*.11);
     for(let j=0;j<7;j++){
       const angle=j*Math.PI*2/7;part(0x69a42e,new T.BoxGeometry(.9,.22,3.7),[x+Math.sin(angle)*1.5*scale,4.7*scale,z+Math.cos(angle)*1.5*scale],[.32,angle,0],[scale,scale,scale]);
@@ -158,11 +213,15 @@ function buildTrack(a){
     const p=point(i,side*(HALF_W+RUNOFF_W+12+(i%4)*5));palm(p.x,p.z,1.05+(i%5)*.15);
     const q=point(i,side*(HALF_W+RUNOFF_W+34));const h=6+(i%7)*2.1;
     if(Math.min((i-sfIdx+L.n)%L.n,(sfIdx-i+L.n)%L.n)<34)continue;
+    if(!reserveScenery('cliff',q.x,q.z,26,54,p.yaw))continue;
     block(0xad7952,q.x,h/2-2,q.z,21,h,23,p.yaw);block(0x89b83d,q.x,h-1.2,q.z,22,2.5,24,p.yaw);
     for(let j=0;j<3;j++)block(j%2?0xc18c62:0x9d6e4e,q.x+Math.sin(p.yaw)*6*j,h*.28+j*2,q.z+Math.cos(p.yaw)*6*j,8,3,24,p.yaw);
   }
   // Landmark vista beside the start: tall terraced island, red/white lighthouse and waterfall.
-  const island=point(sfIdx+20,59);block(0xaf7850,island.x,12,island.z,58,31,45,island.yaw);block(0x82b43e,island.x,28,island.z,60,3.8,47,island.yaw);
+  let island=null;
+  for(let offset=59;offset<=419;offset+=20){const p=point(sfIdx+20,offset);if(reserveScenery('lighthouse-island',p.x,p.z,90,90)){island=p;break;}}
+  if(island){
+  block(0xaf7850,island.x,12,island.z,58,31,45,island.yaw);block(0x82b43e,island.x,28,island.z,60,3.8,47,island.yaw);
   for(let j=0;j<6;j++){
     part(j%2?0xf14b49:0xffefd1,new T.CylinderGeometry(3.1-j*.12,3.2-j*.12,3.5,12),[island.x,31+j*3.5,island.z]);
   }
@@ -173,6 +232,7 @@ function buildTrack(a){
   for(let j=0;j<7;j++){
     const w=new T.Mesh(new T.PlaneGeometry(1.8,29),waterMat);w.position.set(island.x-12+j*1.7,13,island.z+23.5);scene.add(w);waterfalls.push(w);
     block(0xc4f8ff,island.x-12+j*1.7,.2,island.z+23.8,2.4,.45,4);
+  }
   }
   for(const side of [-1,1]){const p=point(sfIdx+13,side*24);block(0x8c653d,p.x,4,p.z,.24,8,.24);block(0xf0564a,p.x+1.5,7.4,p.z,3,.95,.1);}
   // Puffy clustered clouds, and distant island silhouettes entirely from shared geometry.
@@ -196,8 +256,9 @@ function decorateDom(w){
   el('.garage-sub').textContent='รถคาร์ตเกาะสายรุ้ง · เลือกสีเดียวกันทั้งคันและมุมคนขับ';
   el('.garage-stage').innerHTML='<canvas class="kart-preview" width="720" height="330" aria-label="รถคาร์ตสีที่เลือก"></canvas>';
   el('#kart-intro h2').textContent='🏝️ Vocab World Kart · Tropical Island';
-  const rules=el('.fi-rules');rules.innerHTML=rules.innerHTML.replace('Vocab Motors VR-X1 · Open-Wheel Racing · สนามกลางทะเลทราย 5.4 กม. 15 โค้งใต้แสงไฟ!','Island Star Kart · เกาะเขตร้อน '+(profile.map.lengthKm).toFixed(1)+' กม. · สูงสุด 110 กม./ชม.').replace('80 กม./ชม.','40 กม./ชม.');
+  const rules=el('.fi-rules');rules.innerHTML=rules.innerHTML.replace('Vocab Motors VR-X1 · Open-Wheel Racing · สนามกลางทะเลทราย 5.4 กม. 15 โค้งใต้แสงไฟ!','Island Star Kart · เกาะเขตร้อน '+(profile.map.lengthKm).toFixed(1)+' กม. · สูงสุด 110 กม./ชม.').replace('80 กม./ชม.','40 กม./ชม.').replace('⚠️ ออกนอกแทร็ก ทรายลื่นและช้าลงมาก','🚧 ขอบสนามแข็ง ชนแล้วเด้งกลับ · ไม่มีระบบวาร์ป');
   const style=document.createElement('style');style.textContent=`
+  body:has(#kart-wrap.on) > .toast, body:has(#kart-wrap.on) > #toast-clear-all{display:none!important}
   #kart-wrap.fp #kart-hud{display:flex!important;bottom:8px}
   #kart-wrap #kart-cockpit{display:none!important;background:none!important}
   #kart-wrap .garage-card{background:linear-gradient(145deg,#fff8e6,#f6e6c3);border:2px solid #e8b953;color:#26434d;box-shadow:0 22px 80px #142e5980}
@@ -230,7 +291,7 @@ const profile={
   environment:{id:'tropical-island',downloadBytes:0,shadows:0},
   authorized:()=>typeof canAccessKartBeta==='function'&&canAccessKartBeta()&&typeof KartAccess!=='undefined'&&KartAccess.valid(),
   gearOf:v=>v<6?1:v<12?2:v<20?3:v<26?4:5,
-  buildCar,carView,steer,camera,buildTrack,applyEnvironment,animate,decorateDom,paintDom,preview,
+  collideBoundary,buildCar,carView,steer,camera,buildTrack,applyEnvironment,animate,decorateDom,paintDom,preview,
 };
 root.KartProfile=profile;root.KartWorld=root.createVocabRacingWorld(profile);
 })(window);

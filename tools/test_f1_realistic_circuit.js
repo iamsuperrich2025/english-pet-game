@@ -71,7 +71,7 @@ assert.ok(/if\(portalActive\)\{portalTick\(dt\);return;\}/.test(f1),
 assert.ok(/portalResumeSpeed=Math\.hypot\(vx,vz\)/.test(f1)&&
   /vx=LINE\.tx\[myIdx\]\*portalResumeSpeed;vz=LINE\.tz\[myIdx\]\*portalResumeSpeed;spd=portalResumeSpeed/.test(f1),
   'portal must restore the exact entry speed along the local track tangent after respawn');
-const portalRuntime=f1.slice(f1.indexOf('function beginPortalReturn()'),f1.indexOf('function barrierBounce()'));
+const portalRuntime=f1.slice(f1.indexOf('function beginPortalReturn()'),f1.indexOf('function barrierBounce('));
 assert.ok(/portalResumeSpeed=Math\.hypot\(vx,vz\);\s*spd=portalResumeSpeed/.test(portalRuntime)&&
   !/vx\s*\*=|vz\s*\*=|Math\.pow\(\.025/.test(portalRuntime),
   'portal must never damp the saved entry speed before, during or after teleporting');

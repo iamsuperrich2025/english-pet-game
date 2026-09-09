@@ -3064,6 +3064,7 @@ function drawPortalDestination(targetIdx){
   return true;
 }
 function beginPortalReturn(){
+  if(IS_KART)return; // Kart has solid boundaries instead of off-track teleportation.
   if(portalActive) return;
   portalActive=true; portalT=0; portalJumped=false; sandT=0;
   portalTargetIdx=nearIdx(px,pz,myIdx);
@@ -3096,7 +3097,15 @@ function portalTick(dt){
     if(portalEl) portalEl.className='';
   }
 }
-function barrierBounce(){
+function barrierBounce(fromX=px,fromZ=pz){
+  if(IS_KART){
+    const hit=P.collideBoundary(fromX,fromZ,px,pz,vx,vz);
+    if(!hit)return false;
+    px=hit.x;pz=hit.z;vx=hit.vx;vz=hit.vz;spd=Math.hypot(vx,vz);sandT=0;
+    myIdx=nearIdx(px,pz,myIdx);
+    if(state.haptic!==false&&navigator.vibrate)navigator.vibrate(25);
+    return true;
+  }
   const s=surfAt(px,pz,myIdx),side=Math.sign(s.lat)||1;
   if(Math.abs(s.lat)<=BARRIER_LAT||inPitLane(px,pz,s.lat)) return false;
   const i=s.i,nx=LINE.nx[i],nz=LINE.nz[i],tx=LINE.tx[i],tz=LINE.tz[i];
@@ -3307,12 +3316,14 @@ function physTick(dt){
   const fx2=Math.sin(yaw),fz2=Math.cos(yaw);
   vx=fx2*vF+fz2*vL;
   vz=fz2*vF+(-fx2)*vL;
+  const moveFromX=px,moveFromZ=pz;
   px+=vx*dt; pz+=vz*dt;
   resolvePeerCars(dt);
   /* รอบ 1218: แถบเทา paved runoff ขับได้ถึงขอบนอก; ถ้าข้ามเข้าทรายให้ portal ชนะ barrier */
   const postMoveSurf=surfAt(px,pz,myIdx);
   const crossedRunoffOuter=!airborne&&postMoveSurf.surf==='sand';
-  if(!crossedRunoffOuter)barrierBounce();
+  if(IS_KART)barrierBounce(moveFromX,moveFromZ);
+  else if(!crossedRunoffOuter)barrierBounce();
   const missedJump=jumpPhysicsTick(dt,vF,preJump);
   const terrainRoll=airborne?0:jumpTerrainRoll(px,pz,myIdx);
   bodyRoll=lerp(bodyRoll,terrainRoll,clamp(dt*(Math.abs(terrainRoll)>.001?RAMP_ROLL_RESPONSE:RAMP_ROLL_RETURN),0,1));
@@ -3335,7 +3346,8 @@ function physTick(dt){
   const audioThr=clamp(padThr+(kThr?1:0),0,1);     // ให้เร่งเครื่องรอไฟสตาร์ทได้ โดยไม่ส่งแรงไปที่ล้อ
   Snd.tick(spd,audioThr,slide>0.4&&spd>12,dt,drsOn,braking,camMode);   // sample RPM + เกียร์ + cockpit/chase
   /* หลุดจากผิวถนนแข่งต่อเนื่อง: runoff/ทรายเปิดประตูมิติ แล้วกลับตรง track segment ใกล้จุดที่หลุด */
-  if(!gridFormationActive()&&(missedJump||crossedRunoffOuter)){sandT=OFFTRACK_S;beginPortalReturn();}else sandT=0;
+  if(IS_KART)sandT=0;
+  else if(!gridFormationActive()&&(missedJump||crossedRunoffOuter)){sandT=OFFTRACK_S;beginPortalReturn();}else sandT=0;
   /* จับเวลา + เช็คทิศ */
   progressTick(dt);
 }
