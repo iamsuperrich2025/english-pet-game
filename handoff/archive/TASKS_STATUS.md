@@ -5831,3 +5831,12 @@
 - พร้อมส่ง manifest เฉพาะ 6 ไฟล์ผ่าน COMMIT_DEPLOY.bat; ยังไม่ยืนยัน deploy รอบ 1386
 
 - **รอบ 1383 · แก้ Deploy ติด async():** ยืนยันตัวตรวจ undefined-call เข้าใจ async arrow callback ใน `js/ui.js:7284` เป็นฟังก์ชันไม่มีนิยาม; เปลี่ยนเป็น named async function `preloadArenaScene` โดยไม่แก้หรือข้ามตัวตรวจ และคง preload/cancel/entry behavior
+
+
+## ⏬ ย้ายเมื่อ 2026-09-10 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- 60 ธาตุ (เพิ่ม 50 แบบ โหลด engine+family ที่เลือก), คลังพลังอักษร 50 ชิ้น ไอคอน SVG; ซื้อถาวร 3,000–5,000 เหรียญผ่าน state.arenaItems, ค่าเริ่มต้นยิง/แสงฟื้นฟู; แอดมินใช้ฟรีทั้งหมดไม่หักเหรียญ; เพิ่มเหรียญรอบนี้คงอยู่เมื่อเปลี่ยน map; โบนัสคำนวณเมื่อเข้า/ซื้อและหยุดวาดฉากขณะเปิดคลัง
+- Source + dist: grimoire209/maps70 ผ่าน; field26/crystals53/heroes32/NetRoom52 ผ่าน, Home V2/lobby route + assets306/undefined0/backtick0 ผ่าน; build9,517ไฟล์616.4MiB + validator + ไบต์ไฟล์ใหม่29รายการตรงกัน; ภาพ/HP/ตำแหน่งบนจอ1366/812/667 ตรวจแล้ว (ยังไม่ได้ทดสอบมือถือจริงหรือบัญชี co-op จริง)
+- รายละเอียด docs/ARENA_FIELD.md, docs/ARENA_MAP_ASSETS.json, docs/PERFORMANCE.md; ผู้ใช้ยืนยัน [SUCCESS] แล้ว: commit9af6c115/handoff4adad2cf, HEAD=origin/main; ตรวจเว็บจริง version.json เป็น2026-09-10.1240 ตรงเครื่องเมื่อ10ก.ย.2026 — commit/deploy/push รอบ1387สำเร็จ
+
+- **รอบ 1386 · พลังอลังการ + ห้องอัตโนมัติ:** เพิ่มพลังธาตุทุกชนิดให้มีวง แสง อนุภาค และแรงกระแทกมากขึ้น; MEGA ขยายภาพเกือบเต็มสนาม (~26 หน่วย) แต่คงดาเมจรัศมีเดิม; Adventure จำกัด 4 คน/ห้องและไล่เข้าห้องถัดไปเมื่อเต็ม

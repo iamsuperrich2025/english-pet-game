@@ -52,7 +52,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/adventure3d.js** (13,531 บรรทัด) — adventure3d.js — โลก 3D First-person 2 โหมด (คิว 7725691507 ข้อ 8 + ต่อยอด) · 🌍 adv   = โลกผจญภัยกลางวัน: เก็บตัวอักษรประกอบคำ 15🪙/คำ · monster ยิงสู้ได้ · 👻 haunt = โรงแรมผีสิง: 25🪙/คำ · ผี PNG ไล่ผู้เล่นใกล้สุดหลังไฟดับ
 - **js/app-update.js** (214 บรรทัด) — (ไม่มี comment หัวไฟล์)
 - **js/arena-elements.js** (74 บรรทัด) — ==== 🔥🌪 Round 1381 — elemental combat, independent of rendering and account rewards ====
-- **js/arena-field-visuals.js** (175 บรรทัด) — Round 1380 — small articulated heroes and bounded spell effects. · All visuals are original procedural geometry / canvas textures: no image downloads.
+- **js/arena-field-visuals.js** (232 บรรทัด) — Round 1380 — small articulated heroes and bounded spell effects. · All visuals are original procedural geometry / canvas textures: no image downloads.
 - **js/arena-grimoire.js** (32 บรรทัด) — Round 1387: compact searchable spell cards; SVG symbols share one cached small shared file.
 - **js/arena-heroes.js** (42 บรรทัด) — Round 1381 — admin-only hero selection, eight generated full-body portraits, preload before entry.
 - **js/arena-maps.js** (108 บรรทัด) — ==== Rounds 1387/1389 — three world-ground arenas; one selected texture, grouped four-seat rooms ====
@@ -140,6 +140,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/style.css** (2,498 บรรทัด) — Pet Vocab Adventure — สไตล์พื้นฐานรุ่นแรกทั้งเกม (โดน lobby.css โหลดทับบางส่วน — แก้หน้าตาโซนล็อบบี้/UI ใหม่ให้ไปที่ lobby.css ก่อน) · ครอบคลุม: screens/login/dashboard · เกมจับคู่ .word-card + แบบทดสอบ .quiz-* · shop/ที่พัก/หมวดคำศัพท์ · หิว-ป่วย/สภาพอากาศ · ตั้งค่า/วิธีเล่น/level-up overlay · คลังของฉัน/กล่องขาย · เอฟเฟกต์ลอย/เหรียญ/rotate-overlay
 - **sw.js** (281 บรรทัด) — Vocab World service worker · Delivery contract: · - HTML navigations are network-first with the last valid shell as fallback.
 <!-- AUTO-FILES:END -->
+
 
 
 

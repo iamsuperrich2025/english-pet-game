@@ -27,11 +27,6 @@
 - อัปเดต docs/ARENA_FIELD.md + docs/PERFORMANCE.md; ผู้ใช้ยืนยัน [SUCCESS] แล้ว: commit6c7f47c2/handoffaee914cc, version2026-09-10.1241 — commit/deploy/push รอบ1388สำเร็จ
 
 - **รอบ 1387 · Vocab Arena 3 แผนที่:** Sky Citadel / Crystal Hollow / Moonleaf Ruins แบบ AVIF + WebP fallback; เลือก map, 4 คน/map, ครบ 3 map เปิดกลุ่มถัดไปใน adv r21–r35 (5 กลุ่ม/60 ที่นั่ง); ปุ่มล็อบบี้รูปบ้านแฟนตาซี; ยังแอดมินเท่านั้น
-- 60 ธาตุ (เพิ่ม 50 แบบ โหลด engine+family ที่เลือก), คลังพลังอักษร 50 ชิ้น ไอคอน SVG; ซื้อถาวร 3,000–5,000 เหรียญผ่าน state.arenaItems, ค่าเริ่มต้นยิง/แสงฟื้นฟู; แอดมินใช้ฟรีทั้งหมดไม่หักเหรียญ; เพิ่มเหรียญรอบนี้คงอยู่เมื่อเปลี่ยน map; โบนัสคำนวณเมื่อเข้า/ซื้อและหยุดวาดฉากขณะเปิดคลัง
-- Source + dist: grimoire209/maps70 ผ่าน; field26/crystals53/heroes32/NetRoom52 ผ่าน, Home V2/lobby route + assets306/undefined0/backtick0 ผ่าน; build9,517ไฟล์616.4MiB + validator + ไบต์ไฟล์ใหม่29รายการตรงกัน; ภาพ/HP/ตำแหน่งบนจอ1366/812/667 ตรวจแล้ว (ยังไม่ได้ทดสอบมือถือจริงหรือบัญชี co-op จริง)
-- รายละเอียด docs/ARENA_FIELD.md, docs/ARENA_MAP_ASSETS.json, docs/PERFORMANCE.md; ผู้ใช้ยืนยัน [SUCCESS] แล้ว: commit9af6c115/handoff4adad2cf, HEAD=origin/main; ตรวจเว็บจริง version.json เป็น2026-09-10.1240 ตรงเครื่องเมื่อ10ก.ย.2026 — commit/deploy/push รอบ1387สำเร็จ
-
-- **รอบ 1386 · พลังอลังการ + ห้องอัตโนมัติ:** เพิ่มพลังธาตุทุกชนิดให้มีวง แสง อนุภาค และแรงกระแทกมากขึ้น; MEGA ขยายภาพเกือบเต็มสนาม (~26 หน่วย) แต่คงดาเมจรัศมีเดิม; Adventure จำกัด 4 คน/ห้องและไล่เข้าห้องถัดไปเมื่อเต็ม
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
