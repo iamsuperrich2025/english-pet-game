@@ -15,7 +15,7 @@
 - **รอบ 1395 · Arena เพลงไม่เริ่ม:** reproduce browser entryมีuserActivationแต่Audio.unlocked=false และmusicOffจากล็อบบี้ทำให้SFXดัง/เพลงเงียบ; js/arena-audio.jsรับactivationตอนstart+retryในgestureทันทีแทนรอ10s
 - เพิ่ม #va-music-toggle ในarena3d.js/CSS แสดงเพลงปิด/โหลด/แตะเล่น/error และเปิดกลับด้วยtapเดียว; เคารพmuteเดิมจนผู้ใช้แตะ, saveState/syncMusicBtn, ไม่โหลดเพลงซ้ำ; ตรวจviewport812×375/1366×768ไม่มีทับHUD
 - test_arena_music_entry24+test_arena_music65 ผ่านทั้งsource/dist; build9,526files620.1MiB+validator/undefined0/template0/syntax/diffผ่าน; แก้harnessกันenemyโจมตีก่อนตั้งfixture ไม่เปลี่ยนgameplay; assetsเดิมทั้งหมด
-- PROJECT_MAPอัปเดต; SHIP7paths/COMMIT_DEPLOY1ครั้งตามสิทธิ์deployเดิม; ยังไม่ยืนยันผลpublish1395
+- PROJECT_MAPอัปเดต; SHIP7paths/COMMIT_DEPLOY1ครั้งตามสิทธิ์deployเดิม; live2026-09-10.1248/commit874dcfac+handoff03c4b258+pushสำเร็จ; live manager/game/CSS/2เพลงตรงsourceที่ทดสอบ
 
 - **รอบ 1394 · Arena เสียงไฟ6.mp3:** js/arena-audio.js ใช้fire cueแทนเสียงธาตุสำหรับวงเพลิง+5ท่าตระกูลไฟ; คงMEGA1/ธาตุ2/โล่3/ฮีล4/สายฟ้า5/BGM1392; ไม่แตะกติกาเกม
 - ตัดเฉพาะpaddingเงียบ 18.13s580,127B→7.00s224,906B ลด61.2%; MP3copyไม่encodeซ้ำ ตรวจ268packetSHA256ตรงsourceต่อเนื่อง; preloadหลังgesture+content-hashcache+1playerไม่ซ้อน
