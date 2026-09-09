@@ -5867,3 +5867,12 @@
 - Source/dist fire31 ผ่าน; crystals53/grimoire209 ผ่าน; build9,517ไฟล์616.6MiB/validator/assets306/undefined0/backtick0/syntax/diffผ่าน; ตรวจรูปทุกช่วงบน3map/มือถือและคลิปจริง1280×720 10.72วินาที 1.50MB ที่ work/arena-fire-1390
 - docs/ARENA_FIELD.md/PERFORMANCE.md/PROJECT_MAP.md + tools/test_arena_fire.cjs; เตรียม SHIP7ไฟล์และเปิด COMMIT_DEPLOY.bat รอบ1390; ยังไม่ยืนยัน commit/deploy รอบนี้
 
+
+
+## ⏬ ย้ายเมื่อ 2026-09-10 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1391 · Arena SFX:** เพิ่ม js/arena-audio.js + Kenney CC0 MP3 11ไฟล์/12cue รวม24,111B, preload4ไฟล์6,804B; gesture unlock, shared mute, decode/cache, cap8เสียง, background/exit cleanup; SOURCE: SOUND_LICENSES.md
+- js/arena3d.js เชื่อมยิง/โดน/แตก/รับเหรียญจริง/อักษรถูก/การกระทำที่เกมปฏิเสธ/MEGA/โล่/UI; js/ui.js โหลดเฉพาะArena; คงกติกาและnetwork; docs/PROJECT_MAP.md ชี้owner
+- tools/test_arena_audio.cjs ผ่านsource39+dist39 (desktop/mobile touch, missing/corrupt audio, peer revive); grimoire209/crystals53; build9,529ไฟล์616.6MiB+validator/assets306/undefined0/backtick0/syntax/diffผ่าน; native Android/TWA ยังต้องตรวจบนเครื่องจริง
+- ผู้ใช้อนุญาตและเปิด COMMIT_DEPLOY1ครั้ง; commit790cadb4/handoff8341470c+pushสำเร็จ; live2026-09-10.1244 ยืนยันversion/loader/engine200 + managerและMP3ทั้ง11ตรงsourceทุกbyte; แอดมินตรวจได้ที่ vocabworld.web.app/index_classic.html
+

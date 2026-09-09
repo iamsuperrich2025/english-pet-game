@@ -27,11 +27,6 @@
 - tools/test_arena_music.cjs ผ่านsource26 (desktop/mobile, loopไม่downloadซ้ำ, reloadบล็อกเน็ตเล่นจากcache, fallback, missing, realgameไม่มีSFX); grimoire209/crystals53; build9,520files619.7MiB+validator/undefined0/template0/syntax/diffผ่าน; dist26ผ่านและbytesตรงsource
 - docs/PROJECT_MAP.md + SOUND_LICENSES.md ปรับเป็นเพลงผู้ใช้; commit6cef08a5/handoff71188e69+push+live2026-09-10.1245 สำเร็จ; live manager+2เพลงตรงsource และmanifestไม่มี11SFXเดิม; launcherเปิด1ครั้งติดstaged-deletionตรวจพลาด จึงfinish_round pin20pathsจนสำเร็จ
 
-- **รอบ 1391 · Arena SFX:** เพิ่ม js/arena-audio.js + Kenney CC0 MP3 11ไฟล์/12cue รวม24,111B, preload4ไฟล์6,804B; gesture unlock, shared mute, decode/cache, cap8เสียง, background/exit cleanup; SOURCE: SOUND_LICENSES.md
-- js/arena3d.js เชื่อมยิง/โดน/แตก/รับเหรียญจริง/อักษรถูก/การกระทำที่เกมปฏิเสธ/MEGA/โล่/UI; js/ui.js โหลดเฉพาะArena; คงกติกาและnetwork; docs/PROJECT_MAP.md ชี้owner
-- tools/test_arena_audio.cjs ผ่านsource39+dist39 (desktop/mobile touch, missing/corrupt audio, peer revive); grimoire209/crystals53; build9,529ไฟล์616.6MiB+validator/assets306/undefined0/backtick0/syntax/diffผ่าน; native Android/TWA ยังต้องตรวจบนเครื่องจริง
-- ผู้ใช้อนุญาตและเปิด COMMIT_DEPLOY1ครั้ง; commit790cadb4/handoff8341470c+pushสำเร็จ; live2026-09-10.1244 ยืนยันversion/loader/engine200 + managerและMP3ทั้ง11ตรงsourceทุกbyte; แอดมินตรวจได้ที่ vocabworld.web.app/index_classic.html
-
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
