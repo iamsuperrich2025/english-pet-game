@@ -199,3 +199,39 @@
 @media (max-width:760px){.va-player-card{min-width:105px;max-width:135px}.va-player-name{font-size:10px}.va-coins{padding:0 8px}.va-shop-btn{padding:0 8px}.va-word-card{width:42vw}.va-bag{width:27vw}.va-party{width:28vw}.va-feed{display:none}.va-revive{width:28vw}.va-intro-steps{gap:4px}}
 @media (orientation:portrait){#va-root .va-portrait{display:grid}}
 @media (prefers-reduced-motion:reduce){#va-root *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
+/* Round 1380 — compact battlefield HUD, keeps the middle of the field clear. */
+#va-root .va-top{display:grid;grid-template-columns:64px 116px minmax(160px,1fr) 110px 108px;gap:8px;height:58px;align-items:stretch}
+#va-root .va-word-card{position:relative;left:auto;top:auto;transform:none;width:auto;min-height:0;border-radius:12px;padding:5px 10px}
+#va-root .va-player-card{min-width:0;max-width:none;height:auto;grid-template-columns:29px 1fr;column-gap:5px;padding:5px}
+.va-avatar-icon{grid-row:1/3;display:grid;place-items:center;font-size:25px;color:#bdefff}
+#va-root .va-coins{margin:0;height:auto;justify-content:center;padding:0 7px;font-size:12px}
+#va-root .va-exit,#va-root .va-shop-btn{height:auto;min-width:0;padding:0 7px;border-radius:12px}
+#va-root .va-online{font-size:8px;letter-spacing:0}
+#va-root .va-word-th{font-size:10px;color:#d4e7ff}
+#va-root .va-word-en{font-size:19px;line-height:1.2}
+#va-root .va-word-slots i{width:18px;height:15px;border-radius:3px;font-style:normal;font-size:10px;line-height:15px;background:#192d48;color:#9cacbd;border:1px solid #6f829f}
+#va-root .va-word-slots i.got{background:#a0ffe4;color:#13384a;border-color:#a0ffe4;box-shadow:0 0 6px #77eedc}
+#va-root .va-energy{top:75px;width:32vw;max-width:360px}
+#va-root .va-bag{top:76px;min-height:31px;width:28vw;max-width:280px}
+#va-root .va-party{top:75px;min-height:36px;width:28vw;max-width:300px}
+#va-root .va-glass{backdrop-filter:none;background:linear-gradient(145deg,#152b45f5,#0e1a31e8);border-color:#91b4d56b;box-shadow:0 3px 12px #03091255,inset 0 1px #ffffff12}
+#va-root .va-vignette{background:radial-gradient(ellipse at 50% 45%,transparent 60%,#040d2638);mix-blend-mode:normal}
+#va-root .va-scan{display:none}
+.va-home-nav{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);border-radius:12px;min-height:47px;width:240px;padding:5px 10px;cursor:pointer;text-align:center}
+.va-home-nav b{display:block;color:#a4e6ff;font-size:13px}.va-home-nav span{display:block;color:#ccdeef;font-size:10px;white-space:nowrap}
+.va-home-nav.routing{border-color:#9dffe1!important;box-shadow:0 0 16px #62ffce44!important}
+.va-cargo{position:absolute;left:0;top:0;pointer-events:none;color:#fff0a2;font-weight:900;font-size:12px;letter-spacing:3px;text-shadow:0 2px 3px #000,0 0 9px #e9ab30;white-space:nowrap}
+#va-root .va-feed{top:122px;right:12px;max-width:240px;pointer-events:none}
+#va-root .va-feed-line{font-size:10px}
+#va-root .va-pop{pointer-events:none}
+@media(max-height:480px){
+ #va-root .va-top{height:48px;grid-template-columns:52px 90px minmax(145px,1fr) 90px 88px;gap:6px}
+ #va-root .va-word-en{font-size:16px}#va-root .va-word-th{font-size:8px}
+ #va-root .va-word-slots i{height:13px;line-height:12px;width:14px;font-size:9px}
+ #va-root .va-energy{top:64px;height:18px}#va-root .va-bag{top:64px;padding:3px 6px;min-height:27px}#va-root .va-party{top:63px;min-height:30px}
+ #va-root .va-boss{top:89px;width:36vw}#va-root .va-home-nav{bottom:8px;width:210px;min-height:39px;padding:3px 7px}
+ #va-root .va-home-nav b{font-size:11px}#va-root .va-home-nav span{font-size:9px}
+ #va-root .va-player-name{font-size:10px}#va-root .va-coins{font-size:11px}#va-root .va-shop-btn{font-size:10px}
+ #va-root .va-feed{top:111px}#va-root .va-hp{width:130px;left:115px}
+}
+@media(max-width:720px){#va-root .va-top{grid-template-columns:47px 73px minmax(132px,1fr) 78px 74px;gap:4px}#va-root .va-online{font-size:6px}#va-root .va-word-th{font-size:7px}#va-root .va-avatar-icon{font-size:19px}#va-root .va-player-card{grid-template-columns:20px 1fr}#va-root .va-home-nav{width:175px;bottom:46px}#va-root .va-home-nav span{font-size:8px}#va-root .va-bag-label{font-size:7px}#va-root .va-bag-letter{width:17px;height:20px;font-size:10px}}

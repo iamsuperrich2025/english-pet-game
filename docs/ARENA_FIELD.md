@@ -1,0 +1,13 @@
+# Arena Field — round 1380
+
+The admin-only Adventure entry loads `js/arena-field-visuals.js` before `js/arena3d.js`. The main engine still owns combat, words, rewards, co-op/boss state and lifecycle. The visual module owns compact articulated heroes, original procedural houses, merged static scenery, and bounded spell pools. `css/arena3d.css` owns its landscape HUD.
+
+Controls: WASD/arrows or left joystick to move; hold the attack button or Space for repeated attacks; 1/2/3 for lightning/Nova/Wordstorm; H or the house button to walk home. Manual steering interrupts the return route.
+
+Pick up up to six letters, then walk within 3.3 world units of your own house to bank them. Only banked letters complete words, with repeated letters consumed individually. `state.arenaHome={letters,cargo}` uses the existing account save; both bank and carried letters survive exit/reload. Downing drops carried letters on the field, while banked letters remain safe. A-Z counts are sanitized and capped at 999; ground drops expire after 45 seconds. The home ring offers recovery and blocks incoming damage. Rewards retain the original Arena calculations, not Frontline's economy.
+
+Co-op retains the existing `adv` room, A2 payload, chapter bosses and revive system. Self and peers use the same articulated hero; each member sees their personal home and peer homes at deterministic party slots. Houses may move to another slot when the sorted membership changes. This is co-op PvE, not a new competitive Frontline server. No Firebase paths, Rules, or callable changes were made.
+
+Visual cost: no new raster/model/audio downloads. Avatar animation, scenery and house art are procedural; effects reuse 640 points + 48 effect meshes (256 + 28 on low-power mode). Floating combat text is capped at 24. Static scenery is merged once before dynamic actors are created. DPR stays capped at 1.45, antialias/shadows remain off. Timers, input captures, GPU resources and audio are cleared on exit.
+
+Validation: `node tools/test_arena_field.cjs` runs real Edge/Playwright with an isolated fake account/save and no production writes. It covers admin entry denial, cargo capacity, banking distance, repeated letters, reward idempotency, reload, downing, keyboard/touch, mobile layout/shop/intro, peer/boss lifecycle and reentry. `VW_ARENA_SOURCE=dist` selects a built source root; `VW_ARENA_OUTPUT` chooses the report/WebP directory. A local eight-enemy comparison at 812x375 measured old/new ultimate peak draw calls 402/138; idle 127/136, peak triangles 10,394/17,062. These are desktop-browser scene-cost samples, not physical-phone FPS claims. Real-account co-op was not exercised.

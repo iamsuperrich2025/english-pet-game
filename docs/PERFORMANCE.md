@@ -87,3 +87,8 @@ Do not implement these without a scoped task, baseline measurements, and visual 
 - Test entry, active play, pause/background, exit, and second entry.
 - Check low landscape (812x375), a high-DPR phone profile, and desktop regression.
 - Update this document only when the durable strategy changes.
+
+### Arena Field (round 1380)
+
+- Static arena meshes merge once; runtime spells reuse 640 particles/48 meshes (low-power 256/28), floating text cap 24. Original DPR 1.45 and no-shadow policy remain. No new image/model/audio downloads.
+- Desktop Edge, 812x375, eight enemies: old/new ultimate peak 402/138 calls; idle 127/136; peak triangles 10,394/17,062. This measures rendering work, not physical-device FPS. More triangles buy articulated figures, a wider field and spell domes while burst draw calls fall. See `docs/ARENA_FIELD.md`.

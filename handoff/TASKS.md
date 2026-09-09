@@ -10,6 +10,12 @@
 
 > ประวัติ Frontline 1372–1373: `handoff/archive/frontline-1372-1373.md`
 
+### 📌 สรุปสถานะล่าสุด
+- **รอบ 1380 · Arena Field (โลกผจญภัยเฉพาะแอดมิน):** ตัวละคร articulated ขนาดเล็ก/กดโจมตีค้าง + กล้องกว้าง + pooled เวท/สายฟ้า/โดม; `arena-field-visuals.js` ใหม่ โหลดก่อน `arena3d.js`; ไม่มี raster/GLB/audio asset ใหม่
+- เก็บอักษรได้ 6 ตัว → ขนกลับวงบ้านเพื่อฝาก/ประกอบคำ, `state.arenaHome` จำคลัง+ของที่ขนข้ามเข้าเกม; ล้มทำของตกแต่คลังไม่หาย; มี H กลับบ้าน/บ้านเพื่อน และคง boss/revive/รางวัลเดิม; guard isAdmin ทั้ง entry+engine
+- source browser 24 / dist browser 26 checks ผ่าน (touch+hold/เซฟ/ซ้ำ/ลงบ้าน/low-power/812×375,667×320,1366×768), Home V2 + syntax + build9,470files612.9MiB + validator ผ่าน; สกิลใหญ่ old/new peak402/138 draws (ไม่ใช่ FPS มือถือจริง); รายละเอียด `docs/ARENA_FIELD.md`
+- เปิด COMMIT_DEPLOY แล้ว 1 ครั้ง; รอผู้ใช้ตอบ y / หลักฐาน [SUCCESS] ยังไม่ยืนยัน commit/deploy. `SHIP.txt` pin8ไฟล์ Arena; PROJECT_MAP/CURRENT_STATE ปรับ route ในเครื่องแต่ไม่รวมส่งเพราะมี diff Frontline เดิม. ภาพ/รายงาน `work/arena-field-dist/`; ไม่ทดสอบบัญชีจริงหรือเขียน production DB
+
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน

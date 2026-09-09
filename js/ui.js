@@ -7225,6 +7225,7 @@ async function loadAdv3d(){
    🤝👑 รอบ 1048 — Co-op PvE 2–4 คน + บอสคำศัพท์รายบท + revive + รางวัลทีม
    ============================================================ */
 async function loadVocabArena3d(){
+  await loadScriptOnce('js/arena-field-visuals.js');
   await loadScriptOnce('js/arena3d.js');
 }
 /* ============================================================
@@ -7261,6 +7262,7 @@ async function enterSkyPlayground3D(){
 }
 let advLoading = false;
 async function enterAdventure3D(){
+  if(typeof isAdmin!=='function'||!isAdmin())return worldEntryStopped('โลกผจญภัยเปิดให้แอดมินเท่านั้น');
   if(!state.advTicket || state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
   if(advLoading){ advBusyMsg(enterAdventure3D); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
   // 🗺️ รอบ 1045: เลือกแผนที่ก่อน แล้วค่อยโหลดเฉพาะเอนจินที่ใช้จริง
@@ -7297,7 +7299,7 @@ function pickAdvMap(){
                   padding:clamp(8px,2vh,14px) 6px;color:#e8fbff;cursor:pointer;box-shadow:inset 0 0 18px rgba(93,222,255,.08)">
             <div style="font-size:clamp(26px,7vh,38px)">🌀</div>
             <div style="font-weight:800;font-size:clamp(13px,3vh,16px)">Vocab Arena</div>
-            <div style="font-size:clamp(10px,2.3vh,12px);opacity:.85;line-height:1.35">Co-op 2–4 คน 🤝 บอสคำศัพท์รายบท 👑<br>ช่วยชุบเพื่อน + แบ่งรางวัลอย่างยุติธรรม</div>
+            <div style="font-size:clamp(10px,2.3vh,12px);opacity:.85;line-height:1.35">Co-op 2–4 คน 🤝 บอสคำศัพท์รายบท 👑<br>ตัวละครเล็ก · เวทมนตร์ใหญ่ · ขนอักษรกลับบ้าน</div>
           </button>
           <button class="am-c" data-m="heli" style="flex:1;background:rgba(41,182,246,.13);border:2px solid #4fc3f7;border-radius:14px;
                   padding:clamp(8px,2vh,14px) 6px;color:#e5f6ff;cursor:pointer">
