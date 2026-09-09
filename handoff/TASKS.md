@@ -29,11 +29,6 @@
 - Syntax/diff + hero browser31 checks (4 viewports) + build9,490files614.6MiB + web validator ผ่าน; hash source/dist ตรงกัน; เตรียม SHIP เฉพาะ js/arena-heroes.js และ TASKS.md, ยังไม่ยืนยัน deploy รอบ1382
 
 
-- **รอบ 1381 · Arena ธาตุ + เลือกฮีโร่:** พลังธาตุใหม่ 8 ชนิด/คลัง 10 พลัง, HP เหนือหัวและดาเมจลอยจาง; หน้าเลือกชาย4หญิง4 ภาพเจนเต็มตัว WebP, ผม/ผ้าคลุม/ธาตุขยับเฉพาะภาพที่เลือก; คง admin-only
-- ฮีโร่มีพลังเริ่มต้นต่างกัน+คูลดาวน์ธาตุประจำตัวลด20%; preload ไฟล์สนามระหว่างเลือก, cancel/retry/ลดแอนิเมชัน/cleanup; ตัวในสนามยังเล็กและเบา; รายละเอียด+prompt/asset bytes: docs/ARENA_FIELD.md, docs/ARENA_HERO_ASSETS.json
-- Source/dist ผ่าน Arena26+ธาตุ50+ฮีโร่31 checks, HomeV2, syntax/diff, build9,490files614.6MiB และ web validator; ไม่มี browser error; pixel QA ใบหน้า/เท้าคงที่ ผม/ผ้าคลุม/ไฟขยับ; ไม่เขียนข้อมูลทดสอบ production
-- พร้อมส่งผ่าน COMMIT_DEPLOY.bat ตาม FILE manifest; ยังไม่ยืนยัน deploy รอบ1381. คงไฟล์เปลี่ยนค้างนอก scope รวม docs/PROJECT_MAP.md+CURRENT_STATE.md ไว้ในเครื่อง (มีงาน Frontline อื่นปนอยู่); mapping Arena อัปเดตในเครื่องและ docs/ARENA_FIELD.md มี routing ครบ
-
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน

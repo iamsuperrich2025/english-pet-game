@@ -2,7 +2,7 @@
 
 > วิธีใช้: หาชื่อฟังก์ชัน/ค่าคงที่/selector ในไฟล์นี้ (Grep หรือกวาดตา) → `Read` ไฟล์จริง `offset=<บรรทัด>` `limit=40`
 > 🗂️ ไฟล์อ้วนมี **สารบัญโซน** (`st-end ชื่อโซน`) — งานทั้งระบบ/โลก 3D: Grep ชื่อโซน → Read/Edit เฉพาะช่วงนั้น **ห้ามอ่านทั้งไฟล์** · เพิ่มระบบใหม่ในไฟล์อ้วนต้องครอบ banner `/* ==== */`+ชื่อโซน (สารบัญเจนเอง)
-> css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: 2026-09-09
+> css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: 2026-09-10
 
 ## js/account-deletion.js (235 บรรทัด · 0 รายการ)
 
@@ -193,15 +193,25 @@ beginPlay:12952 · start:12954 · exitWorld:13187 · mechaRecapLine:13264
 
 ## js/app-update.js (214 บรรทัด · 0 รายการ)
 
-## js/arena-elements.js (71 บรรทัด · 0 รายการ)
+## js/arena-elements.js (74 บรรทัด · 0 รายการ)
 
-## js/arena-field-visuals.js (145 บรรทัด · 0 รายการ)
+## js/arena-field-visuals.js (175 บรรทัด · 0 รายการ)
+
+## js/arena-grimoire.js (32 บรรทัด · 0 รายการ)
 
 ## js/arena-heroes.js (42 บรรทัด · 0 รายการ)
 
+## js/arena-maps.js (96 บรรทัด · 0 รายการ)
+
 ## js/arena-portrait.js (32 บรรทัด · 0 รายการ)
 
-## js/arena3d.js (834 บรรทัด · 0 รายการ)
+## js/arena-relics.js (581 บรรทัด · 0 รายการ)
+
+## js/arena-spell-catalog.js (377 บรรทัด · 0 รายการ)
+
+## js/arena-spell-engine.js (93 บรรทัด · 0 รายการ)
+
+## js/arena3d.js (875 บรรทัด · 0 รายการ)
 
 ## js/assetaward.js (21 บรรทัด · 0 รายการ)
 
@@ -460,7 +470,7 @@ gradeChangeTo:64 · gradeLockNote:91 · openGradeChange:100
 
 ## js/hauntedhotelsession.js (255 บรรทัด · 0 รายการ)
 
-## js/home-v2.js (2,165 บรรทัด · 0 รายการ)
+## js/home-v2.js (2,167 บรรทัด · 0 รายการ)
 
 ## js/hotel3d.js (1,526 บรรทัด · 62 รายการ)
 ### 🗂️ สารบัญโซน js/hotel3d.js (Read/Edit เฉพาะช่วง)
@@ -746,11 +756,11 @@ tick:2392 · carDrive:2402 · frame:2451 · start:2630 · exitWorld:2703
 
 ## js/music.js (347 บรรทัด · 0 รายการ)
 
-## js/netroom.js (821 บรรทัด · 20 รายการ)
+## js/netroom.js (839 บรรทัด · 20 รายการ)
 CFG:41 · roomsAllowed:63 · HOT_KEYS:71 · COLD_KEYS:72 · HOT_BACK:73 · splitPayload:77
 mergeBack:88 · metUids:100 · AIM_TTL_MS:119 · aimAt:121 · aimGet:125 · aimClear:129
 MAPS3D:135 · skyMapAllowed:136 · whereFriends:139 · dbOf:163 · envReady:164 · isDenied:167
-create:179 · drawBudget:794
+create:179 · drawBudget:812
 
 ## js/onetpromo.js (259 บรรทัด · 0 รายการ)
 
@@ -872,7 +882,7 @@ thLocaleOpt:46
 
 ## js/typing.js (370 บรรทัด · 0 รายการ)
 
-## js/ui.js (10,348 บรรทัด · 447 รายการ)
+## js/ui.js (10,353 บรรทัด · 447 รายการ)
 ### 🗂️ สารบัญโซน js/ui.js (Read/Edit เฉพาะช่วง)
 - 2-77 UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
 - 78-144 🎬 เวทีน้องน่ารัก (Cute Pet Show) — รอบ 604 (ผู้ใช้สั่ง 26 ก.ค. 2026)
@@ -911,24 +921,24 @@ thLocaleOpt:46
 - 6905-6915 การ์ดคอมพิวเตอร์ (ข้อ 11): ซื้อ 50,000 ขายคืน 30,000
 - 6916-6960 item 8: โบนัสออนไลน์ +0.01 เหรียญ/วิ ฟรีทุกคนที่เปิดเกมออนไลน์อยู่
 - 6961-7221 💻 รอบ 706 (ผู้ใช้สั่ง 29 ก.ค. 2026): ช่องรายได้คอมพิวเตอร์บนแถบบนล็อบบี้
-- 7222-7231 🌀🔤 รอบ 1045 — Vocab Arena (โลกผจญภัยฉบับใหม่)
-- 7232-7653 ☁️📚 รอบ 1229 — Vocab Sky Playground
-- 7654-7723 🏝️ รอบ 1377 — KART (public entry; separate persistent keys)
-- 7724-7744 🌍 ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย (ผู้ใช้สั่ง 9 ก.ค. 2026)
-- 7745-7810 🔒 รอบ 1070/1132: โลกที่ยังไม่เปิดสาธารณะ — เปิดให้บัญชีทดสอบ 2 ชื่อเท่านั้น
-- 7811-7928 ↩️🪙 Legacy recovery — คืนค่าเข้าที่เวอร์ชันเก่าอาจหักค้างไว้ก่อนเปลี่ยนเป็นเข้าฟรี
-- 7929-8013 ☁️🧸 รอบ 1258 — เลือกตัวละคร Sky ก่อนเข้าโลก
-- 8014-8210 🧭 ป้ายบอกทางของรางเมนูซ้าย (รอบ 601 · ผู้ใช้สั่ง 26 ก.ค. 2026)
-- 8211-8380 การ์ดสวนผลไม้ (ข้อ 12): ซื้อต้นไม้ปลูกได้ไม่จำกัด แต่ละต้นออกผล
-- 8381-8395 โรงงานผลิตสินค้า 🏭 + ตลาดขายต่อ (แนวคิดใหม่ 5 ก.ค. 2026)
-- 8396-8419 โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
-- 8420-8694 ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
-- 8695-9703 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
-- 9704-9766 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
-- 9767-9803 เลเวลอัพ (รายตัว)
-- 9804-9909 สถิติผลการเรียนรู้
-- 9910-9947 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
-- 9948-10348 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
+- 7222-7235 🌀🔤 รอบ 1045 — Vocab Arena (โลกผจญภัยฉบับใหม่)
+- 7236-7658 ☁️📚 รอบ 1229 — Vocab Sky Playground
+- 7659-7728 🏝️ รอบ 1377 — KART (public entry; separate persistent keys)
+- 7729-7749 🌍 ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย (ผู้ใช้สั่ง 9 ก.ค. 2026)
+- 7750-7815 🔒 รอบ 1070/1132: โลกที่ยังไม่เปิดสาธารณะ — เปิดให้บัญชีทดสอบ 2 ชื่อเท่านั้น
+- 7816-7933 ↩️🪙 Legacy recovery — คืนค่าเข้าที่เวอร์ชันเก่าอาจหักค้างไว้ก่อนเปลี่ยนเป็นเข้าฟรี
+- 7934-8018 ☁️🧸 รอบ 1258 — เลือกตัวละคร Sky ก่อนเข้าโลก
+- 8019-8215 🧭 ป้ายบอกทางของรางเมนูซ้าย (รอบ 601 · ผู้ใช้สั่ง 26 ก.ค. 2026)
+- 8216-8385 การ์ดสวนผลไม้ (ข้อ 12): ซื้อต้นไม้ปลูกได้ไม่จำกัด แต่ละต้นออกผล
+- 8386-8400 โรงงานผลิตสินค้า 🏭 + ตลาดขายต่อ (แนวคิดใหม่ 5 ก.ค. 2026)
+- 8401-8424 โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
+- 8425-8699 ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
+- 8700-9708 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
+- 9709-9771 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
+- 9772-9808 เลเวลอัพ (รายตัว)
+- 9809-9914 สถิติผลการเรียนรู้
+- 9915-9952 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
+- 9953-10353 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
 ### รายการ js/ui.js
 startHTML:10 · PET_ANIM:30 · petAnimHTML:35 · petVisualHTML:50 · PET_SHOW:91 · PET_SHOW_STAGE:96
 PET_SHOW_H:99 · petShowBgHTML:102 · petBondLine:153 · PET_HEALTH_TIPS:177 · nextPetHealthTip:215 · petBondActionLine:223
@@ -985,26 +995,26 @@ renderHomeCard:6572 · payMaint:6656 · trashBillUI:6672 · payTrash:6689 · UTI
 payUtility:6782 · buyUtilityFix:6808 · renderPhoneCard:6826 · buyPhone:6866 · sellPhone:6888 · compLiveTotal:6909
 onlineLiveTotal:6920 · syncCoinHeader:6927 · flashPillGain:6932 · renderOnlineEarnPill:6941 · renderCompEarnPill:6966 · openPillInfo:6999
 renderComputerCard:7082 · buyComputer:7117 · sellComputer:7140 · soldCount:7161 · soldBadge:7162 · loadScriptOnce:7168
-advBusyMsg:7193 · advResetLoad:7205 · loadAdv3d:7211 · loadVocabArena3d:7227 · loadSkyPlayground3d:7236 · SKY_BETA_DENIED_MSG:7239
-ensureSkyBetaAccess:7240 · enterSkyPlayground3D:7248 · enterAdventure3D:7265 · pickAdvMap:7297 · enterHaunted3D:7332 · enterHeli3D:7355
-pickHeliMap:7382 · enterDrone3D:7418 · confirmPetShoppingEntry:7439 · enterPetShopping3D:7465 · enterDrive3D:7517 · pickDriveMap:7556
-enterMotoMapAsCar:7592 · enterSoccer3D:7611 · enterMoto3D:7631 · kartLobbyIconHTML:7657 · enterKart3D:7660 · enterF1_3D:7675
-enterInvasion3D:7703 · WORLD3D:7731 · WORLD3D_COMING_SOON:7749 · world3DComingSoon:7750 · gotoRobotShop:7753 · openHealDialog:7759
-world3DFail:7780 · worldEntryStarted:7815 · worldEntryStopped:7816 · GAME_ENTRY_STABLE_MS:7817 · gameEntryCommit:7819 · gameEntryRefund:7827
-recoverInterruptedGameEntry:7844 · showGameEntryRefundNotice:7852 · startWorldEntry:7879 · railWorldClick:7904 · skyEntryCatalog:7933 · skyEntryPickerHTML:7937
-openWorldEntryDialog:7947 · railScrollHint:8019 · railScrollTop:8027 · initRailScroll:8032 · renderRailWorlds:8052 · tinvOnlineFriends:8148
-refreshTinvOnlineUI:8152 · tinvNoticeHTML:8163 · openTinvPicker:8172 · fruitCountdown:8216 · renderFarmCard:8228 · renderFarmClock:8303
-buyFruit:8319 · sellFruit:8339 · sellAllFruit:8360 · collectImg:8389 · renderFactoryCard:8400 · renderMarketCard:8424
-updateWishBadge:8482 · openWishlistDialog:8493 · bindStripArrows:8540 · renderMarketBrowse:8554 · openMarketBuyDialog:8581 · carImg:8701
-renderVehicleShop:8702 · CS_CYCLE_MS:8754 · carInteriorImg:8755 · carStatHtml:8757 · renderCarShowroom:8764 · csShowBig:8791
-csInit:8818 · RS_CYCLE_MS:8841 · robotImg:8842 · renderRobotShop:8843 · renderPetMarketShop:8867 · rsShowBig:8885
-rsInit:8906 · buyRobot:8925 · enterMecha3D:8950 · pickMechaRobot:8978 · pickDriveCar:9010 · openCarBuyDialog:9053
-buyCarInsurance:9114 · payCarLoanMonthly:9133 · payCarLoanFull:9145 · carDriveBlock:9164 · gotoVehicleShop:9169 · gotoMyStock:9174
-showNeedCarDialog:9180 · craftDiscount:9192 · renderFactory:9195 · renderOrdersUI:9264 · startProduce:9283 · buyCollectible:9311
-cancelProduce:9341 · deliverOrder:9355 · renderOrderClock:9372 · renderCollectMine:9382 · openListDialog:9431 · cancelListing:9488
-buyMarketItem:9512 · showCollectReveal:9577 · buyAC:9615 · openHomeShop:9634 · openPetPurchase:9708 · renderPetShop:9745
-showLevelUp:9770 · renderStats:9807 · showTeacherCard:9914 · CALL_REACT_EMOS:9958 · CALL_TALK_MIN:9961 · CALL_TALK_HOLD:9962
-CALL_ORDER_GAP:9964 · CALL_TONES:9970 · startCall:10344
+advBusyMsg:7193 · advResetLoad:7205 · loadAdv3d:7211 · loadVocabArena3d:7227 · loadSkyPlayground3d:7240 · SKY_BETA_DENIED_MSG:7243
+ensureSkyBetaAccess:7244 · enterSkyPlayground3D:7252 · enterAdventure3D:7269 · pickAdvMap:7302 · enterHaunted3D:7337 · enterHeli3D:7360
+pickHeliMap:7387 · enterDrone3D:7423 · confirmPetShoppingEntry:7444 · enterPetShopping3D:7470 · enterDrive3D:7522 · pickDriveMap:7561
+enterMotoMapAsCar:7597 · enterSoccer3D:7616 · enterMoto3D:7636 · kartLobbyIconHTML:7662 · enterKart3D:7665 · enterF1_3D:7680
+enterInvasion3D:7708 · WORLD3D:7736 · WORLD3D_COMING_SOON:7754 · world3DComingSoon:7755 · gotoRobotShop:7758 · openHealDialog:7764
+world3DFail:7785 · worldEntryStarted:7820 · worldEntryStopped:7821 · GAME_ENTRY_STABLE_MS:7822 · gameEntryCommit:7824 · gameEntryRefund:7832
+recoverInterruptedGameEntry:7849 · showGameEntryRefundNotice:7857 · startWorldEntry:7884 · railWorldClick:7909 · skyEntryCatalog:7938 · skyEntryPickerHTML:7942
+openWorldEntryDialog:7952 · railScrollHint:8024 · railScrollTop:8032 · initRailScroll:8037 · renderRailWorlds:8057 · tinvOnlineFriends:8153
+refreshTinvOnlineUI:8157 · tinvNoticeHTML:8168 · openTinvPicker:8177 · fruitCountdown:8221 · renderFarmCard:8233 · renderFarmClock:8308
+buyFruit:8324 · sellFruit:8344 · sellAllFruit:8365 · collectImg:8394 · renderFactoryCard:8405 · renderMarketCard:8429
+updateWishBadge:8487 · openWishlistDialog:8498 · bindStripArrows:8545 · renderMarketBrowse:8559 · openMarketBuyDialog:8586 · carImg:8706
+renderVehicleShop:8707 · CS_CYCLE_MS:8759 · carInteriorImg:8760 · carStatHtml:8762 · renderCarShowroom:8769 · csShowBig:8796
+csInit:8823 · RS_CYCLE_MS:8846 · robotImg:8847 · renderRobotShop:8848 · renderPetMarketShop:8872 · rsShowBig:8890
+rsInit:8911 · buyRobot:8930 · enterMecha3D:8955 · pickMechaRobot:8983 · pickDriveCar:9015 · openCarBuyDialog:9058
+buyCarInsurance:9119 · payCarLoanMonthly:9138 · payCarLoanFull:9150 · carDriveBlock:9169 · gotoVehicleShop:9174 · gotoMyStock:9179
+showNeedCarDialog:9185 · craftDiscount:9197 · renderFactory:9200 · renderOrdersUI:9269 · startProduce:9288 · buyCollectible:9316
+cancelProduce:9346 · deliverOrder:9360 · renderOrderClock:9377 · renderCollectMine:9387 · openListDialog:9436 · cancelListing:9493
+buyMarketItem:9517 · showCollectReveal:9582 · buyAC:9620 · openHomeShop:9639 · openPetPurchase:9713 · renderPetShop:9750
+showLevelUp:9775 · renderStats:9812 · showTeacherCard:9919 · CALL_REACT_EMOS:9963 · CALL_TALK_MIN:9966 · CALL_TALK_HOLD:9967
+CALL_ORDER_GAP:9969 · CALL_TONES:9975 · startCall:10349
 
 ## js/util.js (1,473 บรรทัด · 57 รายการ)
 ### 🗂️ สารบัญโซน js/util.js (Read/Edit เฉพาะช่วง)
@@ -1039,8 +1049,8 @@ vbRender:148 · vbCardHTML:194
 ## css/arena-heroes.css (12 บรรทัด · 4 selector)
 #ah-picker:2,3 · .ah-layout:4 · .ah-info:5 · .ah-header:11,12
 
-## css/arena3d.css (273 บรรทัด · 77 selector)
-#va-root:5,7,9,203(+24) · #va-canvas:8 · .va-vignette:11 · .va-scan:15 · .va-top:18 · .va-glass:20
+## css/arena3d.css (386 บรรทัด · 87 selector)
+#va-root:5,7,9,203(+91) · #va-canvas:8 · .va-vignette:11 · .va-scan:15 · .va-top:18 · .va-glass:20
 .va-exit:23,26 · .va-player-card:27,29 · .va-player-name:30 · .va-online:31 · .va-word-card:32,34,36 · .va-word-th:37
 .va-word-en:38 · .va-word-slots:40,41,43 · .va-coins:44 · .va-shop-btn:46 · .va-energy:48,54 · .va-energy-label:50
 .va-energy-track:51 · .va-energy-fill:52 · .va-energy-power:55 · .va-bag:57 · .va-bag-label:59 · .va-bag-list:60
@@ -1051,8 +1061,10 @@ vbRender:148 · vbCardHTML:194
 .va-panel-title:157 · .va-panel-coins:158 · .va-store-grid:160 · .va-store-item:161,163,164 · .va-store-ico:165 · .va-store-name:167
 .va-store-price:168 · .va-intro-panel:169 · .va-intro-logo:170 · .va-intro-sub:172 · .va-intro-steps:173 · .va-intro-step:174
 .va-start:176,178 · .va-portrait:180 · .va-avatar-icon:206 · .va-home-nav:220,221,222 · .va-cargo:223 · .va-spell-toggle:241,242
-.va-spell-panel:244 · .va-slot-tabs:245,246 · .va-spell-grid:247 · .va-spell-card:248,249,251,252 · .va-element-icon:250 · .va-spell-footer:253
-.va-vitals-layer:258 · .va-vital:259,260,261,262(+2) · .va-damage-number:264 · .va-mega-uses:272 · #va-crystal-count:273
+.va-spell-panel:244 · .va-slot-tabs:245,246,371 · .va-spell-grid:247 · .va-spell-card:248,249,251,252 · .va-element-icon:250 · .va-spell-footer:253
+.va-vitals-layer:258 · .va-vital:259,260,261,262(+2) · .va-damage-number:264 · .va-mega-uses:272 · #va-crystal-count:273 · .va-map-art:276
+.va-map-ambience:277,278 · .va-map-change:307 · #va-map-picker:328,329,330,331(+1) · .vam-cards:332 · .vam-card:333,334,335,336 · #vam-play:338
+.va-spell-icon:366 · .va-grimoire-tools:372,373,374,375(+1) · .va-grimoire-nav:377,378,379,380
 
 ## css/bubble.css (60 บรรทัด · 25 selector)
 #bb-overlay:4 · #bb-board:5,9,10,11 · .no-anim:12,49 · .bb-head:13 · .bb-title:14 · .bb-stat:15,16
@@ -1080,30 +1092,30 @@ vbRender:148 · vbCardHTML:194
 .xsp-foot:235 · .xsb-box:250,277 · .xsb-head:255,256 · .xsb-grid:257 · .xsb-card:258,262 · .xsb-emoji:263
 .xsb-name:264 · .xsb-info:265 · .xsb-done:266 · .onet-picker:270,271,272,273(+3) · .onet-board:278,279,280
 
-## css/home-v2.css (2,497 บรรทัด · 136 selector)
-:root:9,2469 · #screen-dashboard:36,46 · #vw-home-v2-root:48,49,59,60(+114) · .vw2-screen-frame:81 · .vw2-sky:82,83,92,99(+1) · .vw2-shell:102,107,591
+## css/home-v2.css (2,502 บรรทัด · 136 selector)
+:root:9,2474 · #screen-dashboard:36,46 · #vw-home-v2-root:48,49,59,60(+118) · .vw2-screen-frame:81 · .vw2-sky:82,83,92,99(+1) · .vw2-shell:102,107,591
 .vw2-glass:111 · .vw2-top:124,641,788,977(+2) · .vw2-profile:129,143,147,291(+3) · .vw2-kanok-corner:148 · .vw2-profile-crown:149 · .vw2-profile-kicker:150,151
-.vw2-avatar-frame:152,157,297,298(+1) · .vw2-avatar:158,159,1974,1978(+3) · .vw2-avatar-edit:160,2031 · .vw2-profile-main:161,1893 · .vw2-name-row:162,163,1894 · .vw2-pencil:164,165,166
-.vw2-profile-meta:167,1829,1895 · .vw2-profile-meta-chip:168,169,170,171(+12) · .vw2-grade-identity:172 · .vw2-grade-copy:173 · .vw2-profile-chips:174,1908 · .vw2-achievement-mark:175,1909
-.vw2-rank:176,300,1910 · .vw2-sync-chip:177 · .vw2-wallet:179,645,790 · .vw2-wallet-pill:180,186,187,188(+39) · .vw2-stat-art:190 · .vw2-stat-copy:191
+.vw2-avatar-frame:152,157,297,298(+1) · .vw2-avatar:158,159,1979,1983(+3) · .vw2-avatar-edit:160,2036 · .vw2-profile-main:161,1898 · .vw2-name-row:162,163,1899 · .vw2-pencil:164,165,166
+.vw2-profile-meta:167,1834,1900 · .vw2-profile-meta-chip:168,169,170,171(+12) · .vw2-grade-identity:172 · .vw2-grade-copy:173 · .vw2-profile-chips:174,1913 · .vw2-achievement-mark:175,1914
+.vw2-rank:176,300,1915 · .vw2-sync-chip:177 · .vw2-wallet:179,645,790 · .vw2-wallet-pill:180,186,187,188(+39) · .vw2-stat-art:190 · .vw2-stat-copy:191
 .vw2-top-actions:193,502 · .vw2-tool-btn:194,200,201,318(+11) · .vw2-main-grid:204,592,720,949 · .vw2-left:207,208,323,526 · .vw2-rail-btn:209,324,1300,1301(+3) · .vw2-rail-art:210,211,212,213(+4)
 .vw2-rail-scene:214,215 · .vw2-rail-scene-mark:216,329 · .vw2-rail-label:217,330,721,1344 · .vw2-left-scroll-cue:218,528 · .vw2-feed:221,222,334,335(+26) · .vw2-section-head:223,224,225,344(+5)
-.vw2-feed-items:226,889,1023,1865(+1) · .vw2-feed-card:227,345 · .vw2-feed-avatar:228 · .vw2-feed-copy:229 · .vw2-feed-coin:230,904,1029,1038(+2) · .vw2-feature:233,708,821,1273
+.vw2-feed-items:226,889,1023,1870(+1) · .vw2-feed-card:227,345 · .vw2-feed-avatar:228 · .vw2-feed-copy:229 · .vw2-feed-coin:230,904,1029,1038(+2) · .vw2-feature:233,708,821,1273
 .vw2-feature-title:234,235,348,349(+12) · .vw2-word-ribbon:236,237,238,350(+8) · .vw2-feature-stage:239,354,355,596(+1) · .vw2-world-scene:240,597,830 · .vw2-stage-depth:241,242,243,356(+2) · .vw2-stage-castle:244,358,598
 .vw2-atmosphere:245 · .vw2-speech:246,359,360,361(+5) · .vw2-reward-card:247,362,363,364(+7) · .vw2-pet-halo:248,249,601 · .vw2-pedestal-aura:250,251,367 · .vw2-pet-platform:252,253,254,365(+1)
 .vw2-pet:255,368,698,705(+3) · .vw2-pet-sparkles:256 · .vw2-house-preview:257 · .vw2-stage-copy:258,372,1186,1187(+1) · .vw2-feature-actions:259,375,376,831(+5) · .vw2-right:262,498
 .vw2-mission:263,336,341,499(+1) · .vw2-quests:264,500,890 · .vw2-quest-row:265,1282 · .vw2-online:266,337,342,531(+2) · .vw2-online-row:267,1203 · .vw2-friends-btn:268,533,538,1208(+1)
-.vw2-bottom:271,272,382,452(+14) · .vw2-mode:273,383,384,385(+27) · .vw2-preview-mark:274,602 · .vw2-home-active:277,278,279,2007(+3) · .vw2-rail-racing:325,331,527,1342 · .vw2-house-preview-head:369,370,497,1189(+3)
+.vw2-bottom:271,272,382,452(+14) · .vw2-mode:273,383,384,385(+27) · .vw2-preview-mark:274,602 · .vw2-home-active:277,278,279,2012(+3) · .vw2-rail-racing:325,331,527,1342 · .vw2-house-preview-head:369,370,497,1189(+3)
 .vw2-stage-foreground:371,600,1053 · .vw2-enter:377 · .vw2-play:378 · .vw2-shop-link:379 · .vw2-bottom-scroll:458,477,478,479(+6) · .vw2-bottom-track:480,490,522,523(+42)
-.vw2-online-list:501,532,891,1202 · .vw2-word-kicker:711,854,1275,2096(+1) · .vw2-word-copy:712,713,714,855(+7) · .vw2-word-reward:715,858,2109 · .vw2-feed-market-divider:894,895,896,1040 · .vw2-feed-market-note:897
-.vw2-market-feed-card:898,899,900,1194(+3) · .vw2-feed-product:901,902 · .vw2-market-seller:903,1198 · .no-anim:982 · .vw2-house-backdrop:1191,1983 · .vw2-online-name-line:1204,1205
+.vw2-online-list:501,532,891,1202 · .vw2-word-kicker:711,854,1275,2101(+1) · .vw2-word-copy:712,713,714,855(+7) · .vw2-word-reward:715,858,2114 · .vw2-feed-market-divider:894,895,896,1040 · .vw2-feed-market-note:897
+.vw2-market-feed-card:898,899,900,1194(+3) · .vw2-feed-product:901,902 · .vw2-market-seller:903,1198 · .no-anim:982 · .vw2-house-backdrop:1191,1988 · .vw2-online-name-line:1204,1205
 .vw2-online-badges:1206 · .vw2-online-copy:1207 · .vw2-rail-cure:1211,1212,1213,1214 · .vw2-online-modal-open:1218 · .vw2-online-modal:1219,1220 · .vw2-online-modal-panel:1221,1222
 .vw2-online-modal-head:1223,1224,1230 · .vw2-online-modal-emblem:1225,1226 · .vw2-online-modal-heading:1227,1228,1229 · .vw2-online-modal-close:1231,1232,1241 · .vw2-online-modal-list:1233,1234,1235,1236(+3) · .vw2-online-modal-foot:1240
-.vw2-qbody:1283 · .vw2-feature-action-scroll:1384,1397,1398,2034 · .vw2-feature-action-track:1399,1409,1417,1431(+5) · .vw2-pet-name-action:1433 · .vw2-owned-pets-action:1434 · .vw2-pet-modal-open:1438
+.vw2-qbody:1283 · .vw2-feature-action-scroll:1384,1397,1398,2039 · .vw2-feature-action-track:1399,1409,1417,1431(+5) · .vw2-pet-name-action:1433 · .vw2-owned-pets-action:1434 · .vw2-pet-modal-open:1438
 .vw2-pet-modal:1439,1440 · .vw2-pet-modal-panel:1441,1442,1503 · .vw2-pet-modal-head:1443,1444,1447,1448(+3) · .vw2-pet-modal-emblem:1445,1446 · .vw2-pet-modal-close:1451,1452,1467 · .vw2-pet-modal-list:1453,1454
 .vw2-owned-pet-card:1455,1456,1457,1464 · .vw2-owned-pet-thumb:1458,1459,1460 · .vw2-owned-pet-copy:1461,1462,1463 · .vw2-pet-modal-empty:1465 · .vw2-pet-modal-foot:1466 · .vw2-pet-modal-healbar:1505
-.vw2-heal-all:1506,1507,1508,1513(+3) · .vw2-heal-all-icon:1509 · .vw2-heal-all-copy:1510,1511,1512 · .vw2-adventure-hub:1539,1545,1546,1547(+22) · .vw2-adventure-landmark:1553,1557,1558,1625(+1) · .vw2-adventure-copy:1559,1560,1561,1630(+2)
-.vw2-adventure-menu:1565,1566,1576,1577(+15) · .vw2-adventure-menu-panel:1567,1568,1569,1570(+8) · .vw2-adventure-menu-scroll:1573,1574 · .vw2-adventure-menu-track:1575,1646
+.vw2-heal-all:1506,1507,1508,1513(+3) · .vw2-heal-all-icon:1509 · .vw2-heal-all-copy:1510,1511,1512 · .vw2-adventure-hub:1544,1550,1551,1552(+22) · .vw2-adventure-landmark:1558,1562,1563,1630(+1) · .vw2-adventure-copy:1564,1565,1566,1635(+2)
+.vw2-adventure-menu:1570,1571,1581,1582(+15) · .vw2-adventure-menu-panel:1572,1573,1574,1575(+8) · .vw2-adventure-menu-scroll:1578,1579 · .vw2-adventure-menu-track:1580,1651
 
 ## css/lettercannon.css (89 บรรทัด · 30 selector)
 #lc-game:6,7,13,14(+30) · .lc-hud:8 · .lc-glass:9 · .lc-stats:10 · .lc-stat:11,12 · .lc-coin-stat:15

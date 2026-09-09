@@ -5803,3 +5803,12 @@
 - source browser 24 / dist browser 26 checks ผ่าน (touch+hold/เซฟ/ซ้ำ/ลงบ้าน/low-power/812×375,667×320,1366×768), Home V2 + syntax + build9,470files612.9MiB + validator ผ่าน; สกิลใหญ่ old/new peak402/138 draws (ไม่ใช่ FPS มือถือจริง); รายละเอียด `docs/ARENA_FIELD.md`
 - เปิด COMMIT_DEPLOY แล้ว 1 ครั้ง; รอผู้ใช้ตอบ y / หลักฐาน [SUCCESS] ยังไม่ยืนยัน commit/deploy. `SHIP.txt` pin8ไฟล์ Arena; PROJECT_MAP/CURRENT_STATE ปรับ route ในเครื่องแต่ไม่รวมส่งเพราะมี diff Frontline เดิม. ภาพ/รายงาน `work/arena-field-dist/`; ไม่ทดสอบบัญชีจริงหรือเขียน production DB
 
+
+
+## ⏬ ย้ายเมื่อ 2026-09-10 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1381 · Arena ธาตุ + เลือกฮีโร่:** พลังธาตุใหม่ 8 ชนิด/คลัง 10 พลัง, HP เหนือหัวและดาเมจลอยจาง; หน้าเลือกชาย4หญิง4 ภาพเจนเต็มตัว WebP, ผม/ผ้าคลุม/ธาตุขยับเฉพาะภาพที่เลือก; คง admin-only
+- ฮีโร่มีพลังเริ่มต้นต่างกัน+คูลดาวน์ธาตุประจำตัวลด20%; preload ไฟล์สนามระหว่างเลือก, cancel/retry/ลดแอนิเมชัน/cleanup; ตัวในสนามยังเล็กและเบา; รายละเอียด+prompt/asset bytes: docs/ARENA_FIELD.md, docs/ARENA_HERO_ASSETS.json
+- Source/dist ผ่าน Arena26+ธาตุ50+ฮีโร่31 checks, HomeV2, syntax/diff, build9,490files614.6MiB และ web validator; ไม่มี browser error; pixel QA ใบหน้า/เท้าคงที่ ผม/ผ้าคลุม/ไฟขยับ; ไม่เขียนข้อมูลทดสอบ production
+- พร้อมส่งผ่าน COMMIT_DEPLOY.bat ตาม FILE manifest; ยังไม่ยืนยัน deploy รอบ1381. คงไฟล์เปลี่ยนค้างนอก scope รวม docs/PROJECT_MAP.md+CURRENT_STATE.md ไว้ในเครื่อง (มีงาน Frontline อื่นปนอยู่); mapping Arena อัปเดตในเครื่องและ docs/ARENA_FIELD.md มี routing ครบ
+
