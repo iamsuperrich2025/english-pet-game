@@ -51,7 +51,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/adv3d_tex.js** (250 บรรทัด) — adv3d_tex.js — 🪓 เฟส 3 (รอบ 546): ผ่าจาก js/adventure3d.js โซน "Texture ตัวอักษร / emoji / ป้ายชื่อผู้เล่น (canvas → sprite)" · IIFE จบในตัว expose window.Adv3dTex — ไฟล์หลักคง alias ชื่อเดิม จุดเรียกทั้งไฟล์ไม่ต้องแก้ · โหลดก่อนไฟล์หลักใน loadAdv3d() (js/ui.js) · deps ตอนรัน: THREE (global) · ค่าจาก closure ไฟล์หลัก inject ผ่าน Adv3dTex.bind({adRenterActive…
 - **js/adventure3d.js** (13,531 บรรทัด) — adventure3d.js — โลก 3D First-person 2 โหมด (คิว 7725691507 ข้อ 8 + ต่อยอด) · 🌍 adv   = โลกผจญภัยกลางวัน: เก็บตัวอักษรประกอบคำ 15🪙/คำ · monster ยิงสู้ได้ · 👻 haunt = โรงแรมผีสิง: 25🪙/คำ · ผี PNG ไล่ผู้เล่นใกล้สุดหลังไฟดับ
 - **js/app-update.js** (214 บรรทัด) — (ไม่มี comment หัวไฟล์)
-- **js/arena-audio.js** (106 บรรทัด) — Arena-only sampled SFX. Kenney CC0 sources: SOUND_LICENSES.md.
+- **js/arena-audio.js** (73 บรรทัด) — Arena background music only; sampled SFX removed at the user's request (round 1392).
 - **js/arena-elements.js** (74 บรรทัด) — ==== 🔥🌪 Round 1381 — elemental combat, independent of rendering and account rewards ====
 - **js/arena-field-visuals.js** (232 บรรทัด) — Round 1380 — small articulated heroes and bounded spell effects. · All visuals are original procedural geometry / canvas textures: no image downloads.
 - **js/arena-grimoire.js** (32 บรรทัด) — Round 1387: compact searchable spell cards; SVG symbols share one cached small shared file.
@@ -61,7 +61,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/arena-relics.js** (581 บรรทัด) — Round 1387: permanent relic metadata + bonuses compiled only on entry/purchase.
 - **js/arena-spell-catalog.js** (377 บรรทัด) — Round 1387: metadata only. The selected family's recipes and runner load on demand.
 - **js/arena-spell-engine.js** (93 บรรทัด) — Round 1387: bounded spell trajectories. Uses ArenaElements' shared 12-zone budget.
-- **js/arena3d.js** (876 บรรทัด) — 🌀🔤 รอบ 1045 — VOCAB ARENA · โลกผจญภัย PvE มุมกล้อง MOBA-inspired ที่ออกแบบใหม่สำหรับ Vocab World · - ไม่ใช้แผนที่/ฮีโร่/ไอคอน/เอฟเฟกต์/เสียงจากเกมอื่น
+- **js/arena3d.js** (870 บรรทัด) — 🌀🔤 รอบ 1045 — VOCAB ARENA · โลกผจญภัย PvE มุมกล้อง MOBA-inspired ที่ออกแบบใหม่สำหรับ Vocab World · - ไม่ใช้แผนที่/ฮีโร่/ไอคอน/เอฟเฟกต์/เสียงจากเกมอื่น
 - **js/assetaward.js** (21 บรรทัด) — 🏆 รางวัลรายเดือน Top 10 กระดานมูลค่าทรัพย์สินรวม — ใช้โรงงานกลางใน award.js
 - **js/auth.js** (557 บรรทัด) — ENGINE: Google Login + Sync เซฟขึ้น cloud (backlog ข้อ 0.1) · กติกา (ผู้ใช้เลือกแบบ ก. 5 ก.ค. 2026): บังคับ login ด้วย Google · เท่านั้นก่อนเข้าเกม — offline/SDK โหลดไม่ได้ → หน้าประตูให้ลองใหม่
 - **js/award.js** (279 บรรทัด) — 🏆 award.js — เครื่องจ่าย "รางวัลรายเดือน Top 10" ใช้ร่วมทุกกระดาน (รอบ 649) · เดิมโค้ดก้อนนี้อยู่ใน js/wsaward.js เฉพาะแท็บ 🔎 ค้นหาคำ · รอบ 649 เพิ่มแท็บ ⌨️ พิมพ์คำ ที่ใช้กติกาเดียวกันเป๊ะ → ยกมาเป็นโรงงานกลาง
@@ -141,6 +141,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/style.css** (2,498 บรรทัด) — Pet Vocab Adventure — สไตล์พื้นฐานรุ่นแรกทั้งเกม (โดน lobby.css โหลดทับบางส่วน — แก้หน้าตาโซนล็อบบี้/UI ใหม่ให้ไปที่ lobby.css ก่อน) · ครอบคลุม: screens/login/dashboard · เกมจับคู่ .word-card + แบบทดสอบ .quiz-* · shop/ที่พัก/หมวดคำศัพท์ · หิว-ป่วย/สภาพอากาศ · ตั้งค่า/วิธีเล่น/level-up overlay · คลังของฉัน/กล่องขาย · เอฟเฟกต์ลอย/เหรียญ/rotate-overlay
 - **sw.js** (281 บรรทัด) — Vocab World service worker · Delivery contract: · - HTML navigations are network-first with the last valid shell as fallback.
 <!-- AUTO-FILES:END -->
+
 
 
 

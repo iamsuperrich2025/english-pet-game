@@ -27,11 +27,6 @@
 - Source/dist fire31 ผ่าน; crystals53/grimoire209 ผ่าน; build9,517ไฟล์616.6MiB/validator/assets306/undefined0/backtick0/syntax/diffผ่าน; ตรวจรูปทุกช่วงบน3map/มือถือและคลิปจริง1280×720 10.72วินาที 1.50MB ที่ work/arena-fire-1390
 - docs/ARENA_FIELD.md/PERFORMANCE.md/PROJECT_MAP.md + tools/test_arena_fire.cjs; เตรียม SHIP7ไฟล์และเปิด COMMIT_DEPLOY.bat รอบ1390; ยังไม่ยืนยัน commit/deploy รอบนี้
 
-- **รอบ 1389 · คืนมุมกล้องเดิม:** ยกเลิกกล้อง Orthographic/ภาพพื้นติดจอ; คืน Perspective48° ตามผู้เล่น สูง33/36 ระยะตาม20/23 lookAhead2.3 พร้อม snap ตอนเข้า/resize; คงโมเดลตัวเล็กเดิม
-- เจนพื้น3map ใหม่ปูบนพื้นสามมิติ; AVIF1024² 217,521/245,070/274,132bytes + WebP fallback; โหลดเฉพาะที่เลือก ขอบฉากต่อจาก texture เดิม/หนึ่ง draw; เสารอบฉาก3 instanced meshes; provenance docs/ARENA_GROUND_ASSETS.json
-- เทียบโค้ด6bb1b6f5: position/quaternion/ขอบสนาม/ขนาดตัวละครพิกเซลตรงกันบน1015/812/1366 ทั้ง3map; source maps82/field26/grimoire209, dist maps82, build9,517ไฟล์616.6MiB/validator/assets306/undefined0/backtick0/syntax/diffผ่าน; ตรวจภาพกลางและขอบเวทีแล้ว
-- ภาพเทียบ work/arena-camera-compare-1389; รายละเอียด docs/ARENA_FIELD.md/PERFORMANCE.md/PROJECT_MAP.md/CURRENT_STATE.md; ผู้ใช้ยืนยัน [SUCCESS] และตรวจแล้ว commit009a0887/handoff26f7684e, HEAD=origin/main; เว็บจริง version2026-09-10.1242 ตรงเครื่อง — commit/deploy/push1389สำเร็จ
-
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน

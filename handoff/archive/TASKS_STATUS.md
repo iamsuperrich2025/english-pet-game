@@ -5849,3 +5849,12 @@
 - อัปเดต docs/ARENA_FIELD.md + docs/PERFORMANCE.md; ผู้ใช้ยืนยัน [SUCCESS] แล้ว: commit6c7f47c2/handoffaee914cc, version2026-09-10.1241 — commit/deploy/push รอบ1388สำเร็จ
 
 - **รอบ 1387 · Vocab Arena 3 แผนที่:** Sky Citadel / Crystal Hollow / Moonleaf Ruins แบบ AVIF + WebP fallback; เลือก map, 4 คน/map, ครบ 3 map เปิดกลุ่มถัดไปใน adv r21–r35 (5 กลุ่ม/60 ที่นั่ง); ปุ่มล็อบบี้รูปบ้านแฟนตาซี; ยังแอดมินเท่านั้น
+
+
+## ⏬ ย้ายเมื่อ 2026-09-10 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1389 · คืนมุมกล้องเดิม:** ยกเลิกกล้อง Orthographic/ภาพพื้นติดจอ; คืน Perspective48° ตามผู้เล่น สูง33/36 ระยะตาม20/23 lookAhead2.3 พร้อม snap ตอนเข้า/resize; คงโมเดลตัวเล็กเดิม
+- เจนพื้น3map ใหม่ปูบนพื้นสามมิติ; AVIF1024² 217,521/245,070/274,132bytes + WebP fallback; โหลดเฉพาะที่เลือก ขอบฉากต่อจาก texture เดิม/หนึ่ง draw; เสารอบฉาก3 instanced meshes; provenance docs/ARENA_GROUND_ASSETS.json
+- เทียบโค้ด6bb1b6f5: position/quaternion/ขอบสนาม/ขนาดตัวละครพิกเซลตรงกันบน1015/812/1366 ทั้ง3map; source maps82/field26/grimoire209, dist maps82, build9,517ไฟล์616.6MiB/validator/assets306/undefined0/backtick0/syntax/diffผ่าน; ตรวจภาพกลางและขอบเวทีแล้ว
+- ภาพเทียบ work/arena-camera-compare-1389; รายละเอียด docs/ARENA_FIELD.md/PERFORMANCE.md/PROJECT_MAP.md/CURRENT_STATE.md; ผู้ใช้ยืนยัน [SUCCESS] และตรวจแล้ว commit009a0887/handoff26f7684e, HEAD=origin/main; เว็บจริง version2026-09-10.1242 ตรงเครื่อง — commit/deploy/push1389สำเร็จ
+

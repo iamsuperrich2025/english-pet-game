@@ -193,7 +193,7 @@ beginPlay:12952 · start:12954 · exitWorld:13187 · mechaRecapLine:13264
 
 ## js/app-update.js (214 บรรทัด · 0 รายการ)
 
-## js/arena-audio.js (106 บรรทัด · 0 รายการ)
+## js/arena-audio.js (73 บรรทัด · 0 รายการ)
 
 ## js/arena-elements.js (74 บรรทัด · 0 รายการ)
 
@@ -213,7 +213,7 @@ beginPlay:12952 · start:12954 · exitWorld:13187 · mechaRecapLine:13264
 
 ## js/arena-spell-engine.js (93 บรรทัด · 0 รายการ)
 
-## js/arena3d.js (876 บรรทัด · 0 รายการ)
+## js/arena3d.js (870 บรรทัด · 0 รายการ)
 
 ## js/assetaward.js (21 บรรทัด · 0 รายการ)
 
