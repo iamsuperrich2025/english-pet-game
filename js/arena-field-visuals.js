@@ -94,32 +94,32 @@
       const add=(k,p,c,size,duration)=>{const f=take(k,p,c,size,duration);if(['flame','wind','water'].includes(k))f.m.material.blending=THREE.NormalBlending;records.push({f,serial:f.serial,offset:f.anchor.clone().sub(pos)});return f;};
       const at=(x=0,y=0,z=0)=>new THREE.Vector3(pos.x+x,pos.y+y,pos.z+z);
       if(kind==='fire'){
-        add('rune',pos,0xff541f,r,life);add('dome',pos,0xff7627,r,.8);for(let i=0;i<8;i++){const a=i/8*TAU;add('flame',at(Math.cos(a)*r*.6,1,Math.sin(a)*r*.6),i%2?0xff5429:0xffd35e,1.8,life);}ring(pos,0xff993d,r,.65);burst(pos,0xffad39,50,6);
+        add('rune',pos,0xff541f,r,life);add('dome',pos,0xff7627,r*1.12,.95);for(let i=0;i<12;i++){const a=i/12*TAU;add('flame',at(Math.cos(a)*r*.66,1,Math.sin(a)*r*.66),i%2?0xff5429:0xffd35e,2.25,life);}ring(pos,0xff993d,r*1.15,.8);ring(pos,0xfff2a1,r*.72,.5);burst(pos,0xffad39,110,9);
       }else if(kind==='wind'){
-        for(let i=0;i<3;i++)add('wind',pos,i===1?0xddffee:0x52eac9,r/4.5,life);add('rune',pos,0x68ffc5,r,life);burst(pos,0xbafff5,35,5);
+        for(let i=0;i<5;i++)add('wind',pos,i%2?0xddffee:0x52eac9,r/3.8,life);add('rune',pos,0x68ffc5,r*1.08,life);ring(pos,0xd4fff7,r*.7,.55);burst(pos,0xbafff5,90,8);
       }else if(kind==='ice'||kind==='earth'){
         const ice=kind==='ice',col=ice?0x5bdcff:0xffba58;add('rune',pos,col,r,1.1);ring(pos,col,r,.7);
         for(let i=0;i<9;i++){const a=i/9*TAU;add(ice?'shard':'flame',at(Math.cos(a)*r*.67,1,Math.sin(a)*r*.67),i%2?col:ice?0xd4ffff:0xd7883a,ice?1.1:1.45,1.6);}
-        burst(pos,col,70,8);
+        ring(pos,ice?0xd4ffff:0xffe0a1,r*1.08,.8);burst(pos,col,120,11);
       }else if(kind==='meteor'){
-        add('rune',pos,0xff872f,r,life);add('meteor',pos,0xffd879,1.1,life);add('meteor',pos,0xff5c20,1.7,life).phase=1;
+        add('rune',pos,0xff872f,r*1.1,life);add('meteor',pos,0xffd879,1.5,life);add('meteor',pos,0xff5c20,2.2,life).phase=1;burst(pos,0xffc24c,45,7);
       }else if(kind==='impact'||kind==='collapse'){
         const col=kind==='impact'?0xff863a:0xcd69ff;add('dome',pos,col,r,.5);ring(pos,col,r,.7);ring(pos,0xffedcd,r*.65,.45);burst(pos,col,85,10);
       }else if(kind==='gravity'){
-        const core=add('core',at(0,2,0),0x080d22,1.5,life);core.m.material.blending=THREE.NormalBlending;
-        for(let i=0;i<3;i++)add('orbit',at(0,2,0),i===1?0xf3b6ff:0x974cff,r*(.4+i*.16),life);add('rune',pos,0x9c66ff,r,life);burst(pos,0xc46dff,40,4);
+        const core=add('core',at(0,2,0),0x080d22,2,life);core.m.material.blending=THREE.NormalBlending;
+        for(let i=0;i<4;i++)add('orbit',at(0,2,0),i%2?0xf3b6ff:0x974cff,r*(.4+i*.14),life);add('rune',pos,0x9c66ff,r*1.08,life);ring(pos,0xe1b7ff,r*.8,.65);burst(pos,0xc46dff,100,7);
       }else if(kind==='water'){
-        const f=add('water',at(0,1,0),0x47bfff,r,life);f.yaw=opts.yaw||0;const crest=add('water',at(0,1.35,0),0xbbf9ff,r*.96,life);crest.yaw=f.yaw;burst(pos,0x70e1ff,45,5);
+        const f=add('water',at(0,1,0),0x47bfff,r*1.12,life);f.yaw=opts.yaw||0;const crest=add('water',at(0,1.35,0),0xbbf9ff,r*1.08,life);crest.yaw=f.yaw;ring(pos,0xc8f7ff,r*.9,.55);burst(pos,0x70e1ff,100,8);
       }else if(kind==='light'){
-        add('dome',pos,0xffe9a2,r,1.6);add('rune',pos,0xffcf60,r,2);for(let i=0;i<5;i++){const a=i/5*TAU,p=at(Math.cos(a)*3,0,Math.sin(a)*3);beam(p,at(Math.cos(a)*3,8,Math.sin(a)*3),0xfff6c1,1.2);}burst(pos,0xb6ff99,65,5);
+        add('dome',pos,0xffe9a2,r*1.12,1.8);add('rune',pos,0xffcf60,r*1.1,2.2);for(let i=0;i<8;i++){const a=i/8*TAU,p=at(Math.cos(a)*3.5,0,Math.sin(a)*3.5);beam(p,at(Math.cos(a)*3.5,10,Math.sin(a)*3.5),0xfff6c1,1.35);}ring(pos,0xffffe4,r*.85,.7);burst(pos,0xb6ff99,120,8);
       }
       return {move(next){for(const h of records)if(h.f.serial===h.serial&&h.f.life>0){h.f.anchor.copy(next).add(h.offset);h.f.m.position.copy(h.f.anchor);}}};
     }
     function mega(pos,kind,r){
-      const col=parseInt(ArenaElements.byId[kind].color.slice(1),16);
-      element(kind,pos,{r,life:2.5});
-      const rim=take('boundary',pos,0xff55bf,r+.12,2.5);rim.m.material.blending=THREE.NormalBlending;
-      take('boundary',pos,col,r,2.5);take('rune',pos,col,r,2.5);take('dome',pos,0x78dfff,r*.96,2.5);burst(pos,col,low?40:90,15);
+      const col=parseInt(ArenaElements.byId[kind].color.slice(1),16),visualR=Math.min(26,r*1.45);
+      element(kind,pos,{r:visualR,life:2.8});
+      const rim=take('boundary',pos,0xff55bf,visualR+.12,2.8);rim.m.material.blending=THREE.NormalBlending;
+      take('boundary',pos,col,visualR,2.8);take('rune',pos,col,visualR,2.8);take('dome',pos,0x78dfff,visualR*.98,2.8);ring(pos,0xffffff,visualR*1.03,1.1);burst(pos,col,low?72:160,19);
     }
     function slash(pos,yaw){const f=take('slash',pos,0xb9faff,2.5,.25);f.m.geometry=newSlashGeo;f.m.rotation.z=-yaw+.6;f.m.position.y=.75;}
     const newSlashGeo=new THREE.RingGeometry(.72,1,32,1,0,Math.PI*1.35);

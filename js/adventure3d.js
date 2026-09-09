@@ -4493,7 +4493,7 @@ function netJoin(){
   room=NetRoom.create({
     // 🚁🌳 รอบ 816: เฮลิฯ เมืองกำแพงเพชรเป็น "แผนที่คนละใบ" กับเมืองเฮลิฯ → ห้องแยก ไม่งั้นเห็นเพื่อนลอยผิดที่
     map:(heliKpp()?'helikpp':mode), sendMs:NET_SEND_MS,
-    roomMax:(mode==='haunt'?HotelRuntime.MAX_PLAYERS:0), // 🏨 Phase 3: 1–6 คน/หลัง · คนที่ 7 ถูก verifier พาไปหลังถัดไปแบบ race-safe
+    roomMax:(mode==='haunt'?HotelRuntime.MAX_PLAYERS:(mode==='adv'?4:0)), // 🏟️ Adventure 4 คน/ห้อง · คนที่ 5 ถูกพาเข้าห้องถัดไปอัตโนมัติ
     // 🏨 รอบ 686: ป้ายสถานะบน HUD เรียก "โรงแรมหลังที่ N" แทน "สนาม N" ให้ตรงธีม (โลกอื่นยังเป็น "สนาม" เหมือนเดิม)
     roomNoun:(mode==='haunt'?'โรงแรม':undefined),
     roomIcon:(mode==='haunt'?'🏨':undefined),

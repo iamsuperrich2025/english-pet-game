@@ -24,19 +24,19 @@
     function cast(kind,pos,dir,target,mult){
       if(!byId[kind]||kind==='arc'||kind==='nova')return false;
       const aim=target?target.group.position.clone():pos.clone().addScaledVector(dir,7),now=performance.now();aim.y=0;
-      if(kind==='fire'){const z=zone(kind,aim,dir,mult,3,6.2);z.visual=api.fx.element(kind,z.pos,{life:3,r:z.r});}
-      else if(kind==='wind'){const z=zone(kind,pos.clone().addScaledVector(dir,3),dir,mult,4,api.storm()?6:4.5);z.visual=api.fx.element(kind,z.pos,{life:4,r:z.r});}
-      else if(kind==='ice'){api.fx.element(kind,pos,{r:8});enemies(pos,8,b=>{b.slow=Math.max(b.slow||0,now+4000);api.hit(b,34*mult);});}
+      if(kind==='fire'){const z=zone(kind,aim,dir,mult,3.4,7.4);z.visual=api.fx.element(kind,z.pos,{life:3.4,r:z.r});}
+      else if(kind==='wind'){const z=zone(kind,pos.clone().addScaledVector(dir,3),dir,mult,4.5,api.storm()?7.2:5.6);z.visual=api.fx.element(kind,z.pos,{life:4.5,r:z.r});}
+      else if(kind==='ice'){api.fx.element(kind,pos,{r:9.5});enemies(pos,9.5,b=>{b.slow=Math.max(b.slow||0,now+4500);api.hit(b,42*mult);});}
       else if(kind==='meteor'){zone(kind,aim,dir,mult,2.1,4.2);}
-      else if(kind==='earth'){api.fx.element(kind,pos,{r:8});enemies(pos,8,b=>{push(b,pos,4);b.slow=Math.max(b.slow||0,now+1500);api.hit(b,58*mult);});}
-      else if(kind==='gravity'){const z=zone(kind,aim,dir,mult,3,6);z.visual=api.fx.element(kind,z.pos,{life:3,r:z.r});}
-      else if(kind==='water'){const z=zone(kind,pos.clone().addScaledVector(dir,1.5),dir,mult,1.25,4);z.visual=api.fx.element(kind,z.pos,{life:1.25,r:4,yaw:Math.atan2(dir.x,dir.z)});}
+      else if(kind==='earth'){api.fx.element(kind,pos,{r:9});enemies(pos,9,b=>{push(b,pos,5.5);b.slow=Math.max(b.slow||0,now+1800);api.hit(b,72*mult);});}
+      else if(kind==='gravity'){const z=zone(kind,aim,dir,mult,3.6,7.2);z.visual=api.fx.element(kind,z.pos,{life:3.6,r:z.r});}
+      else if(kind==='water'){const z=zone(kind,pos.clone().addScaledVector(dir,1.5),dir,mult,1.5,5.5);z.visual=api.fx.element(kind,z.pos,{life:1.5,r:5.5,yaw:Math.atan2(dir.x,dir.z)});}
       else if(kind==='light'){api.fx.element(kind,pos,{r:5});api.heal(30,20);}
       return true;
     }
     function castMega(kind,pos,dir,mult){
       if(!byId[kind]||kind==='arc'||kind==='nova')return false;
-      const z=zone('mega',pos,dir,mult,2.5,18);z.element=kind;z.col=parseInt(byId[kind].color.slice(1),16);api.fx.mega(pos,kind,z.r);
+      const z=zone('mega',pos,dir,mult,2.8,18);z.element=kind;z.col=parseInt(byId[kind].color.slice(1),16);api.fx.mega(pos,kind,z.r);
       if(kind==='light')api.heal(30,20);
       return true;
     }

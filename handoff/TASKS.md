@@ -12,10 +12,10 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
-- **รอบ 1385 · ภาพใหญ่ขยับอัตโนมัติ:** ลบปุ่มและข้อความ `ภาพเคลื่อนไหว` ออกจากหน้าเลือกฮีโร่ พร้อมจัดหัวเรื่องกลับกึ่งกลาง; ภาพใหญ่เล่นเองแม้เปิดธงลดเอฟเฟกต์ของสนาม
-- เพิ่มระยะขยับผม/ผ้าคลุมและธาตุให้สังเกตได้ชัด เพิ่มอนุภาค 18→24 โดยยังตรึงใบหน้าและเท้าเพื่อไม่ให้ตัวละครบิด; hidden tab และ OS reduced-motion ยังหยุด loop ตามเดิม
-- Hero picker 32 checks ผ่าน 4 viewport: hair/cape/fire มี pixel motion, face/boots=0, errors=[]; build 2026-09-09.1237 (9,490 files, 614.6 MiB), dist test, web validator, undefined/template/syntax/diff ผ่าน; ไม่มี asset หรือ network schema ใหม่
-- พร้อมส่ง manifest เฉพาะ 6 ไฟล์ผ่าน COMMIT_DEPLOY.bat; ยังไม่ยืนยัน deploy รอบ 1385
+- **รอบ 1386 · พลังอลังการ + ห้องอัตโนมัติ:** เพิ่มพลังธาตุทุกชนิดให้มีวง แสง อนุภาค และแรงกระแทกมากขึ้น; MEGA ขยายภาพเกือบเต็มสนาม (~26 หน่วย) แต่คงดาเมจรัศมีเดิม; Adventure จำกัด 4 คน/ห้องและไล่เข้าห้องถัดไปเมื่อเต็ม
+- แก้ `js/arena-elements.js`, `js/arena-field-visuals.js`, `js/adventure3d.js`; อัปเดต regression `tools/test_arena_crystals.cjs`; build 2026-09-09.1238 (9,490 files, 614.6 MiB)
+- Arena crystals 53 checks ผ่านทุกธาตุ, syntax ผ่าน; NetRoom logic เดิมมี `pickRoom()` ไล่ห้องว่าง/สร้างห้องเชิงตรรกะอัตโนมัติ (test harness ต้องรันใน browser จึงไม่ใช้ `node` ตรง)
+- พร้อมส่ง manifest เฉพาะ 6 ไฟล์ผ่าน COMMIT_DEPLOY.bat; ยังไม่ยืนยัน deploy รอบ 1386
 
 - **รอบ 1383 · แก้ Deploy ติด async():** ยืนยันตัวตรวจ undefined-call เข้าใจ async arrow callback ใน `js/ui.js:7284` เป็นฟังก์ชันไม่มีนิยาม; เปลี่ยนเป็น named async function `preloadArenaScene` โดยไม่แก้หรือข้ามตัวตรวจ และคง preload/cancel/entry behavior
 - ด่าน undefined-call/template-backtick ผ่านบน git HEAD JavaScript + UI patch (unknown0), missing-assets --git306ครบ, syntax/diff + hero browser31 checks + build9,490files614.6MiB + web validator ผ่าน; เตรียม SHIP เฉพาะ ui.js/TASKS.md และเปิด launcher รอบใหม่; ยังไม่ยืนยันผล deploy1383
