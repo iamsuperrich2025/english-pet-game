@@ -1,4 +1,4 @@
-# Arena Field — current behavior (round 1389)
+# Arena Field — current behavior (round 1390)
 
 The Adventure / Vocab Arena entry remains admin-only. `js/home-v2.js` renders its small fantasy-house lobby icon; `js/ui.js` loads the hero picker, map picker, catalogue and battle engine in dependency order. The eight existing animated full-body portraits are preserved. Confirming a hero keeps the owned loadout instead of granting free signature spells.
 
@@ -28,11 +28,14 @@ The wallet shows total coins and a separate **รอบนี้ +N** for coins 
 
 `ArenaElements` owns the original effects and shared 12-zone gameplay budget. `arena-spell-catalog.js` stores only small metadata, then loads `arena-spell-engine.js` plus the selected family from `js/arena-spells/`. Fifty recipes use 13 actual attack patterns with different trajectories, timing, collision, pull/push/slow/heal behavior. `arena-field-visuals.js` reuses 640 particles / 48 meshes (low-power 256 / 28) and creates the procedural moving flame shader on first fire use. No video or spell image sequences are downloaded.
 
+Round 1390 replaces the twelve identical fire cards with 8 irregularly distributed turbulent plumes (5 on low power), delayed smoke, an eroded ember floor and thin expanding shockwaves. Noise advection breaks up the flame silhouette; warm orange/amber edges lead into a small cream-hot core. Each pooled draw explicitly uploads its own phase, fade and shader mode, fixing the previous shader ignoring material.opacity. Smoke rises, widens and outlasts the flame; embers reuse the existing point pool. One lazy shared shader uses a single pass per flat card, with no downloaded raster, flipbook or video. Fire MEGA uses matching fire shockwaves rather than the generic cyan dome; six ordinary damage ticks and three MEGA damage pulses remain unchanged. Expanded fire and meteor motifs share the new combustion material.
+
 Both inventories pause local combat and redundant scene rendering while preserving room activity. DPR remains capped at 1.45; shadows/antialias remain off. Map changes and exit release renderer resources. See `docs/PERFORMANCE.md` and `docs/ARENA_GROUND_ASSETS.json` for current asset and measurement details; `docs/ARENA_MAP_ASSETS.json` records the superseded round-1387 plates and retained home art.
 
 ## Validation
 
 - `tools/test_arena_maps.cjs`: original camera height/FOV/projection and following movement on three landscape viewports, world-bound ground, edge-view screenshots, room grouping, lane isolation, full-room races, admin guard, responsive layouts, selected-only image downloads, fallback, movement, MEGA counter, map-change cleanup, letters and session coins.
+- `tools/test_arena_fire.cjs`: before/after captures, ignition/sustain/dissipation on all three maps, low-power pools, per-draw phase/opacity, smoke/fire separation, expiry/disposal and MEGA charge. `VW_ARENA_VIDEO=1` additionally records a real game WebM through Playwright's optional ffmpeg runtime. No production account writes.
 - `tools/test_arena_grimoire.cjs`: all 50 recipes and 13 patterns, lazy loading/retry, both permanent shops, prices, real bonuses, saved ownership reload, free admin access, inventory layout/render pause and GPU caps.
 - Existing field/crystal/hero harnesses retain combat, banking, MEGA five-use behavior, animated portraits and cleanup coverage. Fixtures use isolated saves and fake networking; no production account writes.
 

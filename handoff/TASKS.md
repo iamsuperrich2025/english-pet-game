@@ -12,10 +12,15 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1390 · แก้ไฟเป็นแท่งซ้ำ:** เปลี่ยน shader/การวางเปลวใน js/arena-field-visuals.js เป็นเปลวแตกตัว8กลุ่ม (low5) พร้อมควัน/พื้นร้อน/สะเก็ด/คลื่นกระแทก; ส่ง phase+fade แยกทุก draw แก้ opacity เดิมไม่เข้า shader; ไฟ MEGA ใช้คลื่นไฟแทนโดมฟ้า
+- ใช้ pool640/48 และ low256/28 เดิม; lazy shared shader/forceSinglePass ไม่มีภาพหรือวิดีโอ runtime เพิ่ม; ordinary fire peak120draws/sustain118/กลับ105/18textures; คงดาเมจและ5ครั้งMEGA (js/arena-elements.js เปลี่ยนเฉพาะทางเรียกภาพ pulse)
+- Source/dist fire31 ผ่าน; crystals53/grimoire209 ผ่าน; build9,517ไฟล์616.6MiB/validator/assets306/undefined0/backtick0/syntax/diffผ่าน; ตรวจรูปทุกช่วงบน3map/มือถือและคลิปจริง1280×720 10.72วินาที 1.50MB ที่ work/arena-fire-1390
+- docs/ARENA_FIELD.md/PERFORMANCE.md/PROJECT_MAP.md + tools/test_arena_fire.cjs; เตรียม SHIP7ไฟล์และเปิด COMMIT_DEPLOY.bat รอบ1390; ยังไม่ยืนยัน commit/deploy รอบนี้
+
 - **รอบ 1389 · คืนมุมกล้องเดิม:** ยกเลิกกล้อง Orthographic/ภาพพื้นติดจอ; คืน Perspective48° ตามผู้เล่น สูง33/36 ระยะตาม20/23 lookAhead2.3 พร้อม snap ตอนเข้า/resize; คงโมเดลตัวเล็กเดิม
 - เจนพื้น3map ใหม่ปูบนพื้นสามมิติ; AVIF1024² 217,521/245,070/274,132bytes + WebP fallback; โหลดเฉพาะที่เลือก ขอบฉากต่อจาก texture เดิม/หนึ่ง draw; เสารอบฉาก3 instanced meshes; provenance docs/ARENA_GROUND_ASSETS.json
 - เทียบโค้ด6bb1b6f5: position/quaternion/ขอบสนาม/ขนาดตัวละครพิกเซลตรงกันบน1015/812/1366 ทั้ง3map; source maps82/field26/grimoire209, dist maps82, build9,517ไฟล์616.6MiB/validator/assets306/undefined0/backtick0/syntax/diffผ่าน; ตรวจภาพกลางและขอบเวทีแล้ว
-- ภาพเทียบ work/arena-camera-compare-1389; ข้อมูลใน docs/ARENA_FIELD.md/PERFORMANCE.md/PROJECT_MAP.md/CURRENT_STATE.md; เตรียม SHIP19ไฟล์และเปิด COMMIT_DEPLOY.bat รอบนี้; ยังไม่ยืนยัน commit/deploy1389
+- ภาพเทียบ work/arena-camera-compare-1389; รายละเอียด docs/ARENA_FIELD.md/PERFORMANCE.md/PROJECT_MAP.md/CURRENT_STATE.md; ผู้ใช้ยืนยัน [SUCCESS] และตรวจแล้ว commit009a0887/handoff26f7684e, HEAD=origin/main; เว็บจริง version2026-09-10.1242 ตรงเครื่อง — commit/deploy/push1389สำเร็จ
 
 - **รอบ 1388 · คืนตัวละครเดิม:** ArenaMaps.actor กลับใช้ ArenaFieldVisuals.hero แบบสามมิติเดิมทั้งผู้เล่น/เพื่อน สเกล1.12เดิม; คืนระดับชื่อ/HP/สัญลักษณ์เหนือหัวใน js/arena3d.js; คงฉากใหม่ หน้าเลือกตัวละครและระบบเกม
 - Source maps70/field26 ผ่าน; ตรวจภาพ1366/812/667ทั้ง3map; idle107draws/11.9k triangles/18textures; syntax/diff/undefined0/backtick0 และ build9,517ไฟล์616.4MiB/validator/เทียบไฟล์ตรงผ่าน; maps70 บน dist ผ่านแล้ว
@@ -233,10 +238,15 @@
 
 ### ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1390 · แก้ไฟเป็นแท่งซ้ำ:** เปลี่ยน shader/การวางเปลวใน js/arena-field-visuals.js เป็นเปลวแตกตัว8กลุ่ม (low5) พร้อมควัน/พื้นร้อน/สะเก็ด/คลื่นกระแทก; ส่ง phase+fade แยกทุก draw แก้ opacity เดิมไม่เข้า shader; ไฟ MEGA ใช้คลื่นไฟแทนโดมฟ้า
+- ใช้ pool640/48 และ low256/28 เดิม; lazy shared shader/forceSinglePass ไม่มีภาพหรือวิดีโอ runtime เพิ่ม; ordinary fire peak120draws/sustain118/กลับ105/18textures; คงดาเมจและ5ครั้งMEGA (js/arena-elements.js เปลี่ยนเฉพาะทางเรียกภาพ pulse)
+- Source/dist fire31 ผ่าน; crystals53/grimoire209 ผ่าน; build9,517ไฟล์616.6MiB/validator/assets306/undefined0/backtick0/syntax/diffผ่าน; ตรวจรูปทุกช่วงบน3map/มือถือและคลิปจริง1280×720 10.72วินาที 1.50MB ที่ work/arena-fire-1390
+- docs/ARENA_FIELD.md/PERFORMANCE.md/PROJECT_MAP.md + tools/test_arena_fire.cjs; เตรียม SHIP7ไฟล์และเปิด COMMIT_DEPLOY.bat รอบ1390; ยังไม่ยืนยัน commit/deploy รอบนี้
+
 - **รอบ 1389 · คืนมุมกล้องเดิม:** ยกเลิกกล้อง Orthographic/ภาพพื้นติดจอ; คืน Perspective48° ตามผู้เล่น สูง33/36 ระยะตาม20/23 lookAhead2.3 พร้อม snap ตอนเข้า/resize; คงโมเดลตัวเล็กเดิม
 - เจนพื้น3map ใหม่ปูบนพื้นสามมิติ; AVIF1024² 217,521/245,070/274,132bytes + WebP fallback; โหลดเฉพาะที่เลือก ขอบฉากต่อจาก texture เดิม/หนึ่ง draw; เสารอบฉาก3 instanced meshes; provenance docs/ARENA_GROUND_ASSETS.json
 - เทียบโค้ด6bb1b6f5: position/quaternion/ขอบสนาม/ขนาดตัวละครพิกเซลตรงกันบน1015/812/1366 ทั้ง3map; source maps82/field26/grimoire209, dist maps82, build9,517ไฟล์616.6MiB/validator/assets306/undefined0/backtick0/syntax/diffผ่าน; ตรวจภาพกลางและขอบเวทีแล้ว
-- ภาพเทียบ work/arena-camera-compare-1389; ข้อมูลใน docs/ARENA_FIELD.md/PERFORMANCE.md/PROJECT_MAP.md/CURRENT_STATE.md; เตรียม SHIP19ไฟล์และเปิด COMMIT_DEPLOY.bat รอบนี้; ยังไม่ยืนยัน commit/deploy1389 (31 ส.ค.) — อ่านก่อน
+- ภาพเทียบ work/arena-camera-compare-1389; รายละเอียด docs/ARENA_FIELD.md/PERFORMANCE.md/PROJECT_MAP.md/CURRENT_STATE.md; ผู้ใช้ยืนยัน [SUCCESS] และตรวจแล้ว commit009a0887/handoff26f7684e, HEAD=origin/main; เว็บจริง version2026-09-10.1242 ตรงเครื่อง — commit/deploy/push1389สำเร็จ (31 ส.ค.) — อ่านก่อน
 - **รอบ 1379 · Kart ขอบถนนจริง + เปิดทุกคน + ป้ายครั้งเดียว:** แก้ corridor ซ้อนที่ทำให้ทะลุกำแพง ใช้ 1,286 segment ชุดเดียววาด/ชน + swept capsule/grid + เผื่อทั้งคัน 2.85 m; 12,404 crossings (4,957 oblique), route raycast 2,025, bounce 146 ผ่าน; ไม่มี portal เฉพาะ Kart
 - เปิด Classic/Home V2/solo/NetRoom/rank ให้ผู้เล่นทั่วไป; คง auth/UID validation และ namespace แยก F1; rules สดเผยแพร่แล้วและตรง payload ครบ 44 zones เปลี่ยนเฉพาะ wroom/winfo/kartAccess/kartRank
 - ป้ายเชิญชวนใช้ WebP รถเดิม ไม่เพิ่ม asset; UID local+cloud seen marker เมื่อแสดงจริง ข้ามผู้เคยเล่น/รอ dialog/ไม่ขึ้นกลางแข่ง; invitation 24, lobby 13, entry 28, gameplay 29, rules 45+peers 7, F1 19 programs/Home V2/build ผ่าน รวม dist tests

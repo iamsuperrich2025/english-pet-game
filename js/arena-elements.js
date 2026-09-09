@@ -49,7 +49,7 @@
         if(z.kind==='mega'){
           if(z.element==='gravity'||z.element==='wind')enemies(z.pos,z.r,b=>push(b,z.pos,-Math.min(distance(b.group.position,z.pos),dt*3.8)));
           for(const impact of [.35,1.05,1.75])if(previous<impact&&z.age>=impact){
-            api.fx.ring(z.pos,z.col,z.r,.7);api.fx.burst(z.pos,z.col,32,14);
+            if(z.element==='fire'&&api.fx.firePulse)api.fx.firePulse(z.pos,z.r);else api.fx.ring(z.pos,z.col,z.r,.7);api.fx.burst(z.pos,z.col,32,14);
             enemies(z.pos,z.r,b=>{if(z.element==='ice')b.slow=Math.max(b.slow||0,performance.now()+4000);if(z.element==='earth'||z.element==='water')push(b,z.pos,1.2);api.hit(b,40*z.mult);});
           }
         }
