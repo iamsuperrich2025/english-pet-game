@@ -110,6 +110,14 @@ PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.F1World`, `start`, `exitWorld`, `tick
 DEPENDENCIES: `THREE`, `GLTFLoader`, state/UI globals.
 NOTES: Track lookup uses a spatial grid rather than a general physics library.
 
+SYSTEM: Vocab World Kart private preview
+PURPOSE: Admin-only tropical toy-kart game derived from the existing Racing engine, with its own entry, room and records.
+PRIMARY FILE: `js/kart3d.js`
+RELATED FILES: `js/kart-access.js`, `js/f1_3d.js`, `js/auth.js`, `js/ui.js`, `js/home-v2.js`, `js/netroom.js`, `handoff/RULES.md`, `docs/KART_PREVIEW.md`
+PUBLIC ENTRY POINTS / KEY SYMBOLS: `enterKart3D`, `canAccessKartBeta`, `KartAccess.authorize`, `KartWorld`, `KartProfile`, `createVocabRacingWorld`
+DEPENDENCIES: Shared Three.js/Racing engine/vocabulary/economy/NetRoom. Lazy content-hashed modules; no new raster runtime assets.
+NOTES: Verified current admin identity plus fresh server admission required. RTDB `kartAccess`, `wroom/kart`, `winfo/kart`, `kartRank`; legacy `world/kart` denied. Saves `kartTicket/kartDone/kartRecent/kartBest`, local `vwKartCarColor/vwKartGhost`; no mixing with F1. Tests: `tools/test_kart_entry.js`, `tools/kart/`.
+
 SYSTEM: 3D shooting minigame
 PURPOSE: First-person carnival vocabulary target game with an isolated scene, controls, scoring, and HUD.
 PRIMARY FILE: `js/shootword.js`

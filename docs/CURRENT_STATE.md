@@ -47,3 +47,7 @@ Snapshot verified 2026-08-09. Keep only durable facts here.
 - Account/privacy controls live in the classic lobby Settings under a single `Account & Privacy` tab. Permanent deletion requires exact typed `DELETE`, a recent Google re-authentication, one RTDB multi-location cleanup, and then Firebase Authentication deletion.
 - Public bilingual resources are `privacy.html` and `delete-account.html`. The latter documents both the in-app route and an email fallback for users who cannot sign in.
 - The browser cleanup intentionally deletes only paths attributable to the departing UID and does not erase other participants' shared content. Firebase Rules in `handoff/RULES.md` must be published before release, and an isolated disposable account must complete end-to-end acceptance testing before Play Console declarations are submitted.
+
+## Vocab World Kart private preview (round 1377)
+
+A separate admin-only Kart entry now shares the Racing engine through isolated game closures. Its tropical scene and selected-colour vehicle/cockpit are procedural 3D; top speed is 110 km/h (8% DRS boost) and pit limit 40 km/h. Verified admin identity and a fresh RTDB admission read gate entry; server rules independently protect Kart rooms and rankings. Existing F1 remains public and uses its original profile and records. Details and QA: `docs/KART_PREVIEW.md`.
