@@ -7281,7 +7281,7 @@ async function enterAdventure3D(){
       await loadScriptOnce('js/arena-elements.js');
       await loadScriptOnce('js/arena-portrait.js');
       await loadScriptOnce('js/arena-heroes.js');
-      const hero=await ArenaHeroes.choose(async()=>{await loadScriptOnce('js/vendor/three.min.js');await loadVocabArena3d();});
+      const hero=await ArenaHeroes.choose(async function preloadArenaScene(){await loadScriptOnce('js/vendor/three.min.js');await loadVocabArena3d();});
       if(!hero){advLoading=false;return worldEntryStopped('ยกเลิกการเลือกตัวละครก่อนเกมเริ่ม');}
     }
   }catch(e){

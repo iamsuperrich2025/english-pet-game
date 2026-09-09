@@ -11,6 +11,9 @@
 > ประวัติ Frontline 1372–1373: `handoff/archive/frontline-1372-1373.md`
 
 ### 📌 สรุปสถานะล่าสุด
+- **รอบ 1383 · แก้ Deploy ติด async():** ยืนยันตัวตรวจ undefined-call เข้าใจ async arrow callback ใน `js/ui.js:7284` เป็นฟังก์ชันไม่มีนิยาม; เปลี่ยนเป็น named async function `preloadArenaScene` โดยไม่แก้หรือข้ามตัวตรวจ และคง preload/cancel/entry behavior
+- ด่าน undefined-call/template-backtick ผ่านบน git HEAD JavaScript + UI patch (unknown0), missing-assets --git306ครบ, syntax/diff + hero browser31 checks + build9,490files614.6MiB + web validator ผ่าน; เตรียม SHIP เฉพาะ ui.js/TASKS.md และเปิด launcher รอบใหม่; ยังไม่ยืนยันผล deploy1383
+
 - **รอบ 1382 · ชื่อฮีโร่ภาษาอังกฤษ:** เปลี่ยนชื่อแสดงผล 8 ตัวใน `js/arena-heroes.js` เป็น Zevrakin/Kirevon/Vaelkorin/Oryndel/Elyzavia/Lyravyn/Nirelya/Zirelia ตามภาพผู้ใช้; เอาไอคอนซ้ำหน้าชื่อบนการ์ดออกให้ชื่อยาวพอดีมือถือ โดยคง ID/save/พลังเดิม
 - Syntax/diff + hero browser31 checks (4 viewports) + build9,490files614.6MiB + web validator ผ่าน; hash source/dist ตรงกัน; เตรียม SHIP เฉพาะ js/arena-heroes.js และ TASKS.md, ยังไม่ยืนยัน deploy รอบ1382
 
