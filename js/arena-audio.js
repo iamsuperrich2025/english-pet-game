@@ -1,106 +1,73 @@
 "use strict";
-/* Arena-only sampled SFX. Kenney CC0 sources: SOUND_LICENSES.md. */
+/* Arena background music only; sampled SFX removed at the user's request (round 1392). */
 (function(){
-  const cues={
-    magicShot:{file:'magic-shot',volume:.45,gap:95,group:'shot'},
-    hitLetter:{file:'hit-letter',volume:.40,gap:70,group:'impact'},
-    letterBreak:{file:'letter-break',volume:.55,gap:85,group:'break'},
-    coin:{file:'coin',volume:.45,gap:110,group:'reward'},
-    correct:{file:'correct',volume:.50,gap:160,group:'feedback'},
-    wrong:{file:'wrong',volume:.35,gap:450,group:'feedback'},
-    megaReady:{file:'mega-ready',volume:.60,gap:700,group:'mega'},
-    megaFire:{file:'mega-fire',volume:.70,gap:400,group:'mega'},
-    shield:{file:'shield',volume:.55,gap:250,group:'shield'},
-    uiClick:{file:'ui-click',volume:.30,gap:100,group:'ui'},
-    uiBack:{file:'ui-back',volume:.30,gap:100,group:'ui'},
-    enemyDefeat:{file:'letter-break',volume:.45,gap:85,group:'break',rate:.85}
-  };
-  const essential=['magicShot','hitLetter','letterBreak','uiClick'];
-  const buffers=new Map(),loads=new Map(),failed=new Map(),last=new Map(),voices=new Set();
-  const played={};let ctx=null,master=null,active=false,unlocked=false,epoch=0,detach=[];
-  let peak=0,dropped=0,fetches=0;
+  let active=false,unlocked=false,detach=[];
   const enabled=()=>active&&!document.hidden&&typeof state!=='undefined'&&!!state.sound;
-  function context(){
-    if(ctx)return ctx;
-    try{const AudioContext=window.AudioContext||window.webkitAudioContext;if(!AudioContext)return null;
-      ctx=new AudioContext();master=ctx.createGain();master.gain.value=.65;master.connect(ctx.destination);return ctx;
-    }catch(_){return null;}
+  // Keep music compressed: one media element plays a cached Blob, never a full PCM buffer.
+  const musicTracks=[
+    {file:'bgmusic-b6b49f8fdc7aeb2f.ogg',hash:'b6b49f8fdc7aeb2f',type:'audio/ogg; codecs="opus"'},
+    {file:'bgmusic-e450dce94058763f.mp3',hash:'e450dce94058763f',type:'audio/mpeg'}
+  ];
+  let music=null,musicUrl='',musicBlob=null,musicLoad=null,musicPending=false,musicTimer=0,musicRetryAt=0;
+  let musicTrack=null,musicDownloads=0;
+  function musicEnabled(){return enabled()&&unlocked&&!state.musicOff;}
+  async function loadMusic(){
+    if(musicBlob)return musicBlob;if(musicLoad)return musicLoad;
+    const track=musicTrack,path='/sound/arena/'+track.file;
+    musicLoad=(async function fetchArenaMusic(){
+      let cache=null;
+      const key=location.origin+'/__vw_asset__'+path+'?v='+track.hash;
+      try{cache=await caches.open('vw-assets-content-v1');const hit=await cache.match(key);if(hit)return musicBlob=await hit.blob();}catch(_){}
+      const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),20000);
+      try{
+        musicDownloads++;const response=await fetch(path,{signal:controller.signal});
+        if(!response.ok)throw Error('Arena music unavailable');
+        // Same key as the existing service worker: retained across unrelated game deployments.
+        if(cache)try{await cache.put(key,response.clone());}catch(_){}
+        return musicBlob=await response.blob();
+      }finally{clearTimeout(timer);}
+    })().catch(()=>{musicRetryAt=performance.now()+10000;return null;}).finally(()=>{musicLoad=null;});
+    return musicLoad;
   }
-  function preload(){if(enabled())essential.forEach(name=>{void load(cues[name].file);});}
-  function load(file){
-    if(buffers.has(file))return Promise.resolve(buffers.get(file));
-    if(loads.has(file))return loads.get(file);
-    if((failed.get(file)||0)>performance.now())return Promise.resolve(null);
-    // Downloads can begin on Arena entry; decoding waits until a gesture has created the context.
-    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),6000);
-    fetches++;
-    const promise=fetch('sound/arena/'+file+'.mp3',{signal:controller.signal})
-      .then(r=>{if(!r.ok)throw Error('SFX unavailable');return r.arrayBuffer();})
-      .then(data=>{buffers.set(file,data);return data;})
-      .catch(()=>{failed.set(file,performance.now()+30000);return null;})
-      .finally(()=>{clearTimeout(timer);loads.delete(file);});
-    loads.set(file,promise);return promise;
+  function pauseMusic(){if(music)music.pause();}
+  function syncMusic(){
+    if(!musicEnabled()){pauseMusic();return;}
+    if(musicPending||performance.now()<musicRetryAt)return;
+    try{
+      if(!music){
+        music=new Audio();music.preload='none';music.loop=true;music.volume=.16;
+        musicTrack=musicTrack||musicTracks.find(track=>music.canPlayType(track.type))||musicTracks[1];
+      }
+      if(!music.paused)return;
+      const element=music;musicPending=true;
+      void loadMusic().then(blob=>{
+        if(!blob||element!==music||!musicEnabled())return;
+        if(!musicUrl){musicUrl=URL.createObjectURL(blob);element.src=musicUrl;}
+        return element.play().then(()=>{if(element!==music||!musicEnabled())element.pause();});
+      }).catch(()=>{musicRetryAt=performance.now()+10000;})
+        .finally(()=>{if(element===music)musicPending=false;});
+    }catch(_){musicPending=false;musicRetryAt=performance.now()+10000;}
   }
-  const decoding=new Map();
-  async function decoded(file,audio){
-    const value=await load(file);if(!value)return null;
-    if(!(value instanceof ArrayBuffer))return value;
-    if(decoding.has(file))return decoding.get(file);
-    const pending=audio.decodeAudioData(value.slice(0)).then(buffer=>{buffers.set(file,buffer);return buffer;})
-      .catch(()=>{buffers.delete(file);failed.set(file,performance.now()+30000);return null;})
-      .finally(()=>decoding.delete(file));
-    decoding.set(file,pending);return pending;
+  function stopMusic(){
+    clearInterval(musicTimer);musicTimer=0;pauseMusic();
+    if(music){music.removeAttribute('src');music.load();music=null;}
+    if(musicUrl)URL.revokeObjectURL(musicUrl);musicUrl='';musicPending=false;
   }
+
   function unlock(event){
     if(!event.isTrusted||!enabled()||(event.type==='keydown'&&event.repeat))return;
-    const audio=context();if(!audio)return;
-    unlocked=true;
-    // resume() must be called synchronously in the trusted gesture, including after app backgrounding.
-    try{if(audio.state!=='running')void audio.resume().catch(()=>{});}catch(_){}
-    preload();essential.forEach(name=>{void decoded(cues[name].file,audio);});
-  }
-  function silence(){
-    for(const voice of voices){try{voice.source.stop();}catch(_){}voice.source.disconnect();voice.gain.disconnect();}
-    voices.clear();
-  }
-  function play(name){
-    const cue=cues[name];if(!cue||!enabled()||!unlocked||!ctx)return false;
-    const now=performance.now(),key=cue.group,throttleKey=key==='break'||key==='ui'?key:name;
-    if(now-(last.get(throttleKey)??-Infinity)<cue.gap){dropped++;return false;}
-    last.set(throttleKey,now);
-    const audio=ctx,bus=master,token=epoch,deadline=now+(essential.includes(name)?200:650);
-    void decoded(cue.file,audio).then(buffer=>{
-      if(!buffer||token!==epoch||!enabled()||audio.state!=='running'||performance.now()>deadline)return;
-      if(voices.size>=8||Array.from(voices).filter(v=>v.group===key).length>=2){dropped++;return;}
-      const source=audio.createBufferSource(),gain=audio.createGain();source.buffer=buffer;
-      source.playbackRate.value=cue.rate||1;gain.gain.value=cue.volume;
-      source.connect(gain);gain.connect(bus);const voice={source,gain,group:key};voices.add(voice);
-      source.onended=()=>{voices.delete(voice);source.disconnect();gain.disconnect();};
-      source.start();peak=Math.max(peak,voices.size);played[name]=(played[name]||0)+1;
-    }).catch(()=>{});return true;
+    unlocked=true;syncMusic();
   }
   function start(root){
-    stop();active=true;epoch++;
+    stop();active=true;
     const listen=(el,type,fn,options)=>{el.addEventListener(type,fn,options);detach.push(()=>el.removeEventListener(type,fn,options));};
     listen(root,'pointerdown',unlock,{capture:true,passive:true});
     listen(window,'keydown',unlock,true);
-    listen(root,'click',event=>{
-      const button=event.target.closest('button');if(!button||button.disabled||button.matches('[data-skill],#va-revive,#va-exit,#va-shop-open,#va-shop-close,#va-spells-open,#va-spells-close'))return;
-      play(/close|back/.test(button.id)?'uiBack':'uiClick');
-    },true);
-    listen(document,'visibilitychange',()=>{if(document.hidden){epoch++;silence();if(ctx)void ctx.suspend().catch(()=>{});}});
-    preload();
+    listen(document,'visibilitychange',()=>{if(document.hidden)pauseMusic();else syncMusic();});
+    listen(window,'pagehide',pauseMusic);
+    musicTimer=setInterval(syncMusic,500);
   }
-  function stop(){
-    active=false;unlocked=false;epoch++;detach.splice(0).forEach(fn=>fn());silence();last.clear();
-    const old=ctx;ctx=master=null;if(old)void old.close().catch(()=>{});
-  }
-  // Exit cue runs in the existing context for its 56 ms clip, without keeping the game alive.
-  function exit(){
-    const old=ctx,token=epoch;play('uiBack');
-    detach.splice(0).forEach(fn=>fn());
-    setTimeout(()=>{if(epoch===token&&ctx===old)stop();},160);
-  }
-  window.ArenaAudio={start,stop,exit,play,preload,
-    stats:()=>({active,unlocked,state:ctx?.state||'closed',voices:voices.size,peak,dropped,fetches,cached:buffers.size,played:{...played}})};
+  function stop(){stopMusic();active=false;unlocked=false;detach.splice(0).forEach(fn=>fn());}
+  window.ArenaAudio={start,stop,exit:stop,
+    stats:()=>({active,unlocked,music:{playing:!!music&&!music.paused,loop:!!music&&music.loop,volume:music?.volume||0,track:musicTrack?.file||'',cached:!!musicBlob,downloads:musicDownloads}})};
 })();

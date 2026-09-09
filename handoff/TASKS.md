@@ -12,6 +12,11 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1392 · Arena เพลงอย่างเดียว:** ผู้ใช้ให้ Arena_bgmusic.mp3 และสั่งลบ SFX1391ทั้งหมด; เอา11คลิป/ทุกhook/engineSFX/testเดิมออก เหลือ js/arena-audio.js จัดการเพลงวนลูป .16 เท่านั้น; gameplay/networkคงเดิม
+- Opus80k 1,284,092B ลด54%จากต้นฉบับ2,787,323B; MP3128k fallback1,900,416B เลือกโหลดเพียงformatเดียวหลังgesture; compressedBlob+1media element+content-hashcacheเดิมข้ามreload/deploy, musicOff/sound/hidden/exit; เก็บต้นฉบับไม่แก้/ไม่ship
+- tools/test_arena_music.cjs ผ่านsource26 (desktop/mobile, loopไม่downloadซ้ำ, reloadบล็อกเน็ตเล่นจากcache, fallback, missing, realgameไม่มีSFX); grimoire209/crystals53; build9,520files619.7MiB+validator/undefined0/template0/syntax/diffผ่าน; dist26ผ่านและbytesตรงsource
+- docs/PROJECT_MAP.md + SOUND_LICENSES.md ปรับเป็นเพลงผู้ใช้; เตรียมSHIPเฉพาะรอบ พร้อมตรวจliveหลังlauncher; ยังไม่ยืนยันcommit/deploy
+
 - **รอบ 1391 · Arena SFX:** เพิ่ม js/arena-audio.js + Kenney CC0 MP3 11ไฟล์/12cue รวม24,111B, preload4ไฟล์6,804B; gesture unlock, shared mute, decode/cache, cap8เสียง, background/exit cleanup; SOURCE: SOUND_LICENSES.md
 - js/arena3d.js เชื่อมยิง/โดน/แตก/รับเหรียญจริง/อักษรถูก/การกระทำที่เกมปฏิเสธ/MEGA/โล่/UI; js/ui.js โหลดเฉพาะArena; คงกติกาและnetwork; docs/PROJECT_MAP.md ชี้owner
 - tools/test_arena_audio.cjs ผ่านsource39+dist39 (desktop/mobile touch, missing/corrupt audio, peer revive); grimoire209/crystals53; build9,529ไฟล์616.6MiB+validator/assets306/undefined0/backtick0/syntax/diffผ่าน; native Android/TWA ยังต้องตรวจบนเครื่องจริง
