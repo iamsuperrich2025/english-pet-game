@@ -1,5 +1,5 @@
 "use strict";
-/* Arena music + user-approved MEGA, elemental cast, shield impact, healing and lightning clips; previous SFX remain removed (round 1393). */
+/* Arena music + user-approved MEGA, elemental cast, shield impact, healing, lightning and fire clips; previous SFX remain removed (round 1394). */
 (function(){
   let active=false,unlocked=false,detach=[];
   const enabled=()=>active&&!document.hidden&&typeof state!=='undefined'&&!!state.sound;
@@ -65,7 +65,8 @@
   const shield=createEffect({file:'shield-2a738b9421347bc6.mp3',hash:'2a738b9421347bc6'},.55);
   const heal=createEffect({file:'heal-f5beb28f8a0c7708.mp3',hash:'f5beb28f8a0c7708'},.55,1800);
   const lightning=createEffect({file:'lightning-261c63b74d97a82f.mp3',hash:'261c63b74d97a82f'},.55);
-  function pauseEffects(){mega.pause();element.pause();shield.pause();heal.pause();lightning.pause();}
+  const fire=createEffect({file:'fire-a6fea31058694941.mp3',hash:'a6fea31058694941'},.55);
+  function pauseEffects(){mega.pause();element.pause();shield.pause();heal.pause();lightning.pause();fire.pause();}
   function pauseMusic(){if(music)music.pause();}
   function syncMusic(){
     if(!enabled())pauseEffects();
@@ -94,7 +95,7 @@
 
   function unlock(event){
     if(!event.isTrusted||!enabled()||(event.type==='keydown'&&event.repeat))return;
-    unlocked=true;element.prepare();shield.prepare();heal.prepare();lightning.prepare();syncMusic();
+    unlocked=true;element.prepare();shield.prepare();heal.prepare();lightning.prepare();fire.prepare();syncMusic();
   }
   function start(root){
     stop();active=true;
@@ -105,7 +106,7 @@
     listen(window,'pagehide',()=>{pauseMusic();pauseEffects();});
     musicTimer=setInterval(syncMusic,500);
   }
-  function stop(){mega.stop();element.stop();shield.stop();heal.stop();lightning.stop();stopMusic();active=false;unlocked=false;detach.splice(0).forEach(fn=>fn());}
-  window.ArenaAudio={start,stop,exit:stop,prepareMega:mega.prepare,playMega:mega.play,playElement:family=>(family==='arc'?lightning:element).play(),playShield:shield.play,playHeal:heal.play,
-    stats:()=>({active,unlocked,mega:mega.stats(),element:element.stats(),shield:shield.stats(),heal:heal.stats(),lightning:lightning.stats(),music:{playing:!!music&&!music.paused,loop:!!music&&music.loop,volume:music?.volume||0,track:musicTrack?.file||'',cached:!!musicBlob,downloads:musicDownloads}})};
+  function stop(){mega.stop();element.stop();shield.stop();heal.stop();lightning.stop();fire.stop();stopMusic();active=false;unlocked=false;detach.splice(0).forEach(fn=>fn());}
+  window.ArenaAudio={start,stop,exit:stop,prepareMega:mega.prepare,playMega:mega.play,playElement:family=>(family==='arc'?lightning:family==='fire'?fire:element).play(),playShield:shield.play,playHeal:heal.play,
+    stats:()=>({active,unlocked,mega:mega.stats(),element:element.stats(),shield:shield.stats(),heal:heal.stats(),lightning:lightning.stats(),fire:fire.stats(),music:{playing:!!music&&!music.paused,loop:!!music&&music.loop,volume:music?.volume||0,track:musicTrack?.file||'',cached:!!musicBlob,downloads:musicDownloads}})};
 })();

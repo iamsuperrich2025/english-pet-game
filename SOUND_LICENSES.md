@@ -31,3 +31,7 @@ Source: `C:\Users\rober\english-pet-game\sound\arena\4.mp3`, explicitly supplied
 ## User-approved lightning (round 1393)
 
 Source: `C:\Users\rober\english-pet-game\sound\arena\5.mp3`, explicitly supplied for lightning. No external license supplied or inferred. Runtime: `sound/arena/lightning-261c63b74d97a82f.mp3`, 35,108 bytes, identical original MP3 (1.097125 seconds, stereo 44.1 kHz). Replaces the generic elemental cast cue for ARC and all five extended arc-family spells, without playing both cues. Quiet first-gesture preload, persistent cache and reusable player as above.
+
+## User-approved fire (round 1394)
+
+Source: `C:\Users\rober\english-pet-game\sound\arena\6.mp3`, explicitly assigned to fire powers. No external license supplied or inferred. Runtime: `sound/arena/fire-a6fea31058694941.mp3`, 224,906 bytes, 7.000816 seconds, stereo 44.1 kHz MP3. Source: 580,127 bytes / 18.128969 seconds; signal below -60 dB after 7.25263 seconds and before 0.553492 seconds. Copy audio packets from 0.45 seconds for 7 seconds to retain the audible onset/tail; no re-encoding, with all output audio packet SHA-256 hashes verified as an unchanged contiguous sequence from the source. Removes silent padding and saves 61.2% of transfer bytes. Uses one cached player for the fire ring and all five extended fire-family spells instead of the generic element cue; MEGA remains on the separately assigned clip.

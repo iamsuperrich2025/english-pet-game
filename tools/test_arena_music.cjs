@@ -13,7 +13,7 @@ const server=http.createServer((req,res)=>{let p=new URL(req.url,'http://localho
   ok('no music bytes or player before gesture',requests.length===0&&await page.evaluate(()=>media.length===0));
   if(mobile)await page.locator('#enter').tap();else await page.locator('#enter').click();
   await page.waitForFunction(()=>ArenaAudio.stats().music.playing&&media[0].currentTime>.1);
-  await page.waitForFunction(()=>ArenaAudio.stats().element.cached&&ArenaAudio.stats().shield.cached&&ArenaAudio.stats().heal.cached&&ArenaAudio.stats().lightning.cached);
+  await page.waitForFunction(()=>ArenaAudio.stats().element.cached&&ArenaAudio.stats().shield.cached&&ArenaAudio.stats().heal.cached&&ArenaAudio.stats().lightning.cached&&ArenaAudio.stats().fire.cached);
   ok('single supported Opus download and quiet looping player',requests.length===1&&requests[0].endsWith('.ogg')&&await page.evaluate(()=>media.length===1&&media[0].loop&&media[0].volume===.16));
   await page.evaluate(()=>media[0].currentTime=media[0].duration-.2);await page.waitForTimeout(800);
   ok('natural track ending loops without another download',requests.length===1&&await page.evaluate(()=>media[0].currentTime<2&&!media[0].paused));
@@ -41,7 +41,7 @@ const server=http.createServer((req,res)=>{let p=new URL(req.url,'http://localho
     ok(cue+' immediately stops on hidden tab',await page.evaluate(cue=>!ArenaAudio.stats()[cue].playing,cue));
     await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:false});document.dispatchEvent(new Event('visibilitychange'));});
   }
-  await page.evaluate(()=>ArenaAudio.stop());await page.route('**/*element-*.mp3',route=>route.abort());await page.route('**/*shield-*.mp3',route=>route.abort());await page.route('**/*heal-*.mp3',route=>route.abort());await page.reload();await page.locator('#enter').click();await page.waitForFunction(()=>ArenaAudio.stats().element.cached&&ArenaAudio.stats().shield.cached&&ArenaAudio.stats().heal.cached&&ArenaAudio.stats().lightning.cached);
+  await page.evaluate(()=>ArenaAudio.stop());await page.route('**/*element-*.mp3',route=>route.abort());await page.route('**/*shield-*.mp3',route=>route.abort());await page.route('**/*heal-*.mp3',route=>route.abort());await page.reload();await page.locator('#enter').click();await page.waitForFunction(()=>ArenaAudio.stats().element.cached&&ArenaAudio.stats().shield.cached&&ArenaAudio.stats().heal.cached&&ArenaAudio.stats().lightning.cached&&ArenaAudio.stats().fire.cached);
   ok('element, shield and heal reuse persistent cache after reload with network blocked',await page.evaluate(()=>ArenaAudio.stats().element.downloads===0&&ArenaAudio.stats().shield.downloads===0&&ArenaAudio.stats().heal.downloads===0));
   await page.evaluate(()=>{state.sound=false;ArenaAudio.playElement();ArenaAudio.playShield();ArenaAudio.playHeal();});await page.waitForTimeout(200);
   ok('global mute rejects all approved action sounds',await page.evaluate(()=>ArenaAudio.stats().element.played===0&&ArenaAudio.stats().shield.played===0&&ArenaAudio.stats().heal.played===0));
@@ -51,15 +51,15 @@ const server=http.createServer((req,res)=>{let p=new URL(req.url,'http://localho
  const missing=await browser.newContext();const m=await missing.newPage(),bad=[],failures=[];m.on('pageerror',e=>failures.push(e.message));await m.route('**/*bgmusic-*',r=>{bad.push(r.request().url());return r.fulfill({status:404,body:''});});await m.goto('http://127.0.0.1:'+server.address().port+'/test');await m.locator('#enter').click();await m.waitForTimeout(1800);ok('missing music remains silent without crashes or request spam',bad.length===1&&failures.length===0&&!await m.evaluate(()=>ArenaAudio.stats().music.playing));await m.evaluate(()=>ArenaAudio.stop());await missing.close();
  const game=await browser.newPage({viewport:{width:812,height:375},isMobile:true,hasTouch:true}),gameAudio=[],gameErrors=[];game.on('request',r=>{if(r.url().includes('/sound/arena/'))gameAudio.push(r.url());});game.on('pageerror',e=>gameErrors.push(e.message));
  await game.goto('http://127.0.0.1:'+server.address().port+'/game');await game.evaluate(()=>VocabArena3D.start());await game.waitForTimeout(300);ok('real Arena has no initial SFX or music download',gameAudio.length===0);
- await game.locator('#va-home-nav').tap();await game.waitForFunction(()=>ArenaAudio.stats().music.playing&&ArenaAudio.stats().element.cached&&ArenaAudio.stats().shield.cached&&ArenaAudio.stats().heal.cached&&ArenaAudio.stats().lightning.cached);
- await game.evaluate(()=>{const t=VocabArena3D._t;t.bots.forEach(b=>{b.attackAt=performance.now()+60000;b.hp=b.maxHp=100000;});});
+ await game.locator('#va-home-nav').tap();await game.waitForFunction(()=>ArenaAudio.stats().music.playing&&ArenaAudio.stats().element.cached&&ArenaAudio.stats().shield.cached&&ArenaAudio.stats().heal.cached&&ArenaAudio.stats().lightning.cached&&ArenaAudio.stats().fire.cached);
+ await game.evaluate(()=>{const t=VocabArena3D._t;t.spellbook(false);t.player().vel.set(0,0,0);t.bots.forEach(b=>{b.attackAt=performance.now()+60000;b.hp=b.maxHp=100000;});});
  await game.evaluate(()=>{const t=VocabArena3D._t;t.player().pos.set(0,0,0);t.bots[0].group.position.set(5,0,0);t.cast('basic');t.kill(1);for(let i=0;i<4;i++)t.collect(t.drops.indexOf(t.crystalNodes[i].drop));t.cast('ult');});await game.waitForTimeout(400);
- ok('normal actions and rejected MEGA remain silent',gameAudio.length===5&&await game.evaluate(()=>ArenaAudio.stats().mega.played===0&&ArenaAudio.stats().element.played===0&&ArenaAudio.stats().shield.played===0&&ArenaAudio.stats().heal.played===0));
+ ok('normal actions and rejected MEGA remain silent',gameAudio.length===6&&await game.evaluate(()=>ArenaAudio.stats().mega.played===0&&ArenaAudio.stats().element.played===0&&ArenaAudio.stats().shield.played===0&&ArenaAudio.stats().heal.played===0));
  await game.evaluate(()=>{const t=VocabArena3D._t;t.collect(t.drops.indexOf(t.crystalNodes[4].drop));});await game.waitForFunction(()=>ArenaAudio.stats().mega.cached);
- ok('fifth crystal prepares approved clip without playing it',gameAudio.length===6&&gameAudio.some(url=>url.includes('mega-5583f203fe74a126.mp3'))&&await game.evaluate(()=>ArenaAudio.stats().mega.played===0));
+ ok('fifth crystal prepares approved clip without playing it',gameAudio.length===7&&gameAudio.some(url=>url.includes('mega-5583f203fe74a126.mp3'))&&await game.evaluate(()=>ArenaAudio.stats().mega.played===0));
  await game.locator('[data-skill="ult"]').tap();await game.waitForFunction(()=>ArenaAudio.stats().mega.playing&&ArenaAudio.stats().mega.played>0);
  await game.locator('[data-skill="ult"]').tap();await game.evaluate(()=>VocabArena3D._t.complete());await game.waitForTimeout(300);
- ok('successful MEGA plays exactly once; cooldown and other actions add no SFX',gameAudio.length===6&&await game.evaluate(()=>ArenaAudio.stats().mega.played===1&&VocabArena3D._t.megaUses===4&&ArenaAudio.stats().music.playing));
+ ok('successful MEGA plays exactly once; cooldown and other actions add no SFX',gameAudio.length===7&&await game.evaluate(()=>ArenaAudio.stats().mega.played===1&&VocabArena3D._t.megaUses===4&&ArenaAudio.stats().music.playing));
  await game.evaluate(()=>{const t=VocabArena3D._t;t.player().pos.set(0,0,0);t.cast('light');t.cast('light');});await game.waitForFunction(()=>ArenaAudio.stats().element.played===1);
  ok('successful elemental cast plays once and cooldown rejects duplicate',await game.evaluate(()=>ArenaAudio.stats().mega.played===1&&ArenaAudio.stats().element.played===1));
  await game.waitForTimeout(300);await game.evaluate(()=>{const t=VocabArena3D._t;t.bots.forEach(b=>b.group.position.set(40,0,40));t.cast('arc');});await game.waitForTimeout(100);
@@ -69,6 +69,10 @@ const server=http.createServer((req,res)=>{let p=new URL(req.url,'http://localho
  ok('ARC uses lightning alone; NOVA uses generic elemental clip',await game.evaluate(()=>ArenaAudio.stats().lightning.played===1&&ArenaAudio.stats().element.played===2));
  await game.evaluate(()=>ArenaElements.prepare('thunder_chain'));await game.waitForTimeout(300);await game.evaluate(()=>VocabArena3D._t.cast('thunder_chain'));await game.waitForFunction(()=>ArenaAudio.stats().lightning.played===2);
  ok('extended lightning family also uses only the lightning clip',await game.evaluate(()=>ArenaAudio.stats().element.played===2));
+ await game.evaluate(()=>VocabArena3D._t.cast('fire'));await game.waitForFunction(()=>ArenaAudio.stats().fire.played===1);
+ ok('fire ring uses the supplied fire clip without generic element audio',await game.evaluate(()=>ArenaAudio.stats().element.played===2&&ArenaAudio.stats().lightning.played===2));
+ await game.evaluate(()=>ArenaElements.prepare('dragon_breath'));await game.waitForTimeout(300);await game.evaluate(()=>VocabArena3D._t.cast('dragon_breath'));await game.waitForFunction(()=>ArenaAudio.stats().fire.played===2);
+ ok('extended fire family reuses the fire clip',await game.evaluate(()=>ArenaAudio.stats().element.played===2));
  ok('healing spell at full HP does not play recovery audio',await game.evaluate(()=>ArenaAudio.stats().heal.played===0));
  await game.evaluate(()=>{VocabArena3D._t.damage(1);VocabArena3D._t.damage(1);});await game.waitForFunction(()=>ArenaAudio.stats().shield.played===1);
  ok('shield absorbs impacts with bounded audio retriggers',await game.evaluate(()=>ArenaAudio.stats().shield.played===1&&VocabArena3D._t.health().shield>0));
@@ -81,7 +85,7 @@ const server=http.createServer((req,res)=>{let p=new URL(req.url,'http://localho
  ok('continuous home healing cannot stack recovery sounds',await game.evaluate(()=>ArenaAudio.stats().heal.played===1));
  await game.waitForFunction(()=>ArenaAudio.stats().heal.played===2);
  ok('ongoing home healing can replay after bounded cooldown',true);
- ok('all repeated casts and impacts reuse the six downloaded files',gameAudio.length===6);
- await game.locator('#va-exit').tap();ok('real Arena exit stops music',await game.evaluate(()=>!ArenaAudio.stats().music.playing&&!ArenaAudio.stats().mega.playing&&!ArenaAudio.stats().element.playing&&!ArenaAudio.stats().shield.playing&&!ArenaAudio.stats().heal.playing&&!ArenaAudio.stats().lightning.playing));ok('real Arena no JS errors',gameErrors.length===0);await game.close();
+ ok('all repeated casts and impacts reuse the seven downloaded files',gameAudio.length===7);
+ await game.locator('#va-exit').tap();ok('real Arena exit stops music',await game.evaluate(()=>!ArenaAudio.stats().music.playing&&!ArenaAudio.stats().mega.playing&&!ArenaAudio.stats().element.playing&&!ArenaAudio.stats().shield.playing&&!ArenaAudio.stats().heal.playing&&!ArenaAudio.stats().lightning.playing&&!ArenaAudio.stats().fire.playing));ok('real Arena no JS errors',gameErrors.length===0);await game.close();
  fs.mkdirSync(out,{recursive:true});fs.writeFileSync(path.join(out,'music-tests.json'),JSON.stringify({passed:checks.length,checks},null,2));console.log(JSON.stringify({passed:checks.length,checks}));
 }finally{await browser.close();server.close();}})().catch(e=>{console.error(e);process.exitCode=1;server.close();});
