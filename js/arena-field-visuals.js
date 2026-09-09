@@ -76,11 +76,12 @@
     const ribbon=[],ribbonIndex=[];
     for(let i=0;i<=64;i++){const t=i/64,a=t*Math.PI*7,r=.35+t*4.3;for(const edge of [-1,1]){const aa=a+edge*.16;ribbon.push(Math.cos(aa)*r,t*9,Math.sin(aa)*r);}if(i<64){const n=i*2;ribbonIndex.push(n,n+1,n+2,n+1,n+3,n+2);}}
     const twisterGeo=new THREE.BufferGeometry();twisterGeo.setAttribute('position',new THREE.Float32BufferAttribute(ribbon,3));twisterGeo.setIndex(ribbonIndex);twisterGeo.computeVertexNormals();
-    const elementalGeos={flame:coneGeo,shard:shardGeo,meteor:orbGeo,core:orbGeo,orbit:haloGeo,wind:twisterGeo,water:waveGeo};
+    const boundaryGeo=new THREE.RingGeometry(.984,1,96);
+    const elementalGeos={boundary:boundaryGeo,flame:coneGeo,shard:shardGeo,meteor:orbGeo,core:orbGeo,orbit:haloGeo,wind:twisterGeo,water:waveGeo};
     const pool=[],qUp=new THREE.Vector3(0,1,0),delta=new THREE.Vector3();
     for(let i=0;i<(low?28:48);i++){const m=new THREE.Mesh(ringGeo,new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending}));m.visible=false;scene.add(m);pool.push({m,life:0,max:1,kind:'ring',size:1,anchor:new THREE.Vector3(),serial:0,phase:0});}
     let index=0;
-    function take(kind,pos,col,size,duration){const f=pool[index++%pool.length];f.serial++;f.phase=index*.73;f.yaw=0;f.kind=kind;f.life=f.max=duration;f.size=size;const m=f.m;m.geometry=elementalGeos[kind]||(kind==='rune'?planeGeo:kind==='beam'?beamGeo:kind==='dome'?domeGeo:ringGeo);m.material.blending=THREE.AdditiveBlending;m.material.map=kind==='rune'?runeMap:null;m.material.needsUpdate=true;m.material.color.setHex(col).convertSRGBToLinear();m.material.toneMapped=false;m.material.opacity=1;m.visible=true;m.position.set(pos.x,.13+(pos.y||0),pos.z);m.rotation.set(kind==='beam'||kind==='dome'||elementalGeos[kind]?0:-Math.PI/2,0,0);m.scale.setScalar(1);f.anchor.copy(m.position);return f;}
+    function take(kind,pos,col,size,duration){const f=pool[index++%pool.length];f.serial++;f.phase=index*.73;f.yaw=0;f.kind=kind;f.life=f.max=duration;f.size=size;const m=f.m;m.geometry=elementalGeos[kind]||(kind==='rune'?planeGeo:kind==='beam'?beamGeo:kind==='dome'?domeGeo:ringGeo);m.material.blending=THREE.AdditiveBlending;m.material.map=kind==='rune'?runeMap:null;m.material.needsUpdate=true;m.material.color.setHex(col).convertSRGBToLinear();m.material.toneMapped=false;m.material.opacity=1;m.visible=true;m.position.set(pos.x,.13+(pos.y||0),pos.z);m.rotation.set(kind==='beam'||kind==='dome'||(elementalGeos[kind]&&kind!=='boundary')?0:-Math.PI/2,0,0);m.scale.setScalar(1);f.anchor.copy(m.position);return f;}
     function ring(pos,col,size=5,duration=.6){take('ring',pos,col,size,duration);}
     function beam(a,b,col,duration=.3){const f=take('beam',a,col,1,duration);delta.copy(b).sub(a);if(delta.length()<.01)delta.y=.01;f.m.position.copy(a).addScaledVector(delta,.5);f.m.position.y+=.7;f.m.scale.set(1,delta.length(),1);f.m.quaternion.setFromUnitVectors(qUp,delta.normalize());}
     function spell(pos,kind){const col=kind==='ult'?0xffce79:kind==='arc'?0x5cddff:0xc16bff,r=kind==='ult'?16:kind==='nova'?7:4;
@@ -114,12 +115,19 @@
       }
       return {move(next){for(const h of records)if(h.f.serial===h.serial&&h.f.life>0){h.f.anchor.copy(next).add(h.offset);h.f.m.position.copy(h.f.anchor);}}};
     }
+    function mega(pos,kind,r){
+      const col=parseInt(ArenaElements.byId[kind].color.slice(1),16);
+      element(kind,pos,{r,life:2.5});
+      const rim=take('boundary',pos,0xff55bf,r+.12,2.5);rim.m.material.blending=THREE.NormalBlending;
+      take('boundary',pos,col,r,2.5);take('rune',pos,col,r,2.5);take('dome',pos,0x78dfff,r*.96,2.5);burst(pos,col,low?40:90,15);
+    }
     function slash(pos,yaw){const f=take('slash',pos,0xb9faff,2.5,.25);f.m.geometry=newSlashGeo;f.m.rotation.z=-yaw+.6;f.m.position.y=.75;}
     const newSlashGeo=new THREE.RingGeometry(.72,1,32,1,0,Math.PI*1.35);
     function tick(dt){for(let i=0;i<cap;i++){if(life[i]<=0)continue;life[i]-=dt;const k=i*3,f=Math.max(0,life[i]/max[i]);if(f===0){positions[k+1]=-100;continue;}positions[k]+=vel[k]*dt;positions[k+1]+=vel[k+1]*dt;positions[k+2]+=vel[k+2]*dt;vel[k+1]-=dt*4;colors[k]=baseColor[k]*f;colors[k+1]=baseColor[k+1]*f;colors[k+2]=baseColor[k+2]*f;}geo.attributes.position.needsUpdate=true;geo.attributes.color.needsUpdate=true;
       for(const f of pool){
         if(f.life<=0)continue;f.life-=dt;const p=1-Math.max(0,f.life/f.max),m=f.m,age=f.max-f.life,fade=Math.min(1,(1-p)*4);m.visible=f.life>0;m.material.opacity=(1-p)*(f.kind==='dome'?.13:.9);
-        if(f.kind==='wind'){m.rotation.set(0,age*4+f.phase,0);m.scale.set(f.size,1,f.size);m.material.opacity=fade*.68;}
+        if(f.kind==='boundary'){m.scale.setScalar(f.size);m.material.opacity=Math.min(1,age*8)*fade*.95;}
+        else if(f.kind==='wind'){m.rotation.set(0,age*4+f.phase,0);m.scale.set(f.size,1,f.size);m.material.opacity=fade*.68;}
         else if(f.kind==='flame'){m.scale.set(f.size*.55,f.size*(.8+Math.sin(age*14+f.phase)*.25)*fade,f.size*.55);m.material.opacity=fade*.95;}
         else if(f.kind==='shard'){m.scale.set(f.size*.4,f.size*(1.4+Math.sin(p*Math.PI)*.7),f.size*.4);m.rotation.y=age*.7+f.phase;}
         else if(f.kind==='meteor'){m.position.set(f.anchor.x+6*(1-p),f.anchor.y+13*(1-p),f.anchor.z-3*(1-p));m.scale.setScalar(f.size);m.rotation.x+=dt*3;m.material.opacity=f.size>1.2?.34:1;}
@@ -130,8 +138,8 @@
       }
     }
 
-    function dispose(){scene.remove(points);pool.forEach(f=>{scene.remove(f.m);f.m.material.dispose();});[geo,ringGeo,planeGeo,beamGeo,domeGeo,newSlashGeo,coneGeo,shardGeo,orbGeo,haloGeo,waveGeo,twisterGeo].forEach(g=>g.dispose());[mat,map,runeMap].forEach(m=>m.dispose());}
-    return {burst,ring,beam,spell,element,slash,tick,dispose,stats:()=>({particles:cap,active:life.reduce((n,x)=>n+(x>0),0),meshes:pool.length})};
+    function dispose(){scene.remove(points);pool.forEach(f=>{scene.remove(f.m);f.m.material.dispose();});[geo,ringGeo,planeGeo,beamGeo,domeGeo,boundaryGeo,newSlashGeo,coneGeo,shardGeo,orbGeo,haloGeo,waveGeo,twisterGeo].forEach(g=>g.dispose());[mat,map,runeMap].forEach(m=>m.dispose());}
+    return {burst,ring,beam,spell,element,mega,slash,tick,dispose,stats:()=>({particles:cap,active:life.reduce((n,x)=>n+(x>0),0),meshes:pool.length})};
   }
   window.ArenaFieldVisuals={hero,animate,strike,house,createFx,garden,compactStatic};
 })();

@@ -266,3 +266,8 @@
 .va-vital b{white-space:nowrap}.va-vital.self{width:60px}
 
 #va-root .va-feed{max-height:56px}
+
+/* Round 1384 — distinguish the five MEGA uses from cooldown seconds. */
+#va-root .va-skill.ult .key{top:4px;bottom:auto;z-index:3;font-size:8px}
+.va-mega-uses{position:absolute;bottom:6px;left:12%;width:76%;padding:1px 0;border-radius:8px;background:#10243e;color:#ffec94;font-size:9px;font-weight:900;line-height:1.3;z-index:4;white-space:nowrap;border:1px solid #efd48688;pointer-events:none}
+#va-crystal-count{text-shadow:0 1px 3px #000,0 0 5px #102038}

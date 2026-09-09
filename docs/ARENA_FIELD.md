@@ -1,8 +1,8 @@
-# Arena Field — rounds 1380–1381
+# Arena Field — rounds 1380–1384
 
 The admin-only Adventure entry loads `js/arena-field-visuals.js` and `js/arena-elements.js` before `js/arena3d.js`. The main engine still owns combat, words, rewards, co-op/boss state and lifecycle. The visual module owns compact articulated heroes, original procedural houses, merged static scenery, and bounded spell pools. `css/arena3d.css` owns its landscape HUD.
 
-Controls: WASD/arrows or left joystick to move; hold the attack button or Space for repeated attacks; 1/2 for the equipped elements, 3 for Wordstorm, E for the elemental library; H or the house button to walk home. Manual steering interrupts the return route.
+Controls: WASD/arrows or left joystick to move; hold the attack button or Space for repeated attacks; 1/2 for the equipped elements, 3 for elemental MEGA, E for the elemental library; H or the house button to walk home. Manual steering interrupts the return route.
 
 Pick up up to six letters, then walk within 3.3 world units of your own house to bank them. Only banked letters complete words, with repeated letters consumed individually. `state.arenaHome={letters,cargo}` uses the existing account save; both bank and carried letters survive exit/reload. Downing drops carried letters on the field, while banked letters remain safe. A-Z counts are sanitized and capped at 999; ground drops expire after 45 seconds. The home ring offers recovery and blocks incoming damage. Rewards retain the original Arena calculations, not Frontline's economy.
 
@@ -25,7 +25,7 @@ Ten choices fit on one landscape panel; two distinct slots persist in `state.are
 - Gravity: three seconds of pull/damage, followed by a final collapse.
 - Water: a traveling wave; each target takes damage once and is pushed away.
 - Light: restore up to 30 HP and add up to 20 shield, bounded by the existing/temporary shield capacity.
-- Existing Arc and Nova remain available; Wordstorm remains the fixed ultimate.
+- Existing Arc and Nova remain available; elemental MEGA is the fixed ultimate (see round 1384 below).
 
 `ArenaElements.create()` owns the bounded gameplay zones (maximum 12) and does not own rewards or network writes. The visual module reuses the existing 640/48 or 256/28 pools with procedural flame/crystal/ribbon/wave/orb geometry. Damage to the player produces red floating text, shields use cyan, enemy damage keeps the original damage colors, and healing uses green. Labels rise and fade over 1.15 seconds and are removed on expiry or exit. Pets remain non-targetable companions, with no invented health system.
 
@@ -41,3 +41,14 @@ Eight generated full-body heroes (male: fire/wind/ice/light; female: earth/meteo
 `img/arena-heroes/` contains only WebP: eight 768x1152 alpha portraits and eight 160x240 thumbnails. Generated source PNGs stay outside the repo. `docs/ARENA_HERO_ASSETS.json` records prompts, sources, codec comparisons, alpha and bytes. Thumbnails load together; full images load as selected. One selected portrait owns one lightweight WebGL shader and an 18-particle canvas overlay capped at 30 FPS, DPR 1.5 and 768x1152. Per-hero masks displace hair/cape/magic while protecting the face and leaving feet anchored. No video or animation frame atlas downloads. Hidden tab, reduced-motion preference and the motion button stop animation; cancellation/entry releases textures, context, observer and listeners. If WebGL is unavailable, the full-body still remains visible.
 
 `node tools/test_arena_heroes.cjs` exercises the actual entry function with isolated loader/account fixtures, all eight decoded images, 4/4 gender split, responsive layouts (1366x768,812x375,667x320,390x844), pixel differences proving hair/cape/fire animate while face/boots remain still, reduced motion, selection-to-game powers and cooldown, persistence, cancellation, preload retry/late resolution, and disposal. No production account writes. Set `VW_ARENA_CAPTURE=1` to export temporary preview frames.
+
+
+## Letter crystals and five-use MEGA (round 1384)
+
+Six former decorative pedestal cores now hold collectible diamonds with A–Z printed on the crystal. Bases remain in the merged static scene; dynamic gems spawn afterward, bob/rotate, and respawn after 18 active gameplay seconds. Letters cycle through A–Z from a randomized starting offset. Walking within 2.5 units collects a pedestal gem; enemy letter diamonds use the existing 1.4-unit radius. Both fresh sources add one charge and one carried letter. Full cargo leaves the gem available and awards neither resource; the six-letter cargo/home bank rules remain intact.
+
+Five fresh crystals grant exactly **five MEGA uses**. Each cast consumes one use, retaining every carried/banked letter. While uses remain, crystals still yield letters but do not accumulate a second charge batch. After the fifth cast the charge meter resets to 0/5; five more pickups grant a fresh five-use batch. The button badge says `เหลือ N`, the top meter says `MEGA เหลือ N ครั้ง`, and cooldown explicitly includes `วิ` to distinguish seconds from remaining uses. The existing 15-second cooldown remains. Downing/exit clears session charges/uses; letters spilled on downing cannot grant fresh charge when reclaimed.
+
+MEGA follows the selected hero's element, with a fixed 18-unit damage radius and matching luminous boundary, rune and dome. Three pulses at 0.35/1.05/1.75 seconds each deal 40 times the current letter/item multiplier to enemies inside the radius. Wind/gravity pull; ice slows; earth/water push; light also heals 30 and grants 20 shield. Targets outside the ring receive no damage. Spell zones cap at 12, and effects retain the existing 640-particle/48-mesh or 256/28 low-power pools. No image/model/audio files or network schema changes were added.
+
+`tools/test_arena_crystals.cjs` covers each element's actual inside/outside damage, matched VFX radius, five-pickup unlock, five-use countdown and recharging, full-cargo rejection, respawn, anti-recharge on spilled letters, home banking, cooldown/uses labels, viewport fit, pool bounds and cleanup. Fixtures are local and do not write production saves.

@@ -42,6 +42,8 @@
   let keys=new Set(),joy={x:0,z:0,id:null},listeners=[];
   let bag={},recentLetters=[],target=null,wordBusy=false,wordNo=0;
   let energy=0,kills=0,sessionWords=0,sessionCoins=0;
+  const CRYSTAL_NEED=5,CRYSTAL_RESPAWN=18;
+  let crystalCharge=0,megaUses=0,crystalNodes=[],crystalLetterIndex=0;
   let cooldown={basic:0,arc:0,nova:0,ult:0},lastFrame=0,lastBotEnsure=0,lastPetStrike=0,lastHitAt=0;
   let hp=100,maxHp=100,shield=0,maxShield=0;
   let texLoader,audioCtx=null,fxLow=false;
@@ -94,14 +96,14 @@
         <div class="va-coins va-glass">🪙 <span id="va-coins">${fmt(state.coins||0)}</span></div>
         <button class="va-shop-btn" id="va-shop-open">🛒 พลังพิเศษ</button>
       </div>
-      <div class="va-energy va-glass" id="va-energy"><span class="va-energy-label">พลังอักษร</span><div class="va-energy-track"><div class="va-energy-fill" id="va-energy-fill"></div></div><span class="va-energy-power" id="va-energy-power">×1.0</span></div>
+      <div class="va-energy va-glass" id="va-energy"><span class="va-energy-label" id="va-crystal-count">◆ 0 / 5 · เก็บคริสตัล</span><div class="va-energy-track"><div class="va-energy-fill" id="va-energy-fill"></div></div><span class="va-energy-power" id="va-energy-power">×1.0</span></div>
       <div class="va-bag va-glass"><span class="va-bag-label">ขนกลับบ้าน</span><div class="va-bag-list" id="va-bag-list"></div></div>
       <div class="va-party va-glass" id="va-party"><button id="va-party-friends" class="va-party-find" aria-label="ไปหาเพื่อน">👥</button><div><b id="va-party-status">กำลังหาปาร์ตี้…</b><div class="va-party-list" id="va-party-list"></div></div></div>
       <div class="va-boss va-glass" id="va-boss"><div class="va-boss-head"><span id="va-boss-chapter">บท 1</span><b id="va-boss-name">ผู้พิทักษ์คำศัพท์</b><em id="va-boss-hp-text">100%</em></div><div class="va-boss-track"><div class="va-boss-fill" id="va-boss-fill"></div></div><div class="va-boss-word" id="va-boss-word"></div></div>
       <div class="va-hp va-glass" id="va-hp"><b>HP</b><div class="va-hp-track"><div class="va-hp-fill" id="va-hp-fill"></div></div></div>
       <div class="va-stick" id="va-stick"><div class="va-stick-knob" id="va-stick-knob"></div></div>
       <div class="va-skills"><button class="va-spell-toggle va-glass" id="va-spells-open">✨ คลังธาตุ <small>E</small></button>
-        <button class="va-skill ult" data-skill="ult" aria-label="Wordstorm"><span class="ico">🌈</span><span class="key">3 WORDSTORM</span><span class="cd"></span></button>
+        <button class="va-skill ult" data-skill="ult" aria-label="MEGA เก็บคริสตัล 5 อัน"><span class="ico">💎</span><span class="key">3 MEGA</span><span class="cd"></span><b class="va-mega-uses" id="va-mega-uses" aria-hidden="true">เหลือ 0</b></button>
         <button class="va-skill nova" data-slot="1" data-skill="nova" aria-label="Nova"><span class="ico">🌀</span><span class="key">2 NOVA</span><span class="cd"></span></button>
         <button class="va-skill arc" data-slot="0" data-skill="arc" aria-label="Arc"><span class="ico">⚡</span><span class="key">1 ARC</span><span class="cd"></span></button>
         <button class="va-skill basic" data-skill="basic" aria-label="ยิงพลัง"><span class="ico">✦</span><span class="key">ยิง</span><span class="cd"></span></button>
@@ -116,13 +118,13 @@
       </div></div>
       <div class="va-modal" id="va-intro"><div class="va-panel va-intro-panel">
         <div class="va-intro-logo">VOCAB ARENA</div><div class="va-intro-sub">ตัวเล็ก · เวทมนตร์ใหญ่ · ขนอักษรกลับบ้าน</div>
-        <div class="va-intro-steps"><div class="va-intro-step"><b>⚔️</b>เดินจอยซ้าย · สู้ปุ่มขวา</div><div class="va-intro-step"><b>🔤</b>เก็บอักษรได้ครั้งละ 6 ตัว</div><div class="va-intro-step"><b>🏠</b>กลับบ้านเพื่อฝากและสะกดคำ</div><div class="va-intro-step"><b>👑</b>ครบ 3 คำ ต่อสู้บอสด้วยกัน</div><div class="va-intro-step"><b>✨</b>คลังธาตุเลือกพลังช่อง 1–2</div></div>
+        <div class="va-intro-steps"><div class="va-intro-step"><b>⚔️</b>เดินจอยซ้าย · สู้ปุ่มขวา</div><div class="va-intro-step"><b>💎</b>คริสตัลมี A–Z · ขนได้ 6 ตัว</div><div class="va-intro-step"><b>🏠</b>กลับบ้านเพื่อฝากและสะกดคำ</div><div class="va-intro-step"><b>👑</b>ครบ 3 คำ ต่อสู้บอสด้วยกัน</div><div class="va-intro-step"><b>✨</b>ครบ 5 คริสตัล · ได้ MEGA 5 ครั้ง</div></div>
         <button class="va-start" id="va-start">เริ่มภารกิจ ✦</button>
       </div></div>
       <div class="va-modal" id="va-spellbook"><div class="va-panel va-spell-panel">
         <div class="va-panel-head"><div><div class="va-panel-title">✨ คลังพลังธาตุ</div><div class="va-panel-sub">เลือกช่อง 1 หรือ 2 แล้วแตะพลังที่ต้องการ · สลับได้ฟรี คูลดาวน์ยังนับต่อ</div></div><button class="va-close" id="va-spells-close" aria-label="ปิดคลังธาตุ">✕</button></div>
         <div class="va-slot-tabs" id="va-slot-tabs"></div><div class="va-spell-grid" id="va-spell-grid"></div>
-        <div class="va-spell-footer">WASD / จอย: เดิน · 1 / 2: พลังที่เลือก · 3: WORDSTORM · Space: โจมตีค้าง</div>
+        <div class="va-spell-footer">WASD / จอย: เดิน · 1 / 2: พลังที่เลือก · 3: MEGA (คริสตัล 5 อัน) · Space: โจมตีค้าง</div>
       </div></div><div class="va-portrait"><div><b>📱↻</b>หมุนเครื่องเป็นแนวนอนเพื่อเข้าสนามครับ</div></div>`;
     document.body.appendChild(root);
     canvas=root.querySelector('#va-canvas');
@@ -209,6 +211,7 @@
   }
 
   function buildArena(){
+    crystalNodes=[];
     scene.add(new THREE.HemisphereLight(0x8bdcff,0x130d2c,.75));
     const sun=new THREE.DirectionalLight(0xc9f5ff,1.1); sun.position.set(-12,24,11); scene.add(sun);
     const fill=new THREE.PointLight(0xb44cff,.7,55); fill.position.set(10,8,-10); scene.add(fill);
@@ -240,8 +243,7 @@
     for(let i=0;i<6;i++){
       const a=i/6*TAU+.25,r=22.8,col=crystalColors[i%3],g=new THREE.Group(); g.position.set(Math.sin(a)*r,0,Math.cos(a)*r);
       const base=new THREE.Mesh(new THREE.CylinderGeometry(1.5,2.15,.8,8),new THREE.MeshStandardMaterial({color:0x172b45,metalness:.55,roughness:.34})); base.position.y=.38; g.add(base);
-      const core=new THREE.Mesh(new THREE.OctahedronGeometry(.9,0),new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:1.7,metalness:.25,roughness:.2})); core.scale.y=2.5; core.position.y=2.4; core.rotation.y=a; g.add(core);
-      const halo=new THREE.Mesh(new THREE.TorusGeometry(1.5,.065,8,40),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.65,blending:THREE.AdditiveBlending})); halo.rotation.x=Math.PI/2; halo.position.y=2.4; g.add(halo); g.userData.halo=halo; scene.add(g);
+      crystalNodes.push({pos:g.position.clone(),remaining:0,drop:null});scene.add(g);
     }
     const starGeo=new THREE.BufferGeometry(),n=180,arr=new Float32Array(n*3);
     for(let i=0;i<n;i++){ const a=Math.random()*TAU,r=Math.sqrt(Math.random())*ARENA_R; arr[i*3]=Math.sin(a)*r;arr[i*3+1]=rnd(.35,4.5);arr[i*3+2]=Math.cos(a)*r; }
@@ -472,7 +474,7 @@
     const now=performance.now(),mult=powerMult();
     const aim=targetNearest(18);if(aim)player.facing.copy(aim.group.position).sub(player.pos).setY(0).normalize();
     if(!SKILL_CD[kind])return;
-    if(kind==='ult'&&energy<5){ feed(`ต้องเก็บอักษรอีก ${5-energy} ตัว เพื่อเปิด WORDSTORM`,'bad');pulseButton('ult');return; }
+    if(kind==='ult'&&megaUses===0){ feed(`เก็บคริสตัลอีก ${CRYSTAL_NEED-crystalCharge} อัน เพื่อปล่อย MEGA`,'bad');pulseButton('ult');return; }
     if(ArenaElements.byId[kind]&&kind!=='arc'&&kind!=='nova'){
       if(elements.cast(kind,player.pos,player.facing,aim,mult)){
         const def=ArenaElements.byId[kind];cooldown[kind]=now+skillSeconds(kind)*1000;ArenaFieldVisuals.strike(player.spr,now);feed(`${def.icon} ${def.name} · ${def.detail}`,'gold');tone(def.tone,.35,.13,kind==='light'||kind==='ice'?'sine':'triangle');haptic(25);updateHud();
@@ -494,10 +496,10 @@
       let n=0;for(const b of bots.slice()){if(!b.dead&&flatDist(player.pos,b.group.position)<=rad){hitBot(b,48*mult);burst(b.group.position,0xd27cff,10,3);n++;}}
       feed(n?`🌀 NOVA โดน ${n} เป้าหมาย`:'🌀 NOVA ยังไม่ถึงตัวปีศาจ');tone(235,.32,.18,'sawtooth');haptic(35);
     }else if(kind==='ult'){
-      ArenaFieldVisuals.strike(player.spr,now);fieldFx.spell(player.pos,'ult');const charge=energy;energy=0;cooldown.ult=now+SKILL_CD.ult*1000;
-      ringFx(player.pos,0x57efff,9,.85);schedule(()=>running&&ringFx(player.pos,0xff5bd8,15,.85),120);schedule(()=>running&&ringFx(player.pos,0xffe56c,22,.9),240);
-      for(const b of bots.slice()){if(b.dead)continue;beam(new THREE.Vector3(b.group.position.x,11,b.group.position.z),b.group.position,0xffec8b,.45);hitBot(b,(74+charge*8)*(own('prism')?1.25:1));burst(b.group.position,BOT_COLORS[Math.floor(Math.random()*BOT_COLORS.length)],28,7);}
-      showPop('WORDSTORM',`พลังอักษร ${charge} ตัว ระเบิดทั่วสนาม!`);tone(110,.7,.24,'sawtooth');schedule(()=>tone(660,.38,.16,'sine'),120);haptic([30,45,60]);
+      const kind=selectedHero?.id||'fire';
+      if(!elements.castMega(kind,player.pos,player.facing,powerMult()))return;
+      megaUses--;if(megaUses===0)crystalCharge=0;cooldown.ult=now+SKILL_CD.ult*1000;ArenaFieldVisuals.strike(player.spr,now);
+      showPop('MEGA '+kind.toUpperCase(),megaUses?`เหลือพลังวงใหญ่อีก ${megaUses} ครั้ง`:'ใช้ครบแล้ว · เก็บคริสตัลใหม่ 5 อัน');tone(110,.7,.24,'sawtooth');schedule(()=>tone(660,.38,.16,'sine'),120);haptic([30,45,60]);
     }
     updateHud();
   }
@@ -533,17 +535,25 @@
     feed(`👾 กำจัดปีศาจ ${b.ch} — เก็บอักษรที่ตกได้เลย`);tone(180,.12,.11,'square');
   }
 
-  function dropLetter(pos,ch,col){
+  function dropLetter(pos,ch,col,options={}){
     const group=new THREE.Group();group.position.copy(pos);group.position.y=.35;
     const gem=new THREE.Mesh(new THREE.OctahedronGeometry(.58,0),new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:1.65,metalness:.3,roughness:.18,transparent:true,opacity:.9}));gem.scale.y=1.3;group.add(gem);
-    const spr=makeTextSprite(ch,0xffffff,180,180);spr.scale.set(1.12,1.12,1);spr.position.y=1.3;group.add(spr);
+    const spr=makeTextSprite(ch,0xffffff,180,180);spr.scale.set(.9,.9,1);spr.position.y=.08;spr.material.depthTest=false;spr.renderOrder=8;group.add(spr);
     const halo=new THREE.Mesh(new THREE.RingGeometry(.55,.82,30),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.68,side:THREE.DoubleSide,blending:THREE.AdditiveBlending}));halo.rotation.x=-Math.PI/2;halo.position.y=.08;group.add(halo);
-    scene.add(group);drops.push({group,gem,halo,ch,col,phase:Math.random()*TAU,life:45});
+    if(options.node){group.scale.setScalar(1.85);group.position.y=2.3;}
+    const d={group,gem,halo,ch,col,phase:Math.random()*TAU,life:options.node?Infinity:45,node:options.node||null,chargeable:options.chargeable!==false};
+    scene.add(group);drops.push(d);return d;
   }
+  /* ==== 💎 Round 1384: letter crystals charge a five-pickup elemental MEGA ==== */
+  function spawnCrystal(node){const ch=ALPHABET[crystalLetterIndex++%26];node.drop=dropLetter(node.pos,ch,0x77eaff,{node});node.remaining=0;}
+  function updateCrystalNodes(dt){for(const node of crystalNodes)if(!node.drop){node.remaining-=dt;if(node.remaining<=0)spawnCrystal(node);}}
   function collectDrop(d){
     if(downed||!drops.includes(d))return;
     if(cargo.length>=CARGO_MAX){if(performance.now()-fullHintAt>3000){feed('กระเป๋าเต็มแล้ว · กดบ้าน หรือ H เพื่อกลับไปฝาก','gold');fullHintAt=performance.now();}return;}
     cargo.push(d.ch);persistHome();recentLetters.push(d.ch);if(recentLetters.length>9)recentLetters.shift();energy=Math.min(ENERGY_MAX,energy+1);
+    const before=crystalCharge;if(d.chargeable&&megaUses===0)crystalCharge=Math.min(CRYSTAL_NEED,crystalCharge+1);
+    if(d.node){d.node.drop=null;d.node.remaining=CRYSTAL_RESPAWN;}
+    if(before<CRYSTAL_NEED&&crystalCharge===CRYSTAL_NEED){megaUses=5;showPop('MEGA ×5 READY','ได้พลังวงใหญ่ 5 ครั้ง · กด 3 หรือปุ่ม MEGA');tone(1240,.25,.14,'sine');}
     const p=d.group.position.clone();scene.remove(d.group);disposeTree(d.group);drops.splice(drops.indexOf(d),1);
     burst(p,d.col,24,4);ringFx(p,d.col,2.8,.36);floatText(p,`+ ${d.ch}`,0xfff39a);tone(880,.16,.12,'sine');haptic(18);
     feed(`🔤 ขน ${d.ch} แล้ว (${cargo.length}/${CARGO_MAX}) · กลับบ้านเพื่อฝาก`,'gold');updateHud();paintHome();
@@ -638,7 +648,7 @@
     player.pos.x+=player.vel.x*dt;player.pos.z+=player.vel.z*dt;
     const r=Math.hypot(player.pos.x,player.pos.z);if(r>ARENA_R-1.8){player.pos.x*=((ARENA_R-1.8)/r);player.pos.z*=((ARENA_R-1.8)/r);}
     if(player.vel.lengthSq()>.12)player.facing.set(player.vel.x,0,player.vel.z).normalize();
-    ArenaFieldVisuals.animate(player.spr,t,player.vel.length(),Math.atan2(player.facing.x,player.facing.z),downed,dt);player.aura.rotation.z+=dt;player.aura.material.color.setHex(downed?0xff5577:energy>=5?0xff79dd:0x5de8ff);player.crown.material.opacity=.7;
+    ArenaFieldVisuals.animate(player.spr,t,player.vel.length(),Math.atan2(player.facing.x,player.facing.z),downed,dt);player.aura.rotation.z+=dt;player.aura.material.color.setHex(downed?0xff5577:crystalCharge>=CRYSTAL_NEED?0xff79dd:0x5de8ff);player.crown.material.opacity=.7;
 
   }
 
@@ -680,7 +690,7 @@
     const fell=hp<=0;if(fell)downPlayer();updateHud();return fell;
   }
   function downPlayer(){
-    if(downed)return;homeRoute=false;const lost=cargo.splice(0);persistHome();lost.forEach((ch,i)=>dropLetter(new THREE.Vector3(player.pos.x+Math.cos(i/6*TAU)*2,0,player.pos.z+Math.sin(i/6*TAU)*2),ch,0xffd873));paintHome();downed=true;downUntil=performance.now()+DOWN_MS;hp=0;reviveHold=null;ui.downed.classList.add('on');
+    if(downed)return;homeRoute=false;crystalCharge=0;megaUses=0;const lost=cargo.splice(0);persistHome();lost.forEach((ch,i)=>dropLetter(new THREE.Vector3(player.pos.x+Math.cos(i/6*TAU)*2,0,player.pos.z+Math.sin(i/6*TAU)*2),ch,0xffd873,{chargeable:false}));paintHome();downed=true;downUntil=performance.now()+DOWN_MS;hp=0;reviveHold=null;ui.downed.classList.add('on');
     for(let i=shots.length-1;i>=0;i--)if(shots[i].fromEnemy)removeShot(i);
     showPop('ล้มแล้ว!','เพื่อนยืนใกล้แล้วกดค้าง 2.2 วิ เพื่อช่วยชุบ');feed('🆘 ล้มแล้ว — คลานไปหาเพื่อนได้ และไม่เสียเหรียญ','bad');ringFx(player.pos,0xff5577,5,.65);netSend(true);
   }
@@ -704,7 +714,8 @@
   }
 
   function updateDrops(dt,t){
-    for(let i=drops.length-1;i>=0;i--){const d=drops[i];d.life-=dt;if(d.life<=0){scene.remove(d.group);disposeTree(d.group);drops.splice(i,1);continue;}d.gem.rotation.y+=dt*2.6;d.gem.rotation.x+=dt*.8;d.group.position.y=.35+Math.sin(t*.004+d.phase)*.16;d.halo.rotation.z+=dt*1.8;if(!downed&&flatDist(d.group.position,player.pos)<1.4)collectDrop(d);}
+    updateCrystalNodes(dt);
+    for(let i=drops.length-1;i>=0;i--){const d=drops[i];d.life-=dt;if(d.life<=0){scene.remove(d.group);disposeTree(d.group);drops.splice(i,1);continue;}d.gem.rotation.y+=dt*2.6;d.gem.rotation.x+=dt*.8;d.group.position.y=(d.node?2.3:.65)+Math.sin(t*.004+d.phase)*.16;d.halo.rotation.z+=dt*1.8;if(!downed&&flatDist(d.group.position,player.pos)<(d.node?2.5:1.4))collectDrop(d);}
   }
   function updateEffects(dt){
     for(let i=effects.length-1;i>=0;i--){const f=effects[i];f.life-=dt;
@@ -767,13 +778,13 @@
     const have={...bag};ui.wordSlots.innerHTML=Array.from(target.en).map(ch=>{const got=have[ch]>0;if(got)have[ch]--;return `<i class="${got?'got':''}">${ch}</i>`;}).join('');
   }
   function updateHud(){
-    if(!root)return;ui.coins.textContent=fmt(state.coins||0);ui.shopCoins.textContent=fmt(state.coins||0);ui.energyFill.style.width=(energy/ENERGY_MAX*100)+'%';ui.energy.classList.toggle('hot',energy>=5);ui.energyPower.textContent='×'+powerMult().toFixed(1);
+    if(!root)return;ui.coins.textContent=fmt(state.coins||0);ui.shopCoins.textContent=fmt(state.coins||0);ui.energyFill.style.width=(crystalCharge/CRYSTAL_NEED*100)+'%';ui.energy.classList.toggle('hot',crystalCharge>=CRYSTAL_NEED);root.querySelector('#va-crystal-count').textContent=megaUses?`💎 MEGA เหลือ ${megaUses} ครั้ง`:`◆ ${crystalCharge}/5 · เก็บคริสตัล`;ui.energyPower.textContent='×'+powerMult().toFixed(1);
     ui.hpFill.style.width=(hp/maxHp*100)+'%';ui.hp.classList.toggle('low',hp/maxHp<.3);ui.hp.querySelector('b').textContent=(maxShield||shield>0)?`HP ${Math.ceil(hp)} · 🛡${Math.ceil(shield)}`:`HP ${Math.ceil(hp)}`;
     const entries=Object.entries(cargo.reduce((a,ch)=>(a[ch]=(a[ch]||0)+1,a),{}));ui.bagList.innerHTML=entries.length?entries.map(([ch,n])=>`<span class="va-bag-letter">${ch}${n>1?`<small>×${n}</small>`:''}</span>`).join(''):'<span style="font-size:9px;color:#7795aa">ยังไม่มีอักษร</span>';
-    root.querySelectorAll('[data-skill]').forEach(b=>b.classList.toggle('down',downed));root.querySelector('[data-skill="ult"]').classList.toggle('ready',energy>=5&&!downed);root.querySelector('[data-skill="ult"]').classList.toggle('locked',energy<5||downed);updateWord();updateBossHud();paintHome();
+    root.querySelectorAll('[data-skill]').forEach(b=>b.classList.toggle('down',downed));root.querySelector('[data-skill="ult"]').classList.toggle('ready',crystalCharge>=CRYSTAL_NEED&&!downed);root.querySelector('[data-skill="ult"]').classList.toggle('locked',crystalCharge<CRYSTAL_NEED||downed);root.querySelector('#va-mega-uses').textContent=`เหลือ ${megaUses}`;root.querySelector('[data-skill="ult"]').setAttribute('aria-label',megaUses?`MEGA เหลือใช้ได้ ${megaUses} ครั้ง`:`MEGA คริสตัล ${crystalCharge} จาก 5`);updateWord();updateBossHud();paintHome();
   }
   function updateCooldownUi(t){
-    root.querySelectorAll('[data-skill]').forEach(b=>{const k=b.dataset.skill,left=Math.max(0,cooldown[k]-t),total=skillSeconds(k)*1000;b.classList.toggle('cool',left>0);b.style.setProperty('--cd',Math.round(left/total*100)+'%');b.querySelector('.cd').textContent=left>0?(left/1000).toFixed(left>950?0:1):'';});
+    root.querySelectorAll('[data-skill]').forEach(b=>{const k=b.dataset.skill,left=Math.max(0,cooldown[k]-t),total=skillSeconds(k)*1000;b.classList.toggle('cool',left>0);b.style.setProperty('--cd',Math.round(left/total*100)+'%');b.querySelector('.cd').textContent=left>0?(left/1000).toFixed(left>950?0:1)+(k==='ult'?' วิ':''):'';});
   }
   function pulseButton(k){const b=root.querySelector(`[data-skill="${k}"]`);if(b)b.animate([{transform:'scale(1)'},{transform:'scale(.84)'},{transform:'scale(1)'}],{duration:240});}
 
@@ -784,8 +795,8 @@
   function resize(){if(!renderer||!camera)return;const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
 
   function resetRound(){
-    bots=[];drops=[];shots=[];effects=[];respawns=[];bag=state.arenaHome.letters;cargo=state.arenaHome.cargo.slice();homeRoute=false;recentLetters=[];energy=0;kills=0;sessionWords=0;sessionCoins=0;cooldown=Object.fromEntries(Object.keys(SKILL_CD).map(k=>[k,0]));if(elements)elements.clear();hp=maxHp;shield=maxShield;wordBusy=false;lastPetStrike=performance.now();lastHitAt=0;downed=false;downUntil=0;reviveHold=null;reviveSignal='-';reviveSeq=0;revivesGiven=0;chapter=state.arenaChapter||1;waveBase=0;bossPhase='wave';boss=null;bossEncounter='';bossMax=bossHp=bossContribution=0;bossWord='';bossWordSolved=false;bossVictoryAt=0;bossReward=0;onPeer._seen.clear();
-    player.pos.set(home.position.x+2,0,home.position.z-4);player.vel.set(0,0,0);if(petComp){petComp.group.position.set(-1.8,0,9);petComp.vel.set(0,0,0);}nextWord();for(let i=0;i<BOT_TARGET;i++)buildBot(chooseBotLetter(),false);updateHud();
+    bots=[];drops=[];shots=[];effects=[];respawns=[];bag=state.arenaHome.letters;cargo=state.arenaHome.cargo.slice();homeRoute=false;recentLetters=[];energy=0;crystalCharge=0;megaUses=0;crystalLetterIndex=Math.floor(Math.random()*26);kills=0;sessionWords=0;sessionCoins=0;cooldown=Object.fromEntries(Object.keys(SKILL_CD).map(k=>[k,0]));if(elements)elements.clear();hp=maxHp;shield=maxShield;wordBusy=false;lastPetStrike=performance.now();lastHitAt=0;downed=false;downUntil=0;reviveHold=null;reviveSignal='-';reviveSeq=0;revivesGiven=0;chapter=state.arenaChapter||1;waveBase=0;bossPhase='wave';boss=null;bossEncounter='';bossMax=bossHp=bossContribution=0;bossWord='';bossWordSolved=false;bossVictoryAt=0;bossReward=0;onPeer._seen.clear();
+    player.pos.set(home.position.x+2,0,home.position.z-4);player.vel.set(0,0,0);if(petComp){petComp.group.position.set(-1.8,0,9);petComp.vel.set(0,0,0);}nextWord();for(const node of crystalNodes)spawnCrystal(node);for(let i=0;i<BOT_TARGET;i++)buildBot(chooseBotLetter(),false);updateHud();
   }
 
   function start(){
@@ -802,13 +813,13 @@
     if(!running)return;running=false;paused=false;cancelAnimationFrame(raf);raf=0;pendingTimers.forEach(clearTimeout);pendingTimers.clear();persistHome();if(audioCtx){audioCtx.close();audioCtx=null;}if(elements){elements.clear();elements=null;}if(fieldFx){fieldFx.dispose();fieldFx=null;}listeners.splice(0).forEach(fn=>{try{fn();}catch(e){}});keys.clear();joy={x:0,z:0,id:null};basicHeld=false;
     if(room){room.leave();room=null;}Object.keys(peerActors).forEach(removePeerActor);peers={};peerActors={};
     for(const s of shots){if(s.mesh.parent)scene.remove(s.mesh);disposeTree(s.mesh);}if(scene)disposeTree(scene);if(renderer){renderer.dispose();renderer.forceContextLoss&&renderer.forceContextLoss();renderer.setSize(2,2,false);}
-    if(root)root.remove();vitalNodes.clear();vitalLive.clear();root=null;built=false;renderer=scene=camera=clock=null;bots=[];drops=[];shots=[];effects=[];petComp=null;player=null;home=null;
+    if(root)root.remove();vitalNodes.clear();vitalLive.clear();root=null;built=false;renderer=scene=camera=clock=null;bots=[];drops=[];shots=[];effects=[];petComp=null;player=null;home=null;crystalNodes=[];crystalCharge=0;megaUses=0;
     saveState();if(typeof Music!=='undefined')Music.resumeBg();if(typeof renderDashboard==='function')renderDashboard();
     if(typeof toast==='function')toast(`🌀 กลับจาก Vocab Arena — สำเร็จ ${sessionWords} คำ · +${fmt(sessionCoins)} 🪙`);
   }
 
   window.VocabArena3D={start,stop,_t:{
-    get running(){return running},get bots(){return bots},get drops(){return drops},get bag(){return bag},get target(){return target},get cargo(){return cargo},home:()=>home,bank:bankCargo,stats:()=>({draws:renderer.info.render.calls,triangles:renderer.info.render.triangles,textures:renderer.info.memory.textures,fx:fieldFx.stats()}),get energy(){return energy},
+    get running(){return running},get bots(){return bots},get drops(){return drops},get bag(){return bag},get target(){return target},get cargo(){return cargo},home:()=>home,bank:bankCargo,stats:()=>({draws:renderer.info.render.calls,triangles:renderer.info.render.triangles,textures:renderer.info.memory.textures,fx:fieldFx.stats()}),get energy(){return energy},get crystalCharge(){return crystalCharge},get megaUses(){return megaUses},get crystalNodes(){return crystalNodes},tickDrops:updateDrops,drop:dropLetter,
     get slots(){return spellSlots.slice()},get cooldowns(){return {...cooldown}},elementStats:()=>elements.stats(),equip:equipSpell,spellbook:toggleSpellbook,health:()=>({hp,shield}),hero:()=>selectedHero?.id,skillSeconds,damage:damagePlayer,cast:castSkill,kill:(i=0)=>bots[i]&&hitBot(bots[i],9999),collect:(i=0)=>drops[i]&&collectDrop(drops[i]),complete:()=>{if(target){for(const ch of target.en)bag[ch]=(bag[ch]||0)+1;checkWord();}},
     buy:buyItem,player:()=>player,resize,down:downPlayer,recover:()=>recoverPlayer('เพื่อนช่วยชุบ'),boss:()=>({phase:bossPhase,chapter,encounter:bossEncounter,hp:bossHp,max:bossMax,word:bossWord,contribution:bossContribution}),triggerBoss:()=>{if(bossPhase==='wave')startBossAsLeader();},wire:applyLeaderWire,peer:onPeer,gone:onPeerGone,party:()=>({leader:leaderId(),members:partyUids(),online:!!(room&&room.online)}),
     /* ทดสอบแยกเฟสเมื่อ WebView เครื่องใดสร้างฉากไม่ผ่าน — ไม่ทำงานเองในเกมจริง */
