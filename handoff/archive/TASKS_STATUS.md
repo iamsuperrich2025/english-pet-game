@@ -5812,3 +5812,13 @@
 - Source/dist ผ่าน Arena26+ธาตุ50+ฮีโร่31 checks, HomeV2, syntax/diff, build9,490files614.6MiB และ web validator; ไม่มี browser error; pixel QA ใบหน้า/เท้าคงที่ ผม/ผ้าคลุม/ไฟขยับ; ไม่เขียนข้อมูลทดสอบ production
 - พร้อมส่งผ่าน COMMIT_DEPLOY.bat ตาม FILE manifest; ยังไม่ยืนยัน deploy รอบ1381. คงไฟล์เปลี่ยนค้างนอก scope รวม docs/PROJECT_MAP.md+CURRENT_STATE.md ไว้ในเครื่อง (มีงาน Frontline อื่นปนอยู่); mapping Arena อัปเดตในเครื่องและ docs/ARENA_FIELD.md มี routing ครบ
 
+
+
+## ⏬ ย้ายเมื่อ 2026-09-10 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- ด่าน undefined-call/template-backtick ผ่านบน git HEAD JavaScript + UI patch (unknown0), missing-assets --git306ครบ, syntax/diff + hero browser31 checks + build9,490files614.6MiB + web validator ผ่าน; เตรียม SHIP เฉพาะ ui.js/TASKS.md และเปิด launcher รอบใหม่; ยังไม่ยืนยันผล deploy1383
+
+- **รอบ 1382 · ชื่อฮีโร่ภาษาอังกฤษ:** เปลี่ยนชื่อแสดงผล 8 ตัวใน `js/arena-heroes.js` เป็น Zevrakin/Kirevon/Vaelkorin/Oryndel/Elyzavia/Lyravyn/Nirelya/Zirelia ตามภาพผู้ใช้; เอาไอคอนซ้ำหน้าชื่อบนการ์ดออกให้ชื่อยาวพอดีมือถือ โดยคง ID/save/พลังเดิม
+- Syntax/diff + hero browser31 checks (4 viewports) + build9,490files614.6MiB + web validator ผ่าน; hash source/dist ตรงกัน; เตรียม SHIP เฉพาะ js/arena-heroes.js และ TASKS.md, ยังไม่ยืนยัน deploy รอบ1382
+
+

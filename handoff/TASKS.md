@@ -27,12 +27,6 @@
 - พร้อมส่ง manifest เฉพาะ 6 ไฟล์ผ่าน COMMIT_DEPLOY.bat; ยังไม่ยืนยัน deploy รอบ 1386
 
 - **รอบ 1383 · แก้ Deploy ติด async():** ยืนยันตัวตรวจ undefined-call เข้าใจ async arrow callback ใน `js/ui.js:7284` เป็นฟังก์ชันไม่มีนิยาม; เปลี่ยนเป็น named async function `preloadArenaScene` โดยไม่แก้หรือข้ามตัวตรวจ และคง preload/cancel/entry behavior
-- ด่าน undefined-call/template-backtick ผ่านบน git HEAD JavaScript + UI patch (unknown0), missing-assets --git306ครบ, syntax/diff + hero browser31 checks + build9,490files614.6MiB + web validator ผ่าน; เตรียม SHIP เฉพาะ ui.js/TASKS.md และเปิด launcher รอบใหม่; ยังไม่ยืนยันผล deploy1383
-
-- **รอบ 1382 · ชื่อฮีโร่ภาษาอังกฤษ:** เปลี่ยนชื่อแสดงผล 8 ตัวใน `js/arena-heroes.js` เป็น Zevrakin/Kirevon/Vaelkorin/Oryndel/Elyzavia/Lyravyn/Nirelya/Zirelia ตามภาพผู้ใช้; เอาไอคอนซ้ำหน้าชื่อบนการ์ดออกให้ชื่อยาวพอดีมือถือ โดยคง ID/save/พลังเดิม
-- Syntax/diff + hero browser31 checks (4 viewports) + build9,490files614.6MiB + web validator ผ่าน; hash source/dist ตรงกัน; เตรียม SHIP เฉพาะ js/arena-heroes.js และ TASKS.md, ยังไม่ยืนยัน deploy รอบ1382
-
-
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน

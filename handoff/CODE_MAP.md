@@ -201,7 +201,7 @@ beginPlay:12952 · start:12954 · exitWorld:13187 · mechaRecapLine:13264
 
 ## js/arena-heroes.js (42 บรรทัด · 0 รายการ)
 
-## js/arena-maps.js (96 บรรทัด · 0 รายการ)
+## js/arena-maps.js (95 บรรทัด · 0 รายการ)
 
 ## js/arena-portrait.js (32 บรรทัด · 0 รายการ)
 
