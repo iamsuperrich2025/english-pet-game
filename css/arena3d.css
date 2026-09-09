@@ -383,3 +383,11 @@
 @media(max-width:720px){#va-root .va-spell-grid{grid-template-columns:repeat(5,minmax(0,1fr))}#va-root .va-spell-card{grid-template-columns:27px minmax(0,1fr);gap:2px 4px}#va-root .va-spell-card .va-element-icon{width:27px;height:27px}.va-grimoire-tools select{width:110px}.va-grimoire-tools b{font-size:8px;letter-spacing:.5px}#va-root .va-spell-card small{font-size:7.5px}}
 
 @media(orientation:portrait){#va-map-picker{padding:14px;gap:10px}.vam-cards{grid-template-columns:1fr;grid-template-rows:repeat(3,minmax(0,1fr))}.vam-card{grid-template-columns:42% minmax(0,1fr);grid-template-rows:1fr}.vam-card>div{align-self:center;padding:9px}.vam-card p{font-size:10px}#va-map-picker header>span{display:none}#va-map-picker footer{align-items:stretch;flex-direction:column;gap:8px}.vam-card h2{font-size:20px}}
+
+/* Round 1395: visible music state and one-tap recovery beneath the letter bag. */
+#va-root .va-music-toggle{position:absolute;left:max(12px,env(safe-area-inset-left));top:116px;min-height:38px;width:154px;padding:5px 8px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;z-index:2;white-space:nowrap}
+#va-root .va-music-toggle[data-state="playing"]{color:#a4ffe1;border-color:#7edfc5}
+#va-root .va-music-toggle[data-state="music-off"],#va-root .va-music-toggle[data-state="blocked"],#va-root .va-music-toggle[data-state="load"]{color:#ffe5aa}
+@media(max-height:480px){#va-root .va-music-toggle{top:102px;min-height:36px;width:144px;font-size:11px}}
+
+#va-root[data-map] .va-music-toggle{left:1.8vw;top:calc(clamp(61px,14.8vh,139px) + clamp(27px,5.1vh,49px) + 8px)}

@@ -9,7 +9,7 @@
     {file:'bgmusic-e450dce94058763f.mp3',hash:'e450dce94058763f',type:'audio/mpeg'}
   ];
   let music=null,musicUrl='',musicBlob=null,musicLoad=null,musicPending=false,musicTimer=0,musicRetryAt=0;
-  let musicTrack=null,musicDownloads=0;
+  let musicTrack=null,musicDownloads=0,musicError='',musicButton=null;
   function musicEnabled(){return enabled()&&unlocked&&!state.musicOff;}
   async function cachedAudioBlob(track,onDownload){
     let cache=null;const path='/sound/arena/'+track.file,key=location.origin+'/__vw_asset__'+path+'?v='+track.hash;
@@ -25,7 +25,7 @@
   async function loadMusic(){
     if(musicBlob)return musicBlob;if(musicLoad)return musicLoad;
     musicLoad=cachedAudioBlob(musicTrack,()=>musicDownloads++).then(blob=>musicBlob=blob)
-      .catch(()=>{musicRetryAt=performance.now()+10000;return null;}).finally(()=>{musicLoad=null;});
+      .catch(()=>{musicError='load';musicRetryAt=performance.now()+10000;return null;}).finally(()=>{musicLoad=null;});
     return musicLoad;
   }
   // One reusable compressed-media player per approved cue; no PCM buffers or voice stacking.
@@ -68,45 +68,96 @@
   const fire=createEffect({file:'fire-a6fea31058694941.mp3',hash:'a6fea31058694941'},.55);
   function pauseEffects(){mega.pause();element.pause();shield.pause();heal.pause();lightning.pause();fire.pause();}
   function pauseMusic(){if(music)music.pause();}
+  function musicStatus(){
+    if(!active)return 'stopped';
+    if(!state.sound)return 'sound-off';
+    if(state.musicOff)return 'music-off';
+    if(!unlocked)return 'gesture';
+    if(document.hidden)return 'hidden';
+    if(musicError)return musicError;
+    if(musicPending||musicLoad)return 'loading';
+    return music&&!music.paused?'playing':'gesture';
+  }
+  function paintMusic(){
+    if(!musicButton)return;
+    const status=musicStatus(),labels={'sound-off':'🔇 เปิดเสียง','music-off':'🎵 เพลงปิด',gesture:'🎵 แตะเปิดเพลง',blocked:'🎵 แตะเล่นเพลง',load:'🎵 โหลดเพลงใหม่',loading:'🎵 กำลังโหลด…',playing:'🎵 เพลงเปิด',hidden:'🎵 พักเพลง',stopped:'🎵 เพลง'};
+    if(musicButton.dataset.state!==status){
+      musicButton.dataset.state=status;musicButton.textContent=labels[status];
+      musicButton.setAttribute('aria-pressed',String(status==='playing'));
+      musicButton.setAttribute('aria-label',status==='playing'?'ปิดเพลงพื้นหลัง':status==='sound-off'?'เปิดเสียงและเพลงพื้นหลัง':'เปิดเพลงพื้นหลัง');
+      musicButton.title=status==='music-off'?'เพลงถูกปิดไว้จากการตั้งค่า แตะเพื่อเปิด':status==='load'?'โหลดเพลงไม่สำเร็จ แตะเพื่อลองใหม่':status==='blocked'?'เบราว์เซอร์รอการแตะเพื่อเล่นเพลง':musicButton.getAttribute('aria-label');
+    }
+  }
+  function beginMusic(element){
+    if(element!==music||!musicEnabled()){musicPending=false;paintMusic();return;}
+    if(!musicUrl){musicUrl=URL.createObjectURL(musicBlob);element.src=musicUrl;}
+    musicPending=true;
+    element.play().then(()=>{if(element!==music||!musicEnabled())element.pause();else musicError='';})
+      .catch(error=>{if(element===music){musicError=error.name==='NotAllowedError'?'blocked':'load';musicRetryAt=performance.now()+10000;}})
+      .finally(()=>{if(element===music){musicPending=false;paintMusic();}});
+  }
   function syncMusic(){
     if(!enabled())pauseEffects();
-    if(!musicEnabled()){pauseMusic();return;}
-    if(musicPending||performance.now()<musicRetryAt)return;
+    if(!musicEnabled()){pauseMusic();paintMusic();return;}
+    if(musicPending||performance.now()<musicRetryAt){paintMusic();return;}
     try{
+      musicError='';
       if(!music){
         music=new Audio();music.preload='none';music.loop=true;music.volume=.16;
         musicTrack=musicTrack||musicTracks.find(track=>music.canPlayType(track.type))||musicTracks[1];
       }
-      if(!music.paused)return;
-      const element=music;musicPending=true;
-      void loadMusic().then(blob=>{
-        if(!blob||element!==music||!musicEnabled())return;
-        if(!musicUrl){musicUrl=URL.createObjectURL(blob);element.src=musicUrl;}
-        return element.play().then(()=>{if(element!==music||!musicEnabled())element.pause();});
-      }).catch(()=>{musicRetryAt=performance.now()+10000;})
-        .finally(()=>{if(element===music)musicPending=false;});
-    }catch(_){musicPending=false;musicRetryAt=performance.now()+10000;}
+      if(!music.paused){paintMusic();return;}
+      const element=music;
+      // Cached playback runs inside the current gesture, including mobile retry taps.
+      if(musicBlob)beginMusic(element);
+      else{
+        musicPending=true;
+        void loadMusic().then(blob=>{
+          if(element!==music)return;
+          if(blob)beginMusic(element);else{musicPending=false;paintMusic();}
+        }).catch(()=>{if(element===music){musicPending=false;musicError='load';musicRetryAt=performance.now()+10000;paintMusic();}});
+      }
+      paintMusic();
+    }catch(_){musicPending=false;musicError='load';musicRetryAt=performance.now()+10000;paintMusic();}
+  }
+  function toggleMusic(){
+    if(!active)return;
+    const turnOff=musicStatus()==='playing';
+    if(!turnOff){state.sound=true;unlocked=true;musicRetryAt=0;musicError='';}
+    state.musicOff=turnOff;
+    if(typeof saveState==='function')saveState();
+    if(typeof syncMusicBtn==='function')syncMusicBtn();
+    syncMusic();
   }
   function stopMusic(){
     clearInterval(musicTimer);musicTimer=0;pauseMusic();
     if(music){music.removeAttribute('src');music.load();music=null;}
-    if(musicUrl)URL.revokeObjectURL(musicUrl);musicUrl='';musicPending=false;
+    if(musicUrl)URL.revokeObjectURL(musicUrl);musicUrl='';musicPending=false;musicError='';musicRetryAt=0;
   }
 
   function unlock(event){
+    if(event.target.closest?.('#va-music-toggle'))return;
     if(!event.isTrusted||!enabled()||(event.type==='keydown'&&event.repeat))return;
-    unlocked=true;element.prepare();shield.prepare();heal.prepare();lightning.prepare();fire.prepare();syncMusic();
+    unlocked=true;
+    if(musicError==='blocked'){musicRetryAt=0;musicError='';}
+    element.prepare();shield.prepare();heal.prepare();lightning.prepare();fire.prepare();syncMusic();
   }
   function start(root){
     stop();active=true;
     const listen=(el,type,fn,options)=>{el.addEventListener(type,fn,options);detach.push(()=>el.removeEventListener(type,fn,options));};
+    musicButton=root.querySelector('#va-music-toggle');
+    if(musicButton)listen(musicButton,'click',toggleMusic);
     listen(root,'pointerdown',unlock,{capture:true,passive:true});
+    listen(root,'pointerup',unlock,{capture:true,passive:true});
+    listen(root,'click',unlock,true);
     listen(window,'keydown',unlock,true);
     listen(document,'visibilitychange',()=>{if(document.hidden){pauseMusic();pauseEffects();}else syncMusic();});
     listen(window,'pagehide',()=>{pauseMusic();pauseEffects();});
-    musicTimer=setInterval(syncMusic,500);
+    // Arena is loaded after the entry click; retain that existing browser activation.
+    unlocked=!!navigator.userActivation?.hasBeenActive;
+    syncMusic();musicTimer=setInterval(syncMusic,500);
   }
-  function stop(){mega.stop();element.stop();shield.stop();heal.stop();lightning.stop();fire.stop();stopMusic();active=false;unlocked=false;detach.splice(0).forEach(fn=>fn());}
-  window.ArenaAudio={start,stop,exit:stop,prepareMega:mega.prepare,playMega:mega.play,playElement:family=>(family==='arc'?lightning:family==='fire'?fire:element).play(),playShield:shield.play,playHeal:heal.play,
-    stats:()=>({active,unlocked,mega:mega.stats(),element:element.stats(),shield:shield.stats(),heal:heal.stats(),lightning:lightning.stats(),fire:fire.stats(),music:{playing:!!music&&!music.paused,loop:!!music&&music.loop,volume:music?.volume||0,track:musicTrack?.file||'',cached:!!musicBlob,downloads:musicDownloads}})};
+  function stop(){mega.stop();element.stop();shield.stop();heal.stop();lightning.stop();fire.stop();stopMusic();active=false;unlocked=false;musicButton=null;detach.splice(0).forEach(fn=>fn());}
+  window.ArenaAudio={start,stop,exit:stop,toggleMusic,prepareMega:mega.prepare,playMega:mega.play,playElement:family=>(family==='arc'?lightning:family==='fire'?fire:element).play(),playShield:shield.play,playHeal:heal.play,
+    stats:()=>({active,unlocked,mega:mega.stats(),element:element.stats(),shield:shield.stats(),heal:heal.stats(),lightning:lightning.stats(),fire:fire.stats(),music:{status:musicStatus(),playing:!!music&&!music.paused,loop:!!music&&music.loop,volume:music?.volume||0,track:musicTrack?.file||'',cached:!!musicBlob,downloads:musicDownloads}})};
 })();

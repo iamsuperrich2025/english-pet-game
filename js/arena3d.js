@@ -101,6 +101,7 @@
         <button class="va-shop-btn" id="va-shop-open">🛒 พลังพิเศษ</button>
       </div>
       <div class="va-energy va-glass" id="va-energy"><span class="va-energy-label" id="va-crystal-count">◆ 0 / 5 · เก็บคริสตัล</span><div class="va-energy-track"><div class="va-energy-fill" id="va-energy-fill"></div></div><span class="va-energy-power" id="va-energy-power">×1.0</span></div>
+      <button class="va-music-toggle va-glass" id="va-music-toggle" type="button" aria-label="เปิดเพลงพื้นหลัง" aria-pressed="false">🎵 เพลง</button>
       <div class="va-bag va-glass"><span class="va-bag-label">ขนกลับบ้าน</span><div class="va-bag-list" id="va-bag-list"></div></div>
       <div class="va-party va-glass" id="va-party"><button id="va-party-friends" class="va-party-find" aria-label="ไปหาเพื่อน">👥</button><div><b id="va-party-status">กำลังหาปาร์ตี้…</b><div class="va-party-list" id="va-party-list"></div></div></div>
       <div class="va-boss va-glass" id="va-boss"><div class="va-boss-head"><span id="va-boss-chapter">บท 1</span><b id="va-boss-name">ผู้พิทักษ์คำศัพท์</b><em id="va-boss-hp-text">100%</em></div><div class="va-boss-track"><div class="va-boss-fill" id="va-boss-fill"></div></div><div class="va-boss-word" id="va-boss-word"></div></div>
