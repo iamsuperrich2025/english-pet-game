@@ -1,32 +1,39 @@
-# Vocab World Kart — private preview
+# Vocab World Kart — public game
 
-Round 1377. Reference: the supplied Vocab World toy-kart poster. Vehicle treatment: Soft Cuboid Chibi 3D, rounded helmet, square headlights, white racing stripe/star, coloured body/cuffs, chunky tyres and gold hubs. Track: bright dirt circuit, red/white barriers, block cliffs, palm trees, water, lighthouse, clouds and start gantry. Geometry is an interpretation for a playable 3D world, not a pixel-identical still image.
+Round 1379 opens the former admin preview to all players after fixing visible-wall collision. Reference artwork: the supplied tropical toy-kart poster; procedural Soft Cuboid Chibi 3D car, five colours, square lights, white stripe/star, gold hubs, palms, block cliffs, lighthouse and waterfall. It is a lightweight playable interpretation of the poster.
 
-## Ownership and isolation
+## Engine and player state
 
-- `js/f1_3d.js`: one shared engine source; `createVocabRacingWorld(profile)` creates isolated runtime closures. Default `F1World` keeps original tuning and visuals. Unique `f1-*` / `kart-*` DOM ids; existing classes/controls preserved. Switching stops the previous race/audio/network loop.
-- `js/kart3d.js`: presentation, half-scale track coordinates (same topology), compact car footprint and tuning. 110 km/h base limit, existing 8% DRS boost, 40 km/h pit limit. Same start lights, lap/ghost, peer collision, jumps, word pickups, rewards and room controls. Kart has no off-track portal; its own solid road/pit corridor sweeps movement and reflects impact velocity.
-- `js/kart-access.js`: fresh server read on every entry; no persisted access flag. Failed/offline admission stops before loading heavy code. Active game stops on account replacement/sign-out.
-- `Auth.user.emailVerified` + current `isAdmin()` gate both lobbies/direct entry. Saved `adminAccess`, display name and ticket cannot grant access.
-- RTDB verified-email rules protect `kartAccess`, `wroom/kart`, `winfo/kart`, `kartRank`; legacy `world/kart` is denied. Rule source remains `handoff/RULES.md`, updated against the exact live snapshot. Only Kart grants changed.
-- Saves: `kartTicket`, `kartDone`, `kartRecent`, `kartBest`. Local preferences/ghost: `vwKartCarColor`, `vwKartGhost`. Shared wallet/vocabulary curriculum remain canonical. Private best-lap board preserves the original tester-exclusion behavior.
+`js/f1_3d.js` exposes `createVocabRacingWorld(profile)` with independent closures. Default F1 keeps its original tuning and recovery. `js/kart3d.js` owns Kart visuals, 110 km/h tuning (+8% DRS), 40 km/h pit, and solid boundaries. Switching stops the previous race/audio/network loop. Unique `f1-*` and `kart-*` DOM ids share original classes/controls.
 
-## Delivery and performance
+Kart preserves word pickups, wallet rewards, peer rooms, laps, ghosts, jumps and controls. It has no off-track portal. Records remain `kartTicket/kartDone/kartRecent/kartBest`, preferences `vwKartCarColor/vwKartGhost`, and rooms/rank `wroom/kart`, `winfo/kart`, `kartRank`. Entry also records `kartPlayedV1`. F1 saves and namespace remain separate.
 
-New modules are lazy and content hashed by `tools/build_web.mjs`. The lobby icon is a 96x96 transparent WebP rendered from the actual car (10,534 bytes, shared URL, lazy loaded only when visible); the race adds no raster/model/audio downloads: selected colours, steering and vehicle bodies share geometry/materials; the garage snapshot uses the existing renderer. Road grain is a tiny locally generated canvas texture. Existing music streams through the same immutable URL/cache as Racing; Kart motor is synthesized rather than downloading another sample. Static scene geometry is batched into spatial chunks. Existing mobile resolution/thermal governor and 160 ms compact NetRoom cadence remain in force; no extra per-frame server calls. Lobby users without admin access do not load the Kart modules. Private friend lookup is filtered by the same current-identity gate.
+## Public access and invitation
 
-## Round 1378 fixes
+Classic and Home V2 show Kart to ordinary users, with no admin badge. Public solo entry follows Racing and does not call a server admission endpoint. `canAccessKartBeta()` is retained as a true-returning compatibility alias for old callers. `js/kart-access.js` is a legacy module no longer loaded by new entry code. RTDB requires authentication for rooms/ranks, UID ownership for writes, original data validation and improving lap records. `kartAccess` is readable by authenticated users for old clients; client writes remain denied. Legacy `world/kart` stays closed because Kart uses modern rooms only. Other world restrictions remain unchanged.
 
-Scenery is accepted only when its full footprint clears every main-road and pit segment, including nearby hairpins. All parts of a cliff are rejected together; the lighthouse island is moved outward until clear. Roadside boundary collisions use a vehicle-size margin, <=0.75 m movement steps and 48% normal restitution. The portal entry guard and caller are Kart-only; Racing retains its previous recovery. Global lobby toast stack and close-all are hidden while Kart is open, restored on exit without deleting financial notices. Both lobby variants use the same car icon.
+`js/onetpromo.js` and `css/onetpromo.css` provide a cute once-per-player Kart invitation. A UID-scoped local marker and `state.kartPromoSeenV1` persist only when it is shown. It skips players with prior Kart entry, words/recent words, or best lap. It waits for existing dialogs/financial notices, defers while a race is open, fits four tested viewport sizes, and routes its CTA through the normal free-entry confirmation. It uses the same cached car artwork as the lobby.
 
-`node tools/kart/clearance.mjs`: actual Three.js raycasts across 2,025 driving segments; independent full-footprint checks; 146 swept collisions on both sides; real Kart velocity reflection/no portal and real F1 portal preserved; toast lifecycle at 1318x615 and 812x375. `KART_BEFORE` can load the previous Kart profile to reproduce scenery hits and the visible close-all button. `KART_ICON_OUTPUT` renders the car icon and compares WebP/AVIF lossless sizes with exact visible RGB and alpha checks.
+## Scenery and solid walls
 
-## Validation
+Scenery footprints are checked against all main-road and pit segments, preventing decorations outside one bend from blocking another. All parts of a cliff are rejected together and the lighthouse island moves outward until clear.
 
-- `node tools/test_kart_entry.js`: 17 entry/isolation checks, including forged saved adminAccess and server denial before heavy assets.
-- `node tools/kart/browser.mjs`: 29 Chrome checks, 5 colours, Android touch, desktop + 812x375, actual physics (109.91 km/h), coasting/braking, 66 coins for CAT (3x2 + 60), F1 records unchanged, game switching, unique DOM ids and identity revocation. Mock save only; no live data.
-- `KART_PEERS=1 node tools/kart/rules.mjs`: 45 real RTDB emulator rules checks + 7 real two-browser NetRoom checks (slots, colour sync, namespaces, peer departure). Uses existing `work/frontline-v1-deps` Java/database.jar. The emulator has a serialization bug in an unrelated existing whitespace regex; the tests load the exact affected zones with root permissions, never weaken or rewrite the production rules.
-- `node tools/kart/lobby.mjs`: 12 checks against actual Classic/Home V2 shell (including shared decoded icon and no icon download for ordinary players). Fixture dismisses unrelated first-login notices; checks role changes and native click -> shared confirmation -> ticket/start pipeline. External requests blocked.
-- Existing 19 F1 test programs, Home V2, free-entry tests, production build and web/PWA/cache/TWA validator required before shipping.
+Round 1378's road-corridor union could allow crossing a visible wall where nearby track/pit corridors overlap. Round 1379 draws and collides against one shared list of 1,286 continuous wall segments, with open track/pit joins. Swept capsule intersection covers each segment and both end caps; a 32 m spatial grid keeps per-frame searches local. Vehicle-size margin and 48% normal restitution stop tunnelling and reflect impact velocity. Corridor recovery remains a fallback beyond the outer scene. The actual visible walls are the primary contact boundary.
 
-`KART_ROOT` can point browser/lobby checks at `dist`; `KART_OUTPUT` chooses scratch screenshot/report location. Tests use ports 17476-17479, demo namespace only, local fake identities. Bundled Playwright/Sharp dependency paths match this workstation. WebP screenshots are temporary QA artifacts, not game downloads. Test programs stay under production-excluded `tools/`.
+Lobby toasts and close-all are hidden while Kart is open and restored on exit without deleting transaction notices.
+
+## Downloads and rendering
+
+Car/track geometry and materials are shared and batched, road grain is generated locally, and the existing mobile resolution governor remains enabled. No extra race image/model/audio files. Music shares Racing's immutable cached URL; Kart motor is synthesized. Lobby/invitation artwork is the same 96x96 transparent WebP (10,534 bytes vs AVIF lossless14,602); visible pixels and alpha verified. Lazy modules and icon use content-hashed paths. Public entry removes the old per-entry admission request. No new per-frame network requests; NetRoom cadence remains160ms.
+
+## Tests
+
+- `node tools/kart/walls.mjs`:12,404 crossing checks (4,957 fast oblique cases) against all1,286 visible walls, both sides, no failures. A legacy profile without `boundaryWalls` reproduces the old gap.
+- `node tools/kart/clearance.mjs`:2,025 Three.js driving-segment raycasts,92 scenery footprint groups,146 boundary sweeps, actual bounce/no-portal and F1's original portal, toast lifecycle.
+- `node tools/kart/invite.mjs`:24 checks covering once/account/reload/synced marker/previous player/deferred dialogs/native free entry;812x375,667x320,1318x615,390x844. Fixture suppresses unrelated first-login Dragon/Daily Box notices only.
+- `node tools/kart/lobby.mjs`:13 public lobby/icon checks across ordinary, unverified and admin identities; same decoded icon, no admin tag, native entry.
+- `node tools/test_kart_entry.js`:28 public/offline entry/guard/save-isolation checks. `node tools/kart/browser.mjs`:29 full gameplay checks (five colours, touch,109.91 km/h, coast/brake,CAT66coins,F1 saves,switching,offline public play).
+- `KART_PEERS=1 node tools/kart/rules.mjs`:45 exact affected-zone RTDB emulator checks and7 two-ordinary-browser NetRoom checks. The existing emulator has a serialization bug in an unrelated whitespace regex; production rules remain untouched outside the scoped Kart changes.
+- Existing19 F1 regression programs, HomeV2 and build validator must pass before shipping.
+
+Browser tests use bundled Playwright/Sharp on this workstation and local ports17476-17481. `KART_ROOT` selects source or dist; `KART_OUTPUT` selects scratch output. No test writes production data. Mobile coverage is viewport/touch simulation, not hardware FPS measurement. Tools/test artifacts stay excluded from Hosting.

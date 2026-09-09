@@ -127,7 +127,7 @@ function boundaryPoint(x,z){
   }
   return best;
 }
-function collideBoundary(fromX,fromZ,x,z,vx,vz){
+function recoverCorridor(fromX,fromZ,x,z,vx,vz){
   const steps=Math.max(1,Math.ceil(Math.hypot(x-fromX,z-fromZ)/.75));
   for(let i=1;i<=steps;i++){
     const qx=fromX+(x-fromX)*i/steps,qz=fromZ+(z-fromZ)*i/steps,b=boundaryPoint(qx,qz);
@@ -139,13 +139,58 @@ function collideBoundary(fromX,fromZ,x,z,vx,vz){
   }
   return null;
 }
+// Round 1379: the exact same wall segments drive drawing AND swept collision.
+let boundaryWalls=[],wallGrid=new Map();
+const WALL_RADIUS=2.85,WALL_CELL=32;
+function addBoundaryWall(x,z,qx,qz){
+  const dx=qx-x,dz=qz-z,len=Math.hypot(dx,dz);if(len<.02)return;
+  const b={x,z,dx,dz,len,len2:len*len,nx:dz/len,nz:-dx/len},id=boundaryWalls.length;boundaryWalls.push(b);
+  for(let cx=Math.floor((Math.min(x,qx)-WALL_RADIUS)/WALL_CELL);cx<=Math.floor((Math.max(x,qx)+WALL_RADIUS)/WALL_CELL);cx++)
+    for(let cz=Math.floor((Math.min(z,qz)-WALL_RADIUS)/WALL_CELL);cz<=Math.floor((Math.max(z,qz)+WALL_RADIUS)/WALL_CELL);cz++){
+      const key=cx+':'+cz;if(!wallGrid.has(key))wallGrid.set(key,[]);wallGrid.get(key).push(id);
+    }
+}
+function sweptWall(px,pz,dx,dz,b){
+  const projection=Math.max(0,Math.min(1,((px-b.x)*b.dx+(pz-b.z)*b.dz)/b.len2));
+  const qx=b.x+projection*b.dx,qz=b.z+projection*b.dz,ox=px-qx,oz=pz-qz,dist=Math.hypot(ox,oz);
+  if(dist<WALL_RADIUS-1e-6){
+    const sign=(dx*b.nx+dz*b.nz)>0?-1:1,nx=dist>1e-7?ox/dist:b.nx*sign,nz=dist>1e-7?oz/dist:b.nz*sign;
+    return {t:0,nx,nz,x:qx+nx*(WALL_RADIUS+.03),z:qz+nz*(WALL_RADIUS+.03)};
+  }
+  let hit=null;
+  function accept(t,nx,nz){if(t>=-1e-8&&t<=1&&(!hit||t<hit.t))hit={t:Math.max(0,t),nx,nz};}
+  const d0=(px-b.x)*b.nx+(pz-b.z)*b.nz,dv=dx*b.nx+dz*b.nz;
+  for(const side of [-1,1])if(dv*side< -1e-9){
+    const t=(WALL_RADIUS-d0*side)/(dv*side),x=px+dx*t-b.x,z=pz+dz*t-b.z,along=(x*b.dx+z*b.dz)/b.len;
+    if(along>=0&&along<=b.len)accept(t,b.nx*side,b.nz*side);
+  }
+  const aa=dx*dx+dz*dz;
+  if(aa>1e-12)for(const end of [0,1]){
+    const ex=b.x+b.dx*end,ez=b.z+b.dz*end,rx=px-ex,rz=pz-ez,bb=rx*dx+rz*dz,cc=rx*rx+rz*rz-WALL_RADIUS*WALL_RADIUS,disc=bb*bb-aa*cc;
+    if(bb<0&&disc>=0){const t=(-bb-Math.sqrt(disc))/aa;accept(t,(px+dx*t-ex)/WALL_RADIUS,(pz+dz*t-ez)/WALL_RADIUS);}
+  }
+  return hit;
+}
+function collideBoundary(fromX,fromZ,x,z,vx,vz){
+  const dx=x-fromX,dz=z-fromZ,ids=new Set();
+  for(let cx=Math.floor(Math.min(fromX,x)/WALL_CELL);cx<=Math.floor(Math.max(fromX,x)/WALL_CELL);cx++)
+    for(let cz=Math.floor(Math.min(fromZ,z)/WALL_CELL);cz<=Math.floor(Math.max(fromZ,z)/WALL_CELL);cz++)
+      for(const id of wallGrid.get(cx+':'+cz)||[])ids.add(id);
+  let hit=null;
+  for(const id of ids){const h=sweptWall(fromX,fromZ,dx,dz,boundaryWalls[id]);if(h&&(!hit||h.t<hit.t))hit=h;}
+  if(!hit)return recoverCorridor(fromX,fromZ,x,z,vx,vz);
+  const nx=hit.nx,nz=hit.nz,normal=vx*nx+vz*nz;
+  if(normal<0){vx-=nx*normal*1.48;vz-=nz*normal*1.48;}
+  const reflected=vx*nx+vz*nz;
+  return {x:hit.x??fromX+dx*hit.t+nx*.03,z:hit.z??fromZ+dz*hit.t+nz*.03,vx:vx*.88+nx*reflected*.12,vz:vz*.88+nz*reflected*.12};
+}
 function buildTrack(a){
   const {scene,LINE:L,sfIdx,HALF_W,RUNOFF_W,ribbonGeo,kerbStrips,TexLib}=a;
   const groups=new Map();waterfalls=[];TexLib.kerb.encoding=T.sRGBEncoding;
-  boundarySegments=[];
+  boundarySegments=[];boundaryWalls=[];wallGrid=new Map();
   function boundarySegment(x,z,qx,qz,limit){const dx=qx-x,dz=qz-z,len2=dx*dx+dz*dz;if(len2>1e-8)boundarySegments.push({x,z,dx,dz,len2,limit});}
-  for(let i=0;i<L.n;i++){const j=(i+1)%L.n;boundarySegment(L.x[i],L.z[i],L.x[j],L.z[j],HALF_W+RUNOFF_W-1.45);}
-  for(let i=1;i<profile.map.pit.length;i++){const p=profile.map.pit[i-1],q=profile.map.pit[i];boundarySegment(p[0],p[1],q[0],q[1],4.5);}
+  for(let i=0;i<L.n;i++){const j=(i+1)%L.n;boundarySegment(L.x[i],L.z[i],L.x[j],L.z[j],HALF_W+RUNOFF_W-1.25);}
+  for(let i=1;i<profile.map.pit.length;i++){const p=profile.map.pit[i-1],q=profile.map.pit[i];boundarySegment(p[0],p[1],q[0],q[1],4.7);}
 
   function part(c,g,p,r,s){const key=String(c);if(!groups.has(key))groups.set(key,[]);groups.get(key).push({c,g,p,r,s});}
   const cube=new T.BoxGeometry(1,1,1);
@@ -206,9 +251,27 @@ function buildTrack(a){
   gantry.add(new T.Mesh(merge(checks),staticMat));a.setLights(lights);scene.add(gantry);
   const finish=new T.Mesh(new T.PlaneGeometry(HALF_W*2,1.4),new T.MeshBasicMaterial({map:TexLib.kerb}));finish.rotation.x=-Math.PI/2;finish.position.set(sf.x,.05,sf.z);finish.rotation.z=-sf.yaw;scene.add(finish);
   // One set of vertex buffers per material, not hundreds of repeated individual draw calls.
-  for(let i=0;i<L.n;i+=2)for(const side of [-1,1]){
-    const p=point(i,side*(HALF_W+RUNOFF_W+.9));block((i/2)%2?0xfff6df:0xe75443,p.x,.52,p.z,1.1,1.1,5.1,p.yaw);
+  function insideRoad(x,z,kind){
+    for(let i=0;i<boundarySegments.length;i++){
+      const b=boundarySegments[i],pit=i>=L.n;if(kind==='pit'&&!pit||kind==='main'&&pit)continue;
+      const t=Math.max(0,Math.min(1,((x-b.x)*b.dx+(z-b.z)*b.dz)/b.len2));
+      if(Math.hypot(x-b.x-t*b.dx,z-b.z-t*b.dz)<(pit?7.15:HALF_W+RUNOFF_W-1))return true;
+    }
+    return false;
   }
+  function wallEdge(ax,az,bx,bz,pit){
+    const count=Math.max(1,Math.ceil(Math.hypot(bx-ax,bz-az))),dx=bx-ax,dz=bz-az;let start=-1;
+    for(let k=0;k<=count;k++){
+      const f=(k+.5)/count,x=ax+dx*f,z=az+dz*f,keep=k<count&&!insideRoad(x,z,'main')&&(pit||!insideRoad(x,z,'pit'));
+      if(keep&&start<0)start=k;
+      if(!keep&&start>=0){addBoundaryWall(ax+dx*start/count,az+dz*start/count,ax+dx*k/count,az+dz*k/count);start=-1;}
+    }
+  }
+  for(let i=0;i<L.n;i++)for(const side of [-1,1]){const p=point(i,side*(HALF_W+RUNOFF_W+.9)),q=point(i+1,side*(HALF_W+RUNOFF_W+.9));wallEdge(p.x,p.z,q.x,q.z,false);}
+  const pit=profile.map.pit;
+  for(let i=1;i<pit.length;i++){const p=pit[i-1],q=pit[i],dx=q[0]-p[0],dz=q[1]-p[1],len=Math.hypot(dx,dz);if(!len)continue;for(const side of [-1,1])wallEdge(p[0]+dz/len*side*6.9,p[1]-dx/len*side*6.9,q[0]+dz/len*side*6.9,q[1]-dx/len*side*6.9,true);}
+  for(let i=0;i<boundaryWalls.length;i++){const b=boundaryWalls[i];block(i%2?0xfff6df:0xe75443,b.x+b.dx/2,.52,b.z+b.dz/2,1.1,1.1,b.len+.04,Math.atan2(b.dx,b.dz));}
+  scene.userData.kartWallCount=boundaryWalls.length;
   for(let i=0;i<L.n;i+=17)for(const side of [-1,1]){
     const p=point(i,side*(HALF_W+RUNOFF_W+12+(i%4)*5));palm(p.x,p.z,1.05+(i%5)*.15);
     const q=point(i,side*(HALF_W+RUNOFF_W+34));const h=6+(i%7)*2.1;
@@ -252,7 +315,7 @@ function buildTrack(a){
 function animate(dt,now){for(let i=0;i<waterfalls.length;i++)waterfalls[i].scale.x=.92+Math.sin(now*.002+i)*.07;}
 function decorateDom(w){
   w.classList.add('kart-theme');const el=s=>w.querySelector(s);
-  el('#kart-garage-title').textContent='ISLAND STAR KART';el('.garage-kicker').textContent='Vocab World Kart · Admin Preview';
+  el('#kart-garage-title').textContent='ISLAND STAR KART';el('.garage-kicker').textContent='Vocab World Kart · เล่นฟรี';
   el('.garage-sub').textContent='รถคาร์ตเกาะสายรุ้ง · เลือกสีเดียวกันทั้งคันและมุมคนขับ';
   el('.garage-stage').innerHTML='<canvas class="kart-preview" width="720" height="330" aria-label="รถคาร์ตสีที่เลือก"></canvas>';
   el('#kart-intro h2').textContent='🏝️ Vocab World Kart · Tropical Island';
@@ -273,7 +336,7 @@ function decorateDom(w){
   @media(max-height:400px){#kart-wrap .garage-card{padding:8px 14px}#kart-wrap .garage-stage{height:108px}#kart-wrap .garage-sub{font-size:10px}#kart-wrap .garage-swatches{margin:4px 0}}
   `;w.appendChild(style);
 }
-function paintDom(w,style){w.querySelector('#kart-garage-color-name').textContent='Island Star · '+style.label;w.querySelector('#kart-car-proof').textContent='🏝️ Kart · '+style.label+' · ADMIN';w.style.setProperty('--f1-cockpit-center','none');}
+function paintDom(w,style){w.querySelector('#kart-garage-color-name').textContent='Island Star · '+style.label;w.querySelector('#kart-car-proof').textContent='🏝️ Kart · '+style.label+' · KART';w.style.setProperty('--f1-cockpit-center','none');}
 let previewScene,previewCamera,previewCar,previewColor;
 function preview(r,color,w){
   const cv=w.querySelector('.kart-preview');if(!cv)return;
@@ -289,9 +352,9 @@ const profile={
   physics:Object.freeze({top:110/3.6,accel:5.2,power:135,drag:.0041,brake:10,coast:2.8,grip:10.8,wheelbase:2.16,steer:.49,steerHi:.092,pit:40/3.6}),
   hitParts:[[0,.05,.94,1.4],[0,1.65,1.2,.2],[0,-1.58,1.12,.2],[-1.02,1.12,.17,.46],[1.02,1.12,.17,.46],[-1.02,-1.04,.17,.46],[1.02,-1.04,.17,.46]],
   environment:{id:'tropical-island',downloadBytes:0,shadows:0},
-  authorized:()=>typeof canAccessKartBeta==='function'&&canAccessKartBeta()&&typeof KartAccess!=='undefined'&&KartAccess.valid(),
+  authorized:()=>true, // Public solo entry, matching Racing; multiplayer still uses authenticated rules.
   gearOf:v=>v<6?1:v<12?2:v<20?3:v<26?4:5,
-  collideBoundary,buildCar,carView,steer,camera,buildTrack,applyEnvironment,animate,decorateDom,paintDom,preview,
+  wallRadius:WALL_RADIUS,get boundaryWalls(){return boundaryWalls;},collideBoundary,buildCar,carView,steer,camera,buildTrack,applyEnvironment,animate,decorateDom,paintDom,preview,
 };
 root.KartProfile=profile;root.KartWorld=root.createVocabRacingWorld(profile);
 })(window);

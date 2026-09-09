@@ -64,8 +64,8 @@ try{
  await page.click('#f1-garage-confirm');await page.click('#f1-go');await page.waitForTimeout(100);await shot('f1-preserved-smoke');
  await page.evaluate(()=>KartWorld.start());assert.equal(await page.evaluate(()=>F1World._t.running),false);assert.equal(await page.evaluate(()=>KartWorld._t.carStyle.key),'blue');assertions+=2;
  const ids=await page.evaluate(()=>{const ids=[...document.querySelectorAll('[id]')].map(e=>e.id);return ids.length-new Set(ids).size;});assert.equal(ids,0,'world DOM ids stay independent');assertions++;
- await page.evaluate(()=>{Auth.user={uid:'ordinary',email:'student@example.com',emailVerified:true};});await page.waitForTimeout(150);assert.equal(await page.evaluate(()=>KartWorld._t.running),false,'revoked identity stops active race');assertions++;
- const denied=await page.evaluate(()=>{try{KartWorld.start();return false;}catch{return true;}});assert(denied);assertions++;
+ await page.evaluate(()=>{Auth.user={uid:'ordinary',email:'student@example.com',emailVerified:true};});await page.waitForTimeout(150);assert.equal(await page.evaluate(()=>KartWorld._t.running),true,'public Kart remains available to ordinary players');assertions++;
+ const publicEntry=await page.evaluate(()=>{KartWorld._t.exitWorld();Auth.user=null;KartWorld.start();return KartWorld._t.running;});assert(publicEntry,'public solo mode is available offline like Racing');assertions++;
  assert.deepEqual(errors,[],'no browser runtime errors');assertions++;
  await fs.writeFile(path.join(work,'kart-browser-results.json'),JSON.stringify({assertions,physics,errors,requestCount:requests.length},null,2));console.log('PASS',assertions,'browser checks');
  

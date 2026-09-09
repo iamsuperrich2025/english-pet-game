@@ -134,7 +134,6 @@ function aimClear(){ aim=null; }
    คืน {found:{uid:{map,room,n,t}}, denied:true ถ้าอ่านไม่ได้ (rules ยังไม่ publish)} */
 const MAPS3D = ['adv','sky','haunt','heli','drone','drive','soccer','moto','invasion','mecha','f1','kart','lettercannon'];
 function skyMapAllowed(map){
-  if(map==='kart')return typeof canAccessKartBeta==='function'&&canAccessKartBeta();
   return map !== 'sky' || (typeof canAccessSkyBeta === 'function' && canAccessSkyBeta());
 }
 function whereFriends(uids){

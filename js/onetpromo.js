@@ -161,6 +161,51 @@
     el.querySelector('.onet-promo-go').focus();
   }
 
+  /* 🏝️ Round 1379: one invitation per player, only before their first Kart visit. */
+  let kartPending=false,kartTimer=0;
+  const kartUid=()=> (typeof Auth!=='undefined'&&Auth.user&&Auth.user.uid)||('local:'+String(typeof state!=='undefined'&&state.playerName||'player'));
+  const kartSeenKey=()=> 'vwKartPromoShown:v1:'+kartUid();
+  function kartPromoEligible(){
+    if(!authReady()||!classicReady())return false;
+    const played=state.kartPlayedV1||state.kartTicket||Number(state.kartBest)>0||['kartDone','kartRecent'].some(k=>Array.isArray(state[k])&&state[k].length>0);
+    return !played&&state.kartPromoSeenV1!==kartUid()&&storeGet(localStorage,kartSeenKey())!=='1';
+  }
+  function openKartPromo(){
+    if(!kartPromoEligible()||document.getElementById('kart-promo-overlay'))return false;
+    const previous=document.activeElement,owner=kartUid(),el=document.createElement('div');
+    el.id='kart-promo-overlay';el.className='kart-promo-overlay';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-labelledby','kart-promo-title');
+    const car=typeof kartLobbyIconHTML==='function'?kartLobbyIconHTML():'🏎️';
+    el.innerHTML=`<section class="kart-promo-card">
+      <button class="kart-promo-close" type="button" aria-label="ปิดป้ายชวนเล่น Kart">✕</button>
+      <div class="kart-promo-art" aria-hidden="true"><span class="kart-promo-spark">⭐</span><span class="kart-promo-palm">🌴</span>${car}<span class="kart-promo-road">🏁 เกาะนี้รอเธออยู่!</span></div>
+      <div class="kart-promo-copy"><span class="kart-promo-tag">สนามใหม่ · เล่นฟรี!</span>
+        <h2 id="kart-promo-title">คันเล็ก...<br>ความสนุกคันใหญ่!</h2>
+        <p>เลือกรถสีโปรด แล้วซิ่งรอบเกาะ<br>เก็บคำศัพท์ไปด้วยกัน 🌈</p>
+        <div class="kart-promo-chips"><span>🎨 รถ 5 สี</span><span>📚 เก็บคำศัพท์</span><span>👥 เล่นกับเพื่อน</span></div>
+        <div class="kart-promo-actions"><button class="kart-promo-go" type="button">🏁 ไปลองขับกัน!</button><button class="kart-promo-later" type="button">ไว้ก่อน</button></div>
+        <small>Vocab World Kart · หาเราได้ที่แถบเกมด้านซ้าย</small>
+      </div></section>`;
+    function close(resume){el.remove();if(previous&&previous.isConnected)previous.focus({preventScroll:true});if(resume)setTimeout(maybeShow,350);}
+    el.querySelector('.kart-promo-close').onclick=()=>close(true);el.querySelector('.kart-promo-later').onclick=()=>close(true);
+    el.querySelector('.kart-promo-go').onclick=()=>{close(false);if(owner!==kartUid())return;const btn=document.getElementById('btn-world-kart');if(btn)btn.click();};
+    el.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();close(true);}if(e.key==='Tab'){const buttons=[...el.querySelectorAll('button')],first=buttons[0],last=buttons[buttons.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
+    document.body.appendChild(el);
+    state.kartPromoSeenV1=owner;storeSet(localStorage,kartSeenKey(),'1');saveClassicPrefs();
+    el.querySelector('.kart-promo-go').focus();return true;
+  }
+  function kartPromoMaybeShow(){
+    if(kartPending)return true;
+    if(!kartPromoEligible())return false;
+    kartPending=true;const owner=kartUid();
+    const attempt=()=>{
+      if(owner!==kartUid()||!kartPromoEligible()){kartPending=false;return;}
+      const dash=document.getElementById('screen-dashboard');if(!dash||!dash.classList.contains('active')){kartPending=false;return;}
+      if(document.hidden||visibleBlocker()||[...document.querySelectorAll('#onet-promo-overlay,#racing-promo-overlay,#lc-announce,[data-daily-box],[role="dialog"][aria-modal="true"],.toast-financial')].some(isVisible)){kartTimer=setTimeout(attempt,850);return;}
+      kartPending=false;openKartPromo();
+    };
+    kartTimer=setTimeout(attempt,850);return true;
+  }
+
   function isVisible(el){
     if(!el || el.hidden) return false;
     const cs = getComputedStyle(el);
@@ -169,11 +214,12 @@
     return r.width > 0 && r.height > 0;
   }
   function visibleBlocker(){
-    return [...document.querySelectorAll('#consent-gate,.confirm-overlay,.levelup-overlay,.pl-overlay,.alert-overlay')].some(isVisible);
+    return [...document.querySelectorAll('#consent-gate,.confirm-overlay,.levelup-overlay,.pl-overlay,.alert-overlay,#kart-promo-overlay,#kart-wrap.on,#f1-wrap.on')].some(isVisible);
   }
   function maybeShow(){
     if(pending || document.getElementById('onet-promo-overlay')) return;
     if(!authReady() || !classicReady()) return;
+    if(kartPromoMaybeShow())return;
     if(!allowed()){setTimeout(()=>racingPromoMaybeShow(),850);return;}
     pending = true;
     clearTimeout(retryTimer);
@@ -187,6 +233,7 @@
     retryTimer = setTimeout(attempt,850);
   }
   function reset(){
+    clearTimeout(kartTimer);kartPending=false;document.getElementById('kart-promo-overlay')?.remove();
     clearTimeout(retryTimer);
     pending = false;
     storeDel(sessionStorage,sessionKey());
@@ -200,6 +247,8 @@
     retryTimer = setTimeout(()=>{pending=false;openPromo(false);},1100);
   }
 
+  window.kartPromoMaybeShow = kartPromoMaybeShow;
+  window.kartPromoEligible = kartPromoEligible;
   window.onetPromoMaybeShow = maybeShow;
   window.onetPromoClose = finishPromo;
   window.onetPromoReset = reset;

@@ -258,12 +258,12 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
     },
     "wroom": {
       "$map": {
-        ".read": "auth != null && ($map !== 'sky' || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com') && ($map !== 'kart' || (auth != null && auth.token.email_verified === true && (auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com')))",
+        ".read": "auth != null && ($map !== 'sky' || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com')",
         ".validate": "$map === 'adv' || $map === 'sky' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive' || $map === 'moto' || $map === 'invasion' || $map === 'soccer' || $map === 'mecha' || $map === 'f1' || $map === 'lettercannon' || $map === 'kart'",
         "$room": {
           ".validate": "$room.matches(/^r([0-9]|[1-2][0-9]|3[0-5])$/)",
           "$uid": {
-            ".write": "auth != null && auth.uid === $uid && ($map !== 'sky' || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com') && ($map !== 'kart' || (auth != null && auth.token.email_verified === true && (auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com')))",
+            ".write": "auth != null && auth.uid === $uid && ($map !== 'sky' || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com')",
             ".validate": "newData.hasChildren(['x','z'])",
             "x":  { ".validate": "newData.isNumber()" },
             "z":  { ".validate": "newData.isNumber()" },
@@ -280,12 +280,12 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
     },
     "winfo": {
       "$map": {
-        ".read": "auth != null && ($map !== 'sky' || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com') && ($map !== 'kart' || (auth != null && auth.token.email_verified === true && (auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com')))",
+        ".read": "auth != null && ($map !== 'sky' || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com')",
         ".validate": "$map === 'adv' || $map === 'sky' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive' || $map === 'moto' || $map === 'invasion' || $map === 'soccer' || $map === 'mecha' || $map === 'f1' || $map === 'lettercannon' || $map === 'kart'",
         "$room": {
           ".validate": "$room.matches(/^r([0-9]|[1-2][0-9]|3[0-5])$/)",
           "$uid": {
-            ".write": "auth != null && auth.uid === $uid && ($map !== 'sky' || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com') && ($map !== 'kart' || (auth != null && auth.token.email_verified === true && (auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com')))",
+            ".write": "auth != null && auth.uid === $uid && ($map !== 'sky' || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com')",
             ".validate": "newData.hasChildren(['t'])",
             "n":  { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
             "w":  { ".validate": "newData.isNumber() && newData.val() >= 0" },
@@ -752,14 +752,14 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
       }
     },
     "kartAccess": {
-      ".read": "auth != null && auth.token.email_verified === true && (auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com')",
+      ".read": "auth != null",
       ".write": false
     },
     "kartRank": {
-      ".read": "auth != null && auth.token.email_verified === true && (auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com')",
+      ".read": "auth != null",
       ".indexOn": "sec",
       "$uid": {
-        ".write": "auth != null && auth.token.email_verified === true && (auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com') && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
         ".validate": "newData.hasChildren(['sec','n','ts']) && (!data.exists() || newData.child('sec').val() < data.child('sec').val())",
         "sec": {
           ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= 3600"

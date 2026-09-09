@@ -62,9 +62,9 @@ function canUseReservedAdminName(){
     ? String(Auth.user.email).trim().toLowerCase() : '';
   return ADMIN_NAME_EMAILS.has(email);
 }
-/* 🏝️ Kart is a separate admin-only preview; never trust saved adminAccess. */
+/* 🏝️ Round 1379: Kart is public; retain the old capability name for cached callers. */
 function canAccessKartBeta(){
-  return !!(Auth.user && Auth.user.emailVerified && isAdmin());
+  return true;
 }
 function isAdmin(){
   return canUseReservedAdminName();

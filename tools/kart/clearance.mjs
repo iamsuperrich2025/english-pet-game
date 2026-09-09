@@ -49,7 +49,7 @@ try{
       if(!hit)continue;
       if(!Number.isFinite(hit.x+hit.z+hit.vx+hit.vz))throw Error('Non-finite collision');
       if(Math.hypot(hit.vx,hit.vz)>v+.001)throw Error('Collision added energy');
-      if(KartProfile.collideBoundary(hit.x,hit.z,hit.x,hit.z,hit.vx,hit.vz))throw Error('Collision left car outside boundary');
+      if(KartProfile.collideBoundary(hit.x,hit.z,hit.x,hit.z,hit.vx,hit.vz))throw Error('Collision left car outside boundary '+JSON.stringify({i,side,hit,again:KartProfile.collideBoundary(hit.x,hit.z,hit.x,hit.z,hit.vx,hit.vz)}));
       hits++;sides.add(side);
     }
     // A representative straight: real physics must bounce instead of starting a portal.

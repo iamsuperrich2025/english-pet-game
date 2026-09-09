@@ -1,0 +1,39 @@
+import http from 'node:http';import fs from 'node:fs/promises';import path from 'node:path';import assert from 'node:assert/strict';import {createRequire} from 'node:module';
+const require=createRequire(import.meta.url),{chromium}=require('C:/Users/rober/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const root=path.resolve(process.env.KART_ROOT||process.cwd());const server=http.createServer(async(req,res)=>{try{const u=new URL(req.url,'http://local');const f=path.resolve(root,'.'+decodeURIComponent(u.pathname));if(!f.startsWith(root+path.sep))throw Error();const ext=path.extname(f),types={'.html':'text/html; charset=utf-8','.js':'text/javascript','.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.webp':'image/webp','.avif':'image/avif','.woff2':'font/woff2'};res.setHeader('content-type',types[ext]||'application/octet-stream');res.end(await fs.readFile(f));}catch{res.statusCode=404;res.end('Not found');}});await new Promise(r=>server.listen(17476,'127.0.0.1',r));
+const browser=await chromium.launch({channel:'chrome',headless:true,args:['--enable-unsafe-swiftshader']}),page=await browser.newPage({viewport:{width:812,height:375}}),errors=[],requests=[];page.on('request',r=>requests.push(r.url()));page.on('pageerror',e=>errors.push(e.message));
+try{
+ page.setDefaultTimeout(7000);
+ await page.route('**/*',route=>route.request().url().startsWith('http://127.0.0.1:17476/')?route.continue():route.abort());
+ async function setup(uid,resetState=true){await page.evaluate(({uid,resetState})=>{
+  window.__realPromo=window.__realPromo||window.onetPromoMaybeShow;window.onetPromoMaybeShow=()=>{};
+  authWriteCloud=()=>Promise.resolve();authFetchCloud=()=>Promise.resolve(null);authPushSaveAwait=()=>Promise.resolve();authPushSave=()=>{};onlineStart=()=>{};Online.ready=false;Online.db=null;saveState=()=>{};
+  Auth.user={uid,email:'student@example.com',emailVerified:true};Auth.booted=true;
+  state.student={name:'QA',grade:'ป.1',school:'QA',province:'กรุงเทพมหานคร'};state.playerName='QA';state.onetPromoNeverV4=true;state.racingPromoDismissedV1=true;
+  if(resetState){state.kartTicket=false;state.kartPlayedV1=false;state.kartDone=[];state.kartRecent=[];state.kartBest=0;delete state.kartPromoSeenV1;}
+  // Fresh-account Dragon/Daily Box notices are unrelated fixture noise; keep the deliberate QA blocker.
+  if(!window.__fixturePromoObserver){window.__fixturePromoObserver=new MutationObserver(()=>document.querySelectorAll('#lc-announce,[data-daily-box]').forEach(e=>e.remove()));window.__fixturePromoObserver.observe(document.body,{childList:true,subtree:true});}
+  showScreen('screen-dashboard');renderDashboard();
+  document.querySelectorAll('#lc-announce,[data-daily-box],#consent-gate,.rankup-overlay,.levelup-overlay,.toast-financial,.toast-warn,#onet-promo-overlay,#racing-promo-overlay').forEach(el=>el.remove());
+ },{uid,resetState});}
+ await page.goto('http://127.0.0.1:17476/index_classic.html',{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>typeof kartPromoMaybeShow==='function'&&typeof renderDashboard==='function');
+ await setup('kart-invite-a');
+ await page.evaluate(()=>{const blocker=document.createElement('div');blocker.className='confirm-overlay';blocker.id='qa-blocker';blocker.style.cssText='position:fixed;width:20px;height:20px';document.body.appendChild(blocker);__realPromo();});await page.waitForTimeout(1000);
+ assert.equal(await page.locator('#kart-promo-overlay').count(),0);assert.equal(await page.evaluate(()=>localStorage.getItem('vwKartPromoShown:v1:kart-invite-a')),null);
+ await page.locator('#qa-blocker').evaluate(e=>e.remove());await page.locator('#kart-promo-overlay').waitFor({state:'visible'});
+ assert.equal(await page.evaluate(()=>state.kartPromoSeenV1),'kart-invite-a');assert.equal(await page.evaluate(()=>localStorage.getItem('vwKartPromoShown:v1:kart-invite-a')),'1');
+ const sizes=[[812,375],[667,320],[1318,615],[390,844]];
+ for(const [width,height]of sizes){await page.setViewportSize({width,height});const fit=await page.locator('.kart-promo-card').evaluate(e=>({r:e.getBoundingClientRect().toJSON(),h:e.scrollHeight,c:e.clientHeight,w:e.scrollWidth,cw:e.clientWidth}));assert(fit.r.top>=0&&fit.r.bottom<=height&&fit.r.left>=0&&fit.r.right<=width&&fit.h<=fit.c+1&&fit.w<=fit.cw+1,JSON.stringify({width,height,fit}));}
+ await page.setViewportSize({width:812,height:375});await page.locator('.kart-promo-art img').evaluate(e=>e.decode());
+ if(process.env.KART_OUTPUT){const sharp=require('C:/Users/rober/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/sharp');await sharp(await page.screenshot()).webp({lossless:true}).toFile(path.join(process.env.KART_OUTPUT,'kart-invitation-1379.webp'));}
+ await page.locator('.kart-promo-later').click();assert.equal(await page.evaluate(()=>kartPromoMaybeShow()),false);assert.equal(await page.locator('#kart-promo-overlay').count(),0);
+ await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>typeof kartPromoMaybeShow==='function');await setup('kart-invite-a');assert.equal(await page.evaluate(()=>kartPromoEligible()),false,'Reload does not show invitation twice');
+ for(const field of ['kartPlayedV1','kartTicket','kartDone','kartRecent','kartBest']){await setup('kart-played-'+field);await page.evaluate(field=>state[field]=field==='kartBest'?120:field==='kartDone'||field==='kartRecent'?['cat']:true,field);assert.equal(await page.evaluate(()=>kartPromoEligible()),false,'Played detection '+field);}
+ await setup('kart-cloud-seen');await page.evaluate(()=>state.kartPromoSeenV1=Auth.user.uid);assert.equal(await page.evaluate(()=>kartPromoEligible()),false,'Synced save marker prevents showing on another device');
+ await setup('kart-invite-b');assert.equal(await page.evaluate(()=>kartPromoMaybeShow()),true);await page.locator('#kart-promo-overlay').waitFor({state:'visible'});const coins=await page.evaluate(()=>state.coins);
+ await page.locator('.kart-promo-go').click();const entry=page.locator('.levelup-overlay .levelup-box').last();await entry.waitFor({state:'visible'});assert((await entry.innerText()).includes('Vocab World Kart'));
+ await page.evaluate(()=>{window.__kartStarts=0;loadScriptOnce=async()=>{};window.KartWorld={start:()=>window.__kartStarts++};});await entry.getByRole('button',{name:/เข้าเลย/}).click();await page.waitForTimeout(100);
+ assert.equal(await page.evaluate(()=>__kartStarts),1);assert.equal(await page.evaluate(()=>state.kartPlayedV1),true);assert.equal(await page.evaluate(()=>state.coins),coins);assert.equal(await page.evaluate(()=>kartPromoEligible()),false);assert.deepEqual(errors,[]);
+ console.log('PASS 24 Kart invitation checks: once/account/reload/cloud/played/4 viewport fits/blocked deferral/native free entry');
+ if(process.env.KART_OUTPUT)await fs.writeFile(path.join(process.env.KART_OUTPUT,'kart-invitation-1379.json'),JSON.stringify({checks:24,viewports:sizes,errors,passed:true},null,2));
+}catch(e){console.error(e);console.log('promo diagnostics',await page.evaluate(()=>({eligible:kartPromoEligible(),seen:state.kartPromoSeenV1,uid:Auth.user?.uid,hidden:document.hidden,dash:document.querySelector('#screen-dashboard')?.className,blockers:[...document.querySelectorAll('#consent-gate,.confirm-overlay,.levelup-overlay,.pl-overlay,.alert-overlay,#kart-wrap.on,#f1-wrap.on,#onet-promo-overlay,#racing-promo-overlay,#lc-announce,[data-daily-box],[role="dialog"][aria-modal="true"],.toast-financial')].filter(e=>e.getBoundingClientRect().width&&e.getBoundingClientRect().height&&getComputedStyle(e).display!=='none'&&getComputedStyle(e).visibility!=='hidden').map(e=>({tag:e.tagName,id:e.id,cls:e.className,opacity:getComputedStyle(e).opacity,text:e.textContent.slice(0,100)}))})));console.log('page errors',errors);process.exitCode=1;}finally{await browser.close();server.close();}

@@ -7641,26 +7641,22 @@ async function enterMoto3D(){
 /* 🏎️ รอบ 896: เข้าโลกแข่งรถ F1 สนามซาเคียร์ (Bahrain) — engine แยก (js/f1_3d.js)
    + ข้อมูลสนามจริงจาก OSM (js/data/f1_bahrain.js) + GLTFLoader เผื่อผู้ใช้วางโมเดล f1_car.glb */
 /* ============================================================
-   🏝️ รอบ 1377 — KART ADMIN PREVIEW (separate entry and persistent keys)
+   🏝️ รอบ 1377 — KART (public entry; separate persistent keys)
    ============================================================ */
 function kartLobbyIconHTML(){
   return '<img data-kart-icon src="img/kart/kart-menu.webp" width="40" height="40" loading="lazy" decoding="async" alt="" style="width:40px;height:40px;object-fit:contain;vertical-align:middle">';
 }
 async function enterKart3D(){
-  if(typeof canAccessKartBeta!=='function'||!canAccessKartBeta())return worldEntryStopped('เกมนี้เปิดให้แอดมินเท่านั้น');
   if(!state.kartTicket||state.advHurt)return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
   if(advLoading)return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่');
   advLoading=Date.now();toast('🏝️ กำลังเปิด Vocab World Kart...');
   try{
-    await loadScriptOnce('js/kart-access.js');
-    await KartAccess.authorize();
     await loadScriptOnce('js/vendor/three.min.js');
     await loadScriptOnce('js/data/f1_bahrain.js');
     const engineUrl='__VW_F1_ENGINE_URL__';
     await loadScriptOnce(engineUrl.startsWith('__VW_')?'js/f1_3d.js':engineUrl);
     await loadScriptOnce('js/kart3d.js');
-    if(!KartAccess.valid())return worldEntryStopped('สิทธิ์แอดมินเปลี่ยน กรุณาเข้าใหม่');
-    KartWorld.start();return worldEntryStarted();
+    KartWorld.start();state.kartPlayedV1=true;saveState();return worldEntryStarted();
   }catch(error){return worldEntryStopped('เปิด Kart ไม่สำเร็จ: '+String(error.message||error),error);}
   finally{advLoading=false;}
 }
@@ -7870,7 +7866,6 @@ function showGameEntryRefundNotice(next){
 }
 
 async function startWorldEntry(w, info, unlocked, overlay, button){
-  if(w && w.mode==='kart' && !(typeof canAccessKartBeta==='function'&&canAccessKartBeta())){toast('🔒 เกมนี้เปิดให้แอดมินเท่านั้น');return;}
   if(w && w.mode === 'sky' && !ensureSkyBetaAccess()) return;
   if(button) button.disabled = true;
   // info คงอยู่ใน signature เพื่อ compatibility เท่านั้น — ห้ามใช้ราคา/หักเหรียญเมื่อเข้าเกม
@@ -7896,7 +7891,6 @@ async function startWorldEntry(w, info, unlocked, overlay, button){
 }
 
 function railWorldClick(w){
-  if(w && w.mode==='kart' && !(typeof canAccessKartBeta==='function'&&canAccessKartBeta())){toast('🔒 เกมนี้เปิดให้แอดมินเท่านั้น');return;}
   if(w && w.mode === 'sky' && !ensureSkyBetaAccess()) return;
   if(world3DComingSoon(w)){
     sfx.wrong(); toast('🔒 Coming soon'); return;
@@ -7940,7 +7934,6 @@ function skyEntryPickerHTML(w, characters){
 
 /* 🎮 หน้ายืนยันเข้าโลก 3D ฟรี + ปุ่มชวนเพื่อนเล่นด้วยกัน (openTinvPicker) */
 function openWorldEntryDialog(w){
-  if(w && w.mode==='kart' && !(typeof canAccessKartBeta==='function'&&canAccessKartBeta())){toast('🔒 เกมนี้เปิดให้แอดมินเท่านั้น');return;}
   if(w && w.mode === 'sky' && !ensureSkyBetaAccess()) return;
   const isSky = !!(w && w.mode === 'sky');
   const skyCharacters = isSky ? skyEntryCatalog() : [];
@@ -8086,8 +8079,7 @@ function renderRailWorlds(){
   WORLD3D.forEach(w=>{
     const b = document.getElementById('btn-world-' + w.mode);
     if(!b) return;
-    const betaVisible = (w.mode !== 'sky' || (typeof canAccessSkyBeta === 'function' && canAccessSkyBeta()))
-      && (w.mode !== 'kart' || (typeof canAccessKartBeta === 'function' && canAccessKartBeta()));
+    const betaVisible = w.mode !== 'sky' || (typeof canAccessSkyBeta === 'function' && canAccessSkyBeta());
     b.hidden = !betaVisible;
     if(w.mode==='kart'){
       b.disabled=!betaVisible;b.style.display=betaVisible?'':'none';b.setAttribute('aria-hidden',String(!betaVisible));
