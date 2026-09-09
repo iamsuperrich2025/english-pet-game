@@ -193,7 +193,7 @@ beginPlay:12952 · start:12954 · exitWorld:13187 · mechaRecapLine:13264
 
 ## js/app-update.js (214 บรรทัด · 0 รายการ)
 
-## js/arena-audio.js (112 บรรทัด · 0 รายการ)
+## js/arena-audio.js (163 บรรทัด · 0 รายการ)
 
 ## js/arena-elements.js (74 บรรทัด · 0 รายการ)
 
@@ -213,7 +213,7 @@ beginPlay:12952 · start:12954 · exitWorld:13187 · mechaRecapLine:13264
 
 ## js/arena-spell-engine.js (93 บรรทัด · 0 รายการ)
 
-## js/arena3d.js (870 บรรทัด · 0 รายการ)
+## js/arena3d.js (871 บรรทัด · 0 รายการ)
 
 ## js/assetaward.js (21 บรรทัด · 0 รายการ)
 
@@ -1051,8 +1051,8 @@ vbRender:148 · vbCardHTML:194
 ## css/arena-heroes.css (12 บรรทัด · 4 selector)
 #ah-picker:2,3 · .ah-layout:4 · .ah-info:5 · .ah-header:11,12
 
-## css/arena3d.css (385 บรรทัด · 86 selector)
-#va-root:5,7,9,203(+91) · #va-canvas:8 · .va-vignette:11 · .va-scan:15 · .va-top:18 · .va-glass:20
+## css/arena3d.css (393 บรรทัด · 86 selector)
+#va-root:5,7,9,203(+95) · #va-canvas:8 · .va-vignette:11 · .va-scan:15 · .va-top:18 · .va-glass:20
 .va-exit:23,26 · .va-player-card:27,29 · .va-player-name:30 · .va-online:31 · .va-word-card:32,34,36 · .va-word-th:37
 .va-word-en:38 · .va-word-slots:40,41,43 · .va-coins:44 · .va-shop-btn:46 · .va-energy:48,54 · .va-energy-label:50
 .va-energy-track:51 · .va-energy-fill:52 · .va-energy-power:55 · .va-bag:57 · .va-bag-label:59 · .va-bag-list:60

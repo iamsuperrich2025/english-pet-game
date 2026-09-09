@@ -5876,3 +5876,12 @@
 - tools/test_arena_audio.cjs ผ่านsource39+dist39 (desktop/mobile touch, missing/corrupt audio, peer revive); grimoire209/crystals53; build9,529ไฟล์616.6MiB+validator/assets306/undefined0/backtick0/syntax/diffผ่าน; native Android/TWA ยังต้องตรวจบนเครื่องจริง
 - ผู้ใช้อนุญาตและเปิด COMMIT_DEPLOY1ครั้ง; commit790cadb4/handoff8341470c+pushสำเร็จ; live2026-09-10.1244 ยืนยันversion/loader/engine200 + managerและMP3ทั้ง11ตรงsourceทุกbyte; แอดมินตรวจได้ที่ vocabworld.web.app/index_classic.html
 
+
+
+## ⏬ ย้ายเมื่อ 2026-09-10 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1392 · Arena เพลงอย่างเดียว:** ผู้ใช้ให้ Arena_bgmusic.mp3 และสั่งลบ SFX1391ทั้งหมด; เอา11คลิป/ทุกhook/engineSFX/testเดิมออก เหลือ js/arena-audio.js จัดการเพลงวนลูป .16 เท่านั้น; gameplay/networkคงเดิม
+- Opus80k 1,284,092B ลด54%จากต้นฉบับ2,787,323B; MP3128k fallback1,900,416B เลือกโหลดเพียงformatเดียวหลังgesture; compressedBlob+1media element+content-hashcacheเดิมข้ามreload/deploy, musicOff/sound/hidden/exit; เก็บต้นฉบับไม่แก้/ไม่ship
+- tools/test_arena_music.cjs ผ่านsource26 (desktop/mobile, loopไม่downloadซ้ำ, reloadบล็อกเน็ตเล่นจากcache, fallback, missing, realgameไม่มีSFX); grimoire209/crystals53; build9,520files619.7MiB+validator/undefined0/template0/syntax/diffผ่าน; dist26ผ่านและbytesตรงsource
+- docs/PROJECT_MAP.md + SOUND_LICENSES.md ปรับเป็นเพลงผู้ใช้; commit6cef08a5/handoff71188e69+push+live2026-09-10.1245 สำเร็จ; live manager+2เพลงตรงsource และmanifestไม่มี11SFXเดิม; launcherเปิด1ครั้งติดstaged-deletionตรวจพลาด จึงfinish_round pin20pathsจนสำเร็จ
+

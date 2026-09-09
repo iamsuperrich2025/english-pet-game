@@ -27,11 +27,6 @@
 - test_arena_music source63+dist63ผ่าน desktop/mobile/จริงในเกม/cacheบล็อกเน็ต/loop/fallback/mute/ARC/โล่/ฮีลเต็มHPและต่อเนื่อง; grimoire209/crystals53; build9,525files619.9MiB+validator/undefined0/template0/syntax/diffผ่าน, runtime7เสียงตรงsource
 - SOUND_LICENSES.md/PROJECT_MAP.mdอัปเดต; ผู้ใช้อนุญาตdeployแล้ว เตรียมSHIP11pathsและเปิดCOMMIT_DEPLOY1ครั้ง; live2026-09-10.1246/commitc86046a6+handoff2ca230d1+pushสำเร็จ; manager/game/7เสียงตรงsource
 
-- **รอบ 1392 · Arena เพลงอย่างเดียว:** ผู้ใช้ให้ Arena_bgmusic.mp3 และสั่งลบ SFX1391ทั้งหมด; เอา11คลิป/ทุกhook/engineSFX/testเดิมออก เหลือ js/arena-audio.js จัดการเพลงวนลูป .16 เท่านั้น; gameplay/networkคงเดิม
-- Opus80k 1,284,092B ลด54%จากต้นฉบับ2,787,323B; MP3128k fallback1,900,416B เลือกโหลดเพียงformatเดียวหลังgesture; compressedBlob+1media element+content-hashcacheเดิมข้ามreload/deploy, musicOff/sound/hidden/exit; เก็บต้นฉบับไม่แก้/ไม่ship
-- tools/test_arena_music.cjs ผ่านsource26 (desktop/mobile, loopไม่downloadซ้ำ, reloadบล็อกเน็ตเล่นจากcache, fallback, missing, realgameไม่มีSFX); grimoire209/crystals53; build9,520files619.7MiB+validator/undefined0/template0/syntax/diffผ่าน; dist26ผ่านและbytesตรงsource
-- docs/PROJECT_MAP.md + SOUND_LICENSES.md ปรับเป็นเพลงผู้ใช้; commit6cef08a5/handoff71188e69+push+live2026-09-10.1245 สำเร็จ; live manager+2เพลงตรงsource และmanifestไม่มี11SFXเดิม; launcherเปิด1ครั้งติดstaged-deletionตรวจพลาด จึงfinish_round pin20pathsจนสำเร็จ
-
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
