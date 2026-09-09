@@ -5885,3 +5885,12 @@
 - tools/test_arena_music.cjs ผ่านsource26 (desktop/mobile, loopไม่downloadซ้ำ, reloadบล็อกเน็ตเล่นจากcache, fallback, missing, realgameไม่มีSFX); grimoire209/crystals53; build9,520files619.7MiB+validator/undefined0/template0/syntax/diffผ่าน; dist26ผ่านและbytesตรงsource
 - docs/PROJECT_MAP.md + SOUND_LICENSES.md ปรับเป็นเพลงผู้ใช้; commit6cef08a5/handoff71188e69+push+live2026-09-10.1245 สำเร็จ; live manager+2เพลงตรงsource และmanifestไม่มี11SFXเดิม; launcherเปิด1ครั้งติดstaged-deletionตรวจพลาด จึงfinish_round pin20pathsจนสำเร็จ
 
+
+
+## ⏬ ย้ายเมื่อ 2026-09-10 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1393 · Arena เสียงผู้ใช้ 1–5:** 1=MEGAสำเร็จ, 2=พลังธาตุ, 3=โล่รับดาเมจ, 4=HPฟื้นจริง, 5=ARC+5ท่าสายฟ้าแทนเสียงธาตุ; คงBGM1392และไม่คืนSFXเดิม; js/arena-audio.js/arena3d.js
+- MP3ใหม่5ไฟล์224,198B: 1ลบปกโดยcopyเสียงlossless, 2–5bytesตรงต้นฉบับ; preloadเงียบหลังgesture (MEGAเมื่อ5คริสตัล), compressedBlob+content-hashcacheข้ามreload, 1player/cue, mute/hidden/exit; healกันถี่1.8s อื่น250ms
+- test_arena_music source63+dist63ผ่าน desktop/mobile/จริงในเกม/cacheบล็อกเน็ต/loop/fallback/mute/ARC/โล่/ฮีลเต็มHPและต่อเนื่อง; grimoire209/crystals53; build9,525files619.9MiB+validator/undefined0/template0/syntax/diffผ่าน, runtime7เสียงตรงsource
+- SOUND_LICENSES.md/PROJECT_MAP.mdอัปเดต; ผู้ใช้อนุญาตdeployแล้ว เตรียมSHIP11pathsและเปิดCOMMIT_DEPLOY1ครั้ง; live2026-09-10.1246/commitc86046a6+handoff2ca230d1+pushสำเร็จ; manager/game/7เสียงตรงsource
+
