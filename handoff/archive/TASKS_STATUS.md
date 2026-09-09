@@ -5840,3 +5840,12 @@
 - รายละเอียด docs/ARENA_FIELD.md, docs/ARENA_MAP_ASSETS.json, docs/PERFORMANCE.md; ผู้ใช้ยืนยัน [SUCCESS] แล้ว: commit9af6c115/handoff4adad2cf, HEAD=origin/main; ตรวจเว็บจริง version.json เป็น2026-09-10.1240 ตรงเครื่องเมื่อ10ก.ย.2026 — commit/deploy/push รอบ1387สำเร็จ
 
 - **รอบ 1386 · พลังอลังการ + ห้องอัตโนมัติ:** เพิ่มพลังธาตุทุกชนิดให้มีวง แสง อนุภาค และแรงกระแทกมากขึ้น; MEGA ขยายภาพเกือบเต็มสนาม (~26 หน่วย) แต่คงดาเมจรัศมีเดิม; Adventure จำกัด 4 คน/ห้องและไล่เข้าห้องถัดไปเมื่อเต็ม
+
+
+## ⏬ ย้ายเมื่อ 2026-09-10 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1388 · คืนตัวละครเดิม:** ArenaMaps.actor กลับใช้ ArenaFieldVisuals.hero แบบสามมิติเดิมทั้งผู้เล่น/เพื่อน สเกล1.12เดิม; คืนระดับชื่อ/HP/สัญลักษณ์เหนือหัวใน js/arena3d.js; คงฉากใหม่ หน้าเลือกตัวละครและระบบเกม
+- Source maps70/field26 ผ่าน; ตรวจภาพ1366/812/667ทั้ง3map; idle107draws/11.9k triangles/18textures; syntax/diff/undefined0/backtick0 และ build9,517ไฟล์616.4MiB/validator/เทียบไฟล์ตรงผ่าน; maps70 บน dist ผ่านแล้ว
+- อัปเดต docs/ARENA_FIELD.md + docs/PERFORMANCE.md; ผู้ใช้ยืนยัน [SUCCESS] แล้ว: commit6c7f47c2/handoffaee914cc, version2026-09-10.1241 — commit/deploy/push รอบ1388สำเร็จ
+
+- **รอบ 1387 · Vocab Arena 3 แผนที่:** Sky Citadel / Crystal Hollow / Moonleaf Ruins แบบ AVIF + WebP fallback; เลือก map, 4 คน/map, ครบ 3 map เปิดกลุ่มถัดไปใน adv r21–r35 (5 กลุ่ม/60 ที่นั่ง); ปุ่มล็อบบี้รูปบ้านแฟนตาซี; ยังแอดมินเท่านั้น

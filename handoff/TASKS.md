@@ -27,11 +27,6 @@
 - เทียบโค้ด6bb1b6f5: position/quaternion/ขอบสนาม/ขนาดตัวละครพิกเซลตรงกันบน1015/812/1366 ทั้ง3map; source maps82/field26/grimoire209, dist maps82, build9,517ไฟล์616.6MiB/validator/assets306/undefined0/backtick0/syntax/diffผ่าน; ตรวจภาพกลางและขอบเวทีแล้ว
 - ภาพเทียบ work/arena-camera-compare-1389; รายละเอียด docs/ARENA_FIELD.md/PERFORMANCE.md/PROJECT_MAP.md/CURRENT_STATE.md; ผู้ใช้ยืนยัน [SUCCESS] และตรวจแล้ว commit009a0887/handoff26f7684e, HEAD=origin/main; เว็บจริง version2026-09-10.1242 ตรงเครื่อง — commit/deploy/push1389สำเร็จ
 
-- **รอบ 1388 · คืนตัวละครเดิม:** ArenaMaps.actor กลับใช้ ArenaFieldVisuals.hero แบบสามมิติเดิมทั้งผู้เล่น/เพื่อน สเกล1.12เดิม; คืนระดับชื่อ/HP/สัญลักษณ์เหนือหัวใน js/arena3d.js; คงฉากใหม่ หน้าเลือกตัวละครและระบบเกม
-- Source maps70/field26 ผ่าน; ตรวจภาพ1366/812/667ทั้ง3map; idle107draws/11.9k triangles/18textures; syntax/diff/undefined0/backtick0 และ build9,517ไฟล์616.4MiB/validator/เทียบไฟล์ตรงผ่าน; maps70 บน dist ผ่านแล้ว
-- อัปเดต docs/ARENA_FIELD.md + docs/PERFORMANCE.md; ผู้ใช้ยืนยัน [SUCCESS] แล้ว: commit6c7f47c2/handoffaee914cc, version2026-09-10.1241 — commit/deploy/push รอบ1388สำเร็จ
-
-- **รอบ 1387 · Vocab Arena 3 แผนที่:** Sky Citadel / Crystal Hollow / Moonleaf Ruins แบบ AVIF + WebP fallback; เลือก map, 4 คน/map, ครบ 3 map เปิดกลุ่มถัดไปใน adv r21–r35 (5 กลุ่ม/60 ที่นั่ง); ปุ่มล็อบบี้รูปบ้านแฟนตาซี; ยังแอดมินเท่านั้น
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
