@@ -1,5 +1,6 @@
-import { createHash } from 'node:crypto';
-import { Script } from 'node:vm';
+import { createHash } from 'node:crypto';
+import { packageFrontline } from './frontline-v1/package-production.mjs';
+
 
 
 
@@ -91,7 +92,9 @@ const PUBLIC_ROOT_FILES = new Set([
 
 
 
-const PUBLIC_DIRS = new Set(['.well-known', 'clip', 'css', 'img', 'js', 'sound']);
+const PUBLIC_DIRS = new Set(['.well-known', 'clip', 'css', 'img', 'js', 'sound']);
+
+const REQUIRED_STATIC_FILES = new Set(['.well-known/assetlinks.json']);
 
 
 
@@ -112,8 +115,8 @@ const TOKEN_UPDATED = /__VW_BUILD_UPDATED__/g;
 
 
 const TOKEN_F1_ENGINE = /__VW_F1_ENGINE_URL__/g;
-const TOKEN_FRONTLINE_JS = /__VW_FRONTLINE_JS_URL__/g;
-const TOKEN_FRONTLINE_CSS = /__VW_FRONTLINE_CSS_URL__/g;
+
+
 
 
 
@@ -263,35 +266,11 @@ async function sourceFiles() {
 
 
 
-    for (const rel of [...PUBLIC_ROOT_FILES, 'js/app-update.js', 'js/account-deletion.js', 'js/specialmission.js', 'css/account-deletion.css',
+    for (const rel of [...PUBLIC_ROOT_FILES, ...REQUIRED_STATIC_FILES, 'js/app-update.js', 'js/account-deletion.js', 'js/specialmission.js', 'css/account-deletion.css',
 
 
 
       'js/home-v2.js', 'css/home-v2.css',
-      'js/frontline1944.js', 'css/frontline1944.css',
-
-      // Phase 2.1: only this Task's seven new WebP assets, including before their first Git commit.
-      'img/frontline1944/phase21/p21_959e5f_crown.webp',
-      'img/frontline1944/phase21/p21_959e5f_furrows.webp',
-      'img/frontline1944/phase21/p21_959e5f_lane.webp',
-      'img/frontline1944/phase21/p21_959e5f_meadow.webp',
-      'img/frontline1944/phase21/p21_959e5f_stone.webp',
-      'img/frontline1944/phase21/p21_959e5f_tiles.webp',
-      'img/frontline1944/phase21/p21_959e5f_wheat.webp',
-      // Phase 2.1 R2: exact new revision paths; do not publish arbitrary untracked artwork.
-      'img/frontline1944/phase21/p21r2_meadow.webp',
-      'img/frontline1944/phase21/p21r2_furrows.webp',
-      'img/frontline1944/phase21/p21r2_lane.webp',
-      'img/frontline1944/phase21/p21r2_wheat.webp',
-      'img/frontline1944/phase21/p21r2_stone.webp',
-      'img/frontline1944/phase21/p21r2_tiles.webp',
-      'img/frontline1944/phase21/p21r2_crown.webp',
-      'img/frontline1944/phase21/p21r2_plaster.webp',
-      'img/frontline1944/phase21/p21r2_grain.webp',
-      'img/frontline1944/phase21/p21r2_armor.webp',
-      'img/frontline1944/phase21/p21r2_sky.webp',
-      'img/frontline1944/phase21/p21r2_asset_manifest.json',
-
       'img/home-v2/r10_screen_backdrop.svg', 'img/home-v2/r10_pet_world.svg', 'img/home-v2/r10_cloud_pedestal.svg',
 
       'img/home-v2/r11_screen_frame.svg', 'img/home-v2/r11_pet_world.svg', 'img/home-v2/r11_cloud_pedestal.svg',
@@ -1437,63 +1416,8 @@ async function writeAssetManifest(build, sourcePaths = []) {
 
 
 
-// Frontline delivery contract: fail before copying/removing build output when
-// the launcher, executing JS and CSS identify different runtimes. This check is
-// read-only; it must never rewrite gameplay or conceal a stale source identity.
-function validateFrontlineRuntimeIdentity(html, js, css) {
-  const loader = [...html.matchAll(/\bvar\s+FRONTLINE_RUNTIME_ID\s*=\s*(['"])([^'"\r\n]+)\1\s*;/g)];
-  const config = js.match(/\bconst\s+CFG\s*=\s*\{([\s\S]*?)\};/);
-  const runtime = config ? [...config[1].matchAll(/\bruntimeVersion\s*:\s*(['"])([^'"\r\n]+)\1/g)] : [];
-  const styles = [...css.matchAll(/--fl44-css-runtime-id\s*:\s*(['"])([^'"\r\n]+)\1/g)];
-  if (loader.length !== 1 || runtime.length !== 1 || styles.length !== 1) {
-    throw new Error('[Frontline delivery guard] Expected one explicit launcher, CFG.runtimeVersion and CSS runtime ID. Check index_classic.html, js/frontline1944.js and css/frontline1944.css.');
-  }
-  const expected = runtime[0][2];
-  if (loader[0][2] !== expected || styles[0][2] !== `${expected}-CSS`) {
-    throw new Error(`[Frontline delivery guard] Runtime identity mismatch: launcher=${loader[0][2]}; JS=${expected}; CSS=${styles[0][2]}. Fix the authoritative source IDs together before building; do not edit dist or bypass the loader check.`);
-  }
-  if (!/window\.Frontline1944\s*=\s*\{\s*VERSION\s*:\s*CFG\.runtimeVersion\s*,/.test(js)) {
-    throw new Error('[Frontline delivery guard] window.Frontline1944.VERSION must be exported from CFG.runtimeVersion.');
-  }
-  new Script(js, { filename: 'js/frontline1944.js' });
-  return expected;
-}
-async function validateFrontlineSourceIdentity() {
-  const [html, js, css] = await Promise.all([
-    fs.readFile(path.join(ROOT, 'index_classic.html'), 'utf8'),
-    fs.readFile(path.join(ROOT, 'js/frontline1944.js'), 'utf8'),
-    fs.readFile(path.join(ROOT, 'css/frontline1944.css'), 'utf8'),
-  ]);
-  const id = validateFrontlineRuntimeIdentity(html, js, css);
-  console.log(`[Frontline delivery guard] Source identity PASS: ${id}`);
-  return id;
-}
-async function validateFrontlineBuiltDelivery(html, jsUrl, cssUrl) {
-  if (!/^\/assets\/build\/js\/frontline1944\.[a-f0-9]{16}\.js$/.test(jsUrl) ||
-      !/^\/assets\/build\/css\/frontline1944\.[a-f0-9]{16}\.css$/.test(cssUrl)) {
-    throw new Error('[Frontline delivery guard] Frontline requires exact content-hash JS/CSS aliases.');
-  }
-  const [js, css, copiedJs] = await Promise.all([
-    fs.readFile(path.join(OUT, jsUrl.slice(1))),
-    fs.readFile(path.join(OUT, cssUrl.slice(1))),
-    fs.readFile(path.join(OUT, 'js/frontline1944.js')),
-  ]);
-  if (jsUrl !== `/assets/build/js/frontline1944.${sha(js)}.js` ||
-      cssUrl !== `/assets/build/css/frontline1944.${sha(css)}.css` || !js.equals(copiedJs)) {
-    throw new Error('[Frontline delivery guard] Frontline alias bytes/hash do not match the copied build runtime.');
-  }
-  const jsRefs = [...html.matchAll(/\bvar\s+FRONTLINE_JS_URL\s*=\s*(['"])([^'"\r\n]+)\1\s*;/g)];
-  const cssRefs = [...html.matchAll(/\bvar\s+FRONTLINE_CSS_URL\s*=\s*(['"])([^'"\r\n]+)\1\s*;/g)];
-  if (jsRefs.length !== 1 || cssRefs.length !== 1 || jsRefs[0][2] !== jsUrl || cssRefs[0][2] !== cssUrl ||
-      html.includes('__VW_FRONTLINE_JS_URL__') || html.includes('__VW_FRONTLINE_CSS_URL__')) {
-    throw new Error('[Frontline delivery guard] Built launcher does not reference the validated Frontline aliases.');
-  }
-  const id = validateFrontlineRuntimeIdentity(html, js.toString('utf8'), css.toString('utf8'));
-  console.log(`[Frontline delivery guard] Built JS/CSS aliases PASS: ${id}`);
-}
-
 async function main() {
-  await validateFrontlineSourceIdentity();
+
 
 
 
@@ -1505,7 +1429,8 @@ async function main() {
 
 
 
-  await copyPublicTree(files);
+  await copyPublicTree(files);
+  await packageFrontline(OUT);
 
 
 
@@ -1542,27 +1467,6 @@ async function main() {
 
 
   }
-
-
-  /* Frontline is admin-only and lazy-loaded from inline bootstrap code, so ordinary
-     HTML tag fingerprinting cannot see it. Rewrite its placeholders to immutable
-     content-hash URLs. This deliberately bypasses the old service-worker fallback
-     path that can ignore query strings and return an obsolete Frontline runtime. */
-  const frontlineJsUrl = await makeImmutableAlias('js/frontline1944.js');
-  const frontlineCssUrl = await makeImmutableAlias('css/frontline1944.css');
-  const frontlineHtmlFile = path.join(OUT, 'index_classic.html');
-  let frontlineHtml = await fs.readFile(frontlineHtmlFile, 'utf8');
-  if (!frontlineHtml.includes('__VW_FRONTLINE_JS_URL__') || !frontlineHtml.includes('__VW_FRONTLINE_CSS_URL__')) {
-    throw new Error('index_classic.html is missing Frontline immutable asset placeholders');
-  }
-  frontlineHtml = frontlineHtml.replace(TOKEN_FRONTLINE_JS, frontlineJsUrl).replace(TOKEN_FRONTLINE_CSS, frontlineCssUrl);
-  await validateFrontlineBuiltDelivery(frontlineHtml, frontlineJsUrl, frontlineCssUrl);
-  await fs.writeFile(frontlineHtmlFile, frontlineHtml);
-
-
-
-
-
 
 
   /* The Realistic cockpit was introduced as a new untracked runtime asset. Give both
@@ -1681,7 +1585,8 @@ async function main() {
 
 
 
-  await fingerprintHtml('index_classic.html');
+  await fingerprintHtml('index_classic.html');
+  await fingerprintHtml('frontline/index.html');
 
 
 
@@ -1766,7 +1671,7 @@ async function main() {
 
 
 // Read-only diagnostic mode; no build, output writes or deploy.
-(process.argv.includes('--check-frontline-delivery') ? validateFrontlineSourceIdentity() : main()).catch((error) => {
+main().catch((error) => {
 
 
 

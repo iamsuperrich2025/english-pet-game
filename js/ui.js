@@ -8025,6 +8025,20 @@ function renderRailWorlds(){
     box.id = 'rail-worlds';
     box.className = 'rail-worlds';
     box.innerHTML = '<div class="rail-div">โลก 3D</div>';
+    {
+      const b = document.createElement('button');
+      b.className = 'rail-btn rail-world rail-frontline';
+      b.id = 'btn-world-frontline';
+      b.title = 'Frontline 1944 · ผู้เล่นทุกคนเข้าได้';
+      b.innerHTML = '<span class="rail-ico">🪖</span>Frontline 1944<span class="rail-price afford">🎉 ฟรี!</span>';
+      b.addEventListener('click', async function(){
+        if(b.disabled)return;b.disabled=true;
+        sfx.select();
+        try{saveState();await authPushSaveAwait(true);location.assign('/frontline/index.html');}
+        catch(error){toast('บันทึกเกมก่อนเข้าสนามไม่สำเร็จ กรุณาลองใหม่');b.disabled=false;}
+      });
+      box.appendChild(b);
+    }
     WORLD3D.forEach(w=>{
       const b = document.createElement('button');
       b.className = 'rail-btn rail-world';

@@ -265,7 +265,7 @@
   ]);
   const CLASSIC_RAIL_GLYPHS = Object.freeze({
     cure:'💊',city:'🏙️',worldAdv:'🌍',worldSky:'☁️',worldHaunt:'👻',worldHeli:'🚁',worldDrone:'🛸',
-    worldDrive:'🚗',worldSoccer:'⚽',worldMoto:'🏍️',worldInvasion:'🛸',worldMecha:'🤖',home:'🏠',
+    worldDrive:'🚗',worldSoccer:'⚽',worldMoto:'🏍️',worldInvasion:'🛸',worldMecha:'🤖',worldFrontline:'🪖',home:'🏠',
     invest:'📈',factory:'🏭',wordsearch:'🔎',typing:'⌨️',bubble:'🫧',shoot:'🎯',cannon:'🐉🔥',
     examstd:'📋',onet:'🇹🇭',rank:'🥇',market:'🏪',friends:'👥',gifts:'🎁',stats:'📊',trophy:'🏆',racing:'🏎️'
   });
@@ -826,6 +826,7 @@
       worldHeli:'#btn-world-heli', worldDrone:'#btn-world-drone', worldDrive:'#btn-world-drive',
       worldSoccer:'#btn-world-soccer', worldMoto:'#btn-world-moto',
       worldInvasion:'#btn-world-invasion', worldMecha:'#btn-world-mecha',
+      worldFrontline:'#btn-world-frontline',
       typing:'#btn-rail-typing', bubble:'#btn-rail-bubble', shoot:'#btn-rail-shootword',
       cannon:'#btn-rail-lettercannon', examstd:'#btn-rail-examstd', onet:'#btn-rail-onet',
       rank:'#btn-rail-rank', stats:'#btn-stats', trophy:'#btn-rail-trophy', chat:'#btn-chat',
@@ -1089,7 +1090,7 @@
     const dash = dashboard();
     if(!dash || document.getElementById(ROOT_ID)) return;
     ensureVisualStyles();
-    const railButtons = [
+    const railItems = [
       ['cure','heart','รักษา','#btn-rail-cure'],
       ['city','city','เมือง 3D','#btn-rail-city'],
       ['worldAdv','adventure','โลกผจญภัย','#btn-world-adv'],
@@ -1119,7 +1120,9 @@
       ['stats','stats','สถิติ','#btn-stats'],
       ['trophy','pinboard','ตู้เข็ม','#btn-rail-trophy'],
       ['racing','racecar','Vocab World Racing',''],
-    ].map(x=>navButton(x[0],x[1],x[2],x[3])).join('');
+    ];
+    railItems.splice(2,0,['worldFrontline','tank','Frontline 1944','#btn-world-frontline']);
+    const railButtons = railItems.map(x=>navButton(x[0],x[1],x[2],x[3])).join('');
     const learningModes = [
       ['vocabbook','bookgold','สมุดคำศัพท์','book','#btn-vocab-book','journal'],
       ['ielts','book','IELTS','blue','.lobby-bottom [data-xstd="ielts"]','challenge'],

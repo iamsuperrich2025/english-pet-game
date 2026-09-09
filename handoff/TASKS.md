@@ -9,10 +9,18 @@
 บั๊ก "ของขวัญโดนบัง" ปิดจบรอบ 31 · **ผู้ใช้ทดสอบจริงยืนยันแล้ว 7 ก.ค.** (กล่องยืนยันเด้งหน้าแผง picker ถูกต้อง ไม่บวม)
 
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
+- **รอบ 1374 · Frontline public + เสียงต้นฉบับ:** ผู้ใช้ยืนยันยกเลิก Local-only และสั่ง commit/deploy จริง; ปุ่มรางซ้าย Classic/Home V2 ทุกบัญชี → `/frontline/index.html`; ไม่มี admin gate
+- เพิ่ม callable `frontlineV1` คำนวณ controls/movement/combat/คำบน server, ห้อง 4 คน/บอท/overflow; namespace `frontline_v1_live/v1/{rooms,claims}` default-deny เดิม, จ่าย 1,000 เข้าก้อน save หลักแบบ receipt+private ledger; dev namespace แยกเหมือนเดิม
+- เสียง synth/score/audio แยกโมดูล: เพลง+เครื่องยนต์+FIRE/BOMB/fuse/impact/pickup/drop/bank/HP/respawn/win/control; gesture init, immutable cache, mute จำค่า, hidden suspend, dispose; ทดสอบ waveform จริง/ปิดเสียงศูนย์/ไม่มี audio download และ peak12จาก cap24 ผ่าน
+- ผ่าน production 2-browser (server movement, peer FIRE/BOMB+เสียง, winner1000, wallet11000, reentryไม่ซ้ำ), backend auth/cap4/receipts และ shared49 checks/Home suite/build validator; build9,461 files/612.8MiB; กำลังเตรียม COMMIT_DEPLOY + ตรวจ live; รายละเอียดใน tools/frontline-v1/README.md
 > ผู้ใช้เริ่มใช้ Codex ช่วยงานคู่ขนานกับ session Claude (4 ส.ค. 2026 เหตุ: Claude ติด rate limit) — Codex ไม่เห็น `img/`/`sound/` (ไม่อยู่ใน git) และ **deploy Firebase เองไม่ได้** ต้องรอผู้ใช้รันบนเครื่องเอง
 - **รอบ 1372 · แก้ซื้อสัตว์แล้วโตทันที + ยืนตรงแท่น:** ต้นเหตุ `testerBoost()` เร่งทุกตัวเป็น Lv.3/EXP 0; ยกเลิก hook หลังซื้อและคืนลายเซ็นสัตว์ที่ถูกเร่งให้ Lv.1 หนึ่งครั้ง โดยไม่ลดตัวที่มี EXP จริง
 - Home V2 วัดขอบ alpha ภาพจริงเพื่อชดเชยฐาน/กึ่งกลาง แล้ววางผิวแท่น responsive; ครอบคลุมสัตว์เดิม 3 + สัตว์ใหม่ 6 ชนิด ทุกวัยโดยไม่เพิ่ม/แก้ asset
 - regression/syntax/Home suite/build 9,384 ไฟล์/611.9 MiB + validator ผ่าน; visual source+dist 54 เคส (9×3×2 viewport) ฐาน/กลาง 0 px, ผิวแท่นคลาดสูงสุด 0.74 px, ไม่ล้นจอ
+- **รอบ 1373 · Frontline กลางสนามขับผ่านของตกแต่ง (Local only):** ของตกแต่งไม่มี collision; สาเหตุหยุดในภาพเดิมยังไม่ยืนยัน แต่พบขอบ ±89 มองไม่เห็น
+- เพิ่ม `frontline-boundary.js` รั้วขอบ ±90 + meadow ชายทราย/น้ำ, จำกัด prop/flora ภายในสนาม โดยคง 15 chunks/ไม่มี asset ใหม่; tank คืนเหตุ edge/base ให้ main/UI แสดง EDGE · TURN หรือ BASE LOCKED พร้อมไทย ไม่เปลี่ยนป้อม/เศรษฐกิจ/network
+- ผ่าน native movement 11 checks: ของตกแต่งจริง 6 แบบ×เดินหน้า/ถอยหลัง=12 legs ไม่หยุดสักครั้งและ peer เห็นตรงกัน, edge/base/เลี้ยวกลับ; unit49, visual8, syntax31, coverage/dispose; build2026-09-09.1226 9,384 files/611.9 MiB + validator/production exclusion ผ่าน
+- Local `http://192.168.1.120:19444/__dev/frontline?room=R1001&v=1373`; namespaceเดิม `frontline_v1_dev/0ba61275a15a39f98a073760/{rooms,inputs}`; ทดสอบ R7349; R1001 อ่านอย่างเดียว; รายงาน/ภาพ workspace work/frontline-1373-*; ไม่ restart/deploy/commit
 - **รอบ 1372 · Frontline หน้าเข้าเกมภาพน่ารัก (Local only):** `index.html` + `frontline-launcher.css` แยกสไตล์หน้าเข้าเกม; โลโก้/รถถังยิ้ม ฉากสวน แผงครีม ปุ่มเขียว wallet/tip จริง; ห้องเลข 4 หลักและ Enter/click เดิม; จอเตี้ยเห็นโลโก้ครบ แนวตั้งเลื่อนหน้า welcome ได้แต่สนามยังแนวนอน
 - ภาพ built-in image_gen → AVIF 1672×940/180,384 B + WebP fallback 279,948 B; ไม่มี PNG runtime หรือ texture เพิ่มในสนาม; `preview.mjs` allowlist CSS/AVIF เฉพาะ Local; README บันทึกโมดูล/asset/การทดสอบ
 - ผ่าน launcher 10 checks (5 viewport, validation, join/AUTO/DROP/FIRE/BOMB/EXIT, no production requests), ตรวจภาพจริงเป็น WebP; build retry สำเร็จ 9,384 files/611.9 MiB + validator + production exclusion; รายงานรวมรอบ 1371–1372 และ prompt ที่ Documents/Codex/2026-09-08/create-a-new-vocab-world-frontline/work/

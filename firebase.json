@@ -1,11 +1,13 @@
 {
   "functions": {
     "source": "functions",
+    "predeploy": ["node tools/frontline-v1/package-production.mjs --server"],
     "runtime": "nodejs22"
   },
   "hosting": {
     "site": "vocabworld",
     "public": "dist",
+    "rewrites": [{"source":"/frontline","destination":"/frontline/index.html"}],
     "ignore": [
       "firebase.json",
       "**/node_modules/**",

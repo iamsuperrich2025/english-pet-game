@@ -979,6 +979,8 @@ html.no-anim .rail-nudge{animation:none !important;}
 .rail-worlds{display:flex;flex-direction:column;gap:7px;margin-top:4px;padding-top:7px;border-top:1px solid var(--glass-line);}
 .rail-div{font-size:10px;font-weight:700;color:#9fc3ea;text-align:center;letter-spacing:.5px;opacity:.85;}
 .rail-btn.rail-world{position:relative;}
+.rail-btn.rail-frontline{background:linear-gradient(145deg,rgba(54,139,93,.94),rgba(24,86,67,.96));border-color:rgba(255,222,105,.72);color:#fff7cf;}
+.rail-btn.rail-frontline:hover{background:linear-gradient(145deg,rgba(70,163,108,.98),rgba(28,103,78,.98));}
 .rail-btn.rail-world .rail-beta{
   display:block;margin-top:1px;padding:1px 4px;border-radius:999px;
   background:#ffd84d;color:#382a00;font-size:7px;font-weight:900;line-height:1.15;letter-spacing:.35px;

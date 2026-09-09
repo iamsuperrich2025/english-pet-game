@@ -26,6 +26,19 @@ const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 initializeApp({databaseURL: DB_URL});
 setGlobalOptions({region: REGION, maxInstances: 10, memory: '256MiB', timeoutSeconds: 60});
 
+let frontlineService;
+exports.frontlineV1 = onCall({maxInstances:10,timeoutSeconds:20},async request=>{
+  if(!request.auth)throw new HttpsError('unauthenticated','กรุณาเข้าสู่ระบบ Vocab World');
+  if(!frontlineService)frontlineService=require('./frontline-service').createService(getDatabase(),require('./frontline-simulation')());
+  try{return await frontlineService(request.data,request.auth.uid);}
+  catch(error){
+    if(error.code==='FRONTLINE_ROOM_FULL')throw new HttpsError('resource-exhausted','Room full',{code:error.code});
+    if(error.code==='SEAT_EXPIRED')throw new HttpsError('failed-precondition','Seat expired',{code:error.code});
+    if(/^invalid_/.test(error.message))throw new HttpsError('invalid-argument',error.message);
+    logger.error('Frontline request failed',{message:error.message});throw new HttpsError('unavailable','เชื่อมต่อสนามไม่ได้ กรุณาลองอีกครั้ง');
+  }
+});
+
 function publicResult(ledger) {
   return {
     ok: ledger.status === 'completed',

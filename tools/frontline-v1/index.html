@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Vocab World · Frontline 1944 · Local test</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/frontline/frontline.css"><link rel="stylesheet" href="/frontline/frontline-launcher.css">
+</head><body>
+<main id="launcher" aria-label="Frontline 1944 local test launcher">
+  <section class="fl-intro"><h1 class="fl-launch-sr">Vocab World · Frontline 1944</h1><div class="fl-launch-copy"><span class="fl-dev">LOCAL TEST ONLY</span></div></section>
+  <section class="fl-card" role="form" aria-labelledby="fl-launch-title"><h2 id="fl-launch-title">Ready, word raider?</h2><p class="fl-launch-subtitle">Collect letters. Defend your vault.</p>
+  <div class="fl-wallet"><span>Vocab World test wallet</span><b><i data-icon="coin"></i><span id="fl-wallet">—</span><span>coins</span></b></div>
+  <label for="fl-code">หมายเลขห้อง · สูงสุด 4 คน<small>ห้องเต็มจะเข้าห้องถัดไปให้อัตโนมัติ</small></label><input id="fl-code" maxlength="4" value="1001" inputmode="numeric" pattern="[0-9]{4}" autocomplete="off" spellcheck="false" aria-label="หมายเลขห้อง 4 หลัก">
+  <button id="fl-join" type="button"><span>ENTER LANDSCAPE BATTLEFIELD</span><i data-icon="arrow"></i></button>
+  <div class="fl-launch-help"><p>Collect A–Z cards and bring them home.<br>First to spell the word wins <strong>1,000 coins!</strong></p><p>เหรียญรอบนี้จะรวมเข้ากระเป๋าเมื่อกด <strong>EXIT</strong><br><strong>DROP / Q</strong> leaves a card · <strong>B</strong> places a bomb</p></div>
+  <div class="fl-launch-tip"><svg class="fl-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M11 23c0-4-5-5-5-11a10 10 0 0 1 20 0c0 6-5 7-5 11Z" fill="#ffe46b" stroke="#d89b29" stroke-width="1.6"/><path d="M12 23h8v6h-8Z" fill="#bbc5af" stroke="#759482" stroke-width="1.5"/><path d="M16 22v-8m-4-4q4-4 8 0M3 4 1 2m28 2 2-2M2 13H0m30 0h2" fill="none" stroke="#fff5ba" stroke-width="2" stroke-linecap="round"/></svg><p id="fl-launch-status" role="status">Ready. Bots fill empty seats up to four.</p></div>
+  <p class="fl-launch-note">Local test save · Your production progress stays untouched.</p></section>
+</main>
+<section id="battle" hidden aria-label="Frontline battlefield">
+  <canvas id="fl-canvas" aria-label="Four-rival tank battlefield"></canvas><div id="fl-labels"></div>
+  <div class="fl-top"><div class="fl-status-stack"><div class="fl-brand"><strong><i data-icon="star"></i> FRONTLINE 1944</strong><small id="fl-connection">CONNECTING</small><div>ห้อง <b id="fl-room"></b> · TEST</div><span class="fl-brand-leaves"><i data-icon="leaf"></i></span></div>
+    <div class="fl-stats"><span><i data-icon="heart"></i><b id="fl-hp">HP 5000</b></span><span><i data-icon="pilot"></i> RIVALS <b id="fl-party">4/4</b></span><span title="เข้ายอดรวมเมื่อกด EXIT"><i data-icon="coin"></i> รอบนี้ <b id="fl-coins">0</b></span></div>
+    <div class="fl-coach"><i data-icon="pilot"></i><div id="fl-message" role="status">Ram a letter to carry it back to your base.</div></div>
+  </div><div class="fl-top-actions"><button id="fl-sound" aria-label="Toggle sound">♪ ON</button><button id="fl-leave" aria-label="Leave battlefield">EXIT</button></div></div>
+  <div class="fl-target"><small><i data-icon="star"></i> FIRST TO SPELL · 1,000 COINS <i data-icon="star"></i></small><div id="fl-word"></div><div id="fl-translation" lang="th"></div><div id="fl-next"></div></div>
+  <div id="fl-victory" role="status" aria-live="polite" hidden><strong></strong><span></span></div>
+  <div id="fl-roster" aria-label="All player letter banks"></div>
+  <div class="fl-controls">
+    <div class="fl-left-controls">
+      <div class="fl-auto"><button data-auto="1" aria-pressed="false"><i data-icon="arrow"></i><span>AUTO FORWARD</span></button><button data-auto="-1" aria-pressed="false"><i data-icon="arrow"></i><span>AUTO REVERSE</span></button></div>
+      <div class="fl-steer"><button data-hold="left" aria-label="Turn left"><i data-icon="steer"></i><span>LEFT</span></button><button data-hold="right" aria-label="Turn right"><i data-icon="steer"></i><span>RIGHT</span></button></div>
+    </div>
+    <label class="fl-speed-control" for="fl-speed"><span>SPEED <b id="fl-speed-name">NORMAL</b></span><input id="fl-speed" type="range" min="0" max="2" step="1" value="1"><span class="fl-speed-foot"><i data-icon="turtle"></i><output id="fl-drive">STOPPED</output><i data-icon="rabbit"></i></span></label>
+    <div class="fl-attack"><div id="fl-drop-hint" hidden><strong>Wrong letter?</strong><span>Tap DROP to leave it.</span></div><button class="fl-drop" data-hold="drop" aria-label="Drop carried letter" title="Drop carried letter (Q)" disabled><i data-icon="drop"></i><span>DROP</span><small>EMPTY</small></button><button class="fl-bomb" data-hold="bomb" aria-label="Place bomb, unlimited"><i data-icon="bomb"></i><span>BOMB ∞</span><small>READY</small></button><button class="fl-fire" data-hold="fire" aria-label="Fire shell, unlimited"><span>FIRE</span><small>READY ∞</small></button></div>
+  </div>
+  <div id="fl-rotate" role="dialog" aria-modal="true"><div><strong>TURN YOUR PHONE</strong><span>Frontline plays in landscape only.</span><button id="fl-rotate-exit">EXIT BATTLE</button></div></div>
+</section>
+<script src="/dev-config.js"></script><script src="/frontline/frontline-config.js"></script>
+<script src="/shared/thaitime.js"></script><script src="/shared/items.js"></script><script src="/shared/homes.js"></script><script src="/shared/ranks.js"></script><script src="/shared/state.js"></script>
+<script src="/shared/vocab.js"></script>
+<script src="/shared/three.min.js"></script><script src="/shared/gltfloader.js"></script><script src="/sdk/firebase-app-compat.js"></script><script src="/sdk/firebase-database-compat.js"></script>
+<script src="/frontline/frontline-particles.js"></script><script src="/frontline/frontline-effects.js"></script>
+<script src="/frontline/frontline-health.js"></script><script src="/frontline/frontline-lighting.js"></script>
+<script src="/frontline/frontline-icons.js"></script>
+<script src="/frontline/frontline-meadow.js"></script><script src="/frontline/frontline-garden.js"></script><script src="/frontline/frontline-flora.js"></script>
+<script src="/frontline/frontline-boundary.js"></script>
+<script src="/frontline/frontline-lobby.js"></script>
+<script src="/frontline/frontline-commands.js"></script>
+<script src="/frontline/frontline-synth.js"></script><script src="/frontline/frontline-score.js"></script><script src="/frontline/frontline-audio.js"></script>
+<script src="/frontline/frontline-words.js"></script><script src="/frontline/frontline-bases.js"></script><script src="/frontline/frontline-tank.js"></script><script src="/frontline/frontline-letters.js"></script><script src="/frontline/frontline-drop.js"></script><script src="/frontline/frontline-bots.js"></script><script src="/frontline/frontline-guards.js"></script><script src="/frontline/frontline-combat.js"></script><script src="/frontline/frontline-bombs.js"></script><script src="/frontline/frontline-room.js"></script><script src="/frontline/frontline-network.js"></script><script src="/frontline/frontline-input.js"></script><script src="/frontline/frontline-economy.js"></script><script src="/frontline/frontline-shapes.js"></script><script src="/frontline/frontline-map.js"></script><script src="/frontline/frontline-scene.js"></script><script src="/frontline/frontline-ui.js"></script><script src="/frontline/frontline-main.js"></script>
+</body></html>
