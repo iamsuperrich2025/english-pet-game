@@ -116,7 +116,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/wordsearch.js** (524 บรรทัด) — 🔎 wordsearch.js — เกมค้นหาคำศัพท์ (Word Search) รอบ 194 · แผงฟ้าล้ำยุคเลื่อนออกจากซ้าย · สุ่มคำไม่ซ้ำในแต่ละเกม · 🆕 รอบ 588: กระดานเกือบเต็มจอ · แถบ "หาคำเหล่านี้ให้เจอ" ย้ายขึ้นบนสุด จัดกึ่งกลาง
 - **js/wsaward.js** (32 บรรทัด) — 🏆 wsaward.js — รางวัลรายเดือนของกระดานอันดับ 🔎 ค้นหาคำ (รอบ 592) · ผู้ใช้สั่ง 26 ก.ค. 2026: · ① Top 10 ได้เหรียญรางวัลทุกวันที่ 1 ของเดือน (10,000 ลดหลั่นถึง 1,000)
 - **css/account-deletion.css** (15 บรรทัด) — Protected account deletion — compact landscape-first dialogs
-- **css/arena-heroes.css** (8 บรรทัด) — Round 1381 — full-body hero selection. Portrait owns a single animation context.
+- **css/arena-heroes.css** (12 บรรทัด) — Round 1381 — full-body hero selection. Portrait owns a single animation context.
 - **css/arena3d.css** (273 บรรทัด) — 🌀🔤 รอบ 1045 — Vocab Arena · HUD โลกผจญภัยแบบ MOBA-inspired ที่ออกแบบใหม่ทั้งหมดสำหรับ Vocab World
 - **css/bubble.css** (60 บรรทัด) — 🫧 เกมฟองคำศัพท์ — เต็มจอ ไม่มี scrollbar ทั้ง desktop/mobile landscape
 - **css/dailybox.css** (24 บรรทัด) — 🎁🪙 กล่องสุ่มรายวัน — รอบ 1272 · CSS illustration ล้วน ไม่พึ่ง asset ภาพภายนอก
@@ -135,6 +135,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/style.css** (2,498 บรรทัด) — Pet Vocab Adventure — สไตล์พื้นฐานรุ่นแรกทั้งเกม (โดน lobby.css โหลดทับบางส่วน — แก้หน้าตาโซนล็อบบี้/UI ใหม่ให้ไปที่ lobby.css ก่อน) · ครอบคลุม: screens/login/dashboard · เกมจับคู่ .word-card + แบบทดสอบ .quiz-* · shop/ที่พัก/หมวดคำศัพท์ · หิว-ป่วย/สภาพอากาศ · ตั้งค่า/วิธีเล่น/level-up overlay · คลังของฉัน/กล่องขาย · เอฟเฟกต์ลอย/เหรียญ/rotate-overlay
 - **sw.js** (281 บรรทัด) — Vocab World service worker · Delivery contract: · - HTML navigations are network-first with the last valid shell as fallback.
 <!-- AUTO-FILES:END -->
+
 
 
 

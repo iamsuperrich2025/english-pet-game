@@ -1036,8 +1036,8 @@ vbRender:148 · vbCardHTML:194
 .account-delete-overlay:2 · .ad-box:3 · .ad-head:4 · .ad-warning:5 · .ad-grid:6 · .ad-shared:7
 .ad-actions:8 · .ad-safe:9 · .ad-type-label:10 · .ad-busy:11 · .set-account-panel:12
 
-## css/arena-heroes.css (8 บรรทัด · 3 selector)
-#ah-picker:2,3 · .ah-layout:4 · .ah-info:5
+## css/arena-heroes.css (12 บรรทัด · 4 selector)
+#ah-picker:2,3 · .ah-layout:4 · .ah-info:5 · .ah-header:11,12
 
 ## css/arena3d.css (273 บรรทัด · 77 selector)
 #va-root:5,7,9,203(+24) · #va-canvas:8 · .va-vignette:11 · .va-scan:15 · .va-top:18 · .va-glass:20
