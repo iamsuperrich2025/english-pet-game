@@ -5901,3 +5901,12 @@
 - test_arena_music source65+dist65ผ่าน (ไฟพื้นฐาน/ขยายไม่เล่นgenericซ้ำ, loop/cache/mute/ฮีล/โล่); แก้harnessให้หยุดเดินกลับบ้านก่อนตรวจโล่; build9,526files620.1MiB+validator/undefined0/template0/syntax/diffผ่าน
 - SOURCE: SOUND_LICENSES.md; PROJECT_MAPปรับowner; SHIP6paths เปิดCOMMIT_DEPLOY1ครั้ง ผู้ใช้อนุญาตdeploy; live2026-09-10.1247/commit9f8767b0+handoff6eca5f0d+pushสำเร็จ; live manager/game/8เสียงตรงsource และmanifest8เสียงครบ ไม่มีSFXเดิม
 
+
+
+## ⏬ ย้ายเมื่อ 2026-09-10 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- test_arena_music_entry24+test_arena_music65 ผ่านทั้งsource/dist; build9,526files620.1MiB+validator/undefined0/template0/syntax/diffผ่าน; แก้harnessกันenemyโจมตีก่อนตั้งfixture ไม่เปลี่ยนgameplay; assetsเดิมทั้งหมด
+- PROJECT_MAPอัปเดต; SHIP7paths/COMMIT_DEPLOY1ครั้งตามสิทธิ์deployเดิม; live2026-09-10.1248/commit874dcfac+handoff03c4b258+pushสำเร็จ; live manager/game/CSS/2เพลงตรงsourceที่ทดสอบ
+
+- **รอบ 1394 · Arena เสียงไฟ6.mp3:** js/arena-audio.js ใช้fire cueแทนเสียงธาตุสำหรับวงเพลิง+5ท่าตระกูลไฟ; คงMEGA1/ธาตุ2/โล่3/ฮีล4/สายฟ้า5/BGM1392; ไม่แตะกติกาเกม
+- ตัดเฉพาะpaddingเงียบ 18.13s580,127B→7.00s224,906B ลด61.2%; MP3copyไม่encodeซ้ำ ตรวจ268packetSHA256ตรงsourceต่อเนื่อง; preloadหลังgesture+content-hashcache+1playerไม่ซ้อน

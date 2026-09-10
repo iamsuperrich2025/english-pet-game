@@ -199,7 +199,7 @@ beginPlay:12952 · start:12954 · exitWorld:13187 · mechaRecapLine:13264
 
 ## js/arena-field-visuals.js (232 บรรทัด · 0 รายการ)
 
-## js/arena-grimoire.js (32 บรรทัด · 0 รายการ)
+## js/arena-grimoire.js (31 บรรทัด · 0 รายการ)
 
 ## js/arena-heroes.js (41 บรรทัด · 0 รายการ)
 
@@ -213,7 +213,9 @@ beginPlay:12952 · start:12954 · exitWorld:13187 · mechaRecapLine:13264
 
 ## js/arena-spell-engine.js (93 บรรทัด · 0 รายการ)
 
-## js/arena3d.js (870 บรรทัด · 0 รายการ)
+## js/arena-strip.js (40 บรรทัด · 0 รายการ)
+
+## js/arena3d.js (871 บรรทัด · 0 รายการ)
 
 ## js/assetaward.js (21 บรรทัด · 0 รายการ)
 
@@ -884,7 +886,7 @@ thLocaleOpt:46
 
 ## js/typing.js (370 บรรทัด · 0 รายการ)
 
-## js/ui.js (10,342 บรรทัด · 447 รายการ)
+## js/ui.js (10,344 บรรทัด · 447 รายการ)
 ### 🗂️ สารบัญโซน js/ui.js (Read/Edit เฉพาะช่วง)
 - 2-77 UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
 - 78-144 🎬 เวทีน้องน่ารัก (Cute Pet Show) — รอบ 604 (ผู้ใช้สั่ง 26 ก.ค. 2026)
@@ -923,24 +925,24 @@ thLocaleOpt:46
 - 6905-6915 การ์ดคอมพิวเตอร์ (ข้อ 11): ซื้อ 50,000 ขายคืน 30,000
 - 6916-6960 item 8: โบนัสออนไลน์ +0.01 เหรียญ/วิ ฟรีทุกคนที่เปิดเกมออนไลน์อยู่
 - 6961-7221 💻 รอบ 706 (ผู้ใช้สั่ง 29 ก.ค. 2026): ช่องรายได้คอมพิวเตอร์บนแถบบนล็อบบี้
-- 7222-7236 🌀🔤 รอบ 1045 — Vocab Arena (โลกผจญภัยฉบับใหม่)
-- 7237-7658 ☁️📚 รอบ 1229 — Vocab Sky Playground
-- 7659-7728 🏝️ รอบ 1377 — KART (public entry; separate persistent keys)
-- 7729-7749 🌍 ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย (ผู้ใช้สั่ง 9 ก.ค. 2026)
-- 7750-7815 🔒 รอบ 1070/1132: โลกที่ยังไม่เปิดสาธารณะ — เปิดให้บัญชีทดสอบ 2 ชื่อเท่านั้น
-- 7816-7930 ↩️🪙 Legacy recovery — คืนค่าเข้าที่เวอร์ชันเก่าอาจหักค้างไว้ก่อนเปลี่ยนเป็นเข้าฟรี
-- 7931-8015 ☁️🧸 รอบ 1258 — เลือกตัวละคร Sky ก่อนเข้าโลก
-- 8016-8204 🧭 ป้ายบอกทางของรางเมนูซ้าย (รอบ 601 · ผู้ใช้สั่ง 26 ก.ค. 2026)
-- 8205-8374 การ์ดสวนผลไม้ (ข้อ 12): ซื้อต้นไม้ปลูกได้ไม่จำกัด แต่ละต้นออกผล
-- 8375-8389 โรงงานผลิตสินค้า 🏭 + ตลาดขายต่อ (แนวคิดใหม่ 5 ก.ค. 2026)
-- 8390-8413 โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
-- 8414-8688 ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
-- 8689-9697 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
-- 9698-9760 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
-- 9761-9797 เลเวลอัพ (รายตัว)
-- 9798-9903 สถิติผลการเรียนรู้
-- 9904-9941 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
-- 9942-10342 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
+- 7222-7237 🌀🔤 รอบ 1045 — Vocab Arena (โลกผจญภัยฉบับใหม่)
+- 7238-7660 ☁️📚 รอบ 1229 — Vocab Sky Playground
+- 7661-7730 🏝️ รอบ 1377 — KART (public entry; separate persistent keys)
+- 7731-7751 🌍 ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย (ผู้ใช้สั่ง 9 ก.ค. 2026)
+- 7752-7817 🔒 รอบ 1070/1132: โลกที่ยังไม่เปิดสาธารณะ — เปิดให้บัญชีทดสอบ 2 ชื่อเท่านั้น
+- 7818-7932 ↩️🪙 Legacy recovery — คืนค่าเข้าที่เวอร์ชันเก่าอาจหักค้างไว้ก่อนเปลี่ยนเป็นเข้าฟรี
+- 7933-8017 ☁️🧸 รอบ 1258 — เลือกตัวละคร Sky ก่อนเข้าโลก
+- 8018-8206 🧭 ป้ายบอกทางของรางเมนูซ้าย (รอบ 601 · ผู้ใช้สั่ง 26 ก.ค. 2026)
+- 8207-8376 การ์ดสวนผลไม้ (ข้อ 12): ซื้อต้นไม้ปลูกได้ไม่จำกัด แต่ละต้นออกผล
+- 8377-8391 โรงงานผลิตสินค้า 🏭 + ตลาดขายต่อ (แนวคิดใหม่ 5 ก.ค. 2026)
+- 8392-8415 โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
+- 8416-8690 ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
+- 8691-9699 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
+- 9700-9762 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
+- 9763-9799 เลเวลอัพ (รายตัว)
+- 9800-9905 สถิติผลการเรียนรู้
+- 9906-9943 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
+- 9944-10344 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
 ### รายการ js/ui.js
 startHTML:10 · PET_ANIM:30 · petAnimHTML:35 · petVisualHTML:50 · PET_SHOW:91 · PET_SHOW_STAGE:96
 PET_SHOW_H:99 · petShowBgHTML:102 · petBondLine:153 · PET_HEALTH_TIPS:177 · nextPetHealthTip:215 · petBondActionLine:223
@@ -997,26 +999,26 @@ renderHomeCard:6572 · payMaint:6656 · trashBillUI:6672 · payTrash:6689 · UTI
 payUtility:6782 · buyUtilityFix:6808 · renderPhoneCard:6826 · buyPhone:6866 · sellPhone:6888 · compLiveTotal:6909
 onlineLiveTotal:6920 · syncCoinHeader:6927 · flashPillGain:6932 · renderOnlineEarnPill:6941 · renderCompEarnPill:6966 · openPillInfo:6999
 renderComputerCard:7082 · buyComputer:7117 · sellComputer:7140 · soldCount:7161 · soldBadge:7162 · loadScriptOnce:7168
-advBusyMsg:7193 · advResetLoad:7205 · loadAdv3d:7211 · loadVocabArena3d:7227 · loadSkyPlayground3d:7241 · SKY_BETA_DENIED_MSG:7244
-ensureSkyBetaAccess:7245 · enterSkyPlayground3D:7253 · enterAdventure3D:7270 · pickAdvMap:7302 · enterHaunted3D:7337 · enterHeli3D:7360
-pickHeliMap:7387 · enterDrone3D:7423 · confirmPetShoppingEntry:7444 · enterPetShopping3D:7470 · enterDrive3D:7522 · pickDriveMap:7561
-enterMotoMapAsCar:7597 · enterSoccer3D:7616 · enterMoto3D:7636 · kartLobbyIconHTML:7662 · enterKart3D:7665 · enterF1_3D:7680
-enterInvasion3D:7708 · WORLD3D:7736 · WORLD3D_COMING_SOON:7754 · world3DComingSoon:7755 · gotoRobotShop:7758 · openHealDialog:7764
-world3DFail:7785 · worldEntryStarted:7820 · worldEntryStopped:7821 · GAME_ENTRY_STABLE_MS:7822 · gameEntryCommit:7824 · gameEntryRefund:7832
-recoverInterruptedGameEntry:7849 · showGameEntryRefundNotice:7857 · startWorldEntry:7884 · railWorldClick:7909 · skyEntryCatalog:7935 · skyEntryPickerHTML:7939
-openWorldEntryDialog:7949 · railScrollHint:8021 · railScrollTop:8029 · initRailScroll:8034 · renderRailWorlds:8054 · tinvOnlineFriends:8142
-refreshTinvOnlineUI:8146 · tinvNoticeHTML:8157 · openTinvPicker:8166 · fruitCountdown:8210 · renderFarmCard:8222 · renderFarmClock:8297
-buyFruit:8313 · sellFruit:8333 · sellAllFruit:8354 · collectImg:8383 · renderFactoryCard:8394 · renderMarketCard:8418
-updateWishBadge:8476 · openWishlistDialog:8487 · bindStripArrows:8534 · renderMarketBrowse:8548 · openMarketBuyDialog:8575 · carImg:8695
-renderVehicleShop:8696 · CS_CYCLE_MS:8748 · carInteriorImg:8749 · carStatHtml:8751 · renderCarShowroom:8758 · csShowBig:8785
-csInit:8812 · RS_CYCLE_MS:8835 · robotImg:8836 · renderRobotShop:8837 · renderPetMarketShop:8861 · rsShowBig:8879
-rsInit:8900 · buyRobot:8919 · enterMecha3D:8944 · pickMechaRobot:8972 · pickDriveCar:9004 · openCarBuyDialog:9047
-buyCarInsurance:9108 · payCarLoanMonthly:9127 · payCarLoanFull:9139 · carDriveBlock:9158 · gotoVehicleShop:9163 · gotoMyStock:9168
-showNeedCarDialog:9174 · craftDiscount:9186 · renderFactory:9189 · renderOrdersUI:9258 · startProduce:9277 · buyCollectible:9305
-cancelProduce:9335 · deliverOrder:9349 · renderOrderClock:9366 · renderCollectMine:9376 · openListDialog:9425 · cancelListing:9482
-buyMarketItem:9506 · showCollectReveal:9571 · buyAC:9609 · openHomeShop:9628 · openPetPurchase:9702 · renderPetShop:9739
-showLevelUp:9764 · renderStats:9801 · showTeacherCard:9908 · CALL_REACT_EMOS:9952 · CALL_TALK_MIN:9955 · CALL_TALK_HOLD:9956
-CALL_ORDER_GAP:9958 · CALL_TONES:9964 · startCall:10338
+advBusyMsg:7193 · advResetLoad:7205 · loadAdv3d:7211 · loadVocabArena3d:7227 · loadSkyPlayground3d:7242 · SKY_BETA_DENIED_MSG:7245
+ensureSkyBetaAccess:7246 · enterSkyPlayground3D:7254 · enterAdventure3D:7271 · pickAdvMap:7304 · enterHaunted3D:7339 · enterHeli3D:7362
+pickHeliMap:7389 · enterDrone3D:7425 · confirmPetShoppingEntry:7446 · enterPetShopping3D:7472 · enterDrive3D:7524 · pickDriveMap:7563
+enterMotoMapAsCar:7599 · enterSoccer3D:7618 · enterMoto3D:7638 · kartLobbyIconHTML:7664 · enterKart3D:7667 · enterF1_3D:7682
+enterInvasion3D:7710 · WORLD3D:7738 · WORLD3D_COMING_SOON:7756 · world3DComingSoon:7757 · gotoRobotShop:7760 · openHealDialog:7766
+world3DFail:7787 · worldEntryStarted:7822 · worldEntryStopped:7823 · GAME_ENTRY_STABLE_MS:7824 · gameEntryCommit:7826 · gameEntryRefund:7834
+recoverInterruptedGameEntry:7851 · showGameEntryRefundNotice:7859 · startWorldEntry:7886 · railWorldClick:7911 · skyEntryCatalog:7937 · skyEntryPickerHTML:7941
+openWorldEntryDialog:7951 · railScrollHint:8023 · railScrollTop:8031 · initRailScroll:8036 · renderRailWorlds:8056 · tinvOnlineFriends:8144
+refreshTinvOnlineUI:8148 · tinvNoticeHTML:8159 · openTinvPicker:8168 · fruitCountdown:8212 · renderFarmCard:8224 · renderFarmClock:8299
+buyFruit:8315 · sellFruit:8335 · sellAllFruit:8356 · collectImg:8385 · renderFactoryCard:8396 · renderMarketCard:8420
+updateWishBadge:8478 · openWishlistDialog:8489 · bindStripArrows:8536 · renderMarketBrowse:8550 · openMarketBuyDialog:8577 · carImg:8697
+renderVehicleShop:8698 · CS_CYCLE_MS:8750 · carInteriorImg:8751 · carStatHtml:8753 · renderCarShowroom:8760 · csShowBig:8787
+csInit:8814 · RS_CYCLE_MS:8837 · robotImg:8838 · renderRobotShop:8839 · renderPetMarketShop:8863 · rsShowBig:8881
+rsInit:8902 · buyRobot:8921 · enterMecha3D:8946 · pickMechaRobot:8974 · pickDriveCar:9006 · openCarBuyDialog:9049
+buyCarInsurance:9110 · payCarLoanMonthly:9129 · payCarLoanFull:9141 · carDriveBlock:9160 · gotoVehicleShop:9165 · gotoMyStock:9170
+showNeedCarDialog:9176 · craftDiscount:9188 · renderFactory:9191 · renderOrdersUI:9260 · startProduce:9279 · buyCollectible:9307
+cancelProduce:9337 · deliverOrder:9351 · renderOrderClock:9368 · renderCollectMine:9378 · openListDialog:9427 · cancelListing:9484
+buyMarketItem:9508 · showCollectReveal:9573 · buyAC:9611 · openHomeShop:9630 · openPetPurchase:9704 · renderPetShop:9741
+showLevelUp:9766 · renderStats:9803 · showTeacherCard:9910 · CALL_REACT_EMOS:9954 · CALL_TALK_MIN:9957 · CALL_TALK_HOLD:9958
+CALL_ORDER_GAP:9960 · CALL_TONES:9966 · startCall:10340
 
 ## js/util.js (1,473 บรรทัด · 57 รายการ)
 ### 🗂️ สารบัญโซน js/util.js (Read/Edit เฉพาะช่วง)
@@ -1048,11 +1050,11 @@ vbRender:148 · vbCardHTML:194
 .account-delete-overlay:2 · .ad-box:3 · .ad-head:4 · .ad-warning:5 · .ad-grid:6 · .ad-shared:7
 .ad-actions:8 · .ad-safe:9 · .ad-type-label:10 · .ad-busy:11 · .set-account-panel:12
 
-## css/arena-heroes.css (12 บรรทัด · 4 selector)
-#ah-picker:2,3 · .ah-layout:4 · .ah-info:5 · .ah-header:11,12
+## css/arena-heroes.css (20 บรรทัด · 5 selector)
+#ah-picker:2,3 · .ah-layout:4 · .ah-info:5,15 · .ah-header:11,12 · .ah-roster:16,17,18,19(+1)
 
-## css/arena3d.css (399 บรรทัด · 87 selector)
-#va-root:5,7,9,203(+98) · #va-canvas:8 · .va-vignette:11 · .va-scan:15 · .va-top:18 · .va-glass:20
+## css/arena3d.css (417 บรรทัด · 89 selector)
+#va-root:5,7,9,203(+100) · #va-canvas:8 · .va-vignette:11 · .va-scan:15 · .va-top:18 · .va-glass:20
 .va-exit:23,26 · .va-player-card:27,29 · .va-player-name:30 · .va-online:31 · .va-word-card:32,34,36 · .va-word-th:37
 .va-word-en:38 · .va-word-slots:40,41,43 · .va-coins:44 · .va-shop-btn:46 · .va-energy:48,54 · .va-energy-label:50
 .va-energy-track:51 · .va-energy-fill:52 · .va-energy-power:55 · .va-bag:57 · .va-bag-label:59 · .va-bag-list:60
@@ -1066,7 +1068,7 @@ vbRender:148 · vbCardHTML:194
 .va-spell-panel:244 · .va-slot-tabs:245,246,370 · .va-spell-grid:247 · .va-spell-card:248,249,251,252 · .va-element-icon:250 · .va-spell-footer:253
 .va-vitals-layer:258 · .va-vital:259,260,261,262(+2) · .va-damage-number:264 · .va-mega-uses:272 · #va-crystal-count:273 · .va-map-ambience:276,277
 .va-map-change:306 · #va-map-picker:327,328,329,330(+1) · .vam-cards:331 · .vam-card:332,333,334,335 · #vam-play:337 · .va-spell-icon:365
-.va-grimoire-tools:371,372,373,374(+1) · .va-grimoire-nav:376,377,378,379 · .va-music-track:396,397
+.va-grimoire-tools:371,372,373,374(+1) · .va-grimoire-nav:376,377,378,379 · .va-music-track:396,397 · .va-swipe-strip:408,409,410,411 · .va-swipe-hint:412
 
 ## css/bubble.css (60 บรรทัด · 25 selector)
 #bb-overlay:4 · #bb-board:5,9,10,11 · .no-anim:12,49 · .bb-head:13 · .bb-title:14 · .bb-stat:15,16
