@@ -20,7 +20,7 @@
     const zones=[],MAX_ZONES=12;let elapsed=0,expanded=null;
     const distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
     function enemies(pos,r,fn){for(const b of api.enemies().slice())if(!b.dead&&distance(pos,b.group.position)<=r)fn(b);}
-    function push(b,pos,strength){if(b.boss)strength*=.22;const p=b.group.position,dx=p.x-pos.x,dz=p.z-pos.z,d=Math.hypot(dx,dz)||1;p.x+=dx/d*strength;p.z+=dz/d*strength;const r=Math.hypot(p.x,p.z);if(r>30){p.x*=30/r;p.z*=30/r;}}
+    function push(b,pos,strength){if(b.vaultOwner)return;if(b.boss)strength*=.22;const p=b.group.position,dx=p.x-pos.x,dz=p.z-pos.z,d=Math.hypot(dx,dz)||1;p.x+=dx/d*strength;p.z+=dz/d*strength;const r=Math.hypot(p.x,p.z);if(r>30){p.x*=30/r;p.z*=30/r;}}
     function zone(kind,pos,dir,mult,life,r){const z={kind,pos:pos.clone(),dir:dir.clone(),mult,life,max:life,age:0,lastPulse:0,r,hit:new Set(),index:0,visual:null};if(zones.length>=MAX_ZONES)zones.shift();zones.push(z);return z;}
     function cast(kind,pos,dir,target,mult){
       if(!byId[kind]||kind==='arc'||kind==='nova')return false;
@@ -58,7 +58,7 @@
         if(z.kind==='fire'||z.kind==='wind'||z.kind==='gravity'){
           while(z.lastPulse+.5<=Math.min(z.age,z.max)+.00001){z.lastPulse+=.5;enemies(z.pos,z.r,b=>api.hit(b,(z.kind==='fire'?15:z.kind==='wind'?10:8)*z.mult));api.fx.burst(z.pos,z.kind==='fire'?0xff7e28:z.kind==='wind'?0x8effdd:0xc778ff,8,3);}
         }
-        if(z.kind==='water')enemies(z.pos,z.r,b=>{if(z.hit.has(b))return;z.hit.add(b);const p=b.group.position;p.addScaledVector(z.dir,b.boss?.4:2.8);const r=Math.hypot(p.x,p.z);if(r>30)p.multiplyScalar(30/r);api.hit(b,48*z.mult);api.fx.burst(p,0xb6faff,10,4);});
+        if(z.kind==='water')enemies(z.pos,z.r,b=>{if(z.hit.has(b))return;z.hit.add(b);const p=b.group.position;if(!b.vaultOwner)p.addScaledVector(z.dir,b.boss?.4:2.8);const r=Math.hypot(p.x,p.z);if(r>30)p.multiplyScalar(30/r);api.hit(b,48*z.mult);api.fx.burst(p,0xb6faff,10,4);});
         if(z.kind==='meteor'){
           for(let j=0;j<3;j++){const start=j*.5,impact=start+.65,a=j/3*Math.PI*2,p=z.pos.clone();p.x+=Math.cos(a)*2.6;p.z+=Math.sin(a)*2.6;
             if((previous<=start&&z.age>start)&&!(z.index&(1<<j))){z.index|=1<<j;api.fx.element('meteor',p,{life:.65,r:z.r});}

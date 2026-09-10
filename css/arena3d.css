@@ -415,3 +415,9 @@
 @media(max-width:720px){#va-root .va-spell-grid.va-swipe-strip,#va-root .va-relic-panel .va-store-grid.va-swipe-strip{--strip-columns:3.4}}
 @media(max-width:500px){#va-root .va-spell-grid.va-swipe-strip,#va-root .va-relic-panel .va-store-grid.va-swipe-strip{--strip-columns:1.8;--strip-rows:3}.va-grimoire-nav{gap:6px}.va-swipe-hint{font-size:8px}.va-grimoire-nav small{font-size:8px}}
 @media(max-height:350px){#va-root .va-spell-grid.va-swipe-strip{--strip-rows:1}}
+
+/* Shared-word cargo control; kept beside the existing home navigation. */
+#va-drop-letter{position:absolute;left:50%;bottom:100px;transform:translateX(-50%);padding:7px 12px;border-radius:12px;color:#fff3c4;font:700 12px Kanit,sans-serif;z-index:15;touch-action:manipulation}
+#va-drop-letter:disabled{opacity:.45}
+
+#va-root[data-map] #va-drop-letter{bottom:calc(3vh + clamp(37px,10vh,96px) + 12px)}

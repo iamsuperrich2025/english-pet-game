@@ -1,4 +1,6 @@
-# Arena Field — current behavior (round 1396)
+# Arena Field — current behavior (round 1403)
+
+Round 1403 replaces personal word/boss rewards with a shared word race: one carried letter, 5,000 HP destructible homes, open-vault raids and exactly 1,000 coins for the first winner. These rules supersede the older co-op/boss/cargo notes below. Current source of truth: `docs/ARENA_RACE.md`.
 
 The Vocab Arena entry is public, including new players without an adult pet. `js/home-v2.js` renders an explicitly sized cover using the existing fire-hero and crystal-map WebP thumbnails; `js/ui.js` loads the hero picker, map picker, catalogue and battle engine in dependency order. The eight existing animated full-body portraits are preserved. Confirming a hero keeps the owned loadout instead of granting free signature spells.
 
@@ -20,7 +22,7 @@ Ordinary accounts start with **basic shot and Light / แสงฟื้นฟ�
 
 **Admins have all 60 spells and all 50 relic bonuses immediately, with no coin deduction and no fabricated purchased flags.** Entitlement is derived from the existing `isAdmin()` check. Shop cards display ADMIN. Selected spells still load on demand. Basic shot and Light remain the initial equipped controls; admins can equip any spell.
 
-Relic effects include bounded attack/critical/echo bonuses, ten element sigils, cooldowns, healing, armor, recovery, HP/shield, movement, pickup distance, cargo, drop lifetime, ordinary-word reward, pet attacks and revive time. Bonuses compile only on entry/purchase, not each frame. With all current relics: 145 maximum HP, 60 maximum shield and nine carried letters. A2's existing 28-character HP field optionally appends maximum HP; older messages default to 100.
+Relic effects include bounded attack/critical/echo bonuses, ten element sigils, cooldowns, healing, armor, recovery, HP/shield, movement, pickup distance, cargo, drop lifetime, ordinary-word reward, pet attacks and revive time. Bonuses compile only on entry/purchase, not each frame. With all current relics: 145 maximum HP, 60 maximum shield and one carried letter under the fixed race rules. A2's existing 28-character HP field optionally appends maximum HP; older messages default to 100.
 
 The wallet shows total coins and a separate **รอบนี้ +N** for coins actually earned this play session. Purchases do not alter this earned counter. Map changes preserve it and carried letters; exit/reentry resets earned coins to zero.
 

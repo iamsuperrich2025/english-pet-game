@@ -7235,6 +7235,7 @@ async function loadVocabArena3d(){
   await loadScriptOnce('js/arena-strip.js');
   await loadScriptOnce('js/arena-grimoire.js');
   await loadScriptOnce('js/arena-relics.js');
+  await loadScriptOnce('js/arena-race.js');
   await loadScriptOnce('js/arena3d.js');
 }
 /* ============================================================

@@ -12,6 +12,11 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1403 · Arena แข่งคำร่วมกัน:** ทั้งห้องคำเดียว/ขน 1 อักษร/ฝากบ้าน ผู้ชนะคนเดียวรับ1,000; บ้าน5,000HP โจมตี250/700ms บ้านพังเปิดคลังให้แย่งทีละใบ; A–Zร่วมกัน/Q+DROP/ตายทำอักษรตก ไม่ชาร์จMEGAซ้ำ; เก็บเซฟ solo เดิมไว้ไม่ใช้แข่ง
+- callable `arenaRaceV1` + private `arena_v1_live/v1` ใช้ Rules default-deny เดิม; serverตัดสินpickup/bank/raid/winner+wallet receipt/ledger; authป้องกันเซฟเก่าทับเหรียญ; ปิดโบนัสคำ/บอสและพักขายไอเท็มcargo/reward3ชิ้น คงสิทธิ์ของเดิม; รายละเอียด `docs/ARENA_RACE.md`
+- ผ่าน backend30 + Frontline regression; source/dist2browser18รายการต่อชุด (ฝากคำ/ตีบ้าน/แย่ง/Q/กลับเข้าใหม่/3landscape/ไม่ทับปุ่ม); 196draws/15,704tri/43textures/pool640+48; cleanHEAD+16paths build9,515files612.9MiB/validator/missingassets/undefined0/syntax/diffผ่าน
+- เตรียมSHIPเฉพาะ17pathsและเปิดCOMMIT_DEPLOY1ครั้งตามคำสั่งผู้ใช้; ยังไม่ยืนยันcommit/deploy/live รอหน้าต่างยืนยัน; หลักฐาน `Documents/Codex/2026-09-10/new-chat-5/work/arena-race[-dist]` และ `work/ship-1403`; ไม่เขียนข้อมูลผู้เล่นจริงในการทดสอบ
+
 - **รอบ 1402 · Frontline พื้นหลังเลื่อนกระตุก:** scene แยก visual pose สำหรับแก้ตำแหน่งออนไลน์/bump ด้วย exponential120ms; กล้อง/รถ/labels/chunks/แสงใช้ตำแหน่งภาพเดียวกัน; ขับปกติไม่มี delay, respawn/teleport reset, ไม่แก้ physics/network
 - ลด projectionเหลือครั้งเดียวและเขียน HUD/labelเฉพาะข้อความเปลี่ยน; fixture correction3→0.389หน่วยในเฟรมแรก, text writes60frames2,100→0; คง420draws/80,819tri/15chunks/DPRเดิม; desktopp95~17ms ไม่ใช่ผลมือถือจริง
 - ผ่าน unit63, source+fingerprinted browser/4landscape/FIRE+BOMB และ movement11; แก้ movement fixture ปิด hull ของ peerผู้สังเกตที่จอดขวางป้อม (ยังตรวจpeer sync); clean HEAD+patch build9,514files612.9MiB/validator/production isolation/syntax/diff ผ่าน

@@ -200,7 +200,21 @@ function authFetchCloud(uid){
     });
   });
 }
-function authWriteCloud(uid, payload){ return authSaveRef(uid).set(payload); }
+// Serialize cloud saves; stale snapshots cannot erase server-confirmed Arena credits.
+let authCloudWriteQueue=Promise.resolve();
+function authWriteCloud(uid,payload){
+ const write=()=>authSaveRef(uid).transaction(current=>{
+  if(!current?.data||!payload?.data)return payload;
+  let remote,local;try{remote=JSON.parse(current.data);local=JSON.parse(payload.data);}catch{return payload;}
+  const latest=remote.arenaRaceReceipts;
+  if(!latest)return payload;
+  const receipts=local.arenaRaceReceipts||{};let delta=0;
+  for(const [key,total]of Object.entries(latest))if(Number.isSafeInteger(total)&&total>(receipts[key]||0)){delta+=total-(receipts[key]||0);receipts[key]=total;}
+  if(delta){local.coins=(Number(local.coins)||0)+delta;local.lifetimeCoins=(Number(local.lifetimeCoins)||0)+delta;const day=new Date(Date.now()+7*3600000).toISOString().slice(0,10);if(local.daily?.date!==day)local.daily={date:day,coins:0};local.daily.coins=(Number(local.daily.coins)||0)+delta;}
+  local.arenaRaceReceipts=receipts;return {...payload,data:JSON.stringify(local)};
+ },undefined,false).then(r=>{if(!r.committed)throw Error('cloud/save_failed');});
+ authCloudWriteQueue=authCloudWriteQueue.catch(()=>{}).then(write);return authCloudWriteQueue;
+}
 function authDeleteCloud(uid){ return authSaveRef(uid).remove(); }
 function authWriteProfileName(uid, name){
   return firebase.database().ref('users/' + uid + '/profile/name').set(name);
@@ -520,6 +534,7 @@ function authEnterGame(){
 
 /* ---------- push เซฟทั้งก้อนขึ้น cloud (เฉพาะตอนเซฟขยับ / force) ---------- */
 function authPushSaveAwait(force){
+  if(window.ArenaRace?.saving)return Promise.resolve(false);
   if(!Auth.user || !state.student) return Promise.resolve(false);
   if(!force && state.savedAt === Auth.lastPushedAt) return Promise.resolve(true);
   const at = state.savedAt || Date.now();

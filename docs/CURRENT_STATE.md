@@ -20,6 +20,10 @@ Snapshot verified 2026-08-09. Keep only durable facts here.
 - `tools/frontline-v1/` is a fresh modular competitive prototype: four player seats, bots for vacant seats, two neutral leader-pressure guards, persistent A-Z ram pickups, private 5,000-HP vaults, letter theft, 5,000-HP tanks, projectile/PvP damage, timed bombs, and winner-only target-word rewards. Players, bots and guards spawn/respawn at 5,000 HP. Lightweight overhead health bars use green above 50%, yellow above 25% through 50%, and red at 25% or less. All tanks share one texture-free cute toy GLB and rotate continuously through 360 degrees with no directional sprite snapping.
 - The local development server exposes only `/__dev/frontline` on port 19444. It renders a fullscreen landscape battlefield from 15 recycled procedural chunks. The production build excludes the whole `tools/` directory and has no Frontline launcher, menu item, public route, asset, or test state.
 - Multiplayer uses only the `demo-vocab-frontline-v1` RTDB emulator on loopback port 19445, with browser traffic proxied through the single LAN port 19444 and mobile clients forced to HTTP long-poll, at `frontline_v1_dev/<random-session>/rooms/<CODE>`. Four explicit Rules-backed seats enforce capacity. Main `addCoins()`/`saveState()` award exactly 1,000 coins to the word winner in isolated storage `vw.frontline-v1.test.save.v1`; production Firebase, saves, accounts, and leaderboards are never loaded. No production deployment was performed.
+## Arena shared word race
+
+Round 1403 implements shared room words, one carried letter, 5,000 HP destructible homes/open-vault raids and winner-only 1,000 central coins. Authoritative inventories and claims use callable `arenaRaceV1` with default-denied private storage; A3 presence retains the existing Arena room lanes. See `docs/ARENA_RACE.md` for scope, wallet recovery and validation. Publication is tracked in `handoff/TASKS.md`.
+
 ## Active 3D architecture
 
 - Vocab City, Adventure3D, Vocab Arena, Vocab Sky Playground, Invasion, Moto, F1, ShootWord, and lobby character rendering are separate Three.js owners rather than one universal engine.

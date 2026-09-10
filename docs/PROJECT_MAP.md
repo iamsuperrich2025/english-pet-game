@@ -86,8 +86,9 @@ DEPENDENCIES: `THREE`, shared pet/economy state, `FOODS`, `ITEMS`, `Music`, loca
 NOTES: `petshopping3d.js` is lazy-loaded. Food stock is consumable and excluded from net worth; the shelf is a permanent asset. Players without a car rent `car_01` per trip without acquiring it.
 
 SYSTEM: Vocab Arena
-PURPOSE: Lightweight combat-first vocabulary world with player/pet/bots, co-op boss state, pickups, HUD, and its own renderer lifecycle.
+PURPOSE: Shared four-player word race with private destructible 5,000 HP homes, carry-one A–Z pickups, winner-only 1,000 coins, combat and its own renderer lifecycle.
 PRIMARY FILE: `js/arena3d.js`
+RACE OWNERS: `js/arena-race.js`, `functions/arena-race.js`, callable `arenaRaceV1`; wallet receipts in `functions/frontline-wallet.js` and `js/auth.js`. Rules and tests: `docs/ARENA_RACE.md`, `functions/test_arena_race.js`, `tools/test_arena_race.cjs`.
 RELATED FILES: `js/arena-strip.js`, `js/arena-audio.js`, `sound/arena/`, `SOUND_LICENSES.md`, `tools/test_arena_music.cjs`, `tools/test_arena_music_entry.cjs`, `js/arena-heroes.js`, `js/arena-portrait.js`, `js/arena-maps.js`, `js/arena-elements.js`, `js/arena-field-visuals.js`, `js/arena-spell-catalog.js`, `js/arena-spell-engine.js`, `js/arena-spells/`, `js/arena-grimoire.js`, `js/arena-relics.js`, `js/netroom.js`, `css/arena3d.css`, `css/arena-heroes.css`, `js/ui.js`, `js/home-v2.js`, `img/arena-heroes/`, `img/arena-maps/`, `img/arena-icons/`, `docs/ARENA_FIELD.md`, `docs/ARENA_GROUND_ASSETS.json`, `tools/test_arena_maps.cjs`, `tools/test_arena_grimoire.cjs`, `tools/test_arena_fire.cjs`
 PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.VocabArena3D`, `start`, `stop`, `loop`, `cameraTick`, `updatePlayer`, `startBoss`; `ArenaMaps.prepare/scenery`
 DEPENDENCIES: `THREE`, shared state/progression, optional online state.

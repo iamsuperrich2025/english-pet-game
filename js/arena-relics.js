@@ -557,6 +557,7 @@
 ];
   const items=rows.map(([id,name,price,desc,category,family,effect])=>({id,name,price,desc,category,family,effect,ico:'✦'}));
   const byId=Object.fromEntries(items.map(i=>[i.id,i]));
+  for(const id of ['rune_satchel','starlight_satchel','lexicon_charm']){byId[id].raceDisabled=true;byId[id].desc='พักใช้ในสนามแข่งขัน · ขน 1 อักษร / รางวัลคงที่ 1,000';}
   function compile(owned={},admin=false){
     const m={damage:0,crit:0,critDamage:0,echoDamage:0,cooldown:0,megaCooldown:0,heal:0,hp:0,armor:0,regen:0,shield:0,speed:0,pickup:0,cargo:0,dropLife:0,wordReward:0,petDamage:0,petCooldown:0,revive:0,elements:{}};
     for(const i of items)if(admin||owned[i.id]){const e=i.effect;if(e.element)m.elements[e.element]=(m.elements[e.element]||0)+e.value;else for(const [k,v] of Object.entries(e))m[k]+=v;}
@@ -574,7 +575,7 @@
     const admin=typeof isAdmin==='function'&&isAdmin();panel.querySelector('.va-panel-sub').textContent=admin?'ADMIN · ปลดล็อกครบ 50 ชิ้น ใช้งานฟรี':'ใช้เหรียญรวมที่มีอยู่ ซื้อครั้งเดียว ใช้ได้ถาวร';panel.querySelector('.va-grimoire-nav small').textContent=admin?'ADMIN · ใช้ฟรีทุกชิ้น':'ซื้อครั้งเดียว · ใช้ถาวร · โบนัสมีขีดจำกัด';
     v.api=api;const q=v.query.trim().toLowerCase(),list=items.filter(i=>(v.category==='all'||i.category===v.category)&&(!q||(i.name+' '+i.desc).toLowerCase().includes(q)));
     const grid=root.querySelector('#va-store-grid'),left=v.reset?0:grid.scrollLeft;ArenaStrip.bind(grid,'คลังพลังอักษร');
-    grid.innerHTML=list.map(i=>'<button class="va-store-item'+(api.own(i.id)?' owned':'')+'" data-buy="'+i.id+'" aria-label="'+i.name+' '+i.desc+' '+(api.own(i.id)?'มีแล้ว':i.price+' เหรียญ')+'" '+(api.own(i.id)?'aria-disabled="true" tabindex="-1"':'')+'><span class="va-store-ico">'+icon(i)+'</span><div class="va-store-name">'+i.name+'</div><div class="va-store-desc">'+i.desc+'</div><div class="va-store-price">'+(api.own(i.id)?(typeof isAdmin==='function'&&isAdmin()?'✦ ADMIN · ใช้ได้':'✓ มีแล้ว'):'◈ '+api.fmt(i.price))+'</div></button>').join('')||'<p class="va-spell-empty">ไม่พบพลังอักษรที่ค้นหา</p>';
+    grid.innerHTML=list.map(i=>'<button class="va-store-item'+(api.own(i.id)?' owned':'')+'" data-buy="'+i.id+'" aria-label="'+i.name+' '+i.desc+' '+(api.own(i.id)?'มีแล้ว':i.price+' เหรียญ')+'" '+(api.own(i.id)||i.raceDisabled?'aria-disabled="true" tabindex="-1" disabled':'')+'><span class="va-store-ico">'+icon(i)+'</span><div class="va-store-name">'+i.name+'</div><div class="va-store-desc">'+i.desc+'</div><div class="va-store-price">'+(i.raceDisabled?'พักใช้ในสนามแข่งขัน':api.own(i.id)?(typeof isAdmin==='function'&&isAdmin()?'✦ ADMIN · ใช้ได้':'✓ มีแล้ว'):'◈ '+api.fmt(i.price))+'</div></button>').join('')||'<p class="va-spell-empty">ไม่พบพลังอักษรที่ค้นหา</p>';
     grid.scrollLeft=left;v.reset=false;panel.querySelector('.va-grimoire-nav span').textContent=list.length+' ชิ้น';
   }
   window.ArenaRelics={items,byId,compile,render,icon};

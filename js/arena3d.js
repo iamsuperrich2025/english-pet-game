@@ -36,7 +36,7 @@
   let activeMap=null,sceneDrawn=false,relicMods={"damage":0,"crit":0,"critDamage":0,"echoDamage":0,"cooldown":0,"megaCooldown":0,"heal":0,"hp":0,"armor":0,"regen":0,"shield":0,"speed":0,"pickup":0,"cargo":0,"dropLife":0,"wordReward":0,"petDamage":0,"petCooldown":0,"revive":0,"elements":{}};
   const skillSeconds=kind=>SKILL_CD[kind]*(selectedHero && kind===selectedHero.id ? .8 : 1)*(kind==='ult'?1-relicMods.megaCooldown:kind==='basic'?1:1-relicMods.cooldown);
   let cargo=[],homeRoute=false,lastHomePaint=0,fullHintAt=0,basicHeld=false;
-  const HOME_SPOTS=[[-12,13],[12,13],[-12,-13],[12,-13]];let CARGO_MAX=6;
+  const HOME_SPOTS=[[-12,13],[12,13],[-12,-13],[12,-13]];const CARGO_MAX=1;let race=null,raceTargets=[],vaultHomes=new Map(),raceStatus='กำลังเชื่อมต่อการแข่งขัน…',raceSessionOffset=0;
   const pendingTimers=new Set();
   function schedule(fn,ms){const id=setTimeout(()=>{pendingTimers.delete(id);if(running)fn();},ms);pendingTimers.add(id);return id;}
   let bots=[],drops=[],shots=[],effects=[],respawns=[];
@@ -60,7 +60,7 @@
   const fmt=n=>(typeof fmtNum==='function'?fmtNum(n):Math.round(n).toLocaleString());
   const own=id=>!!(state.arenaItems&&state.arenaItems[id])||!!(typeof ArenaRelics!=='undefined'&&ArenaRelics.byId[id]&&typeof isAdmin==='function'&&isAdmin());
   const powerMult=()=> ((own('prism')?1.25:1)+relicMods.damage)*(1+energy*.11);
-  function refreshRelics(){if(typeof ArenaRelics!=='undefined')relicMods=ArenaRelics.compile(state.arenaItems,typeof isAdmin==='function'&&isAdmin());CARGO_MAX=6+relicMods.cargo;maxHp=100+relicMods.hp;maxShield=(own('wing')?30:0)+relicMods.shield;hp=Math.min(hp,maxHp);shield=Math.min(shield,maxShield);}
+  function refreshRelics(){if(typeof ArenaRelics!=='undefined')relicMods=ArenaRelics.compile(state.arenaItems,typeof isAdmin==='function'&&isAdmin());maxHp=100+relicMods.hp;maxShield=(own('wing')?30:0)+relicMods.shield;hp=Math.min(hp,maxHp);shield=Math.min(shield,maxShield);}
   const profileAvatar=()=>{
     if(typeof lobbyBlk==='function') return lobbyBlk();
     if(/^blk([1-9]|[1-7][0-9]|8[0-8])$/.test(state.profAv||'')) return state.profAv;
@@ -83,7 +83,7 @@
     selectedHero=typeof ArenaHeroes!=='undefined'?ArenaHeroes.get(state.arenaHero):null;
     activeMap=typeof ArenaMaps!=='undefined'?ArenaMaps.get(state.arenaMap):null;
     spellSlots=ArenaElements.normalizeSlots(state.arenaLoadout);state.arenaLoadout=spellSlots.slice();
-    state.arenaHome.cargo=(Array.isArray(state.arenaHome.cargo)?state.arenaHome.cargo:[]).filter(ch=>typeof ch==='string'&&/^[A-Z]$/.test(ch)).slice(0,CARGO_MAX);
+    state.arenaHome.cargo=(Array.isArray(state.arenaHome.cargo)?state.arenaHome.cargo:[]).filter(ch=>typeof ch==='string'&&/^[A-Z]$/.test(ch)).slice(0,9); // Retain legacy solo cargo; never import it into the race.
   }
 
   function createDom(){
@@ -95,7 +95,7 @@
       <canvas id="va-canvas"></canvas><div class="va-vitals-layer" id="va-vitals-layer"></div><div class="va-vignette"></div><div class="va-scan"></div>
       <div class="va-top">
         <button class="va-exit" id="va-exit" aria-label="ออกจากสนาม">← ออก</button>
-        <div class="va-player-card va-glass"><span class="va-avatar-icon" aria-hidden="true">${selectedHero?.icon||'⚔'}</span><div class="va-player-name">${esc(state.profileName||'นักผจญภัย')}</div><div class="va-online${online?'':' off'}">● ${online?'ONLINE PvE':'PvE ฝึกซ้อม'}</div></div>
+        <div class="va-player-card va-glass"><span class="va-avatar-icon" aria-hidden="true">${selectedHero?.icon||'⚔'}</span><div class="va-player-name">${esc(state.profileName||'นักผจญภัย')}</div><div class="va-online${online?'':' off'}">● ${online?'WORD RACE':'รอออนไลน์'}</div></div>
         <div class="va-word-card va-glass"><div class="va-word-th" id="va-word-th">เป้าหมายคำศัพท์</div><div class="va-word-en" id="va-word-en">READY</div><div class="va-word-slots" id="va-word-slots"></div></div>
         <div class="va-coins va-glass"><span class="va-coin-total">🪙 <span id="va-coins">${fmt(state.coins||0)}</span></span><small id="va-session-coins" aria-label="เหรียญที่ได้รับในรอบนี้">รอบนี้ +0</small></div>
         <button class="va-shop-btn" id="va-shop-open">🛒 พลังพิเศษ</button>
@@ -113,7 +113,7 @@
         <button class="va-skill arc" data-slot="0" data-skill="arc" aria-label="Arc"><span class="ico">⚡</span><span class="key">1 ARC</span><span class="cd"></span></button>
         <button class="va-skill basic" data-skill="basic" aria-label="ยิงพลัง"><span class="ico">✦</span><span class="key">ยิง</span><span class="cd"></span></button>
       </div>
-      <button class="va-home-nav va-glass" id="va-home-nav"><b>⌂ บ้านของคุณ</b><span id="va-home-hint">เดินเข้าวงเพื่อฝากอักษร</span></button><div class="va-cargo" id="va-cargo" aria-hidden="true"></div><div class="va-feed" id="va-feed"></div>
+      <button class="va-home-nav va-glass" id="va-home-nav"><b>⌂ บ้านของคุณ</b><span id="va-home-hint">เดินเข้าวงเพื่อฝากอักษร</span></button><button id="va-drop-letter" class="va-glass" aria-label="ทิ้งอักษร Q">DROP · Q</button><div class="va-cargo" id="va-cargo" aria-hidden="true"></div><div class="va-feed" id="va-feed"></div>
       <div class="va-pop" id="va-pop"><strong></strong><span></span></div>
       <div class="va-downed" id="va-downed"><strong>ต้องการความช่วยเหลือ!</strong><span id="va-down-time">รอเพื่อนมาชุบ 12 วิ</span><small>ยังขยับช้า ๆ ไปหาเพื่อนได้ · ไม่เสียเหรียญ</small></div>
       <button class="va-revive" id="va-revive"><b>🤝 กดค้างเพื่อช่วยเพื่อน</b><span><i id="va-revive-fill"></i></span><small id="va-revive-name"></small></button>
@@ -123,7 +123,7 @@
       </div></div>
       <div class="va-modal" id="va-intro"><div class="va-panel va-intro-panel">
         <div class="va-intro-logo">VOCAB ARENA</div><div class="va-intro-sub">ตัวเล็ก · เวทมนตร์ใหญ่ · ขนอักษรกลับบ้าน</div>
-        <div class="va-intro-steps"><div class="va-intro-step"><b>⚔️</b>เดินจอยซ้าย · สู้ปุ่มขวา</div><div class="va-intro-step"><b>💎</b>คริสตัลมี A–Z · ขนได้ ${CARGO_MAX} ตัว</div><div class="va-intro-step"><b>🏠</b>กลับบ้านเพื่อฝากและสะกดคำ</div><div class="va-intro-step"><b>👑</b>ครบ 3 คำ ต่อสู้บอสด้วยกัน</div><div class="va-intro-step"><b>✨</b>ครบ 5 คริสตัล · ได้ MEGA 5 ครั้ง</div></div>
+        <div class="va-intro-steps"><div class="va-intro-step"><b>⚔️</b>เดินจอยซ้าย · สู้ปุ่มขวา</div><div class="va-intro-step"><b>💎</b>อักษร A–Z ร่วมกัน · ขนครั้งละ 1 ตัว</div><div class="va-intro-step"><b>🏠</b>บ้าน 5,000 HP · พังแล้วใครก็หยิบได้</div><div class="va-intro-step"><b>👑</b>คำเดียวทั้งห้อง · ชนะรับ 1,000 เหรียญ</div><div class="va-intro-step"><b>✨</b>ครบ 5 คริสตัล · ได้ MEGA 5 ครั้ง</div></div>
         <button class="va-start" id="va-start">เริ่มภารกิจ ✦</button>
       </div></div>
       <div class="va-modal" id="va-spellbook" role="dialog" aria-modal="true" aria-label="คลังพลังธาตุ"><div class="va-panel va-spell-panel">
@@ -152,6 +152,7 @@
   function bindDom(){
     addListener(root.querySelector('#va-exit'),'click',stop);
     addListener(root.querySelector('#va-home-nav'),'click',()=>{homeRoute=!homeRoute;paintHome();});
+    addListener(root.querySelector('#va-drop-letter'),'click',()=>{if(!paused&&!downed)race?.drop();});
     const clearInput=()=>{basicHeld=false;keys.clear();joy.x=joy.z=0;joy.id=null;homeRoute=false;ui.stickKnob.style.transform='translate(-50%,-50%)';};
     addListener(window,'blur',clearInput);addListener(document,'visibilitychange',()=>{clearInput();lastFrame=0;});
     addListener(root.querySelector('#va-shop-open'),'click',()=>toggleShop(true));
@@ -197,6 +198,7 @@
       else if(e.code==='Digit2') castSkill(spellSlots[1]);
       else if(e.code==='Digit3') castSkill('ult');
       else if(e.code==='KeyE')toggleSpellbook(!ui.spellbook.classList.contains('on'));
+      else if(e.code==='KeyQ'){if(!e.repeat&&!paused&&!downed)race?.drop();}
       else if(e.code==='KeyH'){homeRoute=!homeRoute;paintHome();}
       else if(e.code==='KeyB') toggleShop(!ui.shop.classList.contains('on'));
       else if(e.code==='Escape'){ if(ui.spellbook.classList.contains('on'))toggleSpellbook(false);else if(ui.shop.classList.contains('on')) toggleShop(false); else stop(); }
@@ -217,7 +219,7 @@
     camera=new THREE.PerspectiveCamera(48,innerWidth/innerHeight,.1,120);
     clock=new THREE.Clock(); texLoader=new THREE.TextureLoader();
     buildArena(); ArenaFieldVisuals.compactStatic(scene); fieldFx=ArenaFieldVisuals.createFx(scene,fxLow);
-    elements=ArenaElements.create({fx:fieldFx,enemies:()=>bots,hit:hitBot,storm:()=>own('storm'),heal:(health,guard)=>{const before=hp;health*=1+relicMods.heal;hp=Math.min(maxHp,hp+health);if(hp>before&&window.ArenaAudio)ArenaAudio.playHeal();shield=Math.min(Math.max(maxShield,20),shield+guard);floatText(player.pos,`+${Math.round(hp-before)} HP · โล่ +${guard}`,0xd5ffac);updateHud();}});
+    elements=ArenaElements.create({fx:fieldFx,enemies:()=>[...bots,...raceTargets.filter(b=>!b.dead)],hit:hitBot,storm:()=>own('storm'),heal:(health,guard)=>{const before=hp;health*=1+relicMods.heal;hp=Math.min(maxHp,hp+health);if(hp>before&&window.ArenaAudio)ArenaAudio.playHeal();shield=Math.min(Math.max(maxShield,20),shield+guard);floatText(player.pos,`+${Math.round(hp-before)} HP · โล่ +${guard}`,0xd5ffac);updateHud();}});
     buildPlayer(); buildPet(); buildHome();if(!activeMap)ArenaFieldVisuals.garden(scene);
     built=true; resize();
   }
@@ -304,14 +306,14 @@
   function safeAvatar(v){return /^blk([1-9]|[1-7][0-9]|8[0-8])$/.test(v||'')?v:'blk1';}
   function parseArenaStatus(v){
     const p=String(v||'').split(':');
-    const max=clamp(parseInt(p[4],10)||100,100,180);return p[0]==='A2'?{hp:clamp(parseInt(p[1],10)||0,0,max),max,down:p[2]==='1',enc:p[3]||'-'}:null;
+    const max=clamp(parseInt(p[4],10)||100,100,180);return p[0]==='A3'?{hp:clamp(parseInt(p[1],10)||0,0,max),max,down:p[2]==='1',enc:p[3]||'-'}:null;
   }
   function isArenaPeer(d){return !!(d&&parseArenaStatus(d.hp));}
   function partyUids(){return [myUid].concat(Object.keys(peers).filter(uid=>isArenaPeer(peers[uid]))).sort();}
   function leaderId(){return partyUids()[0]||myUid;}
   function isLeader(){return leaderId()===myUid;}
   function partyWords(){let n=sessionWords;for(const uid in peers)if(isArenaPeer(peers[uid]))n+=Math.max(0,Number(peers[uid].w)||0);return n;}
-  function packArenaStatus(){return `A2:${Math.ceil(hp)}:${downed?1:0}:${bossEncounter||'-'}${maxHp>100?':'+maxHp:''}`.slice(0,28);}
+  function packArenaStatus(){return `A3:${Math.ceil(hp)}:${downed?1:0}:${bossEncounter||'-'}${maxHp>100?':'+maxHp:''}`.slice(0,28);}
   function buildPeerActor(uid,d){
     const group=new THREE.Group();group.position.set(Number(d.x)||0,0,Number(d.z)||0);scene.add(group);
     const aura=new THREE.Mesh(new THREE.RingGeometry(.72,1.12,36),new THREE.MeshBasicMaterial({color:0x7be8ff,transparent:true,opacity:.42,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,depthWrite:false}));aura.rotation.x=-Math.PI/2;aura.position.y=.05;group.add(aura);
@@ -336,18 +338,18 @@
   function netToast(html){const d=document.createElement('div');d.innerHTML=html;feed(d.textContent||'อัปเดตสนาม Co-op','gold');}
   function setupCoop(){
     myUid=coopReady()?onlineKey():'local';renderPartyHud();
-    if(!coopReady()){feed('📡 โหมดฝึกเดี่ยว — ล็อกอินออนไลน์เพื่อเล่น Co-op 2–4 คน','bad');return;}
+    if(!coopReady()){feed('📡 เข้าสู่ระบบออนไลน์เพื่อแข่งคำร่วมกันและรับเหรียญ','bad');return;}
     room=NetRoom.create({map:'adv',roomMax:PARTY_MAX,sendMs:170,push:()=>netSend(true),onPeer,onPeerGone,onStatus:renderPartyHud,toast:netToast,roomNoun:'ปาร์ตี้',roomIcon:'🤝',roomFmt:i=>'ปาร์ตี้ '+i,...(activeMap?ArenaMaps.roomOptions(activeMap.id):{})});
     room.join();
   }
   function netSend(force){
     if(!room||!player)return;
-    const yaw=Math.atan2(player.facing.x,player.facing.z),payload={n:String(state.profileName||'นักผจญภัย').slice(0,40),x:+player.pos.x.toFixed(2),z:+player.pos.z.toFixed(2),y:Math.round(bossContribution),yaw:+yaw.toFixed(3),av:activeMap&&selectedHero?'AH:'+selectedHero.id:profileAvatar(),m:downed?1:0,w:sessionWords,c:reviveSignal||'-',ct:revivesGiven,cw:isLeader()?bossWire():'',hp:packArenaStatus()};
+    const yaw=Math.atan2(player.facing.x,player.facing.z),payload={n:String(state.profileName||'นักผจญภัย').slice(0,40),x:+player.pos.x.toFixed(2),z:+player.pos.z.toFixed(2),y:Math.round(bossContribution),yaw:+yaw.toFixed(3),av:activeMap&&selectedHero?'AH:'+selectedHero.id:profileAvatar(),m:downed?1:0,w:sessionWords,c:reviveSignal||'-',ct:revivesGiven,cw:'',hp:packArenaStatus()};
     room.send(payload,!!force);
   }
   function tickCoop(t){
     if(room){room.tick(t);if(t-lastNetSend>170){lastNetSend=t;netSend(false);}}
-    updatePeerActors(t);updateRevive(t);driveBoss(t);
+    updatePeerActors(t);updateRevive(t);if(race)race.tick(room);
     if(t-lastPartyPaint>350){lastPartyPaint=t;renderPartyHud();}
   }
   function updatePeerActors(t){
@@ -360,6 +362,7 @@
     let status;if(!coopReady())status='สนามฝึกเดี่ยว · ออฟไลน์';else if(!room||!room.joined)status='กำลังหาปาร์ตี้ Co-op…';else status=`Co-op ${members.length}/${PARTY_MAX} · ปาร์ตี้ ${room.roomLabel}${members.length<2?' · รอเพื่อนได้':''}`;
     ui.partyStatus.textContent=status;ui.partyList.innerHTML=members.slice(0,PARTY_MAX).map(m=>`<span class="${m.down?'down':''}${m.self?' self':''}" title="${esc(m.n)}">${m.down?'🆘':'●'} ${esc(m.self?'เรา':m.n)}</span>`).join('');
     if(activeMap&&room)ui.partyStatus.textContent=room.full?'แผนที่เต็ม · กดเปลี่ยนแผนที่':room.joined?`Co-op ${members.length}/4 · ห้อง ${Math.floor((room.room-ArenaMaps.FIRST)/3)+1} · ${activeMap.name}`:'กำลังเชื่อมต่อห้อง…';
+    ui.partyStatus.textContent=room?.full?'แผนที่เต็ม · กดเปลี่ยนแผนที่':raceStatus;
     const btn=root&&root.querySelector('#va-party-friends');if(btn)btn.classList.toggle('off',!room||!room.online);
   }
 
@@ -395,10 +398,10 @@
     if(bossPhase==='victory')return `V:${chapter}:${bossEncounter}:${Math.round(bossReward)}:${bossWord}`.slice(0,60);
     return `W:${chapter}:${Math.round(waveBase)}`;
   }
-  function syncLeaderState(){
+  function syncLeaderState(){return;
     if(!running||isLeader())return;const d=peers[leaderId()];if(d&&typeof d.cw==='string'&&d.cw)applyLeaderWire(d.cw);
   }
-  function applyLeaderWire(wire){
+  function applyLeaderWire(wire){return;
     const p=String(wire||'').split(':'),kind=p[0],ch=clamp(parseInt(p[1],10)||1,1,CHAPTERS.length);
     if(kind==='B'){
       const enc=p[2]||'',max=Math.max(100,parseInt(p[3],10)||100),left=clamp(parseInt(p[4],10)||0,0,max),word=String(p[5]||'WORD').replace(/[^A-Z]/gi,'').slice(0,8).toUpperCase()||'WORD';
@@ -434,7 +437,7 @@
   }
   function setBossHp(v){bossHp=clamp(Number(v)||0,0,bossMax||1);if(boss){boss.hp=bossHp;const k=clamp(bossHp/boss.maxHp,0,1);boss.bar.scale.x=k;boss.bar.position.x=-(1-k)*1.31;}updateBossHud();}
   function bossImpact(){let total=bossContribution;for(const uid in peers){const d=peers[uid],st=parseArenaStatus(d&&d.hp);if(st&&st.enc===bossEncounter)total+=Math.max(0,Number(d.y)||0);}return total;}
-  function driveBoss(t){
+  function driveBoss(t){return;
     if(!isLeader()){syncLeaderState();return;}
     if(bossPhase==='wave'){
       if(partyWords()-waveBase>=BOSS_WORD_GOAL)startBossAsLeader();
@@ -447,7 +450,7 @@
     if(boss){boss.dead=true;boss.group.scale.multiplyScalar(1.08);burst(boss.group.position,chapterDef(ch).color,52,8);ringFx(boss.group.position,0xffe77a,14,1.1);}
     showPop('พิชิตบอส!',`${chapterDef(ch).name} · รางวัลแบ่งแบบทีม`);feed('⚖️ ทุกคนได้รางวัลฐานเท่ากัน 80% และโบนัสช่วยทีมสูงสุด 20%','gold');awardBoss(enc,ch,reward);haptic([45,55,90]);if(leader)netSend(true);
   }
-  function awardBoss(enc,ch,totalReward){
+  function awardBoss(enc,ch,totalReward){return;
     if(!enc||state.arenaBossClaims.includes(enc))return;
     const count=Math.max(1,partyUids().length),total=Math.max(1,bossImpact()),fair=total/count,ratio=clamp(bossContribution/fair,0,1),base=Math.round(totalReward*.8),bonus=Math.round(totalReward*.2*ratio),reward=base+bonus;
     state.arenaBossClaims.push(enc);state.arenaBossClaims=state.arenaBossClaims.slice(-20);state.arenaStats.bossWins++;state.arenaStats.fairCoins+=reward;state.arenaStats.bestChapter=Math.max(state.arenaStats.bestChapter||0,ch);state.arenaChapter=ch%CHAPTERS.length+1;
@@ -480,7 +483,7 @@
 
   function targetNearest(range=99,exclude){
     let best=null,bd=range;
-    for(const b of bots){ if(b.dead||b===exclude)continue;const d=flatDist(player.pos,b.group.position);if(d<bd){bd=d;best=b;} }
+    for(const b of [...bots,...raceTargets]){ if(b.dead||b===exclude)continue;const d=flatDist(player.pos,b.group.position);if(d<bd){bd=d;best=b;} }
     return best;
   }
 
@@ -498,7 +501,7 @@
       return;
     }
     if(kind==='basic'){
-      const b=targetNearest(15);if(!b){feed('เข้าใกล้ปีศาจอีกนิดครับ');return;}
+      const b=targetNearest(15);if(!b){feed('เข้าใกล้ปีศาจหรือบ้านคู่แข่งอีกนิดครับ');return;}
       ArenaFieldVisuals.strike(player.spr,now);fieldFx.slash(player.pos,Math.atan2(player.facing.x,player.facing.z));cooldown.basic=now+SKILL_CD.basic*1000;fireBolt(b,24*mult,0x7ff3ff,false);
       if(own('echo')){const b2=targetNearest(15,b);if(b2)schedule(()=>{if(running&&!b2.dead)fireBolt(b2,16*mult*(1+relicMods.echoDamage),0xcb7cff,false);},85);}
     }else if(kind==='arc'){
@@ -508,7 +511,7 @@
       burst(first.group.position,0x77e9ff,22,5);if(window.ArenaAudio)ArenaAudio.playElement('arc');haptic(22);
     }else if(kind==='nova'){
       ArenaFieldVisuals.strike(player.spr,now);fieldFx.spell(player.pos,'nova');cooldown.nova=now+skillSeconds('nova')*1000;const rad=own('storm')?8.2:6.1;ringFx(player.pos,0xb55cff,rad,.62);
-      let n=0;for(const b of bots.slice()){if(!b.dead&&flatDist(player.pos,b.group.position)<=rad){hitBot(b,48*mult);burst(b.group.position,0xd27cff,10,3);n++;}}
+      let n=0;for(const b of [...bots,...raceTargets]){if(!b.dead&&flatDist(player.pos,b.group.position)<=rad){hitBot(b,48*mult);burst(b.group.position,0xd27cff,10,3);n++;}}
       feed(n?`🌀 NOVA โดน ${n} เป้าหมาย`:'🌀 NOVA ยังไม่ถึงตัวปีศาจ');if(window.ArenaAudio)ArenaAudio.playElement();haptic(35);
     }else if(kind==='ult'){
       const kind=selectedHero?.id||'fire';
@@ -532,6 +535,7 @@
     const to=player.pos.clone().sub(bot.group.position).setY(0).normalize();shots.push({mesh,vel:to.multiplyScalar(bot.boss?9.2:(bot.elite?8.5:7)),damage:bot.boss?10+bot.chapter*2:(bot.elite?9:4),color:shotColor,fromEnemy:true,ttl:2.7,lastSpark:0});
   }
   function hitBot(b,dmg){
+    if(b?.vaultOwner){if(!downed&&race?.ready&&!race.busy)race.hit(b.vaultOwner,b.revision);return;}
     if(!b||b.dead)return;
     if(relicMods.crit&&Math.random()<relicMods.crit)dmg*=1.5+relicMods.critDamage;
     if(b.boss){
@@ -547,8 +551,8 @@
   function killBot(b){
     if(b.dead)return;b.dead=true;kills++;state.arenaStats.kills=(state.arenaStats.kills||0)+1;
     const idx=bots.indexOf(b);if(idx>=0)bots.splice(idx,1);scene.remove(b.group);disposeTree(b.group);
-    dropLetter(b.group.position,b.ch,b.col);respawns.push(performance.now()+rnd(900,1700));respawns.sort((a,c)=>a-c);
-    feed(`👾 กำจัดปีศาจ ${b.ch} — เก็บอักษรที่ตกได้เลย`);
+    respawns.push(performance.now()+rnd(900,1700));respawns.sort((a,c)=>a-c);
+    feed(`👾 กำจัดปีศาจ ${b.ch} — ไปเก็บอักษร A–Z ในสนามต่อได้`);
   }
 
   function dropLetter(pos,ch,col,options={}){
@@ -564,63 +568,64 @@
   function spawnCrystal(node){const ch=ALPHABET[crystalLetterIndex++%26];node.drop=dropLetter(node.pos,ch,0x77eaff,{node});node.remaining=0;}
   function updateCrystalNodes(dt){for(const node of crystalNodes)if(!node.drop){node.remaining-=dt;if(node.remaining<=0)spawnCrystal(node);}}
   function collectDrop(d){
-    if(downed||!drops.includes(d))return;
-    if(cargo.length>=CARGO_MAX){if(performance.now()-fullHintAt>3000){feed('กระเป๋าเต็มแล้ว · กดบ้าน หรือ H เพื่อกลับไปฝาก','gold');fullHintAt=performance.now();}return;}
-    cargo.push(d.ch);persistHome();recentLetters.push(d.ch);if(recentLetters.length>9)recentLetters.shift();energy=Math.min(ENERGY_MAX,energy+1);
-    const before=crystalCharge;if(d.chargeable&&megaUses===0)crystalCharge=Math.min(CRYSTAL_NEED,crystalCharge+1);
-    if(d.node){d.node.drop=null;d.node.remaining=CRYSTAL_RESPAWN;}
-    if(before<CRYSTAL_NEED&&crystalCharge===CRYSTAL_NEED){megaUses=5;showPop('MEGA ×5 READY','ได้พลังวงใหญ่ 5 ครั้ง · กด 3 หรือปุ่ม MEGA');if(window.ArenaAudio)ArenaAudio.prepareMega();}
-    const p=d.group.position.clone();scene.remove(d.group);disposeTree(d.group);drops.splice(drops.indexOf(d),1);
-    burst(p,d.col,24,4);ringFx(p,d.col,2.8,.36);floatText(p,`+ ${d.ch}`,0xfff39a);haptic(18);
-    feed(`🔤 ขน ${d.ch} แล้ว (${cargo.length}/${CARGO_MAX}) · กลับบ้านเพื่อฝาก`,'gold');updateHud();paintHome();
+    if(downed||!race?.ready||race.busy||!drops.includes(d)||cargo.length||!d.raceId)return;
+    netSend(true);race.pickup(d.raceId,d.raceRevision);
+  }
+  /* ==== Shared server race: letters, vaults and one winner per word ==== */
+  function raceReset(){bag={};cargo=[];target={en:'…',th:'กำลังเชื่อมต่อคำร่วมกัน'};raceTargets=[];raceStatus='กำลังเชื่อมต่อการแข่งขัน…';for(const d of drops){scene.remove(d.group);disposeTree(d.group);}drops=[];updateHud();}
+  function raceSnapshot(r,previous,earned){
+    if(!running)return;raceStatus='แข่งคำเดียวกัน · ผู้ชนะรับ 1,000 🪙';sessionCoins=raceSessionOffset+earned;
+    bag={};for(const ch of r.self.bank||'')bag[ch]=(bag[ch]||0)+1;cargo=r.self.carried?[r.self.carried]:[];
+    target={en:r.word.target,th:r.word.translation};wordBusy=!!r.word.completedAt;
+    if(previous&&r.self.revision>previous.self.revision&&r.self.carried&&r.self.fresh){energy=Math.min(ENERGY_MAX,energy+1);if(!megaUses){crystalCharge=Math.min(5,crystalCharge+1);if(crystalCharge===5){megaUses=5;showPop('MEGA ×5 READY','เก็บครบ 5 อักษรแล้ว');if(window.ArenaAudio)ArenaAudio.prepareMega();}}}
+    if(previous&&r.word.completedAt&&(!previous.word.completedAt||previous.word.round!==r.word.round)){
+      showPop(r.word.winnerId===myUid?'ชนะ! +1,000 🪙':r.word.winnerName+' ชนะ',r.word.target+' · กำลังเปลี่ยนคำ');
+      if(r.word.winnerId===myUid){sessionWords++;state.arenaStats.words++;saveState();}
+    }
+    const remaining=new Map(Object.entries(r.items||{}));
+    for(let i=drops.length-1;i>=0;i--){const d=drops[i],item=remaining.get(d.raceId);if(!item||item.rev!==d.raceRevision){scene.remove(d.group);disposeTree(d.group);drops.splice(i,1);}else remaining.delete(d.raceId);}
+    for(const [id,item]of remaining){const d=dropLetter(new THREE.Vector3(item.x,0,item.z),item.ch,0x77eaff,{chargeable:!item.dropped});d.life=Infinity;d.raceId=id;d.raceRevision=item.rev;}
+    placeHome();updateHud();renderPartyHud();
   }
 
-  /* ==== 🏡 Round 1380: collect → carry → return → bank ==== */
   function buildHome(){home=activeMap?ArenaMaps.house(0x58baff,'บ้านของคุณ',loadSprite,makeTextSprite):ArenaFieldVisuals.house(0x58baff,'บ้านของคุณ',makeTextSprite);scene.add(home);placeHome();}
-  function placeHome(){if(!home)return;const spot=HOME_SPOTS[Math.max(0,partyUids().indexOf(myUid))%4];home.position.set(spot[0],0,spot[1]);for(const uid in peerActors){const peer=peerActors[uid],p=HOME_SPOTS[Math.max(0,partyUids().indexOf(uid))%4];peer.home.position.set(p[0],0,p[1]);}}
-  function persistHome(){state.arenaHome.letters=bag;state.arenaHome.cargo=cargo.slice();saveState();}
-  function bankCargo(){
-    if(!home||downed||!cargo.length||flatDist(player.pos,home.position)>3.3)return false;
-    const deposited=cargo.splice(0);for(const ch of deposited)bag[ch]=Math.min(999,(bag[ch]||0)+1);persistHome();
-    fieldFx.spell(home.position,'arc');feed(`🏠 ฝาก ${deposited.join(' ')} ไว้ที่บ้านแล้ว`,'gold');updateHud();checkWord();paintHome();return true;
+  function placeHome(){
+    if(!home)return;const snap=race?.snapshot;
+    const mySlot=snap?.self.slot??Math.max(0,partyUids().indexOf(myUid))%4;home.position.set(HOME_SPOTS[mySlot][0],0,HOME_SPOTS[mySlot][1]);home.scale.y=snap?.self.hp===0?.22:1;
+    raceTargets.length=0;
+    for(const uid in peerActors)peerActors[uid].home.visible=false;
+    for(const [uid,base]of Object.entries(snap?.bases||{}))if(uid!==myUid){
+      let b=vaultHomes.get(uid);if(!b){const group=activeMap?ArenaMaps.house(0xffbf6b,base.name,loadSprite,makeTextSprite):ArenaFieldVisuals.house(0xffbf6b,base.name,makeTextSprite);scene.add(group);b={vaultOwner:uid,group,hp:5000,maxHp:5000,revision:0,dead:false,col:0xffbf6b,boss:true,vel:new THREE.Vector3()};vaultHomes.set(uid,b);}
+      b.hp=base.hp;b.dead=base.hp<=0;b.revision=base.revision;b.group.position.set(HOME_SPOTS[base.slot][0],0,HOME_SPOTS[base.slot][1]);b.group.scale.y=b.dead?.22:1;raceTargets.push(b);
+    }
+    for(const [uid,b]of vaultHomes)if(!snap?.bases?.[uid]){scene.remove(b.group);disposeTree(b.group);vaultHomes.delete(uid);}
   }
-  function paintHome(){if(!home||!ui.homeHint)return;const dist=Math.round(flatDist(player.pos,home.position)),total=Object.values(bag).reduce((n,v)=>n+v,0);ui.homeHint.textContent=`${homeRoute?'กำลังกลับ · ':''}${dist<=3?'ถึงบ้านแล้ว':dist+' ม.'} · ขน ${cargo.length}/${CARGO_MAX} · คลัง ${total}`;root.querySelector('#va-home-nav').classList.toggle('routing',homeRoute);ui.cargo.textContent=cargo.join(' ');}
+
+  function persistHome(){if(race)return;state.arenaHome.letters=bag;state.arenaHome.cargo=cargo.slice();saveState();}
+  function bankCargo(){
+    if(!home||downed||!race?.ready||race.busy||flatDist(player.pos,home.position)>3.3||(!cargo.length&&(wordBusy||!canBuild()))||(cargo.length&&race.snapshot.self.bank.length>=999))return false;
+    netSend(true);race.bank();return true;
+  }
+
+  function paintHome(){if(!home||!ui.homeHint)return;const dist=Math.round(flatDist(player.pos,home.position)),total=Object.values(bag).reduce((n,v)=>n+v,0);ui.homeHint.textContent=`${homeRoute?'กำลังกลับ · ':''}${dist<=3?'ถึงบ้านแล้ว':dist+' ม.'} · ขน ${cargo.length}/${CARGO_MAX} · คลัง ${total}`;const dropButton=root.querySelector('#va-drop-letter');dropButton.disabled=!cargo.length||downed||!race?.ready||race.busy;root.querySelector('#va-home-nav').classList.toggle('routing',homeRoute);ui.cargo.textContent=cargo.join(' ');}
   const cargoScreen=new THREE.Vector3();
   function updateHome(dt,t){
-    placeHome();if(!downed&&flatDist(player.pos,home.position)<3.3){bankCargo();checkWord();if(hp<maxHp){const before=hp;hp=Math.min(maxHp,hp+dt*7);if(hp>before&&window.ArenaAudio)ArenaAudio.playHeal();if(t-lastHomePaint>200)updateHud();}}
+    placeHome();
+    if(!downed&&race?.ready&&!race.busy&&!cargo.length)for(const b of raceTargets)if(b.hp===0&&flatDist(player.pos,b.group.position)<3.3){netSend(true);race.raid(b.vaultOwner,b.revision);break;}
+    if(!downed&&flatDist(player.pos,home.position)<3.3){bankCargo();checkWord();if((race?.snapshot?.self.hp??5000)>0&&hp<maxHp){const before=hp;hp=Math.min(maxHp,hp+dt*7);if(hp>before&&window.ArenaAudio)ArenaAudio.playHeal();if(t-lastHomePaint>200)updateHud();}}
     if(t-lastHomePaint>200){lastHomePaint=t;paintHome();}
     cargoScreen.copy(player.pos);cargoScreen.y=activeMap?8.8:2.9;cargoScreen.project(camera);ui.cargo.style.transform=`translate(${(cargoScreen.x*.5+.5)*innerWidth}px,${(-cargoScreen.y*.5+.5)*innerHeight}px) translate(-50%,-50%)`;
   }
 
-  function nextWord(){
-    wordBusy=false;const done=Array.isArray(state.advDone)?state.advDone:[];
-    let pool=(typeof vocabForStudent==='function'?vocabForStudent():[]).filter(x=>x&&/^[a-z]{3,8}$/i.test(x[0])).filter(x=>!done.includes(String(x[0]).toLowerCase()));
-    if(!pool.length){state.advDone=[];pool=(typeof vocabForStudent==='function'?vocabForStudent():[]).filter(x=>x&&/^[a-z]{3,8}$/i.test(x[0]));}
-    if(!pool.length)pool=[['cat','แมว'],['dog','สุนัข'],['book','หนังสือ'],['star','ดาว']];
-    const pick=pool[Math.floor(Math.random()*pool.length)];target={en:String(pick[0]).toUpperCase(),th:String(pick[1]||'คำศัพท์')};wordNo++;
-    updateWord();feed(`📖 คำใหม่ ${target.en} = ${target.th}`,'gold');if(running&&home&&flatDist(player.pos,home.position)<3.3)checkWord();
-  }
+  function nextWord(){target={en:'…',th:'กำลังเชื่อมต่อคำร่วมกัน'};updateWord();}
+
   function canBuild(){
     if(!target)return false;const tmp={...bag};for(const ch of target.en){if(!tmp[ch])return false;tmp[ch]--;}return true;
   }
-  function checkWord(){ if(canBuild()&&!wordBusy)completeWord(); }
-  function completeWord(){
-    if(target&&target.boss)return completeBossWord();
-    wordBusy=true;for(const ch of target.en)bag[ch]--;persistHome();
-    const reward=Math.round((40+target.en.length*15+Math.min(100,energy*5))*(1+relicMods.wordReward)),word=target.en,meaning=target.th;
-    if(!Array.isArray(state.advDone))state.advDone=[];if(!state.advDone.includes(word.toLowerCase()))state.advDone.push(word.toLowerCase());
-    addCoins(reward);sessionWords++;sessionCoins+=reward;state.arenaStats.words=(state.arenaStats.words||0)+1;if(partyUids().length>1)state.arenaStats.coopWords=(state.arenaStats.coopWords||0)+1;saveState();
-    showPop(word,`${meaning} · +${fmt(reward)} 🪙`);feed(`🎉 ประกอบ ${word} สำเร็จ ได้ ${fmt(reward)} เหรียญ`,'gold');
-    ringFx(player.pos,0xffe36d,8,.65);burst(player.pos,0xffe36d,38,7);
-    updateHud();netSend(true);schedule(()=>{if(running)nextWord();},1350);
-  }
-  function completeBossWord(){
-    if(!target||!target.boss||bossWordSolved)return;wordBusy=true;bossWordSolved=true;for(const ch of target.en)bag[ch]--;persistHome();
-    const boost=Math.round(bossMax*.18);bossContribution+=boost;sessionWords++;state.arenaStats.words=(state.arenaStats.words||0)+1;if(partyUids().length>1)state.arenaStats.coopWords=(state.arenaStats.coopWords||0)+1;saveState();
-    showPop(target.en,`ทำลายเกราะคำศัพท์ · พลังทีม +${fmt(boost)}`);feed(`📖 สะกด ${target.en} สำเร็จ! บอสเสียพลังครั้งใหญ่`,'gold');ringFx(boss?boss.group.position:player.pos,0xffe36d,11,.8);if(boss)burst(boss.group.position,0xffe36d,42,7);updateHud();netSend(true);
-  }
+  function checkWord(){return bankCargo();}
 
   function buyItem(id){
+    if(typeof ArenaRelics!=='undefined'&&ArenaRelics.byId[id]?.raceDisabled){feed('ไอเท็มนี้พักใช้ตามกติกาแข่งขัน','gold');return;}
     ensureState();const it=STORE.find(x=>x.id===id);if(!it||own(id))return;
     if((state.coins||0)<it.price){feed(`เหรียญยังไม่พอซื้อ ${it.name} — ขาด ${fmt(it.price-(state.coins||0))} 🪙`,'bad');return;}
     state.coins-=it.price;state.arenaItems[id]=true;saveState();
@@ -683,6 +688,7 @@
     player.vel.x+=(x*speed-player.vel.x)*Math.min(1,dt*10);player.vel.z+=(z*speed-player.vel.z)*Math.min(1,dt*10);
     if(len<.05){player.vel.x*=Math.max(0,1-dt*7);player.vel.z*=Math.max(0,1-dt*7);}
     player.pos.x+=player.vel.x*dt;player.pos.z+=player.vel.z*dt;
+    for(const b of raceTargets)if(!b.dead){const dx=player.pos.x-b.group.position.x,dz=player.pos.z-b.group.position.z,d=Math.hypot(dx,dz);if(d<3.5){player.pos.x=b.group.position.x+(d?dx/d:1)*3.5;player.pos.z=b.group.position.z+(d?dz/d:0)*3.5;}}
     const r=Math.hypot(player.pos.x,player.pos.z);if(r>ARENA_R-1.8){player.pos.x*=((ARENA_R-1.8)/r);player.pos.z*=((ARENA_R-1.8)/r);}
     if(player.vel.lengthSq()>.12)player.facing.set(player.vel.x,0,player.vel.z).normalize();
     ArenaFieldVisuals.animate(player.spr,t,player.vel.length(),Math.atan2(player.facing.x,player.facing.z),downed,dt);player.aura.rotation.z+=dt;player.aura.material.color.setHex(downed?0xff5577:crystalCharge>=CRYSTAL_NEED?0xff79dd:0x5de8ff);player.crown.material.opacity=.7;
@@ -721,14 +727,14 @@
   }
   function removeShot(i){const s=shots[i];if(!s)return;scene.remove(s.mesh);s.mesh.geometry.dispose();s.mesh.material.dispose();shots.splice(i,1);}
   function damagePlayer(n){
-    if(downed||(home&&flatDist(player.pos,home.position)<3.3))return true;
+    if(downed||(home&&(race?.snapshot?.self.hp??5000)>0&&flatDist(player.pos,home.position)<3.3))return true;
     n*=1-relicMods.armor;
     if(shield>0){const use=Math.min(shield,n);shield-=use;n-=use;if(use>0){floatText(player.pos,`โล่ -${Math.ceil(use)}`,0x79dfff);if(window.ArenaAudio)ArenaAudio.playShield();}}
     if(n>0){const lost=Math.min(hp,n);hp=Math.max(0,hp-n);floatText(player.pos,`−${Math.ceil(lost)}`,0xff7f95);}lastHitAt=performance.now();ui.hp.animate([{opacity:1},{opacity:.5},{opacity:1}],{duration:220});haptic(28);
     const fell=hp<=0;if(fell)downPlayer();updateHud();return fell;
   }
   function downPlayer(){
-    if(downed)return;homeRoute=false;crystalCharge=0;megaUses=0;const lost=cargo.splice(0);persistHome();lost.forEach((ch,i)=>dropLetter(new THREE.Vector3(player.pos.x+Math.cos(i/6*TAU)*2,0,player.pos.z+Math.sin(i/6*TAU)*2),ch,0xffd873,{chargeable:false}));paintHome();downed=true;downUntil=performance.now()+DOWN_MS;hp=0;reviveHold=null;ui.downed.classList.add('on');
+    if(downed)return;homeRoute=false;crystalCharge=0;megaUses=0;if(race)race.drop();paintHome();downed=true;downUntil=performance.now()+DOWN_MS;hp=0;reviveHold=null;ui.downed.classList.add('on');
     for(let i=shots.length-1;i>=0;i--)if(shots[i].fromEnemy)removeShot(i);
     showPop('ล้มแล้ว!','เพื่อนยืนใกล้แล้วกดค้าง 2.2 วิ เพื่อช่วยชุบ');feed('🆘 ล้มแล้ว — คลานไปหาเพื่อนได้ และไม่เสียเหรียญ','bad');ringFx(player.pos,0xff5577,5,.65);netSend(true);
   }
@@ -752,8 +758,9 @@
   }
 
   function updateDrops(dt,t){
-    updateCrystalNodes(dt);
-    for(let i=drops.length-1;i>=0;i--){const d=drops[i];d.life-=dt;if(d.life<=0){scene.remove(d.group);disposeTree(d.group);drops.splice(i,1);continue;}d.gem.rotation.y+=dt*(activeMap?.8:2.6);if(!activeMap)d.gem.rotation.x+=dt*.8;d.group.position.y=(d.node?2.3:.65)+Math.sin(t*.004+d.phase)*.16;d.halo.rotation.z+=dt*1.8;if(!downed&&flatDist(d.group.position,player.pos)<(d.node?2.5:1.4)*(1+relicMods.pickup))collectDrop(d);}
+    // Letter lifetimes and positions are owned by the room server.
+
+    for(let i=drops.length-1;i>=0;i--){const d=drops[i];d.life-=dt;if(d.life<=0){scene.remove(d.group);disposeTree(d.group);drops.splice(i,1);continue;}d.gem.rotation.y+=dt*(activeMap?.8:2.6);if(!activeMap)d.gem.rotation.x+=dt*.8;d.group.position.y=(d.node?2.3:.65)+Math.sin(t*.004+d.phase)*.16;d.halo.rotation.z+=dt*1.8;if(!downed&&flatDist(d.group.position,player.pos)<1.4*(1+relicMods.pickup))collectDrop(d);}
   }
   function updateEffects(dt){
     for(let i=effects.length-1;i>=0;i--){const f=effects[i];f.life-=dt;
@@ -800,6 +807,8 @@
       const v=Math.max(0,Math.ceil(value)),top=Math.max(1,Math.ceil(max)),label=`${v} / ${top}`;if(node._text.textContent!==label){node._text.textContent=label;node._fill.style.width=Math.min(100,v/top*100)+'%';node.classList.toggle('low',v/top<.3);node.setAttribute('aria-label',`HP ${label}`);}
       hudPoint.copy(pos);hudPoint.y+=y;hudPoint.project(camera);node.hidden=hudPoint.z>1||hudPoint.z< -1||Math.abs(hudPoint.x)>1.08||Math.abs(hudPoint.y)>1.08;node.style.transform=`translate(${(hudPoint.x*.5+.5)*innerWidth}px,${(-hudPoint.y*.5+.5)*innerHeight}px) translate(-50%,-100%)`;
     }
+    if(home&&race?.snapshot)paint('own-vault',home.position,4.5,race.snapshot.self.hp,5000,'peer');
+    for(const b of raceTargets)paint('vault-'+b.vaultOwner,b.group.position,4.5,b.hp,5000,'enemy');
     if(player)paint(player,player.pos,2.8,hp,maxHp,'self');
     for(const b of bots)if(!b.dead)paint(b,b.group.position,4.15*b.group.scale.y,b.boss?bossHp:b.hp,b.maxHp,b.boss?'boss':'enemy');
     for(const uid in peerActors){const a=peerActors[uid],st=parseArenaStatus((peers[uid]||{}).hp);if(st)paint(a,a.group.position,3.05,st.hp,st.max,'peer');}
@@ -813,7 +822,7 @@
   }
   function showPop(big,small){if(!ui.pop)return;ui.pop.querySelector('strong').textContent=big;ui.pop.querySelector('span').textContent=small||'';ui.pop.classList.add('on');clearTimeout(ui.pop._t);ui.pop._t=schedule(()=>ui.pop.classList.remove('on'),1450);}
   function updateWord(){
-    if(!target)return;ui.wordTh.textContent=target.boss?(bossWordSolved?'✅ ทำลายเกราะคำศัพท์แล้ว · ช่วยทีมโจมตีต่อ':`${target.th} · ทุกคนช่วยกันได้`):`${target.th} · ฝากอักษรที่บ้านเพื่อประกอบคำ`;ui.wordEn.textContent=target.en;
+    if(!target)return;ui.wordTh.textContent=target.boss?(bossWordSolved?'✅ ทำลายเกราะคำศัพท์แล้ว · ช่วยทีมโจมตีต่อ':`${target.th} · ทุกคนช่วยกันได้`):`${target.th} · ${wordBusy?'จบคำแล้ว · รอคำถัดไป':'ฝากก่อนชนะ 1,000 เหรียญ'}`;ui.wordEn.textContent=target.en;
     const have={...bag};ui.wordSlots.innerHTML=Array.from(target.en).map(ch=>{const got=have[ch]>0;if(got)have[ch]--;return `<i class="${got?'got':''}">${ch}</i>`;}).join('');
   }
   function updateHud(){
@@ -832,21 +841,21 @@
   function resize(){if(!renderer||!camera)return;sceneDrawn=false;const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();if(player)cameraTick(0,true);}
 
   function resetRound(){
-    bots=[];drops=[];shots=[];effects=[];respawns=[];bag=state.arenaHome.letters;cargo=state.arenaHome.cargo.slice();homeRoute=false;recentLetters=[];energy=0;crystalCharge=0;megaUses=0;crystalLetterIndex=Math.floor(Math.random()*26);kills=0;sessionWords=0;sessionCoins=0;cooldown=Object.fromEntries(Object.keys(SKILL_CD).map(k=>[k,0]));if(elements)elements.clear();hp=maxHp;shield=maxShield;wordBusy=false;lastPetStrike=performance.now();lastHitAt=0;downed=false;downUntil=0;reviveHold=null;reviveSignal='-';reviveSeq=0;revivesGiven=0;chapter=state.arenaChapter||1;waveBase=0;bossPhase='wave';boss=null;bossEncounter='';bossMax=bossHp=bossContribution=0;bossWord='';bossWordSolved=false;bossVictoryAt=0;bossReward=0;onPeer._seen.clear();
-    player.pos.set(home.position.x+2,0,home.position.z-4);player.vel.set(0,0,0);if(petComp){petComp.group.position.set(-1.8,0,9);petComp.vel.set(0,0,0);}nextWord();for(const node of crystalNodes)spawnCrystal(node);for(let i=0;i<BOT_TARGET;i++)buildBot(chooseBotLetter(),false);updateHud();
+    bots=[];drops=[];shots=[];effects=[];respawns=[];bag={};cargo=[];homeRoute=false;recentLetters=[];energy=0;crystalCharge=0;megaUses=0;crystalLetterIndex=Math.floor(Math.random()*26);kills=0;sessionWords=0;sessionCoins=0;cooldown=Object.fromEntries(Object.keys(SKILL_CD).map(k=>[k,0]));if(elements)elements.clear();hp=maxHp;shield=maxShield;wordBusy=false;lastPetStrike=performance.now();lastHitAt=0;downed=false;downUntil=0;reviveHold=null;reviveSignal='-';reviveSeq=0;revivesGiven=0;chapter=state.arenaChapter||1;waveBase=0;bossPhase='wave';boss=null;bossEncounter='';bossMax=bossHp=bossContribution=0;bossWord='';bossWordSolved=false;bossVictoryAt=0;bossReward=0;onPeer._seen.clear();
+    player.pos.set(home.position.x+2,0,home.position.z-4);player.vel.set(0,0,0);if(petComp){petComp.group.position.set(-1.8,0,9);petComp.vel.set(0,0,0);}nextWord();for(let i=0;i<BOT_TARGET;i++)buildBot(chooseBotLetter(),false);updateHud();
   }
 
   function start(session){
     if(running)return;
     ensureState();fxLow=!!state.noAnim||(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4);
     if(typeof clearWarnToasts==='function')clearWarnToasts();if(typeof Music!=='undefined')Music.suspendBg();
-    sceneDrawn=false;createDom();if(window.ArenaAudio)ArenaAudio.start(root);initThree();resetRound();cameraTick(0,true);if(session&&Number.isFinite(session.earned))sessionCoins=Math.max(0,session.earned);updateHud();running=true;paused=!state.arenaHomeIntro;lastFrame=0;setupCoop();
+    sceneDrawn=false;createDom();if(window.ArenaAudio)ArenaAudio.start(root);initThree();race=window.ArenaRace?.create({snapshot:raceSnapshot,reset:raceReset,status:text=>{raceStatus=text;renderPartyHud();},credit:n=>{if(running){if(n)feed(`รับ ${fmt(n)} เหรียญเข้ากระเป๋าแล้ว`,'gold');updateHud();}}});raceSessionOffset=session?.earned||0;resetRound();cameraTick(0,true);if(session&&Number.isFinite(session.earned))sessionCoins=Math.max(0,session.earned);updateHud();running=true;paused=!state.arenaHomeIntro;lastFrame=0;setupCoop();
     if(!state.arenaHomeIntro)ui.intro.classList.add('on');else feed('เก็บอักษรแล้วขนกลับบ้าน · H หรือปุ่มบ้านพากลับไปฝาก','gold');
     raf=requestAnimationFrame(loop);
   }
 
   function stop(options){
-    if(!running)return;running=false;equipRequest++;paused=false;cancelAnimationFrame(raf);raf=0;pendingTimers.forEach(clearTimeout);pendingTimers.clear();persistHome();if(window.ArenaAudio)ArenaAudio.stop();if(elements){elements.clear();elements=null;}if(fieldFx){fieldFx.dispose();fieldFx=null;}listeners.splice(0).forEach(fn=>{try{fn();}catch(e){}});keys.clear();joy={x:0,z:0,id:null};basicHeld=false;
+    if(!running)return;if(race){race.close();race=null;}raceTargets=[];vaultHomes.clear();running=false;equipRequest++;paused=false;cancelAnimationFrame(raf);raf=0;pendingTimers.forEach(clearTimeout);pendingTimers.clear();if(window.ArenaAudio)ArenaAudio.stop();if(elements){elements.clear();elements=null;}if(fieldFx){fieldFx.dispose();fieldFx=null;}listeners.splice(0).forEach(fn=>{try{fn();}catch(e){}});keys.clear();joy={x:0,z:0,id:null};basicHeld=false;
     if(room){room.leave();room=null;}Object.keys(peerActors).forEach(removePeerActor);peers={};peerActors={};
     for(const s of shots){if(s.mesh.parent)scene.remove(s.mesh);disposeTree(s.mesh);}if(scene)disposeTree(scene);if(renderer){renderer.dispose();renderer.forceContextLoss&&renderer.forceContextLoss();renderer.setSize(2,2,false);}
     if(root)root.remove();vitalNodes.clear();vitalLive.clear();root=null;built=false;renderer=scene=camera=clock=null;bots=[];drops=[];shots=[];effects=[];petComp=null;player=null;home=null;crystalNodes=[];crystalCharge=0;megaUses=0;
@@ -857,8 +866,8 @@
   window.VocabArena3D={start,stop,_t:{
     map:()=>activeMap?.id,room:()=>room,camera:()=>camera,ground:()=>scene?.getObjectByName('arena-ground'),project:p=>new THREE.Vector3(p.x,p.y||0,p.z).project(camera),
     get sessionCoins(){return sessionCoins},get running(){return running},get bots(){return bots},get drops(){return drops},get bag(){return bag},get target(){return target},get cargo(){return cargo},home:()=>home,bank:bankCargo,stats:()=>({frames:renderer.info.render.frame,draws:renderer.info.render.calls,triangles:renderer.info.render.triangles,textures:renderer.info.memory.textures,fx:fieldFx.stats()}),get energy(){return energy},get crystalCharge(){return crystalCharge},get megaUses(){return megaUses},get crystalNodes(){return crystalNodes},tickDrops:updateDrops,drop:dropLetter,
-    get slots(){return spellSlots.slice()},get cooldowns(){return {...cooldown}},elementStats:()=>elements.stats(),equip:equipSpell,spellbook:toggleSpellbook,refreshRelics,relics:()=>({...relicMods,maxHp,maxShield,cargoMax:CARGO_MAX}),health:()=>({hp,shield}),hero:()=>selectedHero?.id,skillSeconds,damage:damagePlayer,cast:castSkill,kill:(i=0)=>bots[i]&&hitBot(bots[i],9999),collect:(i=0)=>drops[i]&&collectDrop(drops[i]),complete:()=>{if(target){for(const ch of target.en)bag[ch]=(bag[ch]||0)+1;checkWord();}},
-    buy:buyItem,buySpell,player:()=>player,resize,down:downPlayer,recover:()=>recoverPlayer('เพื่อนช่วยชุบ'),boss:()=>({phase:bossPhase,chapter,encounter:bossEncounter,hp:bossHp,max:bossMax,word:bossWord,contribution:bossContribution}),triggerBoss:()=>{if(bossPhase==='wave')startBossAsLeader();},wire:applyLeaderWire,peer:onPeer,gone:onPeerGone,party:()=>({leader:leaderId(),members:partyUids(),online:!!(room&&room.online)}),
+    get slots(){return spellSlots.slice()},get cooldowns(){return {...cooldown}},elementStats:()=>elements.stats(),equip:equipSpell,spellbook:toggleSpellbook,refreshRelics,relics:()=>({...relicMods,maxHp,maxShield,cargoMax:CARGO_MAX}),health:()=>({hp,shield}),hero:()=>selectedHero?.id,skillSeconds,damage:damagePlayer,cast:castSkill,kill:(i=0)=>bots[i]&&hitBot(bots[i],9999),collect:(i=0)=>drops[i]&&collectDrop(drops[i]),complete:()=>checkWord(),race:()=>race,
+    buy:buyItem,buySpell,player:()=>player,resize,down:downPlayer,recover:()=>recoverPlayer('เพื่อนช่วยชุบ'),boss:()=>({phase:bossPhase,chapter,encounter:bossEncounter,hp:bossHp,max:bossMax,word:bossWord,contribution:bossContribution}),triggerBoss:()=>{},wire:applyLeaderWire,peer:onPeer,gone:onPeerGone,party:()=>({leader:leaderId(),members:partyUids(),online:!!(room&&room.online)}),
     /* ทดสอบแยกเฟสเมื่อ WebView เครื่องใดสร้างฉากไม่ผ่าน — ไม่ทำงานเองในเกมจริง */
     stage(part){
       if(part==='dom'){ensureState();createDom();return 'dom';}

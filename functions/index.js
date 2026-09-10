@@ -26,6 +26,14 @@ const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 initializeApp({databaseURL: DB_URL});
 setGlobalOptions({region: REGION, maxInstances: 10, memory: '256MiB', timeoutSeconds: 60});
 
+let arenaRaceService;
+exports.arenaRaceV1 = onCall({maxInstances:10,timeoutSeconds:20},async request=>{
+  if(!request.auth)throw new HttpsError('unauthenticated','กรุณาเข้าสู่ระบบ Vocab World');
+  if(!arenaRaceService)arenaRaceService=require('./arena-race').createService(getDatabase(),require('./frontline-simulation')());
+  try{return await arenaRaceService(request.data,request.auth.uid);}
+  catch(error){logger.warn('Arena race request failed',{message:error.message});throw new HttpsError(/^invalid_/.test(error.message)?'invalid-argument':'unavailable',error.message);}
+});
+
 let frontlineService;
 exports.frontlineV1 = onCall({maxInstances:10,timeoutSeconds:20},async request=>{
   if(!request.auth)throw new HttpsError('unauthenticated','กรุณาเข้าสู่ระบบ Vocab World');
