@@ -5894,3 +5894,10 @@
 - test_arena_music source63+dist63ผ่าน desktop/mobile/จริงในเกม/cacheบล็อกเน็ต/loop/fallback/mute/ARC/โล่/ฮีลเต็มHPและต่อเนื่อง; grimoire209/crystals53; build9,525files619.9MiB+validator/undefined0/template0/syntax/diffผ่าน, runtime7เสียงตรงsource
 - SOUND_LICENSES.md/PROJECT_MAP.mdอัปเดต; ผู้ใช้อนุญาตdeployแล้ว เตรียมSHIP11pathsและเปิดCOMMIT_DEPLOY1ครั้ง; live2026-09-10.1246/commitc86046a6+handoff2ca230d1+pushสำเร็จ; manager/game/7เสียงตรงsource
 
+
+
+## ⏬ ย้ายเมื่อ 2026-09-10 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- test_arena_music source65+dist65ผ่าน (ไฟพื้นฐาน/ขยายไม่เล่นgenericซ้ำ, loop/cache/mute/ฮีล/โล่); แก้harnessให้หยุดเดินกลับบ้านก่อนตรวจโล่; build9,526files620.1MiB+validator/undefined0/template0/syntax/diffผ่าน
+- SOURCE: SOUND_LICENSES.md; PROJECT_MAPปรับowner; SHIP6paths เปิดCOMMIT_DEPLOY1ครั้ง ผู้ใช้อนุญาตdeploy; live2026-09-10.1247/commit9f8767b0+handoff6eca5f0d+pushสำเร็จ; live manager/game/8เสียงตรงsource และmanifest8เสียงครบ ไม่มีSFXเดิม
+
