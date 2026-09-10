@@ -7230,6 +7230,7 @@ async function loadVocabArena3d(){
   await loadScriptOnce('js/arena-field-visuals.js');
   await loadScriptOnce('js/arena-elements.js');
   await loadScriptOnce('js/arena-spell-catalog.js');
+  await loadScriptOnce('js/arena-strip.js');
   await loadScriptOnce('js/arena-grimoire.js');
   await loadScriptOnce('js/arena-relics.js');
   await loadScriptOnce('js/arena3d.js');
@@ -7284,6 +7285,7 @@ async function enterAdventure3D(){
       if(!document.getElementById('arena-heroes-css'))await new Promise((resolve,reject)=>{const link=document.createElement('link');link.id='arena-heroes-css';link.rel='stylesheet';link.href='css/arena-heroes.css';link.onload=resolve;link.onerror=()=>{link.remove();reject(new Error('Hero selection styles unavailable'));};document.head.appendChild(link);});
       await loadScriptOnce('js/arena-elements.js');
       await loadScriptOnce('js/arena-portrait.js');
+      await loadScriptOnce('js/arena-strip.js');
       await loadScriptOnce('js/arena-heroes.js');
       const hero=await ArenaHeroes.choose(async function preloadArenaScene(){await loadScriptOnce('js/vendor/three.min.js');await loadVocabArena3d();});
       if(!hero){advLoading=false;return worldEntryStopped('ยกเลิกการเลือกตัวละครก่อนเกมเริ่ม');}

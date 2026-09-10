@@ -397,3 +397,21 @@
 .va-music-track i{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#f6fcff;box-shadow:0 1px 3px #0006;transition:transform .15s}
 #va-root .va-music-toggle[aria-checked="true"] .va-music-track{background:#228a70}
 #va-root .va-music-toggle[aria-checked="true"] .va-music-track i{transform:translateX(14px)}
+
+/* Round 1398 — market-style continuous catalog strips; no vertical list scrolling. */
+#va-root .va-spell-grid.va-swipe-strip,#va-root .va-relic-panel .va-store-grid.va-swipe-strip{
+  --strip-columns:4.5;--strip-rows:2;display:grid;grid-template-columns:none;grid-auto-flow:column;
+  grid-template-rows:repeat(var(--strip-rows),minmax(0,1fr));grid-auto-columns:calc((100% - (var(--strip-columns) - 1)*7px)/var(--strip-columns));
+  gap:7px;overflow-x:auto;overflow-y:hidden;align-content:stretch;touch-action:pan-x;overscroll-behavior-x:contain;
+  scroll-snap-type:x proximity;scrollbar-width:none;cursor:grab;min-width:0;padding:2px;
+}
+.va-swipe-strip::-webkit-scrollbar{display:none}
+.va-swipe-strip>*{scroll-snap-align:start}
+.va-swipe-strip.va-dragging{scroll-snap-type:none!important;cursor:grabbing!important}
+.va-swipe-strip:focus-visible{outline:2px solid #9dedff;outline-offset:-2px}
+.va-swipe-hint{font-size:10px;font-weight:400;color:#9de4ed}
+#va-root .va-swipe-strip .va-spell-empty{grid-column:1;grid-row:1/-1;margin:auto}
+@media(min-height:501px) and (min-width:721px){#va-root .va-spell-grid.va-swipe-strip,#va-root .va-relic-panel .va-store-grid.va-swipe-strip{--strip-rows:3}}
+@media(max-width:720px){#va-root .va-spell-grid.va-swipe-strip,#va-root .va-relic-panel .va-store-grid.va-swipe-strip{--strip-columns:3.4}}
+@media(max-width:500px){#va-root .va-spell-grid.va-swipe-strip,#va-root .va-relic-panel .va-store-grid.va-swipe-strip{--strip-columns:1.8;--strip-rows:3}.va-grimoire-nav{gap:6px}.va-swipe-hint{font-size:8px}.va-grimoire-nav small{font-size:8px}}
+@media(max-height:350px){#va-root .va-spell-grid.va-swipe-strip{--strip-rows:1}}

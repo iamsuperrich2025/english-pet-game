@@ -12,6 +12,11 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1398 · Arena ปัดรายการเหมือนตลาด:** เปลี่ยนคลัง 50 relics/สมุดเวท 60 แบบ/ตัวละคร 8 ตัวเป็น native horizontal strips; ArenaStrip รองรับ mouse drag/keyboard และกัน drag กดซื้อ; ค้นหา reset ตำแหน่ง ซื้อ/เลือกเวทคง scroll; แผนที่ 3 ใบแสดงครบเดิม
+- CSS responsive 1–3 แถว ไม่มีแนวตั้งล้น; จอ 667×320 สมุดเวทใช้ 1 แถว, 812×375 ใช้ 2 แถว; ป้องกันพิมพ์ค้นหาแล้ว trigger E/B/H ของเกม; ใช้ SVG/WebP เดิม ไม่มี asset ใหม่; อัปเดต loader/PROJECT_MAP และ harness dependencies
+- ผ่าน grimoire209 + heroes32 + swipe25 + entry34 + maps82; source/dist grimoire+native touch/mouse/keyboard ผ่าน, 3 landscape viewports + hero portrait ตรวจภาพ WebP; build9,527files620.1MiB + web validator + undefined0/template0/syntax/diff ผ่าน
+- เตรียม SHIP 17 paths เฉพาะงานนี้; รอผู้ใช้ยืนยันใน COMMIT_DEPLOY (เปิดตาม workflow 1 ครั้ง); ยังไม่ยืนยัน commit/deploy/live; รายงาน/ภาพ work/arena-swipe[-dist], work/arena-grimoire[-dist], work/arena-heroes
+
 - **รอบ 1397 · ลดเสียงโล่ Arena ครึ่งหนึ่ง:** js/arena-audio.js ปรับเฉพาะ shield cue 0.55→0.275; คงเพลง/MEGA/ธาตุ/ฮีล/สายฟ้า/ไฟและไฟล์เสียงเดิมทั้งหมด
 - เพิ่ม regression วัด media volume จริง; test_arena_music 69 checks ผ่านทั้ง source/dist, build9,526files620.1MiB+validator+syntax/diff ผ่าน; เตรียม SHIP เฉพาะ 3 paths และ deploy ตามสิทธิ์ผู้ใช้เดิม
 

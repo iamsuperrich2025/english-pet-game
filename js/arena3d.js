@@ -188,6 +188,7 @@
     });
     const kd=e=>{
       if(!running) return;
+      if(e.code!=='Escape'&&(e.target.closest?.('input,select,textarea,.va-swipe-strip')||e.defaultPrevented))return;
       if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
       keys.add(e.code);
       if(e.repeat) return;
