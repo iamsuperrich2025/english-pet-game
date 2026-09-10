@@ -5910,3 +5910,35 @@
 
 - **รอบ 1394 · Arena เสียงไฟ6.mp3:** js/arena-audio.js ใช้fire cueแทนเสียงธาตุสำหรับวงเพลิง+5ท่าตระกูลไฟ; คงMEGA1/ธาตุ2/โล่3/ฮีล4/สายฟ้า5/BGM1392; ไม่แตะกติกาเกม
 - ตัดเฉพาะpaddingเงียบ 18.13s580,127B→7.00s224,906B ลด61.2%; MP3copyไม่encodeซ้ำ ตรวจ268packetSHA256ตรงsourceต่อเนื่อง; preloadหลังgesture+content-hashcache+1playerไม่ซ้อน
+
+
+## ⏬ ย้ายเมื่อ 2026-09-10 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- QA source: music67/entry34/public26/field26/heroes32/maps82/grimoire209/HomeV2 ผ่าน; screenshot ปกมือถือ/desktop ตรวจจริง, build9,526files620.1MiB + validator/public26/entry34 ในdist ผ่าน; syntax/undefined0/template0/diff ผ่าน; docs PROJECT_MAP/ARENA_FIELD อัปเดต
+- SHIP19paths/COMMIT_DEPLOY1ครั้ง ส่งตามสิทธิ์ผู้ใช้สำเร็จ; live2026-09-10.1249/code1cef9dca+handoffcbb703ca+push; ตรวจlive11filesตรงtested build (normalizeเฉพาะgenerated F1/Karthashในui.js)
+
+- **รอบ 1395 · Arena เพลงไม่เริ่ม:** reproduce browser entryมีuserActivationแต่Audio.unlocked=false และmusicOffจากล็อบบี้ทำให้SFXดัง/เพลงเงียบ; js/arena-audio.jsรับactivationตอนstart+retryในgestureทันทีแทนรอ10s
+- เพิ่ม #va-music-toggle ในarena3d.js/CSS แสดงเพลงปิด/โหลด/แตะเล่น/error และเปิดกลับด้วยtapเดียว; เคารพmuteเดิมจนผู้ใช้แตะ, saveState/syncMusicBtn, ไม่โหลดเพลงซ้ำ; ตรวจviewport812×375/1366×768ไม่มีทับHUD
+
+
+## ⏬ ย้ายเมื่อ 2026-09-10 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1398 · Arena ปัดรายการเหมือนตลาด:** เปลี่ยนคลัง 50 relics/สมุดเวท 60 แบบ/ตัวละคร 8 ตัวเป็น native horizontal strips; ArenaStrip รองรับ mouse drag/keyboard และกัน drag กดซื้อ; ค้นหา reset ตำแหน่ง ซื้อ/เลือกเวทคง scroll; แผนที่ 3 ใบแสดงครบเดิม
+- CSS responsive 1–3 แถว ไม่มีแนวตั้งล้น; จอ 667×320 สมุดเวทใช้ 1 แถว, 812×375 ใช้ 2 แถว; ป้องกันพิมพ์ค้นหาแล้ว trigger E/B/H ของเกม; ใช้ SVG/WebP เดิม ไม่มี asset ใหม่; อัปเดต loader/PROJECT_MAP และ harness dependencies
+- ผ่าน grimoire209 + heroes32 + swipe25 + entry34 + maps82; source/dist grimoire+native touch/mouse/keyboard ผ่าน, 3 landscape viewports + hero portrait ตรวจภาพ WebP; build9,527files620.1MiB + web validator + undefined0/template0/syntax/diff ผ่าน
+- เตรียม SHIP 17 paths เฉพาะงานนี้; รอผู้ใช้ยืนยันใน COMMIT_DEPLOY (เปิดตาม workflow 1 ครั้ง); ยังไม่ยืนยัน commit/deploy/live; รายงาน/ภาพ work/arena-swipe[-dist], work/arena-grimoire[-dist], work/arena-heroes
+
+- **รอบ 1397 · ลดเสียงโล่ Arena ครึ่งหนึ่ง:** js/arena-audio.js ปรับเฉพาะ shield cue 0.55→0.275; คงเพลง/MEGA/ธาตุ/ฮีล/สายฟ้า/ไฟและไฟล์เสียงเดิมทั้งหมด
+- เพิ่ม regression วัด media volume จริง; test_arena_music 69 checks ผ่านทั้ง source/dist, build9,526files620.1MiB+validator+syntax/diff ผ่าน; เตรียม SHIP เฉพาะ 3 paths และ deploy ตามสิทธิ์ผู้ใช้เดิม
+
+- **รอบ 1396 · Arena public + เพลง default-on:** แยก state.arenaMusicOff=false จาก lobby musicOff; รับ entry gesture อัตโนมัติ, optional switch แตะ/เลื่อน/keyboard ปิดได้และจำค่า; คง master mute/content-hash cache/เสียงผู้ใช้เดิม
+- เปิด Home V2/Classic/hero/map/engine ให้ผู้เล่นทั่วไป รวมผู้เล่นไม่มีสัตว์โต; คงสิทธิ์สกิล/ไอเทมและโลก private อื่น; แก้ปกที่ CSS grid บีบเหลือเส้น ใช้ fire-thumb+crystal-thumb WebP เดิม ไม่มี asset ใหม่
+
+
+## ⏬ ย้ายเมื่อ 2026-09-10 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1399 · หุ่นชิบิ GLB 10 ตัว:** สร้างจากสี/อาวุธ img/robots; ผู้ใช้ยกเลิกรุ่นอ้วนและคืนสัดส่วนก่อนหน้าแล้ว (ภาพเรนเดอร์diff0); GLB 196,656–221,472B/ตัว ไม่มี texture/PNG, 10 draws, Idle/Walk/Attack และ pivot แยก; generator+preview+manifest tools/mecha/
+- MechaModels แทน peer เดิมด้วย GLB ตาม m_01..m_10, cache/share GPU+clone limbs, fallback/retry/late-dispose; normalize หุ่นเลือก/HUD/weapon/payload ให้ตรง; MechaCombatFX กระสุนชิบิ10แบบ+muzzle/impact ใช้6 instanced batches≤12นัด; เอฟเฟกต์ฝั่งผู้ยิง ไม่เปลี่ยน rewards/heat/cadence/admission/DB rules
+- ผ่าน Khronos GLB validator0errors/0warnings; source+dist models75/FX34 (500นัด), online2windows/เปลี่ยนครบ10ตัว/re-entry/ออกห้อง/เดิน/โหลดพังแล้วretry/มือถือ1366×768,812×375,667×320; P0 style/syntax/diff + build9,540files622.1MiB/webvalidatorผ่าน; ภาพ/report work/mecha-1399[-dist-qa]
+- เตรียม SHIP เฉพาะ26paths พร้อมเปิด COMMIT_DEPLOY ตามคำสั่งผู้ใช้1ครั้ง; สถานะก่อนเปิด: ยังไม่ยืนยัน commit/deploy/live; ส่งมอบ ZIP GLB+ภาพWebPที่ Documents/Codex/2026-09-10/new-chat-2/outputs; ไม่รวม index.html/test_letter_cannon หรืองานค้างอื่น
+

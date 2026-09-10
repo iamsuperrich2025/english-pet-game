@@ -15,7 +15,7 @@
 - **รอบ 1402 · Frontline พื้นหลังเลื่อนกระตุก:** scene แยก visual pose สำหรับแก้ตำแหน่งออนไลน์/bump ด้วย exponential120ms; กล้อง/รถ/labels/chunks/แสงใช้ตำแหน่งภาพเดียวกัน; ขับปกติไม่มี delay, respawn/teleport reset, ไม่แก้ physics/network
 - ลด projectionเหลือครั้งเดียวและเขียน HUD/labelเฉพาะข้อความเปลี่ยน; fixture correction3→0.389หน่วยในเฟรมแรก, text writes60frames2,100→0; คง420draws/80,819tri/15chunks/DPRเดิม; desktopp95~17ms ไม่ใช่ผลมือถือจริง
 - ผ่าน unit63, source+fingerprinted browser/4landscape/FIRE+BOMB และ movement11; แก้ movement fixture ปิด hull ของ peerผู้สังเกตที่จอดขวางป้อม (ยังตรวจpeer sync); clean HEAD+patch build9,514files612.9MiB/validator/production isolation/syntax/diff ผ่าน
-- แก้ ship.sh ให้ตรวจพบ runtime Frontlineใต้toolsแล้วdeploy; เตรียมSHIPเฉพาะรอบ+สำรองmanifest1401ที่commitแล้ว; พร้อมเปิดCOMMIT_DEPLOY1ครั้ง รอผู้ใช้y ยังไม่ยืนยันcommit/deploy/live; หลักฐาน Documents/Codex/2026-09-10/new-chat-4/work/scroll-* และ work/frontline-{visual,movement,scroll}
+- ส่งสำเร็จ: game a1ac248e + scanner4b87f511 แก้ regexหลังreturn/arrowถูกมองเป็นrobot_() (6regressionsยังจับcallจริง); Firebase Deploy complete และ live2026-09-10.1254/Frontline200; scene/UIตรงGit-archive artifactทุกbyte+browserผ่าน; รอยต่อCRLFเท่านั้นทำให้hashต่างจากprecommit; retryต่อจากcommitเดิมตามผู้ใช้ ไม่เปิดlauncherซ้ำ
 
 - **รอบ 1401 · ภาพตลาดหุ่น Chibi 10 แบบ:** image_gen ตามภาพอ้างอิงครบสี/อาวุธ; 10 WebP ใหญ่ +10 thumbnail และฉากโชว์รูม AVIF รวม1,148,744B (เดิม PNG28,246,825B ลด95.9%); alpha/dimensions/bytes และภาพเทียบจริงผ่าน; assets img/robots/chibi-market/
 - js/ui.js ใช้ direct market art ไม่ probe PNG, lazy thumbs/ภาพใหญ่เมื่อเลือก, aria-pressed และ thumbnail fallback ของตัวเลือกหุ่น; css/lobby.css .rs-chibi ฉากฟ้า-ครีม/ข้อมูลด้านข้าง/จอเตี้ยและportrait; ราคา/ซื้อ/GLB/เกมไม่เปลี่ยน; docs/PROJECT_MAP อัปเดต
@@ -26,11 +26,6 @@
 - GLB 292,528–339,344B, 16,896–19,764tri, 8–10draws ไม่มีtexture; POSITION/NORMAL16bit + unlit energy; คงcache/share GPUและm_01..10; ท่าถือสองมือ04/08/09ลดการแกว่งแขนให้มืออยู่ใกล้ปืน; tools/mecha generator+preview+README+tests
 - ผ่าน Khronos0errors/0warnings, source/dist97รายการต่อชุด +FX34/500นัด +P0style/syntax/diff; build9,540files623.1MiB/webvalidator; ตรวจภาพหน้า/หลัง/ข้าง/เดินและเกม1366×768,812×375,667×320; undefined scannerเจอregex robot_()เดิม2จุด (false positive); reports work/mecha-1400[-dist-qa]
 - **ผู้ใช้ยังไม่ผ่านโครงรุ่น1400:** หยุดขึ้นรูปเพื่อทำวิธีเทียบภาพอย่างละเอียดก่อน; ยกเลิกSHIPที่เตรียมไว้แล้ว ยังไม่เปิดCOMMIT_DEPLOYสำหรับ1400และยังไม่deploy; Preview/GLBปัจจุบันเป็นร่างที่ต้องแก้ ไม่ใช่แบบที่ผู้ใช้ยอมรับ
-
-- **รอบ 1399 · หุ่นชิบิ GLB 10 ตัว:** สร้างจากสี/อาวุธ img/robots; ผู้ใช้ยกเลิกรุ่นอ้วนและคืนสัดส่วนก่อนหน้าแล้ว (ภาพเรนเดอร์diff0); GLB 196,656–221,472B/ตัว ไม่มี texture/PNG, 10 draws, Idle/Walk/Attack และ pivot แยก; generator+preview+manifest tools/mecha/
-- MechaModels แทน peer เดิมด้วย GLB ตาม m_01..m_10, cache/share GPU+clone limbs, fallback/retry/late-dispose; normalize หุ่นเลือก/HUD/weapon/payload ให้ตรง; MechaCombatFX กระสุนชิบิ10แบบ+muzzle/impact ใช้6 instanced batches≤12นัด; เอฟเฟกต์ฝั่งผู้ยิง ไม่เปลี่ยน rewards/heat/cadence/admission/DB rules
-- ผ่าน Khronos GLB validator0errors/0warnings; source+dist models75/FX34 (500นัด), online2windows/เปลี่ยนครบ10ตัว/re-entry/ออกห้อง/เดิน/โหลดพังแล้วretry/มือถือ1366×768,812×375,667×320; P0 style/syntax/diff + build9,540files622.1MiB/webvalidatorผ่าน; ภาพ/report work/mecha-1399[-dist-qa]
-- เตรียม SHIP เฉพาะ26paths พร้อมเปิด COMMIT_DEPLOY ตามคำสั่งผู้ใช้1ครั้ง; สถานะก่อนเปิด: ยังไม่ยืนยัน commit/deploy/live; ส่งมอบ ZIP GLB+ภาพWebPที่ Documents/Codex/2026-09-10/new-chat-2/outputs; ไม่รวม index.html/test_letter_cannon หรืองานค้างอื่น
 
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
