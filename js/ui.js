@@ -7217,6 +7217,8 @@ async function loadAdv3d(){
   await loadScriptOnce('js/hauntedhoteldirector.js'); // 🏨 Phase 3: adaptive local horror + compact shared scare intent
   await loadScriptOnce('js/hauntedhotel.js');  // 🏨 Phase 2+3: mission lifecycle + Horror Director boundary
   await loadScriptOnce('js/hauntedhotelghost.js'); // 👻 PNG-only chase + lightweight hair/lighting shader
+  await loadScriptOnce('js/mecha-combat-fx.js'); // pooled cute projectile styles
+  await loadScriptOnce('js/mecha-models.js'); // selected chibi GLBs; lazy asset loading
   await loadScriptOnce('js/adventure3d.js');
 }
 /* ============================================================

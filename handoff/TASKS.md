@@ -12,6 +12,11 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1399 · หุ่นชิบิ GLB 10 ตัว:** สร้างจากสี/อาวุธ img/robots; ผู้ใช้ยกเลิกรุ่นอ้วนและคืนสัดส่วนก่อนหน้าแล้ว (ภาพเรนเดอร์diff0); GLB 196,656–221,472B/ตัว ไม่มี texture/PNG, 10 draws, Idle/Walk/Attack และ pivot แยก; generator+preview+manifest tools/mecha/
+- MechaModels แทน peer เดิมด้วย GLB ตาม m_01..m_10, cache/share GPU+clone limbs, fallback/retry/late-dispose; normalize หุ่นเลือก/HUD/weapon/payload ให้ตรง; MechaCombatFX กระสุนชิบิ10แบบ+muzzle/impact ใช้6 instanced batches≤12นัด; เอฟเฟกต์ฝั่งผู้ยิง ไม่เปลี่ยน rewards/heat/cadence/admission/DB rules
+- ผ่าน Khronos GLB validator0errors/0warnings; source+dist models75/FX34 (500นัด), online2windows/เปลี่ยนครบ10ตัว/re-entry/ออกห้อง/เดิน/โหลดพังแล้วretry/มือถือ1366×768,812×375,667×320; P0 style/syntax/diff + build9,540files622.1MiB/webvalidatorผ่าน; ภาพ/report work/mecha-1399[-dist-qa]
+- เตรียม SHIP เฉพาะ26paths พร้อมเปิด COMMIT_DEPLOY ตามคำสั่งผู้ใช้1ครั้ง; สถานะก่อนเปิด: ยังไม่ยืนยัน commit/deploy/live; ส่งมอบ ZIP GLB+ภาพWebPที่ Documents/Codex/2026-09-10/new-chat-2/outputs; ไม่รวม index.html/test_letter_cannon หรืองานค้างอื่น
+
 - **รอบ 1398 · Arena ปัดรายการเหมือนตลาด:** เปลี่ยนคลัง 50 relics/สมุดเวท 60 แบบ/ตัวละคร 8 ตัวเป็น native horizontal strips; ArenaStrip รองรับ mouse drag/keyboard และกัน drag กดซื้อ; ค้นหา reset ตำแหน่ง ซื้อ/เลือกเวทคง scroll; แผนที่ 3 ใบแสดงครบเดิม
 - CSS responsive 1–3 แถว ไม่มีแนวตั้งล้น; จอ 667×320 สมุดเวทใช้ 1 แถว, 812×375 ใช้ 2 แถว; ป้องกันพิมพ์ค้นหาแล้ว trigger E/B/H ของเกม; ใช้ SVG/WebP เดิม ไม่มี asset ใหม่; อัปเดต loader/PROJECT_MAP และ harness dependencies
 - ผ่าน grimoire209 + heroes32 + swipe25 + entry34 + maps82; source/dist grimoire+native touch/mouse/keyboard ผ่าน, 3 landscape viewports + hero portrait ตรวจภาพ WebP; build9,527files620.1MiB + web validator + undefined0/template0/syntax/diff ผ่าน

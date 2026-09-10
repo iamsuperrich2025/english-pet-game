@@ -267,7 +267,9 @@ async function sourceFiles() {
 
 
 
-    for (const rel of [...PUBLIC_ROOT_FILES, ...REQUIRED_STATIC_FILES, 'js/app-update.js', 'js/account-deletion.js', 'js/specialmission.js', 'css/account-deletion.css',
+    for (const rel of [...PUBLIC_ROOT_FILES, ...REQUIRED_STATIC_FILES,
+      'js/mecha-models.js', 'js/mecha-combat-fx.js', 'img/models/mecha/manifest.json',
+      ...Array.from({length:10},(_,i)=>'img/models/mecha/robot_'+String(i+1).padStart(2,'0')+'.glb'), 'js/app-update.js', 'js/account-deletion.js', 'js/specialmission.js', 'css/account-deletion.css',
 
 
 

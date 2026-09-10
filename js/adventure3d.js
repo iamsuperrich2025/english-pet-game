@@ -368,6 +368,8 @@ const MECHA_WEAPONS={
 };
 let mSpeed=0, mBobPhase=0, mStepDn=false, mLastFire=0;
 let mFwdBtn=0, mStrafeBtn=0, mFireHeld=false;
+let mechaFX=null; // bounded projectile renderer, disposed on exit
+let mechaRobotId='robot_01'; // selected once on entry; HUD, weapon and network agree
 let aliens=[], mechaWeapon=MECHA_WEAPONS.robot_01, mechaTracers=[], mFocusAlien=null;
 let mhUI=null, mHeat=0, mHudAt=0;   // 🤖 รอบ 224: กรอบ HUD ห้องนักบิน (ภาพตามหุ่น + ค่าตัวเลขเรียลไทม์ + ความร้อนปืน)
 let mOverheat=false, mHitAt=0, mLowHp=false;   // 🤖 รอบ 225: ปืนโอเวอร์ฮีต + iframe โดนตี + สถานะพลังงานต่ำ
@@ -967,6 +969,7 @@ function makeSoftChibiWalkPeer(name,av,uid,grade){
   return makeWalkPeerWithFigure(name,av,uid,grade,makeSoftCuboidChibiFigure);
 }
 function disposeBlockPeer(g){
+  g.userData.mechaDisposed=true; // cancel late GLB attachment after leave/skin change
   g.traverse(o=>{ if(o.userData&&o.userData.own){ if(o.material.map)o.material.map.dispose(); o.material.dispose(); } });
 }
 /* 🤖 รอบ 941: เพื่อนในโลกหุ่นยนต์ = หุ่นรบ 3D ตัวที่เขาเลือก (av='m_01'..'m_10' จาก state.mechaRobot ฝั่งส่ง)
@@ -1005,15 +1008,18 @@ function makeMechaFigure(rid){
   return g;                                   // หันหน้า -Z (convention เดียวกับหุ่นบล็อก)
 }
 function makeMechaPeer(name, av, uid, grade){
-  const mm=/^m_(\d\d)$/.exec(av||'');
-  const rid=(mm&&MECHA_WEAPONS['robot_'+mm[1]])?'robot_'+mm[1]:'robot_01';
+  const rid=MechaModels.fromAvatar(av);
   const g=new THREE.Group();
   const fig=makeMechaFigure(rid); g.add(fig);
   const label=blkNameSprite(name,grade);
   label.position.set(0,5.35,0);
   label.scale.multiplyScalar(1.7);            // หุ่นสูง 4.7m — ป้ายต้องใหญ่ขึ้นถึงอ่านออกจากระยะไกล
   g.add(label);
-  g.userData.limbs=fig.userData.limbs;        // ให้ tickPeers แกว่งเดินตรงๆ
+  g.userData.limbs=fig.userData.limbs;        // fallback animates while the GLB loads
+  MechaModels.attach(g,rid,fig).then(ok=>{
+    if(!ok&&!g.userData.mechaDisposed&&running&&mode==='mecha')
+      showBanner('🤖 โหลดภาพหุ่น 3D ไม่สำเร็จ แสดงหุ่นสำรองชั่วคราว');
+  });
   return g;
 }
 
@@ -4526,7 +4532,7 @@ function sendPos(force){
     // 🧱 โลกขับรถ+โลกเดินส่งรหัสตัวบล็อก · 🚁 รอบ 355: โลกเฮลิฯ ยัดเฟสเดินเท้าลง av แทน ('h_w/r/g/p' ≤8 ผ่าน rules เดิม ไม่ต้อง publish — makePeerSprite ฝั่งรับไม่เคยใช้ av ในโหมดบินอยู่แล้ว)
     av:M.heli?('h_'+(hPhase==='pilot'?(pilotShip==='blue'?'b':'p')                      // 🔵 รอบ 392: ขับลำฟ้า='h_b' เพื่อนเห็นลำฟ้า
       :({walk:'w',lift:'w',ride:'r',wing:'g'}[hPhase]||'p')))
-      :(mode==='mecha'?('m_'+String(state.mechaRobot||'robot_01').slice(-2))             // 🤖 รอบ 941: 'm_01'..'m_10' (≤8 ผ่าน rules เดิม) — เพื่อนเห็นหุ่นตัวที่เราเลือก
+      :(mode==='mecha'?MechaModels.avatar(mechaRobotId)             // 🤖 รอบ 941: 'm_01'..'m_10' (≤8 ผ่าน rules เดิม) — เพื่อนเห็นหุ่นตัวที่เราเลือก
       :(((M.drive||mode==='adv'||mode==='haunt')&&state.blockAv)
         ?state.blockAv+(M.drive?carAvCode():'')                                          // 🚙 รอบ 393: 'blk3c07' — เพื่อนเห็นโมเดลรถสีตรงคันเรา
         :(state.playerAvatar||''))),
@@ -12683,9 +12689,7 @@ function mechaTracer(wx,wy,wz,hit){
   const from=camera.position.clone().addScaledVector(dir,1.4); from.y-=.5;
   const to = hit ? new THREE.Vector3(wx,wy,wz)
     : camera.position.clone().addScaledVector(dir,60);
-  const geo=new THREE.BufferGeometry().setFromPoints([from,to]);
-  const line=new THREE.Line(geo,new THREE.LineBasicMaterial({color:mechaWeapon.color,transparent:true}));
-  scene.add(line); mechaTracers.push({line,until:performance.now()+80});
+  if(mechaFX)mechaFX.fire(mechaRobotId,from,to,performance.now(),hit);
 }
 function mechaFire(now){
   if(mOverheat){ if(now-mLastFire>140){ mLastFire=now; sfx.wrong(); } return; }   // 🔥 รอบ 225: ปืนโอเวอร์ฮีต — ยิงไม่ออก (คลิกได้เสียงปฏิเสธ) ต้องรอให้เย็น
@@ -12801,6 +12805,7 @@ function tickMecha(dt,now){
   tickAlienShots(dt,now);                            // 👾 รอบ 226: กระสุนเอเลี่ยน (โดน→เสียหาย+กะพริบแดง)
   tickPowerups(dt,now);                              // ❄️❤️ รอบ 226: ของเก็บ (ลดร้อน/ฟื้นพลัง) + ตัวจับเวลาสปอว์น
   updateMechaHud(dt,now);                            // 🤖 รอบ 224: อัปเดตค่าตัวเลข HUD (ทิศ/ระยะ/เป้า/เหรียญ/ความร้อน)
+  if(mechaFX)mechaFX.tick(now);
   // tracer + particle ระเบิด
   for(let i=mechaTracers.length-1;i>=0;i--){
     const tr=mechaTracers[i];
@@ -12869,6 +12874,7 @@ function savePhoto(){
    เข้า/ออกโลก
    ============================================================ */
 function clearEntities(){
+  if(mechaFX){mechaFX.dispose();mechaFX=null;}
   while(letters.length) removeLetter(0);
   letterRespawns=[];                                // 🔠⏱️ รอบ 847: ออกโลก/เปลี่ยนด่าน = ล้างคิวรอเกิดใหม่ (กันตัวอักษรโลกเก่าโผล่ในโลกใหม่)
   /* 🧟 รอบ 689: ผีโรงแรมเป็น Group ของโมเดล 3D (ไม่มี .material ของตัวเอง) — โลกอื่นยังเป็น Sprite
@@ -13078,7 +13084,11 @@ function start(md,opt){
     mCombo=0; mShieldUntil=0;   // 🔥🛡️ รอบ 227: รีเซ็ตคอมโบ + โล่
     mComboMax=0; mBossKills=0; mShotsFired=0; mShotsHit=0;   // 📊 รอบ 228: รีเซ็ตสถิติรอบ
     mWave=0; mWaveKilled=0; mWaveSpawned=0; mWaveBoss=false; mWaveBossDone=false; mWaveSpd=1; mBossSpeciesIdx=0;   // 🌊 รอบ 229: รีเซ็ต Endless Wave
-    const rid=(state.mechaRobot&&MECHA_WEAPONS[state.mechaRobot])?state.mechaRobot:((state.robots&&state.robots[0])||'robot_01');
+    const rid=MechaModels.resolveSelection(state.mechaRobot,state.robots);
+    mechaRobotId=rid;
+    if(mechaFX)mechaFX.dispose();
+    mechaFX=MechaCombatFX.create(scene);
+    MechaModels.prepare(rid).catch(()=>{}); // warm only the selected model
     mechaWeapon=MECHA_WEAPONS[rid]||MECHA_WEAPONS.robot_01;
     setMechaHudSkin(rid);                          // 🤖 รอบ 224: กรอบ HUD + สีตามหุ่น
     camera.position.set(0,MECHA_EYE,26); yaw=0; pitch=-0.06;
@@ -13208,6 +13218,7 @@ function exitWorld(){
   rainUntil=0; stopRain();                         // 🌧️ ฝนไม่ค้างข้ามโลก
   if(photoEl) photoEl.classList.remove('on');      // 📸 ปิดการ์ดพรีวิวภาพที่ค้าง
   netLeave();
+  if(mechaFX){mechaFX.dispose();mechaFX=null;}
   HSound.stopAll();
   // 🏨 รอบ 684: ออกจากโรงแรม = ปิดไฟฉาย + คืนไฟทั้งตึก + ซ่อน HUD เฉพาะโลกนี้
   if(mode==='haunt'){
@@ -13274,6 +13285,7 @@ window.Adventure3D={
     get letters(){return letters}, get monsters(){return monsters}, get words(){return words},
     get inv(){return inv}, get peers(){return peers}, get hp(){return hp}, get mode(){return mode},
     get running(){return running}, set running(v){running=v},
+    mechaModels:{makePeer:makeMechaPeer,dispose:disposeBlockPeer,get selected(){return mechaRobotId;},get effects(){return mechaFX;},fire:mechaFire,tracer:mechaTracer},
     playerCharacterStyle:{
       standard:'soft-cuboid-chibi-3d', legacyMode:'adv',
       grantQaTickets:()=>{ state.driveTicket=true; state.hauntTicket=true; state.soccerTicket=true; },

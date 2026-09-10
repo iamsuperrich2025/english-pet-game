@@ -46,6 +46,14 @@ PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.Adventure3D`, `start`, `exitWorld`, `
 DEPENDENCIES: `THREE`, state/UI globals, `NetRoom`, optional `GLTFLoader`, world data.
 NOTES: Very large multi-mode file. Route through the mode banners and symbol index; never read it wholesale.
 
+SYSTEM: Mecha selected online robot models
+PURPOSE: Render each remote player as the chibi GLB matching their selected robot, preserving first-person cockpit controls.
+PRIMARY FILE: `js/mecha-models.js`, `js/mecha-combat-fx.js`
+RELATED FILES: `js/adventure3d.js`, `js/ui.js`, `img/models/mecha/`, `tools/mecha/build_robots.py`, `tools/mecha/preview.html`, `tools/mecha/test_models.cjs`, `tools/mecha/test_fx.cjs`, `tools/mecha/fx-preview.html`
+PUBLIC ENTRY POINTS / KEY SYMBOLS: `MechaModels.prepare/attach/fromAvatar/avatar/resolveSelection`, `makeMechaPeer`, `mechaRobotId`
+DEPENDENCIES: THREE, lazy GLTFLoader, existing NetRoom m_01..m_10 avatar payload; no new network fields/rules.
+NOTES: Ten original texture-free Soft Cuboid Chibi GLBs with Idle/Walk/Attack clips, forward -Z, feet y=0, height 4.61m. Each cached template shares geometry/materials across peers; four cloned pivots use existing distance-driven walking. Disposed/replaced peers ignore late loads; failures retain the old colored fallback and can retry on re-entry. Mecha's own view remains the selected cockpit. GLBs keep portable PBR; MechaModels bridges their colors to the engine's existing linear-output Phong pipeline. MechaCombatFX owns ten cosmetic projectile/muzzle/impact styles: six instanced batches, max 12 active shots; no new network fields, rewards, cadence or heat changes. FX are local to the shooter, and disposed on exit. Preview: tools/mecha/preview.html and fx-preview.html.
+
 SYSTEM: Hotel building and interior
 PURPOSE: Builds the five-floor haunted hotel geometry, rooms, stairs/lift, lights, floor visibility, surfaces, and solid collision data.
 PRIMARY FILE: `js/hotel3d.js`
