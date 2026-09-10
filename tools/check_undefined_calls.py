@@ -56,6 +56,9 @@ BUILTINS = {
 
 REGEX_PREV = set("(,=:[!&|?{};+-*%~^\n\t ")   # ตัวที่มาก่อน / แล้วแปลว่าเป็น regex literal ไม่ใช่หาร
 
+# These tokens expect an expression, so a following slash starts a regex literal.
+REGEX_KEYWORDS = {"return", "throw", "yield", "case", "typeof", "void", "delete", "instanceof", "in", "of", "await", "=>"}
+
 def strip_code(src: str) -> str:
     """ตัด comment / string / regex literal ทิ้ง (คงจำนวนบรรทัดไว้เท่าเดิม เพื่อรายงานเลขบรรทัดถูก)
        ⚠️ regex literal ต้องตัดด้วย ไม่งั้นเครื่องหมาย ' หรือ " ข้างในจะถูกอ่านเป็นสตริง
@@ -65,7 +68,7 @@ def strip_code(src: str) -> str:
     while i < n:
         c = src[i]
         nxt = src[i + 1] if i + 1 < n else ""
-        if c == "/" and nxt not in "/*" and (last_sig == "" or last_sig in REGEX_PREV):
+        if c == "/" and nxt not in "/*" and (last_sig == "" or last_sig in REGEX_PREV or last_sig in REGEX_KEYWORDS):
             j, ok = i + 1, False
             while j < n and src[j] != "\n":
                 if src[j] == "\\":
@@ -105,6 +108,7 @@ def strip_code(src: str) -> str:
                 j += 1
             out.append("\n" * src.count("\n", i, j))
             i = j
+            last_sig = quote
         elif c == "`":
             # template literal: เนื้อความทิ้ง แต่ "โค้ดใน ${...} ต้องเก็บไว้" (โค้ดเกมนี้เรียกฟังก์ชันใน ${} เยอะมาก)
             # และต้องรองรับ template ซ้อน template ด้วย ไม่งั้นตัวสแกนหลงกลืนโค้ดจริงเป็นสตริงยาว
@@ -132,7 +136,7 @@ def strip_code(src: str) -> str:
                         # `${url.replace(/'/g,'%27')}` — parser เดิมเห็น ' ใน regex เป็น string
                         # แล้วกลืนโค้ดหลัง template ไปไกล ทำให้ฟ้องฟังก์ชันที่มีนิยามจริงว่า undefined
                         if ch == "/" and k + 1 < n and src[k + 1] not in "/*" \
-                                and (expr_last_sig == "" or expr_last_sig in REGEX_PREV):
+                                and (expr_last_sig == "" or expr_last_sig in REGEX_PREV or expr_last_sig in REGEX_KEYWORDS):
                             q, ok = k + 1, False
                             while q < n and src[q] != "\n":
                                 if src[q] == "\\":
@@ -165,12 +169,20 @@ def strip_code(src: str) -> str:
                                 k += 1
                             expr_last_sig = q
                             continue
+                        if ch.isalpha() or ch in "_$":
+                            end = k + 1
+                            while end < n and (src[end].isalnum() or src[end] in "_$"):
+                                end += 1
+                            word = src[k:end]
+                            expr_last_sig = word if word in REGEX_KEYWORDS and expr_last_sig != "." else word[-1]
+                            k = end
+                            continue
                         if ch == "{":
                             depth += 1
                         elif ch == "}":
                             depth -= 1
                         if not ch.isspace():
-                            expr_last_sig = ch
+                            expr_last_sig = "=>" if ch == ">" and expr_last_sig == "=" else ch
                         k += 1
                     out.append(strip_code(src[j + 2:k - 1]))   # โค้ดข้างใน ${} เก็บไว้สแกนต่อ
                     out.append(";")
@@ -179,10 +191,18 @@ def strip_code(src: str) -> str:
                 j += 1
             i = j
             last_sig = "`"
+        elif c.isalpha() or c in "_$":
+            j = i + 1
+            while j < n and (src[j].isalnum() or src[j] in "_$"):
+                j += 1
+            word = src[i:j]
+            out.append(word)
+            last_sig = word if word in REGEX_KEYWORDS and last_sig != "." else word[-1]
+            i = j
         else:
             out.append(c)
             if not c.isspace():
-                last_sig = c
+                last_sig = "=>" if c == ">" and last_sig == "=" else c
             i += 1
     return "".join(out)
 
