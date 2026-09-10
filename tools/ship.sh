@@ -176,7 +176,7 @@ fi
 
 # ── 4) เดาออปชัน: แตะไฟล์ shell → --sw · แตะแต่เอกสาร → --no-deploy ─────
 OPTS=(); KIND="deploy ขึ้นเว็บจริง"
-if ! printf '%s\n' "${FILES[@]}" | grep -qE '^(functions/|js/|css/|.*\.html$|sw\.js$|manifest|index)'; then
+if ! printf '%s\n' "${FILES[@]}" | grep -qE '^(functions/|js/|css/|tools/frontline-v1/(frontline(-[a-z]+)?\.(js|css)$|assets/)|.*\.html$|sw\.js$|manifest|index)'; then
   OPTS+=(--no-deploy); KIND="ไม่ deploy (แตะแต่เอกสาร/เครื่องมือ)"
 else
   OPTS+=(--sw "${MSG#*: }")

@@ -12,6 +12,11 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1402 · Frontline พื้นหลังเลื่อนกระตุก:** scene แยก visual pose สำหรับแก้ตำแหน่งออนไลน์/bump ด้วย exponential120ms; กล้อง/รถ/labels/chunks/แสงใช้ตำแหน่งภาพเดียวกัน; ขับปกติไม่มี delay, respawn/teleport reset, ไม่แก้ physics/network
+- ลด projectionเหลือครั้งเดียวและเขียน HUD/labelเฉพาะข้อความเปลี่ยน; fixture correction3→0.389หน่วยในเฟรมแรก, text writes60frames2,100→0; คง420draws/80,819tri/15chunks/DPRเดิม; desktopp95~17ms ไม่ใช่ผลมือถือจริง
+- ผ่าน unit63, source+fingerprinted browser/4landscape/FIRE+BOMB และ movement11; แก้ movement fixture ปิด hull ของ peerผู้สังเกตที่จอดขวางป้อม (ยังตรวจpeer sync); clean HEAD+patch build9,514files612.9MiB/validator/production isolation/syntax/diff ผ่าน
+- แก้ ship.sh ให้ตรวจพบ runtime Frontlineใต้toolsแล้วdeploy; เตรียมSHIPเฉพาะรอบ+สำรองmanifest1401ที่commitแล้ว; พร้อมเปิดCOMMIT_DEPLOY1ครั้ง รอผู้ใช้y ยังไม่ยืนยันcommit/deploy/live; หลักฐาน Documents/Codex/2026-09-10/new-chat-4/work/scroll-* และ work/frontline-{visual,movement,scroll}
+
 - **รอบ 1401 · ภาพตลาดหุ่น Chibi 10 แบบ:** image_gen ตามภาพอ้างอิงครบสี/อาวุธ; 10 WebP ใหญ่ +10 thumbnail และฉากโชว์รูม AVIF รวม1,148,744B (เดิม PNG28,246,825B ลด95.9%); alpha/dimensions/bytes และภาพเทียบจริงผ่าน; assets img/robots/chibi-market/
 - js/ui.js ใช้ direct market art ไม่ probe PNG, lazy thumbs/ภาพใหญ่เมื่อเลือก, aria-pressed และ thumbnail fallback ของตัวเลือกหุ่น; css/lobby.css .rs-chibi ฉากฟ้า-ครีม/ข้อมูลด้านข้าง/จอเตี้ยและportrait; ราคา/ซื้อ/GLB/เกมไม่เปลี่ยน; docs/PROJECT_MAP อัปเดต
 - ผ่าน syntax/diff, source+dist 10 selections/purchase ids/owned state และ4viewports; หน้าเกมจริงsource/dist/clean-HEAD-distครบ10ตัว+dialogซื้อ/0pageerror/0legacyRobotPNG;812×375 showroom y49.94–313.94/ข้อมูลไม่ล้น; clean build9,514files612.9MiB+validatorผ่าน
@@ -27,16 +32,6 @@
 - ผ่าน Khronos GLB validator0errors/0warnings; source+dist models75/FX34 (500นัด), online2windows/เปลี่ยนครบ10ตัว/re-entry/ออกห้อง/เดิน/โหลดพังแล้วretry/มือถือ1366×768,812×375,667×320; P0 style/syntax/diff + build9,540files622.1MiB/webvalidatorผ่าน; ภาพ/report work/mecha-1399[-dist-qa]
 - เตรียม SHIP เฉพาะ26paths พร้อมเปิด COMMIT_DEPLOY ตามคำสั่งผู้ใช้1ครั้ง; สถานะก่อนเปิด: ยังไม่ยืนยัน commit/deploy/live; ส่งมอบ ZIP GLB+ภาพWebPที่ Documents/Codex/2026-09-10/new-chat-2/outputs; ไม่รวม index.html/test_letter_cannon หรืองานค้างอื่น
 
-- **รอบ 1398 · Arena ปัดรายการเหมือนตลาด:** เปลี่ยนคลัง 50 relics/สมุดเวท 60 แบบ/ตัวละคร 8 ตัวเป็น native horizontal strips; ArenaStrip รองรับ mouse drag/keyboard และกัน drag กดซื้อ; ค้นหา reset ตำแหน่ง ซื้อ/เลือกเวทคง scroll; แผนที่ 3 ใบแสดงครบเดิม
-- CSS responsive 1–3 แถว ไม่มีแนวตั้งล้น; จอ 667×320 สมุดเวทใช้ 1 แถว, 812×375 ใช้ 2 แถว; ป้องกันพิมพ์ค้นหาแล้ว trigger E/B/H ของเกม; ใช้ SVG/WebP เดิม ไม่มี asset ใหม่; อัปเดต loader/PROJECT_MAP และ harness dependencies
-- ผ่าน grimoire209 + heroes32 + swipe25 + entry34 + maps82; source/dist grimoire+native touch/mouse/keyboard ผ่าน, 3 landscape viewports + hero portrait ตรวจภาพ WebP; build9,527files620.1MiB + web validator + undefined0/template0/syntax/diff ผ่าน
-- เตรียม SHIP 17 paths เฉพาะงานนี้; รอผู้ใช้ยืนยันใน COMMIT_DEPLOY (เปิดตาม workflow 1 ครั้ง); ยังไม่ยืนยัน commit/deploy/live; รายงาน/ภาพ work/arena-swipe[-dist], work/arena-grimoire[-dist], work/arena-heroes
-
-- **รอบ 1397 · ลดเสียงโล่ Arena ครึ่งหนึ่ง:** js/arena-audio.js ปรับเฉพาะ shield cue 0.55→0.275; คงเพลง/MEGA/ธาตุ/ฮีล/สายฟ้า/ไฟและไฟล์เสียงเดิมทั้งหมด
-- เพิ่ม regression วัด media volume จริง; test_arena_music 69 checks ผ่านทั้ง source/dist, build9,526files620.1MiB+validator+syntax/diff ผ่าน; เตรียม SHIP เฉพาะ 3 paths และ deploy ตามสิทธิ์ผู้ใช้เดิม
-
-- **รอบ 1396 · Arena public + เพลง default-on:** แยก state.arenaMusicOff=false จาก lobby musicOff; รับ entry gesture อัตโนมัติ, optional switch แตะ/เลื่อน/keyboard ปิดได้และจำค่า; คง master mute/content-hash cache/เสียงผู้ใช้เดิม
-- เปิด Home V2/Classic/hero/map/engine ให้ผู้เล่นทั่วไป รวมผู้เล่นไม่มีสัตว์โต; คงสิทธิ์สกิล/ไอเทมและโลก private อื่น; แก้ปกที่ CSS grid บีบเหลือเส้น ใช้ fire-thumb+crystal-thumb WebP เดิม ไม่มี asset ใหม่
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน

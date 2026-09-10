@@ -4,6 +4,7 @@
   const F=window.Frontline;
   F.makeUI=function(){
     const root=document.getElementById('battle'),q=id=>document.getElementById(id);
+    function text(id,value){const el=q(id);if(el.textContent!==value)el.textContent=value;}
     let lastWord='',lastRoster='',lastMotion='',messageAt=0,victoryUntil=0;
     q('fl-victory').hidden=true;
     const message=text=>{q('fl-message').textContent=text;messageAt=performance.now();};
@@ -64,18 +65,18 @@
             const icon=F.icon('tank');icon.classList.add('fl-rival-icon');row.append(icon,name,carry,bank,hp);return row;
           }));
         }
-        q('fl-hp').textContent=p&&p.hp>0?'HP '+Math.ceil(p.hp):'REPAIRING…';
-        q('fl-party').textContent=Object.keys(room.players||{}).length+'/4';
-        q('fl-coins').textContent=F.sessionCoins().toLocaleString();
-        q('fl-drive').textContent=motion==='tank'?'BUMP · PUSH':motion==='edge'?'EDGE · TURN':motion==='base'?'BASE LOCKED':input.auto===1?'FORWARD':input.auto===-1?'REVERSE':'STOPPED';
+        text('fl-hp',p&&p.hp>0?'HP '+Math.ceil(p.hp):'REPAIRING…');
+        text('fl-party',Object.keys(room.players||{}).length+'/4');
+        text('fl-coins',F.sessionCoins().toLocaleString());
+        text('fl-drive',motion==='tank'?'BUMP · PUSH':motion==='edge'?'EDGE · TURN':motion==='base'?'BASE LOCKED':input.auto===1?'FORWARD':input.auto===-1?'REVERSE':'STOPPED');
         if(motion!==lastMotion){
           lastMotion=motion;
           if(motion==='edge')message('ถึงขอบสนามแล้ว · เลี้ยวหรือถอยกลับ');
           if(motion==='base')message('ป้อมคู่แข่งยังปิดอยู่ · อ้อมหรือยิงทำลายก่อน');
         }
-        q('fl-speed-name').textContent=F.C.speedNames[input.speedLevel];
-        if(!motion&&performance.now()-messageAt>3200)q('fl-message').textContent=carried?
-          (unneeded?'Not needed? Tap DROP to leave '+carried+'.':'Carry '+carried+' home. A hit will make you drop it!'):'Ram a letter to carry it back to your base.';
+        text('fl-speed-name',F.C.speedNames[input.speedLevel]);
+        if(!motion&&performance.now()-messageAt>3200)text('fl-message',carried?
+          (unneeded?'Not needed? Tap DROP to leave '+carried+'.':'Carry '+carried+' home. A hit will make you drop it!'):'Ram a letter to carry it back to your base.');
       }
     };
   };

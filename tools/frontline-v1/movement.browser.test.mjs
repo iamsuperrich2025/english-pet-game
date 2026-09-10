@@ -72,7 +72,8 @@ try{
   });
   for(const page of [phone,peer]){await page.locator('#fl-join').click();await until(async()=>(await state(page)).metrics?.tankModelReady,'joined');}
   const s=await state(phone),config=await phone.evaluate(()=>FRONTLINE_DEV);owner=s.id;roomPath=config.namespace+'/'+config.token+'/rooms/'+code;
-  const frozen={};for(const [key,p] of Object.entries(s.room.players))if(p.bot){frozen['players/'+key+'/hp']=0;frozen['players/'+key+'/respawnAt']=Date.now()+300000;}
+  // The peer observes movement only; disable its hull as well as bots so it cannot block the vault-crossing fixture.
+  const frozen={};for(const [key,p] of Object.entries(s.room.players))if(key!==owner){frozen['players/'+key+'/hp']=0;frozen['players/'+key+'/respawnAt']=Date.now()+300000;}
   for(const key of Object.keys(s.room.guards)){frozen['guards/'+key+'/hp']=0;frozen['guards/'+key+'/respawnAt']=Date.now()+300000;}
   for(const key of Object.keys(s.room.letters)){frozen['letters/'+key+'/x']=75;frozen['letters/'+key+'/z']=75;}await admin('PATCH','',frozen);
   await phone.locator('#fl-speed').evaluate(el=>{el.value='1';el.dispatchEvent(new Event('input',{bubbles:true}));});

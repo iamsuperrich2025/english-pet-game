@@ -2,6 +2,24 @@
 (function () {
   'use strict';
   const F=window.Frontline,T=window.THREE;
+  // Reconcile only the rendered pose. Movement, collision and network state stay authoritative.
+  F.makeRenderPose=function(){
+    let source=null,lastX=0,lastZ=0,lastBump=0,offsetX=0,offsetZ=0;
+    const view={};
+    return function(local,dt){
+      const distance=Math.hypot(local.x-lastX,local.z-lastZ),bump=local.bumpSeq||0;
+      const reset=source!==local||distance>12||dt>.2;
+      if(reset){offsetX=offsetZ=0;}
+      else if(bump!==lastBump||distance>F.C.speeds[2]*Math.max(0,dt)*1.5+.1){
+        offsetX+=lastX-local.x;offsetZ+=lastZ-local.z;
+      }
+      const decay=Math.exp(-Math.max(0,dt)/.12);offsetX*=decay;offsetZ*=decay;
+      if(Math.hypot(offsetX,offsetZ)<.0001)offsetX=offsetZ=0;
+      source=local;lastX=local.x;lastZ=local.z;lastBump=bump;
+      Object.assign(view,local);view.x+=offsetX;view.z+=offsetZ;
+      return view;
+    };
+  };
   F.makeScene=function(canvas,labels,sound=()=>{}){
     const renderer=new T.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'low-power'});
     renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));
@@ -12,7 +30,9 @@
     const camera=new T.OrthographicCamera(-16,16,16,-16,.1,130);
     const shapes=F.makeShapes(),battlefield=F.buildMap(scene,shapes);
     const tanks=new Map(),pickups=new Map(),bases=new Map(),bombActors=new Map(),seen=new Map(),seenBomb=new Map();
-    const projected=new T.Vector3(),look=new T.Vector3();
+    const projected=new T.Vector3(),look=new T.Vector3(),renderPose=F.makeRenderPose();
+    let display=null;
+    function text(el,value){if(el.textContent!==value)el.textContent=value;}
     const fx=F.makeEffects(scene,sound);
     let width=1,height=1;
     function label(className){const el=document.createElement('span');el.className=className;labels.appendChild(el);return el;}
@@ -31,19 +51,19 @@
       el.hidden=!visible;if(visible)el.style.transform='translate('+((projected.x+1)*width/2)+'px,'+((1-projected.y)*height/2)+'px) translate(-50%,-50%)';
     }
     function render(room,local,id,dt,now,serverNow=Date.now()){
-      battlefield.update(local.x,local.z-3);
+      display=renderPose(local,dt);
+      battlefield.update(display.x,display.z-3);
       const players=room.players||{},actors={...(room.guards||{}),...players};
       for(const [key,actor] of tanks)if(!actors[key]){scene.remove(actor.mesh);actor.label.remove();actor.health.element.remove();tanks.delete(key);seen.delete(key);}
       for(const [key,p] of Object.entries(actors)){
         if(!tanks.has(key)){const mesh=shapes.tank(p.slot),tag=label('fl-carried-letter'),health=F.makeHealthBar(labels,key);
           scene.add(mesh);mesh.position.set(p.x,0,p.z);tanks.set(key,{mesh,label:tag,health});}
-        const actor=tanks.get(key),mesh=actor.mesh,pose=key===id?local:p,smoothing=key===id?1:Math.min(1,dt*12);
+        const actor=tanks.get(key),mesh=actor.mesh,pose=key===id?display:p,smoothing=key===id?1:Math.min(1,dt*12);
         mesh.position.x+=(pose.x-mesh.position.x)*smoothing;mesh.position.z+=(pose.z-mesh.position.z)*smoothing;
         mesh.rotation.y+=F.wrap(-pose.hull-mesh.rotation.y)*smoothing;
         mesh.userData.turret.rotation.y=-(pose.turret-pose.hull);if(mesh.userData.setDirection)mesh.userData.setDirection(pose.hull);mesh.visible=p.hp>0;
-        actor.label.textContent=p.carried||'';actor.label.hidden=!p.carried||p.hp<=0;
+        text(actor.label,p.carried||'');actor.label.hidden=!p.carried||p.hp<=0;
         actor.health.update(p);
-        if(p.carried&&p.hp>0)project(actor.label,mesh.position.x,2.8,mesh.position.z);
         const event=room.events&&room.events[key];
         if(event&&seen.get(key)!==event.id){seen.set(key,event.id);if(serverNow-event.at<5000)fx.shell(event,now,serverNow);}
       }
@@ -52,9 +72,9 @@
       }
       for(const [key,item] of Object.entries(room.letters||{})){
         if(!pickups.has(key)){const mesh=shapes.letter(),tag=label('fl-letter');scene.add(mesh);pickups.set(key,{mesh,label:tag});}
-        const actor=pickups.get(key);actor.mesh.position.set(item.x,0,item.z);actor.label.textContent=item.letter;
+        const actor=pickups.get(key);actor.mesh.position.set(item.x,0,item.z);text(actor.label,item.letter);
         actor.label.classList.toggle('needed',room.word.target.includes(item.letter));
-        actor.label.classList.toggle('drop',key[0]==='d');project(actor.label,item.x,1.75,item.z);
+        actor.label.classList.toggle('drop',key[0]==='d');
       }
       for(const [key,actor] of bases)if(!room.bases||!room.bases[key]){
         scene.remove(actor.mesh);actor.label.remove();bases.delete(key);
@@ -65,8 +85,7 @@
         actor.mesh.position.set(base.x,0,base.z);
         actor.mesh.userData.damageParts.forEach(part=>part.visible=base.hp>0);
         actor.label.classList.toggle('open',base.hp<=0);
-        actor.label.textContent='P'+(base.slot+1)+(p&&p.bot?' BOT':'')+' BASE · '+(base.hp>0?'HP '+base.hp:'OPEN');
-        project(actor.label,base.x,2.2,base.z-3.35);
+        text(actor.label,'P'+(base.slot+1)+(p&&p.bot?' BOT':'')+' BASE · '+(base.hp>0?'HP '+base.hp:'OPEN'));
       }
       for(const [key,actor] of bombActors)if(!room.bombs||!room.bombs[key]){
         scene.remove(actor.mesh);actor.label.remove();bombActors.delete(key);seenBomb.delete(key);
@@ -86,10 +105,10 @@
           const remaining=Math.max(0,bomb.explodeAt-serverNow),pulse=1+Math.max(0,.13*Math.sin(remaining*.025));
           actor.mesh.userData.body.scale.setScalar(pulse);
           actor.mesh.userData.warning.scale.setScalar(F.C.bombRadius*(1-remaining/F.C.bombFuse*.15));
-          actor.label.textContent=(remaining/1000).toFixed(1)+'s';
+          text(actor.label,(remaining/1000).toFixed(1)+'s');
         }
       }
-      camera.position.set(local.x,34,local.z+12);look.set(local.x,0,local.z-3);camera.lookAt(look);camera.updateMatrixWorld();
+      camera.position.set(display.x,34,display.z+12);look.set(display.x,0,display.z-3);camera.lookAt(look);camera.updateMatrixWorld();
       /* Reproject after the camera update so labels stay attached during chunk streaming. */
       for(const [key,actor] of tanks){
         const p=actors[key];if(!p||p.hp<=0)continue;
@@ -99,9 +118,9 @@
       for(const [key,actor] of pickups){const item=room.letters[key];if(item)project(actor.label,item.x,1.75,item.z);}
       for(const [key,actor] of bases){const base=room.bases[key];if(base)project(actor.label,base.x,2.2,base.z-3.35);}
       for(const [key,actor] of bombActors){const b=room.bombs[key];if(b&&!b.explodedAt)project(actor.label,b.x,2.3,b.z);}
-      lighting.update(local,now);fx.frame(now,local);renderer.render(scene,camera);
+      lighting.update(display,now);fx.frame(now,display);renderer.render(scene,camera);
     }
-    return{render,feedback:fx.muzzle,metrics(){return{calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,
+    return{render,feedback(pose,now){fx.muzzle(display?{...pose,x:display.x,z:display.z}:pose,now);},metrics(){return{calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,
       geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,dpr:renderer.getPixelRatio(),
       viewWidth:camera.right-camera.left,viewHeight:camera.top-camera.bottom,cameraElevation:Math.atan2(34,15)*180/Math.PI,
       chunks:battlefield.count,chunkCenter:battlefield.center,...fx.metrics(),pickups:pickups.size,bases:bases.size,bombs:bombActors.size,healthBars:tanks.size,tankModelReady:shapes.tankModelReady};},
