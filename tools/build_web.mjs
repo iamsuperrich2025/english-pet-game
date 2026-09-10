@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { verifyAssetlinks } from './assetlinks.mjs';
 import { packageFrontline } from './frontline-v1/package-production.mjs';
 
 
@@ -1416,7 +1417,9 @@ async function writeAssetManifest(build, sourcePaths = []) {
 
 
 
-async function main() {
+async function main() {
+  // Fail before replacing output if any previously approved certificate is lost.
+  await verifyAssetlinks(ROOT);
 
 
 
@@ -1638,6 +1641,7 @@ async function main() {
 
 
 
+  await verifyAssetlinks(ROOT, OUT);
   const manifest = await writeAssetManifest(build, files);
 
 

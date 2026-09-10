@@ -1,4 +1,5 @@
 import { promises as fs } from 'node:fs';
+import { verifyAssetlinks } from './assetlinks.mjs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -46,7 +47,11 @@ const index = await requireFile('index.html');
 const classic = await requireFile('index_classic.html');
 const deletion = await requireFile('delete-account.html');
 const privacy = await requireFile('privacy.html');
-await requireFile('.well-known/assetlinks.json');
+try {
+  await verifyAssetlinks(ROOT, DIST);
+} catch (error) {
+  failures.push(`assetlinks validation failed: ${error.message}`);
+}
 try {
   const engine = await fs.stat(path.join(DIST, 'sound/racing/engineSound.mp3'));
   if (engine.size < 100000) failures.push('F1 engine audio asset is unexpectedly small');
