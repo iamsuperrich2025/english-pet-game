@@ -62,7 +62,7 @@
   }
   const mega=createEffect({file:'mega-5583f203fe74a126.mp3',hash:'5583f203fe74a126'},.55);
   const element=createEffect({file:'element-91011ad1b87d230d.mp3',hash:'91011ad1b87d230d'},.55);
-  const shield=createEffect({file:'shield-2a738b9421347bc6.mp3',hash:'2a738b9421347bc6'},.55);
+  const shield=createEffect({file:'shield-2a738b9421347bc6.mp3',hash:'2a738b9421347bc6'},.275);
   const heal=createEffect({file:'heal-f5beb28f8a0c7708.mp3',hash:'f5beb28f8a0c7708'},.55,1800);
   const lightning=createEffect({file:'lightning-261c63b74d97a82f.mp3',hash:'261c63b74d97a82f'},.55);
   const fire=createEffect({file:'fire-a6fea31058694941.mp3',hash:'a6fea31058694941'},.55);

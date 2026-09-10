@@ -37,6 +37,7 @@ const server=http.createServer((req,res)=>{let p=new URL(req.url,'http://localho
   for(const cue of ['element','shield','heal']){
     await page.evaluate(cue=>{state.musicOff=true;ArenaAudio[cue==='element'?'playElement':cue==='shield'?'playShield':'playHeal']();},cue);
     await page.waitForFunction(cue=>ArenaAudio.stats()[cue].played===1,cue);
+    if(cue==='shield')ok('shield plays at half the previous effect volume',await page.evaluate(()=>media.at(-1).volume===.275));
     ok(cue+' plays independently of music mute',await page.evaluate(cue=>ArenaAudio.stats()[cue].playing,cue));
     await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'));});
     ok(cue+' immediately stops on hidden tab',await page.evaluate(cue=>!ArenaAudio.stats()[cue].playing,cue));

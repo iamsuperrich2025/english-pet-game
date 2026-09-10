@@ -12,6 +12,9 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1397 · ลดเสียงโล่ Arena ครึ่งหนึ่ง:** js/arena-audio.js ปรับเฉพาะ shield cue 0.55→0.275; คงเพลง/MEGA/ธาตุ/ฮีล/สายฟ้า/ไฟและไฟล์เสียงเดิมทั้งหมด
+- เพิ่ม regression วัด media volume จริง; test_arena_music 69 checks ผ่านทั้ง source/dist, build9,526files620.1MiB+validator+syntax/diff ผ่าน; เตรียม SHIP เฉพาะ 3 paths และ deploy ตามสิทธิ์ผู้ใช้เดิม
+
 - **รอบ 1396 · Arena public + เพลง default-on:** แยก state.arenaMusicOff=false จาก lobby musicOff; รับ entry gesture อัตโนมัติ, optional switch แตะ/เลื่อน/keyboard ปิดได้และจำค่า; คง master mute/content-hash cache/เสียงผู้ใช้เดิม
 - เปิด Home V2/Classic/hero/map/engine ให้ผู้เล่นทั่วไป รวมผู้เล่นไม่มีสัตว์โต; คงสิทธิ์สกิล/ไอเทมและโลก private อื่น; แก้ปกที่ CSS grid บีบเหลือเส้น ใช้ fire-thumb+crystal-thumb WebP เดิม ไม่มี asset ใหม่
 - QA source: music67/entry34/public26/field26/heroes32/maps82/grimoire209/HomeV2 ผ่าน; screenshot ปกมือถือ/desktop ตรวจจริง, build9,526files620.1MiB + validator/public26/entry34 ในdist ผ่าน; syntax/undefined0/template0/diff ผ่าน; docs PROJECT_MAP/ARENA_FIELD อัปเดต
