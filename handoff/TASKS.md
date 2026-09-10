@@ -27,11 +27,6 @@
 - ผ่าน syntax/diff, source+dist 10 selections/purchase ids/owned state และ4viewports; หน้าเกมจริงsource/dist/clean-HEAD-distครบ10ตัว+dialogซื้อ/0pageerror/0legacyRobotPNG;812×375 showroom y49.94–313.94/ข้อมูลไม่ล้น; clean build9,514files612.9MiB+validatorผ่าน
 - เตรียมSHIP26pathsและ COMMIT_DEPLOY พร้อม VW_DEPLOY_FORCE_REBUILD=1 เพื่อdeployจากHEADเฉพาะไฟล์ที่commit ไม่ใช้distปนGLBร่าง1400; เปิดโปรแกรม1ครั้งตามworkflowแล้วรอผู้ใช้ยืนยัน; ยังไม่ยืนยันcommit/deploy/live; outputs Documents/Codex/2026-09-10/new-chat-3/outputs
 
-- **รอบ 1400 · ปรับหุ่น10ตัวตามภาพชิบิใหม่:** ปั้นหมวก/หน้าดำ/ตารี/เกราะมน/ขาสั้น พร้อมสีตาและแกนกลางแยก; ปืนคู่/จรวด12หัว/สไนเปอร์/หมัด/ไฟ/โล่จานจักรข้างเดียว/แกตลิง/ไรเฟิล/เกล็ดน้ำแข็งครบ; เป็นแบบปั้นใกล้ภาพ ไม่ใช่สำเนาตรงทุกจุด ด้านหลังออกแบบเพิ่ม
-- GLB 292,528–339,344B, 16,896–19,764tri, 8–10draws ไม่มีtexture; POSITION/NORMAL16bit + unlit energy; คงcache/share GPUและm_01..10; ท่าถือสองมือ04/08/09ลดการแกว่งแขนให้มืออยู่ใกล้ปืน; tools/mecha generator+preview+README+tests
-- ผ่าน Khronos0errors/0warnings, source/dist97รายการต่อชุด +FX34/500นัด +P0style/syntax/diff; build9,540files623.1MiB/webvalidator; ตรวจภาพหน้า/หลัง/ข้าง/เดินและเกม1366×768,812×375,667×320; undefined scannerเจอregex robot_()เดิม2จุด (false positive); reports work/mecha-1400[-dist-qa]
-- **ผู้ใช้ยังไม่ผ่านโครงรุ่น1400:** หยุดขึ้นรูปเพื่อทำวิธีเทียบภาพอย่างละเอียดก่อน; ยกเลิกSHIPที่เตรียมไว้แล้ว ยังไม่เปิดCOMMIT_DEPLOYสำหรับ1400และยังไม่deploy; Preview/GLBปัจจุบันเป็นร่างที่ต้องแก้ ไม่ใช่แบบที่ผู้ใช้ยอมรับ
-
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
