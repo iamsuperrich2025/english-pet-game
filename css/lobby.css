@@ -6237,3 +6237,43 @@ body #screen-picmatch.screen.active .pm-grid{width:100%;}
   .mkt-pet-price{padding:3px 4px;font-size:9.5px;}
   .mkt-pet-short{display:none;}
 }
+
+/* Round 1401: illustrated chibi market; isolated from other showrooms. */
+.rs-chibi{gap:8px;}
+.rs-chibi .rs-stage{display:grid;grid-template-columns:minmax(0,1fr) minmax(190px,26%);background:#edf8fd;border-color:#a1d5e9;border-radius:22px;box-shadow:0 8px 24px #326b9020;}
+.rs-chibi .rs-big{height:clamp(190px,44vh,370px);min-height:0;max-height:none;padding:0;background:#ceeafa url('../img/robots/chibi-market/showroom.avif') center/100% 100% no-repeat;}
+.rs-chibi .rs-big-img{position:absolute;bottom:23%;height:72%;width:85%;max-height:none;max-width:none;object-fit:contain;animation:none;filter:drop-shadow(0 6px 5px #234b6d30);}
+.rs-chibi .rs-info{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;padding:18px 14px;border:0;border-left:1px solid #a1d5e9;background:linear-gradient(150deg,#fffdf5,#e3f5ff);}
+.rs-chibi .rs-info .rs-name{color:#173a5e;font-size:clamp(15px,1.6vw,21px);line-height:1.3;}
+.rs-chibi .rs-info .rs-weap{color:#315c7a!important;font-size:13px;margin:0;}
+.rs-chibi .rs-info .rs-meta{gap:5px;margin:2px 0;}
+.rs-chibi .rs-info .rs-price{color:#976000;font-size:19px;}
+.rs-chibi .rs-info .sold-badge{color:#63532b;background:#f3e9c5;}
+.rs-chibi .rs-buy{background:linear-gradient(#21b595,#087c72);box-shadow:0 3px 0 #075d59;border-radius:14px;padding:10px 20px;}
+.rs-chibi .rs-buy.own{background:#627c8d;box-shadow:none;}
+.rs-chibi .rs-list.strip-x{--rs-row:clamp(102px,19vh,148px);grid-template-rows:var(--rs-row);grid-auto-columns:clamp(90px,10vw,132px);}
+.rs-chibi .rs-thumb{background:linear-gradient(#fffef9,#e4f4fc);border-color:#acd2e3;border-radius:16px;}
+.rs-chibi .rs-thumb.active{border-color:#238faa;box-shadow:inset 0 0 0 1px #238faa,0 2px 8px #147c9d30;}
+.rs-chibi .rs-thumb:focus-visible{outline:3px solid #126896;outline-offset:2px;}
+.rs-chibi .rs-thumb-pic img{width:100%;height:100%;object-fit:contain;}
+.rs-chibi .rs-thumb-price{color:#805307;}
+@media(max-height:520px){
+ .rs-chibi .rs-big{height:clamp(134px,42vh,210px);}
+ .rs-chibi .rs-info{gap:3px;padding:6px 8px;}
+ .rs-chibi .rs-info .rs-name{font-size:14px;line-height:1.2;}
+ .rs-chibi .rs-info .rs-weap{font-size:11px;}
+ .rs-chibi .rs-info .sold-badge{font-size:10px;padding:2px 5px;}
+ .rs-chibi .rs-info .rs-price{font-size:16px;}
+ .rs-chibi .rs-buy{padding:7px 14px;font-size:13px;}
+ .rs-chibi .rs-list.strip-x{--rs-row:clamp(78px,22vh,105px);padding-top:4px;padding-bottom:4px;}
+}
+@media(max-width:540px) and (orientation:portrait){
+ .rs-chibi .rs-stage{grid-template-columns:1fr;}
+ .rs-chibi .rs-big{height:clamp(220px,37vh,300px);}
+ .rs-chibi .rs-info{border-left:0;border-top:1px solid #a1d5e9;gap:4px;padding:10px;}
+}
+
+.rs-chibi .rs-list.strip-x{background:#cce6f2;border-color:#a1c9da;}
+@media(max-height:520px){.rs-chibi .rs-big-img{height:76%;}}
+@media(max-height:350px){.rs-chibi .rs-info{gap:2px;padding:3px 8px;}.rs-chibi{gap:4px;}}
+@media(max-height:350px){.rs-chibi .rs-list.strip-x{--rs-row:70px;}}

@@ -28,6 +28,13 @@ PUBLIC ENTRY POINTS / KEY SYMBOLS: `showScreen`, `loadScriptOnce`, `loadAdv3d`, 
 DEPENDENCIES: `state`, ticket/health rules, `THREE`, world globals.
 NOTES: Inspect only the relevant loader/entry zone in `ui.js`.
 
+SYSTEM: Robot market showroom artwork
+PURPOSE: Show ten reference-matched chibi robot portraits in the market with a shared illustrated display room.
+PRIMARY FILE: `js/ui.js` (`robotShopImg`, `renderRobotShop`, `rsShowBig`, `rsInit`)
+RELATED FILES: `css/lobby.css` (`.rs-chibi`), `img/robots/chibi-market/manifest.json`, `img/robots/chibi-market/`
+DEPENDENCIES: Existing ROBOTS catalog, buyRobot flow and strip controls; no new gameplay/network state.
+NOTES: Separate 720px-height WebP portraits and 240px-height lazy thumbnails; opaque AVIF backdrop. Direct market paths bypass old PNG probing. robotImg retains existing resolved images with a lightweight chibi thumbnail fallback for owned-robot selection. Does not change GLBs or cockpit assets. Scoped two-column landscape layout, stacked portrait, aria-pressed selection; no animated texture masks.
+
 ## 3D engine, scenes, worlds, and buildings
 
 SYSTEM: Vocab City scene
@@ -142,14 +149,14 @@ PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.LetterCannon`, `open`, `close`
 DEPENDENCIES: `vocabForStudent`, shared state/rewards/audio, Canvas 2D.
 NOTES: Canvas 2D solo gameplay with drag/WASD free flight, animated tail, a procedurally scrolling battlefield, Tracer/Heavy/Piercer rounds, homing missiles, layered ballistic SFX, streak powers, retained coin rewards, touch-only portrait lock/fullscreen lifecycle, and no WebGL lifecycle.
 
-SYSTEM: Frontline 1944 V1 isolated development world
+SYSTEM: Frontline 1944 public game and isolated development preview
 ADDITIONAL MODULES: `tools/frontline-v1/frontline-lobby.js` (numeric overflow rooms), `frontline-commands.js` (host input reducer), `preview-admission.mjs` (local conditional seat admission), `frontline-effects.js` (pooled toy fireworks), `frontline-audio.js` (synthesized cues). Target/Thai data comes from `js/data/vocab.js`, the same source as ShootWord. Inputs use `frontline_v1_dev/<session>/inputs/<room>/<seat>`; only the seat owner writes its mailbox and the elected host writes room simulation state.
 PURPOSE: Competitive four-seat word raid with vacant-seat bots, two neutral anti-collusion guards, A-Z ram pickups, private destructible vaults, projectile/PvP combat, timed bombs, and winner-only central coin rewards.
 PRIMARY FILE: `tools/frontline-v1/frontline-main.js`
 RELATED FILES: `tools/frontline-v1/frontline-{config,input,tank,combat,bombs,letters,bases,words,bots,guards,room,network,economy,shapes,map,scene,ui}.js`, `tools/frontline-v1/assets/tank-cute.glb`, `tools/frontline-v1/build_tank_glb.py`, `frontline.css`, `index.html`, `preview.mjs`, `preview-proxy.mjs`, `database.rules.json`, `README.md`, `js/vendor/GLTFLoader.js`
-PUBLIC ENTRY POINTS / KEY SYMBOLS: Local-only `/__dev/frontline` via `node tools/frontline-v1/preview.mjs`; `window.Frontline`, `admit`, `drive`, `commitFire`, `placeBomb`, `tickLetters`, `creditReward`, `connect`.
-DEPENDENCIES: Existing Three.js and shared items/homes/thaitime/state; Firebase RTDB compat SDK with demo emulator only.
-NOTES: Entire directory remains under production-excluded `tools/`; no public shell/menu/world registration. Browsers use one LAN port (19444); mobile clients force HTTP long-poll while desktop may use WebSocket, and the restricted gateway keeps RTDB on loopback 19445. Demo namespace `frontline_v1_dev/<preview-session>/rooms/<CODE>`, four fixed seats with bot substitution plus two non-seat guards. Central `addCoins`/`saveState` is unchanged and uses a preview-only save key. The field recycles 15 procedural chunks; all tanks share one 129,852-byte texture-free cute GLB and rotate continuously. Tests: `frontline.test.mjs`, `browser.test.mjs`, `check-production.mjs`. No legacy Frontline code reused and no production deploy.
+PUBLIC ENTRY POINTS / KEY SYMBOLS: Public `/frontline/index.html` via `package-production.mjs`; `makeRenderPose` in `frontline-scene.js`; isolated `/__dev/frontline` via `node tools/frontline-v1/preview.mjs`; `window.Frontline`, `admit`, `drive`, `commitFire`, `placeBomb`, `tickLetters`, `creditReward`, `connect`.
+DEPENDENCIES: Existing Three.js and shared state/economy; public Auth/callable adapters, or isolated preview RTDB emulator.
+NOTES: Source lives under `tools/`; `package-production.mjs` explicitly publishes runtime with live Auth/network/economy adapters. Dev gateways and tests remain excluded. `makeRenderPose` smooths only visual server/bump corrections; normal driving remains immediate, and camera/terrain/tank/labels share the displayed position. Stable HUD/label text avoids repeated writes; projection runs once after camera update. Scroll regressions: `frontline-scroll.test.mjs`, `scroll.browser.test.mjs`. Browsers use one LAN port (19444); mobile clients force HTTP long-poll while desktop may use WebSocket, and the restricted gateway keeps RTDB on loopback 19445. Demo namespace `frontline_v1_dev/<preview-session>/rooms/<CODE>`, four fixed seats with bot substitution plus two non-seat guards. Central `addCoins`/`saveState` is unchanged and uses a preview-only save key. The field recycles 15 procedural chunks; all tanks share one 129,852-byte texture-free cute GLB and rotate continuously. Tests: `frontline.test.mjs`, `browser.test.mjs`, `check-production.mjs`. No legacy Frontline code reused; production uses server-owned `frontline_v1_live/v1` and the local preview retains its separate namespace.
 
 ## Player, camera, collision, animation, and NPCs
 

@@ -1,0 +1,354 @@
+{
+  "generator": "built-in image_gen",
+  "fullHeight": 720,
+  "thumbMaxHeight": 240,
+  "assets": [
+    {
+      "id": "robot_01",
+      "file": "robot_01.webp",
+      "dimensions": [
+        524,
+        720
+      ],
+      "bytes": 90738,
+      "sourceBytes": 1988680,
+      "candidates": [
+        {
+          "file": "robot_01-q82.webp",
+          "bytes": 90738,
+          "psnr": 33.13
+        },
+        {
+          "file": "robot_01-q90.webp",
+          "bytes": 111730,
+          "psnr": 34.02
+        },
+        {
+          "file": "robot_01-q70.avif",
+          "bytes": 68527,
+          "psnr": 37.94
+        },
+        {
+          "file": "robot_01-q80.avif",
+          "bytes": 86392,
+          "psnr": 39.79
+        }
+      ]
+    },
+    {
+      "id": "robot_02",
+      "file": "robot_02.webp",
+      "dimensions": [
+        598,
+        720
+      ],
+      "bytes": 103664,
+      "sourceBytes": 1565205,
+      "candidates": [
+        {
+          "file": "robot_02-q82.webp",
+          "bytes": 103664,
+          "psnr": 32.81
+        },
+        {
+          "file": "robot_02-q90.webp",
+          "bytes": 128640,
+          "psnr": 33.59
+        },
+        {
+          "file": "robot_02-q70.avif",
+          "bytes": 76396,
+          "psnr": 37.37
+        },
+        {
+          "file": "robot_02-q80.avif",
+          "bytes": 96174,
+          "psnr": 39.35
+        }
+      ]
+    },
+    {
+      "id": "robot_03",
+      "file": "robot_03.webp",
+      "dimensions": [
+        515,
+        720
+      ],
+      "bytes": 86856,
+      "sourceBytes": 1457013,
+      "candidates": [
+        {
+          "file": "robot_03-q82.webp",
+          "bytes": 86856,
+          "psnr": 35.57
+        },
+        {
+          "file": "robot_03-q90.webp",
+          "bytes": 106122,
+          "psnr": 36.8
+        },
+        {
+          "file": "robot_03-q70.avif",
+          "bytes": 58329,
+          "psnr": 38.73
+        },
+        {
+          "file": "robot_03-q80.avif",
+          "bytes": 73529,
+          "psnr": 40.61
+        }
+      ]
+    },
+    {
+      "id": "robot_04",
+      "file": "robot_04.webp",
+      "dimensions": [
+        519,
+        720
+      ],
+      "bytes": 80418,
+      "sourceBytes": 1334222,
+      "candidates": [
+        {
+          "file": "robot_04-q82.webp",
+          "bytes": 80418,
+          "psnr": 32.62
+        },
+        {
+          "file": "robot_04-q90.webp",
+          "bytes": 99288,
+          "psnr": 33.32
+        },
+        {
+          "file": "robot_04-q70.avif",
+          "bytes": 60716,
+          "psnr": 37.1
+        },
+        {
+          "file": "robot_04-q80.avif",
+          "bytes": 77216,
+          "psnr": 39.26
+        }
+      ]
+    },
+    {
+      "id": "robot_05",
+      "file": "robot_05.webp",
+      "dimensions": [
+        559,
+        720
+      ],
+      "bytes": 85320,
+      "sourceBytes": 1555946,
+      "candidates": [
+        {
+          "file": "robot_05-q82.webp",
+          "bytes": 85320,
+          "psnr": 33.5
+        },
+        {
+          "file": "robot_05-q90.webp",
+          "bytes": 105780,
+          "psnr": 35.08
+        },
+        {
+          "file": "robot_05-q70.avif",
+          "bytes": 66072,
+          "psnr": 38.18
+        },
+        {
+          "file": "robot_05-q80.avif",
+          "bytes": 82966,
+          "psnr": 40.04
+        }
+      ]
+    },
+    {
+      "id": "robot_06",
+      "file": "robot_06.webp",
+      "dimensions": [
+        571,
+        720
+      ],
+      "bytes": 94646,
+      "sourceBytes": 1494447,
+      "candidates": [
+        {
+          "file": "robot_06-q82.webp",
+          "bytes": 94646,
+          "psnr": 33.08
+        },
+        {
+          "file": "robot_06-q90.webp",
+          "bytes": 115690,
+          "psnr": 33.85
+        },
+        {
+          "file": "robot_06-q70.avif",
+          "bytes": 71466,
+          "psnr": 37.58
+        },
+        {
+          "file": "robot_06-q80.avif",
+          "bytes": 90543,
+          "psnr": 39.49
+        }
+      ]
+    },
+    {
+      "id": "robot_07",
+      "file": "robot_07.webp",
+      "dimensions": [
+        563,
+        720
+      ],
+      "bytes": 80204,
+      "sourceBytes": 1731940,
+      "candidates": [
+        {
+          "file": "robot_07-q82.webp",
+          "bytes": 80204,
+          "psnr": 37.32
+        },
+        {
+          "file": "robot_07-q90.webp",
+          "bytes": 100824,
+          "psnr": 38.93
+        },
+        {
+          "file": "robot_07-q70.avif",
+          "bytes": 58224,
+          "psnr": 39.79
+        },
+        {
+          "file": "robot_07-q80.avif",
+          "bytes": 73338,
+          "psnr": 41.58
+        }
+      ]
+    },
+    {
+      "id": "robot_08",
+      "file": "robot_08.webp",
+      "dimensions": [
+        461,
+        720
+      ],
+      "bytes": 78534,
+      "sourceBytes": 1440975,
+      "candidates": [
+        {
+          "file": "robot_08-q82.webp",
+          "bytes": 78534,
+          "psnr": 31.73
+        },
+        {
+          "file": "robot_08-q90.webp",
+          "bytes": 97802,
+          "psnr": 32.38
+        },
+        {
+          "file": "robot_08-q70.avif",
+          "bytes": 60625,
+          "psnr": 36.42
+        },
+        {
+          "file": "robot_08-q80.avif",
+          "bytes": 76664,
+          "psnr": 38.45
+        }
+      ]
+    },
+    {
+      "id": "robot_09",
+      "file": "robot_09.webp",
+      "dimensions": [
+        514,
+        720
+      ],
+      "bytes": 82598,
+      "sourceBytes": 1471244,
+      "candidates": [
+        {
+          "file": "robot_09-q82.webp",
+          "bytes": 82598,
+          "psnr": 33.65
+        },
+        {
+          "file": "robot_09-q90.webp",
+          "bytes": 102198,
+          "psnr": 34.65
+        },
+        {
+          "file": "robot_09-q70.avif",
+          "bytes": 63082,
+          "psnr": 37.79
+        },
+        {
+          "file": "robot_09-q80.avif",
+          "bytes": 79249,
+          "psnr": 39.66
+        }
+      ]
+    },
+    {
+      "id": "robot_10",
+      "file": "robot_10.webp",
+      "dimensions": [
+        513,
+        720
+      ],
+      "bytes": 92370,
+      "sourceBytes": 1517067,
+      "candidates": [
+        {
+          "file": "robot_10-q82.webp",
+          "bytes": 92370,
+          "psnr": 33.47
+        },
+        {
+          "file": "robot_10-q90.webp",
+          "bytes": 115732,
+          "psnr": 34.47
+        },
+        {
+          "file": "robot_10-q70.avif",
+          "bytes": 70063,
+          "psnr": 37.37
+        },
+        {
+          "file": "robot_10-q80.avif",
+          "bytes": 89094,
+          "psnr": 39.33
+        }
+      ]
+    },
+    {
+      "id": "showroom",
+      "file": "showroom.avif",
+      "dimensions": [
+        1440,
+        960
+      ],
+      "bytes": 59402,
+      "sourceBytes": 1749184,
+      "candidates": [
+        {
+          "file": "showroom-q65.avif",
+          "bytes": 59402,
+          "psnr": 41.78
+        },
+        {
+          "file": "showroom-q75.avif",
+          "bytes": 76932,
+          "psnr": 42.89
+        },
+        {
+          "file": "showroom-q88.webp",
+          "bytes": 88262,
+          "psnr": 39.4
+        }
+      ]
+    }
+  ]
+}

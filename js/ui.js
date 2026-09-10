@@ -8835,26 +8835,26 @@ function csInit(){
 
 /* 🤖 หุ่นยนต์นักรบ (หมวดยานพาหนะ) — โชว์รูม: thumb ซ้าย (ราคา+ยอดขาย) · จอใหญ่ขวา (ไฟฟ้าไล่ตัว premium)
    ไม่แตะ = วนโชว์ทีละตัวทุก 3.5 วิ · แตะ = ค้างดูตัวนั้น + หยุดวน 2 นาที (บางคนหยุดดูจริง) แล้ววนต่อ */
-let robotsProbed = false, rsIdx = 0, rsPausedUntil = 0, rsTimer = null;
+let rsIdx = 0, rsPausedUntil = 0, rsTimer = null;
 const RS_CYCLE_MS = 3500, RS_PAUSE_MS = 120000;   // วนทุก 3.5 วิ · หยุดวน 2 นาทีหลังแตะ
-function robotImg(id){ return IMG_FILES[id] || null; }
+function robotImg(id){ return IMG_FILES[id] || (/^robot_(0[1-9]|10)$/.test(id) ? `img/robots/chibi-market/${id}-thumb.webp` : null); }
+// Market art is separate from cockpit/owned-robot images (round 1401).
+function robotShopImg(id, thumb=false){
+  return /^robot_(0[1-9]|10)$/.test(id) ? `img/robots/chibi-market/${id}${thumb?'-thumb':''}.webp` : robotImg(id);
+}
 function renderRobotShop(){
-  if(!robotsProbed){
-    robotsProbed = true;
-    probeImages(ROBOTS.map(r=>r.id), 'img/robots').then(()=>{ if(document.getElementById('mkt-robots')) renderMarketCard(); });
-  }
   const owned = state.robots || [];
   const thumbs = ROBOTS.map((r,i)=>{
-    const img = robotImg(r.id);
-    return `<button class="rs-thumb${owned.includes(r.id)?' owned-r':''}" data-i="${i}" data-id="${r.id}" style="--rc:${r.c}">
-      <div class="rs-thumb-pic">${img?`<img src="${img}" alt="">`:`<span class="car-emoji" style="background:${r.c}33;border-color:${r.c}">🤖</span>`}</div>
+    const img = robotShopImg(r.id, true);
+    return `<button class="rs-thumb${owned.includes(r.id)?' owned-r':''}" data-i="${i}" data-id="${r.id}" aria-label="${escapeHTML(r.name)}" aria-pressed="false" style="--rc:${r.c}">
+      <div class="rs-thumb-pic">${img?`<img src="${img}" alt="" width="200" height="240" loading="lazy" decoding="async">`:`<span class="car-emoji" style="background:${r.c}33;border-color:${r.c}">🤖</span>`}</div>
       <div class="rs-thumb-price">🪙${fmtNum(r.price)}</div>
       ${soldBadge(r.id)}
     </button>`;
   }).join('');
   return `<div class="mkt-listhead" id="mkt-robots">🤖 หุ่นยนต์นักรบ — โชว์รูมหุ่นรบ</div>
-    <div class="gp-note">แตะหุ่นเพื่อดูตัวใหญ่ · ไม่แตะ = โชว์วนทีละตัว · <b>ซื้อกี่ตัวก็ได้</b> สะสมเป็นทรัพย์สินในแรงค์ · มี ≥1 ตัว = เข้า<b>โลกหุ่นยนต์นักรบ</b> ยิงเอเลี่ยน คำละ 🪙35</div>
-    <div class="rs-showroom">
+    <div class="gp-note">แตะหุ่นเพื่อดูตัวใหญ่ · ปัดเลือกได้ครบ 10 แบบ · <b>ซื้อสะสมได้หลายตัว</b></div>
+    <div class="rs-showroom rs-chibi">
       <div class="rs-stage"><div class="rs-big" id="rs-big"></div><div class="rs-info" id="rs-info"></div></div>
       <div class="strip-wrap"><button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button><div class="rs-list strip-x grid2x8">${thumbs}</div><button class="strip-arrow sa-r" aria-label="เลื่อนขวา">❯</button></div>
     </div>`;
@@ -8884,10 +8884,9 @@ function rsShowBig(i){
   const r = ROBOTS[i]; if(!r) return;
   const big = document.getElementById('rs-big'), info = document.getElementById('rs-info');
   if(!big || !info) return;
-  const img = robotImg(r.id), have = (state.robots||[]).includes(r.id);
+  const img = robotShopImg(r.id), have = (state.robots||[]).includes(r.id);
   if(img){
-    big.style.setProperty('--rs-img', `url("${img}")`);
-    big.innerHTML = `<img class="rs-big-img" src="${img}" alt="${escapeHTML(r.name)}"><div class="rs-elec"><i></i></div><div class="rs-edge"><i></i></div>`;
+    big.innerHTML = `<img class="rs-big-img" src="${img}" alt="${escapeHTML(r.name)}" decoding="async">`;
   }else{
     big.style.removeProperty('--rs-img');
     big.innerHTML = `<div style="font-size:120px;filter:drop-shadow(0 0 30px ${r.c})">🤖</div>`;
@@ -8898,7 +8897,7 @@ function rsShowBig(i){
     ${have?`<button class="rs-buy own" disabled>🤖 มีหุ่นนี้แล้ว</button>`:`<button class="rs-buy" data-id="${r.id}">🛒 ซื้อหุ่นนี้</button>`}`;
   const buy = info.querySelector('.rs-buy:not(.own)');
   if(buy) buy.addEventListener('click', ()=>buyRobot(buy.dataset.id));
-  document.querySelectorAll('.rs-thumb').forEach(t=>t.classList.toggle('active', +t.dataset.i===i));
+  document.querySelectorAll('.rs-thumb').forEach(t=>{ const selected=+t.dataset.i===i; t.classList.toggle('active', selected); t.setAttribute('aria-pressed', String(selected)); });
 }
 /* เรียกหลัง render market — ผูกคลิก thumb + เริ่มวนโชว์ */
 function rsInit(){

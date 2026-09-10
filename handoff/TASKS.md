@@ -12,6 +12,16 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1401 · ภาพตลาดหุ่น Chibi 10 แบบ:** image_gen ตามภาพอ้างอิงครบสี/อาวุธ; 10 WebP ใหญ่ +10 thumbnail และฉากโชว์รูม AVIF รวม1,148,744B (เดิม PNG28,246,825B ลด95.9%); alpha/dimensions/bytes และภาพเทียบจริงผ่าน; assets img/robots/chibi-market/
+- js/ui.js ใช้ direct market art ไม่ probe PNG, lazy thumbs/ภาพใหญ่เมื่อเลือก, aria-pressed และ thumbnail fallback ของตัวเลือกหุ่น; css/lobby.css .rs-chibi ฉากฟ้า-ครีม/ข้อมูลด้านข้าง/จอเตี้ยและportrait; ราคา/ซื้อ/GLB/เกมไม่เปลี่ยน; docs/PROJECT_MAP อัปเดต
+- ผ่าน syntax/diff, source+dist 10 selections/purchase ids/owned state และ4viewports; หน้าเกมจริงsource/dist/clean-HEAD-distครบ10ตัว+dialogซื้อ/0pageerror/0legacyRobotPNG;812×375 showroom y49.94–313.94/ข้อมูลไม่ล้น; clean build9,514files612.9MiB+validatorผ่าน
+- เตรียมSHIP26pathsและ COMMIT_DEPLOY พร้อม VW_DEPLOY_FORCE_REBUILD=1 เพื่อdeployจากHEADเฉพาะไฟล์ที่commit ไม่ใช้distปนGLBร่าง1400; เปิดโปรแกรม1ครั้งตามworkflowแล้วรอผู้ใช้ยืนยัน; ยังไม่ยืนยันcommit/deploy/live; outputs Documents/Codex/2026-09-10/new-chat-3/outputs
+
+- **รอบ 1400 · ปรับหุ่น10ตัวตามภาพชิบิใหม่:** ปั้นหมวก/หน้าดำ/ตารี/เกราะมน/ขาสั้น พร้อมสีตาและแกนกลางแยก; ปืนคู่/จรวด12หัว/สไนเปอร์/หมัด/ไฟ/โล่จานจักรข้างเดียว/แกตลิง/ไรเฟิล/เกล็ดน้ำแข็งครบ; เป็นแบบปั้นใกล้ภาพ ไม่ใช่สำเนาตรงทุกจุด ด้านหลังออกแบบเพิ่ม
+- GLB 292,528–339,344B, 16,896–19,764tri, 8–10draws ไม่มีtexture; POSITION/NORMAL16bit + unlit energy; คงcache/share GPUและm_01..10; ท่าถือสองมือ04/08/09ลดการแกว่งแขนให้มืออยู่ใกล้ปืน; tools/mecha generator+preview+README+tests
+- ผ่าน Khronos0errors/0warnings, source/dist97รายการต่อชุด +FX34/500นัด +P0style/syntax/diff; build9,540files623.1MiB/webvalidator; ตรวจภาพหน้า/หลัง/ข้าง/เดินและเกม1366×768,812×375,667×320; undefined scannerเจอregex robot_()เดิม2จุด (false positive); reports work/mecha-1400[-dist-qa]
+- **ผู้ใช้ยังไม่ผ่านโครงรุ่น1400:** หยุดขึ้นรูปเพื่อทำวิธีเทียบภาพอย่างละเอียดก่อน; ยกเลิกSHIPที่เตรียมไว้แล้ว ยังไม่เปิดCOMMIT_DEPLOYสำหรับ1400และยังไม่deploy; Preview/GLBปัจจุบันเป็นร่างที่ต้องแก้ ไม่ใช่แบบที่ผู้ใช้ยอมรับ
+
 - **รอบ 1399 · หุ่นชิบิ GLB 10 ตัว:** สร้างจากสี/อาวุธ img/robots; ผู้ใช้ยกเลิกรุ่นอ้วนและคืนสัดส่วนก่อนหน้าแล้ว (ภาพเรนเดอร์diff0); GLB 196,656–221,472B/ตัว ไม่มี texture/PNG, 10 draws, Idle/Walk/Attack และ pivot แยก; generator+preview+manifest tools/mecha/
 - MechaModels แทน peer เดิมด้วย GLB ตาม m_01..m_10, cache/share GPU+clone limbs, fallback/retry/late-dispose; normalize หุ่นเลือก/HUD/weapon/payload ให้ตรง; MechaCombatFX กระสุนชิบิ10แบบ+muzzle/impact ใช้6 instanced batches≤12นัด; เอฟเฟกต์ฝั่งผู้ยิง ไม่เปลี่ยน rewards/heat/cadence/admission/DB rules
 - ผ่าน Khronos GLB validator0errors/0warnings; source+dist models75/FX34 (500นัด), online2windows/เปลี่ยนครบ10ตัว/re-entry/ออกห้อง/เดิน/โหลดพังแล้วretry/มือถือ1366×768,812×375,667×320; P0 style/syntax/diff + build9,540files622.1MiB/webvalidatorผ่าน; ภาพ/report work/mecha-1399[-dist-qa]
@@ -27,11 +37,6 @@
 
 - **รอบ 1396 · Arena public + เพลง default-on:** แยก state.arenaMusicOff=false จาก lobby musicOff; รับ entry gesture อัตโนมัติ, optional switch แตะ/เลื่อน/keyboard ปิดได้และจำค่า; คง master mute/content-hash cache/เสียงผู้ใช้เดิม
 - เปิด Home V2/Classic/hero/map/engine ให้ผู้เล่นทั่วไป รวมผู้เล่นไม่มีสัตว์โต; คงสิทธิ์สกิล/ไอเทมและโลก private อื่น; แก้ปกที่ CSS grid บีบเหลือเส้น ใช้ fire-thumb+crystal-thumb WebP เดิม ไม่มี asset ใหม่
-- QA source: music67/entry34/public26/field26/heroes32/maps82/grimoire209/HomeV2 ผ่าน; screenshot ปกมือถือ/desktop ตรวจจริง, build9,526files620.1MiB + validator/public26/entry34 ในdist ผ่าน; syntax/undefined0/template0/diff ผ่าน; docs PROJECT_MAP/ARENA_FIELD อัปเดต
-- SHIP19paths/COMMIT_DEPLOY1ครั้ง ส่งตามสิทธิ์ผู้ใช้สำเร็จ; live2026-09-10.1249/code1cef9dca+handoffcbb703ca+push; ตรวจlive11filesตรงtested build (normalizeเฉพาะgenerated F1/Karthashในui.js)
-
-- **รอบ 1395 · Arena เพลงไม่เริ่ม:** reproduce browser entryมีuserActivationแต่Audio.unlocked=false และmusicOffจากล็อบบี้ทำให้SFXดัง/เพลงเงียบ; js/arena-audio.jsรับactivationตอนstart+retryในgestureทันทีแทนรอ10s
-- เพิ่ม #va-music-toggle ในarena3d.js/CSS แสดงเพลงปิด/โหลด/แตะเล่น/error และเปิดกลับด้วยtapเดียว; เคารพmuteเดิมจนผู้ใช้แตะ, saveState/syncMusicBtn, ไม่โหลดเพลงซ้ำ; ตรวจviewport812×375/1366×768ไม่มีทับHUD
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
