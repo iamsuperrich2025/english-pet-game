@@ -12,6 +12,11 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1413 · ส่ง Frontline ชุดอัปเดทขึ้นเว็บ:** รวมแก้พื้นกระตุก ลูกศรตัวอักษร/บ้าน เพลง Arcade ตัวเลข HP ข้อความหยิบผิด ย้าย SPEED ปุ่มกลับ Lobby และกระสุนออกจากปากกระบอก
+- `tools/frontline-v1/*` + `sound/Frontline/bgmusic-*` + `SOUND_LICENSES.md` · เพลงต้นฉบับไม่ขึ้นเว็บ · preview Local ยังแยก namespace
+- unit Frontline ผ่าน (กระสุนที่กระบอก, carryHelps, terrain) · ปุ่ม Lobby บน launcher ไป `/index_classic.html`
+- ยังไม่ยืนยันบนมือถือจริงของผู้ใช้หลังขึ้น live
+
 - **รอบ 1412 · โรงแรมผีสิงจบ 5 คำแล้วเล่นต่อ:** ครบ 5 คำแล้วป้ายทั้งห้อง “ภารกิจสำเร็จแล้ว” แล้วเริ่มชุดคำ+ตัวอักษรใหม่ทันที ไม่เด้งล็อบบี้ ไม่ให้ตัวอักษรว่าง/ตัน
 - คนที่เก็บตัวสุดท้ายครบ 5 คำรับ 10,000 ครั้งเดียว — ชื่อประกาศให้เพื่อนในโรงแรมด้วย · ความคืบภารกิจเดี่ยวไม่ถูกรีเซ็ตตอนเปลี่ยนรอบ
 - `js/hauntedhotel.js` startNextMission · `js/adventure3d.js` hotelFillMissingLetters/hotelBroadcastSoloWin · `js/specialmission.js` continueHauntedRun

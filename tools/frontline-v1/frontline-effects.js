@@ -28,13 +28,13 @@
     function burst(x,z,kind,now){
       const b=bursts[burstIndex++%bursts.length],muzzle=kind==='muzzle';b.active=true;b.started=now;b.kind=kind;
       b.duration=muzzle?180:kind==='bomb'?1050:650;b.radius=kind==='bomb'?F.C.bombRadius:muzzle?.95:1.65;
-      b.group.position.set(x,muzzle?1.75:.16,z);b.group.visible=true;
+      b.group.position.set(x,muzzle?F.C.muzzleY:.16,z);b.group.visible=true;
       b.flash.geometry=muzzle?a.star:a.ball;
       b.ring.visible=b.echo.visible=b.glow.visible=b.puffs.visible=b.sparks.visible=!muzzle;b.debris.visible=kind==='bomb';
       b.puffs.count=kind==='bomb'?18:8;
       if(!muzzle){counts.blasts++;sound(kind==='bomb'?'explosion':'impact',x,z);}
     }
-    function muzzle(pose,now){burst(pose.x+Math.sin(pose.turret)*2.35,pose.z-Math.cos(pose.turret)*2.35,'muzzle',now);}
+    function muzzle(pose,now){const tip=F.muzzlePoint(pose);burst(tip.x,tip.z,'muzzle',now);}
     function shell(event,now,serverNow){
       const b=bullets[bulletIndex++%bullets.length];counts.shots++;b.event=event;b.active=true;
       b.duration=Math.max(160,event.hitAt-event.at);
@@ -47,7 +47,7 @@
     function frame(now,focus){
       for(const b of bullets){
         if(!b.active)continue;const e=b.event,t=Math.min(1,Math.max(0,(now-b.started)/b.duration));
-        b.group.position.set(e.x+(e.endX-e.x)*t,1.7,e.z+(e.endZ-e.z)*t);
+        b.group.position.set(e.x+(e.endX-e.x)*t,F.C.muzzleY,e.z+(e.endZ-e.z)*t);
         b.group.visible=Math.abs(b.group.position.x-focus.x)<48&&Math.abs(b.group.position.z-focus.z)<30;
         b.flame.scale.x=.17+Math.sin(now*.07)*.04;
         const length=Math.min(3.4,Math.hypot(e.endX-e.x,e.endZ-e.z)*t);

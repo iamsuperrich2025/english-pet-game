@@ -35,3 +35,13 @@ Source: `C:\Users\rober\english-pet-game\sound\arena\5.mp3`, explicitly supplied
 ## User-approved fire (round 1394)
 
 Source: `C:\Users\rober\english-pet-game\sound\arena\6.mp3`, explicitly assigned to fire powers. No external license supplied or inferred. Runtime: `sound/arena/fire-a6fea31058694941.mp3`, 224,906 bytes, 7.000816 seconds, stereo 44.1 kHz MP3. Source: 580,127 bytes / 18.128969 seconds; signal below -60 dB after 7.25263 seconds and before 0.553492 seconds. Copy audio packets from 0.45 seconds for 7 seconds to retain the audible onset/tail; no re-encoding, with all output audio packet SHA-256 hashes verified as an unchanged contiguous sequence from the source. Removes silent padding and saves 61.2% of transfer bytes. Uses one cached player for the fire ring and all five extended fire-family spells instead of the generic element cue; MEGA remains on the separately assigned clip.
+
+## User-supplied Frontline background music
+
+Source: `C:\Users\rober\english-pet-game\sound\Frontline\Arcade_Adventure_bgm.mp3`, supplied and requested for Frontline 1944 by the user; not a Kenney/CC0 asset. No external license was supplied or inferred.
+
+Runtime derivatives (stereo; embedded artwork/metadata removed):
+- `sound/Frontline/bgmusic-9295a3b2636fb961.ogg`: Opus VBR 80 kbps, 962,775 bytes.
+- `sound/Frontline/bgmusic-a88cbf606d0bd932.mp3`: MP3 128 kbps compatibility fallback, 1,421,613 bytes.
+
+The browser selects one supported format, not both. Fetched only after JOIN with sound enabled; stored in the existing content-hash asset cache across reloads/deployments. Loops from the cached compressed Blob without repeated network requests or decoding the full song to PCM. Cache eviction/private browsing can require a later download. Original file is preserved locally and excluded from the runtime build. Synthesized garden-march score remains a fallback if the file cannot play.

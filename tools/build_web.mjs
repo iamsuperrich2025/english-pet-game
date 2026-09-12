@@ -183,7 +183,8 @@ function isPublicPath(relativePath) {
 
 
 
-  if (PUBLIC_PREFIXES.some((prefix) => rel.startsWith(prefix))) return true;
+  if (PUBLIC_PREFIXES.some((prefix) => rel.startsWith(prefix))) return true;
+  if (rel === 'sound/Frontline/Arcade_Adventure_bgm.mp3') return false;
 
 
 

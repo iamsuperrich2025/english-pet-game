@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 const dir=new URL('./',import.meta.url);
 const context=vm.createContext({window:{},state:{student:null},Date,Math,Uint8Array,crypto:{getRandomValues(bytes){for(let i=0;i<bytes.length;i++)bytes[i]=i;return bytes;}}});
 vm.runInContext(readFileSync(new URL('../../js/data/vocab.js',dir),'utf8'),context);
-for(const name of ['config','words','bases','collision','tank','letters','drop','bots','guards','combat','bombs','room','commands','lobby']){
+for(const name of ['config','health','words','bases','collision','tank','letters','drop','bots','guards','combat','bombs','room','commands','lobby']){
   vm.runInContext(readFileSync(new URL('frontline-'+name+'.js',dir),'utf8'),context);
 }
 const F=context.window.Frontline,close=(a,b,t=1e-9)=>assert.ok(Math.abs(a-b)<=t,a+' != '+b);
@@ -73,6 +73,21 @@ test('a player can steal one useful letter from a destroyed rival vault',()=>{
   const r=room(),p=r.players.s0,base=r.bases.s1;r.letters={};base.hp=0;base.stored='ZAP';
   p.x=base.x;p.z=base.z;p.carried='';F.tickLetters(r,100100);
   assert.equal(p.carried,'A');assert.equal(base.stored,'ZP');
+});
+
+test('shells leave only the cannon muzzle, never the hull center',()=>{
+  const tip=F.muzzlePoint({x:10,z:20,turret:0});
+  close(tip.x,10);close(tip.z,20-F.C.muzzle);close(tip.y,F.C.muzzleY);
+  const side=F.muzzlePoint({x:0,z:0,turret:Math.PI/2});
+  close(side.x,F.C.muzzle);close(side.z,0);
+  const r=room(),p=r.players.s0;
+  Object.values(r.bases).forEach(base=>base.hp=0);Object.values(r.guards).forEach(g=>{g.x=80;g.z=80;});r.letters={};
+  Object.values(r.players).forEach(other=>{if(other!==p){other.x=80;other.z=80;}});
+  p.x=0;p.z=0;p.hull=p.turret=0;
+  const hit=F.pickHit(p,r,'s0');
+  close(hit.x,0);close(hit.z,-F.C.muzzle);
+  assert.ok(Math.hypot(hit.x-p.x,hit.z-p.z)>=2.2,'spawn is at the barrel tip');
+  assert.ok(Math.abs(hit.z-p.z)>1.8,'spawn is not inside the hull');
 });
 
 test('tank shell deals 100 HP and drops the target carried letter into the field',()=>{
@@ -143,6 +158,11 @@ test('public hosts fail the access gate while private LAN hosts pass',()=>{
   assert.equal(F.isPrivateHost('192.168.attacker.example'),false);assert.equal(F.isPrivateHost('10.1.1.999'),false);
   assert.equal(F.isPrivateHost('192.168.1.5'),true);
 });
+test('phones skip the Fullscreen API so the browser URL bar cannot cover the field',()=>{
+  assert.equal(F.usePageFullscreen('Mozilla/5.0 (Linux; Android 14) Chrome/120',true),false);
+  assert.equal(F.usePageFullscreen('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)',false),false);
+  assert.equal(F.usePageFullscreen('Mozilla/5.0 (Windows NT 10.0; Win64; x64)',false),true);
+});
 
 test('LAN random IDs do not require secure-context randomUUID',()=>{
   const id=F.randomId();assert.match(id,/^[0-9a-f]{32}$/);assert.equal(id[12],'4');assert.match(id[16],/[89ab]/);
@@ -199,6 +219,40 @@ test('open-field driving never stops for decorative scenery in either direction 
   for(let frame=0;frame<80;frame++)assert.equal(F.drive(p,{auto,turn:0,speedLevel},.05,r,'s0'),'');
   close(Math.hypot(p.x-start.x,p.z-start.z),speed*4);close((p.x-start.x)*Math.cos(hull)+(p.z-start.z)*Math.sin(hull),0);
  }
+});
+test('wrong carries are letters that do not fill a remaining target slot',()=>{
+  assert.equal(F.carryHelps('','APPLE','K'),false);
+  assert.equal(F.carryHelps('','APPLE','A'),true);
+  assert.equal(F.carryHelps('A','APPLE','A'),false);
+  assert.equal(F.carryHelps('A','APPLE','P'),true);
+});
+test('HP loss pops the actual subtracted amount and ignores heals or first sight',()=>{
+  assert.equal(F.hpLoss(null,5000),0);
+  assert.equal(F.hpLoss(5000,4900),100);
+  assert.equal(F.hpLoss(5000,4750),250);
+  assert.equal(F.hpLoss(80,5000),0);
+  assert.equal(F.hpLoss(100,100),0);
+});
+test('letter hints point at the nearest remaining target pickups and skip banked or carried letters',()=>{
+  const r={word:{target:'CAT',completedAt:0},bases:{s0:{stored:'C'}},players:{s0:{carried:'A'}},
+    letters:{a:{letter:'A',x:10,z:0},c:{letter:'C',x:0,z:10},t:{letter:'T',x:40,z:0},b:{letter:'B',x:0,z:0}}};
+  const first=F.neededLetterHints(r,'s0',{x:0,z:0});assert.equal(first.length,1);assert.equal(first[0].letter,'T');
+  r.players.s0.carried='';const next=F.neededLetterHints(r,'s0',{x:0,z:0}).map(h=>h.letter).sort().join('');
+  assert.equal(next,'AT');
+  r.word.completedAt=1;assert.equal(F.neededLetterHints(r,'s0',{x:0,z:0}).length,0);
+});
+test('off-screen letter hints clamp to the HUD-safe edge and hide when the card is already in view',()=>{
+  const hidden=F.placeLetterHint(400,200,800,400);assert.equal(hidden.visible,false);
+  const left=F.placeLetterHint(-80,200,800,400);assert.equal(left.visible,true);assert.ok(left.x>=52&&left.x<=54);
+  const right=F.placeLetterHint(900,200,800,400);assert.equal(right.visible,true);assert.ok(right.x>=800-54&&right.x<=800-52);
+  assert.ok(Math.abs(left.angle)>1);assert.ok(Math.abs(right.angle)>1);
+});
+test('own-base hint uses the local vault and reuses HUD-safe edge placement',()=>{
+  const r=room(),spot=F.baseSpot(r.players.s0.slot),hint=F.ownBaseHint(r,'s0');
+  assert.equal(hint.x,spot.x);assert.equal(hint.z,spot.z);
+  assert.equal(F.ownBaseHint(r,'missing'),null);
+  const off=F.placeLetterHint(-200,800,800,400);
+  assert.equal(off.visible,true);assert.ok(off.x>=52&&off.y<=400-124);
 });
 test('only real arena edges and intact rival bases report a block; turning and backing away remain available',()=>{
  const r=room(),p=F.newTank('p',0,100000);p.x=89;p.z=0;p.hull=Math.PI/2;

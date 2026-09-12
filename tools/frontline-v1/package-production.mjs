@@ -37,7 +37,7 @@ export async function packageFrontline(out){
   for(const [name,file] of Object.entries(shared))html=html.replaceAll('/shared/'+name+'.js','/'+file);
   html=html.replaceAll(' · Local test','').replaceAll('local test launcher','launcher').replaceAll('LOCAL TEST ONLY','ONLINE · FREE TO PLAY')
     .replaceAll('Vocab World test wallet','Vocab World wallet').replaceAll(' · TEST','')
-    .replace('Local test save · Your production progress stays untouched.','<a href="/">← กลับ Lobby</a> · เหรียญเข้าบัญชี Vocab World ของคุณ');
+    .replace('Local test save · Your production progress stays untouched.','เหรียญเข้าบัญชี Vocab World ของคุณ');
   await fs.writeFile(path.join(target,'index.html'),html);
 }
 if(process.argv.includes('--server'))await packageServer();

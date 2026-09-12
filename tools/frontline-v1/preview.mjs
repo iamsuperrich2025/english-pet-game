@@ -38,7 +38,7 @@ for (let i = 0; i < 100; i++) {
 }
 if (!installed) { stopped = true; emulator.kill(); throw Error('Emulator rules could not be installed. ' + emulatorLog); }
 const shared = { '/shared/items.js': 'js/data/items.js', '/shared/homes.js': 'js/data/homes.js', '/shared/state.js': 'js/state.js', '/shared/thaitime.js': 'js/thaitime.js', '/shared/three.min.js': 'js/vendor/three.min.js', '/shared/gltfloader.js': 'js/vendor/GLTFLoader.js' };
-const mime = { '.js': 'text/javascript', '.css': 'text/css', '.html': 'text/html', '.json': 'application/json', '.avif': 'image/avif', '.webp': 'image/webp', '.glb': 'model/gltf-binary' };
+    const mime = { '.js': 'text/javascript', '.css': 'text/css', '.html': 'text/html', '.json': 'application/json', '.avif': 'image/avif', '.webp': 'image/webp', '.glb': 'model/gltf-binary', '.ogg': 'audio/ogg', '.mp3': 'audio/mpeg' };
 shared['/shared/vocab.js']='js/data/vocab.js';
 shared['/shared/ranks.js']='js/data/ranks.js';
 const admit=await makeAdmission(DIR,token,NS,EMULATOR_PORT);
@@ -52,6 +52,10 @@ const server = http.createServer(async (req, res) => {
     let body, ext = path.extname(p);
     if (p === '/dev-config.js') body = `window.FRONTLINE_DEV=${JSON.stringify({ project: PROJECT, namespace: 'frontline_v1_dev', token, port: WEB_PORT, mobileLongPolling: true })};`;
     else if (p === '/' || p === '/__dev/frontline') { body = await fs.readFile(path.join(DIR, 'index.html')); ext = '.html'; }
+    else if (p === '/index_classic.html' || p === '/index.html') {
+      body = '<!doctype html><html lang="th"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vocab World Lobby</title><body style="margin:0;min-height:100dvh;display:grid;place-items:center;background:linear-gradient(#fff8d4,#b7e08a);font-family:ui-rounded,system-ui,sans-serif;color:#27563a"><main id="lobby-stub" style="text-align:center;padding:24px"><h1>กลับ Lobby</h1><p>หน้าทดสอบ Frontline ไม่มีล็อบบี้เต็มของเกมหลัก</p><p><a href="/__dev/frontline">← Frontline ทดสอบ</a></p></main>';
+      ext = '.html';
+    }
     else if (shared[p]) {
       body = await fs.readFile(path.join(ROOT, shared[p]), 'utf8');
       if (p === '/shared/state.js') {
@@ -61,12 +65,14 @@ const server = http.createServer(async (req, res) => {
         body = body.replace(marker, "const STORAGE_KEY = 'vw.frontline-v1.test.save.v1';");
       }
     } else if (/^\/sdk\/firebase-(app|database)-compat\.js$/.test(p)) body = await fs.readFile(path.join(DEPS, path.basename(p)));
+    else if (/^\/sound\/Frontline\/bgmusic-[a-f0-9]+\.(ogg|mp3)$/.test(p)) body = await fs.readFile(path.join(ROOT, ...p.slice(1).split('/')));
     else if (/^\/frontline\/assets\/[a-z0-9_-]+\.(avif|webp|glb)$/.test(p)) body = await fs.readFile(path.join(DIR, 'assets', path.basename(p)));
     else if (/^\/frontline\/frontline-[a-z]+\.js$/.test(p) || /^\/frontline\/frontline(?:-[a-z]+)?\.css$/.test(p)) body = await fs.readFile(path.join(DIR, path.basename(p)));
     else throw Error('Not found');
-    res.writeHead(200, { 'Content-Type': (mime[ext] || 'text/plain') + '; charset=utf-8', 'Cache-Control': 'no-store',
+    const binary=ext==='.ogg'||ext==='.mp3'||ext==='.glb'||ext==='.avif'||ext==='.webp';
+    res.writeHead(200, { 'Content-Type': (mime[ext] || 'text/plain') + (binary?'':'; charset=utf-8'), 'Cache-Control': /^\/sound\/Frontline\/bgmusic-/.test(p)?'public, max-age=31536000, immutable':'no-store',
       'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer',
-      'Content-Security-Policy': `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; frame-ancestors 'none'` });
+      'Content-Security-Policy': `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; frame-ancestors 'none'` });
     res.end(body);
   } catch { res.writeHead(404, { 'Content-Type': 'text/plain' }); res.end('Not found'); }
 });

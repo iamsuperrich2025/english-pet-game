@@ -22,8 +22,7 @@
       update(room,id,input,attacks={},active=true,motion=''){
         const w=room.word,p=room.players&&room.players[id],own=room.bases&&room.bases[id];
         const carried=p&&p.carried||'',drop=root.querySelector('[data-hold=drop]');
-        const marks=F.wordMarks(own&&own.stored||'',w.target);
-        const unneeded=!!carried&&!w.target.split('').some((ch,i)=>ch===carried&&!marks[i]);
+        const unneeded=!!carried&&!F.carryHelps(own&&own.stored,w.target,carried);
         const dropReady=active&&!!p&&p.hp>0&&!!carried&&!attacks.drop;
         const dropText=!active?'CONNECTING':!p||p.hp<=0?'REPAIRING':attacks.drop?'SENDING':carried?'CARRY '+carried:'EMPTY';
         drop.disabled=!dropReady;drop.dataset.ready=String(dropReady);
@@ -76,7 +75,7 @@
         }
         text('fl-speed-name',F.C.speedNames[input.speedLevel]);
         if(!motion&&performance.now()-messageAt>3200)text('fl-message',carried?
-          (unneeded?'Not needed? Tap DROP to leave '+carried+'.':'Carry '+carried+' home. A hit will make you drop it!'):'Ram a letter to carry it back to your base.');
+          (unneeded?'อุ๊ย หยิบตัวอักษรผิดแล้ว · กด DROP วางลงนะ':'Carry '+carried+' home. A hit will make you drop it!'):'Ram a letter to carry it back to your base.');
       }
     };
   };

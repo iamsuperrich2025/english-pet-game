@@ -1,4 +1,4 @@
-/* Continuous painted grass and dirt lanes, with no image textures and soft received shadows. */
+/* One world-shaded ground sheet that follows the camera so scrolling never snaps with chunk reuse. */
 (function(){
   'use strict';
   const F=window.Frontline,T=window.THREE;
@@ -34,8 +34,9 @@
           ground=mix(ground,dirt,shore*.92);ground=mix(ground,outside,water);
           diffuseColor.rgb*=ground*.65;`);
     };
-    const geometry=new T.PlaneGeometry(F.C.chunkSize,F.C.chunkSize);
-    return{tile(){const mesh=new T.Mesh(geometry,material);mesh.rotation.x=-Math.PI/2;mesh.position.y=-.08;mesh.receiveShadow=true;return mesh;},
-      dispose(){geometry.dispose();material.dispose();}};
+    const geometry=new T.PlaneGeometry(F.C.chunkSize*6,F.C.chunkSize*4);
+    const mesh=new T.Mesh(geometry,material);mesh.rotation.x=-Math.PI/2;mesh.position.y=-.08;mesh.receiveShadow=true;mesh.frustumCulled=false;
+    return{mount(parent){parent.add(mesh);},follow(x,z){mesh.position.x=x;mesh.position.z=z;},
+      dispose(){if(mesh.parent)mesh.parent.remove(mesh);geometry.dispose();material.dispose();}};
   };
 })();

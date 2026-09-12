@@ -1,4 +1,4 @@
-/* Original 96 BPM garden march; pentatonic marimba, soft bass, tiny shakers. No music files. */
+/* Quiet 96 BPM garden march fallback when the hashed Frontline BGM file cannot play. */
 (function(){
   'use strict';
   window.Frontline.makeScore=function(context,synth){

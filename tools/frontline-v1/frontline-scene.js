@@ -29,9 +29,9 @@
     const lighting=F.makeLighting(renderer,scene);
     const camera=new T.OrthographicCamera(-16,16,16,-16,.1,130);
     const shapes=F.makeShapes(),battlefield=F.buildMap(scene,shapes);
-    const tanks=new Map(),pickups=new Map(),bases=new Map(),bombActors=new Map(),seen=new Map(),seenBomb=new Map();
+    const tanks=new Map(),pickups=new Map(),bases=new Map(),bombActors=new Map(),seen=new Map(),seenBomb=new Map(),hints=[];
     const projected=new T.Vector3(),look=new T.Vector3(),renderPose=F.makeRenderPose();
-    let display=null;
+    let display=null,homeHint=null;
     function text(el,value){if(el.textContent!==value)el.textContent=value;}
     const fx=F.makeEffects(scene,sound);
     let width=1,height=1;
@@ -54,7 +54,7 @@
       display=renderPose(local,dt);
       battlefield.update(display.x,display.z-3);
       const players=room.players||{},actors={...(room.guards||{}),...players};
-      for(const [key,actor] of tanks)if(!actors[key]){scene.remove(actor.mesh);actor.label.remove();actor.health.element.remove();tanks.delete(key);seen.delete(key);}
+      for(const [key,actor] of tanks)if(!actors[key]){scene.remove(actor.mesh);actor.label.remove();actor.health.dispose();tanks.delete(key);seen.delete(key);}
       for(const [key,p] of Object.entries(actors)){
         if(!tanks.has(key)){const mesh=shapes.tank(p.slot),tag=label('fl-carried-letter'),health=F.makeHealthBar(labels,key);
           scene.add(mesh);mesh.position.set(p.x,0,p.z);tanks.set(key,{mesh,label:tag,health});}
@@ -85,6 +85,7 @@
         actor.mesh.position.set(base.x,0,base.z);
         actor.mesh.userData.damageParts.forEach(part=>part.visible=base.hp>0);
         actor.label.classList.toggle('open',base.hp<=0);
+        actor.label.classList.toggle('mine',key===id);
         text(actor.label,'P'+(base.slot+1)+(p&&p.bot?' BOT':'')+' BASE · '+(base.hp>0?'HP '+base.hp:'OPEN'));
       }
       for(const [key,actor] of bombActors)if(!room.bombs||!room.bombs[key]){
@@ -111,19 +112,48 @@
       camera.position.set(display.x,34,display.z+12);look.set(display.x,0,display.z-3);camera.lookAt(look);camera.updateMatrixWorld();
       /* Reproject after the camera update so labels stay attached during chunk streaming. */
       for(const [key,actor] of tanks){
-        const p=actors[key];if(!p||p.hp<=0)continue;
-        if(p.carried)project(actor.label,actor.mesh.position.x,2.8,actor.mesh.position.z);
-        project(actor.health.element,actor.mesh.position.x,2.8,actor.mesh.position.z);
+        const p=actors[key];if(!p)continue;
+        if(p.hp>0){
+          if(p.carried)project(actor.label,actor.mesh.position.x,2.8,actor.mesh.position.z);
+          project(actor.health.element,actor.mesh.position.x,2.8,actor.mesh.position.z);
+        }
+        actor.health.lift(project,actor.mesh.position.x,actor.mesh.position.z,now);
       }
       for(const [key,actor] of pickups){const item=room.letters[key];if(item)project(actor.label,item.x,1.75,item.z);}
+      const needed=F.neededLetterHints(room,id,display);
+      while(hints.length<needed.length)hints.push(label('fl-hint'));
+      needed.forEach((item,i)=>{
+        const el=hints[i];projected.set(item.x,1.75,item.z).project(camera);
+        const placed=F.placeLetterHint((projected.x+1)*width/2,(1-projected.y)*height/2,width,height);
+        el.hidden=!placed.visible;
+        if(!placed.visible)return;
+        if(el.dataset.letter!==item.letter){el.dataset.letter=item.letter;el.replaceChildren();
+          const mark=document.createElement('i'),ch=document.createElement('b');ch.textContent=item.letter;el.append(mark,ch);}
+        el.style.transform='translate('+placed.x+'px,'+placed.y+'px) translate(-50%,-50%) rotate('+placed.angle+'rad)';
+        const ch=el.querySelector('b');if(ch)ch.style.transform='rotate('+(-placed.angle)+'rad)';
+      });
+      for(let i=needed.length;i<hints.length;i++)hints[i].hidden=true;
+      if(!homeHint)homeHint=label('fl-hint home');
+      const home=F.ownBaseHint(room,id);
+      if(home){
+        projected.set(home.x,2.2,home.z).project(camera);
+        const placed=F.placeLetterHint((projected.x+1)*width/2,(1-projected.y)*height/2,width,height);
+        homeHint.hidden=!placed.visible;
+        if(placed.visible){
+          if(homeHint.dataset.kind!=='home'){homeHint.dataset.kind='home';homeHint.replaceChildren();
+            const mark=document.createElement('i'),ch=document.createElement('b');ch.textContent='บ้าน';homeHint.append(mark,ch);}
+          homeHint.style.transform='translate('+placed.x+'px,'+placed.y+'px) translate(-50%,-50%) rotate('+placed.angle+'rad)';
+          const ch=homeHint.querySelector('b');if(ch)ch.style.transform='rotate('+(-placed.angle)+'rad)';
+        }
+      }else homeHint.hidden=true;
       for(const [key,actor] of bases){const base=room.bases[key];if(base)project(actor.label,base.x,2.2,base.z-3.35);}
       for(const [key,actor] of bombActors){const b=room.bombs[key];if(b&&!b.explodedAt)project(actor.label,b.x,2.3,b.z);}
-      lighting.update(display,now);fx.frame(now,display);renderer.render(scene,camera);
+      lighting.update(display);fx.frame(now,display);renderer.render(scene,camera);
     }
     return{render,feedback(pose,now){fx.muzzle(display?{...pose,x:display.x,z:display.z}:pose,now);},metrics(){return{calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,
       geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,dpr:renderer.getPixelRatio(),
       viewWidth:camera.right-camera.left,viewHeight:camera.top-camera.bottom,cameraElevation:Math.atan2(34,15)*180/Math.PI,
-      chunks:battlefield.count,chunkCenter:battlefield.center,...fx.metrics(),pickups:pickups.size,bases:bases.size,bombs:bombActors.size,healthBars:tanks.size,tankModelReady:shapes.tankModelReady};},
+      chunks:battlefield.count,chunkCenter:battlefield.center,...fx.metrics(),pickups:pickups.size,bases:bases.size,bombs:bombActors.size,healthBars:tanks.size,letterHints:hints.filter(el=>!el.hidden).length,baseHint:!!(homeHint&&!homeHint.hidden),tankModelReady:shapes.tankModelReady};},
       dispose(){observer.disconnect();fx.dispose();shapes.dispose();battlefield.dispose();lighting.dispose();
         labels.replaceChildren();renderer.dispose();renderer.forceContextLoss();}
     };

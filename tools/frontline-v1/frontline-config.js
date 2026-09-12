@@ -11,8 +11,13 @@
     range:28, bulletSpeed:22, tankDamage:100, respawnMs:4000,
     baseHp:5000, baseDamage:250, baseRadius:3.25, baseBlockRadius:4.2,
     bombFuse:2000, bombCooldown:700, bombRadius:4.5, bombDamage:250, bombBaseDamage:500,
-    pickupRadius:1.35, guardHp:5000, guardRespawnMs:5000, reward:1000, alphabet:'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    pickupRadius:1.35, guardHp:5000, guardRespawnMs:5000, reward:1000, alphabet:'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+    muzzle:2.28, muzzleY:1.69
   });
+  F.muzzlePoint=function(pose){
+    const dx=Math.sin(pose.turret),dz=-Math.cos(pose.turret);
+    return{dx,dz,x:pose.x+dx*F.C.muzzle,z:pose.z+dz*F.C.muzzle,y:F.C.muzzleY};
+  };
   F.isPrivateHost = function (host) {
     if (/^(localhost|127\.0\.0\.1|\[::1\])$/.test(host)) return true;
     const parts=host.split('.');
@@ -25,6 +30,9 @@
     if(!F.isPrivateHost(location.hostname)||!c||c.project!==F.C.project||c.namespace!==F.C.namespace||
       c.port!==19444||!c.token||location.port!=='19444')throw new Error('Frontline is available only in its local test preview.');
     return c;
+  };
+  F.usePageFullscreen=function(ua='',coarse=false){
+    return !coarse&&!/Android|iPhone|iPad|iPod/i.test(ua);
   };
   F.randomId = function () {
     const bytes=new Uint8Array(16);crypto.getRandomValues(bytes);

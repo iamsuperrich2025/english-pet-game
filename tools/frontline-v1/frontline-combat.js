@@ -9,7 +9,7 @@
     return Math.max(.1,along-Math.sqrt(r2-Math.max(0,side2)));
   }
   F.pickHit=function(pose,room,shooterId,guardShot=false){
-    const dx=Math.sin(pose.turret),dz=-Math.cos(pose.turret),sx=pose.x+dx*1.55,sz=pose.z+dz*1.55;
+    const aim=F.muzzlePoint(pose),dx=aim.dx,dz=aim.dz,sx=aim.x,sz=aim.z;
     let distance=F.C.range,targetType='',targetId='';
     function consider(type,id,target,radius){
       const hit=rayCircle(sx,sz,dx,dz,target,radius,distance);

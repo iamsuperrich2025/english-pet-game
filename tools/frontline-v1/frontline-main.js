@@ -8,7 +8,10 @@
   function wallet(){document.getElementById('fl-wallet').textContent=F.balance().toLocaleString();}
   async function enterLandscape(){
     document.body.classList.add('fl-game-active');
-    try{if(document.fullscreenEnabled&&!document.fullscreenElement)await document.documentElement.requestFullscreen({navigationUI:'hide'});}catch(_){}
+    try{
+      if(F.usePageFullscreen(navigator.userAgent,matchMedia('(pointer:coarse)').matches)&&document.fullscreenEnabled&&!document.fullscreenElement)
+        await document.documentElement.requestFullscreen({navigationUI:'hide'});
+    }catch(_){}
     try{if(screen.orientation&&screen.orientation.lock)await screen.orientation.lock('landscape');}catch(_){}
   }
   async function leaveLandscape(){
@@ -45,7 +48,10 @@
     local.bumpSeq=p.bumpSeq||0;
     if(F.live&&Math.hypot(local.x-p.x,local.z-p.z)>2.5)Object.assign(local,F.tankPose(p));
     if(priorHp>p.hp&&ui)ui.message('TANK HIT · -'+Math.ceil(priorHp-p.hp)+' HP'+(priorCarried?' · '+priorCarried+' DROPPED':''));
-    else if(!priorCarried&&p.carried&&ui)ui.message('PICKED UP '+p.carried+' · RETURN TO YOUR BASE');
+    else if(!priorCarried&&p.carried&&ui){
+      const needed=F.carryHelps(room.bases&&room.bases[change.id]&&room.bases[change.id].stored,room.word&&room.word.target,p.carried);
+      ui.message(needed?'เย้ ได้ '+p.carried+' แล้ว · รีบพากลับบ้านนะ':'อุ๊ย หยิบ '+p.carried+' ผิดแล้ว · กด DROP วางลงนะ');
+    }
     else if(priorCarried&&!p.carried&&p.hp>0&&ui&&priorDrop===(p.dropSeq||0))ui.message(priorCarried+' STORED IN YOUR BASE');
     if(ui&&(p.dropSeq||0)>priorDrop){
       const messages={EMPTY:'ไม่มีการ์ดที่ถืออยู่',CHANGED:'การ์ดเปลี่ยนแล้ว · กด DROP อีกครั้ง',FULL:'การ์ดบนพื้นเต็ม · เก็บการ์ดที่วางไว้ก่อน',BLOCKED:'ขับออกจากป้อมแล้วกด DROP อีกครั้ง'};
@@ -101,7 +107,7 @@
   }
   async function start(){
     if(join.disabled)return;join.disabled=true;status.textContent='Opening landscape battlefield…';ownEvent=0;celebration='';
-    audio=F.makeAudio();audio.unlock();document.getElementById('fl-sound').textContent=audio.inspect().muted?'♪ OFF':'♪ ON';await enterLandscape();
+    audio=F.makeAudio();audio.start();document.getElementById('fl-sound').textContent=audio.inspect().muted?'♪ OFF':'♪ ON';await enterLandscape();
     try{
       if(F.productionReady)await F.productionReady;
       F.assertDev();await F.beginCoinSession();ui=F.makeUI();
@@ -111,7 +117,7 @@
       battle.hidden=false;launcher.hidden=true;
       // A disposed WebGL canvas remains lost. Re-entry needs a fresh canvas/context.
       const prior=document.getElementById('fl-canvas'),canvas=prior.cloneNode(false);prior.replaceWith(canvas);
-      scene=F.makeScene(canvas,document.getElementById('fl-labels'),(name,x,z)=>audio?.spatial(name,x,z,local));audio.start();
+      scene=F.makeScene(canvas,document.getElementById('fl-labels'),(name,x,z)=>audio?.spatial(name,x,z,local));
       input=F.bindInput(battle);ui.connection(connected);document.getElementById('fl-room').textContent=network.code;
       if(network.code!==requested)ui.message('ห้องก่อนหน้าเต็ม · เข้าห้อง '+network.code.slice(1)+' แล้ว');code.value=network.code.slice(1);
       history.replaceState(null,'',(F.live?'/frontline/index.html':'/__dev/frontline')+'?room='+network.code);
@@ -123,6 +129,7 @@
   }
   join.addEventListener('click',start);document.getElementById('fl-leave').addEventListener('click',stop);
   document.getElementById('fl-rotate-exit').addEventListener('click',stop);
+  document.getElementById('fl-lobby').href=F.live||location.port!=='19444'?'/index_classic.html':'https://vocabworld.web.app/index_classic.html';
   document.getElementById('fl-sound').addEventListener('click',e=>{if(audio)e.currentTarget.textContent=audio.toggle()?'♪ ON':'♪ OFF';});
   code.addEventListener('keydown',e=>{if(e.key==='Enter')start();});
   window.addEventListener('pagehide',event=>{

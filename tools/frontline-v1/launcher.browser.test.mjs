@@ -14,13 +14,13 @@ async function admin(method,suffix='',body){const response=await fetch('http://1
   method,headers:{Authorization:'Bearer owner','Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
   if(!response.ok)throw Error(await response.text());return response.json();}
 async function geometry(){return page.evaluate(()=>{
-  const selectors=['#fl-launch-title','.fl-launch-subtitle','.fl-wallet','label[for="fl-code"]','#fl-code','#fl-join','.fl-launch-help','.fl-launch-tip','.fl-launch-note','.fl-dev'];
+  const selectors=['#fl-launch-title','.fl-launch-subtitle','.fl-wallet','label[for="fl-code"]','#fl-code','#fl-join','#fl-lobby','.fl-launch-help','.fl-launch-tip','.fl-launch-note','.fl-dev'];
   const boxes=selectors.map(selector=>{const r=document.querySelector(selector).getBoundingClientRect();return{selector,x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height};});
   const overlaps=[];for(let i=0;i<boxes.length;i++)for(let j=i+1;j<boxes.length;j++){
     const a=boxes[i],b=boxes[j];if(a.x<b.right&&a.right>b.x&&a.y<b.bottom&&a.bottom>b.y)overlaps.push([a.selector,b.selector]);}
-  const launcher=document.querySelector('#launcher'),join=document.querySelector('#fl-join').getBoundingClientRect(),field=document.querySelector('#fl-code').getBoundingClientRect(),badge=document.querySelector('.fl-dev').getBoundingClientRect();
+  const launcher=document.querySelector('#launcher'),join=document.querySelector('#fl-join').getBoundingClientRect(),lobby=document.querySelector('#fl-lobby').getBoundingClientRect(),field=document.querySelector('#fl-code').getBoundingClientRect(),badge=document.querySelector('.fl-dev').getBoundingClientRect();
   return{width:innerWidth,height:innerHeight,boxes,overlaps,inside:boxes.every(r=>r.x>=0&&r.right<=innerWidth),
-    hit44:join.height>=44&&field.height>=44,joinInitiallyVisible:join.bottom<=innerHeight,badgeVisible:badge.y>=0&&badge.bottom<=innerHeight,
+    hit44:join.height>=44&&field.height>=44&&lobby.height>=44,joinInitiallyVisible:join.bottom<=innerHeight,badgeVisible:badge.y>=0&&badge.bottom<=innerHeight,
     internallyScrollable:launcher.scrollHeight>launcher.clientHeight,bodyScroll:document.documentElement.scrollHeight>innerHeight,
     inputMode:document.querySelector('#fl-code').inputMode,heading:document.querySelector('#launcher h1').textContent};
 });}
@@ -35,6 +35,9 @@ try{
   assert.ok(assets.some(a=>a.url.endsWith('.avif')&&a.type.includes('image/avif')));assert.ok(!assets.some(a=>a.url.endsWith('.webp')),'one chosen backdrop codec');
   const fallback=await page.request.get(BASE+'/frontline/assets/launcher-garden.webp');assert.equal(fallback.status(),200);assert.match(fallback.headers()['content-type'],/image\/webp/);
   pass('actual local routes deliver launcher CSS, browser-selected AVIF and the WebP fallback with correct MIME types',assets);
+  assert.match(await page.locator('#fl-lobby').getAttribute('href'),/index_classic\.html/);
+  assert.match(await page.locator('#fl-lobby').innerText(),/กลับ Lobby/);
+  pass('cute lobby return control is present before joining');
   for(const size of [{width:1672,height:941},{width:1008,height:566},{width:812,height:375},{width:667,height:320},{width:375,height:812}]){
     await page.setViewportSize(size);await page.locator('#launcher').evaluate(el=>el.scrollTop=0);await pause(130);const layout=await geometry();
     assert.ok(layout.inside&&layout.hit44&&layout.badgeVisible&&!layout.bodyScroll&&!layout.overlaps.length,JSON.stringify(layout));
