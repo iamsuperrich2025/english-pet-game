@@ -5999,3 +5999,12 @@
 - ผ่าน syntax/diff, source+dist 10 selections/purchase ids/owned state และ4viewports; หน้าเกมจริงsource/dist/clean-HEAD-distครบ10ตัว+dialogซื้อ/0pageerror/0legacyRobotPNG;812×375 showroom y49.94–313.94/ข้อมูลไม่ล้น; clean build9,514files612.9MiB+validatorผ่าน
 - เตรียมSHIP26pathsและ COMMIT_DEPLOY พร้อม VW_DEPLOY_FORCE_REBUILD=1 เพื่อdeployจากHEADเฉพาะไฟล์ที่commit ไม่ใช้distปนGLBร่าง1400; เปิดโปรแกรม1ครั้งตามworkflowแล้วรอผู้ใช้ยืนยัน; ยังไม่ยืนยันcommit/deploy/live; outputs Documents/Codex/2026-09-10/new-chat-3/outputs
 
+
+
+## ⏬ ย้ายเมื่อ 2026-09-13 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- `carryHelps` ใน `frontline-words.js` · `frontline-main.js` / `frontline-ui.js` / `index.html`
+- unit 31 ผ่าน (K ไม่ช่วย APPLE, A ช่วย, A ซ้ำไม่ช่วย) · preview เสิร์ฟข้อความไทยแล้ว
+- รีเฟรชแล้วลองชนตัว K; ยังไม่ commit/deploy
+
+- **รอบ 1409 · Frontline ตัวเลขหัก HP ลอยบนหัวรถ:** โดนเปลือก/ระเบิดแล้วโชว์ `-100` / `-250` ตามที่หักจริง ลอยขึ้นจางใน 0.8วินาที บนรถผู้เล่น/บอท/การ์ด · ไม่โชว์ตอนเกิดใหม่

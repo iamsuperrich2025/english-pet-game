@@ -27,11 +27,6 @@
 - วัด HUD 812×375 ไม่ทับ APPLE/EXIT/roster (เว้น 14/2/10px) · 667×375 เว้น APPLE 5px · ยังไม่ commit/deploy; รีเฟรช preview แล้วลองเลื่อนความเร็ว
 
 - **รอบ 1410 · Frontline ข้อความน่ารักตอนหยิบตัวผิด:** หยิบตัวที่ไม่ช่วยเติมคำ (หรือซ้ำที่ฝากแล้ว) ขึ้นโค้ช “อุ๊ย หยิบ X ผิดแล้ว · กด DROP วางลงนะ” และป้าย DROP “อุ๊ย หยิบผิดแล้ว”
-- `carryHelps` ใน `frontline-words.js` · `frontline-main.js` / `frontline-ui.js` / `index.html`
-- unit 31 ผ่าน (K ไม่ช่วย APPLE, A ช่วย, A ซ้ำไม่ช่วย) · preview เสิร์ฟข้อความไทยแล้ว
-- รีเฟรชแล้วลองชนตัว K; ยังไม่ commit/deploy
-
-- **รอบ 1409 · Frontline ตัวเลขหัก HP ลอยบนหัวรถ:** โดนเปลือก/ระเบิดแล้วโชว์ `-100` / `-250` ตามที่หักจริง ลอยขึ้นจางใน 0.8วินาที บนรถผู้เล่น/บอท/การ์ด · ไม่โชว์ตอนเกิดใหม่
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
