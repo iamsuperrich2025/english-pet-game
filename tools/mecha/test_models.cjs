@@ -3,7 +3,7 @@
 // No production Firebase traffic. Run from any directory; --source tests a build.
 const fs=require('fs'),path=require('path'),http=require('http'),assert=require('assert/strict');
 const repo=path.resolve(__dirname,'../..'),arg=process.argv.indexOf('--source'),root=arg>=0?path.resolve(process.argv[arg+1]):repo;
-const out=process.env.MECHA_TEST_OUTPUT||path.join(repo,'work/mecha-1399');fs.mkdirSync(out,{recursive:true});
+const out=process.env.MECHA_TEST_OUTPUT||path.join(repo,'work/mecha-1400');fs.mkdirSync(out,{recursive:true});
 const deps=path.join(require('os').homedir(),'.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules');
 const {chromium}=require(path.join(deps,'playwright')),sharp=require(path.join(deps,'sharp'));
 const checks=[],ok=(name,value)=>{assert.ok(value,name);checks.push(name);};
@@ -12,7 +12,8 @@ function validate(){
   const id='robot_'+String(i).padStart(2,'0'),buf=fs.readFileSync(path.join(root,'img/models/mecha',id+'.glb'));
   ok(id+' binary header',buf.readUInt32LE(0)===0x46546c67&&buf.readUInt32LE(4)===2&&buf.readUInt32LE(8)===buf.length);
   const doc=JSON.parse(buf.subarray(20,20+buf.readUInt32LE(12)).toString()),bin=buf.subarray(28+buf.readUInt32LE(12));
-  ok(id+' standard texture-free compact PBR',doc.asset.version==='2.0'&&!doc.images&&!doc.textures&&buf.length<230000&&doc.materials.length===2);
+  ok(id+' standard texture-free compact PBR',doc.asset.version==='2.0'&&!doc.images&&!doc.textures&&buf.length<350000&&doc.materials.length===2);
+  ok(id+' quantized geometry and independent unlit eye colors',doc.extensionsUsed.includes('KHR_mesh_quantization')&&doc.materials[1].extensions.KHR_materials_unlit&&doc.nodes.slice(1).every(n=>n.scale.every(v=>v===1/4096)));
   ok(id+' articulated and animated',doc.nodes.slice(1).map(n=>n.name).join(',')==='Body,Leg_L,Leg_R,Arm_L,Arm_R'&&doc.animations.map(a=>a.name).join(',')==='Idle,Walk,Attack');
   for(const a of doc.accessors){
    const view=doc.bufferViews[a.bufferView],width={SCALAR:1,VEC3:3,VEC4:4}[a.type],bytes={5126:4,5123:2,5121:1,5122:2}[a.componentType];
@@ -21,6 +22,7 @@ function validate(){
    if(a.componentType===5126)for(let j=0;j<a.count*width;j++)assert(Number.isFinite(bin.readFloatLE(view.byteOffset+j*4)));
   }
   for(const m of doc.meshes)for(const p of m.primitives){const a=doc.accessors[p.indices],v=doc.bufferViews[a.bufferView],n=doc.accessors[p.attributes.POSITION].count;for(let j=0;j<a.count;j++)assert(bin.readUInt16LE(v.byteOffset+j*2)<n);}
+  ok(id+' under 21000 triangles',doc.meshes.reduce((n,m)=>n+m.primitives.reduce((a,p)=>a+doc.accessors[p.indices].count/3,0),0)<21000);
   ok(id+' buffers and indices valid',true);ok(id+' <=10 draws',doc.meshes.reduce((n,m)=>n+m.primitives.length,0)<=10);
  }
 }
@@ -71,6 +73,11 @@ async function run(){
   ok(id+' remote change traverses NetRoom to GLB',true);
  }
  const gait=await a.evaluate(()=>{const t=Adventure3D._t,p=t.peers['mecha-B'];t.onPeerData('mecha-B',{av:'m_10',x:p.cur.x+8,z:p.cur.z,yaw:1,n:'mecha-B'});t.peersTick(.1);return p.spr.userData.limbs.map(l=>l.rotation.x);});ok('distance-driven independent limb walking',Math.abs(gait[0])>.001&&gait[0]===-gait[1]&&gait[2]===-gait[3]);
+ await b.evaluate(()=>Adventure3D._t.room.send({n:'mecha-B',av:'m_08',x:4,z:26,yaw:Math.PI,m:0,w:0},true));
+ await a.waitForFunction(()=>Adventure3D._t.peers['mecha-B']?.spr.userData.robotId==='robot_08'&&Adventure3D._t.peers['mecha-B']?.spr.userData.mechaModelStatus==='ready');
+ const support=await a.evaluate(()=>{const t=Adventure3D._t,p=t.peers['mecha-B'];t.onPeerData('mecha-B',{av:'m_08',x:p.cur.x+8,z:p.cur.z,yaw:1,n:'mecha-B'});t.peersTick(.1);const L=p.spr.userData.limbs,bounds=new THREE.Box3().setFromObject(L[0].parent).getSize(new THREE.Vector3());return {legs:Math.abs(L[0].rotation.x),arms:Math.abs(L[2].rotation.x),height:bounds.y};});
+ ok('two-handed gun support stays close while legs walk',support.legs>.001&&support.arms/support.legs<.061);
+ ok('quantized models retain world scale in the actual game',support.height>4&&support.height<5);
  const clone=await a.evaluate(async()=>{const x=Adventure3D._t.mechaModels.makePeer('x','m_01','x',''),y=Adventure3D._t.mechaModels.makePeer('y','m_01','y','');await MechaModels.prepare('robot_01');await new Promise(r=>setTimeout(r,0));let xm,ym;x.traverse(o=>{if(o.isMesh)xm=o});y.traverse(o=>{if(o.isMesh)ym=o});const same=xm.geometry===ym.geometry&&xm.material===ym.material;const independent=x.userData.limbs[0]!==y.userData.limbs[0];Adventure3D._t.mechaModels.dispose(x);const still=y.userData.limbs[0].parent!==null;Adventure3D._t.mechaModels.dispose(y);return {same,independent,still};});ok('peers share GPU resources but not pivots',clone.same&&clone.independent&&clone.still);
  const selection=await a.evaluate(()=>[MechaModels.resolveSelection('bad',['unknown','robot_07']),MechaModels.resolveSelection(null,[]),MechaModels.fromAvatar('m_99'),MechaModels.fromAvatar('../../evil')]);ok('invalid and rental IDs resolve safely',selection.join(',')==='robot_07,robot_01,robot_01,robot_01');
  // Actual local entry must announce the same fallback robot as its weapon/HUD.

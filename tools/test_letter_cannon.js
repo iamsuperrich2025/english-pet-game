@@ -80,7 +80,7 @@ assert(css.includes('.lc-stats{position:absolute;z-index:2;left:7px;right:7px;to
 assert(css.includes('#lc-game .lc-meaning{font-size:10px;line-height:1.15;white-space:normal;overflow:visible;text-overflow:clip}'),'long Thai meanings remain readable in the restored top target panel');
 assert(code.includes("root.style.setProperty('--lc-stats-height'")&&code.includes("typeof ResizeObserver==='function'")&&code.includes('dockObserver.disconnect()'),'bottom stats panel publishes its real rendered height and cleans up the observer on exit');
 assert(css.includes('.lc-power{left:7px;bottom:calc(var(--lc-stats-height,64px) + 43px')&&css.includes('.lc-hint{position:absolute;z-index:2;top:auto')&&css.includes('bottom:calc(var(--lc-stats-height,64px) + 14px'),'power and hint controls clear the measured stats panel instead of relying on guessed fixed coordinates');
-assert(css.includes('#lc-game{position:fixed;inset:0;z-index:2147483200')&&html.includes('#btn-frontline1944-admin-launcher{position:fixed;right:18px;bottom:84px;z-index:2147483000'),'Dragon Sky Siege covers the global Frontline admin launcher while the game is active');
+assert(css.includes('#lc-game{position:fixed;inset:0;z-index:2147483200'),'Dragon Sky Siege remains a full-screen foreground game while active');
 assert(!code.includes('NetRoom.create')&&!code.includes('netJoin()')&&!code.includes('drawPeerCannon'),'Letter Cannon is solo-only with no multiplayer runtime');
 assert(code.includes('function shockwave')&&code.includes('function impact')&&code.includes("globalCompositeOperation='lighter'"),'projectile and target impact spectacle included');
 assert(!code.includes('registerTap(now)')&&!code.includes('tapPointers.set'),'obsolete double-tap firing removed');

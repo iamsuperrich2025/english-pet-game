@@ -40,7 +40,7 @@
         }
       }
       const old=o.material;
-      if(!materials.has(old))materials.set(old,new root.THREE.MeshPhongMaterial({
+      if(!materials.has(old))materials.set(old,old.isMeshBasicMaterial?new root.THREE.MeshBasicMaterial({name:old.name,vertexColors:true,color:0xffffff}):new root.THREE.MeshPhongMaterial({
         name:old.name,vertexColors:true,color:0xffffff,shininess:38,specular:0x404040,
         emissive:old.emissive?old.emissive.clone().convertLinearToSRGB():0x000000
       }));
@@ -73,7 +73,7 @@
       const previous=host.userData.limbs||[];
       limbs.forEach((limb,i)=>{if(previous[i])limb.rotation.x=previous[i].rotation.x;});
       if(fallback)host.remove(fallback);
-      host.add(model);host.userData.limbs=limbs;host.userData.mechaModelStatus='ready';host.userData.playerStyle='soft-cuboid-chibi-3d';
+      host.add(model);host.userData.limbs=limbs;host.userData.mechaTwoHanded=['robot_04','robot_08','robot_09'].includes(id);host.userData.mechaModelStatus='ready';host.userData.playerStyle='soft-cuboid-chibi-3d';
       return true;
     }).catch(error=>{
       if(!host.userData.mechaDisposed)host.userData.mechaModelStatus='fallback';

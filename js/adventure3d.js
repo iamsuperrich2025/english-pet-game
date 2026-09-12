@@ -4768,7 +4768,7 @@ function tickPeers(dt,now){
       p.swing=(p.swing||0)+(speedN-(p.swing||0))*Math.min(1,dt*8);
       const a=Math.sin(p.stride*fq)*(p.mech?.5:.6)*p.swing;
       const L=p.spr.userData.limbs||[];
-      if(L.length===4){ L[0].rotation.x=a; L[1].rotation.x=-a; L[2].rotation.x=-a*.8; L[3].rotation.x=a*.8; }
+      if(L.length===4){ const arms=p.spr.userData.mechaTwoHanded?.06:.8; L[0].rotation.x=a; L[1].rotation.x=-a; L[2].rotation.x=-a*arms; L[3].rotation.x=a*arms; }
       const walkBase=(p.walk&&M.hotel)?(p.cur.y||0):0;
       p.spr.position.set(p.cur.x,walkBase+Math.abs(Math.sin(p.stride*fq))*(p.mech?.1:.045)*p.swing,p.cur.z);   // เด้งก้าว (หุ่นย่ำหนักกว่า)
       if(M.hotel&&p.walk&&moved>.001){

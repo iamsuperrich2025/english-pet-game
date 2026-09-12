@@ -1,0 +1,387 @@
+<title>Firebase Rules — เพิ่มโลกยานแม่บุกโลก (รอบ 414)</title>
+<style>
+:root{
+  --bg:#f4f2ee; --panel:#ffffff; --ink:#1c2230; --sub:#5a6478; --line:#e2ddd3;
+  --accent:#c8641a; --accent-ink:#fff; --code-bg:#f7f5f0; --code-ink:#2a3040;
+  --ok:#1f8a4c; --hl:#fff6d6;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0f1420; --panel:#161d2b; --ink:#e8edf6; --sub:#9aa6bd; --line:#26304a;
+  --accent:#f0913c; --accent-ink:#1a1207; --code-bg:#0c111b; --code-ink:#cdd8ec;
+  --ok:#5fd08a; --hl:#3a2f12;
+}}
+:root[data-theme="dark"]{
+  --bg:#0f1420; --panel:#161d2b; --ink:#e8edf6; --sub:#9aa6bd; --line:#26304a;
+  --accent:#f0913c; --accent-ink:#1a1207; --code-bg:#0c111b; --code-ink:#cdd8ec;
+  --ok:#5fd08a; --hl:#3a2f12;
+}
+:root[data-theme="light"]{
+  --bg:#f4f2ee; --panel:#ffffff; --ink:#1c2230; --sub:#5a6478; --line:#e2ddd3;
+  --accent:#c8641a; --accent-ink:#fff; --code-bg:#f7f5f0; --code-ink:#2a3040;
+  --ok:#1f8a4c; --hl:#fff6d6;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:'Segoe UI','Prompt',system-ui,sans-serif;line-height:1.55;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:940px;margin:0 auto;padding:26px 20px 60px}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700}
+h1{font-size:clamp(22px,4vw,30px);margin:6px 0 4px;text-wrap:balance;letter-spacing:-.01em}
+.lead{color:var(--sub);margin:0 0 20px;font-size:15px}
+.steps{display:flex;flex-direction:column;gap:10px;margin:0 0 22px;padding:0;list-style:none}
+.steps li{display:flex;gap:12px;align-items:flex-start;background:var(--panel);
+  border:1px solid var(--line);border-radius:12px;padding:12px 15px}
+.steps .n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent);
+  color:var(--accent-ink);font-weight:800;font-size:14px;display:grid;place-items:center}
+.steps b{color:var(--ink)}
+.steps small{color:var(--sub)}
+.note{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);
+  border-radius:10px;padding:11px 15px;margin:0 0 22px;font-size:13.5px;color:var(--sub)}
+.note code{background:var(--code-bg);color:var(--accent);padding:1px 6px;border-radius:5px;
+  font-family:'Cascadia Code',ui-monospace,monospace;font-size:.92em;font-weight:600}
+.bar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0 0 12px}
+.copy{appearance:none;border:none;cursor:pointer;background:var(--accent);color:var(--accent-ink);
+  font-weight:800;font-size:15px;padding:12px 26px;border-radius:11px;letter-spacing:.01em;
+  transition:transform .12s ease,filter .12s ease}
+.copy:hover{filter:brightness(1.06)}
+.copy:active{transform:translateY(1px) scale(.99)}
+.copy:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.copied{color:var(--ok);font-weight:700;font-size:14px;opacity:0;transition:opacity .2s}
+.copied.on{opacity:1}
+.codewrap{position:relative;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--code-bg)}
+.codehead{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;
+  border-bottom:1px solid var(--line);font-size:12px;color:var(--sub);font-weight:600}
+pre{margin:0;padding:16px;overflow:auto;max-height:60vh;
+  font-family:'Cascadia Code',ui-monospace,'SF Mono',Consolas,monospace;
+  font-size:12.5px;line-height:1.5;color:var(--code-ink);tab-size:2}
+mark{background:var(--hl);color:inherit;border-radius:3px;padding:0 2px;font-weight:700}
+.foot{margin-top:18px;font-size:12.5px;color:var(--sub)}
+</style>
+<div class="wrap">
+  <div class="eyebrow">Firebase Realtime Database · Rules</div>
+  <h1>เพิ่มโลก “ยานแม่บุกโลก” ให้เล่นกับเพื่อนได้ 🛸</h1>
+  <p class="lead">อัปเดตกฎ 1 บรรทัด เพื่อเปิดให้ผู้เล่นเห็นกันในสมรภูมิเดียวกัน (โลก 3D อื่นยังทำงานเหมือนเดิมทุกอย่าง)</p>
+
+  <ol class="steps">
+    <li><span class="n">1</span><div>กดปุ่ม <b>คัดลอกกฎทั้งหมด</b> ด้านล่าง</div></li>
+    <li><span class="n">2</span><div>เปิด <b>Firebase Console</b> &rarr; โปรเจกต์ <b>english-pet-game</b> &rarr; <b>Realtime Database</b> &rarr; แท็บ <b>Rules</b></div></li>
+    <li><span class="n">3</span><div><b>ลบของเดิมทั้งหมด</b> แล้ววางกฎที่คัดลอกมาแทน &rarr; กด <b>Publish</b><br><small>วางทั้งก้อนเสมอ ห้ามวางเฉพาะบางส่วน</small></div></li>
+  </ol>
+
+  <div class="note">มีอะไรเปลี่ยน? แค่ <b>จุดเดียว</b> — เพิ่ม <code>$map === 'invasion'</code> ต่อท้าย enum ของ <code>/world/$map</code> (ไฮไลต์เหลืองในโค้ด) เพื่ออนุญาตให้เขียนตำแหน่งผู้เล่นในโลกใหม่ · <b>ไม่มี field ใหม่</b> ใช้ของเดิม (n, x, z, y, yaw, av, w, c, ct) ที่กฎรับอยู่แล้ว · <b>ยังไม่ publish ก็เล่นได้</b> — แค่จะยังไม่เห็นเพื่อนจนกว่าจะกด Publish</div>
+
+  <div class="bar">
+    <button class="copy" id="btn">📋 คัดลอกกฎทั้งหมด</button>
+    <span class="copied" id="ok">✓ คัดลอกแล้ว! ไปวางใน Firebase Console ได้เลย</span>
+  </div>
+
+  <div class="codewrap">
+    <div class="codehead"><span>database.rules.json</span><span>289 บรรทัด</span></div>
+    <pre id="rules">{
+  &quot;rules&quot;: {
+    &quot;presence&quot;: {
+      &quot;.read&quot;: true,
+      &quot;$uid&quot;: {
+        &quot;.write&quot;: &quot;auth != null &amp;&amp; auth.uid === $uid&quot;,
+        &quot;.validate&quot;: &quot;newData.hasChildren([&#x27;n&#x27;,&#x27;g&#x27;,&#x27;act&#x27;,&#x27;at&#x27;])&quot;,
+        &quot;n&quot;:   { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &gt;= 1 &amp;&amp; newData.val().length &lt;= 40&quot; },
+        &quot;g&quot;:   { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &lt;= 20&quot; },
+        &quot;act&quot;: { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &lt;= 60&quot; },
+        &quot;at&quot;:  { &quot;.validate&quot;: &quot;newData.isNumber()&quot; },
+        &quot;$other&quot;: { &quot;.validate&quot;: false }
+      }
+    },
+    &quot;leaderboard&quot;: {
+      &quot;.read&quot;: true,
+      &quot;.indexOn&quot;: &quot;coins&quot;,
+      &quot;$uid&quot;: {
+        &quot;.write&quot;: &quot;auth != null &amp;&amp; auth.uid === $uid&quot;,
+        &quot;.validate&quot;: &quot;newData.hasChildren([&#x27;n&#x27;,&#x27;g&#x27;,&#x27;coins&#x27;,&#x27;at&#x27;])&quot;,
+        &quot;n&quot;:     { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &gt;= 1 &amp;&amp; newData.val().length &lt;= 40&quot; },
+        &quot;g&quot;:     { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &lt;= 20&quot; },
+        &quot;coins&quot;: { &quot;.validate&quot;: &quot;newData.isNumber() &amp;&amp; newData.val() &gt;= 0&quot; },
+        &quot;av&quot;:    { &quot;.validate&quot;: &quot;newData.isNumber() &amp;&amp; newData.val() &gt;= 0&quot; },
+        &quot;ni&quot;:    { &quot;.validate&quot;: &quot;newData.isNumber() &amp;&amp; newData.val() &gt;= 0&quot; },
+        &quot;bk&quot;:    { &quot;.validate&quot;: &quot;newData.isNumber() &amp;&amp; newData.val() &gt;= 0&quot; },
+        &quot;ba&quot;:    { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &lt;= 8&quot; },
+        &quot;hs&quot;:    { &quot;.validate&quot;: &quot;newData.isNumber() &amp;&amp; newData.val() &gt;= 0&quot; },
+        &quot;at&quot;:    { &quot;.validate&quot;: &quot;newData.isNumber()&quot; },
+        &quot;$other&quot;: { &quot;.validate&quot;: false }
+      }
+    },
+    &quot;friendCodes&quot;: {
+      &quot;$code&quot;: {
+        &quot;.read&quot;: true,
+        &quot;.write&quot;: &quot;auth != null &amp;&amp; newData.val() === auth.uid&quot;,
+        &quot;.validate&quot;: &quot;newData.isString()&quot;
+      }
+    },
+    &quot;friendReq&quot;: {
+      &quot;$toUid&quot;: {
+        &quot;.read&quot;: &quot;auth != null &amp;&amp; auth.uid === $toUid&quot;,
+        &quot;$fromUid&quot;: {
+          &quot;.write&quot;: &quot;auth != null &amp;&amp; (auth.uid === $fromUid || auth.uid === $toUid)&quot;,
+          &quot;.validate&quot;: &quot;newData.hasChildren([&#x27;n&#x27;,&#x27;g&#x27;,&#x27;ts&#x27;])&quot;,
+          &quot;n&quot;:  { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &lt;= 40&quot; },
+          &quot;g&quot;:  { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &lt;= 20&quot; },
+          &quot;ts&quot;: { &quot;.validate&quot;: &quot;newData.isNumber()&quot; },
+          &quot;$other&quot;: { &quot;.validate&quot;: false }
+        }
+      }
+    },
+    &quot;friends&quot;: {
+      &quot;$uid&quot;: {
+        &quot;.read&quot;: &quot;auth != null &amp;&amp; auth.uid === $uid&quot;,
+        &quot;$friendUid&quot;: {
+          &quot;.write&quot;: &quot;auth != null &amp;&amp; (auth.uid === $uid || auth.uid === $friendUid)&quot;,
+          &quot;.validate&quot;: &quot;newData.hasChildren([&#x27;n&#x27;,&#x27;g&#x27;,&#x27;ts&#x27;])&quot;,
+          &quot;n&quot;:  { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &lt;= 40&quot; },
+          &quot;g&quot;:  { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &lt;= 20&quot; },
+          &quot;ts&quot;: { &quot;.validate&quot;: &quot;newData.isNumber()&quot; },
+          &quot;$other&quot;: { &quot;.validate&quot;: false }
+        }
+      }
+    },
+    &quot;chats&quot;: {
+      &quot;$pairId&quot;: {
+        &quot;.read&quot;:  &quot;auth != null &amp;&amp; $pairId.contains(auth.uid)&quot;,
+        &quot;.write&quot;: &quot;auth != null &amp;&amp; $pairId.contains(auth.uid)&quot;,
+        &quot;$msgId&quot;: {
+          &quot;.validate&quot;: &quot;newData.hasChildren([&#x27;f&#x27;,&#x27;t&#x27;,&#x27;ts&#x27;])&quot;,
+          &quot;f&quot;:  { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val() === auth.uid&quot; },
+          &quot;t&quot;:  { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &gt;= 1 &amp;&amp; newData.val().length &lt;= 200&quot; },
+          &quot;ts&quot;: { &quot;.validate&quot;: &quot;newData.isNumber()&quot; },
+          &quot;$other&quot;: { &quot;.validate&quot;: false }
+        }
+      }
+    },
+    &quot;typing&quot;: {
+      &quot;$pairId&quot;: {
+        &quot;.read&quot;: &quot;auth != null &amp;&amp; $pairId.contains(auth.uid)&quot;,
+        &quot;$uid&quot;: {
+          &quot;.write&quot;: &quot;auth != null &amp;&amp; auth.uid === $uid &amp;&amp; $pairId.contains(auth.uid)&quot;,
+          &quot;.validate&quot;: &quot;newData.isNumber()&quot;
+        }
+      }
+    },
+    &quot;chattheme&quot;: {
+      &quot;$pairId&quot;: {
+        &quot;.read&quot;:  &quot;auth != null &amp;&amp; $pairId.contains(auth.uid)&quot;,
+        &quot;.write&quot;: &quot;auth != null &amp;&amp; $pairId.contains(auth.uid)&quot;,
+        &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &lt;= 16&quot;
+      }
+    },
+    &quot;gifts&quot;: {
+      &quot;$toUid&quot;: {
+        &quot;.read&quot;: &quot;auth != null &amp;&amp; auth.uid === $toUid&quot;,
+        &quot;$fromUid&quot;: {
+          &quot;.read&quot;:  &quot;auth != null &amp;&amp; auth.uid === $fromUid&quot;,
+          &quot;.write&quot;: &quot;auth != null &amp;&amp; (auth.uid === $fromUid || auth.uid === $toUid)&quot;,
+          &quot;$giftKey&quot;: {
+            &quot;.validate&quot;: &quot;newData.hasChildren([&#x27;k&#x27;,&#x27;id&#x27;,&#x27;fn&#x27;,&#x27;ts&#x27;,&#x27;st&#x27;])&quot;,
+            &quot;k&quot;:  { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; (newData.val() === &#x27;shop&#x27; || newData.val() === &#x27;collect&#x27; || newData.val() === &#x27;greet&#x27;)&quot; },
+            &quot;id&quot;: { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &lt;= 40&quot; },
+            &quot;fn&quot;: { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &gt;= 1 &amp;&amp; newData.val().length &lt;= 40&quot; },
+            &quot;ts&quot;: { &quot;.validate&quot;: &quot;newData.isNumber()&quot; },
+            &quot;st&quot;: { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; (newData.val() === &#x27;pending&#x27; || newData.val() === &#x27;accepted&#x27; || newData.val() === &#x27;declined&#x27;)&quot; },
+            &quot;$other&quot;: { &quot;.validate&quot;: false }
+          }
+        }
+      }
+    },
+    &quot;users&quot;: {
+      &quot;$uid&quot;: {
+        &quot;.read&quot;: &quot;auth != null &amp;&amp; auth.uid === $uid&quot;,
+        &quot;.write&quot;: &quot;auth != null &amp;&amp; auth.uid === $uid&quot;,
+        &quot;save&quot;: {
+          &quot;data&quot;: { &quot;.validate&quot;: &quot;newData.isString()&quot; },
+          &quot;at&quot;:   { &quot;.validate&quot;: &quot;newData.isNumber()&quot; }
+        },
+        &quot;profile&quot;: {
+          &quot;name&quot;: { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &gt;= 2 &amp;&amp; newData.val().length &lt;= 20&quot; }
+        }
+      }
+    },
+    &quot;world&quot;: {
+      &quot;$map&quot;: {
+        &quot;.read&quot;: &quot;auth != null&quot;,
+        &quot;.validate&quot;: &quot;$map === &#x27;adv&#x27; || $map === &#x27;haunt&#x27; || $map === &#x27;heli&#x27; || $map === &#x27;drone&#x27; || $map === &#x27;drive&#x27; || $map === &#x27;moto&#x27; || <mark>$map === &#x27;invasion&#x27;</mark>&quot;,
+        &quot;$uid&quot;: {
+          &quot;.write&quot;: &quot;auth != null &amp;&amp; auth.uid === $uid&quot;,
+          &quot;.validate&quot;: &quot;newData.hasChildren([&#x27;n&#x27;,&#x27;x&#x27;,&#x27;z&#x27;,&#x27;yaw&#x27;,&#x27;ts&#x27;])&quot;,
+          &quot;n&quot;:   { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &gt;= 1 &amp;&amp; newData.val().length &lt;= 40&quot; },
+          &quot;av&quot;:  { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &lt;= 8&quot; },
+          &quot;x&quot;:   { &quot;.validate&quot;: &quot;newData.isNumber()&quot; },
+          &quot;z&quot;:   { &quot;.validate&quot;: &quot;newData.isNumber()&quot; },
+          &quot;y&quot;:   { &quot;.validate&quot;: &quot;newData.isNumber()&quot; },
+          &quot;yaw&quot;: { &quot;.validate&quot;: &quot;newData.isNumber()&quot; },
+          &quot;ts&quot;:  { &quot;.validate&quot;: &quot;newData.isNumber()&quot; },
+          &quot;c&quot;:   { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &gt;= 1 &amp;&amp; newData.val().length &lt;= 60&quot; },
+          &quot;ct&quot;:  { &quot;.validate&quot;: &quot;newData.isNumber()&quot; },
+          &quot;m&quot;:   { &quot;.validate&quot;: &quot;newData.isNumber()&quot; },
+          &quot;w&quot;:   { &quot;.validate&quot;: &quot;newData.isNumber() &amp;&amp; newData.val() &gt;= 0&quot; },
+          &quot;cw&quot;:  { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &lt;= 60&quot; },
+          &quot;tl&quot;:  { &quot;.validate&quot;: &quot;newData.isNumber() &amp;&amp; newData.val() &gt;= 0 &amp;&amp; newData.val() &lt;= 2&quot; },
+          &quot;hp&quot;:  { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &lt;= 28&quot; },
+          &quot;$other&quot;: { &quot;.validate&quot;: false }
+        }
+      }
+    },
+    &quot;tinv&quot;: {
+      &quot;$toUid&quot;: {
+        &quot;.read&quot;: &quot;auth != null &amp;&amp; auth.uid === $toUid&quot;,
+        &quot;$fromUid&quot;: {
+          &quot;.write&quot;: &quot;auth != null &amp;&amp; (auth.uid === $fromUid || auth.uid === $toUid)&quot;,
+          &quot;.validate&quot;: &quot;newData.hasChildren([&#x27;map&#x27;,&#x27;n&#x27;,&#x27;ts&#x27;])&quot;,
+          &quot;map&quot;: { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; (newData.val() === &#x27;adv&#x27; || newData.val() === &#x27;haunt&#x27; || newData.val() === &#x27;heli&#x27; || newData.val() === &#x27;drone&#x27; || newData.val() === &#x27;drive&#x27;)&quot; },
+          &quot;n&quot;:   { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &gt;= 1 &amp;&amp; newData.val().length &lt;= 40&quot; },
+          &quot;ts&quot;:  { &quot;.validate&quot;: &quot;newData.isNumber()&quot; },
+          &quot;$other&quot;: { &quot;.validate&quot;: false }
+        }
+      }
+    },
+    &quot;rtc&quot;: {
+      &quot;$map&quot;: {
+        &quot;$toUid&quot;: {
+          &quot;.read&quot;: &quot;auth != null &amp;&amp; auth.uid === $toUid&quot;,
+          &quot;.write&quot;: &quot;auth != null &amp;&amp; auth.uid === $toUid&quot;,
+          &quot;$msgId&quot;: {
+            &quot;.write&quot;: &quot;auth != null &amp;&amp; newData.child(&#x27;f&#x27;).val() === auth.uid&quot;,
+            &quot;.validate&quot;: &quot;($map === &#x27;adv&#x27; || $map === &#x27;haunt&#x27; || $map === &#x27;heli&#x27; || $map === &#x27;drone&#x27; || $map === &#x27;drive&#x27;) &amp;&amp; newData.hasChildren([&#x27;f&#x27;,&#x27;t&#x27;,&#x27;d&#x27;,&#x27;ts&#x27;])&quot;,
+            &quot;f&quot;:  { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &lt;= 128&quot; },
+            &quot;t&quot;:  { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; (newData.val() === &#x27;offer&#x27; || newData.val() === &#x27;answer&#x27; || newData.val() === &#x27;ice&#x27;)&quot; },
+            &quot;d&quot;:  { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &lt;= 8000&quot; },
+            &quot;ts&quot;: { &quot;.validate&quot;: &quot;newData.isNumber()&quot; },
+            &quot;$other&quot;: { &quot;.validate&quot;: false }
+          }
+        }
+      }
+    },
+    &quot;market&quot;: {
+      &quot;.read&quot;: &quot;auth != null&quot;,
+      &quot;$key&quot;: {
+        &quot;.write&quot;: &quot;auth != null &amp;&amp; ((!data.exists() &amp;&amp; newData.child(&#x27;sid&#x27;).val() === auth.uid) || (data.exists() &amp;&amp; !newData.exists()))&quot;,
+        &quot;.validate&quot;: &quot;newData.hasChildren([&#x27;sid&#x27;,&#x27;sn&#x27;,&#x27;id&#x27;,&#x27;p&#x27;,&#x27;ts&#x27;])&quot;,
+        &quot;sid&quot;: { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &lt;= 128&quot; },
+        &quot;sn&quot;:  { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &gt;= 1 &amp;&amp; newData.val().length &lt;= 40&quot; },
+        &quot;id&quot;:  { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &lt;= 40&quot; },
+        &quot;p&quot;:   { &quot;.validate&quot;: &quot;newData.isNumber() &amp;&amp; newData.val() &gt;= 1 &amp;&amp; newData.val() &lt;= 1000000&quot; },
+        &quot;ts&quot;:  { &quot;.validate&quot;: &quot;newData.isNumber()&quot; },
+        &quot;$other&quot;: { &quot;.validate&quot;: false }
+      }
+    },
+    &quot;msold&quot;: {
+      &quot;$uid&quot;: {
+        &quot;.read&quot;: &quot;auth != null &amp;&amp; auth.uid === $uid&quot;,
+        &quot;$key&quot;: {
+          &quot;.write&quot;: &quot;auth != null &amp;&amp; ((!data.exists() &amp;&amp; newData.exists()) || (auth.uid === $uid &amp;&amp; !newData.exists()))&quot;,
+          &quot;.validate&quot;: &quot;newData.hasChildren([&#x27;id&#x27;,&#x27;p&#x27;,&#x27;bn&#x27;,&#x27;ts&#x27;])&quot;,
+          &quot;id&quot;: { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &lt;= 40&quot; },
+          &quot;p&quot;:  { &quot;.validate&quot;: &quot;newData.isNumber() &amp;&amp; newData.val() &gt;= 1&quot; },
+          &quot;bn&quot;: { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &gt;= 1 &amp;&amp; newData.val().length &lt;= 40&quot; },
+          &quot;ts&quot;: { &quot;.validate&quot;: &quot;newData.isNumber()&quot; },
+          &quot;$other&quot;: { &quot;.validate&quot;: false }
+        }
+      }
+    },
+    &quot;feed&quot;: {
+      &quot;$uid&quot;: {
+        &quot;.read&quot;: &quot;auth != null&quot;,
+        &quot;.write&quot;: &quot;auth != null &amp;&amp; auth.uid === $uid&quot;,
+        &quot;p&quot;: {
+          &quot;$postId&quot;: {
+            &quot;.validate&quot;: &quot;newData.hasChildren([&#x27;c&#x27;,&#x27;tx&#x27;,&#x27;ts&#x27;])&quot;,
+            &quot;c&quot;:  { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &gt;= 1 &amp;&amp; newData.val().length &lt;= 12&quot; },
+            &quot;tx&quot;: { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &gt;= 1 &amp;&amp; newData.val().length &lt;= 120&quot; },
+            &quot;ts&quot;: { &quot;.validate&quot;: &quot;newData.isNumber()&quot; },
+            &quot;$other&quot;: { &quot;.validate&quot;: false }
+          }
+        },
+        &quot;a&quot;: { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &lt;= 4000&quot; },
+        &quot;pt&quot;: { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &lt;= 2000&quot; },
+        &quot;$other&quot;: { &quot;.validate&quot;: false }
+      }
+    },
+    &quot;follow&quot;: {
+      &quot;$uid&quot;: {
+        &quot;.read&quot;: &quot;auth != null&quot;,
+        &quot;$followerUid&quot;: {
+          &quot;.write&quot;: &quot;auth != null &amp;&amp; auth.uid === $followerUid&quot;,
+          &quot;.validate&quot;: &quot;newData.hasChildren([&#x27;n&#x27;,&#x27;ts&#x27;])&quot;,
+          &quot;n&quot;:  { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &gt;= 1 &amp;&amp; newData.val().length &lt;= 40&quot; },
+          &quot;ts&quot;: { &quot;.validate&quot;: &quot;newData.isNumber()&quot; },
+          &quot;$other&quot;: { &quot;.validate&quot;: false }
+        }
+      }
+    },
+    &quot;sales&quot;: {
+      &quot;.read&quot;: true,
+      &quot;$id&quot;: {
+        &quot;.write&quot;: &quot;auth != null &amp;&amp; newData.isNumber() &amp;&amp; ((!data.exists() &amp;&amp; newData.val() === 1) || (data.exists() &amp;&amp; newData.val() === data.val() + 1))&quot;,
+        &quot;.validate&quot;: &quot;newData.isNumber() &amp;&amp; newData.val() &gt;= 0&quot;
+      }
+    },
+    &quot;ads&quot;: {
+      &quot;.read&quot;: true,
+      &quot;$n&quot;: {
+        &quot;.write&quot;: &quot;auth != null &amp;&amp; ($n === &#x27;1&#x27; || $n === &#x27;2&#x27; || $n === &#x27;3&#x27; || $n === &#x27;4&#x27; || $n === &#x27;5&#x27; || $n === &#x27;6&#x27; || $n === &#x27;7&#x27; || $n === &#x27;8&#x27; || $n === &#x27;9&#x27; || $n === &#x27;10&#x27;) &amp;&amp; (!data.exists() || data.child(&#x27;ts&#x27;).val() &lt; now - 604800000 || data.child(&#x27;uid&#x27;).val() === auth.uid)&quot;,
+        &quot;.validate&quot;: &quot;newData.hasChildren([&#x27;uid&#x27;,&#x27;n&#x27;,&#x27;ts&#x27;])&quot;,
+        &quot;uid&quot;: { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val() === auth.uid&quot; },
+        &quot;n&quot;:   { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &gt;= 1 &amp;&amp; newData.val().length &lt;= 40&quot; },
+        &quot;ts&quot;:  { &quot;.validate&quot;: &quot;newData.isNumber() &amp;&amp; newData.val() &lt;= now + 60000&quot; },
+        &quot;$other&quot;: { &quot;.validate&quot;: false }
+      }
+    },
+    &quot;class&quot;: {
+      &quot;$map&quot;: {
+        &quot;.read&quot;: &quot;auth != null&quot;,
+        &quot;.validate&quot;: &quot;$map === &#x27;adv&#x27; || $map === &#x27;haunt&#x27; || $map === &#x27;heli&#x27; || $map === &#x27;drone&#x27; || $map === &#x27;drive&#x27;&quot;,
+        &quot;muteAll&quot;: {
+          &quot;.write&quot;: &quot;auth != null&quot;,
+          &quot;.validate&quot;: &quot;newData.hasChildren([&#x27;on&#x27;,&#x27;by&#x27;,&#x27;ts&#x27;])&quot;,
+          &quot;on&quot;: { &quot;.validate&quot;: &quot;newData.isBoolean()&quot; },
+          &quot;by&quot;: { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &lt;= 40&quot; },
+          &quot;ts&quot;: { &quot;.validate&quot;: &quot;newData.isNumber()&quot; },
+          &quot;$other&quot;: { &quot;.validate&quot;: false }
+        },
+        &quot;podium&quot;: {
+          &quot;.write&quot;: &quot;auth != null&quot;,
+          &quot;.validate&quot;: &quot;newData.hasChildren([&#x27;id&#x27;,&#x27;by&#x27;,&#x27;ts&#x27;])&quot;,
+          &quot;id&quot;: { &quot;.validate&quot;: &quot;newData.isNumber()&quot; },
+          &quot;by&quot;: { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &lt;= 40&quot; },
+          &quot;ts&quot;: { &quot;.validate&quot;: &quot;newData.isNumber()&quot; },
+          &quot;top&quot;: {
+            &quot;$i&quot;: {
+              &quot;.validate&quot;: &quot;newData.hasChildren([&#x27;u&#x27;,&#x27;n&#x27;,&#x27;w&#x27;])&quot;,
+              &quot;u&quot;: { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &lt;= 128&quot; },
+              &quot;n&quot;: { &quot;.validate&quot;: &quot;newData.isString() &amp;&amp; newData.val().length &lt;= 40&quot; },
+              &quot;w&quot;: { &quot;.validate&quot;: &quot;newData.isNumber() &amp;&amp; newData.val() &gt;= 0&quot; },
+              &quot;$other&quot;: { &quot;.validate&quot;: false }
+            }
+          },
+          &quot;$other&quot;: { &quot;.validate&quot;: false }
+        },
+        &quot;$other&quot;: { &quot;.validate&quot;: false }
+      }
+    }
+  }
+}</pre>
+  </div>
+  <p class="foot">รอบ 414 · Vocab World · หลัง publish แล้วลองเข้าโลกยานแม่บุกโลก 2 เครื่องพร้อมกัน จะเห็นชื่อเพื่อน + กระดานคะแนน 🏆</p>
+</div>
+<script>
+(function(){
+  var pre=document.getElementById('rules'), btn=document.getElementById('btn'), ok=document.getElementById('ok');
+  var raw=pre.textContent;                 // textContent = ข้อความจริง (unescape กลับจาก entity)
+  btn.addEventListener('click', function(){
+    navigator.clipboard.writeText(raw).then(function(){
+      ok.classList.add('on'); btn.textContent='📋 คัดลอกอีกครั้ง';
+      clearTimeout(btn._t); btn._t=setTimeout(function(){ok.classList.remove('on');},2600);
+    }).catch(function(){
+      var r=document.createRange();r.selectNodeContents(pre);
+      var s=getSelection();s.removeAllRanges();s.addRange(r);
+      try{document.execCommand('copy');ok.classList.add('on');}catch(e){}
+    });
+  });
+})();
+</script>

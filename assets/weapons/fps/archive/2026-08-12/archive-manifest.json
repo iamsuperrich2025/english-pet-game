@@ -1,0 +1,19 @@
+{
+  "archiveDate": "2026-08-12",
+  "archiveType": "reversible-move",
+  "files": [
+    {
+      "originalPath": "img/animation/fps_weapon/fps_weapon_fire_4frames_master.png",
+      "archivedPath": "assets/weapons/fps/archive/2026-08-12/img/animation/fps_weapon/fps_weapon_fire_4frames_master.png",
+      "sha256": "c2fa8fa7e434eefd883d8c3e240e5cc281e5b98d4270c291ebd89ae2b60d8405",
+      "classification": "ARCHIVE SAFE CANDIDATE",
+      "reason": "Byte-identical SHA-256 match to assets/weapons/fps/fire/fps_weapon_fire_4frames_master.png; no active dependency found for this copy.",
+      "restore": {
+        "action": "move",
+        "from": "assets/weapons/fps/archive/2026-08-12/img/animation/fps_weapon/fps_weapon_fire_4frames_master.png",
+        "to": "img/animation/fps_weapon/fps_weapon_fire_4frames_master.png",
+        "verifySha256": "c2fa8fa7e434eefd883d8c3e240e5cc281e5b98d4270c291ebd89ae2b60d8405"
+      }
+    }
+  ]
+}

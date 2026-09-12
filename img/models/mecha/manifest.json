@@ -1,97 +1,110 @@
 {
   "style": "soft-cuboid-chibi-3d",
   "forward": "-Z",
-  "heightMeters": 4.61,
+  "heightRangeMeters": [
+    4.15,
+    4.5439
+  ],
   "robots": [
     {
       "id": "robot_01",
       "name": "Crimson Lancer",
       "weapon": "lance",
-      "bytes": 196656,
-      "triangles": 8922,
-      "draws": 10,
-      "textures": 0
+      "bytes": 295952,
+      "triangles": 17028,
+      "draws": 9,
+      "textures": 0,
+      "heightMeters": 4.3357
     },
     {
       "id": "robot_02",
       "name": "Azure Artillery",
       "weapon": "cannons",
-      "bytes": 216032,
-      "triangles": 9414,
+      "bytes": 332948,
+      "triangles": 19204,
       "draws": 10,
-      "textures": 0
+      "textures": 0,
+      "heightMeters": 4.15
     },
     {
       "id": "robot_03",
       "name": "Jade Bastion",
       "weapon": "missiles",
-      "bytes": 217856,
-      "triangles": 9558,
-      "draws": 10,
-      "textures": 0
+      "bytes": 339344,
+      "triangles": 19764,
+      "draws": 8,
+      "textures": 0,
+      "heightMeters": 4.4124
     },
     {
       "id": "robot_04",
       "name": "Golden Longshot",
       "weapon": "sniper",
-      "bytes": 209408,
-      "triangles": 9270,
-      "draws": 10,
-      "textures": 0
+      "bytes": 305976,
+      "triangles": 17724,
+      "draws": 8,
+      "textures": 0,
+      "heightMeters": 4.4836
     },
     {
       "id": "robot_05",
       "name": "Violet Dynamo",
       "weapon": "fists",
-      "bytes": 214744,
-      "triangles": 9774,
+      "bytes": 320424,
+      "triangles": 18532,
       "draws": 10,
-      "textures": 0
+      "textures": 0,
+      "heightMeters": 4.4124
     },
     {
       "id": "robot_06",
       "name": "Ember Forge",
       "weapon": "flame",
-      "bytes": 208728,
-      "triangles": 9126,
-      "draws": 10,
-      "textures": 0
+      "bytes": 311448,
+      "triangles": 18002,
+      "draws": 9,
+      "textures": 0,
+      "heightMeters": 4.4124
     },
     {
       "id": "robot_07",
       "name": "Silver Sentinel",
       "weapon": "saw",
-      "bytes": 221472,
-      "triangles": 9870,
-      "draws": 10,
-      "textures": 0
+      "bytes": 314816,
+      "triangles": 18116,
+      "draws": 9,
+      "textures": 0,
+      "heightMeters": 4.4124
     },
     {
       "id": "robot_08",
       "name": "Amber Gatling",
       "weapon": "gatling",
-      "bytes": 213324,
-      "triangles": 9282,
-      "draws": 10,
-      "textures": 0
+      "bytes": 315236,
+      "triangles": 17928,
+      "draws": 8,
+      "textures": 0,
+      "heightMeters": 4.4124
     },
     {
       "id": "robot_09",
       "name": "Cobalt Ranger",
       "weapon": "rifle",
-      "bytes": 204548,
-      "triangles": 9420,
-      "draws": 10,
-      "textures": 0
+      "bytes": 292528,
+      "triangles": 16896,
+      "draws": 8,
+      "textures": 0,
+      "heightMeters": 4.4124
     },
     {
       "id": "robot_10",
       "name": "Frost Warden",
       "weapon": "ice",
-      "bytes": 198332,
-      "triangles": 8866,
+      "bytes": 314100,
+      "triangles": 17918,
       "draws": 10,
-      "textures": 0
+      "textures": 0,
+      "heightMeters": 4.5439
     }
   ]
 }

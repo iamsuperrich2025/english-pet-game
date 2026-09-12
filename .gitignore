@@ -45,3 +45,12 @@ img/matching/animal2.png
 # โน้ต commit ชั่วคราวที่ COMMIT_DEPLOY อ่านแล้วลบเอง — ห้ามเก็บเข้า handoff commit
 handoff/SHIP.txt
 functions/frontline-runtime/
+
+# VW Dev / generated local files
+.firebase/
+.vwdev/
+**/__pycache__/
+*.pyc
+work/
+scratchpad/
+b64.txt

@@ -1,14 +1,14 @@
-# Chibi Mecha for Vocab World — round 1399
+# Chibi Mecha for Vocab World — round 1400
 
-Ten original Soft Cuboid Chibi models modeled from the colors/gear in `img/robots/robot_01..10.png`. The supplied red chibi reference guides proportions; these are newly modeled lightweight assets, not a scan or exact reproduction.
+Ten original Soft Cuboid Chibi models. Round 1400 uses the supplied ten-model reference (`sound/arena/ChatGPT Image Sep 10, 2026, 01_40_27 PM (1).png`) for larger helmets, oval eyes, compact armor, separate eye/core colors and distinct equipment. These are authored approximations, not an exact reconstruction; unseen back surfaces are newly designed. The reference PNG is not shipped or used as a texture.
 
 ## Runtime
 
 - `js/mecha-models.js`: allowlisted robot IDs, shared GLB/template loading, per-player articulated clones, retryable fallback, late-load cancellation. Existing `m_01` to `m_10` NetRoom payload is unchanged. Selected fallback, cockpit, weapon and advertised avatar agree.
 - `js/mecha-combat-fx.js`: ten cosmetic projectile, muzzle and star-impact designs matching each robot. Six instanced batches, at most twelve active shots. Existing scoring, heat and weapon intervals stay in Adventure3D. Effects are currently visible to the shooter; only avatar/movement uses the existing multiplayer transport.
-- Models face -Z, feet at y=0, height 4.6102m. Named body and four independently animated pivots: `Body`, `Leg_L`, `Leg_R`, `Arm_L`, `Arm_R`. Clips: Idle, Walk, Attack. Online walking uses the existing distance-based pivot animation.
-- Portable glTF 2.0 PBR, no images/textures, 10 draws per robot, 8,866–9,870 triangles. Normal vectors use normalized 16-bit storage with `KHR_mesh_quantization` and an 8-byte aligned stride; the checked-in loader supports it. Runtime converts color/material once to match Adventure3D's legacy output pipeline without changing other worlds.
-- Model byte counts and unique equipment are in `img/models/mecha/manifest.json`. Models total about 2.1MB; load only selected/encountered IDs. Geometry/materials are shared across same-model peers.
+- Models face -Z, feet near y=0, height about 4.15–4.54m. Named body and four independently animated pivots: `Body`, `Leg_L`, `Leg_R`, `Arm_L`, `Arm_R`. Clips: Idle, Walk, Attack. Online walking uses the existing distance-based pivot animation, with restrained arm motion for the three two-handed weapons (04/08/09).
+- Portable glTF 2.0 PBR, no images/textures, 8–10 draws per robot, 16,896–19,764 triangles. Positions use 16-bit coordinates at 1/4096 model unit with per-node scale; maximum rounding error is 0.000123 unit per axis. Normal vectors use normalized 16-bit storage with `KHR_mesh_quantization` and an 8-byte aligned stride; the checked-in loader supports it. Eye and core colors share a separate `KHR_materials_unlit` material. Runtime preserves that material and converts armor color/material once to match Adventure3D's legacy output pipeline without changing other worlds.
+- Model byte counts and unique equipment are in `img/models/mecha/manifest.json`. The reference requires smoother curved shells and more equipment detail: the measured budget is now 292,528–339,344 bytes/model (test ceiling 350KB and 21K triangles), about 3.14MB total instead of 2.10MB; load only selected/encountered IDs. Geometry/materials are shared across same-model peers.
 
 ## Build and verify
 
@@ -21,3 +21,5 @@ Ten original Soft Cuboid Chibi models modeled from the colors/gear in `img/robot
 Previews: `/tools/mecha/preview.html` (models, rotate/walk) and `/tools/mecha/fx-preview.html` (projectiles). These are development tools, not production gameplay pages.
 
 Khronos format reference: https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_mesh_quantization/README.md
+
+Round 1400 validation: Khronos validator 0 errors/0 warnings for all ten files; source and built game each 97 checks; FX 34 checks; three landscape game viewports and front/back/side/walking images inspected. The generic undefined-call scanner reports `robot_()` from two pre-existing regex literals; these are not function calls (ID validation is covered by the browser test).

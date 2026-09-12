@@ -1,0 +1,63 @@
+{
+  "ads": [
+    "assets/weapons/fps/runtime/ads/fps_weapon_ads_01.png",
+    "assets/weapons/fps/runtime/ads/fps_weapon_ads_02.png",
+    "assets/weapons/fps/runtime/ads/fps_weapon_ads_03.png",
+    "assets/weapons/fps/runtime/ads/fps_weapon_ads_04.png",
+    "assets/weapons/fps/runtime/ads/fps_weapon_ads_05.png",
+    "assets/weapons/fps/runtime/ads/fps_weapon_ads_06.png"
+  ],
+  "walk": [
+    "assets/weapons/fps/runtime/walk/fps_weapon_walk_01.png",
+    "assets/weapons/fps/runtime/walk/fps_weapon_walk_02.png",
+    "assets/weapons/fps/runtime/walk/fps_weapon_walk_03.png",
+    "assets/weapons/fps/runtime/walk/fps_weapon_walk_04.png",
+    "assets/weapons/fps/runtime/walk/fps_weapon_walk_05.png",
+    "assets/weapons/fps/runtime/walk/fps_weapon_walk_06.png",
+    "assets/weapons/fps/runtime/walk/fps_weapon_walk_07.png",
+    "assets/weapons/fps/runtime/walk/fps_weapon_walk_08.png"
+  ],
+  "sprint": [
+    "assets/weapons/fps/runtime/sprint/fps_weapon_sprint_01.png",
+    "assets/weapons/fps/runtime/sprint/fps_weapon_sprint_02.png",
+    "assets/weapons/fps/runtime/sprint/fps_weapon_sprint_03.png",
+    "assets/weapons/fps/runtime/sprint/fps_weapon_sprint_04.png",
+    "assets/weapons/fps/runtime/sprint/fps_weapon_sprint_05.png",
+    "assets/weapons/fps/runtime/sprint/fps_weapon_sprint_06.png",
+    "assets/weapons/fps/runtime/sprint/fps_weapon_sprint_07.png",
+    "assets/weapons/fps/runtime/sprint/fps_weapon_sprint_08.png"
+  ],
+  "equip": [
+    "assets/weapons/fps/runtime/equip/fps_weapon_equip_01.png",
+    "assets/weapons/fps/runtime/equip/fps_weapon_equip_02.png",
+    "assets/weapons/fps/runtime/equip/fps_weapon_equip_03.png",
+    "assets/weapons/fps/runtime/equip/fps_weapon_equip_04.png",
+    "assets/weapons/fps/runtime/equip/fps_weapon_equip_05.png",
+    "assets/weapons/fps/runtime/equip/fps_weapon_equip_06.png",
+    "assets/weapons/fps/runtime/equip/fps_weapon_equip_07.png",
+    "assets/weapons/fps/runtime/equip/fps_weapon_equip_08.png"
+  ],
+  "fire": [
+    "assets/weapons/fps/runtime/fire/fps_weapon_fire_01.png",
+    "assets/weapons/fps/runtime/fire/fps_weapon_fire_02.png",
+    "assets/weapons/fps/runtime/fire/fps_weapon_fire_03.png",
+    "assets/weapons/fps/runtime/fire/fps_weapon_fire_04.png"
+  ],
+  "reload": [
+    "assets/weapons/fps/runtime/reload/fps_weapon_reload_01.png",
+    "assets/weapons/fps/runtime/reload/fps_weapon_reload_02.png",
+    "assets/weapons/fps/runtime/reload/fps_weapon_reload_03.png",
+    "assets/weapons/fps/runtime/reload/fps_weapon_reload_04.png",
+    "assets/weapons/fps/runtime/reload/fps_weapon_reload_05.png",
+    "assets/weapons/fps/runtime/reload/fps_weapon_reload_06.png",
+    "assets/weapons/fps/runtime/reload/fps_weapon_reload_07.png",
+    "assets/weapons/fps/runtime/reload/fps_weapon_reload_08.png",
+    "assets/weapons/fps/runtime/reload/fps_weapon_reload_09.png",
+    "assets/weapons/fps/runtime/reload/fps_weapon_reload_10.png",
+    "assets/weapons/fps/runtime/reload/fps_weapon_reload_11.png",
+    "assets/weapons/fps/runtime/reload/fps_weapon_reload_12.png"
+  ],
+  "idle": [
+    "assets/weapons/fps/runtime/idle/fps_weapon_idle.png"
+  ]
+}
