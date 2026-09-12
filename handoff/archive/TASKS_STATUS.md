@@ -5951,3 +5951,51 @@
 - ผ่าน Khronos0errors/0warnings, source/dist97รายการต่อชุด +FX34/500นัด +P0style/syntax/diff; build9,540files623.1MiB/webvalidator; ตรวจภาพหน้า/หลัง/ข้าง/เดินและเกม1366×768,812×375,667×320; undefined scannerเจอregex robot_()เดิม2จุด (false positive); reports work/mecha-1400[-dist-qa]
 - **ผู้ใช้ยังไม่ผ่านโครงรุ่น1400:** หยุดขึ้นรูปเพื่อทำวิธีเทียบภาพอย่างละเอียดก่อน; ยกเลิกSHIPที่เตรียมไว้แล้ว ยังไม่เปิดCOMMIT_DEPLOYสำหรับ1400และยังไม่deploy; Preview/GLBปัจจุบันเป็นร่างที่ต้องแก้ ไม่ใช่แบบที่ผู้ใช้ยอมรับ
 
+
+
+## ⏬ ย้ายเมื่อ 2026-09-12 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- `hpLoss` + pool ใน `frontline-health.js` · scene.lift ตามรถ · CSS `.fl-float`
+- unit 30 ผ่าน · เบราว์เซอร์ probe 5000→4900 และ 4900→4650 ได้ `-100` และ `-250`
+- รีเฟรช preview แล้วลองยิงรถคันอื่น; ยังไม่ commit/deploy
+
+- **รอบ 1408 · Frontline ลูกศรชี้ฐานตัวเอง:** นอกจอมีลูกศรเขียวคำว่าบ้านชี้ vault ของที่นั่งตัวเอง (ไม่ชี้ฐานคู่แข่ง) · ในจอป้ายฐานมีเครื่องหมายบ้าน
+- `ownBaseHint` ใน `frontline-words.js` · `frontline-scene.js` โปรเจกต์หลังกล้อง · CSS `.fl-hint.home` / `.fl-base-label.mine`
+- unit 28 ผ่าน · browser ตอนเกิดที่ฐานป้าย mine โชว์/ลูกศรซ่อน; ขับออกไป z≈65 ลูกศรบ้านโผล่ขอบจอ
+- ยังไม่ commit/deploy; รีเฟรช preview แล้วลองขับออกจากบ้าน
+
+- **รอบ 1407 · Frontline ไม่ได้ยินเพลง Arcade:** ไม่ใช่ปุ่มบัง · preview เก่ายังไม่เสิร์ฟ `/sound/Frontline/bgmusic-*.ogg` (404) และเว็บจริงยังไม่มีไฟล์นี้ · เพลงเคยเริ่มหลัง await เข้าห้องเลยโดนมือถือบล็อก autoplay
+- แก้ `frontline-main.js` ให้ `audio.start()` ตอนกด JOIN ทันที + เล่น URL แฮชใน gesture เดียวกัน · รีสตาร์ท preview แล้ว ogg ได้ 200/962775
+- ยืนยันในเบราว์เซอร์หลัง JOIN: `musicPlaying` true, แทร็ก `bgmusic-9295a3b2636fb961.ogg`, ดาวน์โหลด 1 ครั้ง, synth march ปิด (`musicNotes` 0)
+- ยังไม่ขึ้น vocabworld.web.app จนกว่าจะ ship/deploy; ใช้ preview ใหม่ที่รีสตาร์ทแล้ว
+
+- **รอบ 1406 · Frontline BGM Arcade Adventure:** เพลงลูปหลัง JOIN จากไฟล์แฮช Opus 80kbps (หรือ MP3 128 ถ้าไม่มี Opus) เล่นจาก Blob + Cache Storage ไม่ดึงซ้ำตอนลูป/ออก-เข้า/รีโหลด · ไม่ดึงไฟล์ต้นฉบับ · ปิดเสียง/ซ่อนแท็บหยุดเพลง · synth march เป็นสำรอง
+- ไฟล์ `frontline-audio.js` `preview.mjs` `sound/Frontline/bgmusic-9295a3b2636fb961.ogg` + `bgmusic-a88cbf606d0bd932.mp3` · ต้นฉบับถูกกันจาก build
+- unit 3 ผ่าน (แฮช/URL/CSP) · Playwright บนเครื่องนี้ไม่มีเลยข้าม browser harness
+- ยังไม่ commit/deploy; รอบ 1404–1405 ยังค้างอยู่ด้วย — ใช้ ship.bat
+
+- **รอบ 1405 · Frontline ลูกศรชี้ตัวอักษรในคำ:** ลูกศรขอบจอชี้ตัวที่ยังขาดจากคำเป้าหมาย (ตัวที่ฝากแล้ว/กำลังถือไม่ชี้) · การ์ดในจอสีทองมีลูกศรเล็กชี้ลง · ไม่แตะ physics/network
+- `frontline-words.js` neededLetterHints/placeLetterHint · `frontline-scene.js` โปรเจกต์หลังกล้อง · `frontline.css` `.fl-hint`
+- unit 27 ผ่าน รวม CAT ข้าม C ที่ฝาก+A ที่ถือ และ clamp ขอบจอ · browser CAT นอกจอขึ้นลูกศร A/C/T, ตัว B ที่ไม่ใช้ไม่ชี้
+- ยังไม่ commit/deploy; ทดลองมือถือผ่าน preview LAN ตามรอบ 1404
+
+- **รอบ 1404 · Frontline พื้นหลังหายกระตุก:** ต้นตอแผ่นหญ้า15ผืนกระโดดตาม chunk + เงา10Hz + เขียนหญ้าทั้งสนามทุกครั้งที่สตรีม · แผ่นหญ้าโลกตามกล้องทุกเฟรม, chunk ของพุ่มไม้รีไซเคิลเฉพาะช่องที่ออกจอ, เงาสแนป texel, flora.fill เฉพาะช่องใหม่
+- ไฟล์ `frontline-{meadow,map,flora,lighting,scene}.js` · unit หญ้าตามกล้อง+รีไซเคิล3ช่อง/คง12 · browser แผ่นหญ้า error 0, 15 chunks, ถนนต่อเนื่องในสนาม
+- ยังไม่ยืนยันบนมือถือจริงของผู้ใช้; GLB รถใน harness โหลดไม่ถึงเลยเห็นลูกบาศก์สำรอง — ไม่เกี่ยวกับการเลื่อนพื้น
+- รอรัน finish_round commit+deploy ชุด Frontline นี้
+
+- **รอบ 1403 · Arena แข่งคำร่วมกัน:** ทั้งห้องคำเดียว/ขน 1 อักษร/ฝากบ้าน ผู้ชนะคนเดียวรับ1,000; บ้าน5,000HP โจมตี250/700ms บ้านพังเปิดคลังให้แย่งทีละใบ; A–Zร่วมกัน/Q+DROP/ตายทำอักษรตก ไม่ชาร์จMEGAซ้ำ; เก็บเซฟ solo เดิมไว้ไม่ใช้แข่ง
+- callable `arenaRaceV1` + private `arena_v1_live/v1` ใช้ Rules default-deny เดิม; serverตัดสินpickup/bank/raid/winner+wallet receipt/ledger; authป้องกันเซฟเก่าทับเหรียญ; ปิดโบนัสคำ/บอสและพักขายไอเท็มcargo/reward3ชิ้น คงสิทธิ์ของเดิม; รายละเอียด `docs/ARENA_RACE.md`
+- ผ่าน backend30 + Frontline regression; source/dist2browser18รายการต่อชุด (ฝากคำ/ตีบ้าน/แย่ง/Q/กลับเข้าใหม่/3landscape/ไม่ทับปุ่ม); 196draws/15,704tri/43textures/pool640+48; cleanHEAD+16paths build9,515files612.9MiB/validator/missingassets/undefined0/syntax/diffผ่าน
+- เตรียมSHIPเฉพาะ17pathsและเปิดCOMMIT_DEPLOY1ครั้งตามคำสั่งผู้ใช้; ยังไม่ยืนยันcommit/deploy/live รอหน้าต่างยืนยัน; หลักฐาน `Documents/Codex/2026-09-10/new-chat-5/work/arena-race[-dist]` และ `work/ship-1403`; ไม่เขียนข้อมูลผู้เล่นจริงในการทดสอบ
+
+- **รอบ 1402 · Frontline พื้นหลังเลื่อนกระตุก:** scene แยก visual pose สำหรับแก้ตำแหน่งออนไลน์/bump ด้วย exponential120ms; กล้อง/รถ/labels/chunks/แสงใช้ตำแหน่งภาพเดียวกัน; ขับปกติไม่มี delay, respawn/teleport reset, ไม่แก้ physics/network
+- ลด projectionเหลือครั้งเดียวและเขียน HUD/labelเฉพาะข้อความเปลี่ยน; fixture correction3→0.389หน่วยในเฟรมแรก, text writes60frames2,100→0; คง420draws/80,819tri/15chunks/DPRเดิม; desktopp95~17ms ไม่ใช่ผลมือถือจริง
+- ผ่าน unit63, source+fingerprinted browser/4landscape/FIRE+BOMB และ movement11; แก้ movement fixture ปิด hull ของ peerผู้สังเกตที่จอดขวางป้อม (ยังตรวจpeer sync); clean HEAD+patch build9,514files612.9MiB/validator/production isolation/syntax/diff ผ่าน
+- ส่งสำเร็จ: game a1ac248e + scanner4b87f511 แก้ regexหลังreturn/arrowถูกมองเป็นrobot_() (6regressionsยังจับcallจริง); Firebase Deploy complete และ live2026-09-10.1254/Frontline200; scene/UIตรงGit-archive artifactทุกbyte+browserผ่าน; รอยต่อCRLFเท่านั้นทำให้hashต่างจากprecommit; retryต่อจากcommitเดิมตามผู้ใช้ ไม่เปิดlauncherซ้ำ
+
+- **รอบ 1401 · ภาพตลาดหุ่น Chibi 10 แบบ:** image_gen ตามภาพอ้างอิงครบสี/อาวุธ; 10 WebP ใหญ่ +10 thumbnail และฉากโชว์รูม AVIF รวม1,148,744B (เดิม PNG28,246,825B ลด95.9%); alpha/dimensions/bytes และภาพเทียบจริงผ่าน; assets img/robots/chibi-market/
+- js/ui.js ใช้ direct market art ไม่ probe PNG, lazy thumbs/ภาพใหญ่เมื่อเลือก, aria-pressed และ thumbnail fallback ของตัวเลือกหุ่น; css/lobby.css .rs-chibi ฉากฟ้า-ครีม/ข้อมูลด้านข้าง/จอเตี้ยและportrait; ราคา/ซื้อ/GLB/เกมไม่เปลี่ยน; docs/PROJECT_MAP อัปเดต
+- ผ่าน syntax/diff, source+dist 10 selections/purchase ids/owned state และ4viewports; หน้าเกมจริงsource/dist/clean-HEAD-distครบ10ตัว+dialogซื้อ/0pageerror/0legacyRobotPNG;812×375 showroom y49.94–313.94/ข้อมูลไม่ล้น; clean build9,514files612.9MiB+validatorผ่าน
+- เตรียมSHIP26pathsและ COMMIT_DEPLOY พร้อม VW_DEPLOY_FORCE_REBUILD=1 เพื่อdeployจากHEADเฉพาะไฟล์ที่commit ไม่ใช้distปนGLBร่าง1400; เปิดโปรแกรม1ครั้งตามworkflowแล้วรอผู้ใช้ยืนยัน; ยังไม่ยืนยันcommit/deploy/live; outputs Documents/Codex/2026-09-10/new-chat-3/outputs
+
