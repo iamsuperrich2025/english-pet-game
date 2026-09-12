@@ -38,6 +38,13 @@ assert.ok(first.counts().saves>0&&first.counts().pushes>0,'reward did not persis
 mission.hauntedClaimCommitted({runId:'solo-run-1',wordIndex:4,en:'door',th:'ประตู',ordinal:3,ch:'r',completesWord:true});
 assert.strictEqual(first.state.coins,10000,'duplicate completion paid the reward twice');
 
+const continued=loadMission();continued.mission.beginHauntedRun('solo-run-3');
+continued.mission.hauntedClaimCommitted({runId:'solo-run-3',wordIndex:0,en:'ghost',th:'ผี',ordinal:4,ch:'t',completesWord:true});
+assert.strictEqual(continued.mission.snapshot().count,1,'setup did not count the first personal word');
+continued.mission.continueHauntedRun('solo-run-4');
+assert.strictEqual(continued.mission.snapshot().count,1,'chained hotel run reset solo mission progress');
+assert.strictEqual(continued.mission.snapshot().runId,'solo-run-4','chained hotel run did not adopt the next run id');
+
 const second=loadMission();second.mission.beginHauntedRun('solo-run-2');
 for(let i=0;i<4;i++){
   const [en,th]=words[i],ordinal=en.length-1;
@@ -60,12 +67,17 @@ const mainSource=fs.readFileSync('js/main.js','utf8');
 const html=fs.readFileSync('index_classic.html','utf8');
 const buildSource=fs.readFileSync('tools/build_web.mjs','utf8');
 assert.ok(adventure.includes('HOTEL_QUEST_WORDS=5'),'3D Haunted Hotel does not request five words');
-assert.ok(adventure.includes('.then(committed=>')&&adventure.includes('if(!committed||!window.SpecialMission)return'),'personal mission is not gated by the winning canonical transaction');
+assert.ok(adventure.includes('hotelBroadcastSoloWin()'),'solo 10,000 win is not announced to the hotel');
+assert.ok(adventure.includes("const HAUNT_SOLO_WIN_CHAT='🎉ภารกิจ5คำสำเร็จ +10000🪙'"),'solo win chat marker is missing');
+assert.ok(adventure.includes('function hotelFillMissingLetters()'),'hotel letters are not refilled when empty or stuck');
+assert.ok(adventure.includes('hotelAnnounceCycleComplete()'),'five-word completion is not announced to everyone in the hotel');
+assert.ok(fs.readFileSync('js/hauntedhotel.js','utf8').includes('function startNextMission()'),'completed hotel run does not start the next word set');
+assert.ok(!adventure.includes('returnToLobby()'),'completed hotel run still kicks players back to the lobby');
 assert.ok(adventure.includes('completesWord:!!(word&&hQuest.got.size===chars.length-1'),'personal completion is not tied to collecting the last missing letter');
 assert.ok(adventure.includes('window.SpecialMission.failHauntedRun()'),'GAME OVER is not connected to the solo mission reset');
 assert.ok(adventure.includes('window.SpecialMission.leaveHauntedRun()'),'leaving the hotel does not clear the in-memory solo run');
 assert.ok(!adventure.includes('id="adv-survive"')&&!adventure.includes('tickSurvive')&&!adventure.includes('hauntSurviveFinish'),'unneeded Haunted Hotel duration tracker still exists');
-assert.ok(adventure.includes('<span id="adv-coin"></span></div>\n    <div class="adv-hud" id="adv-hh-special"></div>'),'special mission badge is still inside the HP/coin topbar');
+assert.ok(/<span id="adv-coin"><\/span><\/div>\r?\n    <div class="adv-hud" id="adv-hh-special"><\/div>/.test(adventure),'special mission badge is still inside the HP/coin topbar');
 assert.ok(advCss.includes('#adv-hh-special{display:none;top:52px;right:136px'),'special mission badge is not positioned under the Haunted Hotel control row');
 assert.ok(advCss.includes('.adv-haunt #adv-words{top:62px')&&advCss.includes('@media(max-width:1100px){.adv-haunt #adv-words{top:94px}}'),'Haunted Hotel word target is not compactly positioned in the upper HUD');
 assert.ok(advCss.includes('.adv-haunt #adv-words .adv-fch{min-width:clamp(18px,2.2vw,26px);font-size:clamp(17px,2.2vw,28px)'),'Haunted Hotel word tiles are still oversized');

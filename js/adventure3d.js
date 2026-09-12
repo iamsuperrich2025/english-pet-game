@@ -2964,8 +2964,33 @@ function hotelStartQuestWord(){
   if(!hotel||!hQuest||!words[0]||hQuest.finish) return;
   hotelClearQuestLetters();
   hQuest.got=new Set(); hQuest.finalActive=false;
-  hQuest.roomLetters.forEach(p=>spawnLetter(p.ch,{hotelPos:p,placement:p,hqOrdinal:p.ordinal,hqFinal:false}));
+  hotelFillMissingLetters();
   renderHudInv(); renderHudWords();
+}
+function hotelFillMissingLetters(){
+  if(!hotel||!hQuest||!words[0]||hQuest.finish) return;
+  const chars=hotelQuestWordLetters();
+  if(!chars.length) return;
+  let missing=false;
+  for(let i=0;i<chars.length;i++){
+    if(!hQuest.got.has(i)&&!letters.some(l=>l.hqOrdinal===i)){missing=true;break;}
+  }
+  if(!missing) return;
+  if(!hQuest.roomLetters.length && HotelRuntime && HOTEL3D && HOTEL3D.letterPlacementPool){
+    const canonical=HotelRuntime.snapshot&&HotelRuntime.snapshot().canonical;
+    hQuest.roomLetters=HotelRuntime.deriveRoomLetters(HOTEL3D.letterPlacementPool(hotel),canonical||null)||[];
+  }
+  for(let ordinal=0;ordinal<chars.length;ordinal++){
+    if(hQuest.got.has(ordinal)) continue;
+    if(letters.some(l=>l.hqOrdinal===ordinal)) continue;
+    const placements=hQuest.roomLetters.filter(p=>p.ordinal===ordinal);
+    if(placements.length){
+      placements.forEach(p=>spawnLetter(p.ch,{hotelPos:p,placement:p,hqOrdinal:ordinal,hqFinal:false}));
+    }else{
+      const p=hotelSpot();
+      spawnLetter(chars[ordinal],{hotelPos:p,placement:p,hqOrdinal:ordinal,hqFinal:false});
+    }
+  }
 }
 function hotelFinalHint(){
   if(!hQuest) return;
@@ -3044,7 +3069,7 @@ function spawnLettersForWord(w){ w.en.split('').forEach(spawnLetter); }
 function ensureCoverage(){
   if(M.hotel){
     if(!hQuest) hotelQuestReset();
-    if(!letters.length && !hQuest.finish) hotelStartQuestWord();
+    if(!hQuest.finish) hotelFillMissingLetters();
     return;
   }
   // 🚁🛸 โลกบินแบบเรียงลำดับมีเฉพาะตัวอักษรของคำปัจจุบันที่ spawn ไว้พอดีแล้ว
@@ -3132,7 +3157,7 @@ function pickUpLetter(i,fromPeer){
       if(!committed||!window.SpecialMission)return;
       const result=window.SpecialMission.hauntedClaimCommitted(personalClaim);
       renderHotelSpecialMission();
-      if(result.awarded){sessionCoins+=result.reward||0;renderHudTop();}
+      if(result.awarded){sessionCoins+=result.reward||0;renderHudTop();hotelBroadcastSoloWin();}
       else if(result.credited)showBanner(`🎯 <b>ภารกิจเดี่ยว ${result.count}/${result.goal} คำ</b><br><small>${escapeHTML(word.en.toUpperCase())} = ${escapeHTML(word.th)} นับเป็นของคุณแล้ว</small>`,2200);
     });
     return;
@@ -3615,11 +3640,14 @@ function hotelApplyCanonicalState(previous,next,meta){
     const roomLetters=HotelRuntime.deriveRoomLetters(placementPool,next);
     hotelQuestReset(); hQuest.bonusPaid=oldBonus;
     hQuest.runId=next.runId; hQuest.wordIndex=next.wordIndex;
-    if((!previous||previous.runId!==next.runId)&&window.SpecialMission)window.SpecialMission.beginHauntedRun(next.runId);
+    if((!previous||previous.runId!==next.runId)&&window.SpecialMission){
+      if(meta&&meta.chainedFromComplete)window.SpecialMission.continueHauntedRun(next.runId);
+      else window.SpecialMission.beginHauntedRun(next.runId);
+    }
     hQuest.placementVersion=next.placementVersion||HotelRuntime.PLACEMENT_VERSION; hQuest.placements=placements; hQuest.roomLetters=roomLetters;
     words=next.words.slice(next.wordIndex).map(w=>({en:w.en,th:w.th}));
     hQuest.finish=next.phase===HotelRuntime.PHASE.COMPLETE||next.phase===HotelRuntime.PHASE.RETURN||next.wordIndex>=HOTEL_QUEST_WORDS;
-    if(!hQuest.finish&&words[0])hotelStartQuestWord();
+    if(!hQuest.finish&&words[0]){hotelStartQuestWord();hotelFillMissingLetters();}
   }
   const previousVisits=HotelRuntime.roomVisitCount(previous),nextVisits=HotelRuntime.roomVisitCount(next);
   hQuest.roomVisitCount=nextVisits;
@@ -3632,9 +3660,13 @@ function hotelApplyCanonicalState(previous,next,meta){
     if(finalWord){hotelApplyCanonicalMask(Math.pow(2,finalWord.en.length)-1,true);rewardCompletedWord(finalWord);}
   }
   hotelApplyCanonicalPhase(previous,next,first);
+  if(!hQuest.finish)hotelFillMissingLetters();
   renderHudInv(); renderHudWords(); renderHotelSpecialMission();
   if(!first&&previous&&previous.phase!==HotelRuntime.PHASE.COMPLETE&&next.phase===HotelRuntime.PHASE.COMPLETE){
-    hQuest.finish=true; hotelClearQuestLetters(); HotelRuntime.later(hotelFinishRound,2500);
+    hotelAnnounceCycleComplete();
+  }
+  if(meta&&meta.chainedFromComplete){
+    HotelRuntime.later(()=>{if(hQuest&&!hQuest.finish&&words[0])announceTarget();},600);
   }
   if(!first&&previous&&next.wordIndex>previous.wordIndex&&next.wordIndex<HOTEL_QUEST_WORDS){
     const nextIndex=next.wordIndex;
@@ -3987,6 +4019,7 @@ function tickHotelWorld(dt,now){
   if(!hotel) return;
   HOTEL3D.tick(hotel,dt,now,camera.position);      // รูปตามอง + ลิฟต์ + บานตู้
   HotelRuntime.update(dt,now,hFootY);
+  if(hQuest&&!hQuest.finish)hotelFillMissingLetters();
   tickTorch();
   const c=camera.position;
   const inside=HOTEL3D.insideHotel(c.x,c.z);
@@ -4082,19 +4115,20 @@ function announceTarget(){
   const w=words[0]; if(!w) return;
   speakWord(w.en);
 }
-
-function hotelFinishRound(){
-  if(!running||!M.hotel||!hQuest||hQuest.bonusPaid) return;
-  hQuest.bonusPaid=true;
-  const bonus=500;
-  addCoins(bonus); sessionCoins+=bonus; saveState(); renderHudTop();
+const HAUNT_SOLO_WIN_CHAT='🎉ภารกิจ5คำสำเร็จ +10000🪙';
+function hotelAnnounceCycleComplete(){
+  if(!M.hotel) return;
   HSound.bonus();
-  hotelImportantHint(`mission-complete-${hQuest.runId}`,
-    `จบรอบโรงแรมผีสิงแล้ว<br><span class="adv-ban-coin">โบนัสพิเศษ +${bonus} 🪙 ต่อคน</span><br>แตะ “เข้าใจแล้ว” เพื่อกลับ Lobby`,
-    {title:'ภารกิจสำเร็จ',onDismiss:()=>{
-      HotelRuntime.returnToLobby();
-      HotelRuntime.later(()=>{ if(running&&M&&M.hotel) exitWorld(); },450);
-    }});
+  showBanner('🎉 <b>ภารกิจสำเร็จแล้ว!</b> เก็บคำศัพท์ครบ 5 คำ<br><small>คำและตัวอักษรถัดไปมาแล้ว — เก็บต่อได้เลย ห้ามให้ตัวอักษรว่าง</small>');
+}
+function hotelBroadcastSoloWin(){
+  const n=escapeHTML((state.profileName||'ผู้เล่น').slice(0,18));
+  showBanner(`🎉 <b>${n}</b> ทำภารกิจเก็บคำศัพท์ครบ 5 คำสำเร็จ รับ 10,000 🪙<br><small>คำและตัวอักษรถัดไปมาแล้ว</small>`);
+  myChat={text:HAUNT_SOLO_WIN_CHAT, ts:Date.now()};
+  if(netUp()) sendPos(true);
+}
+function hotelFinishRound(){
+  hotelAnnounceCycleComplete();
 }
 
 /* ============================================================
@@ -4684,6 +4718,9 @@ function onPeerData(uid,d){
     p.lastCt=d.ct;
     showPeerBubble(p, d.c);
     if(d.c==='📯') p.hornAt=performance.now();   // 📯 รอบ 975: จำเวลาไว้ให้ป้ายในกระจกกะพริบ (mirrorTagsTick)
+    if(M.hotel && d.c===HAUNT_SOLO_WIN_CHAT){
+      showBanner(`🎉 <b>${escapeHTML(p.n||'เพื่อน')}</b> ทำภารกิจเก็บคำศัพท์ครบ 5 คำสำเร็จ รับ 10,000 🪙<br><small>คำและตัวอักษรถัดไปมาแล้ว</small>`);
+    }
   }
   tinvCheck(uid);   // 🤝 รอบ 822: เช็กทุกครั้งที่มีอัปเดตตำแหน่งเข้ามา (ไม่ใช่แค่ตอนเจอครั้งแรก) — ต้องอยู่ด้วยกันต่อเนื่องครบเวลาถึงจ่าย
 }

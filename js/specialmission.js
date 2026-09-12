@@ -52,6 +52,12 @@
     }
     return snapshot();
   }
+  function continueHauntedRun(runId){
+    const id = String(runId || 'local');
+    if(!run || run.dead) return beginHauntedRun(id);
+    run.id = id;
+    return snapshot();
+  }
   function leaveHauntedRun(){ run = null; }
   function failHauntedRun(){
     if(run){ run.dead = true; run.words = 0; run.credited.clear(); run.log = []; }
@@ -217,7 +223,7 @@
   }
 
   root.SpecialMission = Object.freeze({
-    GOAL,REWARD,PROMO_LOGIN_LIMIT,beginHauntedRun,leaveHauntedRun,failHauntedRun,
+    GOAL,REWARD,PROMO_LOGIN_LIMIT,beginHauntedRun,continueHauntedRun,leaveHauntedRun,failHauntedRun,
     hauntedClaimCommitted,snapshot,showRewardNotice,onLogin,_showPromo:showPromo
   });
 })(window);

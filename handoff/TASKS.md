@@ -12,6 +12,50 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1412 · โรงแรมผีสิงจบ 5 คำแล้วเล่นต่อ:** ครบ 5 คำแล้วป้ายทั้งห้อง “ภารกิจสำเร็จแล้ว” แล้วเริ่มชุดคำ+ตัวอักษรใหม่ทันที ไม่เด้งล็อบบี้ ไม่ให้ตัวอักษรว่าง/ตัน
+- คนที่เก็บตัวสุดท้ายครบ 5 คำรับ 10,000 ครั้งเดียว — ชื่อประกาศให้เพื่อนในโรงแรมด้วย · ความคืบภารกิจเดี่ยวไม่ถูกรีเซ็ตตอนเปลี่ยนรอบ
+- `js/hauntedhotel.js` startNextMission · `js/adventure3d.js` hotelFillMissingLetters/hotelBroadcastSoloWin · `js/specialmission.js` continueHauntedRun
+- unit โรงแรม+ภารกิจพิเศษผ่าน (chain หลัง COMPLETE, ตัวอักษรสำรอง, ไม่ returnToLobby)
+
+- **รอบ 1411 · Frontline ย้ายแผง SPEED NORMAL ขึ้นบน:** จากกลางล่างไปช่องว่างขวาของคำเป้าหมาย APPLE ซ้ายของ ♪/EXIT เหนือรายชื่อผู้เล่น
+- `index.html` ย้าย `.fl-speed-control` ออกจาก `.fl-controls` · `frontline.css` ตรึงมุมบนขวา กว้างพอดีช่อง · roster เลื่อนลง `top:80px`
+- วัด HUD 812×375 ไม่ทับ APPLE/EXIT/roster (เว้น 14/2/10px) · 667×375 เว้น APPLE 5px · ยังไม่ commit/deploy; รีเฟรช preview แล้วลองเลื่อนความเร็ว
+
+- **รอบ 1410 · Frontline ข้อความน่ารักตอนหยิบตัวผิด:** หยิบตัวที่ไม่ช่วยเติมคำ (หรือซ้ำที่ฝากแล้ว) ขึ้นโค้ช “อุ๊ย หยิบ X ผิดแล้ว · กด DROP วางลงนะ” และป้าย DROP “อุ๊ย หยิบผิดแล้ว”
+- `carryHelps` ใน `frontline-words.js` · `frontline-main.js` / `frontline-ui.js` / `index.html`
+- unit 31 ผ่าน (K ไม่ช่วย APPLE, A ช่วย, A ซ้ำไม่ช่วย) · preview เสิร์ฟข้อความไทยแล้ว
+- รีเฟรชแล้วลองชนตัว K; ยังไม่ commit/deploy
+
+- **รอบ 1409 · Frontline ตัวเลขหัก HP ลอยบนหัวรถ:** โดนเปลือก/ระเบิดแล้วโชว์ `-100` / `-250` ตามที่หักจริง ลอยขึ้นจางใน 0.8วินาที บนรถผู้เล่น/บอท/การ์ด · ไม่โชว์ตอนเกิดใหม่
+- `hpLoss` + pool ใน `frontline-health.js` · scene.lift ตามรถ · CSS `.fl-float`
+- unit 30 ผ่าน · เบราว์เซอร์ probe 5000→4900 และ 4900→4650 ได้ `-100` และ `-250`
+- รีเฟรช preview แล้วลองยิงรถคันอื่น; ยังไม่ commit/deploy
+
+- **รอบ 1408 · Frontline ลูกศรชี้ฐานตัวเอง:** นอกจอมีลูกศรเขียวคำว่าบ้านชี้ vault ของที่นั่งตัวเอง (ไม่ชี้ฐานคู่แข่ง) · ในจอป้ายฐานมีเครื่องหมายบ้าน
+- `ownBaseHint` ใน `frontline-words.js` · `frontline-scene.js` โปรเจกต์หลังกล้อง · CSS `.fl-hint.home` / `.fl-base-label.mine`
+- unit 28 ผ่าน · browser ตอนเกิดที่ฐานป้าย mine โชว์/ลูกศรซ่อน; ขับออกไป z≈65 ลูกศรบ้านโผล่ขอบจอ
+- ยังไม่ commit/deploy; รีเฟรช preview แล้วลองขับออกจากบ้าน
+
+- **รอบ 1407 · Frontline ไม่ได้ยินเพลง Arcade:** ไม่ใช่ปุ่มบัง · preview เก่ายังไม่เสิร์ฟ `/sound/Frontline/bgmusic-*.ogg` (404) และเว็บจริงยังไม่มีไฟล์นี้ · เพลงเคยเริ่มหลัง await เข้าห้องเลยโดนมือถือบล็อก autoplay
+- แก้ `frontline-main.js` ให้ `audio.start()` ตอนกด JOIN ทันที + เล่น URL แฮชใน gesture เดียวกัน · รีสตาร์ท preview แล้ว ogg ได้ 200/962775
+- ยืนยันในเบราว์เซอร์หลัง JOIN: `musicPlaying` true, แทร็ก `bgmusic-9295a3b2636fb961.ogg`, ดาวน์โหลด 1 ครั้ง, synth march ปิด (`musicNotes` 0)
+- ยังไม่ขึ้น vocabworld.web.app จนกว่าจะ ship/deploy; ใช้ preview ใหม่ที่รีสตาร์ทแล้ว
+
+- **รอบ 1406 · Frontline BGM Arcade Adventure:** เพลงลูปหลัง JOIN จากไฟล์แฮช Opus 80kbps (หรือ MP3 128 ถ้าไม่มี Opus) เล่นจาก Blob + Cache Storage ไม่ดึงซ้ำตอนลูป/ออก-เข้า/รีโหลด · ไม่ดึงไฟล์ต้นฉบับ · ปิดเสียง/ซ่อนแท็บหยุดเพลง · synth march เป็นสำรอง
+- ไฟล์ `frontline-audio.js` `preview.mjs` `sound/Frontline/bgmusic-9295a3b2636fb961.ogg` + `bgmusic-a88cbf606d0bd932.mp3` · ต้นฉบับถูกกันจาก build
+- unit 3 ผ่าน (แฮช/URL/CSP) · Playwright บนเครื่องนี้ไม่มีเลยข้าม browser harness
+- ยังไม่ commit/deploy; รอบ 1404–1405 ยังค้างอยู่ด้วย — ใช้ ship.bat
+
+- **รอบ 1405 · Frontline ลูกศรชี้ตัวอักษรในคำ:** ลูกศรขอบจอชี้ตัวที่ยังขาดจากคำเป้าหมาย (ตัวที่ฝากแล้ว/กำลังถือไม่ชี้) · การ์ดในจอสีทองมีลูกศรเล็กชี้ลง · ไม่แตะ physics/network
+- `frontline-words.js` neededLetterHints/placeLetterHint · `frontline-scene.js` โปรเจกต์หลังกล้อง · `frontline.css` `.fl-hint`
+- unit 27 ผ่าน รวม CAT ข้าม C ที่ฝาก+A ที่ถือ และ clamp ขอบจอ · browser CAT นอกจอขึ้นลูกศร A/C/T, ตัว B ที่ไม่ใช้ไม่ชี้
+- ยังไม่ commit/deploy; ทดลองมือถือผ่าน preview LAN ตามรอบ 1404
+
+- **รอบ 1404 · Frontline พื้นหลังหายกระตุก:** ต้นตอแผ่นหญ้า15ผืนกระโดดตาม chunk + เงา10Hz + เขียนหญ้าทั้งสนามทุกครั้งที่สตรีม · แผ่นหญ้าโลกตามกล้องทุกเฟรม, chunk ของพุ่มไม้รีไซเคิลเฉพาะช่องที่ออกจอ, เงาสแนป texel, flora.fill เฉพาะช่องใหม่
+- ไฟล์ `frontline-{meadow,map,flora,lighting,scene}.js` · unit หญ้าตามกล้อง+รีไซเคิล3ช่อง/คง12 · browser แผ่นหญ้า error 0, 15 chunks, ถนนต่อเนื่องในสนาม
+- ยังไม่ยืนยันบนมือถือจริงของผู้ใช้; GLB รถใน harness โหลดไม่ถึงเลยเห็นลูกบาศก์สำรอง — ไม่เกี่ยวกับการเลื่อนพื้น
+- รอรัน finish_round commit+deploy ชุด Frontline นี้
+
 - **รอบ 1403 · Arena แข่งคำร่วมกัน:** ทั้งห้องคำเดียว/ขน 1 อักษร/ฝากบ้าน ผู้ชนะคนเดียวรับ1,000; บ้าน5,000HP โจมตี250/700ms บ้านพังเปิดคลังให้แย่งทีละใบ; A–Zร่วมกัน/Q+DROP/ตายทำอักษรตก ไม่ชาร์จMEGAซ้ำ; เก็บเซฟ solo เดิมไว้ไม่ใช้แข่ง
 - callable `arenaRaceV1` + private `arena_v1_live/v1` ใช้ Rules default-deny เดิม; serverตัดสินpickup/bank/raid/winner+wallet receipt/ledger; authป้องกันเซฟเก่าทับเหรียญ; ปิดโบนัสคำ/บอสและพักขายไอเท็มcargo/reward3ชิ้น คงสิทธิ์ของเดิม; รายละเอียด `docs/ARENA_RACE.md`
 - ผ่าน backend30 + Frontline regression; source/dist2browser18รายการต่อชุด (ฝากคำ/ตีบ้าน/แย่ง/Q/กลับเข้าใหม่/3landscape/ไม่ทับปุ่ม); 196draws/15,704tri/43textures/pool640+48; cleanHEAD+16paths build9,515files612.9MiB/validator/missingassets/undefined0/syntax/diffผ่าน

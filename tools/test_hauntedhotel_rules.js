@@ -77,6 +77,14 @@ assert.strictEqual(HH.parseRoomVisits('F2_ROOM_201,F2_ROOM_201,F3_ROOM_301').len
   }
   assert.strictEqual(HH.snapshot().canonical.phase,HH.PHASE.COMPLETE,'fifth word did not complete the hotel run');
   assert.strictEqual(HH.snapshot().canonical.wordIndex,4,'terminal hotel state escaped the Firebase wordIndex <= 4 rule');
+  const completedRunId=HH.snapshot().canonical.runId;
+  advance(250);await Promise.resolve();advance(100);await Promise.resolve();
+  const chained=HH.snapshot().canonical;
+  assert.notStrictEqual(chained.runId,completedRunId,'completed hotel run did not start the next five-word mission');
+  assert.ok(chained.phase===HH.PHASE.ENTER||chained.phase===HH.PHASE.ACTIVE_WORD,'next hotel mission did not resume play');
+  assert.strictEqual(chained.wordIndex,0,'next hotel mission did not restart at the first word');
+  assert.strictEqual(chained.words.length,5,'next hotel mission arrived without five words');
+  assert.ok(chained.words.every(w=>/^[a-z]{2,9}$/.test(w.en)&&w.th),'next hotel mission word or Thai gloss was empty');
   HH.exit();
 
   const wardrobe=GH.createWardrobeTurnTrigger();
@@ -96,5 +104,5 @@ assert.strictEqual(HH.parseRoomVisits('F2_ROOM_201,F2_ROOM_201,F3_ROOM_301').len
   assert.strictEqual(target.id,'near','ghost did not ignore hidden player or select nearest visible player');
   const forced=GH._chooseTarget({x:0,y:0,z:0},[{id:'hidden',x:1,y:0,z:0,room:'F2_ROOM_201'}],'hidden');
   assert.strictEqual(forced.id,'hidden','two-minute room intrusion did not target the hidden player');
-  console.log('PASS Haunted Hotel rules: five words, room letters, 5/10/13 lighting, cabinet turn-away, two-minute intrusion, ten-hit health and Thai music sequence');
+  console.log('PASS Haunted Hotel rules: five words, room letters, 5/10/13 lighting, cabinet turn-away, two-minute intrusion, ten-hit health, Thai music sequence and chained next mission');
 })().catch(error=>{console.error(error);process.exitCode=1;});

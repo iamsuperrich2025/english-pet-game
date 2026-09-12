@@ -50,6 +50,7 @@
   let driveTimer=0;
   let errorShown=false;
   const pendingClaims=new Set();
+  let pendingNextMission=false;
   const timers=new Set();
   const intervals=new Set();
   const listeners=[];
@@ -261,15 +262,24 @@
       }).filter(function(item){return /^[a-z]{2,9}$/.test(item.en);});
     }catch(e){return [];}
   }
+  function fallbackWords(){
+    return [{en:'ghost',th:'ผี'},{en:'light',th:'แสง'},{en:'hotel',th:'โรงแรม'},{en:'dark',th:'มืด'},{en:'room',th:'ห้อง'}];
+  }
   function initialRun(){
     const seed=randomSeed();
     const words=adapter&&adapter.createWordSet?adapter.createWordSet(seed):[];
+    const selected=[];
+    (Array.isArray(words)?words:[]).concat(fallbackWords()).forEach(function(item){
+      const en=String(item&&item.en||'').toLowerCase();
+      if(selected.length<HOTEL_WORDS && /^[a-z]{2,9}$/.test(en) && !selected.some(function(w){return w.en===en;}))
+        selected.push({en:en,th:String(item&&item.th||'')});
+    });
     return {
       runId:makeRunId(), seed:seed, phase:PHASE.ENTER, wordIndex:0, ordinalMask:0,
       placementVersion:PLACEMENT_VERSION,
       roomVisits:'',
       cabinetLetterSlot:Math.floor(seededRandom(hash32(seed^0x484f5445))()*5),
-      completedAt:0, revision:0, wordSet:JSON.stringify((words||[]).slice(0,HOTEL_WORDS).map(function(w){return [w.en,w.th||''];}))
+      completedAt:0, revision:0, wordSet:JSON.stringify(selected.slice(0,HOTEL_WORDS).map(function(w){return [w.en,w.th||''];}))
     };
   }
   function validCanonical(value){
@@ -410,14 +420,16 @@
   function applyState(previous,next,meta){
     if(!active||!validCanonical(next))return;
     const first=!previous || !canonical || canonical.runId!==next.runId || !!(meta&&meta.reconnect);
+    const prevPublicAll=publicState(previous);
     const prevPublic=publicState(first?null:previous);
     const nextPublic=publicState(next);
+    const chainedFromComplete=!!(prevPublicAll&&nextPublic&&prevPublicAll.runId!==nextPublic.runId&&prevPublicAll.phase===PHASE.COMPLETE);
     canonical=next;
     localOnly=!!(meta&&meta.localOnly);
     if(meta&&meta.reconnect)resetSearch(true);
     if(prevPublic&&nextPublic.wordIndex!==prevPublic.wordIndex)clearScopedHints('word',nextPublic.runId+':'+nextPublic.wordIndex,false);
     if(nextPublic.phase===PHASE.COMPLETE||nextPublic.phase===PHASE.RETURN)clearScopedHints(null,'',true);
-    if(adapter&&adapter.applyCanonicalState)adapter.applyCanonicalState(prevPublic,nextPublic,{firstSnapshot:first,live:!first,reconnect:!!(meta&&meta.reconnect)});
+    if(adapter&&adapter.applyCanonicalState)adapter.applyCanonicalState(prevPublic,nextPublic,{firstSnapshot:first,live:!first,reconnect:!!(meta&&meta.reconnect),chainedFromComplete:chainedFromComplete});
     if(director)director.onCanonicalState(nextPublic,{firstSnapshot:first,reconnect:!!(meta&&meta.reconnect)});
     adoptSearchObjective(nextPublic,prevPublic);
     scheduleDrive();
@@ -480,7 +492,25 @@
     if(canonical.phase===PHASE.ACTIVE_WORD&&visits>=ROOM_THRESHOLDS.FIRST_DARK){transitionTo(PHASE.TEMP_BLACKOUT,'five unique rooms visited');return;}
     if(canonical.phase===PHASE.TEMP_BLACKOUT&&visits>=ROOM_THRESHOLDS.RESTORE){transitionTo(PHASE.RESTORE,'ten unique rooms visited');return;}
     if(canonical.phase===PHASE.RESTORE&&visits>=ROOM_THRESHOLDS.SECOND_DARK){transitionTo(PHASE.PERMANENT_DARK,'thirteen unique rooms visited');return;}
-    if(maskFull&&canonical.wordIndex<wordTotal&&canonical.phase!==PHASE.COMPLETE&&canonical.phase!==PHASE.RETURN)advanceWord();
+    if(maskFull&&canonical.wordIndex<wordTotal&&canonical.phase!==PHASE.COMPLETE&&canonical.phase!==PHASE.RETURN){advanceWord();return;}
+    if(canonical.phase===PHASE.COMPLETE)startNextMission();
+  }
+  function startNextMission(){
+    if(!canonical||canonical.phase!==PHASE.COMPLETE||pendingNextMission)return Promise.resolve({committed:false,state:canonical});
+    pendingNextMission=true;
+    const before=expected();
+    return mutate(before,function(){
+      const next=initialRun();
+      next.startedAt=Date.now();
+      next.completedAt=0;
+      return next;
+    },'start next five-word mission').then(function(result){
+      pendingNextMission=false;
+      return result||{committed:false,state:canonical};
+    },function(){
+      pendingNextMission=false;
+      return {committed:false,state:canonical};
+    });
   }
 
   function onSessionState(previous,next,meta){applyState(previous,next,meta||{});}
@@ -533,7 +563,7 @@
     clearTransient(true);
     resetSearch(true);
     if(session)session.stop();
-    session=null; canonical=null; localOnly=false; pendingClaims.clear(); errorShown=false;
+    session=null; canonical=null; localOnly=false; pendingClaims.clear(); pendingNextMission=false; errorShown=false;
     active=true;
     currentFloor=floorIndex(context&&context.footY);
     lighting=context&&context.lighting||LIGHTING.NORMAL;
@@ -594,7 +624,7 @@
     resetSearch(true);
     if(director)director.stop();
     if(session)session.stop();
-    session=null; active=false; canonical=null; localOnly=false; pendingClaims.clear();
+    session=null; active=false; canonical=null; localOnly=false; pendingClaims.clear(); pendingNextMission=false;
     currentFloor=FLOOR.GROUND; lighting=LIGHTING.NORMAL;
     if(adapter&&adapter.onExit)adapter.onExit();
   }
@@ -612,7 +642,7 @@
     PLACEMENT_VERSION:PLACEMENT_VERSION,SEARCH:SEARCH,ROOM_THRESHOLDS:ROOM_THRESHOLDS,
     init:init,enter:enter,update:update,exit:exit,dispose:dispose,reconcileSession:reconcileSession,
     floorIndex:floorIndex,setLighting:setLighting,startFlicker:startFlicker,cancelFlicker:cancelFlicker,
-    claimOrdinal:claimOrdinal,visitRoom:visitRoom,returnToLobby:returnToLobby,
+    claimOrdinal:claimOrdinal,visitRoom:visitRoom,returnToLobby:returnToLobby,startNextMission:startNextMission,
     seededRandom:seededRandom,seededShuffle:seededShuffle,hash32:hash32,hashString:hashString,parseWords:parseWords,
     parseRoomVisits:parseRoomVisits,roomVisitCount:roomVisitCount,derivePlacements:derivePlacements,deriveRoomLetters:deriveRoomLetters,
     importantHint:importantHint,dismissHint:dismissHint,reopenHint:reopenHint,clearScopedHints:clearScopedHints,
