@@ -20,12 +20,12 @@
   F.neededLetterHints=function(room,key,from){
     const word=room&&room.word,target=word&&word.target||'';
     if(!target||word.completedAt)return [];
+    const carried=room.players&&room.players[key]&&room.players[key].carried;
+    if(carried)return [];
     const remain={};
     F.wordMarks(room.bases&&room.bases[key]&&room.bases[key].stored||'',target).forEach((done,i)=>{
       if(!done)remain[target[i]]=(remain[target[i]]||0)+1;
     });
-    const carried=room.players&&room.players[key]&&room.players[key].carried;
-    if(carried&&remain[carried]&&!--remain[carried])delete remain[carried];
     const ox=from&&from.x||0,oz=from&&from.z||0,best={};
     for(const item of Object.values(room.letters||{})){
       if(!remain[item.letter])continue;

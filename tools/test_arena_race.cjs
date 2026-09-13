@@ -33,6 +33,8 @@ try{
  const extra=await a.evaluate(()=>Object.values(VocabArena3D._t.race().snapshot.items).find(x=>x.ch==='P'));await position(a,extra.x,extra.z);
  await a.waitForFunction(()=>document.querySelector('#va-pop.on strong')?.textContent.includes('1 ตัว'));
  ok('full cargo explains one-letter limit',await a.evaluate(()=>VocabArena3D._t.cargo[0]==='A'&&[...document.querySelectorAll('.va-feed-line.bad')].some(n=>n.textContent.includes('เก็บได้ทีละ 1 ตัวอักษรเท่านั้น'))));
+ await a.evaluate(()=>{const t=VocabArena3D._t;t.player().pos.set(18,0,-18);t.resize();t.frame(16);});
+ ok('carrying shows only the home arrow',await a.evaluate(()=>{const n=VocabArena3D._t.nav();return VocabArena3D._t.cargo[0]==='A'&&n.hints===0&&n.home&&![...document.querySelectorAll('.va-hint:not(.home)')].some(el=>!el.hidden);}));
  await bank(a);
  for(const ch of ['P','P','L','E']){await pick(a,ch);await bank(a);}
  await a.waitForFunction(()=>state.coins===2000);ok('actual collect-bank loop pays exactly 1000',await a.evaluate(()=>state.coins===2000&&VocabArena3D._t.sessionCoins===1000));ok('other player receives no winner coins',await b.evaluate(()=>state.coins===1000));

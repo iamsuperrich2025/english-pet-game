@@ -853,7 +853,7 @@
   function paintLetterHints(left){
     if(!window.ArenaNav)return;
     const items=drops.map(d=>({letter:d.ch,x:d.group.position.x,z:d.group.position.z}));
-    const needed=ArenaNav.neededLetterHints(items,player.pos,left);
+    const needed=cargo.length?[]:ArenaNav.neededLetterHints(items,player.pos,left);
     while(letterHints.length<needed.length)letterHints.push(navMark('va-hint'));
     needed.forEach((item,i)=>{
       const el=letterHints[i],p=projectNav(item.x,1.75,item.z),placed=ArenaNav.placeLetterHint(p.x,p.y,innerWidth,innerHeight);

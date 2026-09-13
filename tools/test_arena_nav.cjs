@@ -14,5 +14,6 @@ const left=N.placeLetterHint(-80,200,800,400);
 ok('off-screen letter clamps to HUD-safe edge',left.visible&&left.x>=52&&left.x<=54&&Math.abs(left.angle)>1);
 const home=N.placeLetterHint(-200,800,800,400);
 ok('own-base hint reuses the same clamp',home.visible&&home.x>=52&&home.y<=400-124);
+ok('carrying suppresses letter arrows',N.neededLetterHints(items,{x:0,z:0},{S:1,E:1},true).length===0);
 ok('completed words have no letter arrows',N.neededLetterHints(items,{x:0,z:0},{}).length===0);
-console.log(JSON.stringify({passed:7}));
+console.log(JSON.stringify({passed:8}));

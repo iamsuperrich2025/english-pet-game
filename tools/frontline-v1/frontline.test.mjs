@@ -233,10 +233,10 @@ test('HP loss pops the actual subtracted amount and ignores heals or first sight
   assert.equal(F.hpLoss(80,5000),0);
   assert.equal(F.hpLoss(100,100),0);
 });
-test('letter hints point at the nearest remaining target pickups and skip banked or carried letters',()=>{
+test('letter hints hide while carrying so only the vault arrow remains',()=>{
   const r={word:{target:'CAT',completedAt:0},bases:{s0:{stored:'C'}},players:{s0:{carried:'A'}},
     letters:{a:{letter:'A',x:10,z:0},c:{letter:'C',x:0,z:10},t:{letter:'T',x:40,z:0},b:{letter:'B',x:0,z:0}}};
-  const first=F.neededLetterHints(r,'s0',{x:0,z:0});assert.equal(first.length,1);assert.equal(first[0].letter,'T');
+  assert.equal(F.neededLetterHints(r,'s0',{x:0,z:0}).length,0);
   r.players.s0.carried='';const next=F.neededLetterHints(r,'s0',{x:0,z:0}).map(h=>h.letter).sort().join('');
   assert.equal(next,'AT');
   r.word.completedAt=1;assert.equal(F.neededLetterHints(r,'s0',{x:0,z:0}).length,0);

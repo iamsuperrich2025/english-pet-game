@@ -11,7 +11,8 @@ function remain(target,stored,carried){
   for(const ch of word){if(bank[ch]>0)bank[ch]--;else left[ch]=(left[ch]||0)+1;}
   return left;
 }
-function neededLetterHints(items,from,left){
+function neededLetterHints(items,from,left,carrying){
+  if(carrying)return [];
   const ox=from&&from.x||0,oz=from&&from.z||0,best={};
   for(const item of items||[]){
     if(!left||!left[item.letter])continue;
