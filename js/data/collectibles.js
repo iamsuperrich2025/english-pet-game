@@ -114,3 +114,23 @@ function listingStatus(ratio){
   if(ratio <= 1.6)  return {t:'😴 แพง กว่าจะมีคนซื้อนานมาก',            c:'#c0392b'};
   return {t:'🚫 แพงเกินไป อาจไม่มีใครซื้อเลยนะ',                        c:'#c0392b'};
 }
+
+/* 🏪 สินค้าค้างตลาดเกิน 1 วัน: ระบบเสนอซื้อที่ราคาโรงงาน + 100
+   เสนอเฉพาะถ้าตั้งขายแพงกว่าราคานี้ (กันลงราคาถูกแล้วรอระบบมาซื้อแพงกว่า) */
+const MARKET_STALE_MS = 24*60*60*1000;
+const MARKET_SYSTEM_BUY_EXTRA = 100;
+function marketSystemBuyPrice(id){
+  const c = collectInfo(id);
+  const base = c && Number(c.price) > 0 ? Number(c.price) : 0;
+  return base > 0 ? base + MARKET_SYSTEM_BUY_EXTRA : 0;
+}
+function listingNeedsSystemOffer(l, now, status){
+  if(!l || typeof l.listedAt !== 'number') return false;
+  now = now || Date.now();
+  if((now - l.listedAt) < MARKET_STALE_MS) return false;
+  if(l.offerAskedAt && (now - l.offerAskedAt) < MARKET_STALE_MS) return false;
+  const offer = marketSystemBuyPrice(l.id);
+  if(!(offer > 0) || !(Number(l.price) > offer)) return false;
+  if(status === 'sold' || status === 'checking') return false;
+  return true;
+}

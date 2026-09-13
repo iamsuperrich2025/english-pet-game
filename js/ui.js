@@ -9506,6 +9506,95 @@ function cancelListing(i){
   });
 }
 
+/* ==== 🏪 ระบบเสนอซื้อสินค้าค้างตลาดเกิน 1 วัน รอบ 1426 ==== */
+let staleMarketOfferBusy = false;
+function listingMarketStatus(l){
+  if(!l || !l.netKey || typeof Online === 'undefined' || !Online.marketListingStatus) return '';
+  return Online.marketListingStatus[l.netKey] || '';
+}
+function maybeOfferStaleMarketBuy(now){
+  if(staleMarketOfferBusy) return;
+  if(typeof document === 'undefined' || document.querySelector('.levelup-overlay')) return;
+  const dash = document.getElementById('screen-dashboard');
+  if(dash && !dash.classList.contains('active')) return;
+  if(!state || !Array.isArray(state.listings) || typeof listingNeedsSystemOffer !== 'function') return;
+  now = now || Date.now();
+  const l = state.listings.find(x => listingNeedsSystemOffer(x, now, listingMarketStatus(x)));
+  if(!l) return;
+  openStaleMarketOffer(l);
+}
+function openStaleMarketOffer(listing){
+  const c = collectInfo(listing.id);
+  const offer = marketSystemBuyPrice(listing.id);
+  if(!c || !(offer > 0)) return;
+  staleMarketOfferBusy = true;
+  listing.offerAskedAt = Date.now();
+  saveState();
+  if(typeof sfx !== 'undefined' && sfx.select) sfx.select();
+  const overlay = document.createElement('div');
+  overlay.className = 'levelup-overlay';
+  overlay.innerHTML = `<div class="levelup-box mkt-sys-box">
+    <h2>🏪 ของค้างในตลาดเกิน 1 วัน</h2>
+    <p>${c.emoji} <b>${c.name}</b> ตั้งขาย 🪙${fmtNum(listing.price)} ยังไม่มีคนซื้อ</p>
+    <p>ระบบขอซื้อในราคาโรงงาน 🪙${fmtNum(c.price)} + 100 = <b>🪙${fmtNum(offer)}</b></p>
+    <div class="mkt-sys-coins">
+      <img class="coin-ic" src="img/coins/coin_gold.png" alt="" onerror="this.style.display='none';this.parentNode.insertAdjacentText('afterbegin','🪙')">
+      <span>+${fmtNum(offer)}</span>
+    </div>
+    <p>สนใจขายให้ระบบไหม?</p>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:10px">
+      <button class="cf-no" style="background:#b8a8cc;box-shadow:0 4px 0 #96859f">ไว้ก่อน</button>
+      <button class="cf-ok">ขายให้ระบบ 🪙${fmtNum(offer)}</button>
+    </div>
+  </div>`;
+  const close = ()=>{ overlay.remove(); staleMarketOfferBusy = false; };
+  overlay.querySelector('.cf-no').addEventListener('click', ()=>{
+    close();
+    toast('ไว้รอผู้เล่นคนอื่นซื้อต่อได้นะ — ระบบจะถามใหม่วันพรุ่งนี้ถ้ายังขายไม่ได้');
+  });
+  overlay.querySelector('.cf-ok').addEventListener('click', ()=>{
+    const fromEl = overlay.querySelector('.mkt-sys-coins');
+    acceptStaleMarketBuy(listing).then(paid=>{
+      if(paid > 0 && fromEl && typeof coinFlyFx === 'function') coinFlyFx(fromEl, paid);
+      close();
+    }).catch(()=>{ close(); });
+  });
+  document.body.appendChild(overlay);
+}
+function acceptStaleMarketBuy(listing){
+  const credit = ()=>{
+    const paid = applyMarketSystemBuy(listing);
+    if(!(paid > 0)){
+      if(typeof sfx !== 'undefined' && sfx.wrong) sfx.wrong();
+      toast('รายการนี้ขายไปแล้วหรือถอนออกแล้ว');
+      return 0;
+    }
+    if(listing.netKey && typeof Online !== 'undefined' && Online.marketListingStatus)
+      delete Online.marketListingStatus[listing.netKey];
+    saveState();
+    if(typeof authPushSave === 'function') authPushSave(true);
+    if(typeof sfx !== 'undefined' && sfx.coinGet) sfx.coinGet();
+    toast(`🏪 ระบบซื้อ${collectInfo(listing.id) ? collectInfo(listing.id).name : 'สินค้า'} +🪙${fmtNum(paid)} เข้ากระเป๋าแล้ว`);
+    if(typeof renderDashboard === 'function') renderDashboard();
+    return paid;
+  };
+  if(listing.netKey && typeof marketUnlist === 'function'){
+    return marketUnlist(listing.netKey).then(r=>{
+      if(r === 'removed') return credit();
+      if(r === 'gone'){
+        toast('🌏 มีเพื่อนซื้อชิ้นนี้ไปแล้ว — เดี๋ยวเงินเข้ากระเป๋าเองนะ');
+        return 0;
+      }
+      listing.offerAskedAt = 0;
+      saveState();
+      if(typeof sfx !== 'undefined' && sfx.wrong) sfx.wrong();
+      toast('📡 ยังถอนประกาศไม่ได้ ลองใหม่อีกครั้งนะ');
+      return 0;
+    });
+  }
+  return Promise.resolve(credit());
+}
+
 /* 🏪 รอบ 1178: เซิร์ฟเวอร์บันทึก ledger + หัก/จ่าย/ส่งของก่อน แล้ว local ทำตาม tx เดียวกัน */
 let mktBuying = false;                       // กันกดรัว/ซื้อซ้อนระหว่างรอ DB
 function buyMarketItem(key){
