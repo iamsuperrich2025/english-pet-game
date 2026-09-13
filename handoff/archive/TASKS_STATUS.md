@@ -6098,3 +6098,12 @@
 - unit 34/34 รวมเคส HUD-only
 - รีเฟรช `/frontline/` แล้วดูว่าสนามไม่มีตัวเล็กปะปน
 
+
+
+## ⏬ ย้ายเมื่อ 2026-09-13 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1422 · Dragon Sky แผงดำ/บินลื่น/กระสุนถี่:** เลิก requestFullscreen (แถบ Chrome บังล่าง) · HUD รวมบน · ลากนิ้วแบบ exp follow · ยิง 2 กระบอก×4 นัด ถี่ขึ้น
+- `js/lettercannon.js` `css/lettercannon.css` · unit `tools/test_letter_cannon.js` ผ่าน
+- รีเฟรชแล้วเข้า Dragon Sky Siege บนมือถือ: ล่างโล่ง มังกรไม่สะดุด กระสุนถี่พวยพุ่ง
+- ค้าง: ยืนยันบนเครื่องผู้ใช้หลัง deploy
+
