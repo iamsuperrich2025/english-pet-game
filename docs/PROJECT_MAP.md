@@ -134,6 +134,14 @@ PUBLIC ENTRY POINTS / KEY SYMBOLS: `enterKart3D`, `KartWorld`, `KartProfile`, `c
 DEPENDENCIES: Shared Three.js/Racing engine/vocabulary/economy/NetRoom. Lazy content-hashed modules; no new raster runtime assets.
 NOTES: Public solo entry; authenticated UID-owned multiplayer/rank writes. Invitation: `js/onetpromo.js` + `css/onetpromo.css`, UID-scoped seen marker. RTDB `kartAccess`, `wroom/kart`, `winfo/kart`, `kartRank`; legacy `world/kart` denied. Saves `kartTicket/kartDone/kartRecent/kartBest`, local `vwKartCarColor/vwKartGhost`; no mixing with F1. Tests: `tools/test_kart_entry.js`, `tools/kart/`.
 
+SYSTEM: Vocab World Pick-Up Truck
+PURPOSE: Public tropical pick-up truck clone of Kart: same island track, walls, vocabulary and rewards, with a cuboid truck and a mid speed between Kart and Racing.
+PRIMARY FILE: `js/pickup3d.js`
+RELATED FILES: `js/kart3d.js`, `js/f1_3d.js`, `js/ui.js`, `js/home-v2.js`, `js/netroom.js`, `handoff/RULES.md`
+PUBLIC ENTRY POINTS / KEY SYMBOLS: `enterPickup3D`, `PickupWorld`, `PickupProfile`, `createVocabRacingWorld`
+DEPENDENCIES: Shared Three.js/Racing engine/vocabulary/economy/NetRoom. Lazy content-hashed modules; no new raster runtime assets.
+NOTES: Public solo entry like Kart. Rooms/ranks `wroom/pickup`, `winfo/pickup`, `pickupRank`; legacy `world/pickup` denied. Saves `pickupTicket/pickupDone/pickupRecent/pickupBest`, local `vwPickupCarColor/vwPickupGhost`. Top 170 km/h (+8% DRS), pit 55 km/h. Does not mix Kart or F1 records. Tests: `tools/test_pickup_entry.js`.
+
 SYSTEM: 3D shooting minigame
 PURPOSE: First-person carnival vocabulary target game with an isolated scene, controls, scoring, and HUD.
 PRIMARY FILE: `js/shootword.js`
@@ -143,12 +151,12 @@ DEPENDENCIES: Lazily loaded `THREE`, shared state/UI/audio.
 NOTES: Separate from Invasion combat.
 
 SYSTEM: Cute Word Fleet minigame
-PURPOSE: Landscape toy-battleship vocab game: read the Thai prompt and sink the ship painted with the matching English word.
+PURPOSE: Landscape toy-battleship vocab game: pick up letter cards, bank them at your home island, and complete Frontline-style words for central coins.
 PRIMARY FILE: `js/wordship.js`
 RELATED FILES: `css/wordship.css`, `js/ui.js` (`openWordShip`), `js/state.js`, `js/home-v2.js`, `js/city3d.js`, `index_classic.html`, `tools/test_wordship.js`
 PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.WordShip`, `openWordShip`, `pool`, `spawnWave`
-DEPENDENCIES: `vocabForStudent` already loaded for Shoot Word; Canvas 2D; WebAudio beeps.
-NOTES: Admin-only while unfinished. One enemy ship sails only in the water band (never the sky), left↔right or near↔far at constant speed; near→far shrinks the hull. JS+CSS load only after an allowed click. Same 3–10 letter pool as ShootWord.
+DEPENDENCIES: `vocabForStudent` already loaded for Shoot Word; lazily loaded `THREE`; WebAudio HUD beeps; Arena fire-ring clip at `sound/arena/fire-a6fea31058694941.mp3`.
+NOTES: Admin-only while unfinished. No Game Over. Soft-cuboid 3D ships. Frontline-style letters: carry one card, bank at the private home island (ahead-left of spawn), DROP returns a wrong card to the water, complete 3–8 letter `vocabForStudent` words for 1,000 coins via `addCoins` on session settle. Large cute A–Z sprites on the water. Cards that sit between the camera and the player hull fade to 20% opacity. HUD-edge arrows point at missing cards and home. Two extra ~3-storey islands (mesa home + spire). Playable rim shows lazy white iceberg walls when the hull nears an edge. Holding forward against a blocked rim toasts `เรือติดสิ่งกีดขวาง ให้กดถอยหลัง`. Bots sail stern→bow. Right-half drag yaws the turret and pitches the barrels, but depression stops at the horizon so the tubes cannot pierce the deck. A thin plus marks the ballistic splash point. FIRE four Arena-style fireball shells whose flame tails follow velocity, using the same cached Arena fire-ring clip (`sound/arena/fire-a6fea31058694941.mp3`).
 
 SYSTEM: Letter Cannon vocabulary minigame
 PURPOSE: Portrait 9:16 vertical shooter: freely fly a weapon-mounted dragon, spell five words, protect ten hearts from meteors, and survive a two-hit boss wave.
