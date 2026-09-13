@@ -12,7 +12,7 @@
     baseHp:5000, baseDamage:250, baseRadius:3.25, baseBlockRadius:4.2,
     bombFuse:2000, bombCooldown:700, bombRadius:4.5, bombDamage:250, bombBaseDamage:500,
     pickupRadius:1.35, guardHp:5000, guardRespawnMs:5000, reward:1000, alphabet:'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-    muzzle:2.28, muzzleY:1.69
+    muzzle:2.28, muzzleY:1.69, step:1/60, poseBlend:.14, shadowMs:200
   });
   F.muzzlePoint=function(pose){
     const dx=Math.sin(pose.turret),dz=-Math.cos(pose.turret);

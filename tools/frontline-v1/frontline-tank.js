@@ -23,5 +23,16 @@
     else{tank.x=nx;tank.z=nz;}
     return Math.abs(rawX-nx)>1e-8||Math.abs(rawZ-nz)>1e-8?'edge':'';
   };
+  F.blendToward=function(local,server){
+    if(!local||!server)return '';
+    const dx=server.x-local.x,dz=server.z-local.z,d=Math.hypot(dx,dz);
+    const dh=F.wrap((server.hull||0)-(local.hull||0));
+    if(d>12||Math.abs(dh)>2.5){Object.assign(local,F.tankPose(server));return 'reset';}
+    if(d<0.05&&Math.abs(dh)<0.04)return '';
+    const k=d>2.5?0.4:0.18;
+    local.x+=dx*k;local.z+=dz*k;
+    local.hull=F.wrap(local.hull+dh*k);local.turret=local.hull;
+    return 'blend';
+  };
   F.tankPose=p=>({x:F.round(p.x),z:F.round(p.z),hull:F.round(p.hull),turret:F.round(p.turret)});
 })();

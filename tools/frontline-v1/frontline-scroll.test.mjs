@@ -40,3 +40,9 @@ test('zero-delta frames stay finite and visual pose is reused',()=>{
  const local=player(),sample=F.makeRenderPose(),view=sample(local,0);local.x=3;
  assert.equal(sample(local,0),view);assert.equal(view.x,0);assert.ok(Number.isFinite(sample(local,1/60).x));
 });
+test('heading corrections blend then ordinary steering stays attached',()=>{
+ const local=player(),sample=F.makeRenderPose();sample(local,1/60);
+ local.hull=1.2;assert.ok(sample(local,1/60).hull<0.4);
+ for(let i=0;i<45;i++){local.hull+=1.7/60;sample(local,1/60);}
+ assert.ok(Math.abs(F.wrap(sample(local,1/60).hull-local.hull))<0.02);
+});

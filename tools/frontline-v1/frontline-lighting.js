@@ -8,12 +8,14 @@
     const half=26,mapSize=512,quant=(half*2)/mapSize*8,snap=v=>Math.round(v/quant)*quant;
     sun.castShadow=true;sun.shadow.mapSize.set(mapSize,mapSize);sun.shadow.bias=-.00035;sun.shadow.normalBias=.035;
     Object.assign(sun.shadow.camera,{left:-half,right:half,top:half,bottom:-half,near:1,far:85});sun.shadow.camera.updateProjectionMatrix();
-    scene.add(sky,sun,sun.target);let lastX=Infinity,lastZ=Infinity;
+    scene.add(sky,sun,sun.target);let lastX=Infinity,lastZ=Infinity,lastAt=-1e9;
     return{update(focus){
-      if(lastX!==Infinity&&Math.hypot(focus.x-lastX,focus.z-lastZ)<quant*.6)return;
+      const now=typeof performance!=='undefined'&&performance.now?performance.now():0;
+      if(now-lastAt<(F.C.shadowMs||200))return;
+      if(lastX!==Infinity&&Math.hypot(focus.x-lastX,focus.z-lastZ)<quant*1.15)return;
       const x=snap(focus.x),z=snap(focus.z);
       if(x===lastX&&z===lastZ)return;
-      lastX=x;lastZ=z;
+      lastX=x;lastZ=z;lastAt=now;
       sun.position.set(x-12,26,z+10);sun.target.position.set(x,0,z-3);sun.target.updateMatrixWorld();
       renderer.shadowMap.needsUpdate=true;
     },dispose(){sun.shadow.dispose();scene.remove(sky,sun,sun.target);}};

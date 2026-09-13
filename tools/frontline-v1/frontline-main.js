@@ -4,7 +4,7 @@
   const F=window.Frontline,launcher=document.getElementById('launcher'),battle=document.getElementById('battle');
   const join=document.getElementById('fl-join'),code=document.getElementById('fl-code'),status=document.getElementById('fl-launch-status');
   let network=null,scene=null,input=null,ui=null,local=null,room=null,raf=0,lastTime=0,lastShot=0,lastBomb=0;
-  let exiting=false,connected=false,ownEvent=0,audio=null,celebration='';
+  let exiting=false,connected=false,ownEvent=0,audio=null,celebration='',acc=0;
   function wallet(){document.getElementById('fl-wallet').textContent=F.balance().toLocaleString();}
   async function enterLandscape(){
     document.body.classList.add('fl-game-active');
@@ -46,7 +46,7 @@
     local.hp=p.hp;local.carried=p.carried;local.carriedRevision=p.carriedRevision||0;local.dropSeq=p.dropSeq||0;
     if((local.bumpSeq||0)!==(p.bumpSeq||0))Object.assign(local,{x:p.x,z:p.z});
     local.bumpSeq=p.bumpSeq||0;
-    if(F.live&&Math.hypot(local.x-p.x,local.z-p.z)>2.5)Object.assign(local,F.tankPose(p));
+    if(F.live)F.blendToward(local,p);
     if(priorHp>p.hp&&ui)ui.message('TANK HIT · -'+Math.ceil(priorHp-p.hp)+' HP'+(priorCarried?' · '+priorCarried+' DROPPED':''));
     else if(!priorCarried&&p.carried&&ui){
       const needed=F.carryHelps(room.bases&&room.bases[change.id]&&room.bases[change.id].stored,room.word&&room.word.target,p.carried);
@@ -78,11 +78,15 @@
     }
   }
   function loop(now){
-    const dt=Math.min(.05,(now-lastTime)/1000||0);lastTime=now;
+    const raw=Math.min(.1,(now-lastTime)/1000||0);lastTime=now;acc+=raw;
     if(network)network.maintain();
     if(local&&room&&network){
       const active=connected&&room.players?.[network.id]?.id===local.id&&!room.players[network.id].bot;
-      const motion=active?F.drive(local,input.value,dt,room,network.id):'';
+      const step=F.C.step||1/60;let used=0,motion='';
+      if(active){
+        while(acc>=step&&used<3){const hit=F.drive(local,input.value,step,room,network.id);if(hit==='tank')motion='tank';else if(hit&&!motion)motion=hit;acc-=step;used++;}
+        if(acc>step)acc=step;
+      }else acc=0;
       if(motion==='tank'&&audio)audio.cue('bump');
       const fire=active&&local.hp>0&&now-lastShot>=F.C.fireMs+20&&input.take('fire');
       const bomb=active&&local.hp>0&&now-lastBomb>=F.C.bombCooldown&&input.take('bomb');
@@ -90,7 +94,7 @@
       if(fire){lastShot=now;scene.feedback(local,now);}if(bomb)lastBomb=now;if(active)network.update(local,fire,bomb,drop,input.value);
       if(audio)audio.update(room,local,network.id,input.value,active);
       const attacks=network.attackState();
-      scene.render(room,local,network.id,dt,now,attacks.now);ui.update(room,network.id,input.value,attacks,active,motion);
+      scene.render(room,local,network.id,raw||step,now,attacks.now);ui.update(room,network.id,input.value,attacks,active,motion);
     }
     raf=requestAnimationFrame(loop);
   }

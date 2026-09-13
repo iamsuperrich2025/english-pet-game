@@ -4,19 +4,20 @@
   const F=window.Frontline,T=window.THREE;
   // Reconcile only the rendered pose. Movement, collision and network state stay authoritative.
   F.makeRenderPose=function(){
-    let source=null,lastX=0,lastZ=0,lastBump=0,offsetX=0,offsetZ=0;
+    let source=null,lastX=0,lastZ=0,lastH=0,lastBump=0,offsetX=0,offsetZ=0,offsetH=0;
     const view={};
     return function(local,dt){
-      const distance=Math.hypot(local.x-lastX,local.z-lastZ),bump=local.bumpSeq||0;
+      const distance=Math.hypot(local.x-lastX,local.z-lastZ),bump=local.bumpSeq||0,turn=Math.abs(F.wrap((local.hull||0)-lastH));
       const reset=source!==local||distance>12||dt>.2;
-      if(reset){offsetX=offsetZ=0;}
-      else if(bump!==lastBump||distance>F.C.speeds[2]*Math.max(0,dt)*1.5+.1){
-        offsetX+=lastX-local.x;offsetZ+=lastZ-local.z;
+      if(reset){offsetX=offsetZ=offsetH=0;}
+      else if(bump!==lastBump||distance>F.C.speeds[2]*Math.max(0,dt)*1.5+.1||turn>F.C.turnSpeed*Math.max(0,dt)*1.5+.08){
+        offsetX+=lastX-local.x;offsetZ+=lastZ-local.z;offsetH=F.wrap(offsetH+lastH-(local.hull||0));
       }
-      const decay=Math.exp(-Math.max(0,dt)/.12);offsetX*=decay;offsetZ*=decay;
+      const decay=Math.exp(-Math.max(0,dt)/.12);offsetX*=decay;offsetZ*=decay;offsetH*=decay;
       if(Math.hypot(offsetX,offsetZ)<.0001)offsetX=offsetZ=0;
-      source=local;lastX=local.x;lastZ=local.z;lastBump=bump;
-      Object.assign(view,local);view.x+=offsetX;view.z+=offsetZ;
+      if(Math.abs(offsetH)<.0001)offsetH=0;
+      source=local;lastX=local.x;lastZ=local.z;lastH=local.hull||0;lastBump=bump;
+      Object.assign(view,local);view.x+=offsetX;view.z+=offsetZ;view.hull=F.wrap((local.hull||0)+offsetH);view.turret=view.hull;
       return view;
     };
   };
@@ -58,9 +59,10 @@
       for(const [key,p] of Object.entries(actors)){
         if(!tanks.has(key)){const mesh=shapes.tank(p.slot),tag=label('fl-carried-letter'),health=F.makeHealthBar(labels,key);
           scene.add(mesh);mesh.position.set(p.x,0,p.z);tanks.set(key,{mesh,label:tag,health});}
-        const actor=tanks.get(key),mesh=actor.mesh,pose=key===id?display:p,smoothing=key===id?1:Math.min(1,dt*12);
-        mesh.position.x+=(pose.x-mesh.position.x)*smoothing;mesh.position.z+=(pose.z-mesh.position.z)*smoothing;
-        mesh.rotation.y+=F.wrap(-pose.hull-mesh.rotation.y)*smoothing;
+        const actor=tanks.get(key),mesh=actor.mesh,pose=key===id?display:p,k=key===id?1:1-Math.exp(-dt/(F.C.poseBlend||.14));
+        if(actor.sx==null){actor.sx=pose.x;actor.sz=pose.z;actor.sh=pose.hull||0;}
+        actor.sx+=(pose.x-actor.sx)*k;actor.sz+=(pose.z-actor.sz)*k;actor.sh+=F.wrap((pose.hull||0)-actor.sh)*k;
+        mesh.position.x=actor.sx;mesh.position.z=actor.sz;mesh.rotation.y=-actor.sh;
         mesh.userData.turret.rotation.y=-(pose.turret-pose.hull);if(mesh.userData.setDirection)mesh.userData.setDirection(pose.hull);mesh.visible=p.hp>0;
         text(actor.label,p.carried||'');actor.label.hidden=!p.carried||p.hp<=0;
         actor.health.update(p);

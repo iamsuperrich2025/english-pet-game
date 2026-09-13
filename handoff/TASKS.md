@@ -12,6 +12,11 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1419 · Frontline รถวิ่งลื่น:** ขับเป็นขั้น 60Hz, เงาสูงสุด 5 ครั้ง/วิ, รถคนอื่นค่อย ๆ ตาม snapshot, ห้องจริงดึงตำแหน่งแบบ blend ไม่กระชาก 2.5 หน่วย
+- `frontline-{main,tank,scene,lighting,config}.js` · unit 39 รวม blend/heading
+- รีเฟรช live แล้วลองขับตรง/เลี้ยวใกล้บอท
+- ยังไม่ยืนยันบนมือถือจริงของผู้ใช้
+
 - **รอบ 1418 · ถืออักษรแล้วลูกศรชี้บ้านอย่างเดียว:** Arena + Frontline ซ่อนลูกศรตัวอักษรจนกว่าจะฝาก เหลือแต่ลูกศรบ้าน
 - `js/arena-nav.js` `js/arena3d.js` `tools/frontline-v1/frontline-words.js`
 - ArenaNav 8 · Frontline unit 32 · race 22 รวมเคสถือ A แล้วไม่มีลูกศรตัวอักษร

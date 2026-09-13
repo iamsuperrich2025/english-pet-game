@@ -21,6 +21,15 @@ test('forward and reverse follow hull without strafe at three live speeds',()=>{
   assert.ok(distances[0]<distances[1]&&distances[1]<distances[2]);
 });
 
+test('live pose corrections blend instead of snapping the hull mid-drive',()=>{
+  const local=F.newTank('p',0,0);local.x=0;local.z=0;local.hull=0;
+  assert.equal(F.blendToward(local,{x:.2,z:0,hull:.1,turret:.1}),'blend');
+  assert.ok(local.x>0&&local.x<.2);assert.ok(local.hull>0&&local.hull<.1);
+  const far=F.newTank('q',0,0);far.x=0;far.z=0;far.hull=0;
+  assert.equal(F.blendToward(far,{x:20,z:0,hull:0,turret:0}),'reset');
+  close(far.x,20);
+});
+
 test('steering works while advancing and reversing; stationary turn does not translate',()=>{
   for(const auto of [-1,0,1])for(const turn of [-1,1]){
     const p=F.newTank('p',0,0);p.x=p.z=0;p.hull=0;F.drive(p,{auto,turn,speedLevel:1},.05);
