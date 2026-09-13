@@ -148,7 +148,7 @@ PRIMARY FILE: `js/lettercannon.js`
 RELATED FILES: `css/lettercannon.css`, `assets/images/letter_cannon/dragon_gunner_player.webp`, `tools/test_letter_cannon.js`, `index_classic.html`, `js/city3d.js`, `js/main.js`
 PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.LetterCannon`, `open`, `close`
 DEPENDENCIES: `vocabForStudent`, shared state/rewards/audio, Canvas 2D.
-NOTES: Canvas 2D solo gameplay with drag/WASD free flight, animated tail, a procedurally scrolling battlefield, Tracer/Heavy/Piercer rounds, homing missiles, layered ballistic SFX, streak powers, retained coin rewards, touch-only portrait lock/fullscreen lifecycle, and no WebGL lifecycle.
+NOTES: Canvas 2D solo gameplay with drag/WASD free flight, animated tail, a procedurally scrolling battlefield, dense twin-cannon volleys, homing missiles, layered ballistic SFX, streak powers, retained coin rewards, portrait lock without browser fullscreen (avoids Android's blocking exit bar), and no WebGL lifecycle.
 
 SYSTEM: Frontline 1944 public game and isolated development preview
 ADDITIONAL MODULES: `tools/frontline-v1/frontline-lobby.js` (numeric overflow rooms), `frontline-commands.js` (host input reducer), `preview-admission.mjs` (local conditional seat admission), `frontline-effects.js` (pooled toy fireworks), `frontline-audio.js` (synthesized cues plus one hashed looping BGM Blob). Target/Thai data comes from `js/data/vocab.js`, the same source as ShootWord. Inputs use `frontline_v1_dev/<session>/inputs/<room>/<seat>`; only the seat owner writes its mailbox and the elected host writes room simulation state.
