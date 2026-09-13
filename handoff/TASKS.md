@@ -12,6 +12,11 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1415 · Arena บอกเมื่อขนเต็มแล้วยังเก็บซ้ำ:** เดินทับตัวอักษรตอนถืออยู่แล้วขึ้นป้ายกลางจอ “เก็บได้ทีละ 1 ตัว” และข้อความ feed สีแดง ไม่เก็บใบที่สอง
+- `js/arena3d.js` collectDrop + กันสแปม 1.8 วิ · `tools/test_arena_race.cjs`
+- race Playwright 21/21 รวมเคสถือ A แล้วยังเดินทับ P
+- ยังไม่ยืนยันบนมือถือจริงของผู้ใช้
+
 - **รอบ 1414 · Arena ตัวอักษรใหญ่ + ลูกศรแบบ Frontline:** ตัวที่ยังต้องใช้ในคำเป้าหมายเป็นป้ายครีมใหญ่ และมีลูกศรขอบจอชี้ตัวอักษรที่ใกล้สุดกับบ้านตัวเอง
 - `js/arena-nav.js` + `js/arena3d.js` + `css/arena3d.css` + `js/ui.js` · ไม่เพิ่ม draw call 3D ใช้ HUD เดิม
 - unit ArenaNav 7/7 · race Playwright 20/20 รวมลูกศรบ้าน/ตัวอักษรที่ 812×375
@@ -21,11 +26,6 @@
 - `tools/frontline-v1/*` + `sound/Frontline/bgmusic-*` + `SOUND_LICENSES.md` · เพลงต้นฉบับไม่ขึ้นเว็บ · preview Local ยังแยก namespace
 - unit Frontline ผ่าน (กระสุนที่กระบอก, carryHelps, terrain) · ปุ่ม Lobby บน launcher ไป `/index_classic.html`
 - ยังไม่ยืนยันบนมือถือจริงของผู้ใช้หลังขึ้น live
-
-- **รอบ 1412 · โรงแรมผีสิงจบ 5 คำแล้วเล่นต่อ:** ครบ 5 คำแล้วป้ายทั้งห้อง “ภารกิจสำเร็จแล้ว” แล้วเริ่มชุดคำ+ตัวอักษรใหม่ทันที ไม่เด้งล็อบบี้ ไม่ให้ตัวอักษรว่าง/ตัน
-- คนที่เก็บตัวสุดท้ายครบ 5 คำรับ 10,000 ครั้งเดียว — ชื่อประกาศให้เพื่อนในโรงแรมด้วย · ความคืบภารกิจเดี่ยวไม่ถูกรีเซ็ตตอนเปลี่ยนรอบ
-- `js/hauntedhotel.js` startNextMission · `js/adventure3d.js` hotelFillMissingLetters/hotelBroadcastSoloWin · `js/specialmission.js` continueHauntedRun
-- unit โรงแรม+ภารกิจพิเศษผ่าน (chain หลัง COMPLETE, ตัวอักษรสำรอง, ไม่ returnToLobby)
 
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
