@@ -54,6 +54,8 @@
   const ui={};
   const vitalNodes=new Map(),vitalLive=new Set();
   const hudPoint=new THREE.Vector3();
+  const letterMarks=[],letterHints=[];
+  let homeHintEl=null;
 
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   const rnd=(a,b)=>a+Math.random()*(b-a);
@@ -92,7 +94,7 @@
     root=document.createElement('div'); root.id='va-root';
     const av=profileAvatar(), p=petInfo(), online=typeof Online!=='undefined'&&Online.ready;
     root.innerHTML=`
-      <canvas id="va-canvas"></canvas><div class="va-vitals-layer" id="va-vitals-layer"></div><div class="va-vignette"></div><div class="va-scan"></div>
+      <canvas id="va-canvas"></canvas><div class="va-vitals-layer" id="va-vitals-layer"></div><div class="va-nav-layer" id="va-nav-layer"></div><div class="va-vignette"></div><div class="va-scan"></div>
       <div class="va-top">
         <button class="va-exit" id="va-exit" aria-label="ออกจากสนาม">← ออก</button>
         <div class="va-player-card va-glass"><span class="va-avatar-icon" aria-hidden="true">${selectedHero?.icon||'⚔'}</span><div class="va-player-name">${esc(state.profileName||'นักผจญภัย')}</div><div class="va-online${online?'':' off'}">● ${online?'WORD RACE':'รอออนไลน์'}</div></div>
@@ -558,10 +560,10 @@
   function dropLetter(pos,ch,col,options={}){
     const group=new THREE.Group();group.position.copy(pos);group.position.y=.35;
     const gem=new THREE.Mesh(new THREE.OctahedronGeometry(.58,0),new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:activeMap?.18:1.65,metalness:.3,roughness:.18,transparent:true,opacity:.9}));gem.scale.y=1.3;group.add(gem);
-    if(activeMap)ArenaMaps.crystal(gem);const spr=makeTextSprite(ch,activeMap?0x154f89:0xffffff,180,180);spr.scale.set(.9,.9,1);spr.position.y=.08;spr.material.depthTest=false;spr.renderOrder=8;group.add(spr);
+    if(activeMap)ArenaMaps.crystal(gem);const spr=makeTextSprite(ch,activeMap?0x154f89:0xffffff,256,256);spr.scale.set(.9,.9,1);spr.position.y=.08;spr.material.depthTest=false;spr.renderOrder=8;group.add(spr);
     const halo=new THREE.Mesh(new THREE.RingGeometry(.55,.82,30),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.68,side:THREE.DoubleSide,blending:THREE.AdditiveBlending}));halo.rotation.x=-Math.PI/2;halo.position.y=.08;if(activeMap)halo.material.blending=THREE.NormalBlending;group.add(halo);
     if(options.node){group.scale.setScalar(1.85);group.position.y=2.3;}
-    const d={group,gem,halo,ch,col,phase:Math.random()*TAU,life:options.node?Infinity:45+relicMods.dropLife,node:options.node||null,chargeable:options.chargeable!==false};
+    const d={group,gem,halo,spr,ch,col,phase:Math.random()*TAU,life:options.node?Infinity:45+relicMods.dropLife,node:options.node||null,chargeable:options.chargeable!==false};
     scene.add(group);drops.push(d);return d;
   }
   /* ==== 💎 Round 1384: letter crystals charge a five-pickup elemental MEGA ==== */
@@ -783,10 +785,64 @@
     const b=targetNearest(15);aimRing.visible=!!b;if(b){aimRing.position.x=b.group.position.x;aimRing.position.z=b.group.position.z;aimRing.scale.setScalar(b.elite?1.35:1);aimRing.material.opacity=.55+Math.sin(performance.now()*.008)*.25;}
   }
 
+  /* ==== 🔤🧭 Round 1414 — Frontline-sized needed letters + edge arrows to letters and home ==== */
+  function remainNeeded(){return (!target||wordBusy||!window.ArenaNav)?{}:ArenaNav.remain(target.en,bag,cargo);}
+  function navLayer(){return root&&root.querySelector('#va-nav-layer');}
+  function navMark(cls){const el=document.createElement('div');el.className=cls;navLayer().appendChild(el);return el;}
+  function projectNav(x,y,z){hudPoint.set(x,y,z).project(camera);return {x:(hudPoint.x*.5+.5)*innerWidth,y:(-hudPoint.y*.5+.5)*innerHeight,behind:hudPoint.z>1||hudPoint.z<-1};}
+  function styleNeededDrops(left){
+    for(const d of drops){
+      const need=!!left[d.ch],s=need?(d.node?1.55:2.85):.9;
+      if(d.spr){d.spr.scale.set(s,s,1);d.spr.position.y=need?.42:.08;}
+      if(d.halo)d.halo.scale.setScalar(need?1.45:1);
+    }
+  }
+  function paintLetterCards(left){
+    const needed=drops.filter(d=>left[d.ch]);
+    while(letterMarks.length<needed.length)letterMarks.push(navMark('va-letter needed'));
+    needed.forEach((d,i)=>{
+      const el=letterMarks[i],p=projectNav(d.group.position.x,d.group.position.y+(d.node?1.35:1.85),d.group.position.z);
+      const on=!p.behind&&p.x>-40&&p.x<innerWidth+40&&p.y>-40&&p.y<innerHeight+40;
+      el.hidden=!on;if(!on)return;
+      if(el.textContent!==d.ch)el.textContent=d.ch;
+      el.style.transform='translate('+p.x+'px,'+p.y+'px) translate(-50%,-50%)';
+    });
+    for(let i=needed.length;i<letterMarks.length;i++)letterMarks[i].hidden=true;
+  }
+  function paintLetterHints(left){
+    if(!window.ArenaNav)return;
+    const items=drops.map(d=>({letter:d.ch,x:d.group.position.x,z:d.group.position.z}));
+    const needed=ArenaNav.neededLetterHints(items,player.pos,left);
+    while(letterHints.length<needed.length)letterHints.push(navMark('va-hint'));
+    needed.forEach((item,i)=>{
+      const el=letterHints[i],p=projectNav(item.x,1.75,item.z),placed=ArenaNav.placeLetterHint(p.x,p.y,innerWidth,innerHeight);
+      el.hidden=!placed.visible;if(!placed.visible)return;
+      if(el.dataset.letter!==item.letter){el.dataset.letter=item.letter;el.replaceChildren();const mark=document.createElement('i'),ch=document.createElement('b');ch.textContent=item.letter;el.append(mark,ch);}
+      el.style.transform='translate('+placed.x+'px,'+placed.y+'px) translate(-50%,-50%) rotate('+placed.angle+'rad)';
+      const ch=el.querySelector('b');if(ch)ch.style.transform='rotate('+(-placed.angle)+'rad)';
+    });
+    for(let i=needed.length;i<letterHints.length;i++)letterHints[i].hidden=true;
+  }
+  function paintHomeHint(){
+    if(!window.ArenaNav)return;
+    if(!homeHintEl)homeHintEl=navMark('va-hint home');
+    if(!home){homeHintEl.hidden=true;return;}
+    const p=projectNav(home.position.x,2.2,home.position.z),placed=ArenaNav.placeLetterHint(p.x,p.y,innerWidth,innerHeight);
+    homeHintEl.hidden=!placed.visible;if(!placed.visible)return;
+    if(homeHintEl.dataset.kind!=='home'){homeHintEl.dataset.kind='home';homeHintEl.replaceChildren();const mark=document.createElement('i'),ch=document.createElement('b');ch.textContent='บ้าน';homeHintEl.append(mark,ch);}
+    homeHintEl.style.transform='translate('+placed.x+'px,'+placed.y+'px) translate(-50%,-50%) rotate('+placed.angle+'rad)';
+    const ch=homeHintEl.querySelector('b');if(ch)ch.style.transform='rotate('+(-placed.angle)+'rad)';
+  }
+  function updateNav(){
+    if(!root||!camera||!navLayer()||paused)return;
+    const left=remainNeeded();
+    styleNeededDrops(left);paintLetterCards(left);paintLetterHints(left);paintHomeHint();
+  }
+
   function loop(t){
     if(!running)return;raf=requestAnimationFrame(loop);const dt=Math.min(.034,lastFrame?(t-lastFrame)/1000:.016);lastFrame=t;
     if(document.hidden)return;
-    if(!paused){if((basicHeld||keys.has('Space'))&&targetNearest(15))castSkill('basic');updatePlayer(dt,t);updatePet(dt,t);elements.tick(dt);updateBots(dt,t);updateShots(dt,t);updateDrops(dt,t);updateHome(dt,t);updateEffects(dt);fieldFx.tick(dt);ensureBots(t);cameraTick(dt);
+    if(!paused){if((basicHeld||keys.has('Space'))&&targetNearest(15))castSkill('basic');updatePlayer(dt,t);updatePet(dt,t);elements.tick(dt);updateBots(dt,t);updateShots(dt,t);updateDrops(dt,t);updateHome(dt,t);updateEffects(dt);fieldFx.tick(dt);ensureBots(t);cameraTick(dt);updateNav();
       if(!downed&&relicMods.regen&&t-lastHitAt>4000){const before=hp;hp=Math.min(maxHp,hp+dt*relicMods.regen);if(hp>before&&window.ArenaAudio)ArenaAudio.playHeal();}if(maxShield&&t-lastHitAt>4200)shield=Math.min(maxShield,shield+dt*4.5);if(arenaMotes)arenaMotes.rotation.y+=dt*.015;updateCooldownUi(t);}
     tickCoop(t);if(!paused||!sceneDrawn)updateVitals();
     if(!paused||!sceneDrawn){renderer.render(scene,camera);sceneDrawn=true;}
@@ -858,14 +914,14 @@
     if(!running)return;if(race){race.close();race=null;}raceTargets=[];vaultHomes.clear();running=false;equipRequest++;paused=false;cancelAnimationFrame(raf);raf=0;pendingTimers.forEach(clearTimeout);pendingTimers.clear();if(window.ArenaAudio)ArenaAudio.stop();if(elements){elements.clear();elements=null;}if(fieldFx){fieldFx.dispose();fieldFx=null;}listeners.splice(0).forEach(fn=>{try{fn();}catch(e){}});keys.clear();joy={x:0,z:0,id:null};basicHeld=false;
     if(room){room.leave();room=null;}Object.keys(peerActors).forEach(removePeerActor);peers={};peerActors={};
     for(const s of shots){if(s.mesh.parent)scene.remove(s.mesh);disposeTree(s.mesh);}if(scene)disposeTree(scene);if(renderer){renderer.dispose();renderer.forceContextLoss&&renderer.forceContextLoss();renderer.setSize(2,2,false);}
-    if(root)root.remove();vitalNodes.clear();vitalLive.clear();root=null;built=false;renderer=scene=camera=clock=null;bots=[];drops=[];shots=[];effects=[];petComp=null;player=null;home=null;crystalNodes=[];crystalCharge=0;megaUses=0;
+    if(root)root.remove();vitalNodes.clear();vitalLive.clear();letterMarks.length=0;letterHints.length=0;homeHintEl=null;root=null;built=false;renderer=scene=camera=clock=null;bots=[];drops=[];shots=[];effects=[];petComp=null;player=null;home=null;crystalNodes=[];crystalCharge=0;megaUses=0;
     saveState();if(options?.mapSwitch)return;if(typeof Music!=='undefined')Music.resumeBg();if(typeof renderDashboard==='function')renderDashboard();
     if(typeof toast==='function')toast(`🌀 กลับจาก Vocab Arena — สำเร็จ ${sessionWords} คำ · +${fmt(sessionCoins)} 🪙`);
   }
 
   window.VocabArena3D={start,stop,_t:{
     map:()=>activeMap?.id,room:()=>room,camera:()=>camera,ground:()=>scene?.getObjectByName('arena-ground'),project:p=>new THREE.Vector3(p.x,p.y||0,p.z).project(camera),
-    get sessionCoins(){return sessionCoins},get running(){return running},get bots(){return bots},get drops(){return drops},get bag(){return bag},get target(){return target},get cargo(){return cargo},home:()=>home,bank:bankCargo,stats:()=>({frames:renderer.info.render.frame,draws:renderer.info.render.calls,triangles:renderer.info.render.triangles,textures:renderer.info.memory.textures,fx:fieldFx.stats()}),get energy(){return energy},get crystalCharge(){return crystalCharge},get megaUses(){return megaUses},get crystalNodes(){return crystalNodes},tickDrops:updateDrops,drop:dropLetter,
+    get sessionCoins(){return sessionCoins},get running(){return running},get bots(){return bots},get drops(){return drops},get bag(){return bag},get target(){return target},get cargo(){return cargo},home:()=>home,bank:bankCargo,stats:()=>({frames:renderer.info.render.frame,draws:renderer.info.render.calls,triangles:renderer.info.render.triangles,textures:renderer.info.memory.textures,fx:fieldFx.stats()}),get energy(){return energy},get crystalCharge(){return crystalCharge},get megaUses(){return megaUses},get crystalNodes(){return crystalNodes},tickDrops:updateDrops,drop:dropLetter,nav:()=>({remain:remainNeeded(),letters:letterMarks.filter(el=>!el.hidden).length,hints:letterHints.filter(el=>!el.hidden).length,home:!!(homeHintEl&&!homeHintEl.hidden)}),
     get slots(){return spellSlots.slice()},get cooldowns(){return {...cooldown}},elementStats:()=>elements.stats(),equip:equipSpell,spellbook:toggleSpellbook,refreshRelics,relics:()=>({...relicMods,maxHp,maxShield,cargoMax:CARGO_MAX}),health:()=>({hp,shield}),hero:()=>selectedHero?.id,skillSeconds,damage:damagePlayer,cast:castSkill,kill:(i=0)=>bots[i]&&hitBot(bots[i],9999),collect:(i=0)=>drops[i]&&collectDrop(drops[i]),complete:()=>checkWord(),race:()=>race,
     buy:buyItem,buySpell,player:()=>player,resize,down:downPlayer,recover:()=>recoverPlayer('เพื่อนช่วยชุบ'),boss:()=>({phase:bossPhase,chapter,encounter:bossEncounter,hp:bossHp,max:bossMax,word:bossWord,contribution:bossContribution}),triggerBoss:()=>{},wire:applyLeaderWire,peer:onPeer,gone:onPeerGone,party:()=>({leader:leaderId(),members:partyUids(),online:!!(room&&room.online)}),
     /* ทดสอบแยกเฟสเมื่อ WebView เครื่องใดสร้างฉากไม่ผ่าน — ไม่ทำงานเองในเกมจริง */
@@ -875,6 +931,6 @@
       if(part==='reset'){if(!built){if(!root){ensureState();createDom();}initThree();}resetRound();return 'reset';}
       return 'unknown';
     },
-    frame:(ms=16)=>{const t=performance.now();updatePlayer(ms/1000,t);updatePet(ms/1000,t);elements.tick(ms/1000);updateBots(ms/1000,t);updateShots(ms/1000,t);updateDrops(ms/1000,t);updateHome(ms/1000,t);updateEffects(ms/1000);fieldFx.tick(ms/1000);cameraTick(ms/1000);updateVitals();renderer.render(scene,camera);}
+    frame:(ms=16)=>{const t=performance.now();updatePlayer(ms/1000,t);updatePet(ms/1000,t);elements.tick(ms/1000);updateBots(ms/1000,t);updateShots(ms/1000,t);updateDrops(ms/1000,t);updateHome(ms/1000,t);updateEffects(ms/1000);fieldFx.tick(ms/1000);cameraTick(ms/1000);updateNav();updateVitals();renderer.render(scene,camera);}
   }};
 })();

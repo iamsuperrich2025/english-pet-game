@@ -1,0 +1,18 @@
+'use strict';
+const fs=require('fs'),path=require('path'),vm=require('vm'),assert=require('assert/strict');
+const root=path.resolve(__dirname,'..');
+const ctx={window:{}};
+vm.runInNewContext(fs.readFileSync(path.join(root,'js/arena-nav.js'),'utf8'),ctx);
+const N=ctx.window.ArenaNav,ok=(n,v)=>{assert.ok(v,n);console.log('PASS '+n);};
+ok('needed remain skips banked and carried letters',JSON.stringify(N.remain('HORSE',{H:1,O:1},['R']))==='{"S":1,"E":1}');
+ok('string banks work like Frontline stored text',N.remain('CAT','C','A').T===1&&!N.remain('CAT','C','A').C);
+const items=[{letter:'S',x:40,z:0},{letter:'S',x:2,z:0},{letter:'E',x:0,z:50},{letter:'Q',x:1,z:1}];
+const hints=N.neededLetterHints(items,{x:0,z:0},{S:1,E:1});
+ok('arrows pick nearest remaining unique letters',hints.length===2&&hints.find(h=>h.letter==='S').x===2);
+ok('on-screen cards hide the edge arrow',N.placeLetterHint(400,200,800,400).visible===false);
+const left=N.placeLetterHint(-80,200,800,400);
+ok('off-screen letter clamps to HUD-safe edge',left.visible&&left.x>=52&&left.x<=54&&Math.abs(left.angle)>1);
+const home=N.placeLetterHint(-200,800,800,400);
+ok('own-base hint reuses the same clamp',home.visible&&home.x>=52&&home.y<=400-124);
+ok('completed words have no letter arrows',N.neededLetterHints(items,{x:0,z:0},{}).length===0);
+console.log(JSON.stringify({passed:7}));

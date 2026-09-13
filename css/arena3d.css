@@ -262,7 +262,18 @@
 .va-vital i{height:100%;display:block;background:#6cebb0;border-radius:2px}.va-vital.self i{background:#57dfff}.va-vital.peer i{background:#ba8aff}.va-vital.boss{width:69px}.va-vital.boss i{background:#ffcb5d}.va-vital.low i{background:#ff627d}
 .va-vital.self b::before{content:'HP ';color:#7eeaff}
 .va-damage-number{position:absolute;left:0;top:0;white-space:nowrap;font-size:16px;font-weight:900;line-height:1;pointer-events:none;text-shadow:0 2px 2px #0a1020,0 0 6px #091322;will-change:transform,opacity;z-index:3}
-@media(max-height:480px){.va-vital{width:43px}.va-vital b{font-size:8px;line-height:10px}.va-damage-number{font-size:13px}}
+/* Round 1414 — Frontline-sized needed-letter cards and edge arrows. */
+.va-nav-layer{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:2}
+.va-letter,.va-hint{position:absolute;top:0;left:0;text-align:center;pointer-events:none;font-weight:900;white-space:nowrap}
+.va-letter{background:linear-gradient(#fffff1,#fff5d7);border:2px solid #558a8e;color:#174e64;font-size:clamp(18px,3.2vw,28px);line-height:1;min-width:32px;padding:5px 7px;border-radius:10px;box-shadow:0 4px #567f7666,inset 0 2px #fff}
+.va-letter.needed{background:linear-gradient(#fff5ac,#ffe17c);border-color:#c3973d}
+.va-letter.needed:before{content:"";position:absolute;left:50%;bottom:calc(100% + 1px);width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:10px solid #e2aa2f;transform:translateX(-50%);filter:drop-shadow(0 1px #fff8)}
+.va-hint{width:44px;height:48px;display:grid;place-items:center;z-index:3}
+.va-hint i{position:absolute;inset:0;background:linear-gradient(#ffe56a,#efb338);clip-path:polygon(50% 4%,96% 62%,66% 62%,66% 96%,34% 96%,34% 62%,4% 62%);box-shadow:0 2px #c7922840}
+.va-hint b{position:relative;margin-top:8px;color:#3d4e22;font-size:15px;line-height:1;text-shadow:0 1px #fff7c8}
+.va-hint.home i{background:linear-gradient(#8eecc0,#2f9a64)}
+.va-hint.home b{color:#174a36;font-size:12px;margin-top:10px}
+@media(max-height:480px){.va-vital{width:43px}.va-vital b{font-size:8px;line-height:10px}.va-damage-number{font-size:13px}.va-letter{font-size:clamp(16px,2.8vw,22px);min-width:26px;padding:3px 5px}.va-hint{width:36px;height:40px}.va-hint b{font-size:12px}}
 .va-vital b{white-space:nowrap}.va-vital.self{width:60px}
 
 #va-root .va-feed{max-height:56px}
