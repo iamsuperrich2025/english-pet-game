@@ -15,7 +15,7 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
   ],
 });
 /* ============================================================
-  🐉💥 Dragon Sky Siege (รอบ 1422)
+  🐉💥 Dragon Sky Siege (รอบ 1431)
    Portrait shooter: free flight, graded 500-word loops, return fire and timed bosses.
    Three ballistic rounds, homing missiles, ten hearts and a living dragon gunner.
    ============================================================ */
@@ -38,12 +38,11 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
     {id:'piercer',name:'PIERCER',speed:1.9,color:'#7feaff',core:'#eaffff',size:5,damage:1,pierce:1,sound:'pierce'}
   ];
   const MAX_MISSILES=3, MAX_MISSILE_STOCK=12, MISSILE_PICKUP_BONUS=4, MISSILE_SALVO=3, MISSILE_BLAST=105;
-  const MAX_LETTERS=12, MAX_BULLETS=240, MAX_PARTICLES=180, SHOT_ANGLE=-Math.PI/2, WORD_BONUS=50;
-  const FRAME_MS=1000/60,DPR_CAP=1.5,MUZZLE_PARTICLES=4,ROUND_TRAIL_STEP=.09,MISSILE_TRAIL_STEP=.04;
+  const MAX_LETTERS=12, MAX_BULLETS=72, MAX_PARTICLES=140, SHOT_ANGLE=-Math.PI/2, WORD_BONUS=50;
+  const FRAME_MS=1000/60,DPR_CAP=1.5,MUZZLE_PARTICLES=7,ROUND_TRAIL_STEP=.065,MISSILE_TRAIL_STEP=.035;
   const MISSION_WORDS=5, MAX_SHIELD=10, BASE_LINE=.9;
   const BOSS_INTERVAL=30,MAX_ENEMIES=3;
   const MOVE_SPEED_CAP=1500, MOVE_SPEED_FACTOR=1.5, MOVE_ACCEL=34, MOVE_BRAKE=42, MOVE_FOLLOW=16;
-  const FIRE_SPREAD=[-.12,-.04,.04,.12];
   const COIN_IMAGE='img/coins/coin_gold.webp';
   /* เพลงสร้างเมื่อเข้าเกมเท่านั้น; production build จะแทน token ด้วย URL ที่มี content hash
      จึง stream เท่าที่เล่นและใช้ browser disk cache เดิมข้าม deploy เมื่อไฟล์เพลงไม่เปลี่ยน */
@@ -210,13 +209,12 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
     Object.assign(o,{alive:true,kind:'round',ammo:a,damage:a.damage,pierce:a.pierce,x:bx,y:by,px:bx,py:by,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,life:1.25,trailLeft:0,side:!!side,homing:activePower&&activePower.id==='homing'&&!side,phase:Math.random()*6.28});if(!bullets.includes(o)&&bullets.length<MAX_BULLETS)bullets.push(o);return o;
   }
   function fire(){
-    if(!running||paused||counting||missionEnded)return;const ammo=AMMO[shotSeq%AMMO.length],now=performance.now(),gap=activePower&&activePower.id==='beam'?36:ammo.id==='tracer'?42:ammo.id==='heavy'?55:48;if(now-fireAt<gap)return;fireAt=now;shotSeq++;currentAmmo=ammo;
-    flashSide=barrelCycle++%2;
-    const spread=activePower&&activePower.id==='triple'?[-.22,-.14,-.06,.06,.14,.22]:activePower&&activePower.id==='barrage'?[-.32,-.24,-.16,-.08,.08,.16,.24,.32]:FIRE_SPREAD;
-    if(activePower&&activePower.id==='beam'){beamHit(0);beamHit(1);sound('beam');}
-    else{for(let muzzle=0;muzzle<2;muzzle++)spread.forEach(a=>bullet(SHOT_ANGLE+a,false,muzzle,ammo));sound(ammo.sound);}
-    const g=playerGeometry(cannonX(),playerY,playerSize(),flashSide,0);g.muzzles.forEach(m=>{for(let i=0;i<MUZZLE_PARTICLES;i++)particle(m.x,m.y,pick(['#ffffff',ammo.core,ammo.color,'#ff9f45']),SHOT_ANGLE+(Math.random()-.5)*.72,80+Math.random()*280,.18+Math.random()*.2,2+Math.random()*3.5);shockwave(m.x,m.y,ammo.color,4,26,.2);});
-    flash=.09;
+    if(!running||paused||counting||missionEnded)return;const ammo=AMMO[shotSeq%AMMO.length],now=performance.now(),gap=activePower&&activePower.id==='beam'?110:ammo.id==='tracer'?175:ammo.id==='heavy'?315:240;if(now-fireAt<gap)return;fireAt=now;shotSeq++;currentAmmo=ammo;
+    const side=barrelCycle++%2;flashSide=side;
+    if(activePower&&activePower.id==='beam'){beamHit(side);sound('beam');}
+    else{bullet(SHOT_ANGLE,false,side,ammo);if(activePower&&activePower.id==='triple'){bullet(SHOT_ANGLE-.11,true,0,ammo);bullet(SHOT_ANGLE+.11,true,1,ammo);}if(activePower&&activePower.id==='barrage')[-.24,-.12,.12,.24].forEach((a,i)=>bullet(SHOT_ANGLE+a,true,i%2,ammo));sound(ammo.sound);}
+    const m=playerGeometry(cannonX(),playerY,playerSize(),side,0).muzzle;for(let i=0;i<MUZZLE_PARTICLES;i++)particle(m.x,m.y,pick(['#ffffff',ammo.core,ammo.color,'#ff9f45']),SHOT_ANGLE+(Math.random()-.5)*.72,80+Math.random()*280,.22+Math.random()*.24,2+Math.random()*4);
+    shockwave(m.x,m.y,ammo.color,5,34,.28);flash=.13;
   }
   function missileTarget(){return boss&&boss.alive?boss:letters.filter(o=>o.alive&&(o.kind==='enemy'||o.kind==='meteor')).sort((a,b)=>b.y-a.y)[0]||null;}
   function spawnMissile(target){
@@ -396,7 +394,7 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
     const a=Math.atan2(b.vy,b.vx),ammo=b.ammo||AMMO[0];ctx.save();ctx.translate(b.x,b.y);ctx.rotate(a+Math.PI/2);
     if(b.kind==='enemyShot'){ctx.shadowColor='#ff315f';ctx.shadowBlur=18;ctx.fillStyle='#ff334f';ctx.beginPath();ctx.arc(0,0,b.r||5,0,7);ctx.fill();ctx.fillStyle='#fff0a4';ctx.beginPath();ctx.arc(0,-2,(b.r||5)*.38,0,7);ctx.fill();}
     else if(b.kind==='missile'){ctx.shadowColor='#ffb13c';ctx.shadowBlur=14;ctx.fillStyle='#ff7a25';ctx.beginPath();ctx.moveTo(-5,12);ctx.lineTo(0,24+Math.random()*7);ctx.lineTo(5,12);ctx.fill();ctx.shadowBlur=4;ctx.fillStyle='#d9e5eb';roundRect(-5,-15,10,30,5);ctx.fill();ctx.fillStyle='#ff433c';ctx.beginPath();ctx.moveTo(-5,-10);ctx.lineTo(0,-20);ctx.lineTo(5,-10);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(-5,7);ctx.lineTo(-11,15);ctx.lineTo(-4,13);ctx.moveTo(5,7);ctx.lineTo(11,15);ctx.lineTo(4,13);ctx.fill();}
-    else{const z=ammo.size;ctx.globalAlpha=.72;ctx.strokeStyle=ammo.color;ctx.lineWidth=Math.max(2,z*.55);ctx.beginPath();ctx.moveTo(0,8);ctx.lineTo(0,25+z*2);ctx.stroke();ctx.globalAlpha=1;ctx.shadowColor=ammo.color;ctx.shadowBlur=6;ctx.fillStyle=ammo.color;roundRect(-z*.55,-z*2.2,z*1.1,z*3.7,z*.5);ctx.fill();ctx.fillStyle=ammo.core;ctx.beginPath();ctx.moveTo(-z*.52,-z*1.45);ctx.lineTo(0,-z*2.55);ctx.lineTo(z*.52,-z*1.45);ctx.closePath();ctx.fill();ctx.fillStyle='#a46b25';ctx.fillRect(-z*.54,z*1.05,z*1.08,z*.72);}
+    else{const z=ammo.size;ctx.globalAlpha=.72;ctx.strokeStyle=ammo.color;ctx.lineWidth=Math.max(2,z*.55);ctx.beginPath();ctx.moveTo(0,8);ctx.lineTo(0,25+z*2);ctx.stroke();ctx.globalAlpha=1;ctx.shadowColor=ammo.color;ctx.shadowBlur=13;ctx.fillStyle=ammo.color;roundRect(-z*.55,-z*2.2,z*1.1,z*3.7,z*.5);ctx.fill();ctx.fillStyle=ammo.core;ctx.beginPath();ctx.moveTo(-z*.52,-z*1.45);ctx.lineTo(0,-z*2.55);ctx.lineTo(z*.52,-z*1.45);ctx.closePath();ctx.fill();ctx.fillStyle='#a46b25';ctx.fillRect(-z*.54,z*1.05,z*1.08,z*.72);}
     ctx.restore();
   }
   function tickBullet(b,dt){
@@ -479,6 +477,6 @@ if(typeof window.makeMonthAward==='function') window.LcAward = window.makeMonthA
   function watchAnnouncement(){if(maybeShowAnnouncement()||typeof MutationObserver==='undefined')return;const ob=new MutationObserver(()=>{if(maybeShowAnnouncement())ob.disconnect();});ob.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});}
   function bindRail(){const b=document.getElementById('btn-rail-lettercannon');if(b)b.addEventListener('click',()=>{if(typeof closePanel==='function')closePanel();open();});watchAnnouncement();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bindRail);else bindRail();
-  window.LetterCannon={open,close,maybeShowAnnouncement,guideToMenu,_t:{wordPool,nextWord,ensureNeeded,spawnLetter,spawnPower,collectPower,spawnMeteor,spawnEnemy,fireEnemyShot,hitEnemy,spawnBoss,hitBoss,completeBossCycle,bullet,fire,spawnMissile,fireMissile,refillMissile,explodeMissile,tickBullet,hit,activate,damageBase,resetMission,settleScoreRun,awardLetterCoin,awardWordBonus,playerGeometry,playerSize,playerLimits,turretGeometry,turretSize,cannonLimits,get word(){return word;},get pos(){return pos;},get score(){return score;},get combo(){return combo;},get wordsDone(){return wordsDone;},get setWordsDone(){return setWordsDone;},get coinsRun(){return coinsRun;},get shield(){return shield;},get wave(){return wave;},get boss(){return boss;},get bossesDefeated(){return bossesDefeated;},get bossMode(){return bossMode;},get threatsStopped(){return threatsStopped;},get misses(){return misses;},get missiles(){return missiles;},get currentAmmo(){return currentAmmo;},get running(){return running;},get paused(){return paused;},get playerX(){return playerX;},get playerY(){return playerY;},get playerVX(){return playerVX;},get playerVY(){return playerVY;},get letters(){return letters;},get bullets(){return bullets;},get particles(){return particles;},get shockwaves(){return shockwaves;},get activePower(){return activePower;},setPlayer(x,y){const p=playerLimits();playerX=clamp(x,p.minX,p.maxX);playerY=clamp(y,p.minY,p.maxY);playerVX=playerVY=0;},setPlayerX(x){playerX=clamp(x,cannonLimits().min,cannonLimits().max);playerVX=0;},setMove(left,right,up,down){keyLeft=!!left;keyRight=!!right;keyUp=!!up;keyDown=!!down;},setViewport(w,h){W=w;H=h;if(!playerX)playerX=W*.5;if(!playerY)playerY=H*.76;},setRunning(value){running=!!value;},step(dt){update(dt||.016);},PLAYER,AMMO,MAX_MISSILES,MAX_MISSILE_STOCK,MISSILE_PICKUP_BONUS,MISSILE_SALVO,MISSILE_BLAST,SHOT_ANGLE,POWER,MAX_LETTERS,MAX_BULLETS,MAX_PARTICLES,WORD_BONUS,MISSION_WORDS,BOSS_INTERVAL,MAX_ENEMIES,MAX_SHIELD,BASE_LINE,MOVE_SPEED_CAP,MOVE_SPEED_FACTOR,MOVE_ACCEL,MOVE_BRAKE,MOVE_FOLLOW,FIRE_SPREAD,FRAME_MS,DPR_CAP,MUZZLE_PARTICLES,ROUND_TRAIL_STEP,MISSILE_TRAIL_STEP,COIN_IMAGE}};
+  window.LetterCannon={open,close,maybeShowAnnouncement,guideToMenu,_t:{wordPool,nextWord,ensureNeeded,spawnLetter,spawnPower,collectPower,spawnMeteor,spawnEnemy,fireEnemyShot,hitEnemy,spawnBoss,hitBoss,completeBossCycle,bullet,fire,spawnMissile,fireMissile,refillMissile,explodeMissile,tickBullet,hit,activate,damageBase,resetMission,settleScoreRun,awardLetterCoin,awardWordBonus,playerGeometry,playerSize,playerLimits,turretGeometry,turretSize,cannonLimits,get word(){return word;},get pos(){return pos;},get score(){return score;},get combo(){return combo;},get wordsDone(){return wordsDone;},get setWordsDone(){return setWordsDone;},get coinsRun(){return coinsRun;},get shield(){return shield;},get wave(){return wave;},get boss(){return boss;},get bossesDefeated(){return bossesDefeated;},get bossMode(){return bossMode;},get threatsStopped(){return threatsStopped;},get misses(){return misses;},get missiles(){return missiles;},get currentAmmo(){return currentAmmo;},get running(){return running;},get paused(){return paused;},get playerX(){return playerX;},get playerY(){return playerY;},get playerVX(){return playerVX;},get playerVY(){return playerVY;},get letters(){return letters;},get bullets(){return bullets;},get particles(){return particles;},get shockwaves(){return shockwaves;},get activePower(){return activePower;},setPlayer(x,y){const p=playerLimits();playerX=clamp(x,p.minX,p.maxX);playerY=clamp(y,p.minY,p.maxY);playerVX=playerVY=0;},setPlayerX(x){playerX=clamp(x,cannonLimits().min,cannonLimits().max);playerVX=0;},setMove(left,right,up,down){keyLeft=!!left;keyRight=!!right;keyUp=!!up;keyDown=!!down;},setViewport(w,h){W=w;H=h;if(!playerX)playerX=W*.5;if(!playerY)playerY=H*.76;},setRunning(value){running=!!value;},step(dt){update(dt||.016);},PLAYER,AMMO,MAX_MISSILES,MAX_MISSILE_STOCK,MISSILE_PICKUP_BONUS,MISSILE_SALVO,MISSILE_BLAST,SHOT_ANGLE,POWER,MAX_LETTERS,MAX_BULLETS,MAX_PARTICLES,WORD_BONUS,MISSION_WORDS,BOSS_INTERVAL,MAX_ENEMIES,MAX_SHIELD,BASE_LINE,MOVE_SPEED_CAP,MOVE_SPEED_FACTOR,MOVE_ACCEL,MOVE_BRAKE,MOVE_FOLLOW,FRAME_MS,DPR_CAP,MUZZLE_PARTICLES,ROUND_TRAIL_STEP,MISSILE_TRAIL_STEP,COIN_IMAGE}};
   Object.assign(window.LetterCannon._t,{lcMusicStart,lcMusicStop,lcMusicToggle,getMusicState:()=>({url:LC_BGM_URL,preload:lcBgm?lcBgm.preload:null,loop:lcBgm?lcBgm.loop:null,paused:lcBgm?lcBgm.paused:true,volume:lcBgm?lcBgm.volume:0,enabled:lcMusicPreferenceOn(),blocked:lcBgmBlocked}),LC_BGM_VOLUME,LC_BGM_EXIT_FADE_MS});
 })();
