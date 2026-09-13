@@ -29,7 +29,11 @@ try{
  async function position(page,x,z){await page.evaluate(([x,z])=>{VocabArena3D._t.player().pos.set(x,0,z);},[x,z]);await page.waitForTimeout(240);}
  async function pick(page,ch){const item=await page.evaluate(ch=>Object.entries(VocabArena3D._t.race().snapshot.items).find(([,x])=>x.ch===ch),ch);await position(page,item[1].x,item[1].z);await page.waitForFunction(ch=>VocabArena3D._t.cargo[0]===ch,ch);}
  async function bank(page){const pos=await page.evaluate(()=>{const p=VocabArena3D._t.home().position;return [p.x,p.z];});await position(page,...pos);await page.waitForFunction(()=>VocabArena3D._t.cargo.length===0);}
- await pick(a,'A');ok('cargo limit one even for admin relics',await a.evaluate(()=>VocabArena3D._t.relics().cargoMax===1&&VocabArena3D._t.cargo.length===1));await bank(a);
+ await pick(a,'A');ok('cargo limit one even for admin relics',await a.evaluate(()=>VocabArena3D._t.relics().cargoMax===1&&VocabArena3D._t.cargo.length===1));
+ const extra=await a.evaluate(()=>Object.values(VocabArena3D._t.race().snapshot.items).find(x=>x.ch==='P'));await position(a,extra.x,extra.z);
+ await a.waitForFunction(()=>document.querySelector('#va-pop.on strong')?.textContent.includes('1 ตัว'));
+ ok('full cargo explains one-letter limit',await a.evaluate(()=>VocabArena3D._t.cargo[0]==='A'&&[...document.querySelectorAll('.va-feed-line.bad')].some(n=>n.textContent.includes('เก็บได้ทีละ 1 ตัวอักษรเท่านั้น'))));
+ await bank(a);
  for(const ch of ['P','P','L','E']){await pick(a,ch);await bank(a);}
  await a.waitForFunction(()=>state.coins===2000);ok('actual collect-bank loop pays exactly 1000',await a.evaluate(()=>state.coins===2000&&VocabArena3D._t.sessionCoins===1000));ok('other player receives no winner coins',await b.evaluate(()=>state.coins===1000));
  await a.waitForFunction(()=>VocabArena3D._t.target.en==='BOOK');await b.waitForFunction(()=>VocabArena3D._t.target.en==='BOOK');ok('both browsers advance to next shared word',true);

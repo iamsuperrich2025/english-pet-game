@@ -570,7 +570,12 @@
   function spawnCrystal(node){const ch=ALPHABET[crystalLetterIndex++%26];node.drop=dropLetter(node.pos,ch,0x77eaff,{node});node.remaining=0;}
   function updateCrystalNodes(dt){for(const node of crystalNodes)if(!node.drop){node.remaining-=dt;if(node.remaining<=0)spawnCrystal(node);}}
   function collectDrop(d){
-    if(downed||!race?.ready||race.busy||!drops.includes(d)||cargo.length||!d.raceId)return;
+    if(downed||!race?.ready||race.busy||!drops.includes(d)||!d.raceId)return;
+    if(cargo.length){
+      const now=performance.now();
+      if(now-fullHintAt>1800){fullHintAt=now;showPop('เก็บได้ทีละ 1 ตัว','กำลังถือ '+cargo[0]+' อยู่ · ฝากบ้านหรือกด DROP ก่อน');feed('อุ๊ย เก็บได้ทีละ 1 ตัวอักษรเท่านั้น · ฝาก '+cargo[0]+' ที่บ้านหรือกด DROP','bad');}
+      return;
+    }
     netSend(true);race.pickup(d.raceId,d.raceRevision);
   }
   /* ==== Shared server race: letters, vaults and one winner per word ==== */
