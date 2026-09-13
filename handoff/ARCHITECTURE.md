@@ -57,7 +57,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/arena-grimoire.js** (31 บรรทัด) — Round 1387: compact searchable spell cards; SVG symbols share one cached small shared file.
 - **js/arena-heroes.js** (41 บรรทัด) — Round 1381 — public hero selection, eight generated full-body portraits, preload before entry.
 - **js/arena-maps.js** (108 บรรทัด) — ==== Rounds 1387/1389 — three world-ground arenas; one selected texture, grouped four-seat rooms ====
-- **js/arena-nav.js** (36 บรรทัด) — Shared Arena letter/home HUD math — same edge-arrow rules as Frontline.
+- **js/arena-nav.js** (37 บรรทัด) — Shared Arena letter/home HUD math — same edge-arrow rules as Frontline.
 - **js/arena-portrait.js** (32 บรรทัด) — Round 1381 — one live portrait: local hair/cape displacement, anchored face/feet, elemental particles.
 - **js/arena-race.js** (14 บรรทัด) — Serial authenticated Arena race requests and recoverable central-wallet settlement.
 - **js/arena-relics.js** (582 บรรทัด) — Round 1387: permanent relic metadata + bonuses compiled only on entry/purchase.
@@ -146,6 +146,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/style.css** (2,498 บรรทัด) — Pet Vocab Adventure — สไตล์พื้นฐานรุ่นแรกทั้งเกม (โดน lobby.css โหลดทับบางส่วน — แก้หน้าตาโซนล็อบบี้/UI ใหม่ให้ไปที่ lobby.css ก่อน) · ครอบคลุม: screens/login/dashboard · เกมจับคู่ .word-card + แบบทดสอบ .quiz-* · shop/ที่พัก/หมวดคำศัพท์ · หิว-ป่วย/สภาพอากาศ · ตั้งค่า/วิธีเล่น/level-up overlay · คลังของฉัน/กล่องขาย · เอฟเฟกต์ลอย/เหรียญ/rotate-overlay
 - **sw.js** (281 บรรทัด) — Vocab World service worker · Delivery contract: · - HTML navigations are network-first with the last valid shell as fallback.
 <!-- AUTO-FILES:END -->
+
 
 
 

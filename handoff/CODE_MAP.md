@@ -206,8 +206,8 @@ exitWorld:13234 · mechaRecapLine:13312
 
 ## js/arena-maps.js (108 บรรทัด · 0 รายการ)
 
-## js/arena-nav.js (36 บรรทัด · 3 รายการ)
-remain:4 · neededLetterHints:14 · placeLetterHint:23
+## js/arena-nav.js (37 บรรทัด · 3 รายการ)
+remain:4 · neededLetterHints:14 · placeLetterHint:24
 
 ## js/arena-portrait.js (32 บรรทัด · 0 รายการ)
 
