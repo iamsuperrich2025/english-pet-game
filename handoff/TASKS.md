@@ -15,7 +15,7 @@
 - **รอบ 1429 · กองเรือคำศัพท์:** มินิเกมเรือรบน่ารัก ใช้คลัง `vocabForStudent()` ชุดเดียวกับยิงเป้าคำ · Canvas/เสียงสังเคราะห์ ไม่โหลดภาพ-เพลง-คลังใหม่ · JS/CSS โหลดตอนกดปุ่ม
 - `js/wordship.js` `css/wordship.css` `js/ui.js` `js/state.js` `js/home-v2.js` `js/main.js` `js/city3d.js` `index_classic.html` `tools/test_wordship.js`
 - unit wordship + Home V2 ผ่าน · เปิด preview เห็นโจทย์ไทย/เรืออังกฤษ/วงแหวนทอง · ค้าง: เล่นบนมือถือจริง
-- **รอบ 1428 · Dragon Sky กระสุนเท่าเดิม:** ยิงทีละนัด สลับกระบอก ขนาด TRACER/HEAVY/PIERCER เดิม (glow 13) ไม่พวยพุ่ง 8 นัด
+- **รอบ 1430 · Dragon Sky กระสุนเท่าเดิม:** ยิงทีละนัด สลับกระบอก ขนาด TRACER/HEAVY/PIERCER เดิม (glow 13) ไม่พวยพุ่ง 8 นัด
 - `js/lettercannon.js` · unit ผ่าน · HUD โล่งล่าง/บินลื่นจาก 1422 คงไว้
 - รีเฟรชแล้วดูว่ากระสุนใหญ่เท่าเดิมและไม่ออกเป็นพัด
 - ค้าง: ยืนยันบนมือถือผู้ใช้
@@ -26,15 +26,6 @@
 
 - **รอบ 1426 · ตลาดเสนอซื้อของค้างเกิน 1 วัน:** ของตั้งขายเกิน 24 ชม.และยังแพงกว่าราคาโรงงาน+100 → ถามผู้ขาย · ตกลงแล้วถอนประกาศ เติมเหรียญโรงงาน+100 พร้อมภาพเหรียญ+เสียง · ปฏิเสธถามใหม่วันถัดไป
 - `js/data/collectibles.js` `js/state.js` `js/ui.js` `css/style.css` `handoff/GAME_RULES.md` `tools/test_market_system_buy.js`
-- unit `test_market_system_buy.js` ผ่าน (โดนัทโรงงาน 800 → เสนอ 900, บัญชี 100+900=1000, ไม่ฟาร์มลงราคาถูก)
-- ค้าง: เปิดเกมจริงแล้วรอ/จำลอง listedAt เกิน 1 วัน กดขายให้ระบบ ดูเหรียญเข้ากระเป๋า
-
-- **รอบ 1425 · Frontline ลูกศรชี้เข้าหาตัวอักษร:** สูตรเดียวกับอารีน่า 1424 · มุมจากขอบเข้าหาตัวอักษรบนสนาม · จุดหลังกล้องไม่พลิกออกนอก
-- `tools/frontline-v1/frontline-words.js` `frontline-scene.js` `frontline.test.mjs` `docs/PROJECT_MAP.md`
-- unit 34/34
-- ค้าง: รีเฟรช `/frontline/` ดูลูกศรเหลืองชี้เข้าหาตัวอักษรบนสนาม
-
-- **รอบ 1424 · Arena ลูกศรชี้เข้าหาตัวอักษร:** มุมลูกศรวัดจากขอบเข้าหาตำแหน่งตัวอักษรบนสนาม · จุดหลังกล้องไม่พลิกไปด้านนอก
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
