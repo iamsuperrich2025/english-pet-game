@@ -6089,3 +6089,12 @@
 - nav 10/10 · syntax ผ่าน · race ยังมีเคส HUD-only
 - รีเฟรชแล้วดู Crystal Hollow ว่าไม่มีตัวเล็กปะปน
 
+
+
+## ⏬ ย้ายเมื่อ 2026-09-13 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1421 · Frontline เอาตัวอักษรเล็กออก:** การ์ด HUD เหลือเฉพาะตัวที่ยังต้องเก็บ
+- `frontline-words.js` remainNeeded · `frontline-scene.js` ซ่อนการ์ดที่ไม่ใช้ · CSS ขยายการ์ด needed
+- unit 34/34 รวมเคส HUD-only
+- รีเฟรช `/frontline/` แล้วดูว่าสนามไม่มีตัวเล็กปะปน
+
