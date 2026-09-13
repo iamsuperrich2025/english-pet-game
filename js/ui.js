@@ -7188,7 +7188,25 @@ function loadScriptOnce(src){
     document.head.appendChild(s);
   });
 }
-/* ==== ⚓ WORD FLEET / กองเรือคำศัพท์ — รอบ 1429 ==== */
+/* ==== ⚓ WORD FLEET / กองเรือคำศัพท์ — รอบ 1429/1432 ==== */
+const WORDSHIP_LOCK_MSG='🔒 กองเรือคำศัพท์กำลังทดสอบ — เปิดให้ผู้ดูแลระบบเท่านั้น';
+function wordShipAdminAllowed(){
+  try{
+    if(typeof isAdmin==='function' && isAdmin()===true) return true;
+    if(typeof state!=='undefined' && state.adminAccess===true) return true;
+  }catch(_){}
+  return false;
+}
+function refreshWordShipLock(){
+  const b=document.getElementById('btn-rail-wordship');
+  if(!b) return;
+  const ok=wordShipAdminAllowed();
+  b.hidden=!ok;
+  b.setAttribute('aria-hidden', ok?'false':'true');
+  b.setAttribute('aria-disabled', ok?'false':'true');
+  b.title=ok?'เล่นกองเรือคำศัพท์ (กำลังทดสอบ · แอดมิน)':WORDSHIP_LOCK_MSG;
+  if(ok) b.removeAttribute('tabindex'); else b.tabIndex=-1;
+}
 function loadStylesheetOnce(id, href){
   return new Promise((resolve,reject)=>{
     if(document.getElementById(id)){ resolve(); return; }
@@ -7201,6 +7219,10 @@ function loadStylesheetOnce(id, href){
 }
 async function openWordShip(){
   if(typeof closePanel==='function') closePanel();
+  if(!wordShipAdminAllowed()){
+    if(typeof toast==='function') toast(WORDSHIP_LOCK_MSG);
+    return;
+  }
   try{
     if(typeof toast==='function' && (typeof WordShip==='undefined' || !WordShip.open)) toast('⚓ กำลังออกทะเลคำศัพท์...');
     await loadStylesheetOnce('wordship-css','css/wordship.css');
@@ -7219,7 +7241,10 @@ function bindWordShipRail(){
   if(!b || b.dataset.wshBound) return;
   b.dataset.wshBound='1';
   b.addEventListener('click', ()=>{ openWordShip(); });
+  refreshWordShipLock();
 }
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bindWordShipRail);
+else bindWordShipRail();
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bindWordShipRail);
 else bindWordShipRail();
 /* 🚑 รอบ 859: guard ทางเข้าโลก 3D ห้ามเงียบ — ถ้ากดแล้วไม่เกิดอะไรเพราะ advLoading ค้าง ให้บอกผู้เล่นบนจอ

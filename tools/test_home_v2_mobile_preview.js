@@ -276,11 +276,11 @@ const semanticRailIcons = [
   ['trophy','pinboard']
 ];
 semanticRailIcons.forEach(([action, iconName])=>must(home.includes(`['${action}','${iconName}'`), `left rail icon does not explain its destination: ${action}`));
-const adminOnlyWorlds = ["worldSky","worldDrive","worldMoto","worldInvasion","worldMecha"];
+const adminOnlyWorlds = ["worldSky","worldDrive","worldMoto","worldInvasion","worldMecha","wordship"];
 const publicWorlds = ["worldAdv","worldHaunt","worldHeli","worldDrone","worldSoccer"];
 const adminWorldSetBlock = (home.match(/const ADMIN_ONLY_WORLD_ACTIONS = new Set\(\[([\s\S]*?)\]\)/) || [])[1] || "";
 const adminWorldSetNames = Array.from(adminWorldSetBlock.matchAll(/'([^']+)'/g), match=>match[1]);
-must(JSON.stringify(adminWorldSetNames) === JSON.stringify(adminOnlyWorlds), "R40 exact six-world admin set changed");
+must(JSON.stringify(adminWorldSetNames) === JSON.stringify(adminOnlyWorlds), "admin-only destination set changed");
 must(home.includes("const adminBlocked = adminOnly && !adminWorldAllowed()") && home.includes("hidden disabled aria-hidden") && home.includes("btn.hidden = adminBlocked") && home.includes("btn.disabled = disabled") && home.includes("btn.tabIndex = -1") && home.includes("data-vw2-admin-only-world") && css.includes('data-vw2-admin-only-world="1"][hidden]'), "R40 first-paint/public-view admin hiding/disable/focus guard missing");
 must(publicWorlds.every(action=>home.includes(`['${action}',`)) && !publicWorlds.some(action=>adminOnlyWorlds.includes(action)), "R19 public world inventory changed");
 must(home.includes("worldAdv:'#btn-world-adv'") && home.includes("worldSky:'#btn-world-sky'") && home.includes("startsWith('world')") && css.includes('data-vw2-action^="world"'), "R19 Classic world parity missing");

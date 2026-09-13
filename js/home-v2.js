@@ -262,7 +262,7 @@
     return ` data-vw2-source="${htmlEscape(sourceSelector)}"${mirrorVisibility ? ' data-vw2-mirror-visibility="1"' : ''}`;
   }
   const ADMIN_ONLY_WORLD_ACTIONS = new Set([
-    'worldSky','worldDrive','worldMoto','worldInvasion','worldMecha'
+    'worldSky','worldDrive','worldMoto','worldInvasion','worldMecha','wordship'
   ]);
   const CLASSIC_RAIL_GLYPHS = Object.freeze({
     cure:'💊',city:'🏙️',worldAdv:'🌍',worldSky:'☁️',worldHaunt:'👻',worldHeli:'🚁',worldDrone:'🛸',
@@ -1400,6 +1400,12 @@
       const disabled = !!(source && source.disabled) || adminBlocked;
       btn.disabled = disabled;
       btn.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+      if(btn.dataset.vw2AdminOnlyWorld === '1'){
+        btn.hidden = adminBlocked;
+        btn.setAttribute('aria-hidden', adminBlocked ? 'true' : 'false');
+        if(adminBlocked) btn.tabIndex = -1;
+        else btn.removeAttribute('tabindex');
+      }
       if(btn.classList.contains('vw2-rail-btn')){
         const current = !!(source && (source.classList.contains('active') || source.classList.contains('on') || source.getAttribute('aria-current') === 'page' || source.getAttribute('aria-selected') === 'true' || source.getAttribute('aria-pressed') === 'true'));
         btn.classList.toggle('vw2-current', current);

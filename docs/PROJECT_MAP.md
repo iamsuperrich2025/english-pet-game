@@ -86,7 +86,7 @@ DEPENDENCIES: `THREE`, shared pet/economy state, `FOODS`, `ITEMS`, `Music`, loca
 NOTES: `petshopping3d.js` is lazy-loaded. Food stock is consumable and excluded from net worth; the shelf is a permanent asset. Players without a car rent `car_01` per trip without acquiring it.
 
 SYSTEM: Vocab Arena
-PURPOSE: Shared four-player word race with private destructible 5,000 HP homes, carry-one A–Z pickups, winner-only 1,000 coins, combat and its own renderer lifecycle.
+PURPOSE: Shared four-player word race with private indestructible homes, carry-one A–Z pickups, winner-only 1,000 coins, combat and its own renderer lifecycle.
 PRIMARY FILE: `js/arena3d.js`
 RACE OWNERS: `js/arena-race.js`, `functions/arena-race.js`, callable `arenaRaceV1`; wallet receipts in `functions/frontline-wallet.js` and `js/auth.js`. Rules and tests: `docs/ARENA_RACE.md`, `functions/test_arena_race.js`, `tools/test_arena_race.cjs`.
 RELATED FILES: `js/arena-strip.js`, `js/arena-audio.js`, `sound/arena/`, `SOUND_LICENSES.md`, `tools/test_arena_music.cjs`, `tools/test_arena_music_entry.cjs`, `js/arena-heroes.js`, `js/arena-portrait.js`, `js/arena-maps.js`, `js/arena-elements.js`, `js/arena-field-visuals.js`, `js/arena-spell-catalog.js`, `js/arena-spell-engine.js`, `js/arena-spells/`, `js/arena-grimoire.js`, `js/arena-relics.js`, `js/arena-nav.js`, `js/netroom.js`, `css/arena3d.css`, `css/arena-heroes.css`, `js/ui.js`, `js/home-v2.js`, `img/arena-heroes/`, `img/arena-maps/`, `img/arena-icons/`, `docs/ARENA_FIELD.md`, `docs/ARENA_GROUND_ASSETS.json`, `tools/test_arena_maps.cjs`, `tools/test_arena_grimoire.cjs`, `tools/test_arena_fire.cjs`, `tools/test_arena_nav.cjs`
@@ -148,7 +148,7 @@ PRIMARY FILE: `js/wordship.js`
 RELATED FILES: `css/wordship.css`, `js/ui.js` (`openWordShip`), `js/state.js`, `js/home-v2.js`, `js/city3d.js`, `index_classic.html`, `tools/test_wordship.js`
 PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.WordShip`, `openWordShip`, `pool`, `spawnWave`
 DEPENDENCIES: `vocabForStudent` already loaded for Shoot Word; Canvas 2D; WebAudio beeps.
-NOTES: No extra vocab/image/BGM downloads. JS+CSS load on first rail click. Same 3–10 letter pool as ShootWord.
+NOTES: Admin-only while unfinished. One enemy ship sails only in the water band (never the sky), left↔right or near↔far at constant speed; near→far shrinks the hull. JS+CSS load only after an allowed click. Same 3–10 letter pool as ShootWord.
 
 SYSTEM: Letter Cannon vocabulary minigame
 PURPOSE: Portrait 9:16 vertical shooter: freely fly a weapon-mounted dragon, spell five words, protect ten hearts from meteors, and survive a two-hit boss wave.
@@ -160,7 +160,7 @@ NOTES: Canvas 2D solo gameplay with drag/WASD free flight, animated tail, a proc
 
 SYSTEM: Frontline 1944 public game and isolated development preview
 ADDITIONAL MODULES: `tools/frontline-v1/frontline-lobby.js` (numeric overflow rooms), `frontline-commands.js` (host input reducer), `preview-admission.mjs` (local conditional seat admission), `frontline-effects.js` (pooled toy fireworks), `frontline-audio.js` (synthesized cues plus one hashed looping BGM Blob). Target/Thai data comes from `js/data/vocab.js`, the same source as ShootWord. Inputs use `frontline_v1_dev/<session>/inputs/<room>/<seat>`; only the seat owner writes its mailbox and the elected host writes room simulation state.
-PURPOSE: Competitive four-seat word raid with vacant-seat bots, two neutral anti-collusion guards, A-Z ram pickups, private destructible vaults, projectile/PvP combat, timed bombs, and winner-only central coin rewards.
+PURPOSE: Competitive four-seat word raid with vacant-seat bots, two neutral anti-collusion guards, A-Z ram pickups, private indestructible vaults, projectile/PvP combat, timed bombs, and winner-only central coin rewards.
 PRIMARY FILE: `tools/frontline-v1/frontline-main.js`
 RELATED FILES: `tools/frontline-v1/frontline-{config,input,tank,combat,bombs,letters,bases,words,bots,guards,room,network,economy,shapes,map,scene,ui}.js`, `tools/frontline-v1/assets/tank-cute.glb`, `tools/frontline-v1/build_tank_glb.py`, `frontline.css`, `index.html`, `preview.mjs`, `preview-proxy.mjs`, `database.rules.json`, `README.md`, `js/vendor/GLTFLoader.js`
 PUBLIC ENTRY POINTS / KEY SYMBOLS: Public `/frontline/index.html` via `package-production.mjs`; launcher `#fl-lobby` returns to `/index_classic.html`; `makeRenderPose` in `frontline-scene.js`; `muzzlePoint` in `frontline-config.js`; `blendToward` in `frontline-tank.js`; isolated `/__dev/frontline` via `node tools/frontline-v1/preview.mjs`; `window.Frontline`, `admit`, `drive`, `commitFire`, `placeBomb`, `tickLetters`, `creditReward`, `connect`.

@@ -87,6 +87,7 @@ function syncAdminAccess(){
   const allowed=isAdmin();
   if(state.adminAccess!==allowed){state.adminAccess=allowed;saveState();}
   if(typeof LetterCannon!=='undefined'&&LetterCannon.refreshLock)LetterCannon.refreshLock();
+  if(typeof refreshWordShipLock==='function')refreshWordShipLock();
 }
 
 /* ---------- บัญชีผู้ทดสอบเกม (รอบ 56 + 59) ----------

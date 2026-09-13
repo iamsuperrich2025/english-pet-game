@@ -5,12 +5,15 @@
    คลังคำ = สูตรเดียวกับ ShootWord.pool() / vocabForStudent() ที่โหลดมากับล็อบบี้แล้ว
    ไม่ดึงคำศัพท์จากเซิร์ฟเวอร์ซ้ำ · ไม่มีไฟล์ภาพ/เพลงเพิ่ม · วาด Canvas + เสียง WebAudio
    เข้าเกม: ปุ่ม #btn-rail-wordship → ui.js โหลด css/js ครั้งแรกตอนกดเท่านั้น
+   เรือศัตรู 1 ลำ แล่นในเขตน้ำเท่านั้น (ห้ามขึ้นท้องฟ้า) ซ้าย↔ขวา / ใกล้↔ไกล
+   ใกล้→ไกล = ลำเรือเล็กลงตามระยะ · ความเร็วคงที่
    📐 HUD clamp ตาม vh · ทดสอบ 812×375 · ไม่มี scrollbar
    ============================================================ */
 (function(){
   const MINLEN=3, MAXLEN=10;
   const HIT_COIN=5, PERFECT_BONUS=5, PT_PER_LETTER=2;
-  const HEARTS=3, COOLDOWN=380, MAX_SHELLS=40, MAX_FX=90, MAX_FLEET=4;
+  const HEARTS=3, COOLDOWN=380, MAX_SHELLS=40, MAX_FX=90, MAX_FLEET=1;
+  const WATER_HORIZON=.42, WATER_NEAR=.72, FAR_SCALE=.38, NEAR_SCALE=1, SHIP_SPEED=.16;
   const DPR_CAP=1.5, FRAME_MS=1000/60;
   const HULLS=['#7ecbff','#ffb3d9','#ffe08a','#b5f2c0','#d0b8ff','#ffc4a8'];
   const FALLBACK=[['CAT','แมว'],['DOG','สุนัข'],['BOOK','หนังสือ'],['FISH','ปลา'],['BIRD','นก']];
@@ -107,26 +110,52 @@
     clouds=[{x:W*.2,y:H*.1,s:1},{x:W*.55,y:H*.07,s:1.2},{x:W*.88,y:H*.12,s:.9}];
   }
 
-  function shipSize(boss){return {w:clamp(W*(boss?.22:.15),78,160), h:clamp(H*(boss?.14:.1),28,54)};}
-
-  function spawnWave(){
+  function waterLimits(){
+    const pad=Math.max(16, H*.025);
+    const top=H*WATER_HORIZON+pad, bottom=H*WATER_NEAR-pad;
+    return {horizon:H*WATER_HORIZON, top, bottom:Math.max(top+8, bottom), nearY:H*WATER_NEAR};
+  }
+  function depthScale(y){
+    const lim=waterLimits();
+    const t=clamp((y-lim.top)/Math.max(1,lim.bottom-lim.top),0,1);
+    return FAR_SCALE+(NEAR_SCALE-FAR_SCALE)*t;
+  }
+  function applyShipScale(s){
+    if(!s) return 1;
+    const sc=depthScale(s.y);
+    s.scale=sc; s.w=s.baseW*sc; s.h=s.baseH*sc;
+    return sc;
+  }
+  function shipSpeed(){ return Math.min(W,H)*SHIP_SPEED; }
+  function pickCourse(kind, dir){
+    const lim=waterLimits();
+    const goRight=dir==null?Math.random()<.5:dir>0;
+    const startX=goRight?-52:W+52, endX=goRight?W+52:-52;
+    const mode=kind||pick(['flat','flat','nearFar','farNear']);
+    let startY, endY;
+    if(mode==='nearFar'){ startY=lim.bottom; endY=lim.top; }
+    else if(mode==='farNear'){ startY=lim.top; endY=lim.bottom; }
+    else { startY=endY=lim.top+Math.random()*(lim.bottom-lim.top); }
+    return {startX,startY,endX,endY,mode,dir:goRight?1:-1};
+  }
+  function spawnWave(course){
     word=takeWord();
-    const n=Math.min(MAX_FLEET, 2+Math.min(2,1+(wave>2?1:0)));
-    const extras=shuffle(pool().filter(p=>p.w!==word.w)).slice(0,n-1);
-    const pack=shuffle([{w:word.w,th:word.th,target:true}].concat(extras.map(p=>({w:p.w,th:p.th,target:false}))));
-    fleet.length=0;
-    const lanes=pack.length;
-    pack.forEach((p,i)=>{
-      const boss=p.target && wave%5===0 && wave>0;
-      const sz=shipSize(boss);
-      const x=W*((i+.6)/ (lanes+0.2));
-      fleet.push({
-        alive:true, x, y:-sz.h-(i*18), vx:(Math.random()-.5)*18, vy:H*(.042+.006*wave)*(boss?.72:1),
-        w:sz.w, h:sz.h, word:p.w, th:p.th, target:!!p.target, hp:boss?3:1, maxHp:boss?3:1,
-        color:p.target? '#ff8fab' : pick(HULLS), bob:Math.random()*6, sink:0, phase:Math.random()*6.28, boss
-      });
-    });
+    const c=course||pickCourse();
+    const dx=c.endX-c.startX, dy=c.endY-c.startY, dist=Math.hypot(dx,dy)||1;
+    const speed=shipSpeed(), vx=speed*dx/dist, vy=speed*dy/dist;
+    const boss=wave%5===0 && wave>0;
+    const baseW=clamp(W*(boss?.22:.18),90,158), baseH=clamp(H*(boss?.13:.11),32,56);
+    const s={
+      alive:true, x:c.startX, y:c.startY, vx, vy, speed, dist,
+      startX:c.startX, startY:c.startY, endX:c.endX, endY:c.endY, mode:c.mode, dir:c.dir,
+      baseW, baseH, w:baseW, h:baseH, scale:1,
+      word:word.w, th:word.th, target:true, hp:boss?3:1, maxHp:boss?3:1,
+      color:'#ff8fab', bob:Math.random()*6, sink:0, phase:Math.random()*6.28, boss
+    };
+    applyShipScale(s);
+    fleet.length=0; fleet.push(s);
     renderHud();
+    return s;
   }
 
   function fire(){
@@ -201,14 +230,22 @@
     }
   }
 
+  function courseProgress(s){
+    if(!s||!s.dist) return 0;
+    return Math.hypot(s.x-s.startX, s.y-s.startY)/s.dist;
+  }
   function tickFleet(dt){
+    const lim=waterLimits();
     fleet.forEach(s=>{
       if(!s.alive){ if(s.sink>0) s.sink=Math.max(0,s.sink-dt); return; }
-      s.phase+=dt; s.x+=s.vx*dt + Math.sin(elapsed*1.3+s.phase)*8*dt;
-      s.y+=s.vy*dt; s.x=clamp(s.x, s.w*.4, W-s.w*.4);
-      if(s.y>H*.78){
-        if(s.target){ sinkShip(s,false); hurt('เรือเป้าหมายแล่นหนีไปแล้ว'); const id=runId; later(()=>{ if(running&&hearts>0&&id===runId) spawnWave(); },500); }
-        else s.alive=false;
+      s.phase+=dt;
+      s.x+=s.vx*dt;
+      s.y=clamp(s.y+s.vy*dt, lim.top, lim.bottom);
+      applyShipScale(s);
+      const gone=courseProgress(s)>=1 || (s.vx>0&&s.x>W+s.w) || (s.vx<0&&s.x<-s.w);
+      if(gone){
+        sinkShip(s,false); hurt('เรือเป้าหมายแล่นหนีไปแล้ว');
+        const id=runId; later(()=>{ if(running&&hearts>0&&id===runId) spawnWave(); },500);
       }
     });
   }
@@ -232,7 +269,7 @@
 
   function drawSky(){
     const g=ctx.createLinearGradient(0,0,0,H);
-    g.addColorStop(0,'#9fe7ff'); g.addColorStop(.42,'#b9f3ff'); g.addColorStop(.42,'#4ec6ea'); g.addColorStop(1,'#1878b8');
+    g.addColorStop(0,'#9fe7ff'); g.addColorStop(WATER_HORIZON,'#b9f3ff'); g.addColorStop(WATER_HORIZON,'#4ec6ea'); g.addColorStop(1,'#1878b8');
     ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
     ctx.fillStyle='#ffe38a'; ctx.beginPath(); ctx.arc(W*.86,H*.14,Math.min(W,H)*.08,0,7); ctx.fill();
     clouds.forEach((c,i)=>{
@@ -246,7 +283,7 @@
       ctx.fillStyle='#7ad08a'; ctx.beginPath(); ctx.ellipse(o.x,o.y,o.s,o.s*.45,0,0,7); ctx.fill();
       ctx.fillStyle='#f7d48a'; ctx.beginPath(); ctx.ellipse(o.x,o.y+o.s*.2,o.s*1.1,o.s*.22,0,0,7); ctx.fill();
     });
-    const horizon=H*.42;
+    const horizon=H*WATER_HORIZON;
     for(let i=0;i<7;i++){
       ctx.strokeStyle=`rgba(255,255,255,${.08+i*.03})`; ctx.lineWidth=2;
       ctx.beginPath();
@@ -262,7 +299,9 @@
     const bob=Math.sin((isPlayer?player.bob:elapsed*2.2)+ (s.phase||0))*3;
     const y=s.y+bob+(isPlayer?player.recoil*6:0);
     const sink=s.sink||0;
-    ctx.save(); ctx.translate(s.x,y); ctx.rotate(sink? sink*.6 : Math.sin(elapsed+ (s.phase||0))*.04);
+    ctx.save(); ctx.translate(s.x,y);
+    if(!isPlayer && (s.dir||s.vx||0)<0) ctx.scale(-1,1);
+    ctx.rotate(sink? sink*.6 : Math.sin(elapsed+ (s.phase||0))*.03);
     const w=s.w, h=s.h;
     ctx.fillStyle=s.color||'#7ecbff';
     ctx.beginPath(); ctx.moveTo(-w*.48,0); ctx.quadraticCurveTo(0,h*.7,w*.48,0); ctx.quadraticCurveTo(0,-h*.55,-w*.48,0); ctx.fill();
@@ -313,7 +352,7 @@
     hud.coins.textContent=String(coinsRun);
     hud.wave.textContent='คลื่น '+wave;
     hud.words.textContent=String(wordsDone);
-    if(hud.hint) hud.hint.textContent='ยิงเรือที่แปลว่า “'+(word?word.th:'')+'” — อ่านคำอังกฤษบนลำเรือ';
+    if(hud.hint) hud.hint.textContent='ยิงเรือลำเดียวที่แปลว่า “'+(word?word.th:'')+'” — เรืออยู่ในน้ำเท่านั้น';
   }
 
   function step(dt){
@@ -362,7 +401,7 @@
     hud.intro.hidden=false;
     hud.intro.innerHTML=`<div class="wsh-card">
       <h2>⚓ กองเรือคำศัพท์</h2>
-      <p>ทะเลสดใสแบบเรือรบของเล่น — อ่านคำไทยแล้ว<b>ยิงเรือที่เขียนคำอังกฤษถูก</b></p>
+      <p>ทะเลสดใสแบบเรือรบของเล่น — มีเรือศัตรู<b>ลำเดียว</b>ในน้ำ อ่านคำไทยแล้วยิงให้ตรงคำอังกฤษบนลำเรือ</p>
       <p>คำศัพท์ชุดเดียวกับเกม 🎯 ยิงเป้าคำ ตามระดับชั้นของน้อง · ไม่โหลดคลังคำใหม่จากเน็ต</p>
       <p>ลากซ้ายขวาบังคับเรือ · แตะจอ/Space ยิง · เรือเป้าหมายมีวงแหวนทอง</p>
       <button type="button">⚓ ออกทะเล!</button></div>`;
@@ -433,7 +472,18 @@
     bind(); built=true;
   }
 
+  function adminAllowed(){
+    try{
+      if(typeof isAdmin==='function') return isAdmin()===true;
+      if(typeof state!=='undefined' && state.adminAccess===true) return true;
+    }catch(_){}
+    return false;
+  }
   async function open(){
+    if(!adminAllowed()){
+      if(typeof toast==='function') toast('🔒 กองเรือคำศัพท์กำลังทดสอบ — เปิดให้ผู้ดูแลระบบเท่านั้น');
+      return;
+    }
     if(opening) return; opening=true;
     try{
       buildDom();
@@ -463,9 +513,9 @@
     if(typeof renderDashboard==='function') renderDashboard();
   }
 
-  window.WordShip={ open, close, _t:{
-    MINLEN, MAXLEN, HIT_COIN, PERFECT_BONUS, HEARTS, MAX_FLEET,
-    pool, takeWord, spawnWave, fire, hitShip, setViewport, setPlayer, resetRun, step, awardHit,
+  window.WordShip={ open, close, refreshLock:typeof refreshWordShipLock==='function'?refreshWordShipLock:function(){}, _t:{
+    MINLEN, MAXLEN, HIT_COIN, PERFECT_BONUS, HEARTS, MAX_FLEET, WATER_HORIZON, FAR_SCALE, NEAR_SCALE, SHIP_SPEED,
+    pool, takeWord, spawnWave, pickCourse, waterLimits, depthScale, applyShipScale, courseProgress, fire, hitShip, setViewport, setPlayer, resetRun, step, awardHit, adminAllowed, shipSpeed,
     get word(){return word;}, get fleet(){return fleet;}, get shells(){return shells;},
     get score(){return score;}, get coinsRun(){return coinsRun;}, get hearts(){return hearts;},
     get wordsDone(){return wordsDone;}, get misses(){return misses;}, get wave(){return wave;},

@@ -14,6 +14,12 @@ const build=read('tools/build_web.mjs');
 const stateCode=read('js/state.js');
 
 assert(html.includes('id="btn-rail-wordship"')&&html.includes('กองเรือคำศัพท์'),'classic rail button');
+assert(html.includes('id="btn-rail-wordship"')&&/\bid="btn-rail-wordship"[^>]*\bhidden\b/.test(html),'classic rail starts hidden so public first paint cannot open it');
+assert(ui.includes('function wordShipAdminAllowed')&&ui.includes('WORDSHIP_LOCK_MSG')&&ui.includes('if(!wordShipAdminAllowed())'),'lobby refuses to download or open the game for non-admins');
+assert(ui.includes('function refreshWordShipLock')&&ui.includes('b.hidden=!ok'),'rail visibility follows admin login');
+assert(city.includes("b.go==='wordship'")&&city.includes('cityAdminAccess')&&city.includes('เปิดให้แอดมินเท่านั้น'),'3D city harbor explains the admin lock instead of travelling');
+assert(home.includes("'wordship'")&&home.includes("ADMIN_ONLY_WORLD_ACTIONS")&&/'wordship'/.test((home.match(/const ADMIN_ONLY_WORLD_ACTIONS = new Set\(\[([\s\S]*?)\]\)/)||[])[1]||''),'Home V2 hides the card from non-admins');
+assert(code.includes('function adminAllowed')&&code.includes("isAdmin()===true"),'game open itself re-checks admin');
 assert(!/<script[^>]+js\/wordship\.js/.test(html)&&!html.includes('href="css/wordship.css"'),'game JS/CSS are not in the lobby HTML download');
 assert(ui.includes("loadScriptOnce('js/wordship.js')")&&ui.includes("loadStylesheetOnce('wordship-css','css/wordship.css')"),'first click lazy-loads the module');
 assert(ui.includes('async function openWordShip')&&ui.includes('btn-rail-wordship'),'lobby binder lives in ui.js');
@@ -42,6 +48,9 @@ const sandbox={
 sandbox.window=sandbox; sandbox.document.body=sandbox.document.body;
 vm.createContext(sandbox); vm.runInContext(code, sandbox);
 const T=sandbox.WordShip._t;
+assert(T.adminAllowed()===false,'missing admin identity cannot open the fleet');
+sandbox.isAdmin=()=>true;
+assert(T.adminAllowed()===true,'admin identity can open the fleet');
 
 function shootPool(src){
   const seen=new Set(), out=[];
@@ -56,17 +65,27 @@ assert(!T.pool().some(x=>x.w==='TO'||x.w==='EXTRAORDINARILY'), 'too-short and to
 assert(T.pool().some(x=>x.w==='CAT'&&x.th==='แมว'), 'Thai meaning rides along from vocabForStudent');
 
 T.setViewport(812,375); T.resetRun();
-assert(T.word&&T.word.w.length>=3, 'wave starts with a grade-safe word');
-assert(T.fleet.filter(s=>s.alive).length>=2, 'at least one decoy ship sails with the target');
-assert.strictEqual(T.fleet.filter(s=>s.alive&&s.target).length,1, 'exactly one target ship');
-assert(T.fleet.every(s=>s.word), 'every hull shows an English word');
-const decoy=T.fleet.find(s=>!s.target);
-const coins0=awarded.n;
-T.hitShip(decoy);
-assert.strictEqual(awarded.n,coins0,'wrong hull never pays coins');
-assert.strictEqual(T.misses,1,'wrong shot is counted');
-assert.strictEqual(decoy.alive,true,'decoy stays afloat so the child can read it again');
+assert.strictEqual(T.MAX_FLEET,1,'only one enemy ship is allowed');
+assert.strictEqual(T.fleet.filter(s=>s.alive).length,1, 'exactly one live ship');
+assert(T.fleet[0].target && T.fleet[0].word===T.word.w, 'the single hull carries the target word');
+const lim=T.waterLimits();
+assert(T.fleet[0].y>=lim.top && T.fleet[0].y<=lim.bottom, 'spawn stays in the water band');
+assert(lim.top>=375*T.WATER_HORIZON, 'water top is not above the horizon / sky');
+const far=T.spawnWave(T.pickCourse('nearFar',1));
+assert.strictEqual(far.mode,'nearFar','near-to-far course is available');
+assert(far.vx>0 && far.vy<0,'left-to-right near-to-far moves right and away');
+assert.strictEqual(Math.hypot(far.vx,far.vy).toFixed(3), T.shipSpeed().toFixed(3), 'course speed is constant');
+const nearScale=T.depthScale(far.startY), farScale=T.depthScale(far.endY);
+assert(nearScale>farScale, 'far water uses a smaller hull than near water');
+far.y=far.endY; T.applyShipScale(far);
+assert(far.w<far.baseW && far.scale===farScale, 'hull shrinks when it sails farther');
+const left=T.spawnWave(T.pickCourse('flat',-1));
+assert(left.vx<0 && Math.abs(left.vy)<1e-9,'right-to-left flat course keeps a constant depth');
+T.step(.05);
+assert(T.fleet[0].y>=lim.top && T.fleet[0].y<=lim.bottom, 'after moving, the ship is still in the water');
+assert.strictEqual(Math.hypot(T.fleet[0].vx,T.fleet[0].vy).toFixed(3), T.shipSpeed().toFixed(3), 'speed does not change while sailing');
 
+const coins0=awarded.n;
 T.resetRun();
 const target=T.fleet.find(s=>s.target);
 const pay=T.HIT_COIN+target.word.length*2+T.PERFECT_BONUS;
