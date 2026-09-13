@@ -12,6 +12,11 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1414 · Arena ตัวอักษรใหญ่ + ลูกศรแบบ Frontline:** ตัวที่ยังต้องใช้ในคำเป้าหมายเป็นป้ายครีมใหญ่ และมีลูกศรขอบจอชี้ตัวอักษรที่ใกล้สุดกับบ้านตัวเอง
+- `js/arena-nav.js` + `js/arena3d.js` + `css/arena3d.css` + `js/ui.js` · ไม่เพิ่ม draw call 3D ใช้ HUD เดิม
+- unit ArenaNav 7/7 · race Playwright 20/20 รวมลูกศรบ้าน/ตัวอักษรที่ 812×375
+- ยังไม่ยืนยันบนมือถือจริงของผู้ใช้
+
 - **รอบ 1413 · ส่ง Frontline ชุดอัปเดทขึ้นเว็บ:** รวมแก้พื้นกระตุก ลูกศรตัวอักษร/บ้าน เพลง Arcade ตัวเลข HP ข้อความหยิบผิด ย้าย SPEED ปุ่มกลับ Lobby และกระสุนออกจากปากกระบอก
 - `tools/frontline-v1/*` + `sound/Frontline/bgmusic-*` + `SOUND_LICENSES.md` · เพลงต้นฉบับไม่ขึ้นเว็บ · preview Local ยังแยก namespace
 - unit Frontline ผ่าน (กระสุนที่กระบอก, carryHelps, terrain) · ปุ่ม Lobby บน launcher ไป `/index_classic.html`
@@ -22,11 +27,6 @@
 - `js/hauntedhotel.js` startNextMission · `js/adventure3d.js` hotelFillMissingLetters/hotelBroadcastSoloWin · `js/specialmission.js` continueHauntedRun
 - unit โรงแรม+ภารกิจพิเศษผ่าน (chain หลัง COMPLETE, ตัวอักษรสำรอง, ไม่ returnToLobby)
 
-- **รอบ 1411 · Frontline ย้ายแผง SPEED NORMAL ขึ้นบน:** จากกลางล่างไปช่องว่างขวาของคำเป้าหมาย APPLE ซ้ายของ ♪/EXIT เหนือรายชื่อผู้เล่น
-- `index.html` ย้าย `.fl-speed-control` ออกจาก `.fl-controls` · `frontline.css` ตรึงมุมบนขวา กว้างพอดีช่อง · roster เลื่อนลง `top:80px`
-- วัด HUD 812×375 ไม่ทับ APPLE/EXIT/roster (เว้น 14/2/10px) · 667×375 เว้น APPLE 5px · ยังไม่ commit/deploy; รีเฟรช preview แล้วลองเลื่อนความเร็ว
-
-- **รอบ 1410 · Frontline ข้อความน่ารักตอนหยิบตัวผิด:** หยิบตัวที่ไม่ช่วยเติมคำ (หรือซ้ำที่ฝากแล้ว) ขึ้นโค้ช “อุ๊ย หยิบ X ผิดแล้ว · กด DROP วางลงนะ” และป้าย DROP “อุ๊ย หยิบผิดแล้ว”
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
