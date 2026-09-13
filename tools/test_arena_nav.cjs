@@ -9,14 +9,19 @@ ok('string banks work like Frontline stored text',N.remain('CAT','C','A').T===1&
 const items=[{letter:'S',x:40,z:0},{letter:'S',x:2,z:0},{letter:'E',x:0,z:50},{letter:'Q',x:1,z:1}];
 const hints=N.neededLetterHints(items,{x:0,z:0},{S:1,E:1});
 ok('arrows pick nearest remaining unique letters',hints.length===2&&hints.find(h=>h.letter==='S').x===2);
-ok('on-screen cards hide the edge arrow',N.placeLetterHint(400,200,800,400).visible===false);
+function tipDot(p,lx,ly){return Math.sin(p.angle)*(lx-p.x)+(-Math.cos(p.angle))*(ly-p.y);}
+const inner=N.placeLetterHint(400,200,800,400);
+ok('on-screen letter still gets an edge arrow',inner.visible&&(inner.x<=54||inner.x>=746||inner.y<=88||inner.y>=274));
+ok('on-screen arrow points inward at the letter',tipDot(inner,400,200)>20);
 const left=N.placeLetterHint(-80,200,800,400);
 ok('off-screen letter clamps to HUD-safe edge',left.visible&&left.x>=52&&left.x<=54&&Math.abs(left.angle)>1);
+ok('off-screen arrow still points at that letter',tipDot(left,-80,200)>20);
 const home=N.placeLetterHint(-200,800,800,400);
 ok('own-base hint reuses the same clamp',home.visible&&home.x>=52&&home.y<=400-124);
+ok('home arrow points at the base',tipDot(home,-200,800)>20);
 ok('carrying suppresses letter arrows',N.neededLetterHints(items,{x:0,z:0},{S:1,E:1},true).length===0);
 ok('completed words have no letter arrows',N.neededLetterHints(items,{x:0,z:0},{}).length===0);
 const src=fs.readFileSync(path.join(root,'js/arena3d.js'),'utf8');
 ok('field drops skip 3D letter sprites',/halo,spr:null/.test(src)&&!/dropLetter[\s\S]{0,900}makeTextSprite\(ch/.test(src));
 ok('on-crystal letter cards stay hidden',src.includes('function paintLetterCards()')&&src.includes('letterMarks[i].hidden=true'));
-console.log(JSON.stringify({passed:10}));
+console.log(JSON.stringify({passed:13}));
