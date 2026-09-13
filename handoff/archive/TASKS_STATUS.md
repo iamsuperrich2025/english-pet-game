@@ -6026,3 +6026,12 @@
 - `js/hauntedhotel.js` startNextMission · `js/adventure3d.js` hotelFillMissingLetters/hotelBroadcastSoloWin · `js/specialmission.js` continueHauntedRun
 - unit โรงแรม+ภารกิจพิเศษผ่าน (chain หลัง COMPLETE, ตัวอักษรสำรอง, ไม่ returnToLobby)
 
+
+
+## ⏬ ย้ายเมื่อ 2026-09-13 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1413 · ส่ง Frontline ชุดอัปเดทขึ้นเว็บ:** รวมแก้พื้นกระตุก ลูกศรตัวอักษร/บ้าน เพลง Arcade ตัวเลข HP ข้อความหยิบผิด ย้าย SPEED ปุ่มกลับ Lobby และกระสุนออกจากปากกระบอก
+- `tools/frontline-v1/*` + `sound/Frontline/bgmusic-*` + `SOUND_LICENSES.md` · เพลงต้นฉบับไม่ขึ้นเว็บ · preview Local ยังแยก namespace
+- unit Frontline ผ่าน (กระสุนที่กระบอก, carryHelps, terrain) · ปุ่ม Lobby บน launcher ไป `/index_classic.html`
+- ยังไม่ยืนยันบนมือถือจริงของผู้ใช้หลังขึ้น live
+

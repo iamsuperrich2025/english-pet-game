@@ -222,7 +222,7 @@ api:5 · mergeCredit:6 · settle:7 · create:8 · error:9 · request:10
 
 ## js/arena-strip.js (40 บรรทัด · 0 รายการ)
 
-## js/arena3d.js (941 บรรทัด · 0 รายการ)
+## js/arena3d.js (977 บรรทัด · 0 รายการ)
 
 ## js/assetaward.js (21 บรรทัด · 0 รายการ)
 
@@ -1065,8 +1065,8 @@ vbRender:148 · vbCardHTML:194
 ## css/arena-heroes.css (20 บรรทัด · 5 selector)
 #ah-picker:2,3 · .ah-layout:4 · .ah-info:5,15 · .ah-header:11,12 · .ah-roster:16,17,18,19(+1)
 
-## css/arena3d.css (434 บรรทัด · 93 selector)
-#va-root:5,7,9,203(+101) · #va-canvas:8 · .va-vignette:11 · .va-scan:15 · .va-top:18 · .va-glass:20
+## css/arena3d.css (457 บรรทัด · 102 selector)
+#va-root:5,7,9,226(+101) · #va-canvas:8 · .va-vignette:11 · .va-scan:15 · .va-top:18 · .va-glass:20
 .va-exit:23,26 · .va-player-card:27,29 · .va-player-name:30 · .va-online:31 · .va-word-card:32,34,36 · .va-word-th:37
 .va-word-en:38 · .va-word-slots:40,41,43 · .va-coins:44 · .va-shop-btn:46 · .va-energy:48,54 · .va-energy-label:50
 .va-energy-track:51 · .va-energy-fill:52 · .va-energy-power:55 · .va-bag:57 · .va-bag-label:59 · .va-bag-list:60
@@ -1076,12 +1076,13 @@ vbRender:148 · vbCardHTML:194
 .va-feed:136 · .va-feed-line:138,140 · .va-pop:142,144,145,148 · .va-modal:150,152 · .va-panel:153 · .va-panel-head:156
 .va-panel-title:157 · .va-panel-coins:158 · .va-store-grid:160 · .va-store-item:161,163,164 · .va-store-ico:165 · .va-store-name:167
 .va-store-price:168 · .va-intro-panel:169 · .va-intro-logo:170 · .va-intro-sub:172 · .va-intro-steps:173 · .va-intro-step:174
-.va-start:176,178 · .va-portrait:180 · .va-avatar-icon:206 · .va-home-nav:220,221,222 · .va-cargo:223 · .va-spell-toggle:241,242
-.va-spell-panel:244 · .va-slot-tabs:245,246,381 · .va-spell-grid:247 · .va-spell-card:248,249,251,252 · .va-element-icon:250 · .va-spell-footer:253
-.va-vitals-layer:258 · .va-vital:259,260,261,262(+2) · .va-damage-number:264 · .va-nav-layer:266 · .va-letter:267,268,269,270 · .va-hint:271,272,273,274(+1)
-.va-mega-uses:283 · #va-crystal-count:284 · .va-map-ambience:287,288 · .va-map-change:317 · #va-map-picker:338,339,340,341(+1) · .vam-cards:342
-.vam-card:343,344,345,346 · #vam-play:348 · .va-spell-icon:376 · .va-grimoire-tools:382,383,384,385(+1) · .va-grimoire-nav:387,388,389,390 · .va-music-track:407,408
-.va-swipe-strip:419,420,421,422 · .va-swipe-hint:423 · #va-drop-letter:431,432
+.va-start:176,178 · .va-buy-confirm:181 · .va-buy-card:182,190,191 · .va-buy-gem:186,188 · .va-buy-kicker:189 · .va-buy-ledger:192,193,194
+.va-buy-note:195 · .va-buy-actions:196,197 · #va-buy-cancel:198 · #va-buy-ok:199,200 · .va-portrait:203 · .va-avatar-icon:229
+.va-home-nav:243,244,245 · .va-cargo:246 · .va-spell-toggle:264,265 · .va-spell-panel:267 · .va-slot-tabs:268,269,404 · .va-spell-grid:270
+.va-spell-card:271,272,274,275 · .va-element-icon:273 · .va-spell-footer:276 · .va-vitals-layer:281 · .va-vital:282,283,284,285(+2) · .va-damage-number:287
+.va-nav-layer:289 · .va-letter:290,291,292,293 · .va-hint:294,295,296,297(+1) · .va-mega-uses:306 · #va-crystal-count:307 · .va-map-ambience:310,311
+.va-map-change:340 · #va-map-picker:361,362,363,364(+1) · .vam-cards:365 · .vam-card:366,367,368,369 · #vam-play:371 · .va-spell-icon:399
+.va-grimoire-tools:405,406,407,408(+1) · .va-grimoire-nav:410,411,412,413 · .va-music-track:430,431 · .va-swipe-strip:442,443,444,445 · .va-swipe-hint:446 · #va-drop-letter:454,455
 
 ## css/bubble.css (60 บรรทัด · 25 selector)
 #bb-overlay:4 · #bb-board:5,9,10,11 · .no-anim:12,49 · .bb-head:13 · .bb-title:14 · .bb-stat:15,16
