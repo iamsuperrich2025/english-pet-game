@@ -16,4 +16,7 @@ const home=N.placeLetterHint(-200,800,800,400);
 ok('own-base hint reuses the same clamp',home.visible&&home.x>=52&&home.y<=400-124);
 ok('carrying suppresses letter arrows',N.neededLetterHints(items,{x:0,z:0},{S:1,E:1},true).length===0);
 ok('completed words have no letter arrows',N.neededLetterHints(items,{x:0,z:0},{}).length===0);
-console.log(JSON.stringify({passed:8}));
+const src=fs.readFileSync(path.join(root,'js/arena3d.js'),'utf8');
+ok('field drops skip 3D letter sprites',/halo,spr:null/.test(src)&&!/dropLetter[\s\S]{0,900}makeTextSprite\(ch/.test(src));
+ok('needed letters still use HUD cards',src.includes("navMark('va-letter needed')"));
+console.log(JSON.stringify({passed:10}));

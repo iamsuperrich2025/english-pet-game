@@ -24,7 +24,7 @@ try{
  ok('legacy solo inventory preserved but excluded from race',await a.evaluate(()=>state.arenaHome.cargo.join('')==='ABC'&&state.arenaHome.letters.Z===2&&Object.keys(VocabArena3D._t.bag).length===0));
  ok('26 shared A-Z items rendered',await a.evaluate(()=>VocabArena3D._t.drops.length===26));
  await a.evaluate(()=>{const t=VocabArena3D._t;t.player().pos.set(18,0,-18);t.resize();t.frame(16);});
- ok('needed letters enlarge like Frontline cards',await a.evaluate(()=>{const t=VocabArena3D._t,left=ArenaNav.remain(t.target.en,t.bag,t.cargo);return Object.keys(left).length>0&&t.drops.filter(d=>left[d.ch]).every(d=>d.spr.scale.x>2)&&document.querySelectorAll('.va-letter.needed').length>0;}));
+ ok('needed letters use large HUD cards only',await a.evaluate(()=>{const t=VocabArena3D._t,left=ArenaNav.remain(t.target.en,t.bag,t.cargo);return Object.keys(left).length>0&&t.drops.every(d=>!d.spr||!d.spr.visible)&&document.querySelectorAll('.va-letter.needed').length>0;}));
  ok('edge arrows point at remaining letters and own home',await a.evaluate(()=>{const n=VocabArena3D._t.nav();return n.hints>=1&&n.home&&document.querySelector('.va-hint.home b').textContent==='บ้าน';}));
  async function position(page,x,z){await page.evaluate(([x,z])=>{VocabArena3D._t.player().pos.set(x,0,z);},[x,z]);await page.waitForTimeout(240);}
  async function pick(page,ch){const item=await page.evaluate(ch=>Object.entries(VocabArena3D._t.race().snapshot.items).find(([,x])=>x.ch===ch),ch);await position(page,item[1].x,item[1].z);await page.waitForFunction(ch=>VocabArena3D._t.cargo[0]===ch,ch);}

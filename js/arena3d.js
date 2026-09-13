@@ -574,10 +574,10 @@
   function dropLetter(pos,ch,col,options={}){
     const group=new THREE.Group();group.position.copy(pos);group.position.y=.35;
     const gem=new THREE.Mesh(new THREE.OctahedronGeometry(.58,0),new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:activeMap?.18:1.65,metalness:.3,roughness:.18,transparent:true,opacity:.9}));gem.scale.y=1.3;group.add(gem);
-    if(activeMap)ArenaMaps.crystal(gem);const spr=makeTextSprite(ch,activeMap?0x154f89:0xffffff,256,256);spr.scale.set(.9,.9,1);spr.position.y=.08;spr.material.depthTest=false;spr.renderOrder=8;group.add(spr);
+    if(activeMap)ArenaMaps.crystal(gem);
     const halo=new THREE.Mesh(new THREE.RingGeometry(.55,.82,30),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.68,side:THREE.DoubleSide,blending:THREE.AdditiveBlending}));halo.rotation.x=-Math.PI/2;halo.position.y=.08;if(activeMap)halo.material.blending=THREE.NormalBlending;group.add(halo);
     if(options.node){group.scale.setScalar(1.85);group.position.y=2.3;}
-    const d={group,gem,halo,spr,ch,col,phase:Math.random()*TAU,life:options.node?Infinity:45+relicMods.dropLife,node:options.node||null,chargeable:options.chargeable!==false};
+    const d={group,gem,halo,spr:null,ch,col,phase:Math.random()*TAU,life:options.node?Infinity:45+relicMods.dropLife,node:options.node||null,chargeable:options.chargeable!==false};
     scene.add(group);drops.push(d);return d;
   }
   /* ==== 💎 Round 1384: letter crystals charge a five-pickup elemental MEGA ==== */
@@ -826,16 +826,15 @@
     const b=targetNearest(15);aimRing.visible=!!b;if(b){aimRing.position.x=b.group.position.x;aimRing.position.z=b.group.position.z;aimRing.scale.setScalar(b.elite?1.35:1);aimRing.material.opacity=.55+Math.sin(performance.now()*.008)*.25;}
   }
 
-  /* ==== 🔤🧭 Round 1414 — Frontline-sized needed letters + edge arrows to letters and home ==== */
+  /* ==== 🔤🧭 Round 1420 — HUD-only needed letters; hide 3D field glyphs ==== */
   function remainNeeded(){return (!target||wordBusy||!window.ArenaNav)?{}:ArenaNav.remain(target.en,bag,cargo);}
   function navLayer(){return root&&root.querySelector('#va-nav-layer');}
   function navMark(cls){const el=document.createElement('div');el.className=cls;navLayer().appendChild(el);return el;}
   function projectNav(x,y,z){hudPoint.set(x,y,z).project(camera);return {x:(hudPoint.x*.5+.5)*innerWidth,y:(-hudPoint.y*.5+.5)*innerHeight,behind:hudPoint.z>1||hudPoint.z<-1};}
   function styleNeededDrops(left){
     for(const d of drops){
-      const need=!!left[d.ch],s=need?(d.node?1.55:2.85):.9;
-      if(d.spr){d.spr.scale.set(s,s,1);d.spr.position.y=need?.42:.08;}
-      if(d.halo)d.halo.scale.setScalar(need?1.45:1);
+      if(d.spr)d.spr.visible=false;
+      if(d.halo)d.halo.scale.setScalar(left[d.ch]?1.45:1);
     }
   }
   function paintLetterCards(left){
