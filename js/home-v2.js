@@ -268,7 +268,7 @@
     cure:'💊',city:'🏙️',worldAdv:'🌍',worldSky:'☁️',worldHaunt:'👻',worldHeli:'🚁',worldDrone:'🛸',
     worldDrive:'🚗',worldSoccer:'⚽',worldMoto:'🏍️',worldInvasion:'🛸',worldMecha:'🤖',worldFrontline:'🪖',home:'🏠',
     invest:'📈',factory:'🏭',wordsearch:'🔎',typing:'⌨️',bubble:'🫧',shoot:'🎯',wordship:'⚓',cannon:'🐉🔥',
-    examstd:'📋',onet:'🇹🇭',rank:'🥇',market:'🏪',friends:'👥',gifts:'🎁',stats:'📊',trophy:'🏆',racing:'🏎️'
+    examstd:'📋',onet:'🇹🇭',rank:'🥇',market:'🏪',friends:'👥',gifts:'🎁',stats:'📊',trophy:'🏆',racing:'🏎️',worldPickup:'🛻'
   });
   function classicRailGlyph(actionName, sourceSelector){
     if(actionName==='worldAdv')return '<span class="vw2-classic-rail-ico vw2-arena-entry-art" aria-hidden="true"><img src="img/arena-heroes/fire-thumb.webp" alt="" width="160" height="240" decoding="async"><span class="vw2-arena-sigil">⚔</span></span>';
@@ -832,7 +832,7 @@
       worldHeli:'#btn-world-heli', worldDrone:'#btn-world-drone', worldDrive:'#btn-world-drive',
       worldSoccer:'#btn-world-soccer', worldMoto:'#btn-world-moto',
       worldInvasion:'#btn-world-invasion', worldMecha:'#btn-world-mecha',
-      worldFrontline:'#btn-world-frontline', worldKart:'#btn-world-kart',
+      worldFrontline:'#btn-world-frontline', worldKart:'#btn-world-kart', worldPickup:'#btn-world-pickup',
       typing:'#btn-rail-typing', bubble:'#btn-rail-bubble', shoot:'#btn-rail-shootword',
       wordship:'#btn-rail-wordship', cannon:'#btn-rail-lettercannon', examstd:'#btn-rail-examstd', onet:'#btn-rail-onet',
       rank:'#btn-rail-rank', stats:'#btn-stats', trophy:'#btn-rail-trophy', chat:'#btn-chat',
@@ -1128,6 +1128,7 @@
       ['trophy','pinboard','ตู้เข็ม','#btn-rail-trophy'],
       ['racing','racecar','Vocab World Racing',''],
     ];
+    railItems.splice(2,0,['worldPickup','racecar','Vocab World Pick-Up Truck','#btn-world-pickup']);
     railItems.splice(2,0,['worldKart','racecar','Vocab World Kart','#btn-world-kart']);
     railItems.splice(2,0,['worldFrontline','tank','Frontline 1944','#btn-world-frontline']);
     const railButtons = railItems.map(x=>navButton(x[0],x[1],x[2],x[3])).join('');

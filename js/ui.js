@@ -7742,6 +7742,21 @@ async function enterKart3D(){
   finally{advLoading=false;}
 }
 
+async function enterPickup3D(){
+  if(!state.pickupTicket||state.advHurt)return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
+  if(advLoading)return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่');
+  advLoading=Date.now();toast('🛻 กำลังเปิด Vocab World Pick-Up Truck...');
+  try{
+    await loadScriptOnce('js/vendor/three.min.js');
+    await loadScriptOnce('js/data/f1_bahrain.js');
+    const engineUrl='__VW_F1_ENGINE_URL__';
+    await loadScriptOnce(engineUrl.startsWith('__VW_')?'js/f1_3d.js':engineUrl);
+    await loadScriptOnce('js/pickup3d.js');
+    PickupWorld.start();state.pickupPlayedV1=true;saveState();return worldEntryStarted();
+  }catch(error){return worldEntryStopped('เปิด Pick-Up Truck ไม่สำเร็จ: '+String(error.message||error),error);}
+  finally{advLoading=false;}
+}
+
 async function enterF1_3D(){
   if(!state.f1Ticket || state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
   if(advLoading){ advBusyMsg(enterF1_3D); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
@@ -7810,6 +7825,7 @@ const WORLD3D = [
   { mode:'invasion',ico:'🛸',label:'ยานแม่', ticketKey:'invasionTicket',doneKey:'invasionDone', enter:enterInvasion3D },
   { mode:'mecha', ico:'🤖', label:'หุ่นรบ', ticketKey:'mechaTicket', doneKey:'mechaDone', enter:enterMecha3D },
   { mode:'kart', ico:'🏝️', label:'Vocab World Kart', ticketKey:'kartTicket', doneKey:'kartDone', enter:enterKart3D },
+  { mode:'pickup', ico:'🛻', label:'Vocab World Pick-Up Truck', ticketKey:'pickupTicket', doneKey:'pickupDone', enter:enterPickup3D },
   { mode:'f1',    ico:'🏎️', label:'Vocab World Racing', ticketKey:'f1Ticket',  doneKey:'f1Done',    enter:enterF1_3D },   // internal keys kept for compatibility
 ];
 /* ============================================================

@@ -66,6 +66,10 @@ Round 1403 implements shared room words, one carried letter, indestructible priv
 
 Kart is public and shares the Racing engine through isolated game closures. Its tropical scene and selected-colour vehicle/cockpit are procedural 3D; top speed is 110 km/h (8% DRS boost) and pit limit 40 km/h. Drawn walls and continuous swept collision use identical segments; Kart has no portal. Authenticated room/rank writes remain UID-owned. A once-per-player lobby invitation skips previous Kart players. Existing F1 retains its original behavior and records. Details and QA: `docs/KART_PREVIEW.md`.
 
+## Vocab World Pick-Up Truck
+
+Public Kart clone with a procedural Soft Cuboid pick-up truck. Same island track, walls, vocabulary and rewards. Top speed 170 km/h (8% DRS) and pit 55 km/h — faster than Kart (110) and slower than Racing (~306 km/h uncapped F1 physics). Isolated saves/rooms/ranks (`pickup*`, `wroom/pickup`). No new raster assets.
+
 ## Arena Field (round 1389)
 
 - The original following perspective camera and small articulated heroes are restored (rounds 1388–1389). Ground art lives on a horizontal world mesh; its apparent angle comes from the 48° camera, with the original aspect-dependent height and trailing distance. Only the selected 1024×1024 AVIF/WebP terrain texture loads; bounded outer-strip sampling fills the view near the arena edge.

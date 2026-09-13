@@ -12,18 +12,27 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
-- **รอบ 1435 · บ้านผู้เล่นพังไม่ได้:** Frontline+Arena บ้าน/ฐานไม่ลด HP ไม่เปิดคลัง ตัวอักษรที่ฝากแล้วขโมยไม่ได้ · รถถังยังโดนยิงได้
-- `tools/frontline-v1/frontline-{bases,bombs,letters,bots,ui,scene,main}.js` `js/arena3d.js` `functions/arena-race.js` ทดสอบ+docs
-- unit Frontline 34+9+12 และ Arena 31 ผ่าน · ค้าง: เล่นห้องจริงยืนยันบ้านไม่พัง
-- **รอบ 1433 · เรือลำเดียวในเขตน้ำ:** แล่นซ้าย↔ขวาหรือใกล้↔ไกล ความเร็วคงที่ ใกล้→ไกลลำเล็กลง ห้ามขึ้นท้องฟ้า · ค้างล็อกแอดมินจาก 1432
+- **รอบ 1471 · กองเรือ ลูกปืนส้มขาว:** แกน `0xffc090` + AdditiveBlending เปลวร้อนสุดขาวส้ม
+- `js/wordship.js` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: ยิงบนมือถือดูแสงทับขาว
+- **รอบ 1470 · Vocab World Pick-Up Truck ขึ้นเว็บ:** สำเนา Kart เป็นรถกระบะ 170 กม./ชม. ห้อง/สถิติแยก pickup*
+- `js/pickup3d.js` `js/f1_3d.js` `js/kart3d.js` `js/ui.js` `js/home-v2.js` `js/netroom.js` `js/account-deletion.js` `handoff/RULES.md`
+- unit Kart 28 + Pickup 31 · ค้าง: publish RTDB rules เพื่อเล่นห้องออนไลน์
+- **รอบ 1469 · กองเรือ ลูกปืนส้มแดง:** แกนลูกไฟ `0xff3b10` เปลวไม่ผสมขาว · ไม่ใช้ additive ที่แกน
+- `js/wordship.js` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: ยิงบนมือถือดูโทนส้มแดง
+- **รอบ 1468 · ล็อบบี้เหลือโหมดปกติ:** เอาปุ่มกลางคืน/ตั้งค่า NightUI ออก บังคับโทนกลางวัน
+- `js/home-v2.js` `js/util.js` `js/city3d.js` `css/lobby.css` `css/home-v2.css` `index_classic.html`
+- Home V2 test ผ่าน · เบราว์เซอร์: ปุ่มเหลือข้อความ/เพลง/ตั้งค่า/ติดตั้ง/ออกระบบ · `--night-k`=0
+- ค้าง: ผู้ใช้รีเฟรชแอปดูแผงเครื่องมือ
+- **รอบ 1467 · กองเรือ เสียงวงเพลิง:** ปุ่ม FIRE เล่นคลิปไฟชุดเดียวกับ Arena (`fire-a6fea31058694941.mp3` + แคชเดียวกัน)
+- `js/wordship.js` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `SOUND_LICENSES.md` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: ยิงบนมือถือให้ได้ยินวงเพลิง
+- **รอบ 1466 · กองเรือ ติดสิ่งกีดขวาง:** เดินหน้าชนขอบแล้วยังดันต่อขึ้นข้อความให้กดถอยหลัง
 - `js/wordship.js` `tools/test_wordship.js` `handoff/GAME_RULES.md`
-- unit ผ่าน · ค้าง: แอดมินเปิดเกมดูเรือลำเดียวแล่นในน้ำ
-- **รอบ 1432 · ล็อกกองเรือคำศัพท์เฉพาะแอดมิน:** ปุ่มราง/Home V2 ซ่อนจากผู้เล่นทั่วไป · เมือง 3D แตะแล้วขึ้นป้ายเหตุผล ไม่เดินทาง · ไม่โหลด JS ถ้าไม่ใช่แอดมิน
-- `js/ui.js` `js/wordship.js` `js/auth.js` `js/home-v2.js` `js/city3d.js` `css/lobby.css` `index_classic.html` `tools/test_wordship.js`
-- unit wordship + Home V2 ผ่าน · ค้าง: ยืนยันด้วยบัญชีแอดมินบนเครื่องจริง แล้วค่อยปลดล็อกเมื่อเกมเสร็จ
-- **รอบ 1429 · กองเรือคำศัพท์:** มินิเกมเรือรบน่ารัก ใช้คลัง `vocabForStudent()` ชุดเดียวกับยิงเป้าคำ · Canvas/เสียงสังเคราะห์ ไม่โหลดภาพ-เพลง-คลังใหม่ · JS/CSS โหลดตอนกดปุ่ม
-- `js/wordship.js` `css/wordship.css` `js/ui.js` `js/state.js` `js/home-v2.js` `js/main.js` `js/city3d.js` `index_classic.html` `tools/test_wordship.js`
-- unit wordship + Home V2 ผ่าน · เปิด preview เห็นโจทย์ไทย/เรืออังกฤษ/วงแหวนทอง · ค้าง: เล่นบนมือถือจริง
+- unit wordship ผ่าน · ค้าง: ลองชนกำแพงน้ำแข็งบนมือถือ
+- **รอบ 1465 · กองเรือ ไม่ทิ่มดาดฟ้า:** มุมก้มกระบอกไม่ต่ำกว่าแนวนอน (`ELEV_MIN=0`) จึงไม่ทิ่มดาดฟ้า
+- `js/wordship.js` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน

@@ -8,7 +8,7 @@
   const VERIFIED_KEY='vwDeleteReauthVerified';
   const FINALIZE_KEY='vwDeleteFinalizeOnly';
   const RECENT_MS=4*60*1000;
-  const MAPS=['adv','haunt','heli','drone','drive','moto','invasion','soccer','mecha','f1'];
+  const MAPS=['adv','haunt','heli','drone','drive','moto','invasion','soccer','mecha','f1','kart','pickup'];
   const LEGACY_MAPS=['adv','haunt','heli','drone','drive','moto','invasion'];
   const RTC_MAPS=['adv','haunt','heli','drone','drive','chat'];
   const CLASS_MAPS=['adv','haunt','heli','drone','drive'];
@@ -138,7 +138,7 @@
 
   function buildUpdates(uid,b){
     const u={};
-    ['users/'+uid,'pphoto/'+uid,'presence/'+uid,'leaderboard/'+uid,'feed/'+uid,'f1Rank/'+uid].forEach(p=>put(u,p));
+    ['users/'+uid,'pphoto/'+uid,'presence/'+uid,'leaderboard/'+uid,'feed/'+uid,'f1Rank/'+uid,'kartRank/'+uid,'pickupRank/'+uid].forEach(p=>put(u,p));
     if(typeof friendCode==='function')put(u,'friendCodes/'+friendCode(uid));
     examIds().forEach(id=>put(u,'examRank/'+id+'/'+uid));bandIds().forEach(id=>put(u,'bandRank/'+id+'/'+uid));
     LEGACY_MAPS.forEach(m=>put(u,'world/'+m+'/'+uid));

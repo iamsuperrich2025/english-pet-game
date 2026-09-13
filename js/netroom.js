@@ -132,7 +132,7 @@ function aimClear(){ aim=null; }
    อ่าน node เย็น "โลกละ 1 ครั้ง" (rules ให้ `.read` ที่ระดับ $map อยู่แล้ว) = 9 อ่าน/ครั้ง
    ไม่ใช่ไล่ทีละสนาม (จะกลายเป็น 9×สนาม) · ความถี่คุมอีกชั้นที่ js/ui.js
    คืน {found:{uid:{map,room,n,t}}, denied:true ถ้าอ่านไม่ได้ (rules ยังไม่ publish)} */
-const MAPS3D = ['adv','sky','haunt','heli','drone','drive','soccer','moto','invasion','mecha','f1','kart','lettercannon'];
+const MAPS3D = ['adv','sky','haunt','heli','drone','drive','soccer','moto','invasion','mecha','f1','kart','pickup','lettercannon'];
 function skyMapAllowed(map){
   return map !== 'sky' || (typeof canAccessSkyBeta === 'function' && canAccessSkyBeta());
 }
@@ -438,7 +438,7 @@ function create(opt){
      ============================================================ */
   function goLegacy(){
     if(opt.legacy===false){detachRoom();bridgeOff();dropAll();full=false;joined=false;netOk=false;onStat();return;}
-    if(legacy || map==='kart') return;
+    if(legacy || map==='kart' || map==='pickup') return;
     legacy=true; detachRoom(); bridgeOff(); dropAll();
     idx=-1; myUid=onlineKey();
     const ref=legacyRefOf();

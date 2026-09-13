@@ -305,7 +305,7 @@ async function sourceFiles() {
 
 
 
-      'js/data/f1_vocab.js', 'js/kart-access.js', 'js/kart3d.js', 'img/kart/kart-menu.webp',
+      'js/data/f1_vocab.js', 'js/kart-access.js', 'js/kart3d.js', 'js/pickup3d.js', 'img/kart/kart-menu.webp',
 
 
 
@@ -1576,7 +1576,7 @@ async function main() {
 
 
 
-  await fs.writeFile(uiFile, uiText.replaceAll(TOKEN_F1_ENGINE, f1EngineUrl).replaceAll('js/kart-access.js', await makeImmutableAlias('js/kart-access.js')).replaceAll('js/kart3d.js', await makeImmutableAlias('js/kart3d.js')).replaceAll('img/kart/kart-menu.webp', await makeImmutableAlias('img/kart/kart-menu.webp')));
+  await fs.writeFile(uiFile, uiText.replaceAll(TOKEN_F1_ENGINE, f1EngineUrl).replaceAll('js/kart-access.js', await makeImmutableAlias('js/kart-access.js')).replaceAll('js/kart3d.js', await makeImmutableAlias('js/kart3d.js')).replaceAll('js/pickup3d.js', await makeImmutableAlias('js/pickup3d.js')).replaceAll('img/kart/kart-menu.webp', await makeImmutableAlias('img/kart/kart-menu.webp')));
 
 
 

@@ -1,6 +1,5 @@
-/* 🏝️ รอบ 1377 — Vocab World Kart: Soft Cuboid Chibi 3D island kart profile.
-   Geometry/materials are shared across all colours, preview and cockpit. No raster downloads.
-   This module owns presentation/tuning only; F1's racing, vocabulary, reward and input engine stays shared. */
+/* 🛻 Vocab World Pick-Up Truck: Kart clone with a cuboid pickup, mid speed (170 km/h).
+   Same island track, walls, vocabulary and rewards. No extra raster downloads. */
 (function(root){
 'use strict';
 const T=root.THREE, geometryCache=new Map(),paintCache=new Map();
@@ -38,70 +37,70 @@ function starGeo(size=.26){
 function makeKit(){
   if(kit)return kit;
   const paint=[],trim=[],driver=[],steering=[],cuffs=[],wheel=[];
-  box(paint,0xffffff,1.9,.35,2.85,0,.55,.05,.14);
-  box(paint,0xffffff,1.8,.36,1.27,0,.84,1.01,.14);
-  box(paint,0xffffff,.3,.52,1.4,-.91,.84,-.24);box(paint,0xffffff,.3,.52,1.4,.91,.84,-.24);
-  box(paint,0xffffff,1.82,.4,.48,0,.92,-1.36);
-  box(trim,black,2.4,.26,.35,0,.42,1.75);box(trim,black,2.27,.24,.35,0,.4,-1.65);
-  for(const x of [-.72,.72]){
-    box(trim,0x684324,.52,.42,.08,x,.88,1.67,.06);
-    box(trim,gold,.42,.31,.095,x,.88,1.725,.06);box(trim,0xfffbc2,.28,.2,.035,x,.9,1.78,.04);
-    box(trim,0xff3428,.22,.1,.07,x,.71,-1.65,.025);
+  box(paint,0xffffff,2.18,.48,4.42,0,.78,-.08,.16);
+  box(paint,0xffffff,2.08,1.08,1.72,0,1.52,.92,.16);
+  box(paint,0xffffff,2.02,.32,1.22,0,1.12,1.88,.12);
+  box(paint,0xffffff,2.08,.58,2.18,0,1.12,-1.18,.12);
+  box(trim,black,.14,.72,2.08,-1.04,1.18,-1.2,.04);box(trim,black,.14,.72,2.08,1.04,1.18,-1.2,.04);
+  box(trim,black,2.08,.12,2.08,0,1.42,-1.2,.03);
+  box(trim,black,2.52,.3,.42,0,.52,2.28);box(trim,black,2.42,.3,.42,0,.52,-2.32);
+  for(const x of [-.78,.78]){
+    box(trim,0x684324,.58,.42,.1,x,1.02,2.18,.06);
+    box(trim,gold,.46,.3,.11,x,1.02,2.24,.06);box(trim,0xfffbc2,.3,.2,.04,x,1.04,2.3,.04);
+    box(trim,0xff3428,.24,.12,.08,x,.72,-2.32,.03);
   }
-  box(trim,white,.24,.018,1.29,0,1.025,1.02,.003);
-  trim.push({g:starGeo(.29),c:white,p:[.49,1.03,1.07],r:[-Math.PI/2,0,0]});
-  box(trim,black,1.14,.19,1.18,0,.76,-.36,.07);box(trim,black,.96,.58,.23,0,1.02,-.96,.1);
-  for(const x of [-.65,.65])box(trim,black,.09,.65,.1,x,1.05,-1.47,.02);
-
-  box(driver,0xffd1a0,.96,.73,.76,0,1.91,-.39,.19);
-  box(driver,0xffd1a0,.17,.27,.3,-.53,1.88,-.36,.06);box(driver,0xffd1a0,.17,.27,.3,.53,1.88,-.36,.06);
-  box(driver,0xffffff,1.18,.34,1.02,0,2.32,-.46,.16);
-  // Painted helmet kit shares the selected vehicle material, while the friendly face stays visible.
-  const helmet=[{g:new T.SphereGeometry(.6,18,12,0,Math.PI*2,0,Math.PI/2),c:0xffffff,p:[0,2.19,-.46],s:[1,.87,.89]}];
-  box(helmet,0xffffff,.73,.65,.49,0,1.34,-.45,.16);
-  box(helmet,0xffffff,.24,.66,.82,-.5,2.06,-.55,.10);box(helmet,0xffffff,.24,.66,.82,.5,2.06,-.55,.10);
-  driver.push({g:new T.SphereGeometry(.607,4,14,Math.PI/2-.14,.28,0,Math.PI/2),c:white,p:[0,2.19,-.46],s:[1,.87,.89]});
-  driver.push({g:starGeo(.2),c:white,p:[.32,2.43,.061]});
+  box(trim,white,.28,.02,1.42,0,2.08,1.02,.003);
+  trim.push({g:starGeo(.32),c:white,p:[.55,2.1,1.08],r:[-Math.PI/2,0,0]});
+  box(trim,black,1.86,.08,1.08,0,1.08,.95,.05);
+  box(trim,0x4a5560,1.92,.55,.08,0,1.55,.08,.04);
+  box(driver,0xffd1a0,.96,.73,.76,0,2.12,.72,.19);
+  box(driver,0xffd1a0,.17,.27,.3,-.53,2.09,.75,.06);box(driver,0xffd1a0,.17,.27,.3,.53,2.09,.75,.06);
+  box(driver,0xffffff,1.18,.34,1.02,0,2.53,.65,.16);
+  const helmet=[{g:new T.SphereGeometry(.6,18,12,0,Math.PI*2,0,Math.PI/2),c:0xffffff,p:[0,2.4,.65],s:[1,.87,.89]}];
+  box(helmet,0xffffff,.73,.65,.49,0,1.55,.66,.16);
+  box(helmet,0xffffff,.24,.66,.82,-.5,2.27,.56,.10);box(helmet,0xffffff,.24,.66,.82,.5,2.27,.56,.10);
+  driver.push({g:new T.SphereGeometry(.607,4,14,Math.PI/2-.14,.28,0,Math.PI/2),c:white,p:[0,2.4,.65],s:[1,.87,.89]});
+  driver.push({g:starGeo(.2),c:white,p:[.32,2.64,1.17]});
   for(const x of [-.23,.23]){
-    box(driver,0x271b16,.13,.19,.025,x,1.99,.003,.026);box(driver,white,.045,.062,.02,x-.021,2.025,.025,.01);
-    box(driver,0x763622,.18,.047,.03,x,2.13,.019,.015);
-    box(driver,0xf5987a,.17,.07,.024,x*1.38,1.85,.01,.024);
+    box(driver,0x271b16,.13,.19,.025,x,2.2,1.17,.026);box(driver,white,.045,.062,.02,x-.021,2.235,1.19,.01);
+    box(driver,0x763622,.18,.047,.03,x,2.34,1.185,.015);
+    box(driver,0xf5987a,.17,.07,.024,x*1.38,2.06,1.18,.024);
   }
-  box(driver,0x562a1e,.34,.15,.026,0,1.77,.012,.04);box(driver,white,.24,.051,.018,0,1.816,.03,.012);
+  box(driver,0x562a1e,.34,.15,.026,0,1.98,1.18,.04);box(driver,white,.24,.051,.018,0,2.026,1.2,.012);
   const ring=new T.TorusGeometry(.39,.055,7,24);
   steering.push({g:ring,c:black});box(steering,black,.64,.072,.07,0,0,0,.025);box(steering,black,.075,.33,.07,0,-.12,0,.025);
   box(steering,gold,.19,.16,.09,0,0,.04,.04);
   for(const x of [-.39,.39]){box(steering,0xffd1a0,.23,.24,.22,x,0,0,.065);box(cuffs,0xffffff,.21,.28,.24,x,-.2,-.035,.05);}
-  const tyre=new T.CylinderGeometry(.46,.46,.32,16,1);wheel.push({g:tyre,c:0x181c22,r:[0,0,Math.PI/2]});
-  for(const x of [-.172,.172]){
-    wheel.push({g:new T.CylinderGeometry(.27,.27,.025,12),c:gold,p:[x,0,0],r:[0,0,Math.PI/2]});
-    wheel.push({g:new T.CylinderGeometry(.105,.105,.032,10),c:0x72777c,p:[x*1.09,0,0],r:[0,0,Math.PI/2]});
+  const tyre=new T.CylinderGeometry(.54,.54,.38,16,1);wheel.push({g:tyre,c:0x181c22,r:[0,0,Math.PI/2]});
+  for(const x of [-.2,.2]){
+    wheel.push({g:new T.CylinderGeometry(.3,.3,.03,12),c:gold,p:[x,0,0],r:[0,0,Math.PI/2]});
+    wheel.push({g:new T.CylinderGeometry(.12,.12,.038,10),c:0x72777c,p:[x*1.09,0,0],r:[0,0,Math.PI/2]});
   }
-  for(let i=0;i<16;i++){const a=i*Math.PI/8;box(wheel,0x323740,.325,.055,.12,0,Math.cos(a)*.452,Math.sin(a)*.452,.012,[a,0,0]);}
-  kit={paint:merge(paint),trim:merge(trim),driver:merge(driver),helmet:merge(helmet),steering:merge(steering),cuffs:merge(cuffs),wheel:merge(wheel),flap:softBox(2.05,.14,.46,.05)};return kit;
+  for(let i=0;i<16;i++){const a=i*Math.PI/8;box(wheel,0x323740,.38,.06,.14,0,Math.cos(a)*.53,Math.sin(a)*.53,.012,[a,0,0]);}
+  kit={paint:merge(paint),trim:merge(trim),driver:merge(driver),helmet:merge(helmet),steering:merge(steering),cuffs:merge(cuffs),wheel:merge(wheel),flap:softBox(2.08,.55,.16,.05)};return kit;
 }
 function paintMat(c){if(!paintCache.has(c))paintCache.set(c,new T.MeshPhongMaterial({color:new T.Color(c).convertSRGBToLinear(),shininess:65,specular:0x252525}));const m=paintCache.get(c);m.userData.kartLinear=true;return m;}
 function buildCar(c){
-  const k=makeKit(),g=new T.Group();g.name='Island Star Kart';
+  const k=makeKit(),g=new T.Group();g.name='Island Star Pick-Up';
   g.add(new T.Mesh(k.paint,paintMat(c)),new T.Mesh(k.trim,vertexMat));
   const driver=new T.Group();driver.add(new T.Mesh(k.driver,vertexMat),new T.Mesh(k.helmet,paintMat(c)));g.add(driver);
-  const steering=new T.Group();steering.add(new T.Mesh(k.steering,vertexMat),new T.Mesh(k.cuffs,paintMat(c)));steering.position.set(0,1.2,.34);steering.rotation.x=-.3;g.add(steering);
-  const front=[],wheels=[];for(const x of [-1.02,1.02])for(const z of [-1.04,1.12]){
-    const mount=new T.Group(),w=new T.Mesh(k.wheel,vertexMat);mount.position.set(x,.48,z);mount.add(w);g.add(mount);wheels.push(w);if(z>0)front.push(mount);
+  const steering=new T.Group();steering.add(new T.Mesh(k.steering,vertexMat),new T.Mesh(k.cuffs,paintMat(c)));steering.position.set(0,1.48,1.12);steering.rotation.x=-.28;g.add(steering);
+  const front=[],wheels=[];for(const x of [-1.14,1.14])for(const z of [-1.42,1.52]){
+    const mount=new T.Group(),w=new T.Mesh(k.wheel,vertexMat);mount.position.set(x,.54,z);mount.add(w);g.add(mount);wheels.push(w);if(z>0)front.push(mount);
   }
-  const flap=new T.Mesh(k.flap,paintMat(c));flap.position.set(0,1.4,-1.48);g.add(flap);
-  g.userData={modelKind:'island-star-kart',driver,steering,drsFlap:flap,front:[],wheels:[],kartFront:front,kartWheels:wheels,disposePeer(){},peerGpu:{drawCalls:10,textures:0,sharedGeometry:true}};return g;
+  const flap=new T.Mesh(k.flap,paintMat(c));flap.position.set(0,1.12,-2.26);g.add(flap);
+  g.userData={modelKind:'island-star-pickup',driver,steering,drsFlap:flap,front:[],wheels:[],kartFront:front,kartWheels:wheels,disposePeer(){},peerGpu:{drawCalls:10,textures:0,sharedGeometry:true}};return g;
 }
 function carView(g,mode){g.visible=mode!=='road';g.userData.driver.visible=mode!=='cockpit';}
 function steer(g,angle){if(!g)return;lastSteer=angle;g.userData.steering.rotation.z=angle*2.2;g.userData.kartFront.forEach(w=>w.rotation.y=-angle);}
 function camera(c,g,mode,p,dt){
   if(!g)return false;carView(g,mode);steer(g,lastSteer);
-  g.userData.kartWheels.forEach(w=>w.rotation.x+=p.spd*dt/.46);
+  g.userData.kartWheels.forEach(w=>w.rotation.x+=p.spd*dt/.54);
   const f=Math.sin(p.yaw),z=Math.cos(p.yaw);
   if(mode==='cockpit'){
-    c.position.set(p.px+f*(-.78),p.py+1.95,p.pz+z*(-.78));
-    c.lookAt(p.px+f*18,p.py+.7+Math.sin(p.pitch)*18,p.pz+z*18);c.rotateZ(p.roll*.5);
-    c.fov=76+Math.min(6,p.spd/5);c.near=.075;c.updateProjectionMatrix();return true;
+    c.position.set(p.px+f*(-.42),p.py+2.22,p.pz+z*(-.42));
+    c.lookAt(p.px+f*18,p.py+.85+Math.sin(p.pitch)*18,p.pz+z*18);c.rotateZ(p.roll*.5);
+    c.fov=74+Math.min(7,p.spd/6);c.near=.075;c.updateProjectionMatrix();return true;
   }
   return false;
 }
@@ -314,33 +313,33 @@ function buildTrack(a){
 }
 function animate(dt,now){for(let i=0;i<waterfalls.length;i++)waterfalls[i].scale.x=.92+Math.sin(now*.002+i)*.07;}
 function decorateDom(w){
-  w.classList.add('kart-theme');const el=s=>w.querySelector(s);
-  el('#kart-garage-title').textContent='ISLAND STAR KART';el('.garage-kicker').textContent='Vocab World Kart · เล่นฟรี';
-  el('.garage-sub').textContent='รถคาร์ตเกาะสายรุ้ง · เลือกสีเดียวกันทั้งคันและมุมคนขับ';
-  el('.garage-stage').innerHTML='<canvas class="kart-preview" width="720" height="330" aria-label="รถคาร์ตสีที่เลือก"></canvas>';
-  el('#kart-intro h2').textContent='🏝️ Vocab World Kart · Tropical Island';
-  const rules=el('.fi-rules');rules.innerHTML=rules.innerHTML.replace('Vocab Motors VR-X1 · Open-Wheel Racing · สนามกลางทะเลทราย 5.4 กม. 15 โค้งใต้แสงไฟ!','Island Star Kart · เกาะเขตร้อน '+(profile.map.lengthKm).toFixed(1)+' กม. · สูงสุด 110 กม./ชม.').replace('80 กม./ชม.','40 กม./ชม.').replace('⚠️ ออกนอกแทร็ก ทรายลื่นและช้าลงมาก','🚧 ขอบสนามแข็ง ชนแล้วเด้งกลับ · ไม่มีระบบวาร์ป');
+  w.classList.add('pickup-theme');const el=s=>w.querySelector(s);
+  el('#pickup-garage-title').textContent='ISLAND STAR PICK-UP';el('.garage-kicker').textContent='Vocab World Pick-Up Truck · เล่นฟรี';
+  el('.garage-sub').textContent='รถกระบะเกาะสายรุ้ง · เลือกสีเดียวกันทั้งคันและมุมคนขับ';
+  el('.garage-stage').innerHTML='<canvas class="pickup-preview" width="720" height="330" aria-label="รถกระบะสีที่เลือก"></canvas>';
+  el('#pickup-intro h2').textContent='🛻 Vocab World Pick-Up Truck · Tropical Island';
+  const rules=el('.fi-rules');rules.innerHTML=rules.innerHTML.replace('Vocab Motors VR-X1 · Open-Wheel Racing · สนามกลางทะเลทราย 5.4 กม. 15 โค้งใต้แสงไฟ!','Island Star Pick-Up · เกาะเขตร้อน '+(profile.map.lengthKm).toFixed(1)+' กม. · สูงสุด 170 กม./ชม.').replace('80 กม./ชม.','55 กม./ชม.').replace('⚠️ ออกนอกแทร็ก ทรายลื่นและช้าลงมาก','🚧 ขอบสนามแข็ง ชนแล้วเด้งกลับ · ไม่มีระบบวาร์ป');
   const style=document.createElement('style');style.textContent=`
-  body:has(#kart-wrap.on) > .toast, body:has(#kart-wrap.on) > #toast-clear-all{display:none!important}
-  #kart-wrap.fp #kart-hud{display:flex!important;bottom:8px}
-  #kart-wrap #kart-cockpit{display:none!important;background:none!important}
-  #kart-wrap .garage-card{background:linear-gradient(145deg,#fff8e6,#f6e6c3);border:2px solid #e8b953;color:#26434d;box-shadow:0 22px 80px #142e5980}
-  #kart-wrap #kart-garage h2{color:#173b5b;text-shadow:0 2px #fff;font-weight:950}
-  #kart-wrap .garage-kicker{color:#99803e}#kart-wrap .garage-sub{color:#476475}
-  #kart-wrap .garage-stage{height:clamp(108px,31vh,190px);background:radial-gradient(ellipse at 50% 85%,#bdd9b0,#daf3ef 55%,#b9e4f5);margin:3px 0;border:1px solid #b6d3ca}
-  #kart-wrap .garage-stage:before{display:none}#kart-wrap .kart-preview{width:100%;height:100%;object-fit:contain}
-  #kart-wrap #kart-garage-back{color:#355368;border-color:#91a49c}#kart-wrap .garage-color-name{text-shadow:none}
-  #kart-wrap .garage-swatch{box-shadow:0 3px 5px #18383130}#kart-wrap #kart-garage{background:#163d4e80;backdrop-filter:blur(3px)}
-  #kart-wrap #kart-car-proof{background:#143844a8;color:#fff8d5}#kart-wrap #kart-hud{border-color:#ffd36f}
-  #kart-wrap #kart-intro>.box{background:linear-gradient(135deg,#133c4f,#17324d)}
-  @media(max-height:400px){#kart-wrap .garage-card{padding:8px 14px}#kart-wrap .garage-stage{height:108px}#kart-wrap .garage-sub{font-size:10px}#kart-wrap .garage-swatches{margin:4px 0}}
+  body:has(#pickup-wrap.on) > .toast, body:has(#pickup-wrap.on) > #toast-clear-all{display:none!important}
+  #pickup-wrap.fp #pickup-hud{display:flex!important;bottom:8px}
+  #pickup-wrap #pickup-cockpit{display:none!important;background:none!important}
+  #pickup-wrap .garage-card{background:linear-gradient(145deg,#fff4e0,#f0d9b0);border:2px solid #d4923a;color:#26434d;box-shadow:0 22px 80px #142e5980}
+  #pickup-wrap #pickup-garage h2{color:#173b5b;text-shadow:0 2px #fff;font-weight:950}
+  #pickup-wrap .garage-kicker{color:#8a6a32}#pickup-wrap .garage-sub{color:#476475}
+  #pickup-wrap .garage-stage{height:clamp(108px,31vh,190px);background:radial-gradient(ellipse at 50% 85%,#c9d6a8,#e8f4ef 55%,#b9e4f5);margin:3px 0;border:1px solid #b6d3ca}
+  #pickup-wrap .garage-stage:before{display:none}#pickup-wrap .pickup-preview{width:100%;height:100%;object-fit:contain}
+  #pickup-wrap #pickup-garage-back{color:#355368;border-color:#91a49c}#pickup-wrap .garage-color-name{text-shadow:none}
+  #pickup-wrap .garage-swatch{box-shadow:0 3px 5px #18383130}#pickup-wrap #pickup-garage{background:#163d4e80;backdrop-filter:blur(3px)}
+  #pickup-wrap #pickup-car-proof{background:#143844a8;color:#fff8d5}#pickup-wrap #pickup-hud{border-color:#e8a24a}
+  #pickup-wrap #pickup-intro>.box{background:linear-gradient(135deg,#3d2a18,#17324d)}
+  @media(max-height:400px){#pickup-wrap .garage-card{padding:8px 14px}#pickup-wrap .garage-stage{height:108px}#pickup-wrap .garage-sub{font-size:10px}#pickup-wrap .garage-swatches{margin:4px 0}}
   `;w.appendChild(style);
 }
-function paintDom(w,style){w.querySelector('#kart-garage-color-name').textContent='Island Star · '+style.label;w.querySelector('#kart-car-proof').textContent='🏝️ Kart · '+style.label+' · KART';w.style.setProperty('--f1-cockpit-center','none');}
+function paintDom(w,style){w.querySelector('#pickup-garage-color-name').textContent='Island Star Pick-Up · '+style.label;w.querySelector('#pickup-car-proof').textContent='🛻 Pick-Up · '+style.label+' · TRUCK';w.style.setProperty('--f1-cockpit-center','none');}
 let previewScene,previewCamera,previewCar,previewColor;
 function preview(r,color,w){
-  const cv=w.querySelector('.kart-preview');if(!cv)return;
-  if(!previewScene){previewScene=new T.Scene();previewScene.add(new T.HemisphereLight(0xe7f8ff,0x9e896c,.7));const light=new T.DirectionalLight(0xfff3d8,.9);light.position.set(-4,7,6);previewScene.add(light);previewCamera=new T.PerspectiveCamera(34,cv.width/cv.height,.1,30);previewCamera.position.set(3.4,2.7,5.2);previewCamera.lookAt(0,1.2,0);}
+  const cv=w.querySelector('.pickup-preview');if(!cv)return;
+  if(!previewScene){previewScene=new T.Scene();previewScene.add(new T.HemisphereLight(0xe7f8ff,0x9e896c,.7));const light=new T.DirectionalLight(0xfff3d8,.9);light.position.set(-4,7,6);previewScene.add(light);previewCamera=new T.PerspectiveCamera(34,cv.width/cv.height,.1,30);previewCamera.position.set(4.4,3.1,6.4);previewCamera.lookAt(0,1.35,0);}
   if(previewColor!==color){if(previewCar)previewScene.remove(previewCar);previewCar=buildCar(color);previewScene.add(previewCar);previewColor=color;}
   const size=r.getSize(new T.Vector2()),ratio=r.getPixelRatio(),alpha=r.getClearAlpha(),clear=r.getClearColor(new T.Color()).clone();
   r.setPixelRatio(1);r.setSize(cv.width,cv.height,false);r.setClearColor(0x000000,0);r.render(previewScene,previewCamera);
@@ -348,15 +347,16 @@ function preview(r,color,w){
 }
 const scale=.5,source=root.F1_MAP;
 const profile={
-  id:'kart',ns:'kart',title:'Vocab World Kart',
-  keys:{best:'kartBest',rank:'kartRank',rankStatus:'kartRankOk',done:'kartDone',recent:'kartRecent',color:'vwKartCarColor',ghost:'vwKartGhost',map:'kart'},
+  id:'pickup',ns:'pickup',title:'Vocab World Pick-Up Truck',
+  keys:{best:'pickupBest',rank:'pickupRank',rankStatus:'pickupRankOk',done:'pickupDone',recent:'pickupRecent',color:'vwPickupCarColor',ghost:'vwPickupGhost',map:'pickup'},
   map:{track:source.track.map(p=>p.map(v=>v*scale)),pit:source.pit.map(p=>p.map(v=>v*scale)),sf:source.sf,bld:[],lengthKm:2.7},
-  physics:Object.freeze({top:110/3.6,accel:5.2,power:135,drag:.0041,brake:10,coast:2.8,grip:10.8,wheelbase:2.16,steer:.49,steerHi:.092,pit:40/3.6}),
-  hitParts:[[0,.05,.94,1.4],[0,1.65,1.2,.2],[0,-1.58,1.12,.2],[-1.02,1.12,.17,.46],[1.02,1.12,.17,.46],[-1.02,-1.04,.17,.46],[1.02,-1.04,.17,.46]],
+  physics:Object.freeze({top:170/3.6,accel:6.6,power:210,drag:.0035,brake:11.2,coast:2.4,grip:10.3,wheelbase:2.9,steer:.44,steerHi:.08,pit:55/3.6}),
+  engineHz:(rpm,thr)=>52+rpm*rpm*260+thr*16,
+  hitParts:[[0,.08,1.08,2.18],[0,1.0,1.04,.9],[0,-1.2,1.04,1.12],[-1.14,1.52,.2,.54],[1.14,1.52,.2,.54],[-1.14,-1.42,.2,.54],[1.14,-1.42,.2,.54]],
   environment:{id:'tropical-island',downloadBytes:0,shadows:0},
-  authorized:()=>true, // Public solo entry, matching Racing; multiplayer still uses authenticated rules.
-  gearOf:v=>v<6?1:v<12?2:v<20?3:v<26?4:5,
+  authorized:()=>true,
+  gearOf:v=>v<8?1:v<16?2:v<26?3:v<36?4:v<44?5:6,
   wallRadius:WALL_RADIUS,get boundaryWalls(){return boundaryWalls;},collideBoundary,buildCar,carView,steer,camera,buildTrack,applyEnvironment,animate,decorateDom,paintDom,preview,
 };
-root.KartProfile=profile;root.KartWorld=root.createVocabRacingWorld(profile);
+root.PickupProfile=profile;root.PickupWorld=root.createVocabRacingWorld(profile);
 })(window);

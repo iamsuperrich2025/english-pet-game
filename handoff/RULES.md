@@ -233,10 +233,10 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
     },
     "world": {
       "$map": {
-        ".read": "auth != null && ($map !== 'sky' || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com') && $map !== 'kart'",
+        ".read": "auth != null && ($map !== 'sky' || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com') && $map !== 'kart' && $map !== 'pickup'",
         ".validate": "$map === 'adv' || $map === 'sky' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive' || $map === 'moto' || $map === 'invasion' || $map === 'lettercannon'",
         "$uid": {
-          ".write": "auth != null && auth.uid === $uid && ($map !== 'sky' || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com') && $map !== 'kart'",
+          ".write": "auth != null && auth.uid === $uid && ($map !== 'sky' || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com') && $map !== 'kart' && $map !== 'pickup'",
           ".validate": "newData.hasChildren(['n','x','z','yaw','ts'])",
           "n":   { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
           "av":  { ".validate": "newData.isString() && newData.val().length <= 8" },
@@ -259,7 +259,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
     "wroom": {
       "$map": {
         ".read": "auth != null && ($map !== 'sky' || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com')",
-        ".validate": "$map === 'adv' || $map === 'sky' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive' || $map === 'moto' || $map === 'invasion' || $map === 'soccer' || $map === 'mecha' || $map === 'f1' || $map === 'lettercannon' || $map === 'kart'",
+        ".validate": "$map === 'adv' || $map === 'sky' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive' || $map === 'moto' || $map === 'invasion' || $map === 'soccer' || $map === 'mecha' || $map === 'f1' || $map === 'lettercannon' || $map === 'kart' || $map === 'pickup'",
         "$room": {
           ".validate": "$room.matches(/^r([0-9]|[1-2][0-9]|3[0-5])$/)",
           "$uid": {
@@ -281,7 +281,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
     "winfo": {
       "$map": {
         ".read": "auth != null && ($map !== 'sky' || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com')",
-        ".validate": "$map === 'adv' || $map === 'sky' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive' || $map === 'moto' || $map === 'invasion' || $map === 'soccer' || $map === 'mecha' || $map === 'f1' || $map === 'lettercannon' || $map === 'kart'",
+        ".validate": "$map === 'adv' || $map === 'sky' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive' || $map === 'moto' || $map === 'invasion' || $map === 'soccer' || $map === 'mecha' || $map === 'f1' || $map === 'lettercannon' || $map === 'kart' || $map === 'pickup'",
         "$room": {
           ".validate": "$room.matches(/^r([0-9]|[1-2][0-9]|3[0-5])$/)",
           "$uid": {
@@ -756,6 +756,29 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
       ".write": false
     },
     "kartRank": {
+      ".read": "auth != null",
+      ".indexOn": "sec",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['sec','n','ts']) && (!data.exists() || newData.child('sec').val() < data.child('sec').val())",
+        "sec": {
+          ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= 3600"
+        },
+        "n": {
+          ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40"
+        },
+        "g": {
+          ".validate": "newData.isString() && newData.val().length <= 20"
+        },
+        "ts": {
+          ".validate": "newData.isNumber() && newData.val() <= now + 60000"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "pickupRank": {
       ".read": "auth != null",
       ".indexOn": "sec",
       "$uid": {

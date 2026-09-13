@@ -18,10 +18,12 @@
 /* 🏝️ รอบ 1377: one engine source, isolated closures and DOM namespaces per game. */
 function createRacingWorld(P){
 const IS_KART=!!P;
-const BEST_KEY=IS_KART?'kartBest':'f1Best';
-const RANK_PATH=IS_KART?'kartRank':'f1Rank';
-const RANK_STATUS=IS_KART?'kartRankOk':'frOk';
-const domSelector=s=>IS_KART?s.replace(/#f1-/g,'#kart-'):s;
+const NS=IS_KART?(P.ns||'kart'):'f1';
+const GAME_TITLE=IS_KART?(P.title||'Vocab World Kart'):'Vocab World Racing';
+const BEST_KEY=IS_KART?(P.keys&&P.keys.best||'kartBest'):'f1Best';
+const RANK_PATH=IS_KART?(P.keys&&P.keys.rank||'kartRank'):'f1Rank';
+const RANK_STATUS=IS_KART?(P.keys&&P.keys.rankStatus||'kartRankOk'):'frOk';
+const domSelector=s=>IS_KART?s.replace(/#f1-/g,'#'+NS+'-'):s;
 const q=s=>wrapEl.querySelector(domSelector(s));
 const qa=s=>wrapEl.querySelectorAll(domSelector(s));
 
@@ -31,8 +33,8 @@ const qa=s=>wrapEl.querySelectorAll(domSelector(s));
 const REWARD       = 60;      // 🪙 ประกอบคำสำเร็จ
 const LETTER_COIN  = 2;       // 🪙 เก็บตัวอักษร 1 ตัว
 const COLLECT_R    = 8;       // รัศมีเก็บ (รถเร็ว ต้องกว้าง)
-const DONE_KEY     = IS_KART?'kartDone':'f1Done';
-const RECENT_KEY   = IS_KART?'kartRecent':'f1Recent';
+const DONE_KEY     = IS_KART?(P.keys&&P.keys.done||'kartDone'):'f1Done';
+const RECENT_KEY   = IS_KART?(P.keys&&P.keys.recent||'kartRecent'):'f1Recent';
 const HALF_W       = 7.5;     // ครึ่งความกว้างแทร็ก (เมตร) — F1 จริง 12-15ม.
 const KERB_W       = 1.6;     // ความกว้างขอบ kerb
 const RUNOFF_W     = 9;       // runoff ยางมะตอยข้างแทร็ก (สไตล์ Bahrain)
@@ -174,7 +176,7 @@ const CHAT_PRESETS = ['เร็วจัด! 🔥','แซงสวยมาก
 const F1_ROLL_WIRE='F1R:';
 /* 🎨 รอบ 1216: สีรถชุดเดียวกันทั้ง cockpit, รถเรา และรถที่เพื่อนเห็น
    จำกัดไว้เฉพาะสีที่มี cockpit ครบ 3 เฟรม เพื่อไม่ให้ภาพคนขับกับโมเดลสลับสี */
-const CAR_COLOR_KEY=IS_KART?'vwKartCarColor':'vwF1CarColor';
+const CAR_COLOR_KEY=IS_KART?(P.keys&&P.keys.color||'vwKartCarColor'):'vwF1CarColor';
 /* NetRoom ส่งเฉพาะชื่อฟิลด์กลางที่ประกาศไว้: cw จะถูกบีบเป็น q แล้วประกอบคืนครบ
    และผ่าน rules ของ legacy /world ด้วย; ตัวรับยังอ่าน cl เพื่อรองรับ packet ช่วงเปลี่ยนผ่าน */
 const F1_COLOR_WIRE='f1c:';
@@ -216,7 +218,7 @@ const RACE_BGM_EXIT_FADE_MS=1100;
 const GHOST_HZ     = 10;      // บันทึกเส้นทาง 10 จุด/วินาที
 const GHOST_MAX    = 3000;    // เพดานจุด (5 นาที) — ยาวกว่านี้ไม่บันทึก
 const GHOST_KEY    = 'vwF1Ghost';
-const ACTIVE_GHOST_KEY=IS_KART?'vwKartGhost':GHOST_KEY;   // เก็บใน localStorage (ไม่ยัดลง state — กัน cloud save บวม)
+const ACTIVE_GHOST_KEY=IS_KART?(P.keys&&P.keys.ghost||'vwKartGhost'):GHOST_KEY;   // เก็บใน localStorage (ไม่ยัดลง state — กัน cloud save บวม)
 const PIT_HALF_W   = 6;       // ครึ่งความกว้างเลนพิท (เมตร)
 const SURF_PIT     = {grip:1.0, drag:0.25};   // ผิวเลนพิท: ยึดเกาะเต็ม หน่วงนิดเดียว
 const PIT_LIMIT    = 22.2;    // จำกัดความเร็วในเลนพิท 80 กม./ชม. (ลิมิตเตอร์อัตโนมัติ)
@@ -469,7 +471,7 @@ const Snd=(function(){
     /* sample หนึ่งชั้น: pitch 0.70×..1.60× + low-pass เปิดตามคันเร่ง/รอบ และนุ่มด้วย AudioParam */
     const rate=0.70+rpm*0.90;
     if(engineSrc) engineSrc.playbackRate.setTargetAtTime(rate,ac.currentTime,0.045);
-    const f=IS_KART?45+rpm*rpm*145+thr*12:62+rpm*rpm*610+thr*26;
+    const f=IS_KART?(P.engineHz?P.engineHz(rpm,thr):45+rpm*rpm*145+thr*12):62+rpm*rpm*610+thr*26;
     if(synthEng) synthEng.frequency.setTargetAtTime(f,ac.currentTime,0.035);
     if(synthHi) synthHi.frequency.setTargetAtTime(f*2.01,ac.currentTime,0.035);
     const cockpit=cameraMode==='cockpit', cameraK=cockpit?1:0.78;
@@ -2489,8 +2491,8 @@ const CSS=`
   #f1-drs small{font-size:10px}
 }`;
 function buildDom(){
-  const st=document.createElement('style'); st.textContent=IS_KART?CSS.replace(/#f1-/g,'#kart-'):CSS; document.head.appendChild(st);
-  wrapEl=document.createElement('div'); wrapEl.id=IS_KART?'kart-wrap':'f1-wrap';
+  const st=document.createElement('style'); st.textContent=IS_KART?CSS.replace(/#f1-/g,'#'+NS+'-'):CSS; document.head.appendChild(st);
+  wrapEl=document.createElement('div'); wrapEl.id=IS_KART?NS+'-wrap':'f1-wrap';
   wrapEl.style.setProperty('--f1-cockpit-center',"url('"+cockpitAsset('center')+"')");
   wrapEl.style.setProperty('--f1-car-color',playerCarStyle.hex);
   wrapEl.innerHTML=`
@@ -2576,7 +2578,7 @@ function buildDom(){
       <button id="f1-stay">🏎️ แข่งต่อ</button><button id="f1-leave">🚪 ออกเลย</button>
     </div></div>`;
   if(IS_KART){
-    wrapEl.innerHTML=wrapEl.innerHTML.replace(/((?:id|aria-labelledby)=")f1-/g,'$1kart-');
+    wrapEl.innerHTML=wrapEl.innerHTML.replace(/((?:id|aria-labelledby)=")f1-/g,'$1'+NS+'-');
     P.decorateDom(wrapEl);
   }
   document.body.appendChild(wrapEl);
@@ -3886,7 +3888,7 @@ function netReady(){
 function netJoin(){
   if(!netReady()) return;
   room=NetRoom.create({
-    map:IS_KART?'kart':'f1', sendMs:NET_SEND_MS, roomMax:ROOM_MAX,
+    map:IS_KART?(P.keys&&P.keys.map||NS):'f1', sendMs:NET_SEND_MS, roomMax:ROOM_MAX,
     roomNoun:'สนาม', roomIcon:'🏁',
     push(){ lastNetSend=0; netSend(true); },
     onPeer:onPeer, onPeerGone:dropPeer,
@@ -4571,10 +4573,11 @@ function applyEnvironmentProfile(profile,mode){
   }
 }
 function start(options){
-  if(IS_KART&&!P.authorized())throw new Error('Kart is restricted to signed-in administrators');
+  if(IS_KART&&!P.authorized())throw new Error(GAME_TITLE+' is restricted to signed-in administrators');
   if(running) return;
-  const other=IS_KART?window.F1World:window.KartWorld;
-  if(other&&other._t.running)other._t.exitWorld();
+  [window.F1World,window.KartWorld,window.PickupWorld].forEach(w=>{
+    if(w&&w._t&&w._t.running)w._t.exitWorld();
+  });
   if(!built) build();
   options=options||{};
   if(IS_KART)applyEnvironmentProfile(options.environmentProfile,options.graphicsMode);
@@ -4674,7 +4677,7 @@ function exitWorld(){
   saveState();
   if(typeof renderDashboard==='function') renderDashboard();
   if(sessionWords>0||sessionCoins>0)
-    toast(`🏎️ กลับจาก ${IS_KART?'Vocab World Kart':'Vocab World Racing'} — ได้ ${sessionWords} คำ · +${fmtNum(sessionCoins)} 🪙`);
+    toast(`🏎️ กลับจาก ${GAME_TITLE} — ได้ ${sessionWords} คำ · +${fmtNum(sessionCoins)} 🪙`);
 }
 
 return {
