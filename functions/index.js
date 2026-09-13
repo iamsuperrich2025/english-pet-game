@@ -7,7 +7,7 @@ const {logger} = require('firebase-functions');
 const {setGlobalOptions} = require('firebase-functions/v2');
 const {onCall, HttpsError} = require('firebase-functions/v2/https');
 const {onValueCreated, onValueUpdated, onValueWritten} = require('firebase-functions/v2/database');
-const {MarketStateError, applyBuyer, applySeller, refundBuyer} = require('./market-settlement');
+const {MarketStateError, applyBuyer, applySeller, refundBuyer, parseWrapper, thaiDay, completedSellerClaims, sellerNeedsPayout} = require('./market-settlement');
 const {
   CAMPAIGN: CAKE_REFUND_CAMPAIGN,
   collectCakeRefundEntitlements,
@@ -372,8 +372,84 @@ exports.healCakeGiftPriceRefund = onValueWritten({
   );
 });
 
+async function runMarketSellerRepairJob(jobRef, dryRun) {
+  const db = getDatabase();
+  const [ledgerSnap, usersSnap] = await Promise.all([
+    db.ref('marketLedger').get(),
+    db.ref('users').get(),
+  ]);
+  const claims = completedSellerClaims(ledgerSnap.val() || {});
+  const users = usersSnap.val() || {};
+  const report = {sales: claims.length, unpaid: 0, coins: 0, applied: 0, skipped: 0, errors: 0, items: []};
+  for (const claim of claims) {
+    const state = parseCakeRefundSave(users[claim.sid] && users[claim.sid].save);
+    if (!sellerNeedsPayout(state, claim)) { report.skipped++; continue; }
+    report.unpaid++;
+    report.coins += Number(claim.p) || 0;
+    if (report.items.length < 40) report.items.push({id: claim.id, p: Number(claim.p) || 0});
+    if (dryRun) continue;
+    try {
+      await transactSave(claim.sid, current => applySeller(current, claim, Date.now(), {allowMissingListing: true}));
+      report.applied++;
+    } catch (error) {
+      report.errors++;
+      logger.warn('market seller repair deferred', {sid: claim.sid, tx: claim.tx, code: error.code || error.message});
+    }
+  }
+  return report;
+}
+
+exports.runMarketSellerPayoutRepair = onValueCreated({
+  ref: '/maintenance/marketSellerRepairJobs/{jobId}',
+  instance: DB_INSTANCE,
+  retry: false,
+  maxInstances: 1,
+}, async event => {
+  const job = event.data.val() || {};
+  await event.data.ref.update({status: 'running', startedAt: Date.now()});
+  try {
+    const report = await runMarketSellerRepairJob(event.data.ref, job.dryRun === true);
+    await event.data.ref.update({
+      status: job.dryRun === true ? 'dry_run_complete' : 'completed',
+      report, finishedAt: Date.now(),
+    });
+  } catch (error) {
+    logger.error('market seller repair job failed', {code: error.code || error.message});
+    await event.data.ref.update({
+      status: 'failed',
+      reason: String(error.code || error.message).slice(0, 120),
+      finishedAt: Date.now(),
+    });
+    throw error;
+  }
+});
+
+exports.healMarketSellerPayout = onValueWritten({
+  ref: '/users/{uid}/save',
+  instance: DB_INSTANCE,
+  retry: false,
+  maxInstances: 5,
+}, async event => {
+  const uid = event.params.uid;
+  const state = parseCakeRefundSave(event.data.after.val());
+  if (!state) return;
+  const ledger = (await getDatabase().ref('marketLedger').get()).val() || {};
+  const due = completedSellerClaims(ledger).filter(claim => claim.sid === uid && sellerNeedsPayout(state, claim));
+  if (!due.length) return;
+  await transactionFromServer(event.data.after.ref, current => {
+    let wrapper = current;
+    let changed = false;
+    for (const claim of due) {
+      const out = applySeller(wrapper, claim, Date.now(), {allowMissingListing: true});
+      wrapper = out.wrapper;
+      changed = changed || out.changed;
+    }
+    return changed ? wrapper : current;
+  });
+});
+
 exports._test = {
   cleanListing, transactionWithSeed, transactionFromServer,
   acquireSettlementLease, claimMarketListing, beginPurchase, settleClaim,
-  runCakeGiftRefundJob,
+  runCakeGiftRefundJob, runMarketSellerRepairJob,
 };

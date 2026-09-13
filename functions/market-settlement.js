@@ -56,16 +56,26 @@ function applyBuyer(wrapper, claim, timestamp) {
   return {wrapper: finishWrapper(state, timestamp), state, changed: true};
 }
 
-function applySeller(wrapper, claim, timestamp) {
+function sellerHasPayout(state, tx) {
+  if (!state || !tx) return false;
+  const marker = state.marketTx && state.marketTx[tx];
+  if (marker && marker.r === 'seller') return true;
+  return Array.isArray(state.tradeSold) && state.tradeSold.some(row => row && String(row.tx || '') === String(tx));
+}
+
+function listingIndexForClaim(state, claim) {
+  return (state.listings || []).findIndex(listing => listing &&
+    String(listing.netKey || '') === String(claim.key || '') &&
+    String(listing.id || '') === String(claim.id || '') &&
+    Number(listing.price) === Number(claim.p));
+}
+
+function applySeller(wrapper, claim, timestamp, opts) {
   const state = parseWrapper(wrapper);
-  const marker = state.marketTx[claim.tx];
-  if (marker && marker.r === 'seller') return {wrapper, state, changed: false};
-  const index = state.listings.findIndex(listing => listing &&
-    String(listing.netKey || '') === claim.key &&
-    String(listing.id || '') === claim.id &&
-    Number(listing.price) === claim.p);
-  if (index < 0) throw new MarketStateError('seller_not_ready');
-  state.listings.splice(index, 1);
+  if (sellerHasPayout(state, claim.tx)) return {wrapper, state, changed: false};
+  const index = listingIndexForClaim(state, claim);
+  if (index < 0 && !(opts && opts.allowMissingListing)) throw new MarketStateError('seller_not_ready');
+  if (index >= 0) state.listings.splice(index, 1);
   state.coins += claim.p;
   const today = thaiDay(timestamp);
   if (!state.daily || state.daily.date !== today) state.daily = {date: today, coins: 0};
@@ -90,4 +100,20 @@ function refundBuyer(wrapper, claim, timestamp) {
   return {wrapper: finishWrapper(state, timestamp), state, changed: true};
 }
 
-module.exports = {MarketStateError, applyBuyer, applySeller, refundBuyer, parseWrapper, thaiDay};
+function completedSellerClaims(ledger) {
+  return Object.values(ledger || {}).filter(claim => claim &&
+    claim.status === 'completed' &&
+    claim.sid &&
+    claim.tx &&
+    String(claim.id || '') &&
+    Number(claim.p) > 0);
+}
+
+function sellerNeedsPayout(state, claim) {
+  return !!(claim && claim.tx && state && !sellerHasPayout(state, claim.tx));
+}
+
+module.exports = {
+  MarketStateError, applyBuyer, applySeller, refundBuyer, parseWrapper, thaiDay,
+  sellerHasPayout, sellerNeedsPayout, completedSellerClaims, listingIndexForClaim,
+};

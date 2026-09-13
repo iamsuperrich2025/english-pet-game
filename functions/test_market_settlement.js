@@ -2,7 +2,7 @@
 
 const assert = require('assert');
 const fs = require('fs');
-const {applyBuyer, applySeller, refundBuyer} = require('./market-settlement');
+const {applyBuyer, applySeller, refundBuyer, sellerHasPayout, sellerNeedsPayout, completedSellerClaims} = require('./market-settlement');
 const {acquireSettlementLease, claimMarketListing} = require('./index')._test;
 
 const functionSource = fs.readFileSync('./index.js', 'utf8');
@@ -43,6 +43,24 @@ assert.equal(read(refundedTwice).coins, 1000, 'refund must be idempotent');
 
 assert.throws(()=>applyBuyer(wrapper({coins: 100, collection: [], listings: []}), claim, 1), /not_enough_coins/);
 assert.throws(()=>applySeller(wrapper({coins: 0, collection: [], listings: [], tradeSold: []}), claim, 1), /seller_not_ready/);
+
+const repaired = applySeller(wrapper({
+  coins: 20, daily: {date: '', coins: 0}, lifetimeCoins: 100,
+  collection: [], listings: [], tradeSold: [], marketTx: {},
+}), claim, Date.UTC(2026, 7, 20, 16), {allowMissingListing: true});
+assert.equal(read(repaired).coins, 520, 'repair must credit seller even if listing row is gone');
+assert.equal(read(repaired).marketTx[claim.tx].r, 'seller');
+const repairedTwice = applySeller(repaired.wrapper, claim, Date.UTC(2026, 7, 20, 17), {allowMissingListing: true});
+assert.equal(read(repairedTwice).coins, 520, 'repair must be idempotent');
+assert.equal(sellerHasPayout(read(repaired), claim.tx), true);
+
+const unpaidState = {marketTx: {}, tradeSold: []};
+assert.equal(sellerNeedsPayout(unpaidState, {tx: claim.tx}), true);
+assert.equal(sellerNeedsPayout(read(repaired), {tx: claim.tx}), false);
+assert.equal(completedSellerClaims({
+  a: {status: 'completed', sid: 'seller', tx: 'tx1', id: 'cake', p: 500},
+  b: {status: 'failed', sid: 'seller', tx: 'tx2', id: 'cake', p: 500},
+}).length, 1);
 
 (async()=>{
   const listing = {sid: 'seller', id: 'cake', p: 500, sn: 'ผู้ขาย'};

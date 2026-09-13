@@ -12,6 +12,10 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1427 · ตามจ่ายเงินผู้ขายตลาดที่ขาด:** ledger ซื้อสำเร็จ 39 รายการ พบ 3 รายการที่ผู้ซื้อจ่ายแล้วผู้ขายยังไม่มี marker รับเงิน รวม 7,801 · เติมตามยอดที่ผู้ซื้อจ่าย กันซ้ำ + heal ถ้าเซฟทับ
+- `functions/market-settlement.js` `functions/index.js` `functions/test_market_settlement.js` `tools/audit_market_unpaid_sellers.js` `handoff/GAME_RULES.md`
+- unit settlement ผ่าน · ค้าง: deploy functions แล้วรัน job จ่ายจริง แล้วผู้ขายรีเฟรชเกม
+
 - **รอบ 1426 · ตลาดเสนอซื้อของค้างเกิน 1 วัน:** ของตั้งขายเกิน 24 ชม.และยังแพงกว่าราคาโรงงาน+100 → ถามผู้ขาย · ตกลงแล้วถอนประกาศ เติมเหรียญโรงงาน+100 พร้อมภาพเหรียญ+เสียง · ปฏิเสธถามใหม่วันถัดไป
 - `js/data/collectibles.js` `js/state.js` `js/ui.js` `css/style.css` `handoff/GAME_RULES.md` `tools/test_market_system_buy.js`
 - unit `test_market_system_buy.js` ผ่าน (โดนัทโรงงาน 800 → เสนอ 900, บัญชี 100+900=1000, ไม่ฟาร์มลงราคาถูก)
