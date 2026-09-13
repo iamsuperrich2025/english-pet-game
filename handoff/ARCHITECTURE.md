@@ -64,15 +64,15 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/arena-spell-catalog.js** (377 บรรทัด) — Round 1387: metadata only. The selected family's recipes and runner load on demand.
 - **js/arena-spell-engine.js** (93 บรรทัด) — Round 1387: bounded spell trajectories. Uses ArenaElements' shared 12-zone budget.
 - **js/arena-strip.js** (40 บรรทัด) — Round 1398 — native horizontal touch scrolling with mouse/keyboard support.
-- **js/arena3d.js** (975 บรรทัด) — 🌀🔤 รอบ 1045 — VOCAB ARENA · โลกผจญภัย PvE มุมกล้อง MOBA-inspired ที่ออกแบบใหม่สำหรับ Vocab World · - ไม่ใช้แผนที่/ฮีโร่/ไอคอน/เอฟเฟกต์/เสียงจากเกมอื่น
+- **js/arena3d.js** (974 บรรทัด) — 🌀🔤 รอบ 1045 — VOCAB ARENA · โลกผจญภัย PvE มุมกล้อง MOBA-inspired ที่ออกแบบใหม่สำหรับ Vocab World · - ไม่ใช้แผนที่/ฮีโร่/ไอคอน/เอฟเฟกต์/เสียงจากเกมอื่น
 - **js/assetaward.js** (21 บรรทัด) — 🏆 รางวัลรายเดือน Top 10 กระดานมูลค่าทรัพย์สินรวม — ใช้โรงงานกลางใน award.js
-- **js/auth.js** (572 บรรทัด) — ENGINE: Google Login + Sync เซฟขึ้น cloud (backlog ข้อ 0.1) · กติกา (ผู้ใช้เลือกแบบ ก. 5 ก.ค. 2026): บังคับ login ด้วย Google · เท่านั้นก่อนเข้าเกม — offline/SDK โหลดไม่ได้ → หน้าประตูให้ลองใหม่
+- **js/auth.js** (573 บรรทัด) — ENGINE: Google Login + Sync เซฟขึ้น cloud (backlog ข้อ 0.1) · กติกา (ผู้ใช้เลือกแบบ ก. 5 ก.ค. 2026): บังคับ login ด้วย Google · เท่านั้นก่อนเข้าเกม — offline/SDK โหลดไม่ได้ → หน้าประตูให้ลองใหม่
 - **js/award.js** (279 บรรทัด) — 🏆 award.js — เครื่องจ่าย "รางวัลรายเดือน Top 10" ใช้ร่วมทุกกระดาน (รอบ 649) · เดิมโค้ดก้อนนี้อยู่ใน js/wsaward.js เฉพาะแท็บ 🔎 ค้นหาคำ · รอบ 649 เพิ่มแท็บ ⌨️ พิมพ์คำ ที่ใช้กติกาเดียวกันเป๊ะ → ยกมาเป็นโรงงานกลาง
 - **js/bandadv.js** (452 บรรทัด) — BAND ADV — คลังศัพท์ขั้นสูงแยกหมวด (js/data/band/ · รอบ 681) · ต่างจาก js/dictband.js (DICT_BAND 1-5): ไม่ผูกชั้นเรียน เปิดเล่นได้ทุกคน · ไม่มี pos/ipa/ตัวอย่าง (entry แค่ [en, th]) จึงไม่มีชุดสอบย่อย/สอบซ่อม —
 - **js/bbaward.js** (14 บรรทัด) — 🏆 รางวัลรายเดือน Top 10 ของเกม 🫧 ฟอง — คะแนนสะสมตลอดกาล
 - **js/bubble.js** (240 บรรทัด) — 🫧 bubble.js — เกมแตะฟองสะกดคำ · - ฟอง 1 ใบต่อ 1 ตัวอักษร: คำที่มีตัวซ้ำจะมีฟองซ้ำครบจำนวน · - สุ่มตำแหน่งใหม่ทุกคำ โดยไม่ซ้อนกัน และไม่เรืองแสงใบ้ฟองที่ต้องกด
 - **js/cert.js** (655 บรรทัด) — 🎖️ cert.js — ประกาศนียบัตร Vocab World (รอบ 712) · สอบผ่าน = ได้ "ใบประกาศ" อย่างเป็นทางการแทนอิโมจิ 📝 เดิม · ① ฟีด: การ์ดโพสต์หมวด quiz โชว์ใบประกาศเต็มกรอบ (แตะ = ดูใบใหญ่เต็มจอ)
-- **js/city3d.js** (3,361 บรรทัด) — city3d.js — 🏙️ VOCAB CITY: ล็อบบี้ 3D แบบเมืองลอยฟ้า (หน้ารอง index.html?lobby=3d; หน้าเริ่มต้น = Lobby Classic) · เมือง toy-town พาสเทลบนเกาะลอยฟ้า (ออกแบบเอง ไม่อิงเกม city-builder ใด — กันลิขสิทธิ์) · กล้อง: 1 นิ้วลาก = เลื่อนแผนที่ · 2 นิ้ว = หมุน(บิด)/เอียง(ลากแนวตั้ง)/ซูม(ถ่าง-หนีบ)
+- **js/city3d.js** (3,373 บรรทัด) — city3d.js — 🏙️ VOCAB CITY: ล็อบบี้ 3D แบบเมืองลอยฟ้า (หน้ารอง index.html?lobby=3d; หน้าเริ่มต้น = Lobby Classic) · เมือง toy-town พาสเทลบนเกาะลอยฟ้า (ออกแบบเอง ไม่อิงเกม city-builder ใด — กันลิขสิทธิ์) · กล้อง: 1 นิ้วลาก = เลื่อนแผนที่ · 2 นิ้ว = หมุน(บิด)/เอียง(ลากแนวตั้ง)/ซูม(ถ่าง-หนีบ)
 - **js/coinaward.js** (21 บรรทัด) — 🪙🏆 รางวัลรายเดือน Top 10 กระดานเหรียญคงเหลือ
 - **js/dailybox.js** (142 บรรทัด) — 🎁🪙 กล่องสุ่มรายวัน — รอบ 1272 · 5 รางวัลสับด้วย crypto, ไม่ซ้ำตำแหน่งเดิมจากวันก่อน, รับได้วันละครั้ง · ใบยินดีไม่มี timer/Esc/backdrop close; ปิดได้เฉพาะปุ่มรับทราบ
 - **js/dictband.js** (410 บรรทัด) — DICT BAND — คลังศัพท์ใหญ่ตามระดับ (band 1-5) จาก js/data/dict_band/ · manifest.js โหลดตอนบูต (เบา) → ชิ้นข้อมูล db<band>_*.js โหลดขี้เกียจ · ตอนผู้เล่นกดเล่น แล้วต่อเข้าเครื่องยนต์เดิมทั้งคู่:
@@ -86,7 +86,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/hauntedhoteldirector.js** (321 บรรทัด) — hauntedhoteldirector.js — Haunted Hotel Horror Director (Phase 3) · Lightweight local pacing + compact, transaction-claimed shared scare intent. · Mission authority, movement, rewards and scene rendering stay outside this module.
 - **js/hauntedhotelghost.js** (239 บรรทัด) — hauntedhotelghost.js — Haunted Hotel PNG ghost runtime · One lightweight subdivided plane + shader; no physics, post-processing, · dynamic lights or cosmetic Firebase state.
 - **js/hauntedhotelsession.js** (255 บรรทัด) — hauntedhotelsession.js — Haunted Hotel canonical run adapter · One low-frequency Firebase record per NetRoom hotel instance. · This module intentionally does not know about rendering, movement or rewards.
-- **js/home-v2.js** (2,169 บรรทัด) — Vocab World Home V2 — Primary Lobby (R11.4 Visual Master Fidelity Reconstruction + Premium Depth / Composition Recovery) · R12 / รอบ 1279 — Ultimate Visual Master scenic + composition rebuild · R13 / รอบ 1280 — HUD, Bottom Rail and Left Navigation readability rebalance
+- **js/home-v2.js** (2,175 บรรทัด) — Vocab World Home V2 — Primary Lobby (R11.4 Visual Master Fidelity Reconstruction + Premium Depth / Composition Recovery) · R12 / รอบ 1279 — Ultimate Visual Master scenic + composition rebuild · R13 / รอบ 1280 — HUD, Bottom Rail and Left Navigation readability rebalance
 - **js/hotel3d.js** (1,526 บรรทัด) — hotel3d.js — 🏨 โรงแรมผีสิง 5 ชั้น (รอบ 684 · ยกบรรยากาศ/ภารกิจงานศพไทยรอบ 1060) · สร้าง "ตัวโรงแรม" ล้วน ๆ (โมเดล+ชนกำแพง+บันได+ลิฟต์+เฟอร์นิเจอร์+รูปตามอง) · ส่วน "การเล่น" (ผี/ไฟฉาย/ตัวอักษร/เสียง) อยู่ในโซน 🏨 ของ js/adventure3d.js
 - **js/images.js** (286 บรรทัด) — ระบบตรวจหาภาพเจนอัตโนมัติ (ใช้ new Image() probe — ใช้ได้ทั้ง · file:// และ http:// ต่างจาก fetch ที่ถูกบล็อกใน file://) · โฟลเดอร์ภาพ:
 - **js/invasion3d.js** (10,581 บรรทัด) — 🛸 invasion3d.js — โลก "ยานแม่บุกโลก" (Invasion · รอบ 413 · กติกาใหม่รอบ 556) · FPS สไตล์ Delta Force ในเมืองทะเลทรายตะวันออกกลาง — ยานแม่ลำมหึมาลอยเต็มท้องฟ้า (สไตล์ ID4) · 🔤 กติการอบ 556 (ผู้ใช้สั่ง — แทนระบบแผงตัวอักษร+แกนพลังงานเดิมทั้งหมด):
@@ -121,11 +121,11 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/thaitime.js** (52 บรรทัด) — 🇹🇭 js/thaitime.js — "เวลาไทย" กลางของทั้งเกม (รอบ 988) · ปัญหาที่แก้: ทุกจุดในเกมอ่านเวลาจาก `new Date().getHours()` = **นาฬิกาของเครื่องผู้เล่น · เครื่องที่ตั้งไทม์โซนเป็นต่างประเทศ (หรือ tablet/PC ที่ตั้งเวลาไม่ตรง) จะได้ชั่วโมงผิด
 - **js/tpaward.js** (42 บรรทัด) — 🏆 tpaward.js — รางวัลรายเดือนของกระดานอันดับ ⌨️ พิมพ์คำ (รอบ 649 · แก้กติกาอันดับรอบ 654) · ผู้ใช้สั่ง 28 ก.ค. 2026: "ทำแบบเดียวกับแท็บ 🔎 ค้นหาคำ" · ① Top 10 ได้เหรียญรางวัลทุกวันที่ 1 ของเดือน (10,000 ลดหลั่นถึง 1,000)
 - **js/typing.js** (370 บรรทัด) — ⌨️ typing.js — เกม "พิมพ์คำศัพท์" (Keyboard Typing) รอบ 648 · ผู้ใช้สั่ง 28 ก.ค. 2026 · ปุ่มรางซ้ายล็อบบี้ → กระดานเต็มจอ (มีปุ่มปิดชัดเจน) · - แป้นวางตามตำแหน่งคีย์บอร์ดจริง (QWERTY เหลื่อมแถว) · ปุ่มนูน 3 มิติ กดแล้วยุบ-เด้งขึ้นทันที
-- **js/ui.js** (10,470 บรรทัด) — UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
+- **js/ui.js** (10,495 บรรทัด) — UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
 - **js/util.js** (1,473 บรรทัด) — UTIL: เสียง / เอฟเฟกต์ / เครื่องมือทั่วไป
 - **js/vocabbook.js** (207 บรรทัด) — 📒 สมุดคำศัพท์ของฉัน + ข้อสอบทบทวนส่วนตัว (รอบ 288) · เก็บทุกคำที่เด็กเจอในเกมจับคู่/ข้อสอบทุกแบบ (รวม band) ลง state.vocabBook · ถาวรข้ามเซสชัน: {en: {th, c:ถูกกี่ครั้ง, w:ผิดกี่ครั้ง, t:เจอล่าสุด, lw:ครั้งล่าสุดผิด?}}
 - **js/wordsearch.js** (524 บรรทัด) — 🔎 wordsearch.js — เกมค้นหาคำศัพท์ (Word Search) รอบ 194 · แผงฟ้าล้ำยุคเลื่อนออกจากซ้าย · สุ่มคำไม่ซ้ำในแต่ละเกม · 🆕 รอบ 588: กระดานเกือบเต็มจอ · แถบ "หาคำเหล่านี้ให้เจอ" ย้ายขึ้นบนสุด จัดกึ่งกลาง
-- **js/wordship.js** (475 บรรทัด) — ⚓ wordship.js — กองเรือคำศัพท์ (Cute Word Fleet) รอบ 1429 · สไตล์ World of Warships ฉบับน่ารักสดใสสำหรับเด็กประถม · คลังคำ = สูตรเดียวกับ ShootWord.pool() / vocabForStudent() ที่โหลดมากับล็อบบี้แล้ว
+- **js/wordship.js** (525 บรรทัด) — ⚓ wordship.js — กองเรือคำศัพท์ (Cute Word Fleet) รอบ 1429 · สไตล์ World of Warships ฉบับน่ารักสดใสสำหรับเด็กประถม · คลังคำ = สูตรเดียวกับ ShootWord.pool() / vocabForStudent() ที่โหลดมากับล็อบบี้แล้ว
 - **js/wsaward.js** (32 บรรทัด) — 🏆 wsaward.js — รางวัลรายเดือนของกระดานอันดับ 🔎 ค้นหาคำ (รอบ 592) · ผู้ใช้สั่ง 26 ก.ค. 2026: · ① Top 10 ได้เหรียญรางวัลทุกวันที่ 1 ของเดือน (10,000 ลดหลั่นถึง 1,000)
 - **css/account-deletion.css** (15 บรรทัด) — Protected account deletion — compact landscape-first dialogs
 - **css/arena-heroes.css** (20 บรรทัด) — Round 1381 — full-body hero selection. Portrait owns a single animation context.
@@ -134,8 +134,8 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/dailybox.css** (24 บรรทัด) — 🎁🪙 กล่องสุ่มรายวัน — รอบ 1272 · CSS illustration ล้วน ไม่พึ่ง asset ภาพภายนอก
 - **css/exam.css** (377 บรรทัด) — 📋 exam.css — จอข้อสอบจริงแบบมาตรฐาน IELTS/TOEIC/TOEFL (รอบ 812 · js/examstd.js) · กฎทองข้อ 7: กล่องทั้งใบต้องอยู่ในจอ หน้าไม่เลื่อน — บทอ่านยาวจึงเลื่อน "ในกรอบตัวเอง" · (ข้อสอบการอ่านเลี่ยงไม่ได้ที่จะมีบทความยาว แต่กรอบนอกไม่มี scrollbar)
 - **css/home-v2.css** (2,509 บรรทัด) — Vocab World Home V2 — R11.5.1 Safe Lightweight Asset Bridge Rebase · + Asset-Driven Visual Master Convergence / Premium Fantasy UI Refinement · PRIMARY LOBBY · R11.3 readability + authoritative handlers preserved
-- **css/lettercannon.css** (89 บรรทัด) — 🐉💥 Dragon Sky Siege (รอบ 1428) · Portrait 9:16 vertical shooter HUD. Desktop centers the flight lane; · touch devices use the full portrait viewport.
-- **css/lobby.css** (6,279 บรรทัด) — THEME 2.0 "เมืองทันสมัยโทนฟ้า" — LOBBY แนวนอน + UI ยุคหลังทั้งหมด (โหลดทับ style.css · cascade ทีหลังชนะ · เปลี่ยนเฉพาะหน้าตา ไม่แตะ logic) · ครอบคลุม: แถบบน/ราง rail/แผง panel (ตลาด-โรงงาน-บ้าน-เพื่อน) · โชว์รูมหุ่น .rs-* รถ .cs-* · Word Search .ws-* · ข้อมูลน้อง .pi-* · แชท+ธีมแชท · กระดานอันดับ/เข็ม · สไปรต์น้อง .pet-anim/ฉาก .stage-hero · โทนสี: น้ำเงินเ…
+- **css/lettercannon.css** (89 บรรทัด) — 🐉💥 Dragon Sky Siege (รอบ 1431) · Portrait 9:16 vertical shooter HUD. Desktop centers the flight lane; · touch devices use the full portrait viewport.
+- **css/lobby.css** (6,280 บรรทัด) — THEME 2.0 "เมืองทันสมัยโทนฟ้า" — LOBBY แนวนอน + UI ยุคหลังทั้งหมด (โหลดทับ style.css · cascade ทีหลังชนะ · เปลี่ยนเฉพาะหน้าตา ไม่แตะ logic) · ครอบคลุม: แถบบน/ราง rail/แผง panel (ตลาด-โรงงาน-บ้าน-เพื่อน) · โชว์รูมหุ่น .rs-* รถ .cs-* · Word Search .ws-* · ข้อมูลน้อง .pi-* · แชท+ธีมแชท · กระดานอันดับ/เข็ม · สไปรต์น้อง .pet-anim/ฉาก .stage-hero · โทนสี: น้ำเงินเ…
 - **css/onetpromo.css** (41 บรรทัด) — 🇹🇭 รอบ 1186: ป้าย O-NET เกือบเต็มจอ · พอดีจอแนวนอน 812×375
 - **css/petfashion.css** (32 บรรทัด) — ⚔️🎀 ร้านแฟชั่นแบบลากดู–ลองใส่–ยืนยันซื้อ — รอบ 1292
 - **css/petpantry.css** (6 บรรทัด) — 🗄️🐾 Pet Pantry — รอบ 1158
@@ -148,6 +148,8 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/wordship.css** (30 บรรทัด) — ⚓ กองเรือคำศัพท์ — HUD น่ารักจอเตี้ย 812×375 รอบ 1429
 - **sw.js** (281 บรรทัด) — Vocab World service worker · Delivery contract: · - HTML navigations are network-first with the last valid shell as fallback.
 <!-- AUTO-FILES:END -->
+
+
 
 
 
