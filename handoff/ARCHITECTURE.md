@@ -117,11 +117,11 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/shootword.js** (1,266 บรรทัด) — 🎯 shootword.js — เกม "ยิงเป้าคำศัพท์" (Carnival Word Shooting) รอบ 917 · ผู้ใช้สั่ง 2 ส.ค. 2026 (อนุมัติทำเป็นโลก 3D เต็มรูปแบบ): · ① โลก 3D มุมมองบุคคลที่หนึ่ง — ยืนในซุ้มยิงปืนของสวนสนุก สีสันสดใสน่ารัก
 - **js/skyplay3d.js** (640 บรรทัด) — ☁️📚 รอบ 1235 — VOCAB SKY PLAYGROUND · PHASE 5 · Bright Fantasy Social World + Obby ของ Vocab World · - standalone Three.js engine: ไม่แตะ Adventure World / Invasion
 - **js/specialmission.js** (229 บรรทัด) — specialmission.js — ภารกิจพิเศษแบบเดี่ยว (รอบ 1354) · แยกจาก Daily Quest และ canonical progress ของเพื่อนโดยตั้งใจ
-- **js/state.js** (1,393 บรรทัด) — STATE + LocalStorage + กติกากลางของเกม · (แยกจากไฟล์ data — อัปเกรดคำศัพท์/สัตว์/ไอเทมได้โดยไม่กระทบเซฟ)
+- **js/state.js** (1,411 บรรทัด) — STATE + LocalStorage + ??????????????? · (?????????? data ? ??????????????/?????/??????????????????????)
 - **js/thaitime.js** (52 บรรทัด) — 🇹🇭 js/thaitime.js — "เวลาไทย" กลางของทั้งเกม (รอบ 988) · ปัญหาที่แก้: ทุกจุดในเกมอ่านเวลาจาก `new Date().getHours()` = **นาฬิกาของเครื่องผู้เล่น · เครื่องที่ตั้งไทม์โซนเป็นต่างประเทศ (หรือ tablet/PC ที่ตั้งเวลาไม่ตรง) จะได้ชั่วโมงผิด
 - **js/tpaward.js** (42 บรรทัด) — 🏆 tpaward.js — รางวัลรายเดือนของกระดานอันดับ ⌨️ พิมพ์คำ (รอบ 649 · แก้กติกาอันดับรอบ 654) · ผู้ใช้สั่ง 28 ก.ค. 2026: "ทำแบบเดียวกับแท็บ 🔎 ค้นหาคำ" · ① Top 10 ได้เหรียญรางวัลทุกวันที่ 1 ของเดือน (10,000 ลดหลั่นถึง 1,000)
 - **js/typing.js** (370 บรรทัด) — ⌨️ typing.js — เกม "พิมพ์คำศัพท์" (Keyboard Typing) รอบ 648 · ผู้ใช้สั่ง 28 ก.ค. 2026 · ปุ่มรางซ้ายล็อบบี้ → กระดานเต็มจอ (มีปุ่มปิดชัดเจน) · - แป้นวางตามตำแหน่งคีย์บอร์ดจริง (QWERTY เหลื่อมแถว) · ปุ่มนูน 3 มิติ กดแล้วยุบ-เด้งขึ้นทันที
-- **js/ui.js** (10,347 บรรทัด) — UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
+- **js/ui.js** (10,436 บรรทัด) — UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
 - **js/util.js** (1,473 บรรทัด) — UTIL: เสียง / เอฟเฟกต์ / เครื่องมือทั่วไป
 - **js/vocabbook.js** (207 บรรทัด) — 📒 สมุดคำศัพท์ของฉัน + ข้อสอบทบทวนส่วนตัว (รอบ 288) · เก็บทุกคำที่เด็กเจอในเกมจับคู่/ข้อสอบทุกแบบ (รวม band) ลง state.vocabBook · ถาวรข้ามเซสชัน: {en: {th, c:ถูกกี่ครั้ง, w:ผิดกี่ครั้ง, t:เจอล่าสุด, lw:ครั้งล่าสุดผิด?}}
 - **js/wordsearch.js** (524 บรรทัด) — 🔎 wordsearch.js — เกมค้นหาคำศัพท์ (Word Search) รอบ 194 · แผงฟ้าล้ำยุคเลื่อนออกจากซ้าย · สุ่มคำไม่ซ้ำในแต่ละเกม · 🆕 รอบ 588: กระดานเกือบเต็มจอ · แถบ "หาคำเหล่านี้ให้เจอ" ย้ายขึ้นบนสุด จัดกึ่งกลาง
@@ -143,9 +143,10 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/picquiz_online.css** (119 บรรทัด) — 🌐🎧 ห้องแข่งครูถามศัพท์จากหนังสือ · ห้อง/Modal/HUD ทุกใบต้อง fit 812×375 โดยไม่มี scrollbar ทั้งหน้า
 - **css/rankgraph.css** (23 บรรทัด) — 📈 กราฟอันดับ Top 30
 - **css/skyplay3d.css** (46 บรรทัด) — ☁️🏫 รอบ 1235 — Vocab Sky Playground Phase 5 · additive Lesson Packs + Reports · landscape-first
-- **css/style.css** (2,498 บรรทัด) — Pet Vocab Adventure — สไตล์พื้นฐานรุ่นแรกทั้งเกม (โดน lobby.css โหลดทับบางส่วน — แก้หน้าตาโซนล็อบบี้/UI ใหม่ให้ไปที่ lobby.css ก่อน) · ครอบคลุม: screens/login/dashboard · เกมจับคู่ .word-card + แบบทดสอบ .quiz-* · shop/ที่พัก/หมวดคำศัพท์ · หิว-ป่วย/สภาพอากาศ · ตั้งค่า/วิธีเล่น/level-up overlay · คลังของฉัน/กล่องขาย · เอฟเฟกต์ลอย/เหรียญ/rotate-overlay
+- **css/style.css** (2,503 บรรทัด) — Pet Vocab Adventure — สไตล์พื้นฐานรุ่นแรกทั้งเกม (โดน lobby.css โหลดทับบางส่วน — แก้หน้าตาโซนล็อบบี้/UI ใหม่ให้ไปที่ lobby.css ก่อน) · ครอบคลุม: screens/login/dashboard · เกมจับคู่ .word-card + แบบทดสอบ .quiz-* · shop/ที่พัก/หมวดคำศัพท์ · หิว-ป่วย/สภาพอากาศ · ตั้งค่า/วิธีเล่น/level-up overlay · คลังของฉัน/กล่องขาย · เอฟเฟกต์ลอย/เหรียญ/rotate-overlay
 - **sw.js** (281 บรรทัด) — Vocab World service worker · Delivery contract: · - HTML navigations are network-first with the last valid shell as fallback.
 <!-- AUTO-FILES:END -->
+
 
 
 

@@ -860,17 +860,17 @@ openPhotoCrop:224
 
 ## js/specialmission.js (229 บรรทัด · 0 รายการ)
 
-## js/state.js (1,393 บรรทัด · 96 รายการ)
+## js/state.js (1,411 บรรทัด · 97 รายการ)
 ### 🗂️ สารบัญโซน js/state.js (Read/Edit เฉพาะช่วง)
-- 2-247 STATE + LocalStorage + กติกากลางของเกม
-- 248-304 🗄️🐾 ระบบชั้นอาหาร + เงินช่วยปรับตัว
-- 305-797 👍 รอบ 701: รีแอ็กชันฟีด (กดค้างปุ่มถูกใจแล้วเลือกได้เหมือน Facebook)
-- 798-853 Daily Quest (item 3 backlog): ภารกิจรายวัน 3 อย่าง สุ่มตามวันที่
-- 854-964 มูลค่าทรัพย์สินสุทธิ (net worth) — ฐานของระบบแรงค์
-- 965-1014 🚫🍽️ สัตว์ป่วยเพราะหิว = ซื้อของกินไม่ได้ (รอบ 952)
-- 1015-1108 เครื่องยนต์บิลรายเดือน (กลาง — ค่าบำรุงบ้านตอนนี้ / ค่าไฟ-น้ำ-เน็ต เสียบเพิ่มได้)
-- 1109-1233 🍖 เงินค่าอาหารสัตว์รายเดือน — ทุกวันที่ 1 ของเดือน จ่ายตามจำนวนสัตว์ที่เลี้ยงอยู่
-- 1234-1393 โรงงานผลิตสินค้า: จ่ายค่าผลิตด้วย "แต้มคำศัพท์"
+- 2-247 STATE + LocalStorage + ???????????????
+- 248-304 ????? ????????????? + ???????????????
+- 305-797 ?? ??? 701: ???????????? (????????????????????????????????? Facebook)
+- 798-853 Daily Quest (item 3 backlog): ???????????? 3 ????? ?????????????
+- 854-964 ???????????????????? (net worth) ? ???????????????
+- 965-1014 ????? ????????????????? = ???????????????? (??? 952)
+- 1015-1108 ?????????????????????? (???? ? ?????????????????? / ?????-???-???? ?????????????)
+- 1109-1251 ?? ????????????????????????? ? ????????? 1 ???????? ??????????????????????????????
+- 1252-1411 ????????????????: ??????????????? "???????????"
 ### รายการ js/state.js
 STORAGE_KEY:6 · QUIZ_PASS_REWARD:11 · CURE_COST:13 · HUNGRY_SICK_MS:14 · MEAL_HOUR:16 · MEAL_FULL:17
 SLEEP_FROM_HOUR:18 · SLEEP_SICK_HOUR:19 · WAKE_HOUR:20 · DINNER_COST:21 · TOXIN_FULL:23 · DETOX_COST:24
@@ -886,8 +886,9 @@ hungerSickMsg:979 · petShapeOf:987 · updatePetShape:993 · shapeMealDone:1000 
 billOutstanding:1023 · UTILITIES:1030 · HOME_UTILITIES:1036 · homeDecayed:1038 · billTick:1041 · PET_FOOD_PER_PET:1113
 petFoodTick:1114 · myCar:1140 · carLoanDue:1145 · carLoanOverdue:1150 · carLoanPayable:1155 · carLoanPay:1162
 compTick:1175 · ONLINE_RATE:1189 · onlineEarnActive:1190 · onlineEarnTick:1194 · onlineEarnFlush:1205 · marketTick:1215
-addCraft:1239 · ORDER_MAX:1258 · ORDER_LIFE_MS:1259 · ORDER_GAP_MIN_MS:1260 · ORDER_GAP_SPAN_MS:1261 · ORDER_TIER_WEIGHT:1262
-newOrder:1263 · orderTick:1276 · careTick:1284 · expNeed:1364 · addExp:1369 · addRP:1389
+applyMarketSystemBuy:1236 · addCraft:1257 · ORDER_MAX:1276 · ORDER_LIFE_MS:1277 · ORDER_GAP_MIN_MS:1278 · ORDER_GAP_SPAN_MS:1279
+ORDER_TIER_WEIGHT:1280 · newOrder:1281 · orderTick:1294 · careTick:1302 · expNeed:1382 · addExp:1387
+addRP:1407
 
 ## js/thaitime.js (52 บรรทัด · 13 รายการ)
 TH_TZ_MIN:22 · TH_DAY_MS:23 · thShift:28 · thMs:30 · thDate:31 · thHour:32
@@ -898,7 +899,7 @@ thLocaleOpt:46
 
 ## js/typing.js (370 บรรทัด · 0 รายการ)
 
-## js/ui.js (10,347 บรรทัด · 448 รายการ)
+## js/ui.js (10,436 บรรทัด · 452 รายการ)
 ### 🗂️ สารบัญโซน js/ui.js (Read/Edit เฉพาะช่วง)
 - 2-77 UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
 - 78-144 🎬 เวทีน้องน่ารัก (Cute Pet Show) — รอบ 604 (ผู้ใช้สั่ง 26 ก.ค. 2026)
@@ -949,12 +950,12 @@ thLocaleOpt:46
 - 8381-8395 โรงงานผลิตสินค้า 🏭 + ตลาดขายต่อ (แนวคิดใหม่ 5 ก.ค. 2026)
 - 8396-8419 โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
 - 8420-8694 ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
-- 8695-9702 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
-- 9703-9765 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
-- 9766-9802 เลเวลอัพ (รายตัว)
-- 9803-9908 สถิติผลการเรียนรู้
-- 9909-9946 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
-- 9947-10347 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
+- 8695-9791 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
+- 9792-9854 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
+- 9855-9891 เลเวลอัพ (รายตัว)
+- 9892-9997 สถิติผลการเรียนรู้
+- 9998-10035 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
+- 10036-10436 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
 ### รายการ js/ui.js
 startHTML:10 · PET_ANIM:30 · petAnimHTML:35 · petVisualHTML:50 · PET_SHOW:91 · PET_SHOW_STAGE:96
 PET_SHOW_H:99 · petShowBgHTML:102 · petBondLine:153 · PET_HEALTH_TIPS:177 · nextPetHealthTip:215 · petBondActionLine:223
@@ -1028,9 +1029,10 @@ rsShowBig:8885 · rsInit:8905 · buyRobot:8924 · enterMecha3D:8949 · pickMecha
 openCarBuyDialog:9052 · buyCarInsurance:9113 · payCarLoanMonthly:9132 · payCarLoanFull:9144 · carDriveBlock:9163 · gotoVehicleShop:9168
 gotoMyStock:9173 · showNeedCarDialog:9179 · craftDiscount:9191 · renderFactory:9194 · renderOrdersUI:9263 · startProduce:9282
 buyCollectible:9310 · cancelProduce:9340 · deliverOrder:9354 · renderOrderClock:9371 · renderCollectMine:9381 · openListDialog:9430
-cancelListing:9487 · buyMarketItem:9511 · showCollectReveal:9576 · buyAC:9614 · openHomeShop:9633 · openPetPurchase:9707
-renderPetShop:9744 · showLevelUp:9769 · renderStats:9806 · showTeacherCard:9913 · CALL_REACT_EMOS:9957 · CALL_TALK_MIN:9960
-CALL_TALK_HOLD:9961 · CALL_ORDER_GAP:9963 · CALL_TONES:9969 · startCall:10343
+cancelListing:9487 · listingMarketStatus:9511 · maybeOfferStaleMarketBuy:9515 · openStaleMarketOffer:9526 · acceptStaleMarketBuy:9564 · buyMarketItem:9600
+showCollectReveal:9665 · buyAC:9703 · openHomeShop:9722 · openPetPurchase:9796 · renderPetShop:9833 · showLevelUp:9858
+renderStats:9895 · showTeacherCard:10002 · CALL_REACT_EMOS:10046 · CALL_TALK_MIN:10049 · CALL_TALK_HOLD:10050 · CALL_ORDER_GAP:10052
+CALL_TONES:10058 · startCall:10432
 
 ## js/util.js (1,473 บรรทัด · 57 รายการ)
 ### 🗂️ สารบัญโซน js/util.js (Read/Edit เฉพาะช่วง)
@@ -1329,7 +1331,7 @@ vbRender:148 · vbCardHTML:194
 .sp-character-btn:29 · .sp-character-picker:30 · .sp-character-card:31,32 · .sp-character-grid:33,34,35 · .sky-entry-box:40 · .sky-entry-character-picker:41
 .sky-entry-character-grid:42,43 · .sky-entry-actions:44
 
-## css/style.css (2,498 บรรทัด · 604 selector)
+## css/style.css (2,503 บรรทัด · 606 selector)
 :root:5 · *:15 · html:16,21 · input:25 · body:29 · #app:35
 .screen:38,39 · h1:42 · .subtitle:43 · .egg-grid:46,63 · .egg-card:47,52,53,54(+2) · .pet-price:57,61
 .egg:65,71,75 · .d1:76 · .basket:79,80,85,91(+5) · .basket-dog:89,102,103,104 · .basket-cat:90,105,106,107 · .egg-dragon:110
@@ -1419,15 +1421,15 @@ vbRender:148 · vbCardHTML:194
 .cc-name:2077 · .cc-count:2078 · .cc-list-btn:2079,2083 · .mkt-listhead:2084 · .mkt-group-head:2086,2092 · .mkt-two-col:2094,2095,2099,2111(+8)
 #phone-card:2100,2116 · #computer-card:2101,2117 · #ticket-card:2103 · #haunt-card:2104 · #heli-card:2105 · #drone-card:2106
 #drive-card:2107 · #soccer-card:2108 · #moto-card:2109 · #invasion-card:2110 · .mkt-listing:2138 · .ml-cancel:2142
-.mkt-sold:2148,2149,2150 · .mkt-buy-box:2155,2161 · .mkt-buy-item:2162 · .mkt-buy-pic:2172 · .mkt-buy-pic-img:2184 · .mkt-buy-pic-emoji:2185
-.mkt-buy-meta:2186 · .mkt-buy-name:2187 · .mkt-buy-seller:2188,2189 · .mkt-buy-price:2190 · .mkt-buy-balance:2191 · .mkt-confirm-code-title:2192
-.mkt-code-target:2193 · .mkt-pin-note:2206 · .mkt-code-input:2207 · .mkt-code-error:2222 · .mkt-pin-grid:2231 · .mkt-pin-btn:2236,2248
-.mkt-pin-del:2249 · .mkt-pin-clear:2250 · .mkt-buy-actions:2251,2257 · .mkt-buy-cancel:2268 · .mkt-buy-confirm:2273,2279 · .list-dialog:2300,2301,2306
-.list-hint:2305 · .collect-reveal-frame:2309,2316 · .collect-reveal-img:2315 · .collect-reveal-stars:2317 · .craft-box:2320 · .craft-head:2321
-.craft-bar:2322 · .craft-fill:2323 · .craft-text:2324 · .craft-btn-row:2325,2326 · .craft-go-btn:2328,2334,2335,2338 · .craft-cancel:2346,2350
-.mkt-catalog:2353,2354,2355 · .mkt-pager:2358 · .pg-btn:2359,2363,2364 · .pg-mid:2365 · .pg-dots:2366 · .pg-dot:2367,2368
-.order-head:2369 · .order-row:2370,2375,2377,2379 · .order-deliver:2380,2385 · .order-need:2386 · .avatar-chip-photo:2392 · .pass-photo:2393
-.pl-photo:2394 · .pp-cam:2399,2407 · .set-photo-row:2410,2416 · .ph-thumb:2417 · .ph-plus:2418 · .photo-box:2424,2425,2446,2450(+4)
-.ph-now:2426 · .ph-now-img:2427,2431 · .ph-now-cap:2432 · .ph-warn:2433 · .ph-sync:2438,2441 · .ph-sync-wait:2442
-.ph-sync-ok:2443 · .ph-sync-bad:2444 · .ph-btns:2445 · .ph-tip:2455 · .ph-stage:2457,2461 · .ph-cv:2462
-.ph-ring:2463,2468 · .ph-zoom:2472 · .ph-foot:2473 · .ph-crop-box:2474
+.mkt-sold:2148,2149,2150 · .mkt-sys-box:2151,2152,2153 · .mkt-sys-coins:2154,2155 · .mkt-buy-box:2160,2166 · .mkt-buy-item:2167 · .mkt-buy-pic:2177
+.mkt-buy-pic-img:2189 · .mkt-buy-pic-emoji:2190 · .mkt-buy-meta:2191 · .mkt-buy-name:2192 · .mkt-buy-seller:2193,2194 · .mkt-buy-price:2195
+.mkt-buy-balance:2196 · .mkt-confirm-code-title:2197 · .mkt-code-target:2198 · .mkt-pin-note:2211 · .mkt-code-input:2212 · .mkt-code-error:2227
+.mkt-pin-grid:2236 · .mkt-pin-btn:2241,2253 · .mkt-pin-del:2254 · .mkt-pin-clear:2255 · .mkt-buy-actions:2256,2262 · .mkt-buy-cancel:2273
+.mkt-buy-confirm:2278,2284 · .list-dialog:2305,2306,2311 · .list-hint:2310 · .collect-reveal-frame:2314,2321 · .collect-reveal-img:2320 · .collect-reveal-stars:2322
+.craft-box:2325 · .craft-head:2326 · .craft-bar:2327 · .craft-fill:2328 · .craft-text:2329 · .craft-btn-row:2330,2331
+.craft-go-btn:2333,2339,2340,2343 · .craft-cancel:2351,2355 · .mkt-catalog:2358,2359,2360 · .mkt-pager:2363 · .pg-btn:2364,2368,2369 · .pg-mid:2370
+.pg-dots:2371 · .pg-dot:2372,2373 · .order-head:2374 · .order-row:2375,2380,2382,2384 · .order-deliver:2385,2390 · .order-need:2391
+.avatar-chip-photo:2397 · .pass-photo:2398 · .pl-photo:2399 · .pp-cam:2404,2412 · .set-photo-row:2415,2421 · .ph-thumb:2422
+.ph-plus:2423 · .photo-box:2429,2430,2451,2455(+4) · .ph-now:2431 · .ph-now-img:2432,2436 · .ph-now-cap:2437 · .ph-warn:2438
+.ph-sync:2443,2446 · .ph-sync-wait:2447 · .ph-sync-ok:2448 · .ph-sync-bad:2449 · .ph-btns:2450 · .ph-tip:2460
+.ph-stage:2462,2466 · .ph-cv:2467 · .ph-ring:2468,2473 · .ph-zoom:2477 · .ph-foot:2478 · .ph-crop-box:2479
