@@ -51,6 +51,14 @@
       const visible=Math.abs(projected.x)<1.08&&Math.abs(projected.y)<1.08;
       el.hidden=!visible;if(visible)el.style.transform='translate('+((projected.x+1)*width/2)+'px,'+((1-projected.y)*height/2)+'px) translate(-50%,-50%)';
     }
+    function hintScreen(x,y,z){
+      projected.set(x,y,z).applyMatrix4(camera.matrixWorldInverse);
+      if(projected.z>=0){
+        const dx=x-display.x,dz=z-display.z,len=Math.hypot(dx,dz)||1;
+        projected.set(display.x+dx/len*8,y,display.z+dz/len*8).project(camera);
+      }else projected.set(x,y,z).project(camera);
+      return {x:(projected.x+1)*width/2,y:(1-projected.y)*height/2};
+    }
     function render(room,local,id,dt,now,serverNow=Date.now()){
       display=renderPose(local,dt);
       battlefield.update(display.x,display.z-3);
@@ -132,8 +140,7 @@
       const needed=F.neededLetterHints(room,id,display);
       while(hints.length<needed.length)hints.push(label('fl-hint'));
       needed.forEach((item,i)=>{
-        const el=hints[i];projected.set(item.x,1.75,item.z).project(camera);
-        const placed=F.placeLetterHint((projected.x+1)*width/2,(1-projected.y)*height/2,width,height);
+        const el=hints[i],p=hintScreen(item.x,1.75,item.z),placed=F.placeLetterHint(p.x,p.y,width,height);
         el.hidden=!placed.visible;
         if(!placed.visible)return;
         if(el.dataset.letter!==item.letter){el.dataset.letter=item.letter;el.replaceChildren();
@@ -145,8 +152,7 @@
       if(!homeHint)homeHint=label('fl-hint home');
       const home=F.ownBaseHint(room,id);
       if(home){
-        projected.set(home.x,2.2,home.z).project(camera);
-        const placed=F.placeLetterHint((projected.x+1)*width/2,(1-projected.y)*height/2,width,height);
+        const p=hintScreen(home.x,2.2,home.z),placed=F.placeLetterHint(p.x,p.y,width,height);
         homeHint.hidden=!placed.visible;
         if(placed.visible){
           if(homeHint.dataset.kind!=='home'){homeHint.dataset.kind='home';homeHint.replaceChildren();

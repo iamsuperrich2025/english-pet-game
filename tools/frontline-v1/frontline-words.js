@@ -44,15 +44,16 @@
   };
   F.placeLetterHint=function(px,py,width,height){
     const padX=52,padTop=86,padBottom=124,minX=padX,maxX=width-padX,minY=padTop,maxY=height-padBottom;
-    if(px>=minX&&px<=maxX&&py>=minY&&py<=maxY)return {visible:false,x:px,y:py,angle:0};
-    const cx=width/2,cy=Math.min(Math.max(height*.42,minY+20),maxY-20),dx=px-cx,dy=py-cy;
-    let t=1;
+    const cx=width/2,cy=Math.min(Math.max(height*.42,minY+20),maxY-20);
+    let dx=px-cx,dy=py-cy;if(dx*dx+dy*dy<1e-8)dy=-1;
+    let t=Infinity;
     if(dx>1e-6)t=Math.min(t,(maxX-cx)/dx);
     if(dx<-1e-6)t=Math.min(t,(minX-cx)/dx);
     if(dy>1e-6)t=Math.min(t,(maxY-cy)/dy);
     if(dy<-1e-6)t=Math.min(t,(minY-cy)/dy);
-    t=Math.max(0,Math.min(1,t));
-    return {visible:true,x:cx+dx*t,y:cy+dy*t,angle:Math.atan2(dx,-dy)};
+    if(!isFinite(t)||t<=0)t=1;
+    const x=cx+dx*t,y=cy+dy*t;
+    return {visible:true,x,y,angle:Math.atan2(px-x,-(py-y))};
   };
   F.completeWord=function(room,key,now){
     if(room.word.completedAt)return false;

@@ -249,6 +249,7 @@ test('HUD cards stay only on remaining needed letters',()=>{
   const src=readFileSync(new URL('frontline-scene.js',dir),'utf8');
   assert.match(src,/remainNeeded/);
   assert.match(src,/if\(!remain\[item\.letter\]\)\{actor\.label\.hidden=true/);
+  assert.match(src,/function hintScreen/);
 });
 test('letter hints hide while carrying so only the vault arrow remains',()=>{
   const r={word:{target:'CAT',completedAt:0},bases:{s0:{stored:'C'}},players:{s0:{carried:'A'}},
@@ -258,11 +259,15 @@ test('letter hints hide while carrying so only the vault arrow remains',()=>{
   assert.equal(next,'AT');
   r.word.completedAt=1;assert.equal(F.neededLetterHints(r,'s0',{x:0,z:0}).length,0);
 });
-test('off-screen letter hints clamp to the HUD-safe edge and hide when the card is already in view',()=>{
-  const hidden=F.placeLetterHint(400,200,800,400);assert.equal(hidden.visible,false);
+test('letter hints sit on the HUD-safe edge and point at the letter',()=>{
+  const tipDot=(p,lx,ly)=>Math.sin(p.angle)*(lx-p.x)+(-Math.cos(p.angle))*(ly-p.y);
+  const inner=F.placeLetterHint(400,200,800,400);
+  assert.equal(inner.visible,true);
+  assert.ok(inner.x<=54||inner.x>=746||inner.y<=88||inner.y>=274);
+  assert.ok(tipDot(inner,400,200)>20);
   const left=F.placeLetterHint(-80,200,800,400);assert.equal(left.visible,true);assert.ok(left.x>=52&&left.x<=54);
   const right=F.placeLetterHint(900,200,800,400);assert.equal(right.visible,true);assert.ok(right.x>=800-54&&right.x<=800-52);
-  assert.ok(Math.abs(left.angle)>1);assert.ok(Math.abs(right.angle)>1);
+  assert.ok(tipDot(left,-80,200)>20);assert.ok(tipDot(right,900,200)>20);
 });
 test('own-base hint uses the local vault and reuses HUD-safe edge placement',()=>{
   const r=room(),spot=F.baseSpot(r.players.s0.slot),hint=F.ownBaseHint(r,'s0');
@@ -270,6 +275,8 @@ test('own-base hint uses the local vault and reuses HUD-safe edge placement',()=
   assert.equal(F.ownBaseHint(r,'missing'),null);
   const off=F.placeLetterHint(-200,800,800,400);
   assert.equal(off.visible,true);assert.ok(off.x>=52&&off.y<=400-124);
+  const tipDot=(p,lx,ly)=>Math.sin(p.angle)*(lx-p.x)+(-Math.cos(p.angle))*(ly-p.y);
+  assert.ok(tipDot(off,-200,800)>20);
 });
 test('only real arena edges and intact rival bases report a block; turning and backing away remain available',()=>{
  const r=room(),p=F.newTank('p',0,100000);p.x=89;p.z=0;p.hull=Math.PI/2;
