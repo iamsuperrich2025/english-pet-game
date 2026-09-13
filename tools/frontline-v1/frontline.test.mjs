@@ -71,17 +71,18 @@ test('carried letters deposit only at the owner base and repeated letters spell 
   assert.equal(r.rewards.s1,undefined);assert.equal(F.completeWord(r,'s1',100301),false);
 });
 
-test('intact rival base blocks entry and opens after 20 shell hits',()=>{
+test('rival vaults stay locked and stored letters stay banked',()=>{
   const r=room(),base=r.bases.s1;
   assert.equal(F.canOccupy(r,'s0',base.x,base.z),false);
-  for(let i=0;i<20;i++)assert.match(F.damageBase(r,'s1',100000+i),/base-/);
-  assert.equal(base.hp,0);assert.equal(F.canOccupy(r,'s0',base.x,base.z),true);
+  for(let i=0;i<20;i++)assert.equal(F.damageBase(r,'s1',100000+i),'base-safe');
+  assert.equal(base.hp,5000);assert.equal(F.canOccupy(r,'s0',base.x,base.z),false);
 });
 
-test('a player can steal one useful letter from a destroyed rival vault',()=>{
+test('letters stored in a rival vault cannot be stolen even if HP is forced to zero',()=>{
   const r=room(),p=r.players.s0,base=r.bases.s1;r.letters={};base.hp=0;base.stored='ZAP';
   p.x=base.x;p.z=base.z;p.carried='';F.tickLetters(r,100100);
-  assert.equal(p.carried,'A');assert.equal(base.stored,'ZP');
+  assert.equal(p.carried,'');assert.equal(base.stored,'ZAP');
+  assert.equal(F.canOccupy(r,'s0',base.x,base.z),false);
 });
 
 test('shells leave only the cannon muzzle, never the hull center',()=>{
@@ -115,7 +116,8 @@ test('base shell hits the shield before a tank sheltered inside',()=>{
   a.x=-10;a.z=18;a.hull=a.turret=Math.PI/2;b.x=base.x;b.z=base.z;
   Object.values(r.guards).forEach(g=>{g.x=80;g.z=80;});
   F.commitFire(r,'s0',1,100500);
-  assert.equal(base.hp,4750);assert.equal(b.hp,5000);assert.equal(r.events.s0.targetType,'base');
+  assert.equal(base.hp,5000);assert.equal(b.hp,5000);assert.equal(r.events.s0.targetType,'base');
+  assert.equal(r.events.s0.kind,'base-safe');
 });
 
 test('two neutral guards do not consume player seats and pursue the word leader',()=>{
@@ -278,13 +280,14 @@ test('own-base hint uses the local vault and reuses HUD-safe edge placement',()=
   const tipDot=(p,lx,ly)=>Math.sin(p.angle)*(lx-p.x)+(-Math.cos(p.angle))*(ly-p.y);
   assert.ok(tipDot(off,-200,800)>20);
 });
-test('only real arena edges and intact rival bases report a block; turning and backing away remain available',()=>{
+test('only real arena edges and rival bases report a block; turning and backing away remain available',()=>{
  const r=room(),p=F.newTank('p',0,100000);p.x=89;p.z=0;p.hull=Math.PI/2;
  assert.equal(F.drive(p,{auto:1,turn:0,speedLevel:1},.05,r,'s0'),'edge');close(p.x,89);
  assert.equal(F.drive(p,{auto:-1,turn:0,speedLevel:1},.05,r,'s0'),'');assert.ok(p.x<89);
  const base=r.bases.s1;p.x=base.x-F.C.baseBlockRadius-.01;p.z=base.z;p.hull=Math.PI/2;
  const before=p.x;assert.equal(F.drive(p,{auto:1,turn:0,speedLevel:1},.05,r,'s0'),'base');close(p.x,before);
  assert.equal(F.drive(p,{auto:-1,turn:-1,speedLevel:1},.05,r,'s0'),'');assert.ok(p.x<before);assert.ok(p.hull<Math.PI/2);
- base.hp=0;assert.equal(F.drive(p,{auto:1,turn:0,speedLevel:1},.05,r,'s0'),'');
+ p.x=base.x-F.C.baseBlockRadius-.01;p.z=base.z;p.hull=Math.PI/2;base.hp=0;
+ assert.equal(F.drive(p,{auto:1,turn:0,speedLevel:1},.05,r,'s0'),'base');close(p.x,base.x-F.C.baseBlockRadius-.01);
  assert.equal(F.drive(p,{auto:0,turn:1,speedLevel:1},.05,r,'s0'),'');
 });

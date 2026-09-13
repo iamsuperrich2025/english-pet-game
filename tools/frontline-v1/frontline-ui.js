@@ -60,7 +60,7 @@
             const name=document.createElement('b');name.textContent='P'+(player.slot+1)+(player.bot?' BOT':'')+(key===id?' YOU':'');
             const carry=document.createElement('span');carry.textContent='CARRY '+(player.carried||'—');
             const bank=document.createElement('span');bank.textContent='BANK '+bankSummary(base&&base.stored);
-            const hp=document.createElement('small');hp.textContent=base&&(base.hp>0?'BASE '+base.hp:'BASE OPEN');
+            const hp=document.createElement('small');hp.textContent='BASE SAFE';
             const icon=F.icon('tank');icon.classList.add('fl-rival-icon');row.append(icon,name,carry,bank,hp);return row;
           }));
         }

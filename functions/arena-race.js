@@ -42,13 +42,6 @@ function reduce(s,uid,data,position,now,newWord,run){
   s.items['d'+p.slot]={ch:p.carried,x:position.x,z:position.z,rev:now,dropped:true,blockedId:uid,blockedUntil:now+1250};p.carried='';p.revision++;
  }
  
- const enemy=s.players[data.owner],enemyHome=enemy&&{x:HOMES[enemy.slot][0],z:HOMES[enemy.slot][1]};
- if(alive&&enemy&&data.owner!==uid&&data.revision===enemy.baseRevision){
-  if(data.action==='hit'&&enemy.hp>0&&near(position,enemyHome,15)&&now-(p.hitAt||0)>=700){enemy.hp=Math.max(0,enemy.hp-250);enemy.baseRevision++;p.hitAt=now;}
-  if(data.action==='raid'&&enemy.hp===0&&!p.carried&&enemy.bank&&near(position,enemyHome,3.3)){
-   const ch=[...s.word.target].find(c=>enemy.bank.includes(c))||enemy.bank[0];enemy.bank=enemy.bank.replace(ch,'');enemy.baseRevision++;p.carried=ch;p.revision++;p.fresh=false;
-  }
- }
  s.version++;return s;
 }
 exports.ROOT=ROOT;exports.HOMES=HOMES;exports.reduce=reduce;exports.field=field;

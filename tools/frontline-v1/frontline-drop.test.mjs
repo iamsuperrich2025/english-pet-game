@@ -78,13 +78,13 @@ test('empty or dead requests are acknowledged and cannot execute after pickup or
   }
 });
 
-test('core pickups and vault raids each advance carried revision',()=>{
+test('core pickups and drops each advance carried revision',()=>{
   const r=room(),p=r.players.s0;
   const first=acquire(r,'L');assert.equal(first,1);
   F.dropCarried(r,'s0',p.x,p.z,NOW+10);
-  const base=r.bases.s1;base.hp=0;base.stored='P';p.x=base.x;p.z=base.z;parkSources(r);
-  F.tickLetters(r,NOW+20);
-  assert.equal(p.carried,'P');assert.equal(p.carriedRevision,first+1);assert.equal(base.stored,'');
+  parkSources(r);
+  F.tickLetters(r,NOW+10+1250);
+  assert.equal(p.carried,'L');assert.equal(p.carriedRevision,first+1);
 });
 
 test('manual cards remain distinct at capacity; a refused drop keeps its card and forced drops still work',()=>{

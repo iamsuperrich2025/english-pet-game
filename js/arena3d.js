@@ -235,7 +235,7 @@
     camera=new THREE.PerspectiveCamera(48,innerWidth/innerHeight,.1,120);
     clock=new THREE.Clock(); texLoader=new THREE.TextureLoader();
     buildArena(); ArenaFieldVisuals.compactStatic(scene); fieldFx=ArenaFieldVisuals.createFx(scene,fxLow);
-    elements=ArenaElements.create({fx:fieldFx,enemies:()=>[...bots,...raceTargets.filter(b=>!b.dead)],hit:hitBot,storm:()=>own('storm'),heal:(health,guard)=>{const before=hp;health*=1+relicMods.heal;hp=Math.min(maxHp,hp+health);if(hp>before&&window.ArenaAudio)ArenaAudio.playHeal();shield=Math.min(Math.max(maxShield,20),shield+guard);floatText(player.pos,`+${Math.round(hp-before)} HP · โล่ +${guard}`,0xd5ffac);updateHud();}});
+    elements=ArenaElements.create({fx:fieldFx,enemies:()=>bots.slice(),hit:hitBot,storm:()=>own('storm'),heal:(health,guard)=>{const before=hp;health*=1+relicMods.heal;hp=Math.min(maxHp,hp+health);if(hp>before&&window.ArenaAudio)ArenaAudio.playHeal();shield=Math.min(Math.max(maxShield,20),shield+guard);floatText(player.pos,`+${Math.round(hp-before)} HP · โล่ +${guard}`,0xd5ffac);updateHud();}});
     buildPlayer(); buildPet(); buildHome();if(!activeMap)ArenaFieldVisuals.garden(scene);
     built=true; resize();
   }
@@ -499,7 +499,7 @@
 
   function targetNearest(range=99,exclude){
     let best=null,bd=range;
-    for(const b of [...bots,...raceTargets]){ if(b.dead||b===exclude)continue;const d=flatDist(player.pos,b.group.position);if(d<bd){bd=d;best=b;} }
+    for(const b of bots){ if(b.dead||b===exclude)continue;const d=flatDist(player.pos,b.group.position);if(d<bd){bd=d;best=b;} }
     return best;
   }
 
@@ -527,7 +527,7 @@
       burst(first.group.position,0x77e9ff,22,5);if(window.ArenaAudio)ArenaAudio.playElement('arc');haptic(22);
     }else if(kind==='nova'){
       ArenaFieldVisuals.strike(player.spr,now);fieldFx.spell(player.pos,'nova');cooldown.nova=now+skillSeconds('nova')*1000;const rad=own('storm')?8.2:6.1;ringFx(player.pos,0xb55cff,rad,.62);
-      let n=0;for(const b of [...bots,...raceTargets]){if(!b.dead&&flatDist(player.pos,b.group.position)<=rad){hitBot(b,48*mult);burst(b.group.position,0xd27cff,10,3);n++;}}
+      let n=0;for(const b of bots){if(!b.dead&&flatDist(player.pos,b.group.position)<=rad){hitBot(b,48*mult);burst(b.group.position,0xd27cff,10,3);n++;}}
       feed(n?`🌀 NOVA โดน ${n} เป้าหมาย`:'🌀 NOVA ยังไม่ถึงตัวปีศาจ');if(window.ArenaAudio)ArenaAudio.playElement();haptic(35);
     }else if(kind==='ult'){
       const kind=selectedHero?.id||'fire';
@@ -551,7 +551,7 @@
     const to=player.pos.clone().sub(bot.group.position).setY(0).normalize();shots.push({mesh,vel:to.multiplyScalar(bot.boss?9.2:(bot.elite?8.5:7)),damage:bot.boss?10+bot.chapter*2:(bot.elite?9:4),color:shotColor,fromEnemy:true,ttl:2.7,lastSpark:0});
   }
   function hitBot(b,dmg){
-    if(b?.vaultOwner){if(!downed&&race?.ready&&!race.busy)race.hit(b.vaultOwner,b.revision);return;}
+    if(b?.vaultOwner)return;
     if(!b||b.dead)return;
     if(relicMods.crit&&Math.random()<relicMods.crit)dmg*=1.5+relicMods.critDamage;
     if(b.boss){
@@ -612,12 +612,12 @@
   function buildHome(){home=activeMap?ArenaMaps.house(0x58baff,'บ้านของคุณ',loadSprite,makeTextSprite):ArenaFieldVisuals.house(0x58baff,'บ้านของคุณ',makeTextSprite);scene.add(home);placeHome();}
   function placeHome(){
     if(!home)return;const snap=race?.snapshot;
-    const mySlot=snap?.self.slot??Math.max(0,partyUids().indexOf(myUid))%4;home.position.set(HOME_SPOTS[mySlot][0],0,HOME_SPOTS[mySlot][1]);home.scale.y=snap?.self.hp===0?.22:1;
+    const mySlot=snap?.self.slot??Math.max(0,partyUids().indexOf(myUid))%4;home.position.set(HOME_SPOTS[mySlot][0],0,HOME_SPOTS[mySlot][1]);home.scale.y=1;
     raceTargets.length=0;
     for(const uid in peerActors)peerActors[uid].home.visible=false;
     for(const [uid,base]of Object.entries(snap?.bases||{}))if(uid!==myUid){
       let b=vaultHomes.get(uid);if(!b){const group=activeMap?ArenaMaps.house(0xffbf6b,base.name,loadSprite,makeTextSprite):ArenaFieldVisuals.house(0xffbf6b,base.name,makeTextSprite);scene.add(group);b={vaultOwner:uid,group,hp:5000,maxHp:5000,revision:0,dead:false,col:0xffbf6b,boss:true,vel:new THREE.Vector3()};vaultHomes.set(uid,b);}
-      b.hp=base.hp;b.dead=base.hp<=0;b.revision=base.revision;b.group.position.set(HOME_SPOTS[base.slot][0],0,HOME_SPOTS[base.slot][1]);b.group.scale.y=b.dead?.22:1;raceTargets.push(b);
+      b.hp=base.hp;b.dead=false;b.revision=base.revision;b.group.position.set(HOME_SPOTS[base.slot][0],0,HOME_SPOTS[base.slot][1]);b.group.scale.y=1;raceTargets.push(b);
     }
     for(const [uid,b]of vaultHomes)if(!snap?.bases?.[uid]){scene.remove(b.group);disposeTree(b.group);vaultHomes.delete(uid);}
   }
@@ -632,7 +632,6 @@
   const cargoScreen=new THREE.Vector3();
   function updateHome(dt,t){
     placeHome();
-    if(!downed&&race?.ready&&!race.busy&&!cargo.length)for(const b of raceTargets)if(b.hp===0&&flatDist(player.pos,b.group.position)<3.3){netSend(true);race.raid(b.vaultOwner,b.revision);break;}
     if(!downed&&flatDist(player.pos,home.position)<3.3){bankCargo();checkWord();if((race?.snapshot?.self.hp??5000)>0&&hp<maxHp){const before=hp;hp=Math.min(maxHp,hp+dt*7);if(hp>before&&window.ArenaAudio)ArenaAudio.playHeal();if(t-lastHomePaint>200)updateHud();}}
     if(t-lastHomePaint>200){lastHomePaint=t;paintHome();}
     cargoScreen.copy(player.pos);cargoScreen.y=activeMap?8.8:2.9;cargoScreen.project(camera);ui.cargo.style.transform=`translate(${(cargoScreen.x*.5+.5)*innerWidth}px,${(-cargoScreen.y*.5+.5)*innerHeight}px) translate(-50%,-50%)`;

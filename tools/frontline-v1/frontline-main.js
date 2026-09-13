@@ -73,8 +73,7 @@
       ownEvent=event.id;
       if(event.kind==='tank-hit'&&ui)ui.message('RIVAL HIT · -'+F.C.tankDamage+' HP'+(event.dropped?' · '+event.dropped+' DROPPED':''));
       else if(event.kind==='tank-down'&&ui)ui.message('RIVAL TANK DISABLED');
-      else if(event.kind==='base-hit'&&ui)ui.message('BASE HIT · -'+F.C.baseDamage+' HP');
-      else if(event.kind==='base-down'&&ui)ui.message('BASE DESTROYED · VAULT OPEN');
+      else if(event.kind==='base-safe'&&ui)ui.message('บ้านปลอดภัย · ตัวอักษรในบ้านขโมยไม่ได้');
     }
   }
   function loop(now){

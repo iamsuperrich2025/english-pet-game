@@ -24,9 +24,6 @@
         if(guard.hp<=0||Math.hypot(guard.x-bomb.x,guard.z-bomb.z)>F.C.bombRadius)continue;
         guard.hp=Math.max(0,guard.hp-F.C.bombDamage);if(!guard.hp)guard.respawnAt=now+F.C.guardRespawnMs;
       }
-      for(const base of Object.values(room.bases||{})){
-        if(base.hp>0&&Math.hypot(base.x-bomb.x,base.z-bomb.z)<=F.C.bombRadius+1)base.hp=Math.max(0,base.hp-F.C.bombBaseDamage);
-      }
       for(const other of Object.values(room.bombs)){
         if(!other.explodedAt&&other!==bomb&&Math.hypot(other.x-bomb.x,other.z-bomb.z)<=F.C.bombRadius){
           other.explodeAt=now;queue.push(other);

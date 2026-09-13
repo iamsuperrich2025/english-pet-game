@@ -1,6 +1,6 @@
 # Arena Field — current behavior (round 1403)
 
-Round 1403 replaces personal word/boss rewards with a shared word race: one carried letter, 5,000 HP destructible homes, open-vault raids and exactly 1,000 coins for the first winner. These rules supersede the older co-op/boss/cargo notes below. Current source of truth: `docs/ARENA_RACE.md`.
+Round 1403 replaces personal word/boss rewards with a shared word race: one carried letter, indestructible private homes with safe banks, and exactly 1,000 coins for the first winner. These rules supersede the older co-op/boss/cargo notes below. Current source of truth: `docs/ARENA_RACE.md`.
 
 The Vocab Arena entry is public, including new players without an adult pet. `js/home-v2.js` renders an explicitly sized cover using the existing fire-hero and crystal-map WebP thumbnails; `js/ui.js` loads the hero picker, map picker, catalogue and battle engine in dependency order. The eight existing animated full-body portraits are preserved. Confirming a hero keeps the owned loadout instead of granting free signature spells.
 

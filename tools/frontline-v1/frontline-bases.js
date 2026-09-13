@@ -1,4 +1,4 @@
-/* Four private letter vaults; enemy entry opens only after the vault is destroyed. */
+/* Four private letter vaults. Homes never open; banked letters stay with the owner. */
 (function () {
   'use strict';
   const F=window.Frontline;
@@ -10,22 +10,15 @@
   };
   F.canOccupy=function(room,key,x,z){
     for(const [baseKey,base] of Object.entries(room&&room.bases||{})){
-      if(baseKey===key||base.hp<=0)continue;
+      if(baseKey===key)continue;
       if(Math.hypot(x-base.x,z-base.z)<F.C.baseBlockRadius)return false;
     }
     return true;
   };
-  F.damageBase=function(room,key,now){
+  F.damageBase=function(room,key){
     const base=room.bases&&room.bases[key];
-    if(!base||base.hp<=0)return 'miss';
-    base.hp=Math.max(0,base.hp-F.C.baseDamage);
-    return base.hp?'base-hit':'base-down';
+    if(!base)return 'miss';
+    return 'base-safe';
   };
-  F.takeStored=function(base,target){
-    if(!base||!base.stored)return '';
-    const needed=target.split('').find(ch=>base.stored.includes(ch));
-    const letter=needed||base.stored[0];
-    base.stored=base.stored.replace(letter,'');
-    return letter;
-  };
+  F.takeStored=function(){return '';};
 })();

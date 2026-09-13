@@ -45,12 +45,13 @@ test('a tank pinned against the arena edge remains solid under repeated pushes',
  for(let i=0;i<100;i++){F.drive(r.players.s0,{auto:1,turn:0,speedLevel:2},.05,r,'s0');clear(r);}
  assert.ok(r.players.s0.z>=-89+F.tankDiameter-.001);
 });
-test('bumps cannot push a rival inside an intact vault; destroyed vault opens',()=>{
+test('bumps cannot push a rival inside a vault even if HP is forced to zero',()=>{
  const r=setup();r.bases.home={x:0,z:-10,hp:5000};
  r.players.s1.z=-10+F.C.baseBlockRadius;r.players.s0.z=r.players.s1.z+F.tankDiameter;
  for(let i=0;i<60;i++){F.drive(r.players.s0,{auto:1,turn:0,speedLevel:2},.05,r,'s0');clear(r);assert.ok(F.canOccupy(r,'s1',r.players.s1.x,r.players.s1.z));}
- r.bases.home.hp=0;for(let i=0;i<30;i++)F.drive(r.players.s0,{auto:1,turn:0,speedLevel:2},.05,r,'s0');
- assert.ok(r.players.s1.z<-7);
+ const before=r.players.s1.z;r.bases.home.hp=0;for(let i=0;i<30;i++)F.drive(r.players.s0,{auto:1,turn:0,speedLevel:2},.05,r,'s0');
+ assert.ok(r.players.s1.z>=before-F.tankDiameter);
+ assert.equal(F.canOccupy(r,'s0',0,-10),false);
 });
 test('guards have solid hulls, disabled tanks are ignored, and respawn avoids occupied ground',()=>{
  const r=setup();r.guards.g0=r.players.s1;delete r.players.s1;

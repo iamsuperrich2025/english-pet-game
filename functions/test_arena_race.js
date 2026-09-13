@@ -28,10 +28,11 @@ const F={newWord:round=>({round,target:round%2?'BOOK':'APPLE',translation:round%
  now+=2600;for(const id of ['p0','p1'])move(id,...HOMES[db.values.get(room).players[id].slot]);a=await call('p0','sync');b=await call('p1','sync');ok('next shared word changes for everyone',a.word.target==='BOOK'&&b.word.round===1);
  const victim=db.values.get(room).players.p1;victim.bank='XYZ';move('p0',...HOMES[victim.slot]);a=await call('p0','raid',{owner:'p1',revision:victim.baseRevision});ok('intact house prevents theft',!a.self.carried);
  for(let i=0;i<20;i++){now+=701;move('p0',HOMES[victim.slot][0]-7,HOMES[victim.slot][1]);a=await call('p0','hit',{owner:'p1',revision:db.values.get(room).players.p1.baseRevision});}
- ok('20 server-validated hits destroy 5000 HP house',a.bases.p1.hp===0);
+ ok('20 server-validated hits leave the 5000 HP house intact',a.bases.p1.hp===5000&&db.values.get(room).players.p1.bank==='XYZ');
  move('p0',...HOMES[victim.slot]);move('p2',...HOMES[victim.slot]);const rev=db.values.get(room).players.p1.baseRevision;
- const raids=await Promise.all(['p0','p2'].map(id=>call(id,'raid',{owner:'p1',revision:rev})));ok('ruined house letter can be taken exactly once',raids.filter(r=>r.self.carried==='X').length===1&&db.values.get(room).players.p1.bank==='YZ');
- a=await call('p0','sync');await call('p0','drop',{revision:a.self.revision});a=await call('p0','sync');const drop=Object.entries(a.items).find(([,x])=>x.dropped);ok('DROP releases carried letter',!!drop&&!a.self.carried);
+ const raids=await Promise.all(['p0','p2'].map(id=>call(id,'raid',{owner:'p1',revision:rev})));ok('banked letters stay in the home',raids.every(r=>!r.self.carried)&&db.values.get(room).players.p1.bank==='XYZ');
+ a=await call('p0','sync');const take=Object.entries(a.items).find(([,x])=>x.ch==='X'&&!x.dropped);move('p0',take[1].x,take[1].z);a=await call('p0','pickup',{item:take[0],revision:take[1].rev});ok('field pickup can be dropped',a.self.carried==='X');
+ await call('p0','drop',{revision:a.self.revision});a=await call('p0','sync');const drop=Object.entries(a.items).find(([,x])=>x.dropped);ok('DROP releases carried letter',!!drop&&!a.self.carried);
  a=await call('p0','pickup',{item:drop[0],revision:drop[1].rev});ok('owner cannot immediately farm dropped letters',!a.self.carried);
  move('p3',drop[1].x,drop[1].z);let d=await call('p3','pickup',{item:drop[0],revision:drop[1].rev});ok('other player takes dropped letter without MEGA charge',d.self.carried==='X'&&!d.self.fresh);
  move('p3',0,0,true);d=await call('p3','sync');ok('downing releases carried letter and keeps bank',!d.self.carried&&Object.values(d.items).some(x=>x.ch==='X'&&x.dropped));

@@ -31,8 +31,6 @@
       const angle=Math.atan2(goal.x-p.x,p.z-goal.z),diff=F.wrap(angle-p.hull);
       const turn=Math.max(-1,Math.min(1,diff/.4));
       F.drive(p,{auto:Math.hypot(goal.x-p.x,goal.z-p.z)>.8?1:0,turn,speedLevel:1},dt,room,key);
-      const rivalBase=Object.entries(room.bases||{}).find(([baseKey,base])=>baseKey!==key&&base.hp>0&&Math.hypot(base.x-p.x,base.z-p.z)<5.8);
-      if(rivalBase)F.placeBomb(room,key,p.bombSeq+1,now);
       if(now-p.lastFire>=850&&Math.abs(diff)<.22)F.commitFire(room,key,p.fireSeq+1,now);
     }
   };

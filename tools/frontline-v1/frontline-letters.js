@@ -1,4 +1,4 @@
-/* Persistent A-Z field pickups, carried tokens, deposits, drops, and destroyed-base raids. */
+/* Persistent A-Z field pickups, carried tokens, deposits, and drops. Banked vault letters stay safe. */
 (function () {
   'use strict';
   const F=window.Frontline;
@@ -48,11 +48,6 @@
         break;
       }
       if(picked){p.carried=picked;p.carriedRevision=(p.carriedRevision||0)+1;continue;}
-      for(const [baseKey,base] of Object.entries(room.bases||{})){
-        if(baseKey===key||base.hp>0||Math.hypot(p.x-base.x,p.z-base.z)>F.C.baseRadius)continue;
-        p.carried=F.takeStored(base,room.word.target);
-        if(p.carried){p.carriedRevision=(p.carriedRevision||0)+1;break;}
-      }
       if(!p.carried&&own)F.completeWord(room,key,now);
     }
   };

@@ -96,10 +96,10 @@
         if(!bases.has(key)){const mesh=shapes.base(base.slot),tag=label('fl-base-label');scene.add(mesh);bases.set(key,{mesh,label:tag});}
         const actor=bases.get(key),p=players[key];
         actor.mesh.position.set(base.x,0,base.z);
-        actor.mesh.userData.damageParts.forEach(part=>part.visible=base.hp>0);
-        actor.label.classList.toggle('open',base.hp<=0);
+        actor.mesh.userData.damageParts.forEach(part=>part.visible=true);
+        actor.label.classList.toggle('open',false);
         actor.label.classList.toggle('mine',key===id);
-        text(actor.label,'P'+(base.slot+1)+(p&&p.bot?' BOT':'')+' BASE · '+(base.hp>0?'HP '+base.hp:'OPEN'));
+        text(actor.label,'P'+(base.slot+1)+(p&&p.bot?' BOT':'')+' BASE · SAFE');
       }
       for(const [key,actor] of bombActors)if(!room.bombs||!room.bombs[key]){
         scene.remove(actor.mesh);actor.label.remove();bombActors.delete(key);seenBomb.delete(key);
