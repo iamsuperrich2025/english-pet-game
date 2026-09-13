@@ -35,7 +35,7 @@
   let spellSlots=['light',null],editingSlot=0,selectedHero=null,equipRequest=0;const spellPurchases=new Map();
   let activeMap=null,sceneDrawn=false,relicMods={"damage":0,"crit":0,"critDamage":0,"echoDamage":0,"cooldown":0,"megaCooldown":0,"heal":0,"hp":0,"armor":0,"regen":0,"shield":0,"speed":0,"pickup":0,"cargo":0,"dropLife":0,"wordReward":0,"petDamage":0,"petCooldown":0,"revive":0,"elements":{}};
   const skillSeconds=kind=>SKILL_CD[kind]*(selectedHero && kind===selectedHero.id ? .8 : 1)*(kind==='ult'?1-relicMods.megaCooldown:kind==='basic'?1:1-relicMods.cooldown);
-  let cargo=[],homeRoute=false,lastHomePaint=0,fullHintAt=0,basicHeld=false;
+  let cargo=[],homeRoute=false,lastHomePaint=0,fullHintAt=0,basicHeld=false,pendingBuy=null;
   const HOME_SPOTS=[[-12,13],[12,13],[-12,-13],[12,-13]];const CARGO_MAX=1;let race=null,raceTargets=[],vaultHomes=new Map(),raceStatus='กำลังเชื่อมต่อการแข่งขัน…',raceSessionOffset=0;
   const pendingTimers=new Set();
   function schedule(fn,ms){const id=setTimeout(()=>{pendingTimers.delete(id);if(running)fn();},ms);pendingTimers.add(id);return id;}
@@ -123,6 +123,17 @@
         <div class="va-panel-head"><div><div class="va-panel-title">🛒 คลังพลังอักษร</div><div class="va-panel-sub">ใช้เหรียญรวมที่มีอยู่ ซื้อครั้งเดียว ใช้ได้ถาวร</div></div><div class="va-panel-coins">🪙 <span id="va-shop-coins"></span></div><button class="va-close" id="va-shop-close">✕</button></div>
         <div class="va-store-grid" id="va-store-grid"></div>
       </div></div>
+      <div class="va-modal va-buy-confirm" id="va-buy-confirm" role="dialog" aria-modal="true" aria-labelledby="va-buy-title">
+        <div class="va-buy-card">
+          <div class="va-buy-gem" id="va-buy-icon" aria-hidden="true"></div>
+          <div class="va-buy-kicker">ยืนยันการซื้อ</div>
+          <h2 id="va-buy-title"></h2>
+          <p id="va-buy-copy"></p>
+          <dl class="va-buy-ledger"><div><dt>กำลังจะเสีย</dt><dd id="va-buy-price"></dd></div><div><dt>คงเหลือถ้าซื้อ</dt><dd id="va-buy-after"></dd></div></dl>
+          <p class="va-buy-note" id="va-buy-note">ซื้อแล้วใช้ได้ถาวรทั้งบัญชี</p>
+          <div class="va-buy-actions"><button type="button" id="va-buy-cancel">ยกเลิก</button><button type="button" id="va-buy-ok">ยืนยัน</button></div>
+        </div>
+      </div>
       <div class="va-modal" id="va-intro"><div class="va-panel va-intro-panel">
         <div class="va-intro-logo">VOCAB ARENA</div><div class="va-intro-sub">ตัวเล็ก · เวทมนตร์ใหญ่ · ขนอักษรกลับบ้าน</div>
         <div class="va-intro-steps"><div class="va-intro-step"><b>⚔️</b>เดินจอยซ้าย · สู้ปุ่มขวา</div><div class="va-intro-step"><b>💎</b>อักษร A–Z ร่วมกัน · ขนครั้งละ 1 ตัว</div><div class="va-intro-step"><b>🏠</b>บ้าน 5,000 HP · พังแล้วใครก็หยิบได้</div><div class="va-intro-step"><b>👑</b>คำเดียวทั้งห้อง · ชนะรับ 1,000 เหรียญ</div><div class="va-intro-step"><b>✨</b>ครบ 5 คริสตัล · ได้ MEGA 5 ครั้ง</div></div>
@@ -141,7 +152,7 @@
       if(selectedHero){const avatar=root.querySelector('.va-avatar-icon');avatar.textContent='';const image=document.createElement('img');image.src=selectedHero.thumb;image.alt='';avatar.append(image);}
     }
     canvas=root.querySelector('#va-canvas');
-    ['vitalsLayer','spellbook','spellGrid','slotTabs','homeHint','cargo','wordTh','wordEn','wordSlots','coins','energy','energyFill','energyPower','bagList','party','partyStatus','partyList','boss','bossChapter','bossName','bossHpText','bossFill','bossWord','hp','hpFill','feed','pop','downed','downTime','revive','reviveFill','reviveName','shop','shopCoins','storeGrid','intro','stick','stickKnob'].forEach(k=>{
+    ['vitalsLayer','spellbook','spellGrid','slotTabs','homeHint','cargo','wordTh','wordEn','wordSlots','coins','energy','energyFill','energyPower','bagList','party','partyStatus','partyList','boss','bossChapter','bossName','bossHpText','bossFill','bossWord','hp','hpFill','feed','pop','downed','downTime','revive','reviveFill','reviveName','shop','shopCoins','storeGrid','intro','stick','stickKnob','buyConfirm'].forEach(k=>{
       const id='va-'+k.replace(/[A-Z]/g,m=>'-'+m.toLowerCase()); ui[k]=root.querySelector('#'+id);
     });
     bindDom();
@@ -161,12 +172,15 @@
     addListener(root.querySelector('#va-shop-close'),'click',()=>toggleShop(false));
     addListener(root.querySelector('#va-spells-open'),'click',()=>toggleSpellbook(true));
     addListener(root.querySelector('#va-spells-close'),'click',()=>toggleSpellbook(false));
-    addListener(ui.spellbook,'click',e=>{if(e.target===ui.spellbook)toggleSpellbook(false);});
+    addListener(ui.spellbook,'click',e=>{if(e.target===ui.spellbook&&!ui.buyConfirm.classList.contains('on'))toggleSpellbook(false);});
     addListener(ui.slotTabs,'click',e=>{const b=e.target.closest('[data-equip-slot]');if(b){editingSlot=Number(b.dataset.equipSlot);renderSpellbook();}});
-    addListener(ui.spellGrid,'click',e=>{const b=e.target.closest('[data-equip-spell]');if(b){const id=b.dataset.equipSpell;if(ArenaElements.owned(id))equipSpell(editingSlot,id);else buySpell(editingSlot,id);}});
+    addListener(ui.spellGrid,'click',e=>{const b=e.target.closest('[data-equip-spell]');if(b){const id=b.dataset.equipSpell;if(ArenaElements.owned(id))equipSpell(editingSlot,id);else askBuy('spell',id,editingSlot);}});
     addListener(root.querySelector('#va-party-friends'),'click',()=>{ if(room&&room.online)room.openFriends();else feed('📡 ต้องออนไลน์ก่อน จึงจะชวนหรือไปหาเพื่อนได้','bad'); });
-    addListener(ui.shop,'click',e=>{ if(e.target===ui.shop) toggleShop(false); });
-    addListener(ui.storeGrid,'click',e=>{ const b=e.target.closest('[data-buy]'); if(b) buyItem(b.dataset.buy); });
+    addListener(ui.shop,'click',e=>{ if(e.target===ui.shop&&!ui.buyConfirm.classList.contains('on')) toggleShop(false); });
+    addListener(ui.storeGrid,'click',e=>{ const b=e.target.closest('[data-buy]'); if(b&&!b.disabled) askBuy('relic',b.dataset.buy); });
+    addListener(ui.buyConfirm,'click',e=>{ if(e.target===ui.buyConfirm) closeBuy(); });
+    addListener(root.querySelector('#va-buy-cancel'),'click',closeBuy);
+    addListener(root.querySelector('#va-buy-ok'),'click',commitBuy);
     root.querySelectorAll('[data-skill]').forEach(b=>{
       addListener(b,'pointerdown',e=>{e.preventDefault();if(b.dataset.skill==='basic'){basicHeld=true;b.setPointerCapture&&b.setPointerCapture(e.pointerId);}castSkill(b.dataset.skill);});
       if(b.dataset.skill==='basic')for(const event of ['pointerup','pointercancel','lostpointercapture'])addListener(b,event,()=>{basicHeld=false;});
@@ -203,7 +217,7 @@
       else if(e.code==='KeyQ'){if(!e.repeat&&!paused&&!downed)race?.drop();}
       else if(e.code==='KeyH'){homeRoute=!homeRoute;paintHome();}
       else if(e.code==='KeyB') toggleShop(!ui.shop.classList.contains('on'));
-      else if(e.code==='Escape'){ if(ui.spellbook.classList.contains('on'))toggleSpellbook(false);else if(ui.shop.classList.contains('on')) toggleShop(false); else stop(); }
+      else if(e.code==='Escape'){ if(ui.buyConfirm.classList.contains('on'))closeBuy();else if(ui.spellbook.classList.contains('on'))toggleSpellbook(false);else if(ui.shop.classList.contains('on')) toggleShop(false); else stop(); }
     };
     const ku=e=>keys.delete(e.code);
     addListener(window,'keydown',kd,{passive:false}); addListener(window,'keyup',ku);
@@ -631,6 +645,28 @@
   }
   function checkWord(){return bankCargo();}
 
+  function closeBuy(){pendingBuy=null;if(ui.buyConfirm)ui.buyConfirm.classList.remove('on');}
+  function askBuy(kind,id,slot){
+    const spell=kind==='spell'?ArenaElements.byId[id]:null,relic=kind==='relic'?(typeof ArenaRelics!=='undefined'&&ArenaRelics.byId[id]||STORE.find(x=>x.id===id)):null;
+    const item=spell||relic;if(!item)return;
+    if(spell&&ArenaElements.owned(id)){equipSpell(slot,id);return;}
+    if(relic&&(own(id)||relic.raceDisabled)){if(relic.raceDisabled)feed('ไอเท็มนี้พักใช้ตามกติกาแข่งขัน','gold');return;}
+    const price=Number(item.price)||0,have=state.coins||0,ok=have>=price;
+    pendingBuy={kind,id,slot,price};
+    root.querySelector('#va-buy-icon').innerHTML=spell?(typeof ArenaGrimoire!=='undefined'?ArenaGrimoire.icon(item):esc(item.icon||'✨')):(typeof ArenaRelics!=='undefined'?ArenaRelics.icon(item):esc(item.ico||'✦'));
+    root.querySelector('#va-buy-title').textContent=item.name;
+    root.querySelector('#va-buy-copy').textContent='ตอนนี้กำลังจะเสีย '+fmt(price)+' เหรียญ เพื่อซื้อ '+item.name+' แล้ว ยืนยันที่จะซื้อหรือไม่?';
+    root.querySelector('#va-buy-price').textContent='◈ '+fmt(price);
+    root.querySelector('#va-buy-after').textContent='◈ '+fmt(Math.max(0,have-price));
+    root.querySelector('#va-buy-note').textContent=ok?'ซื้อแล้วใช้ได้ถาวรทั้งบัญชี · คลังที่เปิดอยู่ยังค้างไว้':'เหรียญยังไม่พอ · ยังไม่หักจนกว่าจะยืนยันได้';
+    const go=root.querySelector('#va-buy-ok');go.disabled=!ok;go.setAttribute('aria-disabled',ok?'false':'true');
+    ui.buyConfirm.classList.add('on');
+  }
+  function commitBuy(){
+    const job=pendingBuy;if(!job)return;closeBuy();
+    if(job.kind==='relic')buyItem(job.id);else buySpell(job.slot,job.id);
+  }
+
   function buyItem(id){
     if(typeof ArenaRelics!=='undefined'&&ArenaRelics.byId[id]?.raceDisabled){feed('ไอเท็มนี้พักใช้ตามกติกาแข่งขัน','gold');return;}
     ensureState();const it=STORE.find(x=>x.id===id);if(!it||own(id))return;
@@ -644,7 +680,7 @@
     ui.storeGrid.innerHTML=STORE.map(it=>`<button class="va-store-item${own(it.id)?' owned':''}" data-buy="${it.id}"><span class="va-store-ico">${it.ico}</span><div class="va-store-name">${it.name}</div><div class="va-store-desc">${it.desc}</div><div class="va-store-price">${own(it.id)?'✓ มีแล้ว':`🪙 ${fmt(it.price)}`}</div></button>`).join('');
   }
   function toggleShop(on){
-    if(!running)return;basicHeld=false;keys.clear();ui.shop.classList.toggle('on',!!on);syncPause();if(on)renderShop();
+    if(!running)return;if(!on)closeBuy();basicHeld=false;keys.clear();ui.shop.classList.toggle('on',!!on);syncPause();if(on)renderShop();
   }
 
   /* ==== 🔥 Round 1381 — two persistent elemental slots ==== */
@@ -682,7 +718,7 @@
     ui.slotTabs.innerHTML=spellSlots.map((id,i)=>`<button data-equip-slot="${i}" class="${editingSlot===i?'selected':''}" aria-pressed="${editingSlot===i}">${i+1} · ${ArenaElements.byId[id]?.icon||'+'} ${ArenaElements.byId[id]?.name||'เลือกพลัง'}</button>`).join('');
     ui.spellGrid.innerHTML=ArenaElements.skills.map(def=>{const slot=spellSlots.indexOf(def.id);return `<button class="va-spell-card${slot>=0?' equipped':''}" data-equip-spell="${def.id}" style="--element:${def.color}" aria-label="${def.name} ${def.desc}"><span class="va-element-icon">${def.icon}</span><b>${def.name}</b><small>${def.desc}</small><em>${slot>=0?'ช่อง '+(slot+1)+' · ':''}${Number(skillSeconds(def.id).toFixed(1))} วิ</em></button>`;}).join('');
   }
-  function toggleSpellbook(on){if(!running)return;basicHeld=false;keys.clear();joy.x=joy.z=0;homeRoute=false;ui.spellbook.classList.toggle('on',!!on);if(on){if(!spellSlots[1])editingSlot=1;renderSpellbook();}syncPause();}
+  function toggleSpellbook(on){if(!running)return;if(!on)closeBuy();basicHeld=false;keys.clear();joy.x=joy.z=0;homeRoute=false;ui.spellbook.classList.toggle('on',!!on);if(on){if(!spellSlots[1])editingSlot=1;renderSpellbook();}syncPause();}
 
   function updatePlayer(dt,t){
     let x=joy.x,z=joy.z;
