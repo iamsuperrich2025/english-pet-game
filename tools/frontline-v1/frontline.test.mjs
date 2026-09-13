@@ -242,6 +242,14 @@ test('HP loss pops the actual subtracted amount and ignores heals or first sight
   assert.equal(F.hpLoss(80,5000),0);
   assert.equal(F.hpLoss(100,100),0);
 });
+test('HUD cards stay only on remaining needed letters',()=>{
+  const remain=F.remainNeeded({word:{target:'CAT',completedAt:0},bases:{s0:{stored:'C'}}},'s0');
+  assert.equal(JSON.stringify(remain),'{"A":1,"T":1}');
+  assert.equal(JSON.stringify(F.remainNeeded({word:{target:'CAT',completedAt:1},bases:{s0:{stored:''}}},'s0')),'{}');
+  const src=readFileSync(new URL('frontline-scene.js',dir),'utf8');
+  assert.match(src,/remainNeeded/);
+  assert.match(src,/if\(!remain\[item\.letter\]\)\{actor\.label\.hidden=true/);
+});
 test('letter hints hide while carrying so only the vault arrow remains',()=>{
   const r={word:{target:'CAT',completedAt:0},bases:{s0:{stored:'C'}},players:{s0:{carried:'A'}},
     letters:{a:{letter:'A',x:10,z:0},c:{letter:'C',x:0,z:10},t:{letter:'T',x:40,z:0},b:{letter:'B',x:0,z:0}}};

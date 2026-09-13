@@ -72,11 +72,14 @@
       for(const [key,actor] of pickups)if(!room.letters||!room.letters[key]){
         scene.remove(actor.mesh);actor.label.remove();pickups.delete(key);
       }
+      const remain=F.remainNeeded(room,id);
       for(const [key,item] of Object.entries(room.letters||{})){
         if(!pickups.has(key)){const mesh=shapes.letter(),tag=label('fl-letter');scene.add(mesh);pickups.set(key,{mesh,label:tag});}
-        const actor=pickups.get(key);actor.mesh.position.set(item.x,0,item.z);text(actor.label,item.letter);
-        actor.label.classList.toggle('needed',room.word.target.includes(item.letter));
+        const actor=pickups.get(key),need=!!remain[item.letter];
+        actor.mesh.position.set(item.x,0,item.z);text(actor.label,item.letter);
+        actor.label.classList.toggle('needed',need);
         actor.label.classList.toggle('drop',key[0]==='d');
+        if(!need)actor.label.hidden=true;
       }
       for(const [key,actor] of bases)if(!room.bases||!room.bases[key]){
         scene.remove(actor.mesh);actor.label.remove();bases.delete(key);
@@ -121,7 +124,11 @@
         }
         actor.health.lift(project,actor.mesh.position.x,actor.mesh.position.z,now);
       }
-      for(const [key,actor] of pickups){const item=room.letters[key];if(item)project(actor.label,item.x,1.75,item.z);}
+      for(const [key,actor] of pickups){
+        const item=room.letters[key];if(!item)continue;
+        if(!remain[item.letter]){actor.label.hidden=true;continue;}
+        project(actor.label,item.x,1.75,item.z);
+      }
       const needed=F.neededLetterHints(room,id,display);
       while(hints.length<needed.length)hints.push(label('fl-hint'));
       needed.forEach((item,i)=>{
