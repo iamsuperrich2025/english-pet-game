@@ -18,5 +18,5 @@ ok('carrying suppresses letter arrows',N.neededLetterHints(items,{x:0,z:0},{S:1,
 ok('completed words have no letter arrows',N.neededLetterHints(items,{x:0,z:0},{}).length===0);
 const src=fs.readFileSync(path.join(root,'js/arena3d.js'),'utf8');
 ok('field drops skip 3D letter sprites',/halo,spr:null/.test(src)&&!/dropLetter[\s\S]{0,900}makeTextSprite\(ch/.test(src));
-ok('needed letters still use HUD cards',src.includes("navMark('va-letter needed')"));
+ok('on-crystal letter cards stay hidden',src.includes('function paintLetterCards()')&&src.includes('letterMarks[i].hidden=true'));
 console.log(JSON.stringify({passed:10}));

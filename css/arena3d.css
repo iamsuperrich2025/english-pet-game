@@ -450,8 +450,9 @@
 @media(max-width:500px){#va-root .va-spell-grid.va-swipe-strip,#va-root .va-relic-panel .va-store-grid.va-swipe-strip{--strip-columns:1.8;--strip-rows:3}.va-grimoire-nav{gap:6px}.va-swipe-hint{font-size:8px}.va-grimoire-nav small{font-size:8px}}
 @media(max-height:350px){#va-root .va-spell-grid.va-swipe-strip{--strip-rows:1}}
 
-/* Shared-word cargo control; kept beside the existing home navigation. */
-#va-drop-letter{position:absolute;left:50%;bottom:100px;transform:translateX(-50%);padding:7px 12px;border-radius:12px;color:#fff3c4;font:700 12px Kanit,sans-serif;z-index:15;touch-action:manipulation}
+/* Round 1423 — DROP docks in the empty bay immediately right of home. */
+#va-drop-letter{position:absolute;left:calc(50% + 130px);right:auto;bottom:14px;transform:none;padding:7px 12px;border-radius:12px;color:#fff3c4;font:700 12px Kanit,sans-serif;z-index:20;touch-action:manipulation;display:flex;align-items:center;justify-content:center;pointer-events:auto}
 #va-drop-letter:disabled{opacity:.45}
 
-#va-root[data-map] #va-drop-letter{bottom:calc(3vh + clamp(37px,10vh,96px) + 12px)}
+#va-root[data-map] #va-drop-letter{left:calc(50% + (clamp(170px,29vw,470px) / 2) + 12px);bottom:3vh;min-width:clamp(72px,9vw,120px);min-height:clamp(37px,7vh,56px);padding:8px 14px;font-size:clamp(11px,1.5vw,22px)}
+#va-root .va-letter{display:none!important}

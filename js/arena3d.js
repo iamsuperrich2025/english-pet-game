@@ -826,32 +826,23 @@
     const b=targetNearest(15);aimRing.visible=!!b;if(b){aimRing.position.x=b.group.position.x;aimRing.position.z=b.group.position.z;aimRing.scale.setScalar(b.elite?1.35:1);aimRing.material.opacity=.55+Math.sin(performance.now()*.008)*.25;}
   }
 
-  /* ==== 🔤🧭 Round 1420 — HUD-only needed letters; hide 3D field glyphs ==== */
+  /* ==== 🔤🧭 Round 1423 — no letters on crystals; top word + edge arrows only ==== */
   function remainNeeded(){return (!target||wordBusy||!window.ArenaNav)?{}:ArenaNav.remain(target.en,bag,cargo);}
   function navLayer(){return root&&root.querySelector('#va-nav-layer');}
   function navMark(cls){const el=document.createElement('div');el.className=cls;navLayer().appendChild(el);return el;}
   function projectNav(x,y,z){hudPoint.set(x,y,z).project(camera);return {x:(hudPoint.x*.5+.5)*innerWidth,y:(-hudPoint.y*.5+.5)*innerHeight,behind:hudPoint.z>1||hudPoint.z<-1};}
   function styleNeededDrops(left){
     for(const d of drops){
-      if(d.spr)d.spr.visible=false;
+      if(d.spr){d.spr.visible=false;if(d.spr.parent)d.spr.parent.remove(d.spr);}
       if(d.halo)d.halo.scale.setScalar(left[d.ch]?1.45:1);
     }
   }
-  function paintLetterCards(left){
-    const needed=drops.filter(d=>left[d.ch]);
-    while(letterMarks.length<needed.length)letterMarks.push(navMark('va-letter needed'));
-    needed.forEach((d,i)=>{
-      const el=letterMarks[i],p=projectNav(d.group.position.x,d.group.position.y+(d.node?1.35:1.85),d.group.position.z);
-      const on=!p.behind&&p.x>-40&&p.x<innerWidth+40&&p.y>-40&&p.y<innerHeight+40;
-      el.hidden=!on;if(!on)return;
-      if(el.textContent!==d.ch)el.textContent=d.ch;
-      el.style.transform='translate('+p.x+'px,'+p.y+'px) translate(-50%,-50%)';
-    });
-    for(let i=needed.length;i<letterMarks.length;i++)letterMarks[i].hidden=true;
+  function paintLetterCards(){
+    for(let i=0;i<letterMarks.length;i++)letterMarks[i].hidden=true;
   }
   function paintLetterHints(left){
     if(!window.ArenaNav)return;
-    const items=drops.map(d=>({letter:d.ch,x:d.group.position.x,z:d.group.position.z}));
+    const items=drops.filter(d=>d.raceId&&!d.node).map(d=>({letter:d.ch,x:d.group.position.x,z:d.group.position.z}));
     const needed=cargo.length?[]:ArenaNav.neededLetterHints(items,player.pos,left);
     while(letterHints.length<needed.length)letterHints.push(navMark('va-hint'));
     needed.forEach((item,i)=>{
@@ -876,7 +867,7 @@
   function updateNav(){
     if(!root||!camera||!navLayer()||paused)return;
     const left=remainNeeded();
-    styleNeededDrops(left);paintLetterCards(left);paintLetterHints(left);paintHomeHint();
+    styleNeededDrops(left);paintLetterCards();paintLetterHints(left);paintHomeHint();
   }
 
   function loop(t){
