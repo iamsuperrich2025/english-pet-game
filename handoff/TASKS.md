@@ -12,6 +12,11 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1423 · Arena ย้าย DROP + เอาตัวอักษรออกจากคริสตัล:** แผง DROP ไปช่องว่างขวาของปุ่มบ้าน · ไม่ติดตัวอักษรบนเพชร (เหลือคำบน HUD + ลูกศรขอบจอ)
+- `css/arena3d.css` `js/arena3d.js` `tools/test_arena_nav.cjs` `tools/test_arena_race.cjs` `docs/PROJECT_MAP.md`
+- nav 10/10 · คริสตัลตกแต่งบนภาพแผนที่ยังอยู่ (ลบจากเท็กซ์เจอร์ไม่ได้)
+- ค้าง: รีเฟรชอารีน่าแล้วดู DROP ขวาล่าง และเพชรไม่มีตัวอักษรเล็ก
+
 - **รอบ 1422 · Dragon Sky แผงดำ/บินลื่น/กระสุนถี่:** เลิก requestFullscreen (แถบ Chrome บังล่าง) · HUD รวมบน · ลากนิ้วแบบ exp follow · ยิง 2 กระบอก×4 นัด ถี่ขึ้น
 - `js/lettercannon.js` `css/lettercannon.css` · unit `tools/test_letter_cannon.js` ผ่าน
 - รีเฟรชแล้วเข้า Dragon Sky Siege บนมือถือ: ล่างโล่ง มังกรไม่สะดุด กระสุนถี่พวยพุ่ง
@@ -21,11 +26,6 @@
 - `frontline-words.js` remainNeeded · `frontline-scene.js` ซ่อนการ์ดที่ไม่ใช้ · CSS ขยายการ์ด needed
 - unit 34/34 รวมเคส HUD-only
 - รีเฟรช `/frontline/` แล้วดูว่าสนามไม่มีตัวเล็กปะปน
-
-- **รอบ 1420 · เอาตัวอักษรเล็กบนเพชรอารีน่าออก:** เหลือแค่การ์ด HUD ตัวใหญ่ของตัวที่ต้องเก็บ
-- `js/arena3d.js` ไม่สร้างสไปรต์ 3D บนดรอป · halo ยังขยายตัวที่ต้องใช้
-- nav 10/10 · syntax ผ่าน · race ยังมีเคส HUD-only
-- รีเฟรชแล้วดู Crystal Hollow ว่าไม่มีตัวเล็กปะปน
 
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic

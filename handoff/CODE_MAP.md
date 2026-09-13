@@ -222,7 +222,7 @@ api:5 · mergeCredit:6 · settle:7 · create:8 · error:9 · request:10
 
 ## js/arena-strip.js (40 บรรทัด · 0 รายการ)
 
-## js/arena3d.js (976 บรรทัด · 0 รายการ)
+## js/arena3d.js (967 บรรทัด · 0 รายการ)
 
 ## js/assetaward.js (21 บรรทัด · 0 รายการ)
 
@@ -1065,8 +1065,8 @@ vbRender:148 · vbCardHTML:194
 ## css/arena-heroes.css (20 บรรทัด · 5 selector)
 #ah-picker:2,3 · .ah-layout:4 · .ah-info:5,15 · .ah-header:11,12 · .ah-roster:16,17,18,19(+1)
 
-## css/arena3d.css (457 บรรทัด · 102 selector)
-#va-root:5,7,9,226(+101) · #va-canvas:8 · .va-vignette:11 · .va-scan:15 · .va-top:18 · .va-glass:20
+## css/arena3d.css (458 บรรทัด · 102 selector)
+#va-root:5,7,9,226(+102) · #va-canvas:8 · .va-vignette:11 · .va-scan:15 · .va-top:18 · .va-glass:20
 .va-exit:23,26 · .va-player-card:27,29 · .va-player-name:30 · .va-online:31 · .va-word-card:32,34,36 · .va-word-th:37
 .va-word-en:38 · .va-word-slots:40,41,43 · .va-coins:44 · .va-shop-btn:46 · .va-energy:48,54 · .va-energy-label:50
 .va-energy-track:51 · .va-energy-fill:52 · .va-energy-power:55 · .va-bag:57 · .va-bag-label:59 · .va-bag-list:60
