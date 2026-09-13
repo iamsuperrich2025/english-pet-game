@@ -255,7 +255,8 @@ const expectedRail = [
   ["worldInvasion","#btn-world-invasion"], ["worldMecha","#btn-world-mecha"],
   ["home",'.lobby-rail [data-panel="panel-home"]'], ["invest",'.lobby-rail [data-panel="panel-farm"]'],
   ["factory",'.lobby-rail [data-panel="panel-factory"]'], ["wordsearch","#btn-rail-wordsearch"],
-  ["typing","#btn-rail-typing"], ["bubble","#btn-rail-bubble"], ["shoot","#btn-rail-shootword"],
+  ["typing","#btn-rail-typing"], ["bubble","#btn-rail-bubble"],   ["shoot","#btn-rail-shootword"],
+  ["wordship","#btn-rail-wordship"],
   ["cannon","#btn-rail-lettercannon"], ["examstd","#btn-rail-examstd"], ["onet","#btn-rail-onet"],
   ["rank","#btn-rail-rank"], ["market",'.lobby-rail [data-panel="panel-market"]'],
   ["friends",'.lobby-rail [data-panel="panel-friends"]'], ["gifts",'.lobby-rail [data-panel="panel-gifts"]'],
@@ -267,7 +268,7 @@ const tuplePattern = (action, source) => {
 };
 expectedRail.forEach(([action, source]) => must(tuplePattern(action, source).test(home), `left rail marker missing: ${action}`));
 const railOrder = expectedRail.map(([action]) => home.indexOf(`['${action}',`));
-must(expectedRail.length === 29 && railOrder.every((p, i) => p >= 0 && (!i || p > railOrder[i - 1])), "authoritative left rail order changed");
+must(expectedRail.length === 30 && railOrder.every((p, i) => p >= 0 && (!i || p > railOrder[i - 1])), "authoritative left rail order changed");
 const semanticRailIcons = [
   ['worldAdv','adventure'],['worldSky','skyplay'],['worldHaunt','ghost'],
   ['worldHeli','helicopter'],['worldDrone','drone'],['worldSoccer','soccer'],

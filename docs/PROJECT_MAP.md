@@ -142,13 +142,21 @@ PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.ShootWord`, `open`, `close`, `buildSc
 DEPENDENCIES: Lazily loaded `THREE`, shared state/UI/audio.
 NOTES: Separate from Invasion combat.
 
+SYSTEM: Cute Word Fleet minigame
+PURPOSE: Landscape toy-battleship vocab game: read the Thai prompt and sink the ship painted with the matching English word.
+PRIMARY FILE: `js/wordship.js`
+RELATED FILES: `css/wordship.css`, `js/ui.js` (`openWordShip`), `js/state.js`, `js/home-v2.js`, `js/city3d.js`, `index_classic.html`, `tools/test_wordship.js`
+PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.WordShip`, `openWordShip`, `pool`, `spawnWave`
+DEPENDENCIES: `vocabForStudent` already loaded for Shoot Word; Canvas 2D; WebAudio beeps.
+NOTES: No extra vocab/image/BGM downloads. JS+CSS load on first rail click. Same 3–10 letter pool as ShootWord.
+
 SYSTEM: Letter Cannon vocabulary minigame
 PURPOSE: Portrait 9:16 vertical shooter: freely fly a weapon-mounted dragon, spell five words, protect ten hearts from meteors, and survive a two-hit boss wave.
 PRIMARY FILE: `js/lettercannon.js`
 RELATED FILES: `css/lettercannon.css`, `assets/images/letter_cannon/dragon_gunner_player.webp`, `tools/test_letter_cannon.js`, `index_classic.html`, `js/city3d.js`, `js/main.js`
 PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.LetterCannon`, `open`, `close`
 DEPENDENCIES: `vocabForStudent`, shared state/rewards/audio, Canvas 2D.
-NOTES: Canvas 2D solo gameplay with drag/WASD free flight, animated tail, a procedurally scrolling battlefield, dense twin-cannon volleys, homing missiles, layered ballistic SFX, streak powers, retained coin rewards, portrait lock without browser fullscreen (avoids Android's blocking exit bar), and no WebGL lifecycle.
+NOTES: Canvas 2D solo gameplay with drag/WASD free flight, animated tail, a procedurally scrolling battlefield, original Tracer/Heavy/Piercer round size and cadence, homing missiles, layered ballistic SFX, streak powers, retained coin rewards, portrait lock without browser fullscreen (avoids Android's blocking exit bar), and no WebGL lifecycle.
 
 SYSTEM: Frontline 1944 public game and isolated development preview
 ADDITIONAL MODULES: `tools/frontline-v1/frontline-lobby.js` (numeric overflow rooms), `frontline-commands.js` (host input reducer), `preview-admission.mjs` (local conditional seat admission), `frontline-effects.js` (pooled toy fireworks), `frontline-audio.js` (synthesized cues plus one hashed looping BGM Blob). Target/Thai data comes from `js/data/vocab.js`, the same source as ShootWord. Inputs use `frontline_v1_dev/<session>/inputs/<room>/<seat>`; only the seat owner writes its mailbox and the elected host writes room simulation state.

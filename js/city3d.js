@@ -1120,6 +1120,13 @@ const BUILDINGS = [
      ให้ห่างเพื่อนบ้านที่ใกล้สุด (📖 37° · 🥇 55°) ข้างละ ~19 หน่วย — พอ ๆ กับระยะปกติของวงนอก */
   bld('picquiz',   '🎧','ครูถามศัพท์','picquiz',   46, BAND2_R+16, ()=>
     bShop({col:'#e3f6e5', roof:0x2e7d32, aw1:'#81c784', sign:'🎧 LISTEN & TAP', signBg:'#e8f5e9'})),
+  bld('wordship',  '⚓','กองเรือคำศัพท์','wordship',  12, BAND2_R, ()=>{
+    const g=bShop({col:'#c8f4ff',roof:0x0284c7,aw1:'#7dd3fc',sign:'⚓ WORD FLEET',signBg:'#e0f7ff'});
+    const hull=M(cyl(.55,.7,1.8,10),mat(0x5ad0ff,{emissive:0x0b4a6f}),0,6.2,0);hull.rotation.z=Math.PI/2;g.add(hull);
+    const flag=M(new THREE.PlaneGeometry(1.1,.7),mat(0xff8fab), .55,7.15,0);g.add(flag);
+    tickers.push((dt,t)=>{hull.position.y=6.2+Math.sin(t*2)*.12;flag.rotation.y=Math.sin(t*3)*.4;});
+    return g;
+  }),
   bld('shootword', '🎯','ยิงเป้าคำ','shootword',   20, BAND2_R, ()=>{
     const g = bShop({col:'#fff3e0', roof:0xff7043, aw1:'#ff8a65', sign:'🎯 SHOOT WORD', signBg:'#fff3e0'});
     const c = cvs(128,128), q = c.getContext('2d');           // เป้าวงกลมหมุนบนหลังคา

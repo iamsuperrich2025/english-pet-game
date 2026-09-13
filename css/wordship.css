@@ -1,0 +1,30 @@
+/* ⚓ กองเรือคำศัพท์ — HUD น่ารักจอเตี้ย 812×375 รอบ 1429 */
+#wsh-game{position:fixed;inset:0;z-index:2147483000;display:none;overflow:hidden;background:#7ec9ff;color:#14324a;font-family:Kanit,system-ui,sans-serif;touch-action:none;user-select:none;-webkit-user-select:none}
+#wsh-game canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.wsh-hud{position:absolute;inset:0;pointer-events:none;padding:calc(6px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left));display:grid;grid-template-columns:minmax(120px,22vw) 1fr auto;grid-template-rows:auto 1fr auto;gap:6px}
+.wsh-glass{background:linear-gradient(145deg,rgba(255,255,255,.78),rgba(186,236,255,.55));border:1px solid rgba(255,255,255,.9);border-radius:14px;box-shadow:0 4px 12px rgba(20,70,110,.18);backdrop-filter:blur(4px)}
+.wsh-stats{grid-column:1;grid-row:1;padding:6px 10px;font-size:clamp(10px,1.3vw,13px);display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
+.wsh-stats b{color:#b45309}
+#wsh-hearts{color:#e11d48;letter-spacing:1px}
+.wsh-word{grid-column:2;grid-row:1;justify-self:center;text-align:center;padding:5px 16px;min-width:min(46vw,420px)}
+.wsh-word small{display:block;font-size:clamp(9px,1.2vw,12px);opacity:.8}
+.wsh-word strong{display:block;font-size:clamp(16px,2.6vw,28px);color:#9d174d;line-height:1.1}
+.wsh-word em{display:block;font-style:normal;letter-spacing:.28em;color:#0369a1;font-weight:900}
+.wsh-exit{grid-column:3;grid-row:1;pointer-events:auto;justify-self:end;height:clamp(30px,4.2vw,40px);padding:0 12px;border:0;border-radius:12px;font-weight:900;color:#fff;background:linear-gradient(#f43f5e,#be123c);cursor:pointer}
+.wsh-hint{grid-column:1/-1;grid-row:3;justify-self:center;align-self:end;padding:4px 12px;border-radius:999px;background:rgba(255,255,255,.72);font-size:clamp(9px,1.2vw,13px);color:#164e63}
+.wsh-toast{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);padding:8px 14px;border-radius:14px;background:rgba(255,255,255,.92);font-weight:900;opacity:0;transition:opacity .2s;pointer-events:none}
+.wsh-modal{position:absolute;inset:0;z-index:4;display:grid;place-items:center;padding:10px;background:rgba(12,50,80,.45);pointer-events:auto}
+.wsh-modal[hidden]{display:none!important}
+.wsh-card{width:min(560px,92vw);max-height:calc(100vh - 16px);overflow:hidden;padding:clamp(12px,3vh,22px);text-align:center;border-radius:20px;background:linear-gradient(165deg,#e8fbff,#fff0f6);border:2px solid #fff;box-shadow:0 12px 40px rgba(15,60,90,.28)}
+.wsh-card h2{margin:0 0 6px;color:#0e7490}
+.wsh-card p{margin:5px 0;font-size:clamp(12px,2.4vh,16px);line-height:1.4}
+.wsh-buttons{display:flex;justify-content:center;gap:8px;margin-top:10px}
+.wsh-buttons button,.wsh-card>button{pointer-events:auto;border:0;border-radius:12px;padding:8px 16px;font-weight:900;background:linear-gradient(#38bdf8,#0284c7);color:#fff;cursor:pointer}
+@media(max-height:430px){
+  .wsh-hud{gap:4px;padding:4px 8px}
+  .wsh-word{padding:3px 10px;min-width:min(40vw,280px)}
+  .wsh-word strong{font-size:16px}
+  .wsh-card{padding:10px 12px}
+  .wsh-card p{font-size:12px;margin:3px 0}
+  .wsh-hint{font-size:10px}
+}

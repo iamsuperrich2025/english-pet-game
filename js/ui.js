@@ -7188,6 +7188,40 @@ function loadScriptOnce(src){
     document.head.appendChild(s);
   });
 }
+/* ==== ⚓ WORD FLEET / กองเรือคำศัพท์ — รอบ 1429 ==== */
+function loadStylesheetOnce(id, href){
+  return new Promise((resolve,reject)=>{
+    if(document.getElementById(id)){ resolve(); return; }
+    const link=document.createElement('link');
+    link.id=id; link.rel='stylesheet'; link.href=href;
+    link.onload=resolve;
+    link.onerror=()=>{ link.remove(); reject(new Error('โหลดไฟล์ไม่สำเร็จ: '+href)); };
+    document.head.appendChild(link);
+  });
+}
+async function openWordShip(){
+  if(typeof closePanel==='function') closePanel();
+  try{
+    if(typeof toast==='function' && (typeof WordShip==='undefined' || !WordShip.open)) toast('⚓ กำลังออกทะเลคำศัพท์...');
+    await loadStylesheetOnce('wordship-css','css/wordship.css');
+    if(typeof WordShip==='undefined' || !WordShip.open){
+      if(typeof loadScriptOnce!=='function') throw new Error('no loader');
+      await loadScriptOnce('js/wordship.js');
+    }
+    return WordShip.open();
+  }catch(e){
+    console.error('WordShip load fail', e);
+    if(typeof toast==='function') toast('⚠️ เปิดกองเรือไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
+  }
+}
+function bindWordShipRail(){
+  const b=document.getElementById('btn-rail-wordship');
+  if(!b || b.dataset.wshBound) return;
+  b.dataset.wshBound='1';
+  b.addEventListener('click', ()=>{ openWordShip(); });
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bindWordShipRail);
+else bindWordShipRail();
 /* 🚑 รอบ 859: guard ทางเข้าโลก 3D ห้ามเงียบ — ถ้ากดแล้วไม่เกิดอะไรเพราะ advLoading ค้าง ให้บอกผู้เล่นบนจอ
    (เงื่อนไขอื่น เช่น ไม่มีตั๋ว/บาดเจ็บ มีข้อความจากทางเข้าปกติอยู่แล้ว — เงียบเหมือนเดิม) */
 function advBusyMsg(retry){

@@ -12,6 +12,14 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1429 · กองเรือคำศัพท์:** มินิเกมเรือรบน่ารัก ใช้คลัง `vocabForStudent()` ชุดเดียวกับยิงเป้าคำ · Canvas/เสียงสังเคราะห์ ไม่โหลดภาพ-เพลง-คลังใหม่ · JS/CSS โหลดตอนกดปุ่ม
+- `js/wordship.js` `css/wordship.css` `js/ui.js` `js/state.js` `js/home-v2.js` `js/main.js` `js/city3d.js` `index_classic.html` `tools/test_wordship.js`
+- unit wordship + Home V2 ผ่าน · เปิด preview เห็นโจทย์ไทย/เรืออังกฤษ/วงแหวนทอง · ค้าง: เล่นบนมือถือจริง
+- **รอบ 1428 · Dragon Sky กระสุนเท่าเดิม:** ยิงทีละนัด สลับกระบอก ขนาด TRACER/HEAVY/PIERCER เดิม (glow 13) ไม่พวยพุ่ง 8 นัด
+- `js/lettercannon.js` · unit ผ่าน · HUD โล่งล่าง/บินลื่นจาก 1422 คงไว้
+- รีเฟรชแล้วดูว่ากระสุนใหญ่เท่าเดิมและไม่ออกเป็นพัด
+- ค้าง: ยืนยันบนมือถือผู้ใช้
+
 - **รอบ 1427 · ตามจ่ายเงินผู้ขายตลาดที่ขาด:** ledger ซื้อสำเร็จ 39 รายการ พบ 3 รายการที่ผู้ซื้อจ่ายแล้วผู้ขายยังไม่มี marker รับเงิน รวม 7,801 · เติมตามยอดที่ผู้ซื้อจ่าย กันซ้ำ + heal ถ้าเซฟทับ
 - `functions/market-settlement.js` `functions/index.js` `functions/test_market_settlement.js` `tools/audit_market_unpaid_sellers.js` `handoff/GAME_RULES.md`
 - unit settlement ผ่าน · ค้าง: deploy functions แล้วรัน job จ่ายจริง แล้วผู้ขายรีเฟรชเกม
