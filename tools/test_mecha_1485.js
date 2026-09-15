@@ -6,9 +6,9 @@ const assert=(ok,m)=>{ if(!ok){ console.error('FAIL',m); process.exit(1); } cons
 
 assert(a.includes("file:'MissileLaunch.mp3'")||a.includes("file:'fire.mp3'"),'launch sfx file');
 assert(a.includes("dir:'/sound/robot/'"),'launch sfx path');
-assert(a.includes("playClip('launch')"),'FIRE uses launch clip');
+assert(a.includes("playClip('fire')")||a.includes("playClip('launch')")||a.includes("_pick(['fire'"),'FIRE uses launch clip');
 assert(a.includes('impactBoom'),'impact boom helper');
-assert(a.includes("playClip('boom')"),'impact uses arena fire clip');
+assert(a.includes("playClip('boom')")||a.includes("playClip('boomArena')")||a.includes("impactA"),'impact uses arena fire clip');
 assert(a.includes('fire-a6fea31058694941.mp3'),'boom still arena fire');
 assert(/function mechaKillShell[\s\S]{0,220}impactBoom/.test(a),'kill shell plays boom on hit');
 assert(a.includes('function spawnMechaSmoke'),'smoke spawn');

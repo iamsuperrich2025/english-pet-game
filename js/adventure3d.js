@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    adventure3d.js — โลก 3D First-person 2 โหมด (คิว 7725691507 ข้อ 8 + ต่อยอด)
    🌍 adv   = โลกผจญภัยกลางวัน: เก็บตัวอักษรประกอบคำ 15🪙/คำ · monster ยิงสู้ได้
    👻 haunt = โรงแรมผีสิง: 25🪙/คำ · ผี PNG ไล่ผู้เล่นใกล้สุดหลังไฟดับ
@@ -377,6 +377,14 @@ function syncMechaMoveBtns(){
     const el=overlayEl.querySelector(sel); if(!el) return;
     el.classList.toggle('on',!!on);
     el.setAttribute('aria-pressed',on?'true':'false');
+  });
+}
+function syncMechaFireBtns(){
+  if(!overlayEl) return;
+  ['#mecha-fire','#mecha-fire2'].forEach(sel=>{
+    const el=overlayEl.querySelector(sel); if(!el) return;
+    el.classList.toggle('on',!!mFireHeld);
+    el.setAttribute('aria-pressed',mFireHeld?'true':'false');
   });
 }
 let mechaFX=null; // bounded projectile renderer, disposed on exit
@@ -5968,8 +5976,8 @@ function buildDom(){
   mechaToggleBtn('#mecha-back',()=>{ mFwdBtn=mFwdBtn===-1?0:-1; });
   mechaToggleBtn('#mecha-left',()=>{ mStrafeBtn=mStrafeBtn===-1?0:-1; });   /* สเตรฟ · หมุน/เล็ง = ลากจอ */
   mechaToggleBtn('#mecha-right',()=>{ mStrafeBtn=mStrafeBtn===1?0:1; });
-  holdBtn('#mecha-fire',()=>mFireHeld=true,()=>mFireHeld=false);
-  holdBtn('#mecha-fire2',()=>mFireHeld=true,()=>mFireHeld=false);   /* รอบ 223: ปุ่มยิงตัวที่ 2 (ใต้ minimap) ยิงเหมือนกัน */
+  holdBtn('#mecha-fire',()=>{ mFireHeld=true; syncMechaFireBtns(); },()=>{ mFireHeld=false; syncMechaFireBtns(); });
+  holdBtn('#mecha-fire2',()=>{ mFireHeld=true; syncMechaFireBtns(); },()=>{ mFireHeld=false; syncMechaFireBtns(); });   /* รอบ 223: ปุ่มยิงตัวที่ 2 (ใต้ minimap) ยิงเหมือนกัน */
 
   overlayEl.querySelector('#adv-exit').addEventListener('click',confirmExit);
   // 🏁📸 โหมดแข่งเวลา + กล้องในเกม (โลกโดรน)
@@ -12473,16 +12481,49 @@ function soccerKitGo(){
 /* ============================================================
    🤖 โหมดหุ่นยนต์นักรบ — เดินยิงเอเลี่ยนตัวอักษร (ต้องยิงเรียงลำดับในคำ)
    ============================================================ */
+/* 🔊 รอบ 1502: ตัด allroboteffect.mp3 → คลิปย่อยใน /sound/robot/mecha/ ใช้ร่วมทุกหุ่นตามสถานการณ์ */
 const MechaAudio={
   ctx:null,
-  /* 🔊 รอบ 1487: กด FIRE = fire.mp3 ตัดสั้นต่อนัด (ไฟล์ยาว ~5.5s ห้ามเล่นทั้งคลิป) · กระทบ = Arena fire */
-  _launch:{file:'fire.mp3',dir:'/sound/robot/',hash:'6cc1dcf3aaf465f9',vol:.62,gap:120,sliceMs:320,stopT:0,sfx:null,blob:null,url:'',load:null,busy:false,at:-1e9,gen:0},
-  _boom:{file:'fire-a6fea31058694941.mp3',dir:'/sound/arena/',hash:'a6fea31058694941',vol:.55,gap:220,sfx:null,blob:null,url:'',load:null,busy:false,at:-1e9,gen:0},
+  _rr:{},
+  _live:null,
+  clips:{
+    fire:{file:'fire.mp3',dir:'/sound/robot/',hash:'6cc1dcf3aaf465f9',vol:.62,gap:120,sliceMs:320},
+    fireVarA:{file:'fire_var_a.mp3',dir:'/sound/robot/mecha/',hash:'adfec9fc4b85d5f6',vol:.58,gap:110},
+    fireVarB:{file:'fire_var_b.mp3',dir:'/sound/robot/mecha/',hash:'6817ffed74d8bf73',vol:.58,gap:110},
+    impactA:{file:'impact_a.mp3',dir:'/sound/robot/mecha/',hash:'73b3bb53b2820dde',vol:.6,gap:160},
+    impactB:{file:'impact_b.mp3',dir:'/sound/robot/mecha/',hash:'77ab056a69bbdbb5',vol:.6,gap:160},
+    explodeA:{file:'explode_a.mp3',dir:'/sound/robot/mecha/',hash:'e587405561f9fb7b',vol:.68,gap:280},
+    explodeB:{file:'explode_b.mp3',dir:'/sound/robot/mecha/',hash:'326a8b6704d40f59',vol:.68,gap:280},
+    stepA:{file:'step_a.mp3',dir:'/sound/robot/mecha/',hash:'a3a34d4711784692',vol:.42,gap:140},
+    stepB:{file:'step_b.mp3',dir:'/sound/robot/mecha/',hash:'829f371071d3c7bc',vol:.42,gap:140},
+    warnA:{file:'warn_a.mp3',dir:'/sound/robot/mecha/',hash:'fc64051afc686c67',vol:.55,gap:220},
+    warnB:{file:'warn_b.mp3',dir:'/sound/robot/mecha/',hash:'71730083817c8338',vol:.55,gap:220},
+    enemyA:{file:'enemy_a.mp3',dir:'/sound/robot/mecha/',hash:'d5da3b931161fb90',vol:.5,gap:140},
+    enemyB:{file:'enemy_b.mp3',dir:'/sound/robot/mecha/',hash:'1d06f7d90af4516c',vol:.5,gap:140},
+    pickupA:{file:'pickup_a.mp3',dir:'/sound/robot/mecha/',hash:'24432d40f6d5a31f',vol:.55,gap:180},
+    pickupB:{file:'pickup_b.mp3',dir:'/sound/robot/mecha/',hash:'9727e252a110f29c',vol:.55,gap:180},
+    shield:{file:'shield.mp3',dir:'/sound/robot/mecha/',hash:'bbdcfa9f3246d364',vol:.52,gap:200},
+    boomArena:{file:'fire-a6fea31058694941.mp3',dir:'/sound/arena/',hash:'a6fea31058694941',vol:.55,gap:220}
+  },
   ac(){ if(!this.ctx){ try{ this.ctx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return this.ctx; },
   fireOn(){ return !!(typeof state!=='undefined' && state.sound!==false) && !(typeof document!=='undefined' && document.hidden); },
-  _slot(name){ return name==='boom'?this._boom:this._launch; },
+  _slot(name){
+    const def=this.clips[name]; if(!def) return null;
+    if(!this._live) this._live={};
+    let L=this._live[name];
+    if(!L){
+      L=this._live[name]={file:def.file,dir:def.dir,hash:def.hash,vol:def.vol,gap:def.gap,sliceMs:def.sliceMs||0,
+        sfx:null,blob:null,url:'',load:null,busy:false,at:-1e9,gen:0,stopT:0};
+    }
+    return L;
+  },
+  _pick(group){
+    const key=group.join('|');
+    const i=(this._rr[key]|0)%group.length; this._rr[key]=(i+1)%group.length; return group[i];
+  },
   loadClip(name){
-    const F=this._slot(name); if(F.blob) return Promise.resolve(F.blob); if(F.load) return F.load;
+    const F=this._slot(name); if(!F) return Promise.resolve(null);
+    if(F.blob) return Promise.resolve(F.blob); if(F.load) return F.load;
     const path=F.dir+F.file, key=(typeof location!=='undefined'?location.origin:'')+'/__vw_asset__'+path+'?v='+F.hash;
     F.load=Promise.resolve().then(()=>{
       if(typeof caches==='undefined') return null;
@@ -12494,28 +12535,34 @@ const MechaAudio={
     }).then(blob=>blob?(F.blob=blob):null).catch(()=>null).finally(()=>{ F.load=null; });
     return F.load;
   },
-  prepareFire(){ if(!this.fireOn()) return; void this.loadClip('launch'); void this.loadClip('boom'); },
+  prepareFire(){
+    if(!this.fireOn()) return;
+    ['fire','fireVarA','fireVarB','impactA','impactB','explodeA','explodeB','stepA','stepB','warnA','warnB','enemyA','enemyB','pickupA','pickupB','shield','boomArena']
+      .forEach(n=>void this.loadClip(n));
+  },
   stopClip(name){
-    const F=this._slot(name); F.gen++; F.busy=false; F.at=-1e9;
+    const F=this._slot(name); if(!F) return;
+    F.gen++; F.busy=false; F.at=-1e9;
     if(F.stopT){ try{ clearTimeout(F.stopT); }catch(e){} F.stopT=0; }
     if(F.sfx){ try{ F.sfx.pause(); F.sfx.removeAttribute('src'); F.sfx.load(); }catch(e){} F.sfx=null; }
     if(F.url){ try{ URL.revokeObjectURL(F.url); }catch(e){} F.url=''; }
   },
-  stopFireClip(){ this.stopClip('launch'); this.stopClip('boom'); },
+  stopFireClip(){ Object.keys(this.clips).forEach(n=>this.stopClip(n)); },
   playClip(name){
     if(!this.fireOn()) return false;
-    const F=this._slot(name), now=(typeof performance!=='undefined'?performance.now():0);
+    const F=this._slot(name); if(!F) return false;
+    const now=(typeof performance!=='undefined'?performance.now():0);
     if(F.busy || now-F.at<(F.gap||250)) return false;
     const Ctor=typeof Audio!=='undefined'?Audio:(typeof window!=='undefined'?window.Audio:null);
     if(!Ctor) return false;
     try{
       if(!F.sfx){ F.sfx=new Ctor(); F.sfx.preload='none'; F.sfx.volume=F.vol!=null?F.vol:.55; }
+      else F.sfx.volume=F.vol!=null?F.vol:.55;
       const el=F.sfx, at=F.gen; F.busy=true; F.at=now;
       void this.loadClip(name).then(blob=>{
         if(!blob||el!==F.sfx||at!==F.gen||!this.fireOn()) return;
         if(!F.url){ F.url=URL.createObjectURL(blob); el.src=F.url; }
         try{ el.pause(); el.currentTime=0; }catch(e){}
-        /* 🤖 รอบ 1487: 1 นัด = เล่นแค่ต้นคลิปแล้วหยุด — ห้ามปล่อยทั้งไฟล์ยาว */
         if(F.sliceMs>0){
           if(F.stopT) clearTimeout(F.stopT);
           F.stopT=setTimeout(()=>{
@@ -12529,43 +12576,69 @@ const MechaAudio={
       return true;
     }catch(e){ F.busy=false; return false; }
   },
-  playFireClip(){ return this.playClip('boom'); },   // alias เก่า = เสียงระเบิดกระทบ
-  step(){ if(!state.sound) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
+  playAny(names){ for(let i=0;i<names.length;i++){ if(this.playClip(names[i])) return true; } return false; },
+  playFireClip(){ return this.playClip('boomArena'); },
+  step(){
+    if(this.playAny([this._pick(['stepA','stepB'])])) return;
+    if(!state.sound) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
     const o=c.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(120,t); o.frequency.exponentialRampToValueAtTime(38,t+.18);
     const g=c.createGain(); g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.5,t+.012); g.gain.exponentialRampToValueAtTime(.0001,t+.26);
     o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.28);
     const n=c.createBufferSource(), buf=c.createBuffer(1,1400,c.sampleRate), d=buf.getChannelData(0);
     for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3);
     n.buffer=buf; const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=2600; bp.Q.value=.8;
-    const ng=c.createGain(); ng.gain.value=.14; n.connect(bp); bp.connect(ng); ng.connect(c.destination); n.start(t); },
+    const ng=c.createGain(); ng.gain.value=.14; n.connect(bp); bp.connect(ng); ng.connect(c.destination); n.start(t);
+  },
   fire(color){
-    if(this.playClip('launch')) return;             // 🤖 รอบ 1487: fire.mp3 ตัดสั้น 1 นัด
+    /* FIRE: สลับ fire.mp3 ตัดสั้น + คลิปสั้นจากแพ็ก (ทุกหุ่นชุดเดียวกัน) */
+    if(this.playAny([this._pick(['fire','fireVarA','fireVarB'])])) return;
     if(!state.sound) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
     const o=c.createOscillator(); o.type='square'; const f0=520+((color>>8)&0xff);
     o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(130,t+.14);
     const g=c.createGain(); g.gain.setValueAtTime(.2,t); g.gain.exponentialRampToValueAtTime(.001,t+.15);
-    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.16); },
-  impactBoom(){ if(this.playClip('boom')) return; this.boom(); },
-  boom(){ if(!state.sound) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.16);
+  },
+  impactBoom(){
+    if(this.playAny([this._pick(['impactA','impactB']),'boomArena'])) return;
+    this.boomSynth();
+  },
+  boom(){
+    if(this.playAny([this._pick(['explodeA','explodeB']),'boomArena'])) return;
+    this.boomSynth();
+  },
+  boomSynth(){ if(!state.sound) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
     const n=c.createBufferSource(), buf=c.createBuffer(1,Math.floor(c.sampleRate*.6),c.sampleRate), d=buf.getChannelData(0);
     for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2);
     n.buffer=buf; const lp=c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.setValueAtTime(1800,t); lp.frequency.exponentialRampToValueAtTime(120,t+.5);
     const g=c.createGain(); g.gain.setValueAtTime(.6,t); g.gain.exponentialRampToValueAtTime(.001,t+.6);
     n.connect(lp); lp.connect(g); g.connect(c.destination); n.start(t); },
-  warn(){ if(!state.sound) return; const c=this.ac(); if(!c) return; const t=c.currentTime;   // 🚨 คลักซอนเตือน (โอเวอร์ฮีต/โดนตี) — สองโทนสั้น
+  warn(){
+    if(this.playAny([this._pick(['warnA','warnB'])])) return;
+    if(!state.sound) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
     [0,.16].forEach((dt,i)=>{ const o=c.createOscillator(); o.type='sawtooth';
       o.frequency.setValueAtTime(i?520:660,t+dt); o.frequency.linearRampToValueAtTime(i?400:520,t+dt+.12);
       const g=c.createGain(); g.gain.setValueAtTime(.0001,t+dt); g.gain.exponentialRampToValueAtTime(.16,t+dt+.02); g.gain.exponentialRampToValueAtTime(.0001,t+dt+.13);
       const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=800; bp.Q.value=1.2;
-      o.connect(bp); bp.connect(g); g.connect(c.destination); o.start(t+dt); o.stop(t+dt+.14); }); },
-  enemyShot(){ if(!state.sound) return; const c=this.ac(); if(!c) return; const t=c.currentTime;   // 👾 เสียงเอเลี่ยนยิง (ซาวด์ต่ำลง)
+      o.connect(bp); bp.connect(g); g.connect(c.destination); o.start(t+dt); o.stop(t+dt+.14); });
+  },
+  enemyShot(){
+    if(this.playAny([this._pick(['enemyA','enemyB'])])) return;
+    if(!state.sound) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
     const o=c.createOscillator(); o.type='triangle'; o.frequency.setValueAtTime(300,t); o.frequency.exponentialRampToValueAtTime(90,t+.22);
     const g=c.createGain(); g.gain.setValueAtTime(.14,t); g.gain.exponentialRampToValueAtTime(.001,t+.24);
-    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.25); },
-  pickup(){ if(!state.sound) return; const c=this.ac(); if(!c) return; const t=c.currentTime;   // ✨ เสียงเก็บของ (ไล่ขึ้นสดใส)
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.25);
+  },
+  pickup(){
+    if(this.playAny([this._pick(['pickupA','pickupB'])])) return;
+    if(!state.sound) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
     [660,990,1320].forEach((f,i)=>{ const o=c.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(f,t+i*.07);
       const g=c.createGain(); g.gain.setValueAtTime(.0001,t+i*.07); g.gain.exponentialRampToValueAtTime(.16,t+i*.07+.02); g.gain.exponentialRampToValueAtTime(.0001,t+i*.07+.16);
-      o.connect(g); g.connect(c.destination); o.start(t+i*.07); o.stop(t+i*.07+.18); }); },
+      o.connect(g); g.connect(c.destination); o.start(t+i*.07); o.stop(t+i*.07+.18); });
+  },
+  shield(){
+    if(this.playClip('shield')) return;
+    this.pickup();
+  },
 };
 /* ✨ รอบ 226: สไปรต์ไอคอนอิโมจิ (ของเก็บ) */
 function emojiSprite(emoji){
@@ -12701,7 +12774,7 @@ function mechaDamageFx(n){
   if(mhUI&&mhUI.root){ mhUI.root.classList.remove('hit'); void mhUI.root.offsetWidth; mhUI.root.classList.add('hit'); }
 }
 function mechaHitByAlien(a){
-  if(mechaShielded(performance.now())){ MechaAudio.enemyShot(); if(a&&a.grp){ const gs=a.gs||1; a.grp.scale.setScalar(gs*.85); setTimeout(()=>{ if(a.grp) a.grp.scale.setScalar(gs); },140);} return; }  // 🛡️ โล่กัน = ไม่เสียหาย (ดันเอเลี่ยนหด)
+  if(mechaShielded(performance.now())){ MechaAudio.shield(); if(a&&a.grp){ const gs=a.gs||1; a.grp.scale.setScalar(gs*.85); setTimeout(()=>{ if(a.grp) a.grp.scale.setScalar(gs); },140);} return; }  // 🛡️ โล่กัน = ไม่เสียหาย (ดันเอเลี่ยนหด)
   mechaDamageFx(MECHA_ATK_DMG);
   if(a&&a.grp){ const gs=a.gs||1; a.grp.scale.setScalar(gs*1.18); setTimeout(()=>{ if(a.grp) a.grp.scale.setScalar(gs); },160); }   // พุ่งเข้าใส่ (เด้งโต · คืนสเกลเดิม รวมบอส)
 }
@@ -12725,7 +12798,7 @@ function tickAlienShots(dt,now){
   for(let i=alienShots.length-1;i>=0;i--){
     const s=alienShots[i]; s.mesh.position.addScaledVector(s.vel,dt); s.life-=dt;
     if(s.mesh.position.distanceTo(camera.position)<2.2){          // โดนหุ่น
-      if(mechaShielded(now)){ MechaAudio.pickup(); removeAlienShot(i); continue; }   // 🛡️ โล่กันกระสุน (ไม่เสียหาย)
+      if(mechaShielded(now)){ MechaAudio.shield(); removeAlienShot(i); continue; }   // 🛡️ โล่กันกระสุน (ไม่เสียหาย)
       if(now>mHitAt){ mHitAt=now+700; mechaDamageFx(s.dmg); }
       removeAlienShot(i); continue;
     }
@@ -13299,7 +13372,7 @@ function start(md,opt){
     // 🤖 มุมมองในหุ่นสูง 5m · เลือกอาวุธตามหุ่นที่ครอบครอง
     maxHp=MECHA_MAX_HP; hp=maxHp;                       // 🤖 รอบ 236: หุ่นพลังเยอะกว่าโลกอื่น (ทนขึ้น ไม่ตายง่าย)
     mSpeed=0; mBobPhase=0; mStepDn=false; mFwdBtn=0; mStrafeBtn=0; mFireHeld=false; mLastFire=0;
-    syncMechaMoveBtns();
+    syncMechaMoveBtns(); syncMechaFireBtns();
     aliens=[]; mechaTracers=[]; mechaShells=[]; mFocusAlien=null;
     mHeat=0; mOverheat=false; mHitAt=0; mLowHp=false;   // 🤖 รอบ 225: รีเซ็ตความร้อน/โอเวอร์ฮีต/iframe/พลังงานต่ำ
     alienShots=[]; powerups=[]; mNextPowerAt=performance.now()+8000;   // 🤖 รอบ 226: รีเซ็ตกระสุน/ของเก็บ (ชิ้นแรก ~8 วิ)
@@ -13313,7 +13386,7 @@ function start(md,opt){
     MechaModels.prepare(rid).catch(()=>{}); // warm only the selected model
     mechaWeapon=MECHA_WEAPONS[rid]||MECHA_WEAPONS.robot_01;
     setMechaHudSkin(rid);                          // 🤖 รอบ 224: กรอบ HUD + สีตามหุ่น
-    MechaAudio.prepareFire();                      // 🤖 รอบ 1487: พรีโหลด fire.mp3 (ตัดสั้นต่อนัด) + เสียงระเบิดกระทบ
+    MechaAudio.prepareFire();                      // 🤖 รอบ 1502: พรีโหลดคลิปหุ่นจาก allroboteffect + fire.mp3
     clearMechaSmoke();
     camera.position.set(0,MECHA_EYE,26); yaw=0; pitch=-0.06;
   }else if(M.hotel){
