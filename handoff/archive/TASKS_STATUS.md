@@ -6352,3 +6352,19 @@
 - **รอบ 1484 · ขึ้นเว็บ + ล็อกหุ่นรบเฉพาะแอดมิน:** Classic ซ่อนปุ่ม/enterMecha3D ด้วย mechaAdminAllowed (ไม่ใช้ tester coming-soon) · City w3d_mecha บล็อก cityAdminAccess · Home V2 คง worldMecha ใน ADMIN_ONLY · syncAdminAccess → 
 efreshMechaLock
 - ไฟล์: js/{ui,auth,city3d,adventure3d,adv3d_css,mecha-combat-fx,home-v2}.js css/{lobby,home-v2}.css docs/PROJECT_MAP.md 	ools/test_mecha_{1480,1481,lobby_icon,admin_lock}.js
+
+
+## ⏬ ย้ายเมื่อ 2026-09-15 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1489 · คู่มือการเล่นภาษาไทยบน Lobby:** เพิ่มปุ่มตรง Home V2 และเขียนใหม่เป็นภาษาธรรมชาติ 10 หน้า ครอบคลุมเริ่มเล่น/เลี้ยงน้อง/5 สาเหตุป่วย/ที่พัก 3 แบบ/อาหาร/บิล/เกม/เพื่อน/อันดับ/ตั้งค่า/เช็กรายวัน
+- ข้อมูลอิงระบบจริง: มื้อ 18:00–20:00 · นอนก่อน 23:00 · ฝน/ร้อน/ตัดน้ำ · อาหารอันตรายป้อนไม่ได้ · เกมหลักฟรี · ราคา/EXP/ค่ารักษาอ่านจากค่าปัจจุบัน; แก้ `handoff/GAME_RULES.md` ที่เก่าแล้ว
+- ไฟล์หลัก: `js/{home-v2,util}.js` `css/{home-v2,lobby}.css` `index_classic.html` · regression `tools/test_lobby_guide_{1489,browser_1489}.*` + ปรับ cache assertions เดิม
+- ตรวจผ่าน: syntax + guide/Home V2/market regression · browser source และ dist อย่างละ 30 สถานะ (812×375, 1366×768, 390×844) ไม่มีล้น/scroll · build และ web validator ผ่าน
+- **รอบ 1488 · ยิงรบคำ rig ข้อต่อมนุษย์:** แยกสะโพก/เข่า/ข้อเท้า + ไหล่/ศอก/ข้อมือ · ปืนติดมือขวา ศอกงอ ~70° ยกปืนชี้หน้า · recoil ตอนยิง
+- ไฟล์: `js/wordskirmish.js` `tools/test_wordskirmish.js`
+- unit 43 ผ่าน · เบราว์เซอร์ 812×375 ยืนยันมุมข้าง: แขนงอ ปืนอยู่ระดับอกชี้ -Z · หัวยังติด hit=head
+- ค้าง: รีเฟรชมือถือดูท่าถือปืน · ยังไม่ commit/deploy (รอผู้ใช้)
+- **รอบ 1487 · เสียง FIRE = fire.mp3 ตัดสั้นต่อนัด:** เปลี่ยนจาก MissileLaunch · ไฟล์ยาว ~5.5s เล่นแค่ ~320ms แล้วหยุด (1 เสียงต่อ 1 นัด)
+- ไฟล์: js/adventure3d.js sound/robot/fire.mp3 tools/test_mecha_1487.js
+- unit 1487 ผ่าน · ค้าง: เปิดมือถือยิงฟังบน live
+- **รอบ 1486 · ป้ายจบภารกิจหุ่นใหญ่ขึ้นบน Home V2:** ต้นเหตุ CSS ย่อ toast เหลือ 9–14px จึงมองไม่เห็นปุ่มปิด
