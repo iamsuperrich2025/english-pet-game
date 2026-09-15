@@ -24,15 +24,6 @@
 - ไฟล์: js/adventure3d.js sound/robot/fire.mp3 tools/test_mecha_1487.js
 - unit 1487 ผ่าน · ค้าง: เปิดมือถือยิงฟังบน live
 - **รอบ 1486 · ป้ายจบภารกิจหุ่นใหญ่ขึ้นบน Home V2:** ต้นเหตุ CSS ย่อ toast เหลือ 9–14px จึงมองไม่เห็นปุ่มปิด
-- ไฟล์: css/home-v2.css tools/test_home_v2_mobile_preview.js
-- ป้ายเงิน/เตือน font 16–22px ปุ่มปิด 44px กว้าง ~82vw · 812×375 ยังอยู่ในจอ กดปิดแล้วป้ายหาย
-- unit Home V2 ผ่าน · ค้าง: เปิดมือถือดูป้ายจริงหลังออกจากโลกหุ่น
-- **รอบ 1485 · มิสไซล์หุ่นรบ SFX/ควัน/วงเพลิง:** กด FIRE = MissileLaunch.mp3 · กระทบตัวอักษร = คลิป fire เดิม + ลูกไฟวงเพลิงแบบ Arena · ควันหางแบบยานแม่
-- ไฟล์: js/adventure3d.js js/mecha-combat-fx.js sound/robot/MissileLaunch.mp3 docs/PROJECT_MAP.md tools/test_mecha_1485.js
-- unit 1485 + 1480/1481 ผ่าน · ค้าง: เปิดมือถือยิงฟังเสียง/ดูควัน/ระเบิด
-- **รอบ 1484 · ขึ้นเว็บ + ล็อกหุ่นรบเฉพาะแอดมิน:** Classic ซ่อนปุ่ม/enterMecha3D ด้วย mechaAdminAllowed (ไม่ใช้ tester coming-soon) · City w3d_mecha บล็อก cityAdminAccess · Home V2 คง worldMecha ใน ADMIN_ONLY · syncAdminAccess → 
-efreshMechaLock
-- ไฟล์: js/{ui,auth,city3d,adventure3d,adv3d_css,mecha-combat-fx,home-v2}.js css/{lobby,home-v2}.css docs/PROJECT_MAP.md 	ools/test_mecha_{1480,1481,lobby_icon,admin_lock}.js
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน

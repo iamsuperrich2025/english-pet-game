@@ -1070,7 +1070,7 @@ vbRender:148 · vbCardHTML:194
 
 ## js/wordship.js (1,496 บรรทัด · 0 รายการ)
 
-## js/wordskirmish.js (818 บรรทัด · 0 รายการ)
+## js/wordskirmish.js (828 บรรทัด · 0 รายการ)
 
 ## js/wsaward.js (32 บรรทัด · 0 รายการ)
 

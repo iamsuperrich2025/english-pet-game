@@ -6339,3 +6339,16 @@
 - unit admin-lock + mecha 1480/1481/icon ผ่าน · ค้าง: ล็อกอินแอดมินดูปุ่ม/ยิงบน live
 - **รอบ 1483 · ไอคอนเข้าโลกหุ่นรบ:** เปลี่ยนจาก emoji 🤖 เป็นหุ่นชิบิ `robot_01-thumb` + ป้าย💥 · Classic rail + Home V2 การ์ดพื้น HUD
 - ไฟล์: `js/ui.js` `js/home-v2.js` `css/lobby.css` `css/home-v2.css` `tools/test_mecha_lobby_icon.js` `tools/test_home_v2_mobile_preview.js`
+
+
+## ⏬ ย้ายเมื่อ 2026-09-15 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- ไฟล์: css/home-v2.css tools/test_home_v2_mobile_preview.js
+- ป้ายเงิน/เตือน font 16–22px ปุ่มปิด 44px กว้าง ~82vw · 812×375 ยังอยู่ในจอ กดปิดแล้วป้ายหาย
+- unit Home V2 ผ่าน · ค้าง: เปิดมือถือดูป้ายจริงหลังออกจากโลกหุ่น
+- **รอบ 1485 · มิสไซล์หุ่นรบ SFX/ควัน/วงเพลิง:** กด FIRE = MissileLaunch.mp3 · กระทบตัวอักษร = คลิป fire เดิม + ลูกไฟวงเพลิงแบบ Arena · ควันหางแบบยานแม่
+- ไฟล์: js/adventure3d.js js/mecha-combat-fx.js sound/robot/MissileLaunch.mp3 docs/PROJECT_MAP.md tools/test_mecha_1485.js
+- unit 1485 + 1480/1481 ผ่าน · ค้าง: เปิดมือถือยิงฟังเสียง/ดูควัน/ระเบิด
+- **รอบ 1484 · ขึ้นเว็บ + ล็อกหุ่นรบเฉพาะแอดมิน:** Classic ซ่อนปุ่ม/enterMecha3D ด้วย mechaAdminAllowed (ไม่ใช้ tester coming-soon) · City w3d_mecha บล็อก cityAdminAccess · Home V2 คง worldMecha ใน ADMIN_ONLY · syncAdminAccess → 
+efreshMechaLock
+- ไฟล์: js/{ui,auth,city3d,adventure3d,adv3d_css,mecha-combat-fx,home-v2}.js css/{lobby,home-v2}.css docs/PROJECT_MAP.md 	ools/test_mecha_{1480,1481,lobby_icon,admin_lock}.js
