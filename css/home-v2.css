@@ -1540,6 +1540,13 @@ body.vw2-pet-modal-open{overflow:hidden!important}
 #vw-home-v2-root .vw2-rail-worldAdv .vw2-rail-art{background:radial-gradient(circle at 50% 70%,#6be9ff88,#172444 72%)!important;border:1px solid #c9dbf8;box-shadow:inset 0 0 9px #7cc6ff66}
 #vw-home-v2-root .vw2-arena-entry-art{display:grid;place-items:center;width:100%;height:100%;overflow:visible}
 #vw-home-v2-root .vw2-arena-entry-art img{width:100%;height:110%;object-fit:contain;display:block}
+/* 🤖 รอบ 1483: ไอคอนเข้าโลกหุ่นรบบน Home V2 — หุ่นชิบิเต็มช่อง + ป้ายยิง */
+#vw-home-v2-root .vw2-mecha-entry-art{display:grid;place-items:center;width:100%;height:100%;overflow:visible}
+#vw-home-v2-root .vw2-mecha-entry-art .mecha-lobby-ico{position:relative;display:grid;place-items:center;width:100%;height:100%}
+#vw-home-v2-root .vw2-mecha-entry-art img{width:92%;height:118%;object-fit:contain;object-position:50% 8%;display:block;
+  filter:drop-shadow(0 2px 3px rgba(9,21,52,.55))}
+#vw-home-v2-root .vw2-mecha-entry-art .mecha-lobby-sigil{position:absolute;right:2%;bottom:4%;font-style:normal;font-size:12px;line-height:1;
+  filter:drop-shadow(0 0 2px #000)}
 #vw-home-v2-root .vw2-rail-worldAdv .vw2-rail-label{color:#d7f7ff}
 .vw2-adventure-hub{
   --dock-a:#33866d;--dock-b:#19534e;--dock-rim:#8ce5bd;position:relative;isolation:isolate;min-width:0;height:100%;padding:3px 9px 3px 4px;display:grid;grid-template-columns:clamp(33px,3.3vw,43px) minmax(0,1fr) 14px;align-items:center;gap:6px;
@@ -2507,3 +2514,11 @@ body.vw2-home-active #screen-dashboard.vw2-active>#panel-overlay.open{
 #vw-home-v2-root .vw2-arena-entry-art img{position:absolute;right:-3%;top:-5%;width:82%!important;height:155%!important;object-fit:cover;object-position:50% 12%;filter:drop-shadow(-3px 2px 4px #091534)!important}
 #vw-home-v2-root .vw2-arena-sigil{position:absolute;left:7px;bottom:5px;display:grid;place-items:center;width:25px;height:25px;border:1px solid #ffe9a8;border-radius:50%;background:#19385bd9;color:#ffda83;font:22px/1 'Segoe UI Symbol',sans-serif;text-shadow:0 0 6px #ffae52}
 #vw-home-v2-root .vw2-rail-worldAdv .vw2-rail-label{color:#e4f8ff!important;font-weight:900!important}
+
+/* 🤖 รอบ 1483: การ์ดเข้าโลกหุ่นรบ — พื้น HUD ฟ้า + หุ่นชิบิ */
+#vw-home-v2-root .vw2-rail-worldMecha .vw2-rail-art{position:relative!important;width:calc(100% - 6px)!important;height:clamp(60px,9vh,80px)!important;min-height:60px!important;overflow:hidden!important;border-radius:10px!important;background:linear-gradient(145deg,#0d2a4ecc,#1a5f8a88 55%,#0a1c38cc)!important;border:1px solid #7fe6ff!important;box-shadow:inset 0 0 14px #37b6ff44,0 2px 6px rgba(0,0,0,.35)!important}
+#vw-home-v2-root .vw2-mecha-entry-art{position:absolute!important;inset:0!important;display:block!important;width:100%!important;height:100%!important;overflow:hidden!important}
+#vw-home-v2-root .vw2-mecha-entry-art .mecha-lobby-ico{position:absolute!important;inset:0!important;display:block!important}
+#vw-home-v2-root .vw2-mecha-entry-art img{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:78%!important;height:108%!important;object-fit:contain;object-position:50% 0%;filter:drop-shadow(0 2px 4px #091534)!important}
+#vw-home-v2-root .vw2-mecha-entry-art .mecha-lobby-sigil{position:absolute;right:5px;bottom:4px;display:grid;place-items:center;width:22px;height:22px;border:1px solid #ffe9a8;border-radius:50%;background:#19385bd9;font:13px/1 'Segoe UI Emoji',sans-serif;filter:none;text-shadow:0 0 5px #ffae52}
+#vw-home-v2-root .vw2-rail-worldMecha .vw2-rail-label{color:#dff5ff!important;font-weight:900!important}

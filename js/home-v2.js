@@ -197,7 +197,7 @@
     soccer:`<circle cx="32" cy="32" r="25" class="i-white"/><path d="M32 19l8 6-3 10H27l-3-10z" class="i-purple"/><path d="M32 7v12M11 20l13 5M53 20l-13 5M16 49l11-14M48 49L37 35M18 55l-2-6M46 55l2-6" class="i-line"/><path d="M13 18l5-8 10-2M51 18l-5-8-10-2" class="i-blue"/>`,
     motorcycle:`<circle cx="16" cy="47" r="10" class="i-blue"/><circle cx="49" cy="47" r="10" class="i-blue"/><circle cx="16" cy="47" r="4" class="i-white"/><circle cx="49" cy="47" r="4" class="i-white"/><path d="M16 47l11-16h12l10 16M26 31l8 16M25 40h17" class="i-line"/><path d="M27 24h13l6 7H27z" class="i-pink"/><path d="M41 22h9M47 22l4 7" class="i-roof"/>`,
     mothership:`<path d="M9 35c5-12 14-18 23-18s18 6 23 18c-5 8-14 12-23 12S14 43 9 35z" class="i-purple"/><path d="M22 20c2-8 6-12 10-12s8 4 10 12z" class="i-blue"/><ellipse cx="32" cy="35" rx="25" ry="8" class="i-peach"/><circle cx="19" cy="36" r="3" class="i-white"/><circle cx="32" cy="38" r="3" class="i-white"/><circle cx="45" cy="36" r="3" class="i-white"/><path d="M25 47l-5 10M32 48v11M39 47l5 10" class="i-mint-line"/>`,
-    mecha:`<rect x="17" y="10" width="30" height="25" rx="8" class="i-blue"/><rect x="20" y="37" width="24" height="18" rx="5" class="i-purple"/><path d="M17 41H8v11M47 41h9v11M25 55v6M39 55v6M32 10V5" class="i-line"/><circle cx="25" cy="22" r="4" class="i-white"/><circle cx="39" cy="22" r="4" class="i-white"/><path d="M25 30h14" class="i-white-line"/><path d="M27 42l5 5 5-5" class="i-star"/>`,
+    mecha:`<path d="M20 18h24c4 0 7 3 7 7v8H13v-8c0-4 3-7 7-7z" class="i-blue"/><path d="M18 34h28v14c0 3-2 5-5 5H23c-3 0-5-2-5-5z" class="i-purple"/><circle cx="25" cy="26" r="4.5" class="i-white"/><circle cx="39" cy="26" r="4.5" class="i-white"/><circle cx="26" cy="26" r="2" class="i-mint"/><circle cx="40" cy="26" r="2" class="i-mint"/><path d="M14 38H6v10h6M50 38h8v10h-6" class="i-line"/><path d="M24 53v6M40 53v6M32 14V7" class="i-line"/><path d="M46 22h12l2 4-10 3z" class="i-coin"/><path d="M52 18l3-6 3 6 6 2-6 3-3 6-3-6-6-2z" class="i-star"/><path d="M27 41l5 5 5-5" class="i-peach"/>`,
     pinboard:`<rect x="10" y="8" width="44" height="48" rx="7" class="i-peach"/><rect x="15" y="13" width="34" height="38" rx="4" class="i-white"/><circle cx="23" cy="27" r="7" class="i-pink"/><circle cx="41" cy="27" r="7" class="i-blue"/><circle cx="32" cy="43" r="7" class="i-coin"/><path d="M20 34l-2 10 5-3 5 3-2-10M38 34l-2 10 5-3 5 3-2-10M29 50l-2 7 5-3 5 3-2-7" class="i-line"/>`,
   });
   function icon(name, extra=''){
@@ -262,17 +262,18 @@
     return ` data-vw2-source="${htmlEscape(sourceSelector)}"${mirrorVisibility ? ' data-vw2-mirror-visibility="1"' : ''}`;
   }
   const ADMIN_ONLY_WORLD_ACTIONS = new Set([
-    'worldSky','worldDrive','worldMoto','worldInvasion','worldMecha','wordship'
+    'worldSky','worldDrive','worldMoto','worldInvasion','worldMecha','wordship','skirmish'
   ]);
   const CLASSIC_RAIL_GLYPHS = Object.freeze({
     cure:'💊',city:'🏙️',worldAdv:'🌍',worldSky:'☁️',worldHaunt:'👻',worldHeli:'🚁',worldDrone:'🛸',
     worldDrive:'🚗',worldSoccer:'⚽',worldMoto:'🏍️',worldInvasion:'🛸',worldMecha:'🤖',worldFrontline:'🪖',home:'🏠',
-    invest:'📈',factory:'🏭',wordsearch:'🔎',typing:'⌨️',bubble:'🫧',shoot:'🎯',wordship:'⚓',cannon:'🐉🔥',
+    invest:'📈',factory:'🏭',wordsearch:'🔎',typing:'⌨️',bubble:'🫧',shoot:'🎯',wordship:'⚓',skirmish:'🔫',cannon:'🐉🔥',
     examstd:'📋',onet:'🇹🇭',rank:'🥇',market:'🏪',friends:'👥',gifts:'🎁',stats:'📊',trophy:'🏆',racing:'🏎️',worldPickup:'🛻'
   });
   function classicRailGlyph(actionName, sourceSelector){
     if(actionName==='worldAdv')return '<span class="vw2-classic-rail-ico vw2-arena-entry-art" aria-hidden="true"><img src="img/arena-heroes/fire-thumb.webp" alt="" width="160" height="240" decoding="async"><span class="vw2-arena-sigil">⚔</span></span>';
     if(actionName==='worldKart'&&typeof kartLobbyIconHTML==='function')return '<span class="vw2-classic-rail-ico" aria-hidden="true">'+kartLobbyIconHTML()+'</span>';
+    if(actionName==='worldMecha'&&typeof mechaLobbyIconHTML==='function')return '<span class="vw2-classic-rail-ico vw2-mecha-entry-art" aria-hidden="true">'+mechaLobbyIconHTML()+'</span>';
     let glyph = '';
     if(sourceSelector){
       try{ glyph = document.querySelector(sourceSelector)?.querySelector('.rail-ico')?.textContent?.trim() || ''; }
@@ -834,7 +835,7 @@
       worldInvasion:'#btn-world-invasion', worldMecha:'#btn-world-mecha',
       worldFrontline:'#btn-world-frontline', worldKart:'#btn-world-kart', worldPickup:'#btn-world-pickup',
       typing:'#btn-rail-typing', bubble:'#btn-rail-bubble', shoot:'#btn-rail-shootword',
-      wordship:'#btn-rail-wordship', cannon:'#btn-rail-lettercannon', examstd:'#btn-rail-examstd', onet:'#btn-rail-onet',
+      wordship:'#btn-rail-wordship', skirmish:'#btn-rail-skirmish', cannon:'#btn-rail-lettercannon', examstd:'#btn-rail-examstd', onet:'#btn-rail-onet',
       rank:'#btn-rail-rank', stats:'#btn-stats', trophy:'#btn-rail-trophy', chat:'#btn-chat',
       music:'#btn-music', settings:'#btn-settings', install:'#btn-install-top',
       logout:'#btn-logout', play:'#btn-play', cats:'#btn-cats', picmatch:'#btn-picmatch',
@@ -1117,6 +1118,7 @@
       ['bubble','bubble','เกมฟอง','#btn-rail-bubble'],
       ['shoot','target','ยิงเป้าคำ','#btn-rail-shootword'],
       ['wordship','ship','กองเรือคำศัพท์','#btn-rail-wordship'],
+      ['skirmish','gun','ยิงรบคำ','#btn-rail-skirmish'],
       ['cannon','dragon','Dragon Sky Siege','#btn-rail-lettercannon'],
       ['examstd','exam','ข้อสอบจริง','#btn-rail-examstd'],
       ['onet','flag','O-NET','#btn-rail-onet'],

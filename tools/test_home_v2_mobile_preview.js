@@ -257,6 +257,7 @@ const expectedRail = [
   ["factory",'.lobby-rail [data-panel="panel-factory"]'], ["wordsearch","#btn-rail-wordsearch"],
   ["typing","#btn-rail-typing"], ["bubble","#btn-rail-bubble"],   ["shoot","#btn-rail-shootword"],
   ["wordship","#btn-rail-wordship"],
+  ["skirmish","#btn-rail-skirmish"],
   ["cannon","#btn-rail-lettercannon"], ["examstd","#btn-rail-examstd"], ["onet","#btn-rail-onet"],
   ["rank","#btn-rail-rank"], ["market",'.lobby-rail [data-panel="panel-market"]'],
   ["friends",'.lobby-rail [data-panel="panel-friends"]'], ["gifts",'.lobby-rail [data-panel="panel-gifts"]'],
@@ -268,7 +269,7 @@ const tuplePattern = (action, source) => {
 };
 expectedRail.forEach(([action, source]) => must(tuplePattern(action, source).test(home), `left rail marker missing: ${action}`));
 const railOrder = expectedRail.map(([action]) => home.indexOf(`['${action}',`));
-must(expectedRail.length === 30 && railOrder.every((p, i) => p >= 0 && (!i || p > railOrder[i - 1])), "authoritative left rail order changed");
+must(expectedRail.length === 31 && railOrder.every((p, i) => p >= 0 && (!i || p > railOrder[i - 1])), "authoritative left rail order changed");
 const semanticRailIcons = [
   ['worldAdv','adventure'],['worldSky','skyplay'],['worldHaunt','ghost'],
   ['worldHeli','helicopter'],['worldDrone','drone'],['worldSoccer','soccer'],
@@ -276,7 +277,7 @@ const semanticRailIcons = [
   ['trophy','pinboard']
 ];
 semanticRailIcons.forEach(([action, iconName])=>must(home.includes(`['${action}','${iconName}'`), `left rail icon does not explain its destination: ${action}`));
-const adminOnlyWorlds = ["worldSky","worldDrive","worldMoto","worldInvasion","worldMecha","wordship"];
+const adminOnlyWorlds = ["worldSky","worldDrive","worldMoto","worldInvasion","worldMecha","wordship","skirmish"];
 const publicWorlds = ["worldAdv","worldHaunt","worldHeli","worldDrone","worldSoccer"];
 const adminWorldSetBlock = (home.match(/const ADMIN_ONLY_WORLD_ACTIONS = new Set\(\[([\s\S]*?)\]\)/) || [])[1] || "";
 const adminWorldSetNames = Array.from(adminWorldSetBlock.matchAll(/'([^']+)'/g), match=>match[1]);
@@ -284,6 +285,9 @@ must(JSON.stringify(adminWorldSetNames) === JSON.stringify(adminOnlyWorlds), "ad
 must(home.includes("const adminBlocked = adminOnly && !adminWorldAllowed()") && home.includes("hidden disabled aria-hidden") && home.includes("btn.hidden = adminBlocked") && home.includes("btn.disabled = disabled") && home.includes("btn.tabIndex = -1") && home.includes("data-vw2-admin-only-world") && css.includes('data-vw2-admin-only-world="1"][hidden]'), "R40 first-paint/public-view admin hiding/disable/focus guard missing");
 must(publicWorlds.every(action=>home.includes(`['${action}',`)) && !publicWorlds.some(action=>adminOnlyWorlds.includes(action)), "R19 public world inventory changed");
 must(home.includes("worldAdv:'#btn-world-adv'") && home.includes("worldSky:'#btn-world-sky'") && home.includes("startsWith('world')") && css.includes('data-vw2-action^="world"'), "R19 Classic world parity missing");
+must(home.includes("actionName==='worldMecha'") && home.includes('mechaLobbyIconHTML') && home.includes('vw2-mecha-entry-art'), "Home V2 mecha entry should call mechaLobbyIconHTML");
+must(ui.includes('function mechaLobbyIconHTML') && ui.includes('robot_01-thumb.webp') && ui.includes("w.mode==='mecha'?mechaLobbyIconHTML()"), 'Classic rail mecha lobby icon missing');
+must(css.includes('.vw2-rail-worldMecha') && css.includes('.vw2-mecha-entry-art') && fs.existsSync(path.join(root, 'img/robots/chibi-market/robot_01-thumb.webp')), 'Mecha entry art CSS/asset missing');
 must(expectedRail.at(-1)[0] === "racing" && home.includes("clickExisting('#btn-world-f1')") && !home.includes("try{ enterF1_3D(); return true; }"), "Vocab World Racing is not bottom-most or bypasses the authoritative Classic entry pipeline");
 must(css.includes('r111_cloud_pedestal.svg') && css.includes('.vw2-rail-art:after') && css.includes('scrollbar-width:none'), "premium cloud/pedestal left rail or hidden-scrollbar behavior missing");
 must(/\.vw2-rail-btn\{[\s\S]*?flex:0 0 auto!important;[\s\S]*?min-height:92px!important;[\s\S]*?height:auto!important;[\s\S]*?\}/.test(css), "R19 vertical rail controls cannot grow with longer labels");

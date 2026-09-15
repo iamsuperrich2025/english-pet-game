@@ -705,6 +705,15 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
   .adv-mecha #adv-board{display:none}
   .adv-mecha #adv-topbar{top:134px;left:8px;transform:none;z-index:6}   /* เหรียญ/HP ลงใต้ minimap (คอลัมน์ซ้าย) เปิดที่บนขวาให้ปุ่มแถวเดียว */
   .adv-mecha .adv-hp{width:80px}
+  /* 🤖 รอบ 1480: คำศัพท์กลางบน (พ้นเป้าเล็งกลางจอ) + สไตล์กระจก HUD */
+  .adv-mecha #adv-words{top:6px;left:50%;transform:translateX(-50%);z-index:7;
+    padding:4px 12px;border-radius:14px;max-width:min(62vw,380px);
+    background:linear-gradient(160deg,rgba(6,16,26,.82),rgba(4,10,18,.64));
+    border:1px solid rgba(127,230,255,.75);box-shadow:0 0 12px rgba(0,0,0,.45),inset 0 0 8px rgba(0,0,0,.35)}
+  .adv-mecha #adv-words .adv-fword{gap:3px}
+  .adv-mecha #adv-words .adv-fch{font-size:clamp(13px,2.2vw,20px);min-width:20px;padding:2px 5px;border-radius:7px}
+  .adv-mecha #adv-words .adv-fth{font-size:clamp(10px,1.5vw,13px);margin-top:2px}
+  @media(max-height:430px){.adv-mecha #adv-words{top:4px;padding:3px 9px}}
   /* ปุ่มยูทิลิตี้แถวเดียวบนขวา (ซ้าย→ขวา: ทุกคน·เปิด·ปิด·แชท·?·ออก) — ระยะเดียวกับโลกขับรถที่พิสูจน์แล้วไม่ทับกัน */
   .adv-mecha #adv-exit{top:8px;right:8px;font-size:12px;padding:5px 9px;z-index:6}
   .adv-mecha #adv-help{top:8px;right:74px;width:30px;height:30px;font-size:14px;z-index:6}
@@ -1181,11 +1190,20 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
   #mecha-back{right:22px;bottom:24px;width:76px;height:70px}       /* ▼ ถอย (ขวาล่าง) */
   #mecha-left{left:22px;bottom:24px;width:70px;height:70px;border-radius:50%}    /* ◀ เลี้ยวซ้าย (ซ้ายล่าง) */
   #mecha-right{left:100px;bottom:24px;width:70px;height:70px;border-radius:50%}  /* ▶ เลี้ยวขวา (ซ้ายล่าง) */
-  #mecha-fire{right:146px;top:186px;width:92px;height:92px;border-radius:50%;font-size:34px;
-    background:rgba(255,90,110,.32);border-color:rgba(255,150,160,.7)}   /* รอบ 221 (ผู้ใช้): ย้ายไปขวา ให้อยู่คอลัมน์เดียวกับปุ่ม "ทุกคน"/vmode (right:162+ครึ่ง60 −ครึ่ง92 = right:146) */
-  #mecha-fire2{left:24px;top:138px;width:84px;height:84px;border-radius:50%;font-size:30px;
-    background:rgba(255,90,110,.32);border-color:rgba(255,150,160,.7)}   /* รอบ 223 (ผู้ใช้): ปุ่มยิงตัวที่ 2 ใต้ minimap ซ้าย (ยิงได้สองมือ) */
-  #mecha-fire:active,#mecha-fire2:active{background:rgba(255,90,110,.55)}
+  /* 🤖 รอบ 1480: ปุ่มยิงโทน HUD ห้องนักบิน (เลิกไอคอนปืนฉีดน้ำแดง) */
+  #mecha-fire,#mecha-fire2{flex-direction:column;gap:2px;
+    background:linear-gradient(160deg,rgba(6,16,26,.78),rgba(4,12,22,.58));
+    border:2px solid rgba(127,230,255,.72);color:#dff5ff;
+    box-shadow:0 0 12px rgba(0,0,0,.45),inset 0 0 10px rgba(0,0,0,.35);
+    font-size:11px;font-weight:900;letter-spacing:1.2px;text-shadow:0 0 6px rgba(127,230,255,.85)}
+  #mecha-fire{right:146px;top:186px;width:92px;height:92px;border-radius:50%}   /* รอบ 221: คอลัมน์เดียวกับ vmode */
+  #mecha-fire2{left:24px;top:138px;width:84px;height:84px;border-radius:50%}   /* รอบ 223: ใต้ minimap ซ้าย */
+  #mecha-fire:active,#mecha-fire2:active{background:rgba(80,200,255,.28)}
+  #mecha-fire .mh-fire-ico,#mecha-fire2 .mh-fire-ico{width:22px;height:22px;border-radius:50%;
+    border:2px solid currentColor;box-shadow:0 0 8px currentColor;position:relative}
+  #mecha-fire .mh-fire-ico:before,#mecha-fire2 .mh-fire-ico:before{content:'';position:absolute;left:50%;top:50%;
+    width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:currentColor}
+  #mecha-fire b,#mecha-fire2 b{font:inherit;letter-spacing:inherit}
   /* 🤖 รอบ 224: กรอบ HUD ห้องนักบินตามหุ่นแต่ละตัว (img/robots/hud/robotHUD_NN.png) + เอฟเฟกต์ไล่เฉดสี + ค่าตัวเลขเรียลไทม์
      --mh = สีประจำอาวุธของหุ่น (ตั้งตอนเข้าเกมจาก MECHA_WEAPONS) · กรอบเจาะกลางให้มองทะลุเห็นสนามรบ */
   #mecha-hud{position:absolute;inset:0;z-index:5;pointer-events:none;display:none;
@@ -1273,8 +1291,8 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
   #mecha-hud .mh-boss-ttl{font-size:10px;font-weight:800;letter-spacing:.5px;color:#ff7a9c;text-shadow:0 0 6px #ff3b6b;white-space:nowrap}
   #mecha-hud .mh-boss-bar{width:clamp(78px,26vw,120px);height:9px}
   #mecha-hud .mh-boss-bar i{background:linear-gradient(90deg,#ff3b6b,#ff9a3a);width:100%}
-  /* 🔥 คอมโบ — ป๊อปกลางบน (ใต้คำ เหนือเป้าเล็ง) */
-  #mecha-hud .mh-combo{position:absolute;top:104px;left:50%;transform:translateX(-50%);
+  /* 🔥 คอมโบ — ป๊อปใต้คำกลางบน (รอบ 1480: คำย้ายขึ้น top:6px) */
+  #mecha-hud .mh-combo{position:absolute;top:58px;left:50%;transform:translateX(-50%);
     font-family:'Segoe UI',system-ui,sans-serif;font-weight:900;white-space:nowrap;opacity:0;
     color:#fff;text-shadow:0 0 10px var(--mh),0 1px 3px #000}
   #mecha-hud .mh-combo.pop{animation:mhCombo .8s ease-out}

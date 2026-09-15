@@ -59,7 +59,7 @@ PRIMARY FILE: `js/mecha-models.js`, `js/mecha-combat-fx.js`
 RELATED FILES: `js/adventure3d.js`, `js/ui.js`, `img/models/mecha/`, `tools/mecha/build_robots.py`, `tools/mecha/preview.html`, `tools/mecha/test_models.cjs`, `tools/mecha/test_fx.cjs`, `tools/mecha/fx-preview.html`
 PUBLIC ENTRY POINTS / KEY SYMBOLS: `MechaModels.prepare/attach/fromAvatar/avatar/resolveSelection`, `makeMechaPeer`, `mechaRobotId`
 DEPENDENCIES: THREE, lazy GLTFLoader, existing NetRoom m_01..m_10 avatar payload; no new network fields/rules.
-NOTES: Ten original texture-free Soft Cuboid Chibi GLBs with Idle/Walk/Attack clips, forward -Z, feet y=0, height 4.61m. Each cached template shares geometry/materials across peers; four cloned pivots use existing distance-driven walking. Disposed/replaced peers ignore late loads; failures retain the old colored fallback and can retry on re-entry. Mecha's own view remains the selected cockpit. GLBs keep portable PBR; MechaModels bridges their colors to the engine's existing linear-output Phong pipeline. MechaCombatFX owns ten cosmetic projectile/muzzle/impact styles: six instanced batches, max 12 active shots; no new network fields, rewards, cadence or heat changes. FX are local to the shooter, and disposed on exit. Preview: tools/mecha/preview.html and fx-preview.html.
+NOTES: Ten original texture-free Soft Cuboid Chibi GLBs with Idle/Walk/Attack clips, forward -Z, feet y=0, height 4.61m. Each cached template shares geometry/materials across peers; four cloned pivots use existing distance-driven walking. Disposed/replaced peers ignore late loads; failures retain the old colored fallback and can retry on re-entry. Mecha's own view remains the selected cockpit. GLBs keep portable PBR; MechaModels bridges their colors to the engine's existing linear-output Phong pipeline. MechaCombatFX owns ten cosmetic styles with ballistic `launch/sync/impact` (Word Fleet gravity G=8.4, mass=1.2, muzzle=62); legacy `fire(from,to)` remains for fx-preview. Six instanced batches, max 12 active shots; no new network fields, rewards, cadence or heat changes. Daytime open field (no blocking rocks). Coins bank into `state.coins` via `mechaBankCoins`. Admin-only entry via Home V2 / Classic (mechaAdminAllowed + City cityAdminAccess; not tester coming-soon). Preview: tools/mecha/preview.html and fx-preview.html.
 
 SYSTEM: Hotel building and interior
 PURPOSE: Builds the five-floor haunted hotel geometry, rooms, stairs/lift, lights, floor visibility, surfaces, and solid collision data.
@@ -149,6 +149,14 @@ RELATED FILES: `js/ui.js`, `js/state.js`, leaderboard/award files
 PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.ShootWord`, `open`, `close`, `buildScene`, `bindInput`, `loop`
 DEPENDENCIES: Lazily loaded `THREE`, shared state/UI/audio.
 NOTES: Separate from Invasion combat.
+
+SYSTEM: Cute Word Skirmish minigame
+PURPOSE: Admin-only third-person cute PvP vocab raid copied from Shoot Word movement/gun feel, with Frontline/Arena letter banking.
+PRIMARY FILE: `js/wordskirmish.js`
+RELATED FILES: `css/wordskirmish.css`, `js/ui.js` (`openWordSkirmish`), `js/home-v2.js`, `js/city3d.js`, `js/netroom.js`, `index_classic.html`, `tools/test_wordskirmish.js`
+PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.WordSkirmish`, `open`, `close`, `fire`, `tryPickup`, `tryDeposit`
+DEPENDENCIES: `vocabForStudent`, lazily loaded `THREE`, optional `NetRoom` map `skirmish`.
+NOTES: Hidden from non-admins. Free walk + chase camera. Headshot KO, body uses gun `BODY_DMG`. Carry-one letters banked at a private pastel house for 1,000 coins. Soft Cuboid Chibi 3D toy-gun avatars. Rules publish required for live rooms.
 
 SYSTEM: Cute Word Fleet minigame
 PURPOSE: Landscape toy-battleship vocab game: pick up letter cards, bank them at your home island, and complete Frontline-style words for central coins.

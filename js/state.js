@@ -183,6 +183,9 @@ const DEFAULT_STATE = {
   home:null,                          // 'basic' | 'medium' | 'castle'
   homePurchaseLog:[],                 // ประวัติซื้อบ้านล่าสุด (สูงสุด 20 รายการ) ใช้ตรวจสอบ/กู้คืนเมื่อมีข้อพิพาท
   ac:false,                           // ติดแอร์แล้ว (สำหรับบ้าน medium)
+  acPurchaseLog:[],                   // รอบ 1478: ประวัติติดตั้งแอร์ (สูงสุด 20) กันซื้อซ้ำ/ใช้ตรวจคืนเงิน
+  acDuplicateRefunds:{},              // รอบ 1478: marker แคมเปญคืนเงินซื้อแอร์ซ้ำ
+  acDuplicateRefundNotice:null,       // กล่องแจ้งคืนเงินแอร์ ค้างจนกดรับทราบ
   acPurchaseLog:[],                   // ประวัติซื้อแอร์ล่าสุด (สูงสุด 20 รายการ) ใช้ตรวจสอบและกันยอดซ้ำ
   acDuplicateRefunds:{},              // campaign marker จาก server ป้องกันคืนเหรียญซ้ำ
   acDuplicateRefundNotice:null,       // แจ้งยอดคืนเหรียญ ค้างจนผู้เล่นกดรับทราบ

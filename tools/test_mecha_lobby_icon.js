@@ -1,0 +1,16 @@
+'use strict';
+const fs=require('fs');
+const ui=fs.readFileSync('js/ui.js','utf8');
+const home=fs.readFileSync('js/home-v2.js','utf8');
+const lobby=fs.readFileSync('css/lobby.css','utf8');
+const css=fs.readFileSync('css/home-v2.css','utf8');
+const ok=(c,m)=>{ if(!c){ console.error('FAIL',m); process.exit(1); } console.log('ok',m); };
+ok(ui.includes('function mechaLobbyIconHTML'),'fn');
+ok(ui.includes('robot_01-thumb.webp'),'thumb path');
+ok(ui.includes("w.mode==='mecha'?mechaLobbyIconHTML()"),'rail wiring');
+ok(home.includes("actionName==='worldMecha'"),'home glyph');
+ok(home.includes('vw2-mecha-entry-art'),'home class');
+ok(lobby.includes('.mecha-lobby-ico'),'lobby css');
+ok(css.includes('.vw2-rail-worldMecha'),'h2 css');
+ok(fs.existsSync('img/robots/chibi-market/robot_01-thumb.webp'),'asset');
+console.log('mecha-1483 icon checks passed');

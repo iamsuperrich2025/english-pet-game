@@ -34,7 +34,7 @@ const TAU = Math.PI*2;
 /* ============================================================
    🔒 รอบ 1070: ประตูโลกที่ยัง Coming soon — สิทธิ์ทดสอบมาจาก Auth ที่ฝังในเซฟ Lobby เดิม
    ============================================================ */
-const CITY_WORLD_COMING_SOON = new Set(['w3d_adv','w3d_drive','w3d_moto','w3d_mecha']);
+const CITY_WORLD_COMING_SOON = new Set(['w3d_adv','w3d_drive','w3d_moto']); // 🤖 รอบ 1484: mecha ล็อกแอดมินแยก
 const CITY_WORLD_TESTER_NAMES = new Set(['สัมปจิตฉามิ','ครูรุต']);
 function cityWorldTester(){
   try{
@@ -1115,6 +1115,13 @@ const BUILDINGS = [
     tickers.push((dt,t)=>{hull.position.y=6.2+Math.sin(t*2)*.12;flag.rotation.y=Math.sin(t*3)*.4;});
     return g;
   }),
+  bld('skirmish',  '🔫','ยิงรบคำ','skirmish',  16, BAND2_R+8, ()=>{
+    const g=bShop({col:'#ffe4ec',roof:0xfb7185,aw1:'#fda4af',sign:'🔫 WORD SKIRMISH',signBg:'#fff1f5'});
+    const head=M(new THREE.BoxGeometry(.7,.6,.6),mat(0xffcf9e),0,6.45,0);g.add(head);
+    const gun=M(cyl(.08,.1,1.1,8),mat(0xffd54f), .55,6.35,0);gun.rotation.z=Math.PI/2;g.add(gun);
+    tickers.push((dt,t)=>{head.position.y=6.45+Math.sin(t*2)*.1;gun.rotation.y=Math.sin(t*1.4)*.35;});
+    return g;
+  }),
   bld('shootword', '🎯','ยิงเป้าคำ','shootword',   20, BAND2_R, ()=>{
     const g = bShop({col:'#fff3e0', roof:0xff7043, aw1:'#ff8a65', sign:'🎯 SHOOT WORD', signBg:'#fff3e0'});
     const c = cvs(128,128), q = c.getContext('2d');           // เป้าวงกลมหมุนบนหลังคา
@@ -1161,7 +1168,8 @@ function buildCity(){
     g.rotation.y = Math.atan2(-x, -z);      // หันหน้าเข้าลานกลาง
     scene.add(g);
     BLD_AT[b.key] = {x, z, ry:g.rotation.y, h:g.userData.h||8};
-    const ic = iconSprite(b.ico, b.label, cityWorldComingSoon(b.go));
+    const ic = iconSprite(b.ico, b.label,
+      cityWorldComingSoon(b.go) || ((b.go==='wordship'||b.go==='skirmish'||b.go==='w3d_mecha') && !cityAdminAccess()));
     ic.position.set(x, (g.userData.h||8)+1.8, z);
     ic.userData.baseY = ic.position.y;
     ic.userData.ph = rnd(0, TAU);
@@ -2946,7 +2954,7 @@ function captureCityShot(goKey, bldKey){
   }catch(e){}
 }
 function travelTo(b){
-  if(b && b.go==='wordship' && !cityAdminAccess()){
+  if(b && (b.go==='wordship' || b.go==='skirmish' || b.go==='w3d_mecha') && !cityAdminAccess()){
     const msg='🔒 กำลังทดสอบ — เปิดให้แอดมินเท่านั้น';
     setChip(msg);
     if(Live.self && Live.self.g) showBubble('__self', msg, Date.now());

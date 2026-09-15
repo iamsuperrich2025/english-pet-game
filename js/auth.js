@@ -88,6 +88,8 @@ function syncAdminAccess(){
   if(state.adminAccess!==allowed){state.adminAccess=allowed;saveState();}
   if(typeof LetterCannon!=='undefined'&&LetterCannon.refreshLock)LetterCannon.refreshLock();
   if(typeof refreshWordShipLock==='function')refreshWordShipLock();
+  if(typeof refreshSkirmishLock==='function')refreshSkirmishLock();
+  if(typeof refreshMechaLock==='function')refreshMechaLock();
 }
 
 /* ---------- บัญชีผู้ทดสอบเกม (รอบ 56 + 59) ----------

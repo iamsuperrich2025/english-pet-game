@@ -929,6 +929,11 @@ html.no-anim .call-fx-emo{animation:callFloat 1.2s linear forwards;}
   padding:8px 2px;cursor:pointer;transition:background .15s, transform .12s;flex-shrink:0;
 }
 .rail-btn .rail-ico{font-size:21px;line-height:1.15;}
+/* 🤖 รอบ 1483: ไอคอนโลกหุ่นรบ — ภาพชิบิ + ป้ายยิง */
+.rail-btn .mecha-lobby-ico{position:relative;display:inline-grid;place-items:center;width:40px;height:40px;vertical-align:middle}
+.rail-btn .mecha-lobby-ico img{width:40px;height:40px;object-fit:contain;object-position:center top;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
+.rail-btn .mecha-lobby-ico .mecha-lobby-sigil{position:absolute;right:-3px;bottom:-2px;font-style:normal;font-size:13px;line-height:1;
+  filter:drop-shadow(0 0 2px #000);pointer-events:none}
 /* 🏙️ ปุ่ม "Lobby 3D" เป็น <a> ไปหน้ารอง index.html?lobby=3d — จัดกลางเหมือนปุ่มอื่น */
 a.rail-btn{text-decoration:none;text-align:center;}
 .rail-btn.rail-city{background:rgba(232,182,76,.18);border-color:rgba(232,182,76,.5);color:#ffe3a6;}
@@ -993,6 +998,7 @@ html.no-anim .rail-nudge{animation:none !important;}
 .rail-btn#btn-rail-lettercannon .rail-lock{position:absolute;top:3px;right:4px;font-size:14px;line-height:1;}
 .rail-btn#btn-rail-lettercannon.tester-locked{opacity:.72;filter:saturate(.55);}
 .rail-btn#btn-rail-wordship[hidden]{display:none!important;}
+.rail-btn#btn-rail-skirmish[hidden]{display:none!important;}
 /* จำนวนคำที่พิชิตในโลกนั้น (ปลดล็อกแล้ว) — เหรียญทอง = ความสำเร็จ ต่างจาก badge แดง(เตือน) */
 .rail-btn.rail-world .rail-count{
   position:absolute;top:2px;right:5px;min-width:17px;height:17px;padding:0 4px;

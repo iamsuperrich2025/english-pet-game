@@ -7245,8 +7245,53 @@ function bindWordShipRail(){
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bindWordShipRail);
 else bindWordShipRail();
-if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bindWordShipRail);
-else bindWordShipRail();
+/* ==== 🔫 WORD SKIRMISH / ยิงรบคำ — รอบ 1480 ==== */
+const SKIRMISH_LOCK_MSG='🔒 ยิงรบคำกำลังทดสอบ — เปิดให้ผู้ดูแลระบบเท่านั้น';
+function skirmishAdminAllowed(){
+  try{
+    if(typeof isAdmin==='function' && isAdmin()===true) return true;
+    if(typeof state!=='undefined' && state.adminAccess===true) return true;
+  }catch(_){}
+  return false;
+}
+function refreshSkirmishLock(){
+  const b=document.getElementById('btn-rail-skirmish');
+  if(!b) return;
+  const ok=skirmishAdminAllowed();
+  b.hidden=!ok;
+  b.setAttribute('aria-hidden', ok?'false':'true');
+  b.setAttribute('aria-disabled', ok?'false':'true');
+  b.title=ok?'เล่นยิงรบคำ (กำลังทดสอบ · แอดมิน)':SKIRMISH_LOCK_MSG;
+  if(ok) b.removeAttribute('tabindex'); else b.tabIndex=-1;
+}
+async function openWordSkirmish(){
+  if(typeof closePanel==='function') closePanel();
+  if(!skirmishAdminAllowed()){
+    if(typeof toast==='function') toast(SKIRMISH_LOCK_MSG);
+    return;
+  }
+  try{
+    if(typeof toast==='function' && (typeof WordSkirmish==='undefined' || !WordSkirmish.open)) toast('🔫 กำลังเปิดยิงรบคำ...');
+    await loadStylesheetOnce('skirmish-css','css/wordskirmish.css');
+    if(typeof WordSkirmish==='undefined' || !WordSkirmish.open){
+      if(typeof loadScriptOnce!=='function') throw new Error('no loader');
+      await loadScriptOnce('js/wordskirmish.js');
+    }
+    return WordSkirmish.open();
+  }catch(e){
+    console.error('WordSkirmish load fail', e);
+    if(typeof toast==='function') toast('⚠️ เปิดยิงรบคำไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
+  }
+}
+function bindSkirmishRail(){
+  const b=document.getElementById('btn-rail-skirmish');
+  if(!b || b.dataset.skmBound) return;
+  b.dataset.skmBound='1';
+  b.addEventListener('click', ()=>{ openWordSkirmish(); });
+  refreshSkirmishLock();
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bindSkirmishRail);
+else bindSkirmishRail();
 /* 🚑 รอบ 859: guard ทางเข้าโลก 3D ห้ามเงียบ — ถ้ากดแล้วไม่เกิดอะไรเพราะ advLoading ค้าง ให้บอกผู้เล่นบนจอ
    (เงื่อนไขอื่น เช่น ไม่มีตั๋ว/บาดเจ็บ มีข้อความจากทางเข้าปกติอยู่แล้ว — เงียบเหมือนเดิม) */
 function advBusyMsg(retry){
@@ -7727,6 +7772,12 @@ async function enterMoto3D(){
 function kartLobbyIconHTML(){
   return '<img data-kart-icon src="img/kart/kart-menu.webp" width="40" height="40" loading="lazy" decoding="async" alt="" style="width:40px;height:40px;object-fit:contain;vertical-align:middle">';
 }
+/* 🤖 รอบ 1483: ไอคอนเข้าโลกหุ่นรบ — หุ่นชิบิจากโชว์รูม + ป้ายยิง แทน emoji 🤖 ธรรมดา */
+function mechaLobbyIconHTML(){
+  return '<span class="mecha-lobby-ico" aria-hidden="true">'
+    + '<img data-mecha-icon src="img/robots/chibi-market/robot_01-thumb.webp" width="40" height="48" loading="lazy" decoding="async" alt="">'
+    + '<i class="mecha-lobby-sigil">💥</i></span>';
+}
 async function enterKart3D(){
   if(!state.kartTicket||state.advHurt)return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
   if(advLoading)return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่');
@@ -7832,7 +7883,7 @@ const WORLD3D = [
    🔒 รอบ 1070/1132: โลกที่ยังไม่เปิดสาธารณะ — เปิดให้บัญชีทดสอบ 2 ชื่อเท่านั้น
    เทียบชื่อแบบ NFC + ตัดช่องว่าง กันชื่อไทยจากคนละคีย์บอร์ด/มีช่องว่างหลุดแล้วสิทธิ์ไม่ตรง
    ============================================================ */
-const WORLD3D_COMING_SOON = new Set(['drive','moto','invasion','mecha']);
+const WORLD3D_COMING_SOON = new Set(['drive','moto','invasion']); // 🤖 รอบ 1484: mecha แยกไปล็อกแอดมิน (ไม่ใช้ tester gate)
 function world3DComingSoon(w){
   return !!(w && WORLD3D_COMING_SOON.has(w.mode) && !(typeof isTester === 'function' && isTester()));
 }
@@ -7989,6 +8040,9 @@ async function startWorldEntry(w, info, unlocked, overlay, button){
 
 function railWorldClick(w){
   if(w && w.mode === 'sky' && !ensureSkyBetaAccess()) return;
+  if(w && w.mode === 'mecha' && !mechaAdminAllowed()){
+    sfx.wrong(); toast('🔒 โลกหุ่นรบกำลังทดสอบ — เปิดให้ผู้ดูแลระบบเท่านั้น'); return;
+  }
   if(world3DComingSoon(w)){
     sfx.wrong(); toast('🔒 Coming soon'); return;
   }
@@ -8159,7 +8213,7 @@ function renderRailWorlds(){
       const b = document.createElement('button');
       b.className = 'rail-btn rail-world';
       b.id = 'btn-world-' + w.mode;
-      b.innerHTML = `<span class="rail-ico">${w.mode==='kart'?kartLobbyIconHTML():w.ico}</span>${w.label}`
+      b.innerHTML = `<span class="rail-ico">${w.mode==='kart'?kartLobbyIconHTML():(w.mode==='mecha'?mechaLobbyIconHTML():w.ico)}</span>${w.label}`
         + (w.mode === 'sky' ? '<span class="rail-beta">PRIVATE BETA</span>' : '')
         + `<span class="rail-lock" style="display:none">🔒</span>`          // มุมขวาบน: ล็อกอยู่
         + `<span class="rail-count" style="display:none">0</span>`          // มุมขวาบน: จำนวนคำที่พิชิตแล้ว (ปลดล็อกแล้ว)
@@ -8178,6 +8232,12 @@ function renderRailWorlds(){
     if(w.mode==='kart'){
       b.disabled=!betaVisible;b.style.display=betaVisible?'':'none';b.setAttribute('aria-hidden',String(!betaVisible));
       if(b.dataset.kartAllowed!==String(betaVisible)){b.dataset.kartAllowed=String(betaVisible);window.dispatchEvent(new Event('vw-kart-access-changed'));}
+    }
+    if(w.mode==='mecha'){
+      const ok=mechaAdminAllowed();
+      b.hidden=!ok; b.disabled=!ok; b.style.display=ok?'':'none';
+      b.setAttribute('aria-hidden',String(!ok));
+      if(!ok) return;
     }
     if(!betaVisible) return;
     const done = Array.isArray(state[w.doneKey]) ? state[w.doneKey].length : 0;
@@ -9021,7 +9081,28 @@ function buyRobot(id){
 
 /* เลือกหุ่นก่อนเข้าโลก (ถ้ามีหลายตัว) แล้วเข้าโลก mecha
    🔓 รอบ 943: ไม่มีหุ่นของตัวเอง = ระบบให้ยืมหุ่นตัวแรก (robot_01) ฟรีสำหรับรอบนั้น — ไม่บันทึกเป็นทรัพย์สิน */
+function mechaAdminAllowed(){
+  try{
+    if(typeof isAdmin==='function' && isAdmin()===true) return true;
+    if(typeof state!=='undefined' && state.adminAccess===true) return true;
+  }catch(_){}
+  return false;
+}
+function refreshMechaLock(){
+  const b=document.getElementById('btn-world-mecha');
+  if(!b) return;
+  const ok=mechaAdminAllowed();
+  b.hidden=!ok; b.disabled=!ok; b.style.display=ok?'':'none';
+  b.setAttribute('aria-hidden', ok?'false':'true');
+  b.setAttribute('aria-disabled', ok?'false':'true');
+  b.title=ok?'เข้าโลกหุ่นรบ (กำลังทดสอบ · แอดมิน)':'🔒 โลกหุ่นรบกำลังทดสอบ — เปิดให้ผู้ดูแลระบบเท่านั้น';
+  if(ok) b.removeAttribute('tabindex'); else b.tabIndex=-1;
+}
 async function enterMecha3D(){
+  if(!mechaAdminAllowed()){
+    sfx.wrong(); toast('🔒 โลกหุ่นรบกำลังทดสอบ — เปิดให้ผู้ดูแลระบบเท่านั้น');
+    return worldEntryStopped('เฉพาะผู้ดูแลระบบ');
+  }
   if(state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
   if(advLoading){ advBusyMsg(enterMecha3D); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
   let chosen;

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Word Skirmish preview</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../css/wordskirmish.css">
+<body style="margin:0;background:#8ee08a">
+<script>
+window.state={student:{grade:'ป.1'},sound:false,coins:12345,adminAccess:true,profileName:'แอดมิน'};
+window.isAdmin=()=>true;
+window.vocabForStudent=()=>[['cat','แมว'],['dog','สุนัข'],['bird','นก'],['book','หนังสือ'],['fish','ปลา'],['apple','แอปเปิล']];
+window.addCoins=()=>{}; window.saveState=()=>{}; window.Music={suspendBg(){},resumeBg(){}};
+</script>
+<script src="../js/vendor/three.min.js"></script>
+<script src="../js/wordskirmish.js"></script>
+<script>WordSkirmish.open();</script>

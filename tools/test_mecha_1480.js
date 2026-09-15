@@ -1,0 +1,25 @@
+'use strict';
+const fs=require('fs');
+const c=fs.readFileSync('js/mecha-combat-fx.js','utf8');
+const a=fs.readFileSync('js/adventure3d.js','utf8');
+const css=fs.readFileSync('js/adv3d_css.js','utf8');
+const home=fs.readFileSync('js/home-v2.js','utf8');
+const assert=(ok,m)=>{ if(!ok){ console.error('FAIL',m); process.exit(1); } console.log('ok',m); };
+
+assert(c.includes("kind:'shell'"),'shell style');
+assert(c.includes('Word Fleet'),'fleet comment');
+assert(/kind:'twin'|kind:'rocket'|kind:'rail'|kind:'bolt'|kind:'flame'/.test(c),'special kinds');
+assert(a.includes('mechaBankCoins'),'bank coins');
+assert(a.includes('playFireClip'),'arena fire sfx');
+assert(a.includes('fire-a6fea31058694941.mp3'),'arena fire file');
+assert(a.includes('rev:1480'),'scene rev');
+assert(a.includes("mecha:'sky_day'"),'day sky');
+assert(a.includes('sky:0x87c8f0'),'bright sky color');
+const mechaBlock=a.slice(a.indexOf("}else if(md==='mecha'){"), a.indexOf('ringAds(sc, 5, 45, 0, null)'));
+assert(!mechaBlock.includes('Dodecahedron'),'no mecha rocks');
+assert(a.includes('mh-fire-ico')&&a.includes('>FIRE<')||a.includes('<b>FIRE</b>'),'fire HUD label');
+assert(css.includes('.adv-mecha #adv-words{top:6px'),'words top');
+assert(css.includes('#mecha-fire .mh-fire-ico'),'fire ico css');
+assert(home.includes('worldMecha')&&home.includes('ADMIN_ONLY_WORLD_ACTIONS'),'admin gate');
+assert(a.includes('function mechaHudWord'),'hud word intact');
+console.log('mecha-1480 checks passed');
