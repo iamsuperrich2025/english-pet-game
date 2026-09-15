@@ -331,6 +331,9 @@ must(!/firebase\s*\.\s*database\s*\(/.test(home) && !/\.ref\s*\(\s*['"]\/?presen
 /* Mission/stat/action bindings stay authoritative. */
 ["vw2-coins","vw2-today","vw2-online-earn","vw2-comp-earn","vw2-worth","vw2-quest-count","vw2-quest-bar","vw2-quests","vw2-online-count"].forEach(id => must(home.includes(`id="${id}"`), `binding missing: ${id}`));
 must(home.includes("typeof questsToday === 'function'") && home.includes("state.quests"), "mission logic binding changed");
+const questPool = read("js", "state.js");
+must(questPool.includes("name:'ประกอบคำในโลก 3D 3 คำ'"), "daily quest Thai names were replaced by question marks");
+must(((questPool.match(/const QUEST_POOL = \[[\s\S]*?\];/) || [""])[0].match(/[\u0E00-\u0E7F]/g) || []).length >= 80, "QUEST_POOL is missing Thai glyphs");
 must(home.includes("textOf('#clock-chip .ck-date'") && home.includes("textOf('#rank-tab'"), "Profile date/rank source binding changed");
 
 /* R24 restores the complete legacy inventory to one cute horizontal row. */
@@ -416,6 +419,7 @@ must(indexClassic.includes("css/lobby.css?v=1317") && indexClassic.includes("js/
 
 must(r35SafeGaps.every(gap=>gap >= 5), `R35 New Word clearance below secondary HUD is below 5px: ${r35SafeGaps.join(',')}`);
 must(!home.includes("toolButton('classic'") && !home.includes("name === 'classic'") && !home.includes('data-vw2-action="classic"'), "obsolete Classic-page link remains in Home V2");
+must(!home.includes("toolButton('night'") && !home.includes("กลางคืน") && !home.includes("night:'#btn-night'"), "lobby night-mode tool remains in Home V2");
 must(css.includes("R36 / รอบ 1319") && css.includes("--vw2-r1319-ready:1") && home.includes("R36 / รอบ 1319") && home.includes("--vw2-r1319-runtime-ready:1"), "R36 swipe-HUD lineage markers missing");
 must(home.includes('class="vw2-wallet" tabindex="0" role="region"') && home.includes("function setupWalletScroll()") && home.includes("setupWalletScroll();") && home.includes("walletItemCount:walletItems.length") && home.includes("walletScrollable:"), "R36 accessible wallet scroll runtime/metrics missing");
 must(css.includes("display:flex!important") && css.includes("flex:0 0 calc((100% - 10px)/3)!important") && css.includes("scroll-snap-type:x mandatory!important") && css.includes("overscroll-behavior-x:contain"), "R36 seven-card swipe rail geometry missing");
@@ -441,7 +445,7 @@ must(css.includes("R40 / รอบ 1327") && css.includes("--vw2-r1327-ready:1")
 must(css.includes("R41 / รอบ 1328") && css.includes("--vw2-r1328-ready:1") && home.includes("R41 / รอบ 1328") && home.includes("--vw2-r1328-runtime-ready:1"), "R41 zero-flash Primary Home lineage markers missing");
 must(home.includes("primaryLobby:true") && home.includes("adminWorldAllowed:adminWorldAllowed()"), "R40 Primary Lobby/admin-role preview metrics missing");
 must(indexClassic.includes("Primary Home V2") && indexClassic.includes("preserves admin gates"), "R40 production loader comments missing");
-must(css.includes("Six current tools fill the panel exactly") && css.includes("grid-template-rows:repeat(2,minmax(0,1fr))!important"), "six-tool panel does not close the removed Classic row");
+must(css.includes("Five current tools fill the panel exactly") && css.includes("grid-template-rows:repeat(2,minmax(0,1fr))!important"), "five-tool panel does not close the removed night-mode row");
 
 if(fail.length){
   console.error("Home V2 R41 validation FAILED:\n- " + fail.join("\n- "));

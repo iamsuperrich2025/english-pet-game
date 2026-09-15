@@ -14,6 +14,12 @@ const {
   applyCakeRefundEntitlement,
   parseSave: parseCakeRefundSave,
 } = require('./cake-price-refund');
+const {
+  CAMPAIGN: AC_REFUND_CAMPAIGN,
+  normalizeEntitlements: normalizeAcRefundEntitlements,
+  applyAcDuplicateRefund,
+  parseSave: parseAcRefundSave,
+} = require('./ac-duplicate-refund');
 
 const REGION = 'asia-southeast1';
 const DB_INSTANCE = 'english-pet-game-default-rtdb';
@@ -372,6 +378,72 @@ exports.healCakeGiftPriceRefund = onValueWritten({
   );
 });
 
+/* One-time repair for AC purchase confirmations that were opened more than once
+   by rapid taps. Entitlements come from offline snapshot forensics, are written
+   only through the server-only maintenance path, and are persisted in a private
+   ledger so a stale browser save cannot erase the refund. */
+async function runAcDuplicateRefundJob(job, dryRun) {
+  const entitlements = normalizeAcRefundEntitlements(job && job.entitlements);
+  const rows = Object.entries(entitlements);
+  const report = rows.reduce((sum, [, row]) => {
+    sum.players++;
+    sum.coins += row.amount;
+    sum.duplicatePurchases += row.count;
+    return sum;
+  }, {players:0, coins:0, duplicatePurchases:0, applied:0, deferred:0});
+  if (dryRun) return report;
+
+  const db = getDatabase();
+  await db.ref(`acRefundLedger/${AC_REFUND_CAMPAIGN}`).update(entitlements);
+  for (const [uid, entitlement] of rows) {
+    try {
+      await transactSave(uid, current => applyAcDuplicateRefund(current, entitlement, Date.now()));
+      report.applied++;
+    } catch (error) {
+      report.deferred++;
+      logger.warn('AC duplicate-purchase refund deferred until a valid save is written', {uid, code:error.code || error.message});
+    }
+  }
+  return report;
+}
+
+exports.runAcDuplicatePurchaseRefund = onValueCreated({
+  ref: '/maintenance/acDuplicateRefundJobs/{jobId}',
+  instance: DB_INSTANCE,
+  retry: false,
+  maxInstances: 1,
+}, async event => {
+  const job = event.data.val() || {};
+  if (job.campaign !== AC_REFUND_CAMPAIGN) {
+    await event.data.ref.update({status:'rejected', reason:'campaign_mismatch', finishedAt:Date.now()});
+    return;
+  }
+  await event.data.ref.update({status:'running', startedAt:Date.now()});
+  try {
+    const report = await runAcDuplicateRefundJob(job, job.dryRun === true);
+    await event.data.ref.update({status:job.dryRun === true ? 'dry_run_complete' : 'completed', report, finishedAt:Date.now()});
+  } catch (error) {
+    logger.error('AC duplicate-purchase refund job failed', {code:error.code || error.message});
+    await event.data.ref.update({status:'failed', reason:String(error.code || error.message).slice(0, 120), finishedAt:Date.now()});
+    throw error;
+  }
+});
+
+exports.healAcDuplicatePurchaseRefund = onValueWritten({
+  ref: '/users/{uid}/save',
+  instance: DB_INSTANCE,
+  retry: false,
+  maxInstances: 5,
+}, async event => {
+  const state = parseAcRefundSave(event.data.after.val());
+  if (!state || (state.acDuplicateRefunds && state.acDuplicateRefunds[AC_REFUND_CAMPAIGN])) return;
+  const entitlement = (await getDatabase().ref(`acRefundLedger/${AC_REFUND_CAMPAIGN}/${event.params.uid}`).get()).val();
+  if (!entitlement) return;
+  await transactionFromServer(event.data.after.ref, current =>
+    applyAcDuplicateRefund(current, entitlement, Date.now()).wrapper
+  );
+});
+
 async function runMarketSellerRepairJob(jobRef, dryRun) {
   const db = getDatabase();
   const [ledgerSnap, usersSnap] = await Promise.all([
@@ -451,5 +523,5 @@ exports.healMarketSellerPayout = onValueWritten({
 exports._test = {
   cleanListing, transactionWithSeed, transactionFromServer,
   acquireSettlementLease, claimMarketListing, beginPurchase, settleClaim,
-  runCakeGiftRefundJob, runMarketSellerRepairJob,
+  runCakeGiftRefundJob, runAcDuplicateRefundJob, runMarketSellerRepairJob,
 };

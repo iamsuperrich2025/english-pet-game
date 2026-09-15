@@ -1,6 +1,6 @@
 "use strict";
 /* ============================================================
-   ⚓ wordship.js — กองเรือคำศัพท์ (Cute Word Fleet) รอบ 1467
+   ⚓ wordship.js — กองเรือคำศัพท์ (Cute Word Fleet) รอบ 1477
    โลก 3D ของเล่นแบบ Vocab World Kart (Soft Cuboid) + ยิงวิถีโค้งแบบ World of Warships
    คลังคำ = vocabForStudent() ชุดเดียวกับยิงเป้าคำ · ยิงใช้คลิปวงเพลิง Arena ชุดเดียว · ไม่ดึงคลังคำเน็ต
    THREE โหลดครั้งแรกตอนแอดมินกดเข้า · เรือโมเดลขนาดโลกคงที่ (ไกลแล้วเล็กเองจากกล้อง)
@@ -10,14 +10,14 @@
 (function(){
   const MINLEN=3, MAXLEN=8;
   const HIT_COIN=5, PERFECT_BONUS=5, PT_PER_LETTER=2, LETTER_REWARD=1000;
-  const HEARTS=3, COOLDOWN=520, MAX_SHELLS=48, MAX_FX=48, MAX_FLEET=1;
+  const HEARTS=3, COOLDOWN=520, MAX_SHELLS=48, MAX_FX=48, MAX_SPLASH=16, SPLASH_SCALE=10, MAX_FLEET=1;
   const WATER_HORIZON=.42, FAR_SCALE=.42, NEAR_SCALE=1, SHIP_SPEED=9;
   const SPEED_NAMES=['ช้ามาก','ช้า','ปกติ','เร็ว','เร็วมาก'];
   const SPEED_MUL=[.45,.7,1,1.38,1.75];
   const NEAR_Z=-8, FAR_Z=-110, SEA_LEFT=-240, SEA_RIGHT=240, SEA_BACK=160, SEA_MESH=900;
   const ICE_SHOW=38, ICE_HIDE=56, ICE_SPAN=9;
   const HOME={x:-26,z:-6}, SPIRE={x:54,z:-40}, PICKUP_R=7, HOME_R=10, STORY_H=3.4, ALPHABET='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const LABEL_AT=22, LABEL_W=4, LABEL_H=1.28, CARD_W=5.6, CARD_H=7.2, CARD_FADE=.20;
+  const LABEL_AT=22, LABEL_W=4, LABEL_H=1.28, CARD_W=5.6, CARD_H=7.2, CARD_FADE=.20, CARD_SHADOW=0x284664, SEA_COLOR=0x003464;
   const BOW_LEN=4.5, G=8.4, SHELL_MASS=1.2, MUZZLE=62, ELEV=.16, ELEV_MIN=0, ELEV_MAX=.72, ELEV_SWIPE=.0048, ELEV_SWIPE_FINE=.0007, HIT_R=2.6, TURRET_FWD=3.05, TURRET_AFT=3.15, BARREL_LEN=1.85, BARREL_SEP=.26, BARREL_COUNT=4; // ELEV_MIN=0: no depression through the deck
   const TURN_RATE=1.05, TURRET_SWIPE=.0075, TURRET_SWIPE_FINE=.00095, CAM_SWIPE=.0062, FOV_N=52, FOV_Z=26;
   const NO_GAME_OVER=true, STUCK_MSG='เรือติดสิ่งกีดขวาง ให้กดถอยหลัง';
@@ -40,7 +40,8 @@
   let THREE=null,scene=null,camera=null,renderer=null,raycaster=null,waterPlane=null;
   let playerMesh=null,playerTurret=null,playerTurrets=null,aimMarker=null,geoCache=null,tmpV=null,tmpV2=null;
   let iceWalls={far:null,back:null,left:null,right:null};
-  let shellFireMat=null, stuckAt=-99, toastGen=0;
+  let shellFireMat=null, sparkMat=null, sparkGeo=null, stuckAt=-99, toastGen=0;
+  let splashFx=[];
 
   function later(fn,ms){const id=setTimeout(()=>{timers.delete(id);fn();},ms);timers.add(id);return id;}
   function clearTimers(){timers.forEach(clearTimeout);timers.clear();}
@@ -298,14 +299,21 @@
     if(fireBlob) return Promise.resolve(fireBlob);
     if(fireLoad) return fireLoad;
     const path='/sound/arena/'+ARENA_FIRE.file, key=(typeof location!=='undefined'?location.origin:'')+'/__vw_asset__'+path+'?v='+ARENA_FIRE.hash;
-    fireLoad=Promise.resolve().then(async()=>{
-      let cache=null;
-      try{ cache=await caches.open('vw-assets-content-v1'); const hit=await cache.match(key); if(hit) return fireBlob=await hit.blob(); }catch(_){}
+    fireLoad=Promise.resolve().then(function(){
+      if(typeof caches==='undefined') return null;
+      return caches.open('vw-assets-content-v1').then(function(cache){
+        return cache.match(key).then(function(hit){ return hit?{cache:cache,hit:hit}:{cache:cache}; });
+      }).catch(function(){ return {}; });
+    }).then(function(got){
+      got=got||{};
+      if(got.hit) return got.hit.blob();
       if(typeof fetch!=='function') return null;
-      const res=await fetch(path); if(!res.ok) throw 0;
-      if(cache) try{ await cache.put(key, res.clone()); }catch(_){}
-      return fireBlob=await res.blob();
-    }).catch(()=>null).finally(()=>{ fireLoad=null; });
+      return fetch(path).then(function(res){
+        if(!res.ok) throw 0;
+        if(got.cache) got.cache.put(key, res.clone()).catch(function(){});
+        return res.blob();
+      });
+    }).then(function(blob){ return blob?(fireBlob=blob):null; }).catch(function(){ return null; }).finally(function(){ fireLoad=null; });
     return fireLoad;
   }
   function prepareFireClip(){ if(fireSoundOn()) void loadFireClip(); }
@@ -777,11 +785,11 @@
     geoCache=new Map();
     tmpV=new THREE.Vector3(); tmpV2=new THREE.Vector3();
     scene=new THREE.Scene();
-    scene.background=new THREE.Color(0xb7c6d0);
-    scene.fog=new THREE.Fog(0xb7c6d0,160,720);
+    scene.background=new THREE.Color(0x1a5a8a);
+    scene.fog=new THREE.Fog(0x1a5a8a,160,720);
     camera=new THREE.PerspectiveCamera(FOV_N, W/Math.max(1,H), .2, 900);
     renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
-    renderer.setClearColor(0xb7c6d0,1);
+    renderer.setClearColor(0x1a5a8a,1);
     renderer.shadowMap.enabled=false;
     const hold=root.querySelector('.wsh-stage')||root;
     hold.insertBefore(renderer.domElement, hold.firstChild);
@@ -789,12 +797,12 @@
     raycaster=new THREE.Raycaster();
     waterPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
 
-    const hemi=new THREE.HemisphereLight(0xf3efe4,0x6a8490,.92);
+    const hemi=new THREE.HemisphereLight(0xf3efe4,0x003464,.92);
     scene.add(hemi);
     const sun=new THREE.DirectionalLight(0xf0ead8,.62);
     sun.position.set(18,28,12); scene.add(sun);
 
-    const sea=new THREE.Mesh(new THREE.PlaneGeometry(SEA_MESH,SEA_MESH,1,1), new THREE.MeshPhongMaterial({color:0x6a93a3,shininess:6,specular:0x33444c}));
+    const sea=new THREE.Mesh(new THREE.PlaneGeometry(SEA_MESH,SEA_MESH,1,1), new THREE.MeshPhongMaterial({color:SEA_COLOR,shininess:28,specular:0x5eb0e0}));
     sea.rotation.x=-Math.PI/2; scene.add(sea);
     const rim=new THREE.Mesh(new THREE.CircleGeometry(9,24), mat(0x7ad08a));
     rim.rotation.x=-Math.PI/2; rim.position.set(-88,.02,-28); scene.add(rim);
@@ -898,9 +906,9 @@
           float alpha=smoothstep(.11,.29,density)*smoothstep(.2,.47,n+envelope*.32-p.y*.16)*smoothstep(0.0,.08,p.y)*(1.0-smoothstep(.76,1.0,p.y))*fade;
           alpha*=smoothstep(0.0,.17,vUv.x)*smoothstep(0.0,.17,1.0-vUv.x);
           float heat=clamp(density*.83+n*.38-p.y*.22,0.0,1.0);
-          vec3 col=mix(vec3(.38,.065,.012),vec3(1.0,.34,.028),smoothstep(.15,.5,heat));
-          col=mix(col,vec3(1.0,.73,.19),smoothstep(.48,.74,heat));
-          col=mix(col,vec3(1.0,.98,.84),smoothstep(.72,.96,heat));
+          vec3 col=mix(vec3(.40,.05,.01),vec3(1.0,.42,.08),smoothstep(.12,.45,heat));
+          col=mix(col,vec3(1.0,.72,.34),smoothstep(.42,.70,heat));
+          col=mix(col,vec3(1.0,.94,.82),smoothstep(.66,.95,heat));
           if(alpha<.008)discard;
           gl_FragColor=vec4(col,alpha);
         }`
@@ -910,19 +918,20 @@
   function shellFireBefore(){
     if(!shellFireMat) return;
     const u=shellFireMat.uniforms;
-    u.time.value=elapsed; u.seed.value=this.userData.seed||0; u.fade.value=1;
+    u.time.value=elapsed; u.seed.value=this.userData.seed||0; u.fade.value=this.userData.fade==null?1:this.userData.fade;
     shellFireMat.uniformsNeedUpdate=true;
   }
   function makeFireball(){
     const g=new THREE.Group();
-    const core=new THREE.Mesh(new THREE.SphereGeometry(.2,8,8), new THREE.MeshBasicMaterial({color:0xffe7a8,transparent:true,opacity:.92,blending:THREE.AdditiveBlending,depthWrite:false}));
+    const core=new THREE.Mesh(new THREE.SphereGeometry(.2,8,8), new THREE.MeshBasicMaterial({color:0xffc090,transparent:true,opacity:.92,blending:THREE.AdditiveBlending,depthWrite:false}));
     g.add(core);
     const geo=new THREE.PlaneGeometry(1.05,1.9); geo.translate(0,.95,0);
     const mat=getShellFireMat();
     const f1=new THREE.Mesh(geo, mat);
     f1.rotation.x=Math.PI*.5; f1.userData.seed=Math.random()*9; f1.onBeforeRender=shellFireBefore;
+    f1.userData.fade=1;
     const f2=new THREE.Mesh(geo, mat);
-    f2.rotation.set(Math.PI*.5, Math.PI*.5, 0); f2.userData.seed=f1.userData.seed+3.17; f2.onBeforeRender=shellFireBefore;
+    f2.rotation.set(Math.PI*.5, Math.PI*.5, 0); f2.userData.seed=f1.userData.seed+3.17; f2.userData.fade=1; f2.onBeforeRender=shellFireBefore;
     g.add(f1); g.add(f2);
     g.userData.flames=[f1,f2];
     return g;
@@ -1009,17 +1018,53 @@
     beep('bad');
     return true;
   }
-  function burst(x,y,z,n){
+  function getSparkMat(){
+    if(sparkMat||!THREE) return sparkMat;
+    sparkMat=new THREE.MeshBasicMaterial({color:0xff812e,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false});
+    return sparkMat;
+  }
+  function makeSplashCard(){
+    const geo=new THREE.PlaneGeometry(1.2,2.2); geo.translate(0,1.1,0);
+    const m=new THREE.Mesh(geo, getShellFireMat());
+    m.rotation.x=-.42; m.onBeforeRender=shellFireBefore; m.visible=false;
+    scene.add(m); return m;
+  }
+  function takeSplash(){
+    let s=splashFx.find(p=>!p.alive);
+    if(!s){
+      if(splashFx.length>=MAX_SPLASH){
+        s=splashFx[0];
+        for(let i=1;i<splashFx.length;i++) if(splashFx[i].life<s.life) s=splashFx[i];
+      }else{
+        s={alive:false,life:0,max:1,delay:0,size:1,ax:0,ay:0,az:0,phase:0,mesh:null};
+        splashFx.push(s);
+      }
+    }
+    if(scene&&THREE&&!s.mesh) s.mesh=makeSplashCard();
+    return s;
+  }
+  function fireSplash(x,y,z,n){
     if(!scene||!THREE) return;
-    for(let i=0;i<n;i++){
-      let o=fx.find(p=>!p.alive); if(!o && fx.length>=MAX_FX) return; o=o||{};
+    const flames=n>8?5:3;
+    for(let i=0;i<flames;i++){
+      const s=takeSplash(), a=i*2.399+.3, spread=(.22+i*.14)*SPLASH_SCALE;
+      s.alive=true; s.life=s.max=1.15; s.delay=i*.03; s.size=(.85+(i%3)*.18)*SPLASH_SCALE; s.phase=Math.random()*6.28;
+      s.ax=x+Math.cos(a)*spread; s.ay=y; s.az=z+Math.sin(a)*spread;
+      if(s.mesh){ s.mesh.userData.seed=s.phase; s.mesh.userData.fade=0; s.mesh.position.set(s.ax,s.ay,s.az); s.mesh.visible=false; }
+    }
+    if(!sparkGeo) sparkGeo=new THREE.SphereGeometry(.12*SPLASH_SCALE,6,6);
+    const sparks=Math.min(n,12);
+    for(let i=0;i<sparks;i++){
+      let o=fx.find(p=>!p.alive); if(!o && fx.length>=MAX_FX) break; o=o||{};
       const a=Math.random()*6.28, s=3+Math.random()*6;
-      Object.assign(o,{alive:true,x,y,z,vx:Math.cos(a)*s,vy:4+Math.random()*5,vz:Math.sin(a)*s,life:.4,r:.12});
-      if(!o.mesh){ o.mesh=new THREE.Mesh(new THREE.SphereGeometry(.12,6,6), mat(0xffffff)); scene.add(o.mesh); }
+      Object.assign(o,{alive:true,x,y,z,vx:Math.cos(a)*s,vy:4+Math.random()*5,vz:Math.sin(a)*s,life:.45,r:.12});
+      if(!o.mesh){ o.mesh=new THREE.Mesh(sparkGeo, getSparkMat()); scene.add(o.mesh); }
+      else o.mesh.material=getSparkMat();
       o.mesh.visible=true;
       if(!fx.includes(o)) fx.push(o);
     }
   }
+  function burst(x,y,z,n){ fireSplash(x,y,z,n); }
 
   function tickShell(o,dt){
     if(!o.alive) return;
@@ -1134,6 +1179,18 @@
       if(p.mesh){ p.mesh.position.set(p.x,p.y,p.z); p.mesh.visible=p.life>0; }
       if(p.life<=0) p.alive=false;
     });
+    splashFx.forEach(s=>{
+      if(!s.alive) return;
+      s.life-=dt;
+      const age=s.max-s.life;
+      if(s.life<=0){ s.alive=false; if(s.mesh) s.mesh.visible=false; return; }
+      if(!s.mesh||age<s.delay){ if(s.mesh) s.mesh.visible=false; return; }
+      const elapsed=age-s.delay, ignite=Math.min(1,elapsed/.13), fade=ignite*Math.min(1,s.life/.55);
+      const pulse=1+Math.sin(age*3.4+s.phase)*.07;
+      s.mesh.userData.fade=fade; s.mesh.visible=true;
+      s.mesh.scale.set(s.size*(.72+.28*ignite)*pulse, s.size*(1.14+Math.sin(age*2.7+s.phase)*.13), 1);
+      s.mesh.position.set(s.ax+Math.sin(age*2.1+s.phase)*.16, s.ay, s.az);
+    });
     shake=Math.max(0,shake-dt*6);
   }
 
@@ -1192,6 +1249,7 @@
     runId++; score=0; scoreSettled=false; combo=0; wordsDone=0; coinsRun=0; misses=0; hearts=HEARTS; wave=1;
     shells.forEach(s=>{s.alive=false; if(s.mesh) s.mesh.visible=false;});
     fx.forEach(p=>{p.alive=false; if(p.mesh) p.mesh.visible=false;});
+    splashFx.forEach(p=>{p.alive=false; if(p.mesh) p.mesh.visible=false;});
     last=0; elapsed=0; fireAt=0; pointers.clear(); holdDrive=0; holdTurn=0;
     player.vx=0; player.vz=0; player.x=0; player.z=18; player.yaw=0; player.turretRel=0; player.elev=ELEV; player.blocked=false;
     stuckAt=-99;
@@ -1425,9 +1483,9 @@
   }
 
   window.WordShip={ open, close, refreshLock:typeof refreshWordShipLock==='function'?refreshWordShipLock:function(){}, _t:{
-    MINLEN, MAXLEN, HIT_COIN, PERFECT_BONUS, HEARTS, MAX_FLEET, WATER_HORIZON, FAR_SCALE, NEAR_SCALE, SHIP_SPEED, SPEED_NAMES, SPEED_MUL, G, SHELL_MASS, MUZZLE, ELEV, ELEV_MIN, ELEV_MAX, ELEV_SWIPE, ELEV_SWIPE_FINE, NEAR_Z, FAR_Z, SEA_LEFT, SEA_RIGHT, SEA_BACK, SEA_MESH, BOW_LEN, FOV_N, FOV_Z, NO_GAME_OVER, STUCK_MSG, TURRET_SWIPE, TURRET_SWIPE_FINE, MAX_SHELLS, BARREL_COUNT, TURRET_FWD, TURRET_AFT, LETTER_REWARD, PICKUP_R, HOME_R, STORY_H, HOME, SPIRE, ALPHABET, ICE_SHOW, ICE_HIDE, CARD_W, CARD_H, CARD_FADE,
+    MINLEN, MAXLEN, HIT_COIN, PERFECT_BONUS, HEARTS, MAX_FLEET, WATER_HORIZON, FAR_SCALE, NEAR_SCALE, SHIP_SPEED, SPEED_NAMES, SPEED_MUL, G, SHELL_MASS, MUZZLE, ELEV, ELEV_MIN, ELEV_MAX, ELEV_SWIPE, ELEV_SWIPE_FINE, NEAR_Z, FAR_Z, SEA_LEFT, SEA_RIGHT, SEA_BACK, SEA_MESH, BOW_LEN, FOV_N, FOV_Z, NO_GAME_OVER, STUCK_MSG, TURRET_SWIPE, TURRET_SWIPE_FINE, MAX_SHELLS, BARREL_COUNT, TURRET_FWD, TURRET_AFT, LETTER_REWARD, PICKUP_R, HOME_R, STORY_H, HOME, SPIRE, ALPHABET, ICE_SHOW, ICE_HIDE, CARD_W, CARD_H, CARD_FADE, MAX_SPLASH,
     pool, takeWord, spawnWave, pickCourse, waterLimits, depthScale, applyShipScale, apparentHull, labelWorldScale, fitWordLabel, courseProgress, fire, hitShip, setViewport, setPlayer, resetRun, step, awardHit, adminAllowed, shipSpeed, playerDriveSpeed, setSpeedLevel,
-    shellLandingAngle, tickShell, faceWordToCamera, headingFromDelta, headingVec, barrelDir, bowOf, sternOf, driveAlongHeading, keelStep, pointerHalf, applyAimSwipe, yawOnKeel, setAuto, setScope, muzzle, muzzles, hurt, cameraLookTarget, wordMarks, hasWord, completeWord, tryPickup, tryDeposit, dropCarried, placeLetter, spawnLetters, setStored, setCarried, creditReward, settleCoinSession, beginCoinSession, walletCoins, remainNeeded, neededLetterHints, placeHint, playerLimits, iceWanted, tickIce, dropIceAll, shellSplashPoint, aimSplash, letterOccludesShip, fadeLetterCard, poseFireball, warnStuck, playFireClip,
+    shellLandingAngle, tickShell, faceWordToCamera, headingFromDelta, headingVec, barrelDir, bowOf, sternOf, driveAlongHeading, keelStep, pointerHalf, applyAimSwipe, yawOnKeel, setAuto, setScope, muzzle, muzzles, hurt, cameraLookTarget, wordMarks, hasWord, completeWord, tryPickup, tryDeposit, dropCarried, placeLetter, spawnLetters, setStored, setCarried, creditReward, settleCoinSession, beginCoinSession, walletCoins, remainNeeded, neededLetterHints, placeHint, playerLimits, iceWanted, tickIce, dropIceAll, shellSplashPoint, aimSplash, letterOccludesShip, fadeLetterCard, poseFireball, warnStuck, playFireClip, fireSplash,
     get word(){return word;}, get fleet(){return fleet;}, get shells(){return shells;},
     get score(){return score;}, get coinsRun(){return coinsRun;}, get hearts(){return hearts;},
     get wordsDone(){return wordsDone;}, get misses(){return misses;}, get wave(){return wave;},

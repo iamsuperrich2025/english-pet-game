@@ -12,6 +12,28 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1478 · กันซื้อแอร์ซ้ำ + คืนเหรียญ:** `buyAC` กันกล่องยืนยันซ้อน/ตรวจ `state.ac` ซ้ำตอน commit และเก็บ `acPurchaseLog`
+- forensic snapshot พบ 3 บัญชีถูกหักเกิน 10 ครั้ง: คืน 50,000 + 25,000 + 175,000 = 250,000 ผ่าน server ledger/campaign marker + stale-save healer
+- `js/{ui,state,main}.js` `functions/{index,ac-duplicate-refund,test_ac_duplicate_refund}.js` `tools/test_ac_purchase_guard.js`
+- build + syntax + client/Functions/browser 812×375 ผ่าน · ค้าง: deploy Functions/Hosting แล้ว trigger dry-run → apply → ตรวจยอดจริง
+- **รอบ 1477 · กองเรือ ทะเลตามภาพ:** น้ำ `SEA_COLOR=0x003464` จากค่าเฉลี่ยรูปมหาสมุทรที่ส่งมา
+- `js/wordship.js` `css/wordship.css` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: เปิดดูสีน้ำบนมือถือ
+- **รอบ 1476 · กองเรือ ทะเลม่วงอ่อน:** น้ำ `SEA_COLOR=0x7a80a6` อ่อนลง + ผสมม่วง จากโทนเงาการ์ดเดิม
+- `js/wordship.js` `css/wordship.css` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: เปิดดูสีน้ำบนมือถือ
+- **รอบ 1475 · กองเรือ ลูกไฟจุดตก 10 เท่า:** `SPLASH_SCALE=10` ขยายเปลวและประกายตอนกระสุนตก
+- `js/wordship.js` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: ยิงตกน้ำบนมือถือดูขนาดไฟ
+- **รอบ 1474 · กองเรือ ทะเลโทนเงาการ์ด:** น้ำใช้ `CARD_SHADOW=0x284664` สีเดียวกับวงรีเงาใต้การ์ด A–Z
+- `js/wordship.js` `css/wordship.css` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: เปิดกองเรือดูน้ำกับเงาการ์ด
+- **รอบ 1473 · กองเรือ ทะเลฟ้าคราม:** แผ่นน้ำ `0x2f92c9` หมอก/พื้นหลังฟ้าอ่อน กันขอบเทา
+- `js/wordship.js` `css/wordship.css` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: เปิดกองเรือบนมือถือดูสีน้ำ
+- **รอบ 1472 · กองเรือ ลูกไฟจุดตก:** กระสุนตกน้ำ/โดนเรือขึ้นเปลวตั้งแบบ Arena (shader ชุดเดียว) + ประกายส้ม
+- `js/wordship.js` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: ยิงตกน้ำบนมือถือดูลูกไฟ
 - **รอบ 1471 · กองเรือ ลูกปืนส้มขาว:** แกน `0xffc090` + AdditiveBlending เปลวร้อนสุดขาวส้ม
 - `js/wordship.js` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
 - unit wordship ผ่าน · ค้าง: ยิงบนมือถือดูแสงทับขาว
@@ -24,15 +46,6 @@
 - **รอบ 1468 · ล็อบบี้เหลือโหมดปกติ:** เอาปุ่มกลางคืน/ตั้งค่า NightUI ออก บังคับโทนกลางวัน
 - `js/home-v2.js` `js/util.js` `js/city3d.js` `css/lobby.css` `css/home-v2.css` `index_classic.html`
 - Home V2 test ผ่าน · เบราว์เซอร์: ปุ่มเหลือข้อความ/เพลง/ตั้งค่า/ติดตั้ง/ออกระบบ · `--night-k`=0
-- ค้าง: ผู้ใช้รีเฟรชแอปดูแผงเครื่องมือ
-- **รอบ 1467 · กองเรือ เสียงวงเพลิง:** ปุ่ม FIRE เล่นคลิปไฟชุดเดียวกับ Arena (`fire-a6fea31058694941.mp3` + แคชเดียวกัน)
-- `js/wordship.js` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `SOUND_LICENSES.md` `handoff/GAME_RULES.md`
-- unit wordship ผ่าน · ค้าง: ยิงบนมือถือให้ได้ยินวงเพลิง
-- **รอบ 1466 · กองเรือ ติดสิ่งกีดขวาง:** เดินหน้าชนขอบแล้วยังดันต่อขึ้นข้อความให้กดถอยหลัง
-- `js/wordship.js` `tools/test_wordship.js` `handoff/GAME_RULES.md`
-- unit wordship ผ่าน · ค้าง: ลองชนกำแพงน้ำแข็งบนมือถือ
-- **รอบ 1465 · กองเรือ ไม่ทิ่มดาดฟ้า:** มุมก้มกระบอกไม่ต่ำกว่าแนวนอน (`ELEV_MIN=0`) จึงไม่ทิ่มดาดฟ้า
-- `js/wordship.js` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน

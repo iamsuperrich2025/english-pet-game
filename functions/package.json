@@ -7,7 +7,7 @@
     "node": "22"
   },
   "scripts": {
-    "test": "node test_market_settlement.js && node test_cake_price_refund.js"
+    "test": "node test_market_settlement.js && node test_cake_price_refund.js && node test_ac_duplicate_refund.js"
   },
   "dependencies": {
     "firebase-admin": "^14.3.0",

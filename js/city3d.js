@@ -23,25 +23,7 @@ const ISLAND_R = 95;              // รัศมีเกาะ
 const RING_IN  = 21,  RING_OUT = 48;   // รัศมีกลางถนนวงใน/วงนอก
 const BAND1_R  = 34,  BAND2_R  = 63;   // รัศมีแถวอาคารชั้นใน/ชั้นนอก
 const GROUND_TEX_PX = 2048, GROUND_SPAN = 200;   // canvas พื้น ↔ หน่วยโลก
-const NIGHT = (()=>{ // 🌙 รอบ 891: อ่านสวิตช์เดียวกับล็อบบี้เดิม — ตรรกะ readMode() ของ NightUI ใน index_classic.html เป๊ะ
-  // 'vwNightMode' = ตัวตัดสินจริง ('day'/'night' · ไม่มีคีย์/ค่าอื่น = อัตโนมัติ 19:00-06:00)
-  // 'vwNightUi' ('1'/'0' คีย์เดิมรอบ 882) = ใช้เฉพาะผู้ใช้เก่าที่ยังไม่มีคีย์ใหม่
-  // ⛔ ห้ามเขียน/ล้าง localStorage ที่นี่ — กฎล้างค่าของรอบ 882 ทำให้การปักโหมดจากหน้า ⚙️ ตั้งค่า (รอบ 889)
-  //    หายเงียบ ๆ ทันทีที่เดินเข้าเมือง 3D (ปัก "กลางคืน" ตอน 2 ทุ่ม = ตรงกับอัตโนมัติพอดี → โดนล้าง)
-  // · override ?day / ?night (ไว้เทสต์+เล่นสนุก)
-  try{ const q=new URLSearchParams(location.search);
-       if(q.has('day')) return false; if(q.has('night')) return true; }catch(e){}
-  // 🇹🇭 รอบ 988: อ่านเวลาไทย (thaitime.js) ไม่ใช่นาฬิกาเครื่อง — เครื่องตั้งโซนต่างประเทศเคยได้กลางคืนกลางวันแสก ๆ
-  const autoNight = ()=>{ const h = (typeof thHour==='function' ? thHour() : new Date().getHours()); return h>=19 || h<6; };
-  try{
-    const m = localStorage.getItem('vwNightMode');
-    if(m==='day')   return false;
-    if(m==='night') return true;
-    if(m) return autoNight();                       // ค่าแปลก/'auto' = อัตโนมัติ (ไม่ตกไปอ่านคีย์เดิม)
-    const s = localStorage.getItem('vwNightUi');    // ผู้ใช้เก่า (มีแต่คีย์รอบ 882) → อ่านเป็นโหมดปักตามเดิม
-    return s==='1' ? true : s==='0' ? false : autoNight();
-  }catch(e){ return autoNight(); }
-})();
+const NIGHT = false; // ล็อบบี้เหลือโหมดปกติอย่างเดียว — เมือง 3D ไม่ตาม NightUI/นาฬิกาแล้ว
 
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function hash(s){ let h=0; s=String(s||''); for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0; return h; }

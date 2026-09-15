@@ -353,7 +353,7 @@ function showGiantRefund(){
    ============================================================ */
 function showTicketRefund(){
   const b = state.ticketRefund;
-  if(!b || !b.total){ showCakeGiftRefundNotice(); return; }
+  if(!b || !b.total){ showAcDuplicateRefundNotice(); return; }
   state.ticketRefund = null; saveState();
   const num  = (typeof fmtNum === 'function') ? fmtNum : (n)=>String(n);
   const name = state.profileName || (state.student && state.student.first) || 'หนู';
@@ -379,13 +379,44 @@ function showTicketRefund(){
     window.removeEventListener('resize', refit);
     ov.remove();
     if(document.getElementById('screen-dashboard').classList.contains('active')) renderDashboard();
-    showCakeGiftRefundNotice();
+    showAcDuplicateRefundNotice();
   });
   document.body.appendChild(ov);
   fitQbp(ov.querySelector('.qbp'));
   window.addEventListener('resize', refit);
   if(typeof feedEvent === 'function')
     feedEvent('coin', `ได้คืนเงินตั๋วโลก 3D เก่า +${num(b.total)} 🪙 (ตอนนี้ทุกโลกเข้าเล่นฟรีแล้ว)`);
+}
+
+/* ❄️ เงินคืนจากการแตะซื้อแอร์ซ้ำ — server เครดิตให้ก่อนและใส่ campaign marker กันซ้ำ
+   กล่องนี้แจ้งยอดอย่างเดียว; กดรับทราบแล้วค่อยต่อคิวแจ้งเงินคืนรายการอื่น */
+function showAcDuplicateRefundNotice(){
+  const b = state.acDuplicateRefundNotice;
+  if(!b || !(Number(b.total)>0)){ showCakeGiftRefundNotice(); return; }
+  const num = (typeof fmtNum === 'function') ? fmtNum : (n)=>String(n);
+  if(typeof sfx !== 'undefined' && sfx.coinGet){ sfx.coinGet(); setTimeout(()=>sfx.coinGet(), 420); }
+  const ov = document.createElement('div');
+  ov.className = 'rankup-overlay';
+  ov.innerHTML = `
+    <div class="rankup-rays" style="--rank-color:#61d8ff"></div>
+    <div class="rankup-content qbp" data-ac-duplicate-refund>
+      <div class="rankup-title">❄️ พบการซื้อแอร์ซ้ำ — คืนเหรียญให้แล้ว!</div>
+      <div class="qbp-coin">🪙</div>
+      <div class="rankup-name" style="color:#169bd5">+${num(b.total)} เหรียญ 🪙</div>
+      <p class="rankup-sub">ระบบพบว่าปุ่มซื้อแอร์ถูกกดซ้ำเกิน 1 ครั้ง<br>
+        <small>คืนค่าแอร์และค่าติดตั้งส่วนที่เกิน ${num(b.count || 0)} ครั้ง รวม <b>${num(b.total)} เหรียญ</b> เข้ากระเป๋าเรียบร้อยแล้ว<br>
+        ตอนนี้บ้านหนึ่งหลังซื้อแอร์ได้เพียงครั้งเดียว แม้แตะปุ่มรัว ๆ ก็ไม่หักซ้ำ</small></p>
+      <button class="rankup-btn">รับทราบและเก็บเหรียญ 🥳</button>
+    </div>`;
+  let refitT = 0;
+  const refit = ()=>{ clearTimeout(refitT); refitT = setTimeout(()=>fitQbp(ov.querySelector('.qbp')), 140); };
+  ov.querySelector('.rankup-btn').addEventListener('click', ()=>{
+    clearTimeout(refitT); window.removeEventListener('resize', refit);
+    state.acDuplicateRefundNotice = null; saveState(); ov.remove();
+    if(document.getElementById('screen-dashboard').classList.contains('active')) renderDashboard();
+    showCakeGiftRefundNotice();
+  });
+  document.body.appendChild(ov); fitQbp(ov.querySelector('.qbp')); window.addEventListener('resize', refit);
 }
 
 /* 🔍 รอบ 596 (ผู้ใช้สั่ง: "ขยายตัวหนังสือให้ผู้ใหญ่สายตาไม่ดีอ่านชัด แต่ห้ามมี scrollbar")

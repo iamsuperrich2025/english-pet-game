@@ -35,6 +35,9 @@ assert(code.includes("fire-a6fea31058694941.mp3")&&code.includes('playFireClip')
 assert(code.includes("typeof vocabForStudent==='function'")&&code.includes('MINLEN=3, MAXLEN=8'),'Frontline-length words from the same in-memory vocab');
 assert(shoot.includes('const MINLEN=3, MAXLEN=10'),'ShootWord still owns the source length rule');
 assert(css.includes('@media(max-height:430px)')&&css.includes('#wsh-game')&&!css.includes('overflow:auto'),'short landscape HUD without inner scrollbars');
+assert(code.includes('SEA_COLOR=0x003464')&&code.includes('color:SEA_COLOR')&&css.includes('#003464'),'the sea matches the supplied deep-ocean photo');
+assert(code.includes('CARD_SHADOW=0x284664')&&code.includes("rgba(40,70,100,.18)"),'letter-card ovals keep the original shadow ink');
+assert(!code.includes('0x2f92c9')&&!code.includes('0x6a93a3'),'older sea tints are gone');
 
 const awarded={n:0};
 const sandbox={
@@ -260,7 +263,12 @@ T.tickShell(sh,.05);
 assert.strictEqual(sh.vx,vx0,'horizontal aim stays a straight line');
 assert.strictEqual(sh.vz,vz0,'horizontal aim stays a straight line on z');
 assert(sh.vy<vy0,'gravity times shell mass pulls the round down');
+assert(code.includes('function fireSplash')&&code.includes('rotation.x=-.42')&&code.includes('MAX_SPLASH'),'impacts spawn Arena-like upright flame cards');
+assert(code.includes('SPLASH_SCALE=10')&&code.includes('*SPLASH_SCALE'),'impact flames are ten times larger');
+assert(!code.includes('mat(0xffffff)'),'splash sparks are no longer white pellets');
 assert(code.includes('function makeFireball')&&code.includes('getShellFireMat'),'shells use Arena-like combustion fireballs');
+assert(code.includes('0xffc090')&&code.includes('AdditiveBlending')&&!code.includes('0xff3b10'),'fireball core is additive orange-white');
+assert(code.includes('vec3(1.0,.94,.82)'),'flame heat blooms to orange-white');
 assert(code.includes('setFromUnitVectors')&&code.includes('poseFireball'),'flame tails follow shell velocity');
 assert(!code.includes('SphereGeometry(.18,8,8), mat(0xffe36b)'),'gold pellet shells are gone');
 assert(T.shells.some(s=>s.alive),'shell is pooled rather than allocated unbounded');

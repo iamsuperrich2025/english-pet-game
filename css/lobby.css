@@ -5927,6 +5927,20 @@ body::after{
   background:linear-gradient(180deg,#6b4526 0%,#5b3820 60%,#3f2512 100%);
 }
 html.no-anim #night-veil,html.no-anim body::after{transition:none;}
+/* ล็อบบี้เหลือโหมดปกติอย่างเดียว — ปิดพาเลตต์/ผ้าคลุม/ปุ่ม 🌙 */
+html{--night-k:0!important;}
+html.night{
+  --navy:#0a1f3c; --navy-2:#123a6b; --sky:#3b8dde; --sky-d:#1b5fa8;
+  --gold:#f5c542; --gold-d:#c8901a; --panel-bg:#eef5fc; --ink2:#22364f;
+  --glass:rgba(7,25,52,.78); --glass-line:rgba(120,170,230,.35);
+}
+html.night .lobby-top .icon-btn,
+html.night .lobby-top .icon-btn:hover,
+html.night .lobby-top #btn-night{
+  background:unset;box-shadow:unset;
+}
+#night-veil,#btn-night{display:none!important;opacity:0!important;pointer-events:none!important;}
+body::after{opacity:0!important;}
 
 /* ============================================================
    🎨 รอบ 1002 (ผู้ใช้ดูผลรอบ 997-999 แล้วสั่ง "ทำไมมันดูมืด ดูไม่สวยเหมือนตอนแรกเลย

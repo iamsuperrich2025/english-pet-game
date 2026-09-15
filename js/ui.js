@@ -9777,12 +9777,31 @@ function showCollectReveal(id, price, produced){
 
 function buyAC(){
   const total = AC_PRICE + AC_INSTALL;
+  if(state.ac){
+    toast('❄️ บ้านหลังนี้ติดแอร์แล้ว ซื้อซ้ำไม่ได้จ้า'); renderDashboard(); return;
+  }
+  if(state.home !== 'medium'){
+    sfx.wrong(); toast('❄️ ติดแอร์ได้เฉพาะบ้านกลางเท่านั้น'); renderDashboard(); return;
+  }
+  // กันแตะปุ่มซื้อรัว ๆ แล้วสร้างกล่องยืนยันซ้อนหลายใบก่อน state.ac เปลี่ยน
+  if(document.getElementById('ac-buy-confirm')) return;
   if(state.coins < total){
     sfx.wrong(); toast(`แอร์+ติดตั้งรวม 🪙${fmtNum(total)} — เหรียญยังไม่พอนะ`); return;
   }
-  askConfirm(`<h2>❄️ ติดแอร์ให้บ้าน</h2>
-    <p style="font-size:16px;margin:6px 0">เครื่องปรับอากาศ 🪙${fmtNum(AC_PRICE)}<br>+ ค่าติดตั้ง 🪙${fmtNum(AC_INSTALL)}<br>= รวม <b>🪙${fmtNum(total)}</b></p>`,
+  askConfirm(`<div id="ac-buy-confirm"><h2>❄️ ติดแอร์ให้บ้าน</h2>
+    <p style="font-size:16px;margin:6px 0">เครื่องปรับอากาศ 🪙${fmtNum(AC_PRICE)}<br>+ ค่าติดตั้ง 🪙${fmtNum(AC_INSTALL)}<br>= รวม <b>🪙${fmtNum(total)}</b></p></div>`,
     'ติดเลย!', ()=>{
+      // ตรวจซ้ำตอน commit: กันกล่องเก่าหรือ callback ซ้ำหักเหรียญมากกว่าหนึ่งครั้ง
+      if(state.ac){ toast('❄️ บ้านหลังนี้ติดแอร์แล้ว ระบบจึงไม่หักเหรียญซ้ำ'); renderDashboard(); return; }
+      if(state.home !== 'medium'){
+        sfx.wrong(); toast('ยกเลิกการติดแอร์: บ้านปัจจุบันเปลี่ยนไปแล้ว'); renderDashboard(); return;
+      }
+      if(state.coins < total){
+        sfx.wrong(); toast(`ยกเลิกการติดแอร์: ต้องใช้ 🪙${fmtNum(total)} แต่เหรียญไม่พอแล้ว`); renderDashboard(); return;
+      }
+      if(!Array.isArray(state.acPurchaseLog)) state.acPurchaseLog = [];
+      state.acPurchaseLog.push({home:state.home, price:total, at:Date.now()});
+      state.acPurchaseLog = state.acPurchaseLog.slice(-20);
       state.coins -= total;
       state.ac = true;
       if(typeof sellInc==='function') sellInc('ac');

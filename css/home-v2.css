@@ -2273,7 +2273,7 @@ body.vw2-home-active.vw2-page-hidden #vw-home-v2-root *:after{animation-play-sta
   #vw-home-v2-root .vw2-feature-title,
   #vw-home-v2-root .vw2-word-ribbon{top:48px!important}
 }
-/* Six current tools fill the panel exactly after the obsolete Classic link is removed. */
+/* Five current tools fill the panel exactly after night mode was removed. */
 #vw-home-v2-root .vw2-top-actions{grid-template-rows:repeat(3,minmax(0,1fr))!important}
 @media (min-width:1181px) and (min-height:521px){
   #vw-home-v2-root .vw2-top-actions{

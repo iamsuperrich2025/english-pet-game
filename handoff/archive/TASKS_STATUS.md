@@ -6156,3 +6156,120 @@
 - **รอบ 1431 · Dragon Sky กระสุนเท่าเดิม:** ยิงทีละนัด สลับกระบอก ขนาด TRACER/HEAVY/PIERCER เดิม (glow 13) ไม่พวยพุ่ง 8 นัด
 - `js/lettercannon.js` · unit ผ่าน · HUD โล่งล่าง/บินลื่นจาก 1422 คงไว้
 - รีเฟรชแล้วดูว่ากระสุนใหญ่เท่าเดิมและไม่ออกเป็นพัด
+
+
+## ⏬ ย้ายเมื่อ 2026-09-13 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- unit wordship ผ่าน · ค้าง: ลองลากก้มสุดบนมือถือ
+- **รอบ 1464 · กองเรือ วงแหวนบานพับ:** โคนกระบอกมีวงแหวน+เพลาเล็กที่กึ่งกลางป้อม หมุนก้มเงยไปด้วย
+- `js/wordship.js` `tools/test_wordship.js` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: ดูก้มเงยบนมือถือ
+- **รอบ 1463 · กองเรือ ลูกไฟ:** กระสุนเป็นลูกไฟ shader แบบวงเพลิง Arena เปลวลากตามทิศความเร็ว
+- `js/wordship.js` `tools/test_wordship.js` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: ยิงบนมือถือดูเปลวตามวิถี
+- **รอบ 1462 · กองเรือ การ์ดโปร่งตอนบังเรือ:** ตัวอักษรที่อยู่ระหว่างกล้องกับเรือผู้เล่นโปร่งเหลือ 20%
+- `js/wordship.js` `tools/test_wordship.js` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: หมุนกล้องให้การ์ดบังเรือบนมือถือ
+- **รอบ 1461 · กองเรือ จุดหมุนก้มเงย:** กระบอกหมุนรอบกึ่งกลางป้อม ไม่หมุนรอบกลางลำกล้อง
+- `js/wordship.js` `tools/test_wordship.js` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: ลองก้มเงยบนมือถือดูโคนกระบอกติดป้อม
+- **รอบ 1460 · กองเรือ เป้าบวก:** จุดตกกระสุนบนน้ำเป็นเครื่องหมาย + บางๆ ตามวิถีโค้งจากมุมกระบอก
+- `js/wordship.js` `tools/test_wordship.js` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: ลองเล็งขึ้นลงบนมือถือให้ + ขยับ
+- **รอบ 1459 · กองเรือ ยกกระบอก:** ครึ่งจอขวา ลากซ้ายขวาหันป้อม ลากขึ้นลงปรับมุมปลายกระบอก · SCOPE ละเอียดทั้งสองแกน
+- `js/wordship.js` `tools/test_wordship.js` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: ลองลากขึ้นลงบนมือถือ
+- **รอบ 1458 · กองเรือ หัวแหลม:** หัวเรือเรียวเป็นขั้น Soft Cuboid ไปทาง -Z ไม่ตัดเป็นสี่เหลี่ยมทื่อ
+- `js/wordship.js` `tools/test_wordship.js`
+- unit wordship ผ่าน · ค้าง: ดูหัวเรือบนมือถือ
+- **รอบ 1457 · กองเรือ ลูกศรบ้านอันเดียว:** CSS `display:grid` ทับ `[hidden]` เลยเหลือป้ายบ้านเก่าค้างชี้คนละทาง · ซ่อนลูกศรเก่าให้หมด เหลือบ้านตัวเองทางเดียว
+- `js/wordship.js` `css/wordship.css` `tools/test_wordship.js`
+- unit wordship ผ่าน · ค้าง: ดูลูกศรบ้านบนมือถือ
+- **รอบ 1456 · กองเรือ ป้ายกลางโปร่ง:** พื้นป้ายคำกลางบนเหลือทึบ 30% มองทะลุการ์ดด้านหลังได้ ตัวหนังสือยังอ่านได้
+- `css/wordship.css` `tools/test_wordship.js`
+- unit wordship ผ่าน · ค้าง: ดูป้ายบนมือถือ
+- **รอบ 1455 · กองเรือ DROP + การ์ดใหญ่:** ปุ่ม DROP ทิ้งตัวอักษรที่ถือผิดลงน้ำใกล้เรือ · การ์ด A–Z เป็นสไปรต์นามบัตรพาสเทลใหญ่เห็นชัด
+- `js/wordship.js` `css/wordship.css` `tools/test_wordship.js` `handoff/GAME_RULES.md` `docs/PROJECT_MAP.md`
+- unit wordship ผ่าน · ค้าง: ลอง DROP และการ์ดบนมือถือ
+- **รอบ 1454 · กองเรือ กำแพงน้ำแข็งขอบแผนที่:** เดินหน้าชนขอบแล้วยังเห็นทะเลต่อ เพราะแผ่นน้ำกว้างกว่าเขตเล่น · เข้าใกล้ขอบแล้วสร้างกำแพงน้ำแข็งขาวตั้งฉากเฉพาะด้านนั้น ออกห่างแล้วทิ้ง
+- `js/wordship.js` `tools/test_wordship.js` `handoff/GAME_RULES.md` `docs/PROJECT_MAP.md`
+- unit wordship ผ่าน · ค้าง: แล่นชนขอบบนมือถือให้เห็นน้ำแข็ง
+- **รอบ 1453 · กองเรือ เอาฟองขาวออก:** ไม่มีแผ่นน้ำขาวรอบลำเรือตอนแล่น
+- `js/wordship.js` `tools/test_wordship.js` `handoff/GAME_RULES.md` `docs/PROJECT_MAP.md`
+- unit wordship ผ่าน · ค้าง: ดูบนมือถือ
+- **รอบ 1452 · กองเรือ ลูกศร+ย้ายบ้าน:** เกาะบ้านไปหน้าซ้ายจุดเกิด · ลูกศรขอบจอชี้การ์ดที่ยังขาด และชี้บ้าน
+- `js/wordship.js` `css/wordship.css` `tools/test_wordship.js` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: ลองลูกศรบนมือถือ
+- **รอบ 1451 · กองเรือ Frontline letters + เกาะสูง:** เกาะบ้านแท่นสูง + เกาะยอดแหลม · เก็บการ์ดฝากบ้าน สะกดได้ 1,000 เหรียญผ่าน `addCoins` ตอนจบรอบ
+- `js/wordship.js` `css/wordship.css` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: ลองเก็บตัวอักษร/ฝากบ้านบนมือถือ
+- **รอบ 1450 · กองเรือ แหวกผิวน้ำ:** ฟองน้ำรอบลำตามทิศหัว–ท้าย เดินหน้าแหวกหัว ถอยแหวกท้าย
+- `js/wordship.js` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: ลองเดินหน้า/ถอยบนมือถือ
+- **รอบ 1449 · กองเรือ ยิง 4 กระบอก:** FIRE ออกจากกระบอกคู่หน้า+หลังทั้ง 4 ทิศเดียวกับป้อม
+- `js/wordship.js` `tools/test_wordship.js` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: ลองยิงบนมือถือ
+- **รอบ 1448 · กองเรือ ไม่แจ้งเป้าหนี:** เรือแล่นพ้นขอบแล้วยังสปอว์นคำใหม่ แต่ไม่ขึ้นข้อความ "เรือเป้าหมายแล่นหนีไปแล้ว"
+- `js/wordship.js` `tools/test_wordship.js` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: ลองบนมือถือ
+- **รอบ 1447 · กองเรือ ทะเลกว้าง:** อาณาเขตน้ำกว้างขึ้นมาก (ซ้าย-ขวา ±240 · แผ่นน้ำ 900) แล่นได้กว้างขึ้น
+- `js/wordship.js` `tools/test_wordship.js` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: ลองแล่นออกด้านข้างบนมือถือ
+- **รอบ 1446 · กองเรือ กระสุนตามกระบอก:** ทิศยิง = ทิศปลายกระบอก (local -Z ของป้อม + มุมยก ELEV) ไม่กลับซ้ายขวา
+- `js/wordship.js` `tools/test_wordship.js` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · preview FIRE ตอนหันป้อม กระสุนไปทางเดียวกับกระบอก · ค้าง: ลองบนมือถือ
+- **รอบ 1445 · กองเรือ ห้ามไหลข้าง:** เดินหน้า/ถอยตามหัว–ท้ายเท่านั้น ชนขอบแล้วหยุด ไม่ไถตามกำแพง
+- `js/wordship.js` `tools/test_wordship.js` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: ลองเดินหน้าหลังเลี้ยวบนมือถือ
+- **รอบ 1444 · กองเรือ ทรงเรือรบ:** ลำยาว หัวแหลม ป้อมใหญ่คู่หน้า-หลัง ปล่อง สะพาน ปืนรอง เสา — ยังเป็น Soft Cuboid น่ารัก
+- `js/wordship.js` `tools/test_wordship.js` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: ดูทรงเรือบนมือถือ
+- **รอบ 1443 · กองเรือ แถบความเร็ว 5 ระดับ + ทะเลไม่แสบตา:** แถบ SPEED กลางล่างแบบ Frontline · น้ำ/ฟ้าโทนเทาอมฟ้าอ่อนลง
+- `js/wordship.js` `css/wordship.css` `tools/test_wordship.js` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: ลองแถบความเร็วบนมือถือ
+- **รอบ 1442 · กองเรือ สลับทิศเลี้ยวซ้าย/ขวา:** ปุ่มและคีย์บอร์ดกลับด้านให้ตรงกับที่เห็นบนจอ
+- `js/wordship.js` `tools/test_wordship.js`
+- unit wordship ผ่าน · ค้าง: ลองเลี้ยวบนมือถือ
+- **รอบ 1441 · กองเรือ กล้องยึดเรือผู้เล่น:** มุมกล้องหมุนรอบลำเรือตัวเอง ไม่มองจุดกลางจอ/เป้าไกล · SCOPE ซูมใกล้เรือผู้เล่น
+- `js/wordship.js` `css/wordship.css` `tools/test_wordship.js` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: ลองมุมกล้องบนมือถือ / ยังล็อกแอดมิน
+- **รอบ 1440 · กองเรือ ปุ่มเลี้ยว = ตัวเรือ ไม่ใช่กล้อง:** กล้องยึดมุมจากนิ้วซีกซ้ายอย่างเดียว LEFT/RIGHT หมุนกระดูกงูให้เห็นลำเรือหัน
+- `js/wordship.js` `tools/test_wordship.js` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: ลองเลี้ยวบนมือถือ / ยังล็อกแอดมิน
+- **รอบ 1439 · กองเรือ ไม่ Game Over + SCOPE เล็งละเอียด + เลี้ยวแกนหัวท้าย:** พลาด/เรือหนีแล้วยังเล่นต่อ · SCOPE ลากซ้ายขวาหมุนกระบอกแบบละเอียด · เลี้ยวหมุนรอบกระดูกงู ไม่ไหลข้าง
+- `js/wordship.js` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: ลอง SCOPE บนมือถือ / ยังล็อกแอดมิน
+- **รอบ 1438 · กองเรือ บังคับหัวท้าย + กล้อง/ป้อม + SCOPE:** เดินหน้า/ถอย/AUTO แบบ Frontline · BOT แล่นท้าย→หัว · ซีกซ้ายหมุนกล้อง ซีกขวาหมุนป้อม · กระสุนออกจากกระบอกแล้วตก G×มวล ยิงไกลกว่าเขตเรือ · SCOPE ซูมเป้า
+- `js/wordship.js` `css/wordship.css` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: แอดมินลองบนมือถือแนวนอน / ยังไม่ปลดล็อกสาธารณะ
+- **รอบ 1437 · Vocab World Pick-Up Truck:** สำเนา Kart เป็นเกมใหม่ รถกระบะ Soft Cuboid ความเร็ว 170 กม./ชม. (Kart 110 · Racing ~306) พิท 55 · ห้อง/สถิติแยก pickup*
+- `js/pickup3d.js` `js/f1_3d.js` `js/kart3d.js` `js/ui.js` `js/home-v2.js` `js/netroom.js` `js/account-deletion.js` `handoff/RULES.md` `tools/build_web.mjs` `tools/test_pickup_entry.js`
+- unit Kart 28 + Pickup 31 ผ่าน · ค้าง: publish RTDB rules แล้วเล่นห้องจริง + ยืนยันรถกระบะ/ความเร็วในเกม
+- **รอบ 1436 · กองเรือ 3D + ป้ายชัด เรือเล็กลงเอง:** Soft Cuboid เรือ Kart + กระสุนโค้ง WoWS · ป้ายคำแยกจากโมเดล ขยายตามระยะให้อ่านชัด · ลำเรือขนาดโลกคงที่
+- `js/wordship.js` `css/wordship.css` `js/ui.js` `tools/test_wordship.js` `tools/wordship_preview.html` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: แอดมินเปิดเกมดูป้ายชัดตอนเรือไกล และยังล็อกสาธารณะอยู่
+- **รอบ 1435 · บ้านผู้เล่นพังไม่ได้:** Frontline+Arena บ้าน/ฐานไม่ลด HP ไม่เปิดคลัง ตัวอักษรที่ฝากแล้วขโมยไม่ได้ · รถถังยังโดนยิงได้
+- `tools/frontline-v1/frontline-{bases,bombs,letters,bots,ui,scene,main}.js` `js/arena3d.js` `functions/arena-race.js` ทดสอบ+docs
+- unit Frontline 34+9+12 และ Arena 31 ผ่าน · ค้าง: เล่นห้องจริงยืนยันบ้านไม่พัง
+- **รอบ 1433 · เรือลำเดียวในเขตน้ำ:** แล่นซ้าย↔ขวาหรือใกล้↔ไกล ความเร็วคงที่ ใกล้→ไกลลำเล็กลง ห้ามขึ้นท้องฟ้า · ค้างล็อกแอดมินจาก 1432
+- `js/wordship.js` `tools/test_wordship.js` `handoff/GAME_RULES.md`
+- unit ผ่าน · ค้าง: แอดมินเปิดเกมดูเรือลำเดียวแล่นในน้ำ
+- **รอบ 1432 · ล็อกกองเรือคำศัพท์เฉพาะแอดมิน:** ปุ่มราง/Home V2 ซ่อนจากผู้เล่นทั่วไป · เมือง 3D แตะแล้วขึ้นป้ายเหตุผล ไม่เดินทาง · ไม่โหลด JS ถ้าไม่ใช่แอดมิน
+- `js/ui.js` `js/wordship.js` `js/auth.js` `js/home-v2.js` `js/city3d.js` `css/lobby.css` `index_classic.html` `tools/test_wordship.js`
+- unit wordship + Home V2 ผ่าน · ค้าง: ยืนยันด้วยบัญชีแอดมินบนเครื่องจริง แล้วค่อยปลดล็อกเมื่อเกมเสร็จ
+- **รอบ 1429 · กองเรือคำศัพท์:** มินิเกมเรือรบน่ารัก ใช้คลัง `vocabForStudent()` ชุดเดียวกับยิงเป้าคำ · Canvas/เสียงสังเคราะห์ ไม่โหลดภาพ-เพลง-คลังใหม่ · JS/CSS โหลดตอนกดปุ่ม
+- `js/wordship.js` `css/wordship.css` `js/ui.js` `js/state.js` `js/home-v2.js` `js/main.js` `js/city3d.js` `index_classic.html` `tools/test_wordship.js`
+- unit wordship + Home V2 ผ่าน · เปิด preview เห็นโจทย์ไทย/เรืออังกฤษ/วงแหวนทอง · ค้าง: เล่นบนมือถือจริง
+
+
+## ⏬ ย้ายเมื่อ 2026-09-13 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- ค้าง: ผู้ใช้รีเฟรชแอปดูแผงเครื่องมือ
+- **รอบ 1467 · กองเรือ เสียงวงเพลิง:** ปุ่ม FIRE เล่นคลิปไฟชุดเดียวกับ Arena (`fire-a6fea31058694941.mp3` + แคชเดียวกัน)
+- `js/wordship.js` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `SOUND_LICENSES.md` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: ยิงบนมือถือให้ได้ยินวงเพลิง
+- **รอบ 1466 · กองเรือ ติดสิ่งกีดขวาง:** เดินหน้าชนขอบแล้วยังดันต่อขึ้นข้อความให้กดถอยหลัง
+- `js/wordship.js` `tools/test_wordship.js` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: ลองชนกำแพงน้ำแข็งบนมือถือ
+- **รอบ 1465 · กองเรือ ไม่ทิ่มดาดฟ้า:** มุมก้มกระบอกไม่ต่ำกว่าแนวนอน (`ELEV_MIN=0`) จึงไม่ทิ่มดาดฟ้า
+- `js/wordship.js` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`

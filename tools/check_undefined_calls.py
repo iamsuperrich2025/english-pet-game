@@ -33,7 +33,7 @@ SHOW_ALL = "--all" in sys.argv
 # ---- ชื่อที่ถือว่ามีอยู่แล้วเสมอ (คำสงวน + บิลด์อิน + global เบราว์เซอร์ที่เกมนี้ใช้) ----
 KEYWORDS = {
     "if", "for", "while", "switch", "catch", "return", "typeof", "function", "new", "delete",
-    "do", "else", "in", "of", "case", "await", "yield", "void", "throw", "with", "instanceof",
+    "do", "else", "in", "of", "case", "await", "async", "yield", "void", "throw", "with", "instanceof",
 }
 BUILTINS = {
     "Array", "Object", "String", "Number", "Boolean", "Math", "JSON", "Date", "RegExp", "Error",

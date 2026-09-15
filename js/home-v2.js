@@ -836,7 +836,7 @@
       typing:'#btn-rail-typing', bubble:'#btn-rail-bubble', shoot:'#btn-rail-shootword',
       wordship:'#btn-rail-wordship', cannon:'#btn-rail-lettercannon', examstd:'#btn-rail-examstd', onet:'#btn-rail-onet',
       rank:'#btn-rail-rank', stats:'#btn-stats', trophy:'#btn-rail-trophy', chat:'#btn-chat',
-      music:'#btn-music', night:'#btn-night', settings:'#btn-settings', install:'#btn-install-top',
+      music:'#btn-music', settings:'#btn-settings', install:'#btn-install-top',
       logout:'#btn-logout', play:'#btn-play', cats:'#btn-cats', picmatch:'#btn-picmatch',
       picdict:'#btn-picdict', picquiz:'#btn-picquiz', vocabbook:'#btn-vocab-book',
       bandexam:'#btn-band-exam'
@@ -1184,7 +1184,6 @@
           <section class="vw2-top-actions" aria-label="เครื่องมือ — ทุกปุ่มมีข้อความกำกับ">
             ${toolButton('chat','chat','ข้อความ','', '#btn-chat')}
             ${toolButton('music','music','เพลง','', '#btn-music')}
-            ${toolButton('night','moon','กลางคืน','', '#btn-night')}
             ${toolButton('settings','settings','ตั้งค่า','', '#btn-settings')}
             ${toolButton('install','install','ติดตั้ง','vw2-install', '#btn-install-top', true)}
             ${toolButton('logout','logout','ออกระบบ','', '#btn-logout')}
