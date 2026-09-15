@@ -15,6 +15,7 @@ ok(home.includes("toolButton('help','book','คู่มือการเล่
 ok(index.includes('css/lobby.css?v=1486') && index.includes('css/home-v2.css?v=1486') && index.includes('js/util.js?v=1486') && index.includes('js/home-v2.js?v=1486'),'changed guide assets have a fresh production cache key');
 ok(home.includes("if(name === 'help')") && home.includes("typeof openHelp === 'function'"),'Home V2 guide action calls the authoritative guide');
 ok(util.includes('id="set-help">📖 คู่มือการเล่น'),'settings keeps a second guide entry');
+ok(help.includes('ให้ “แตะ” ที่ตัวน้องบน Lobby ก่อน') && help.includes('จึงจะเปิดหน้า Profile หรือหน้ารายละเอียดของน้อง'),'pet-care page explains that tapping the pet opens its Profile/details');
 ok(help.includes("tab:'ที่พัก'") && help.includes('ที่พักมี 3 แบบ'),'guide explains all three shelter choices');
 ok(help.includes("tab:'ไม่ให้ป่วย'") && help.includes('ห้าสิ่งที่ต้องระวังทุกวัน'),'guide explains current illness prevention');
 ok(help.includes("tab:'ตั้งค่า'") && help.includes('เสียงเอฟเฟกต์และเสียงอ่านคำ'),'guide explains current settings in human language');

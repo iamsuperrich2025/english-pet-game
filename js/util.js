@@ -1114,6 +1114,11 @@ function openSettings(initialTab){
             <span class="set-desc">อัปโหลดรูปของหนูเอง (ให้ผู้ปกครองช่วยเลือก) · ไม่ใส่ก็ได้ ใช้ตัวการ์ตูนแทน</span></span>
           <button class="ph-open" type="button" aria-label="เปลี่ยนรูปโปรไฟล์"></button>
         </div>
+        ${(typeof HomeTheme!=='undefined' && HomeTheme && typeof isAdmin==='function' && isAdmin()===true) ? `<div class="set-row set-theme-row" id="set-theme">
+          <span class="set-lwrap"><span class="set-label">🎨 ธีมหน้าหลัก</span>
+            <span class="set-desc">ทดลองเฉพาะแอดมิน · หรูดำใช้โทนดำ เทา เหลืองทอง</span></span>
+          <div class="set-seg set-theme-seg" role="radiogroup" aria-label="เลือกธีมหน้าหลัก">${HomeTheme.list().map(t=>`<button class="set-seg-btn set-theme-sw" type="button" role="radio" data-theme="${t.id}" aria-checked="false" title="${t.label}"><i class="set-theme-chip" style="background:${t.swatch}"></i><span>${t.label}</span></button>`).join('')}</div>
+        </div>` : ''}
       </div>
       <div class="set-panel${startTab==='avatar'?' active':''}" data-panel="avatar">
         <div class="set-row set-blk-row" id="set-blk">
@@ -1206,6 +1211,15 @@ function openSettings(initialTab){
       phBtn.innerHTML = ph ? `<img class="ph-thumb" src="${ph}" alt=""><span>เปลี่ยนรูป</span>`
                            : `<span class="ph-plus">＋</span><span>ใส่รูป</span>`;
       phBtn.classList.toggle('has', !!ph);
+    }
+    const themeRow = overlay.querySelector('#set-theme');
+    if(themeRow && typeof HomeTheme!=='undefined' && HomeTheme){
+      const cur = HomeTheme.get();
+      themeRow.querySelectorAll('.set-theme-sw').forEach(b=>{
+        const on = b.dataset.theme === cur;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-checked', on ? 'true' : 'false');
+      });
     }
     // 📰 รอบ 155: สวิตช์เปิดเผยกิจกรรม (default เปิดทุกหมวดตั้งแต่รอบ 565)
     overlay.querySelectorAll('.set-feed-row').forEach(r=>
@@ -1311,6 +1325,12 @@ function openSettings(initialTab){
   overlay.querySelector('#set-anim .set-switch').addEventListener('click', ()=>{
     state.noAnim = !state.noAnim; saveState(); applyNoAnim(); paint();
   });
+  overlay.querySelectorAll('#set-theme .set-theme-sw').forEach(b=>b.addEventListener('click', ()=>{
+    if(typeof HomeTheme==='undefined' || !HomeTheme) return;
+    HomeTheme.set(b.dataset.theme);
+    paint();
+    if(typeof sfx!=='undefined' && sfx.select) sfx.select();
+  }));
   // 📰 รอบ 155: สลับการเปิดเผยกิจกรรมรายหมวด
   // เปิด = เริ่มรายงานหมวดนั้น · ปิด = หยุด + ลบโพสต์เก่าหมวดนั้นออกจาก DB (คนอื่นไม่เห็นของเก่าด้วย)
   overlay.querySelectorAll('.set-feed-row').forEach(r=>{
@@ -1375,8 +1395,8 @@ function openHelp(){
       ['🎯 เกมนี้เล่นไปเพื่ออะไร','Vocab World เป็นเกมฝึกภาษาอังกฤษที่มีสัตว์เลี้ยงเป็นเพื่อน เราเล่นเกมคำศัพท์เพื่อหาเหรียญ แล้วนำเหรียญไปซื้ออาหาร ที่พัก ของแต่งตัว และต่อยอดเป็นฟาร์ม โรงงาน หรือตลาดของเราเอง'],
       ['👣 สามก้าวแรก','ยังไม่มีสัตว์ก็เล่นเกมและหาเหรียญได้ เริ่มจากเกมจับคู่หรือหมวดคำศัพท์ก่อน พอมีเงินค่อยซื้อสัตว์ ตั้งชื่อให้น้อง แล้วเตรียมชั้นอาหารกับที่พัก ไม่จำเป็นต้องซื้อทุกอย่างพร้อมกัน']
     ]},
-    {tab:'เลี้ยงน้อง', icon:'🐾', title:'เลี้ยงน้องให้แข็งแรงและโตไว', lead:'น้องแต่ละตัวมีเลเวล ความอิ่ม สุขภาพ และชุดของตัวเอง การสลับไปดูตัวอื่นไม่ได้หยุดเวลาของตัวที่เหลือ', items:[
-      ['🍽️ มื้อเย็นสำคัญที่สุด',`ไข่และน้องแรกเกิด Lv.1 ยังไม่หิว ไม่ร้อน และไม่ต้องนอน ตั้งแต่ Lv.2 เป็นต้นไป น้องเริ่มหิวเวลา ${String(mealHour).padStart(2,'0')}:00 น. ให้หยิบอาหารจากชั้นมาป้อนจนหลอดเต็ม 100 ก่อน 20:00 น. ถ้าปล่อยให้หิวนานเกิน 2 ชั่วโมง น้องจะป่วย`],
+    {tab:'เลี้ยงน้อง', icon:'🐾', title:'เลี้ยงน้องให้แข็งแรงและโตไว', lead:'อยากดูข้อมูลหรือดูแลน้อง ให้ “แตะ” ที่ตัวน้องบน Lobby ก่อน ระบบจึงจะเปิดหน้า Profile หรือหน้ารายละเอียดของน้อง', items:[
+      ['🍽️ เปิด Profile แล้วดูแลน้องได้เลย',`ในหน้า Profile จะดูเลเวล ความอิ่ม สุขภาพ และรายละเอียดของน้องได้ ไข่และน้องแรกเกิด Lv.1 ยังไม่หิว ไม่ร้อน และไม่ต้องนอน ตั้งแต่ Lv.2 เป็นต้นไป น้องเริ่มหิวเวลา ${String(mealHour).padStart(2,'0')}:00 น. ให้หยิบอาหารจากชั้นมาป้อนจนครบ 100 ก่อน 20:00 น. ไม่อย่างนั้นน้องจะป่วย`],
       ['🌟 โตจากการฝึกคำศัพท์',`น้องได้ EXP เมื่อเราตอบคำศัพท์ถูก Lv.1 → Lv.2 ใช้ ${lv2Need} EXP และ Lv.2 → โตเต็มวัย Lv.3 ใช้อีก ${lv3Need} EXP เมนูโปรดกับการสอบผ่านช่วยเพิ่ม EXP ได้ แต่ถ้าน้องป่วย EXP และความสามารถพิเศษของน้องจะพักไว้ก่อน`]
     ]},
     {tab:'ไม่ให้ป่วย', icon:'🩺', title:'ห้าสิ่งที่ต้องระวังทุกวัน', lead:'โรคในเกมป้องกันได้เกือบทั้งหมด แค่ดูเวลา บ้าน และบิลที่มีจุดแดง', items:[

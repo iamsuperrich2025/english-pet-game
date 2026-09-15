@@ -12,6 +12,11 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1500 · ยิงรบคำท่า Free Fire:** ปุ่มท่าวน ย่อ/คุกเข่าข้างเดียว/หมอบ + หลบเอียงตัว · รวม AUTO วิ่งกลับบ้าน (เล็งกล้องได้ ถึงบ้านฝากตัวอักษร)
+- ไฟล์: `js/wordskirmish.js` `css/wordskirmish.css` `tools/test_wordskirmish.js` `docs/PLAYER_CHARACTER_STYLE.md`
+- unit 69 ผ่าน · ค้าง: แอดมินลองปุ่มท่า/หลบบนมือถือ
+- **รอบ 1499 · คู่มือบอกทางเปิดข้อมูลน้อง:** หน้า “เลี้ยงน้อง” ระบุชัดให้ “แตะ” ที่ตัวน้องบน Lobby ก่อน จึงจะเปิด Profile/หน้ารายละเอียดได้
+- ปรับ `js/util.js` + regression `tools/test_lobby_guide_1489.js`; syntax/static ผ่าน และ browser 30 สถานะ (3 viewport) ไม่ล้น/ไม่มี scroll
 - **รอบ 1496 · ยิงรบคำปุ่ม AUTO ซ้าย:** กดเปิดวิ่งค้างตามกล้อง กดซ้ำหยุด · กดค้างย้ายปุ่มได้ · คีย์ E
 - ไฟล์: `js/wordskirmish.js` `css/wordskirmish.css` `tools/test_wordskirmish.js`
 - unit 58 ผ่าน · ค้าง: แอดมินลองกด AUTO บนมือถือ
