@@ -18,7 +18,7 @@
 - **รอบ 1478 · กันซื้อแอร์ซ้ำ + คืนเหรียญ:** `buyAC` กันกล่องยืนยันซ้อน/ตรวจ `state.ac` ซ้ำตอน commit และเก็บ `acPurchaseLog`
 - forensic snapshot พบ 3 บัญชีถูกหักเกิน 10 ครั้ง: คืน 50,000 + 25,000 + 175,000 = 250,000 ผ่าน server ledger/campaign marker + stale-save healer
 - `js/{ui,state,main}.js` `functions/{index,ac-duplicate-refund,test_ac_duplicate_refund}.js` `tools/test_ac_purchase_guard.js`
-- build + syntax + client/Functions/browser 812×375 ผ่าน · ค้าง: deploy Functions/Hosting แล้ว trigger dry-run → apply → ตรวจยอดจริง
+- live 2026-09-15.1279 · dry-run/apply ผ่าน: 3 บัญชี 10 รายการ 250,000 เหรียญ · marker/ledger/notice ครบ ไม่มี deferred
 - **รอบ 1477 · กองเรือ ทะเลตามภาพ:** น้ำ `SEA_COLOR=0x003464` จากค่าเฉลี่ยรูปมหาสมุทรที่ส่งมา
 - `js/wordship.js` `css/wordship.css` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
 - unit wordship ผ่าน · ค้าง: เปิดดูสีน้ำบนมือถือ
