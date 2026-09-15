@@ -6317,3 +6317,10 @@
 - **รอบ 1477 · กองเรือ ทะเลตามภาพ:** น้ำ `SEA_COLOR=0x003464` จากค่าเฉลี่ยรูปมหาสมุทรที่ส่งมา
 - `js/wordship.js` `css/wordship.css` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
 - unit wordship ผ่าน · ค้าง: เปิดดูสีน้ำบนมือถือ
+
+
+## ⏬ ย้ายเมื่อ 2026-09-15 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1481 · 🔫 ยิงรบคำ (Cute Word Skirmish) เกมใหม่ แอดมินเท่านั้น:** ก๊อปกติกาปืนลมจากยิงเป้าคำ (COOLDOWN 310) + เดินอิสระ WASD/จอย มุม 3rd-person · โดนหัว/ผม/ตา = ตายทันที โดนตัว −35 HP · เก็บตัวอักษรฝากบ้านตัวเอง ครบคำ 1,000 เหรียญแบบ Frontline · ออนไลน์ NetRoom map `skirmish` 8 คน
+- ไฟล์: `js/wordskirmish.js` `css/wordskirmish.css` + เข้าเลม `index_classic.html` `js/{ui,auth,home-v2,main,city3d,netroom}.js` `css/lobby.css` `tools/{build_web.mjs,test_wordskirmish.js,test_home_v2_mobile_preview.js,wordskirmish_preview.html}` `docs/{PROJECT_MAP,PLAYER_CHARACTER_STYLE}.md` `handoff/{GAME_RULES,RULES}.md`
+- unit 41 เช็ก + wordship + Home V2 ผ่าน · browser 812×375: HUD ไม่ล้นจอ (scrollHeight=clientHeight=375) · ยืนยัน W/S/A เดิน-ถอย-สไลด์, เฮดช็อตตายทันที, ยิงลำตัว −35, ฝากอักษรที่จุดเกิดได้

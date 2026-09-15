@@ -25,9 +25,6 @@ efreshMechaLock
 - **รอบ 1482 · หุ่นรบวิถีกระสุนโค้ง:** ยิงจากปากกระบอก + แรงโน้มถ่วงชุดเดียวกับกองเรือ (`G=8.4`/`mass=1.2`/`muzzle=62`) · FX `launch/sync/impact`
 - ไฟล์: `js/adventure3d.js` `js/mecha-combat-fx.js` `docs/PROJECT_MAP.md` `tools/test_mecha_1481.js`
 - unit ballistic + 1480 ผ่าน · ค้าง: เปิดมือถือยิงดูวิถีโค้ง/ตกพื้น
-- **รอบ 1481 · 🔫 ยิงรบคำ (Cute Word Skirmish) เกมใหม่ แอดมินเท่านั้น:** ก๊อปกติกาปืนลมจากยิงเป้าคำ (COOLDOWN 310) + เดินอิสระ WASD/จอย มุม 3rd-person · โดนหัว/ผม/ตา = ตายทันที โดนตัว −35 HP · เก็บตัวอักษรฝากบ้านตัวเอง ครบคำ 1,000 เหรียญแบบ Frontline · ออนไลน์ NetRoom map `skirmish` 8 คน
-- ไฟล์: `js/wordskirmish.js` `css/wordskirmish.css` + เข้าเลม `index_classic.html` `js/{ui,auth,home-v2,main,city3d,netroom}.js` `css/lobby.css` `tools/{build_web.mjs,test_wordskirmish.js,test_home_v2_mobile_preview.js,wordskirmish_preview.html}` `docs/{PROJECT_MAP,PLAYER_CHARACTER_STYLE}.md` `handoff/{GAME_RULES,RULES}.md`
-- unit 41 เช็ก + wordship + Home V2 ผ่าน · browser 812×375: HUD ไม่ล้นจอ (scrollHeight=clientHeight=375) · ยืนยัน W/S/A เดิน-ถอย-สไลด์, เฮดช็อตตายทันที, ยิงลำตัว −35, ฝากอักษรที่จุดเกิดได้
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
