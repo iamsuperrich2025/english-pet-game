@@ -1183,13 +1183,14 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
     touch-action:none;background:rgba(120,200,255,.14);border:2px solid rgba(150,220,255,.5);color:#dff2ff;
     border-radius:16px;align-items:center;justify-content:center;font-size:26px;font-weight:800;backdrop-filter:blur(2px)}
   .mecha-btn:active{background:rgba(120,200,255,.34)}
+  .mecha-btn.on{background:rgba(80,210,255,.42);border-color:rgba(180,240,255,.95);box-shadow:0 0 14px rgba(80,200,255,.55);
+    color:#fff}
   .adv-touch.adv-mecha .mecha-btn{display:flex}
-  /* รอบ 220 (ผู้ใช้ · แก้ชนบนจอแคบ): 3 คลัสเตอร์แยกกันชัด — ◀▶ ซ้ายล่าง · ▲▼ ขวาล่าง · ปุ่มยิงกลางใต้คำ
-     (รอบ 219 ปุ่มยิงใต้ตัวท้าย H ค่อนขวา → ชน ▲▼ ขวาล่างบนจอ ~480px · ย้ายปุ่มยิงมากลางจอ = ช่องกลางกว้างพอ ไม่ชนทั้ง 2 ฝั่ง) */
-  #mecha-fwd{right:22px;bottom:104px;width:76px;height:70px}       /* ▲ เดินหน้า (ขวาล่าง) */
-  #mecha-back{right:22px;bottom:24px;width:76px;height:70px}       /* ▼ ถอย (ขวาล่าง) */
-  #mecha-left{left:22px;bottom:24px;width:70px;height:70px;border-radius:50%}    /* ◀ เลี้ยวซ้าย (ซ้ายล่าง) */
-  #mecha-right{left:100px;bottom:24px;width:70px;height:70px;border-radius:50%}  /* ▶ เลี้ยวขวา (ซ้ายล่าง) */
+  /* 🤖 รอบ 1491: คลัสเตอร์ซ้ายล่าง = auto ▲▼◀▶ (กดสลับเปิด/ปิด) · เอาปุ่มเดินขวามือออก */
+  #mecha-fwd{left:96px;bottom:104px;width:70px;height:70px;border-radius:50%}
+  #mecha-back{left:96px;bottom:24px;width:70px;height:70px;border-radius:50%}
+  #mecha-left{left:22px;bottom:64px;width:70px;height:70px;border-radius:50%}
+  #mecha-right{left:170px;bottom:64px;width:70px;height:70px;border-radius:50%}
   /* 🤖 รอบ 1480: ปุ่มยิงโทน HUD ห้องนักบิน (เลิกไอคอนปืนฉีดน้ำแดง) */
   #mecha-fire,#mecha-fire2{flex-direction:column;gap:2px;
     background:linear-gradient(160deg,rgba(6,16,26,.78),rgba(4,12,22,.58));

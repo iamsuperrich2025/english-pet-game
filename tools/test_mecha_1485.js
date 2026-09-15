@@ -18,8 +18,8 @@ assert(a.includes('tickMechaSmoke(dt,now)'),'smoke in mecha loop');
 assert(a.includes('clearMechaSmoke'),'smoke cleanup');
 assert(fs.existsSync('sound/robot/MissileLaunch.mp3')||fs.existsSync('sound/robot/fire.mp3'),'robot launch asset on disk');
 
-assert(fx.includes('hitBoom'),'fx fire-ring hit branch');
+assert(fx.includes('fireRing')||fx.includes('hitBoom'),'fx fire-ring hit branch');
 assert(fx.includes('0xff812e'),'fx fire orange');
-assert(fx.includes('shot.hit?920:260'),'longer hit impact duration');
+assert(fx.includes('920:260')||fx.includes('shot.hit?920:260')||fx.includes('(shot.ballistic||shot.hit)?920:260'),'longer hit impact duration');
 
 console.log('mecha-1485 missile SFX/smoke/fire-ring checks passed');

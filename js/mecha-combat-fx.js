@@ -1,6 +1,6 @@
-/* Round 1485 — mecha projectiles.
+/* Round 1492 — mecha projectiles.
    Ballistic shells (Word Fleet gravity): Adventure3D owns physics via launch/sync/impact.
-   Hit impacts use Arena-style fire-ring burst (~920ms). Smoke trails live in Adventure3D.
+   Any impact (ground or letter) uses Arena-style fire-ring burst (~920ms). Smoke trails live in Adventure3D.
    Legacy fire(from,to) kept for tools/mecha/fx-preview.html flash previews.
    Six instanced batches, 12 live shots, zero raster assets. */
 (function(root){
@@ -121,12 +121,12 @@ function create(scene){
   }
  }
  function drawImpact(shot,s,age){
-  const hitBoom=!!shot.hit;
-  const dur=hitBoom?920:260;
+  /* 🔥 รอบ 1492: กระสุนตกที่ใด (พื้น/เป้า) = ประกายไฟแบบวงเพลิง Arena */
+  const fireRing=!!shot.ballistic || !!shot.hit;
+  const dur=fireRing?920:260;
   const e=Math.min(1,age/dur),k=Math.sin(e*Math.PI),fade=1-e,special=s.kind!=='shell',boom=special?1.55:1;
   p.copy(shot.pos);
-  if(hitBoom){
-   /* 🔥 รอบ 1485: ลูกไฟ/แสงแบบวงเพลิง Arena — วงขยาย + เปลวหลายจุด + ประกาย */
+  if(fireRing){
    const fire=0xff812e, bright=0xffebbd, ember=0xffad45;
    local('ring',shot,p,0,0,0,.45+e*2.4,.45+e*2.4,.55,fire,e);
    local('ring',shot,p,0,0,.03,.32+e*1.9,.32+e*1.9,.4,bright,-e);
@@ -160,7 +160,7 @@ function create(scene){
    if(!shot.active)continue;
    const s=style(shot.id),spin=(now-shot.born)*.018,age=now-shot.born;
    if(shot.impacting){
-    const idur=shot.hit?920:260;
+    const idur=(shot.ballistic||shot.hit)?920:260;
     drawImpact(shot,s,now-shot.impactAt);
     if(now-shot.impactAt>idur){shot.active=false;shot.impacting=false;}
     continue;

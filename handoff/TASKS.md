@@ -12,6 +12,20 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1493 · ขึ้นเว็บยิงรบคำ แอดมินเท่านั้น:** rig ข้อต่อ + ปืนชี้หน้า + จอยครึ่งจอ/ย้ายปุ่ม + ตัวอักษรในบ้านปลอดภัย · ปุ่มซ่อนถ้าไม่ใช่แอดมิน (rail hidden, Home V2 ADMIN_ONLY, NetRoom `isAdmin`, city lock)
+- ไฟล์: `js/wordskirmish.js` `css/wordskirmish.css` `tools/{test_wordskirmish.js,wordskirmish_preview.html}` `docs/{PLAYER_CHARACTER_STYLE,PROJECT_MAP}.md`
+- unit 51 ผ่าน · ค้าง: ล็อกอินแอดมินบน live ดูปุ่ม 🔫 · ห้องออนไลน์ต้อง Publish Rules map `skirmish` (รอค้างใน RULES.md รอบ 1480)
+- **รอบ 1492 · กระสุนตกที่ใดก็วงเพลิง:** ballistic impact ทั้งพื้น/เป้า ใช้ประกายไฟแบบ Arena วงเพลิง (~920ms)
+- ไฟล์: js/mecha-combat-fx.js tools/test_mecha_1492.js
+- unit 1492 ผ่าน · ค้าง: ยิงลงพื้นดูประกายบน live
+
+- **รอบ 1491 · ปุ่มเดินหุ่น auto ซ้ายล่าง:** เอา ▲▼ ขวามือออก · ซ้ายเป็น D-pad ▲▼◀▶ กดเปิด/กดซ้ำปิด (สเตรฟ+เดิน)
+- ไฟล์: js/adventure3d.js js/adv3d_css.js tools/test_mecha_1491.js
+- unit 1491 ผ่าน · ค้าง: เปิดมือถือลองกด auto บน live
+
+- **รอบ 1490 · ยิงรบคำ ทัชครึ่งจอ + ตัวอักษรในบ้านปลอดภัย:** ซ้าย = จอยฐานตามนิ้ว · ขวา = หัน/ก้มเงย · กดค้าง DROP/FIRE แล้วย้ายปุ่ม (จำตำแหน่ง) · ฝากบ้านแล้วตายไม่หลุด
+- ไฟล์: `js/wordskirmish.js` `css/wordskirmish.css` `tools/test_wordskirmish.js`
+- unit 51 ผ่าน · ฝาก G แล้วเฮดช็อต stored ยังเป็น G · ค้าง: รีเฟรชมือถือลองจอยครึ่งซ้ายและกดค้างย้ายปุ่ม
 - **รอบ 1489 · คู่มือการเล่นภาษาไทยบน Lobby:** เพิ่มปุ่มตรง Home V2 และเขียนใหม่เป็นภาษาธรรมชาติ 10 หน้า ครอบคลุมเริ่มเล่น/เลี้ยงน้อง/5 สาเหตุป่วย/ที่พัก 3 แบบ/อาหาร/บิล/เกม/เพื่อน/อันดับ/ตั้งค่า/เช็กรายวัน
 - ข้อมูลอิงระบบจริง: มื้อ 18:00–20:00 · นอนก่อน 23:00 · ฝน/ร้อน/ตัดน้ำ · อาหารอันตรายป้อนไม่ได้ · เกมหลักฟรี · ราคา/EXP/ค่ารักษาอ่านจากค่าปัจจุบัน; แก้ `handoff/GAME_RULES.md` ที่เก่าแล้ว
 - ไฟล์หลัก: `js/{home-v2,util}.js` `css/{home-v2,lobby}.css` `index_classic.html` · regression `tools/test_lobby_guide_{1489,browser_1489}.*` + ปรับ cache assertions เดิม

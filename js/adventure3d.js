@@ -370,6 +370,15 @@ const MECHA_WEAPONS={
 };
 let mSpeed=0, mBobPhase=0, mStepDn=false, mLastFire=0;
 let mFwdBtn=0, mStrafeBtn=0, mFireHeld=false;
+function syncMechaMoveBtns(){
+  if(!overlayEl) return;
+  [['#mecha-fwd',mFwdBtn===1],['#mecha-back',mFwdBtn===-1],
+   ['#mecha-left',mStrafeBtn===-1],['#mecha-right',mStrafeBtn===1]].forEach(([sel,on])=>{
+    const el=overlayEl.querySelector(sel); if(!el) return;
+    el.classList.toggle('on',!!on);
+    el.setAttribute('aria-pressed',on?'true':'false');
+  });
+}
 let mechaFX=null; // bounded projectile renderer, disposed on exit
 let mechaRobotId='robot_01'; // selected once on entry; HUD, weapon and network agree
 let aliens=[], mechaWeapon=MECHA_WEAPONS.robot_01, mechaTracers=[], mFocusAlien=null;
@@ -5598,10 +5607,10 @@ function buildDom(){
       <div class="mh-shield"></div>
       <div class="mh-alarm"></div>
     </div>
-    <div class="mecha-btn" id="mecha-fwd">▲</div>
-    <div class="mecha-btn" id="mecha-back">▼</div>
-    <div class="mecha-btn" id="mecha-left">◀</div>
-    <div class="mecha-btn" id="mecha-right">▶</div>
+    <div class="mecha-btn" id="mecha-fwd" title="เดินหน้าอัตโนมัติ" aria-pressed="false">▲</div>
+    <div class="mecha-btn" id="mecha-back" title="ถอยหลังอัตโนมัติ" aria-pressed="false">▼</div>
+    <div class="mecha-btn" id="mecha-left" title="ขยับซ้ายอัตโนมัติ" aria-pressed="false">◀</div>
+    <div class="mecha-btn" id="mecha-right" title="ขยับขวาอัตโนมัติ" aria-pressed="false">▶</div>
     <div class="mecha-btn" id="mecha-fire"><i class="mh-fire-ico" aria-hidden="true"></i><b>FIRE</b></div>
     <div class="mecha-btn" id="mecha-fire2"><i class="mh-fire-ico" aria-hidden="true"></i><b>FIRE</b></div>
     <div id="adv-soccerstart"><!-- 👕 รอบ 939: ห้องแต่งตัวนักเตะเต็มจอ — พรีวิวสด + เสื้อ/กางเกง/ลาย/เบอร์ -->
@@ -5943,11 +5952,22 @@ function buildDom(){
   overlayEl.querySelector('#ss-plus').addEventListener('click',()=>{ let n=Math.min(99,(+sKitNo||10)+1); sKitNo=String(n); overlayEl.querySelector('#ss-no').textContent=sKitNo; if(soccerStartEl&&soccerStartEl._ssPaint) soccerStartEl._ssPaint(); sfx.select(); });
   overlayEl.querySelector('#ss-go').addEventListener('click',()=>{ sfx.select(); soccerKitGo(); });
 
-  // 🤖 ปุ่มบังคับหุ่นยนต์ (กดค้าง)
-  holdBtn('#mecha-fwd',()=>mFwdBtn=1,()=>mFwdBtn=0);
-  holdBtn('#mecha-back',()=>mFwdBtn=-1,()=>mFwdBtn=0);
-  holdBtn('#mecha-left',()=>mStrafeBtn=-1,()=>mStrafeBtn=0);   /* รอบ 222: ◀▶ = ขยับข้าง (สเตรฟ) ไม่ใช่หมุนตัว · หมุน/เล็ง = ลากจอ */
-  holdBtn('#mecha-right',()=>mStrafeBtn=1,()=>mStrafeBtn=0);
+  // 🤖 รอบ 1491: ปุ่มเดินหุ่น = auto toggle (กดเปิด / กดซ้ำปิด) · คลัสเตอร์ซ้าย ▲▼◀▶
+  const mechaToggleBtn=(sel,apply)=>{
+    const el=overlayEl.querySelector(sel); if(!el) return;
+    let lock=0;
+    const act=e=>{
+      e.preventDefault(); e.stopPropagation();
+      const t=performance.now(); if(t-lock<220) return; lock=t;   // กัน touch+mouse ยิงซ้ำ
+      apply(); syncMechaMoveBtns();
+      if(state.haptic!==false && navigator.vibrate) navigator.vibrate(12);
+    };
+    el.addEventListener('pointerdown',act);
+  };
+  mechaToggleBtn('#mecha-fwd',()=>{ mFwdBtn=mFwdBtn===1?0:1; });
+  mechaToggleBtn('#mecha-back',()=>{ mFwdBtn=mFwdBtn===-1?0:-1; });
+  mechaToggleBtn('#mecha-left',()=>{ mStrafeBtn=mStrafeBtn===-1?0:-1; });   /* สเตรฟ · หมุน/เล็ง = ลากจอ */
+  mechaToggleBtn('#mecha-right',()=>{ mStrafeBtn=mStrafeBtn===1?0:1; });
   holdBtn('#mecha-fire',()=>mFireHeld=true,()=>mFireHeld=false);
   holdBtn('#mecha-fire2',()=>mFireHeld=true,()=>mFireHeld=false);   /* รอบ 223: ปุ่มยิงตัวที่ 2 (ใต้ minimap) ยิงเหมือนกัน */
 
@@ -13279,6 +13299,7 @@ function start(md,opt){
     // 🤖 มุมมองในหุ่นสูง 5m · เลือกอาวุธตามหุ่นที่ครอบครอง
     maxHp=MECHA_MAX_HP; hp=maxHp;                       // 🤖 รอบ 236: หุ่นพลังเยอะกว่าโลกอื่น (ทนขึ้น ไม่ตายง่าย)
     mSpeed=0; mBobPhase=0; mStepDn=false; mFwdBtn=0; mStrafeBtn=0; mFireHeld=false; mLastFire=0;
+    syncMechaMoveBtns();
     aliens=[]; mechaTracers=[]; mechaShells=[]; mFocusAlien=null;
     mHeat=0; mOverheat=false; mHitAt=0; mLowHp=false;   // 🤖 รอบ 225: รีเซ็ตความร้อน/โอเวอร์ฮีต/iframe/พลังงานต่ำ
     alienShots=[]; powerups=[]; mNextPowerAt=performance.now()+8000;   // 🤖 รอบ 226: รีเซ็ตกระสุน/ของเก็บ (ชิ้นแรก ~8 วิ)
