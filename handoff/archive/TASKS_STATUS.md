@@ -6324,3 +6324,18 @@
 - **รอบ 1481 · 🔫 ยิงรบคำ (Cute Word Skirmish) เกมใหม่ แอดมินเท่านั้น:** ก๊อปกติกาปืนลมจากยิงเป้าคำ (COOLDOWN 310) + เดินอิสระ WASD/จอย มุม 3rd-person · โดนหัว/ผม/ตา = ตายทันที โดนตัว −35 HP · เก็บตัวอักษรฝากบ้านตัวเอง ครบคำ 1,000 เหรียญแบบ Frontline · ออนไลน์ NetRoom map `skirmish` 8 คน
 - ไฟล์: `js/wordskirmish.js` `css/wordskirmish.css` + เข้าเลม `index_classic.html` `js/{ui,auth,home-v2,main,city3d,netroom}.js` `css/lobby.css` `tools/{build_web.mjs,test_wordskirmish.js,test_home_v2_mobile_preview.js,wordskirmish_preview.html}` `docs/{PROJECT_MAP,PLAYER_CHARACTER_STYLE}.md` `handoff/{GAME_RULES,RULES}.md`
 - unit 41 เช็ก + wordship + Home V2 ผ่าน · browser 812×375: HUD ไม่ล้นจอ (scrollHeight=clientHeight=375) · ยืนยัน W/S/A เดิน-ถอย-สไลด์, เฮดช็อตตายทันที, ยิงลำตัว −35, ฝากอักษรที่จุดเกิดได้
+
+
+## ⏬ ย้ายเมื่อ 2026-09-15 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- unit icon + Home V2 ผ่าน · ค้าง: เปิดล็อบบี้ดูไอคอนจริง
+- **รอบ 1482 · หุ่นรบวิถีกระสุนโค้ง:** ยิงจากปากกระบอก + แรงโน้มถ่วงชุดเดียวกับกองเรือ (`G=8.4`/`mass=1.2`/`muzzle=62`) · FX `launch/sync/impact`
+- ไฟล์: `js/adventure3d.js` `js/mecha-combat-fx.js` `docs/PROJECT_MAP.md` `tools/test_mecha_1481.js`
+- unit ballistic + 1480 ผ่าน · ค้าง: เปิดมือถือยิงดูวิถีโค้ง/ตกพื้น
+
+
+## ⏬ ย้ายเมื่อ 2026-09-15 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- unit admin-lock + mecha 1480/1481/icon ผ่าน · ค้าง: ล็อกอินแอดมินดูปุ่ม/ยิงบน live
+- **รอบ 1483 · ไอคอนเข้าโลกหุ่นรบ:** เปลี่ยนจาก emoji 🤖 เป็นหุ่นชิบิ `robot_01-thumb` + ป้าย💥 · Classic rail + Home V2 การ์ดพื้น HUD
+- ไฟล์: `js/ui.js` `js/home-v2.js` `css/lobby.css` `css/home-v2.css` `tools/test_mecha_lobby_icon.js` `tools/test_home_v2_mobile_preview.js`

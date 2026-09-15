@@ -25,9 +25,6 @@
 - **รอบ 1484 · ขึ้นเว็บ + ล็อกหุ่นรบเฉพาะแอดมิน:** Classic ซ่อนปุ่ม/enterMecha3D ด้วย mechaAdminAllowed (ไม่ใช้ tester coming-soon) · City w3d_mecha บล็อก cityAdminAccess · Home V2 คง worldMecha ใน ADMIN_ONLY · syncAdminAccess → 
 efreshMechaLock
 - ไฟล์: js/{ui,auth,city3d,adventure3d,adv3d_css,mecha-combat-fx,home-v2}.js css/{lobby,home-v2}.css docs/PROJECT_MAP.md 	ools/test_mecha_{1480,1481,lobby_icon,admin_lock}.js
-- unit admin-lock + mecha 1480/1481/icon ผ่าน · ค้าง: ล็อกอินแอดมินดูปุ่ม/ยิงบน live
-- **รอบ 1483 · ไอคอนเข้าโลกหุ่นรบ:** เปลี่ยนจาก emoji 🤖 เป็นหุ่นชิบิ `robot_01-thumb` + ป้าย💥 · Classic rail + Home V2 การ์ดพื้น HUD
-- ไฟล์: `js/ui.js` `js/home-v2.js` `css/lobby.css` `css/home-v2.css` `tools/test_mecha_lobby_icon.js` `tools/test_home_v2_mobile_preview.js`
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
