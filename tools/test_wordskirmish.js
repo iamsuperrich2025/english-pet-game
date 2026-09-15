@@ -47,6 +47,7 @@ assert(code.includes("map:'skirmish'")&&code.includes('roomMax:8'),'online rooms
 assert(css.includes('#skm-game')&&css.includes('max-height:430px'),'landscape HUD');
 assert(css.includes('.skm-zone')&&code.includes('e.clientX < W*0.5'),'left half walks, right half looks');
 assert(code.includes("data-hold=\"drop\"")&&code.includes('HOLD_MS=420')&&code.includes("p.act==='fire'"),'long-press repositions FIRE/DROP');
+assert(code.includes('id="skm-auto"')&&code.includes("data-hold=\"auto\"")&&code.includes('toggleAuto')&&css.includes('#skm-auto.skm-on'),'left AUTO run toggle');
 assert(code.includes('ฐานตามนิ้ว')||code.includes('placeCtl(hud.joy'),'walk base follows the thumb');
 assert(code.includes('userData.safe')&&code.includes('ตัวอักษรในบ้านปลอดภัย'),'banked letters stay safe');
 
@@ -102,4 +103,11 @@ assert(T.aimPoint().y<mid,'drag down looks down (FPS, not flight stick)');
 T.setLook(0,0.28);
 T.applyLook(0,-20);
 assert(T.aimPoint().y>mid,'drag up looks up');
+T.setLook(0,0.28); T.setPlayer({x:0,z:0,alive:true,hp:100}); T.setRunning(true); T.setAutoRun(false);
+assert(T.autoRun===false,'auto starts off');
+assert(T.toggleAuto()===true && T.autoRun===true,'AUTO toggle turns run on');
+const z0=T.player.z; T.step(.1);
+assert(T.player.z<z0-0.3,'auto run walks forward without holding the stick');
+T.setAutoRun(false); const z1=T.player.z; T.step(.1);
+assert(Math.abs(T.player.z-z1)<1e-9,'AUTO off stops the run');
 console.log('wordskirmish ok',n);

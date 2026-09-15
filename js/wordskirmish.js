@@ -36,19 +36,19 @@
   let player={x:0,z:0,yaw:0,hp:MAX_HP,alive:true,seat:0,bob:0,recoil:0,respawnAt:0};
   const PITCH_DEF=0.28;
   let lookYaw=0,lookPitch=PITCH_DEF,shake=0;
-  let keys={f:0,b:0,l:0,r:0}, joy={x:0,z:0}, pointers=new Map();
+  let keys={f:0,b:0,l:0,r:0}, joy={x:0,z:0}, autoRun=false, pointers=new Map();
   let lastShot=0,eventSeq=0,lastEvent='-',seenShot={};
   let playerMesh=null,gunMesh=null,homeMeshes=[],vaultMeshes=[],bots=[],peersVis={};
   let room=null,myUid='',netToast='';
   let audio=null,saveTimer=0,timers=new Set();
   const PAD_KEY='skmPad1', HOLD_MS=420, JOY_R=46;
-  let padPos={joy:{x:.14,y:.82},fire:{x:.9,y:.88},drop:{x:.9,y:.72}};
+  let padPos={joy:{x:.14,y:.82},auto:{x:.14,y:.56},fire:{x:.9,y:.88},drop:{x:.9,y:.72}};
 
   function later(fn,ms){const id=setTimeout(()=>{timers.delete(id);fn();},ms);timers.add(id);return id;}
   function loadPad(){
     try{
       const raw=JSON.parse(localStorage.getItem(PAD_KEY)||'{}');
-      if(raw&&raw.joy&&raw.fire&&raw.drop) padPos=raw;
+      if(raw&&raw.joy&&raw.fire&&raw.drop) padPos=Object.assign({auto:{x:.14,y:.56}}, raw);
     }catch(_){}
   }
   function savePad(){
@@ -57,8 +57,9 @@
   function placeCtl(el, x, y, key){
     if(!el) return {x,y};
     const half=Math.max(18, (el.getBoundingClientRect().width||80)/2);
-    const minX=key==='joy'?half:half;
-    const maxX=key==='joy'?Math.max(minX+8, W*0.5-half):W-half;
+    const leftPad=key==='joy'||key==='auto';
+    const minX=half;
+    const maxX=leftPad?Math.max(minX+8, W*0.5-half):W-half;
     x=clamp(x, minX+4, maxX-4);
     y=clamp(y, half+4, H-half-4);
     el.style.left=x+'px'; el.style.top=y+'px';
@@ -69,9 +70,20 @@
   function layoutPad(){
     if(!hud.joy) return;
     placeCtl(hud.joy, (padPos.joy.x||.14)*W, (padPos.joy.y||.82)*H, 'joy');
+    placeCtl(hud.auto, (padPos.auto.x||.14)*W, (padPos.auto.y||.56)*H, 'auto');
     placeCtl(hud.fire, (padPos.fire.x||.9)*W, (padPos.fire.y||.88)*H, 'fire');
     placeCtl(hud.drop, (padPos.drop.x||.9)*W, (padPos.drop.y||.72)*H, 'drop');
   }
+  function setAutoRun(on){
+    autoRun=!!on;
+    if(hud.auto){
+      hud.auto.classList.toggle('skm-on', autoRun);
+      hud.auto.setAttribute('aria-pressed', autoRun?'true':'false');
+      hud.auto.textContent=autoRun?'AUTO ON':'AUTO';
+    }
+    return autoRun;
+  }
+  function toggleAuto(){ return setAutoRun(!autoRun); }
   function setJoyKnob(x,z){
     if(!hud.joyKnob) return;
     hud.joyKnob.style.transform='translate('+((x||0)*22)+'px,'+((z||0)*22)+'px)';
@@ -612,6 +624,7 @@
     };
   }
   function cameraTick(){
+    if(!camera) return;
     const o=shoulderOrigin();
     camera.position.set(o.x+Math.sin(lookYaw)*CAM_DIST, CAM_H, o.z+Math.cos(lookYaw)*CAM_DIST);
     const a=aimPoint();
@@ -643,8 +656,8 @@
     }else{
       /* เดินหน้า/ถอยหลังอิสระ: คีย์บอร์ดและจอยสติ๊กรวมกันเป็นแกนเดียว
          (เกมยิงเป้าคำยืนติดที่ เกมนี้เดินได้ทุกทิศเทียบกับกล้อง) */
-      const fx=((keys.f?1:0)+(joy.z<0?-joy.z:0)) - ((keys.b?1:0)+(joy.z>0?joy.z:0));
-      const sx=((keys.r?1:0)+(joy.x>0?joy.x:0)) - ((keys.l?1:0)+(joy.x<0?-joy.x:0));
+      const fx=clamp(((keys.f?1:0)+(autoRun?1:0)+(joy.z<0?-joy.z:0)) - ((keys.b?1:0)+(joy.z>0?joy.z:0)),-1,1);
+      const sx=clamp(((keys.r?1:0)+(joy.x>0?joy.x:0)) - ((keys.l?1:0)+(joy.x<0?-joy.x:0)),-1,1);
       const moving=Math.abs(fx)>.05||Math.abs(sx)>.05;
       if(moving){
         const mx=-Math.sin(lookYaw)*fx + Math.cos(lookYaw)*sx;
@@ -695,7 +708,7 @@
       if(hud.intro && !hud.intro.hidden) return;
       const hold=e.target.getAttribute && e.target.getAttribute('data-hold');
       const id=e.pointerId;
-      if(hold==='fire' || hold==='drop'){
+      if(hold==='fire' || hold==='drop' || hold==='auto'){
         e.preventDefault(); e.stopPropagation();
         try{ e.target.setPointerCapture(id); }catch(_){}
         pointers.set(id,{kind:'btn',act:hold,el:e.target,x:e.clientX,y:e.clientY,t0:performance.now(),drag:false});
@@ -754,6 +767,7 @@
         else if(!p.slid && performance.now()-p.t0<HOLD_MS){
           if(p.act==='fire') fire();
           else if(p.act==='drop') dropCarried();
+          else if(p.act==='auto') toggleAuto();
         }
       }
       pointers.delete(e.pointerId);
@@ -772,6 +786,7 @@
     if(e.code==='KeyD'||e.code==='ArrowRight') keys.r=1;
     if(e.code==='Space'||e.code==='KeyF'){ e.preventDefault(); fire(); }
     if(e.code==='KeyQ') dropCarried();
+    if(e.code==='KeyE'){ e.preventDefault(); toggleAuto(); }
     if(e.code==='Escape') close();
   }
   function onKeyUp(e){
@@ -825,6 +840,7 @@
         <div class="skm-zone" id="skm-zone-look"></div>
       </div>
       <button type="button" class="skm-joy" data-hold="joy" id="skm-joy" aria-label="เดิน"><span class="skm-joy-knob"></span><span class="skm-joy-lab">เดิน</span></button>
+      <button type="button" class="skm-float" id="skm-auto" data-hold="auto" aria-label="วิ่งอัตโนมัติ" aria-pressed="false">AUTO</button>
       <button type="button" class="skm-float" id="skm-drop" data-hold="drop">DROP</button>
       <button type="button" class="skm-float" id="skm-fire" data-hold="fire">FIRE</button>
       <div class="skm-toast" id="skm-toast"></div>
@@ -834,7 +850,7 @@
           <p>มุมมองบุคคลที่สาม เดินอิสระ ยิงปืนลมแบบยิงเป้าคำ</p>
           <p>โดนหัว = ตายทันที · โดนตัว = ลด HP ตามดาเมจปืน</p>
           <p>เก็บตัวอักษร ฝากที่บ้านตัวเอง สะกดคำได้ 1,000 เหรียญ · ของในบ้านปลอดภัย ตายแล้วไม่หลุด</p>
-          <p>ซ้ายครึ่งจอ = เดิน (ฐานตามนิ้ว) · ขวาครึ่งจอ = หัน/ก้มเงย · กดค้าง DROP/FIRE เพื่อย้ายปุ่ม</p>
+          <p>ซ้ายครึ่งจอ = เดิน (ฐานตามนิ้ว) · AUTO = วิ่งค้าง กดซ้ำหยุด · ขวาครึ่งจอ = หัน/ก้มเงย · กดค้างปุ่มเพื่อย้าย</p>
           <p>เล่นออนไลน์ได้หลายคน (เฉพาะแอดมินขณะทดสอบ)</p>
           <button type="button" id="skm-intro-ok">เริ่มเล่น</button>
         </div>
@@ -848,6 +864,7 @@
       exit:root.querySelector('#skm-exit'), intro:root.querySelector('#skm-intro'),
       introOk:root.querySelector('#skm-intro-ok'), drop:root.querySelector('#skm-drop'),
       fire:root.querySelector('#skm-fire'), joy:root.querySelector('#skm-joy'),
+      auto:root.querySelector('#skm-auto'),
       joyKnob:root.querySelector('.skm-joy-knob'), net:root.querySelector('#skm-net')
     };
     bind(); built=true;
@@ -907,7 +924,7 @@
     opening=false;
   }
   function close(){
-    running=false; paused=true; settleCoinSession();
+    running=false; paused=true; setAutoRun(false); settleCoinSession();
     if(raf) cancelAnimationFrame(raf); raf=0;
     clearTimers();
     if(room && room.leave) room.leave(); room=null;
@@ -926,13 +943,13 @@
     pool, takeWord, wordMarks, hasWord, creditReward, settleCoinSession, beginCoinSession, walletCoins,
     tryPickup, tryDeposit, dropCarried, completeWord, placeLetter, spawnLetters, applyDamage, packHp, parseHp,
     fire, step, resetRun, collideMove, homeBlocked, homeOf, adminAllowed, aimPoint, poseChibi, makeChibi,
-    placeCtl, layoutPad, syncVault, HOLD_MS, JOY_R,
+    placeCtl, layoutPad, syncVault, HOLD_MS, JOY_R, toggleAuto, setAutoRun,
     setLook(y,p){ if(y!=null) lookYaw=y; if(p!=null) lookPitch=p; return {lookYaw,lookPitch}; },
     applyLook,
     get word(){return word;}, get stored(){return stored;}, get carried(){return carried;}, get letters(){return fieldLetters;},
     get player(){return player;}, get bots(){return bots;}, get running(){return running;}, get coinsRun(){return coinsRun;},
     get camera(){return camera;}, get scene(){return scene;}, get renderer(){return renderer;}, get playerMesh(){return playerMesh;},
-    get padPos(){return padPos;}, get vaultMeshes(){return vaultMeshes;},
+    get padPos(){return padPos;}, get vaultMeshes(){return vaultMeshes;}, get autoRun(){return autoRun;},
     setStored(s){ stored=String(s||''); syncVault(); return stored; }, setCarried(s){ carried=String(s||''); return carried; },
     setPlayer(p){ Object.assign(player,p||{}); return player; },
     setRunning(v){ running=!!v; }
