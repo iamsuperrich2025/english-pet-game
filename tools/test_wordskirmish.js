@@ -47,7 +47,8 @@ assert(code.includes("map:'skirmish'")&&code.includes('roomMax:8'),'online rooms
 assert(css.includes('#skm-game')&&css.includes('max-height:430px'),'landscape HUD');
 assert(css.includes('.skm-zone')&&code.includes('e.clientX < W*0.5'),'left half walks, right half looks');
 assert(code.includes("data-hold=\"drop\"")&&code.includes('HOLD_MS=420')&&code.includes("p.act==='fire'"),'long-press repositions FIRE/DROP');
-assert(code.includes('id="skm-auto"')&&code.includes("data-hold=\"auto\"")&&code.includes('toggleAuto')&&css.includes('#skm-auto.skm-on'),'left AUTO run toggle');
+assert(code.includes('id="skm-auto"')&&code.includes('homeApproach')&&code.includes('atOwnHome')&&css.includes('#skm-auto.skm-on'),'left AUTO runs home');
+assert(code.includes('id="skm-crouch"')&&code.includes('id="skm-prone"')&&code.includes('toggleStance')&&code.includes('packAv')&&code.includes('parseAv'),'separate crouch/prone buttons + peer pose payload');
 assert(code.includes('ฐานตามนิ้ว')||code.includes('placeCtl(hud.joy'),'walk base follows the thumb');
 assert(code.includes('userData.safe')&&code.includes('ตัวอักษรในบ้านปลอดภัย'),'banked letters stay safe');
 
@@ -103,11 +104,36 @@ assert(T.aimPoint().y<mid,'drag down looks down (FPS, not flight stick)');
 T.setLook(0,0.28);
 T.applyLook(0,-20);
 assert(T.aimPoint().y>mid,'drag up looks up');
-T.setLook(0,0.28); T.setPlayer({x:0,z:0,alive:true,hp:100}); T.setRunning(true); T.setAutoRun(false);
+T.setLook(1.57,0.28); T.setPlayer({x:0,z:0,alive:true,hp:100,seat:0}); T.setRunning(true); T.setAutoRun(false);
 assert(T.autoRun===false,'auto starts off');
 assert(T.toggleAuto()===true && T.autoRun===true,'AUTO toggle turns run on');
-const z0=T.player.z; T.step(.1);
-assert(T.player.z<z0-0.3,'auto run walks forward without holding the stick');
-T.setAutoRun(false); const z1=T.player.z; T.step(.1);
-assert(Math.abs(T.player.z-z1)<1e-9,'AUTO off stops the run');
+T.step(.25);
+assert(T.player.x< -0.8 && T.player.z< -0.8,'AUTO runs toward own house, not camera forward');
+T.setCarried('B'); T.setStored('');
+for(let i=0;i<90 && T.autoRun;i++) T.step(.2);
+assert(T.autoRun===false,'AUTO turns off at the house');
+assert(Math.hypot(T.player.x-T.HOMES[0].x,T.player.z-T.HOMES[0].z)<T.HOME_R,'AUTO arrives in banking radius');
+assert(T.stored==='B'&&T.carried==='','AUTO banks the carried letter at home');
+T.setPlayer({seat:0}); T.resetRun();
+assert(T.atOwnHome()===true && T.setAutoRun(true)===false,'AUTO at home stays put');
+assert(T.toggleStance('crouch')==='crouch' && T.packAv()==='sk1c','ย่อ is its own toggle');
+assert(T.toggleStance('prone')==='prone' && T.packAv()==='sk1p','หมอบ replaces crouch instead of cycling');
+assert(T.toggleStance('prone')==='stand' && T.packAv()==='sk1','หมอบ again stands up');
+assert(T.parseAv('sk2c').pose==='crouch'&&T.parseAv('sk2c').seat===1,'peers decode crouch from av');
+assert(T.parseAv('sk1pR').pose==='prone'&&T.parseAv('sk1pR').dodge>0,'peers decode prone+dodge');
+assert(T.stanceSpec('prone').cam<T.stanceSpec('crouch').cam && T.stanceSpec('crouch').spd<1,'lower stances duck the camera and slow the walk');
+assert(T.startDodge(-1)<0 && T.dodgeT>0,'dodge lean starts');
+function rot(){ const o={x:0,y:0,z:0}; o.set=function(x,y,z){ o.x=x; o.y=y; o.z=z; }; return o; }
+function fakeMesh(){
+  const j=()=>({rotation:rot()});
+  return {userData:{rig:{hipL:j(),hipR:j(),kneeL:j(),kneeR:j(),ankleL:j(),ankleR:j(),shoulderL:j(),shoulderR:j(),elbowL:j(),elbowR:j(),wristL:j(),wristR:j(),neck:j(),gun:null}}};
+}
+const kneel=fakeMesh(); T.poseChibi(kneel,{pose:'kneel',alive:true,bob:0});
+assert(kneel.userData.rig.kneeR.rotation.x>kneel.userData.rig.kneeL.rotation.x,'kneel drops one knee');
+const crouch=fakeMesh(); T.poseChibi(crouch,{pose:'crouch',alive:true,bob:0});
+assert(crouch.userData.rig.kneeL.rotation.x>1 && crouch.userData.rig.kneeR.rotation.x>1,'crouch bends both knees');
+const prone=fakeMesh(); T.poseChibi(prone,{pose:'prone',alive:true,bob:0});
+assert(prone.userData.rig.hipL.rotation.z*prone.userData.rig.hipR.rotation.z<0,'prone splits the hips');
+const dodge=fakeMesh(); T.poseChibi(dodge,{pose:'stand',alive:true,bob:0,dodge:1});
+assert(dodge.userData.rig.neck.rotation.z>0,'dodge leans the torso');
 console.log('wordskirmish ok',n);

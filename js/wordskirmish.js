@@ -41,14 +41,17 @@
   let playerMesh=null,gunMesh=null,homeMeshes=[],vaultMeshes=[],bots=[],peersVis={};
   let room=null,myUid='',netToast='';
   let audio=null,saveTimer=0,timers=new Set();
-  const PAD_KEY='skmPad1', HOLD_MS=420, JOY_R=46;
-  let padPos={joy:{x:.14,y:.82},auto:{x:.14,y:.56},fire:{x:.9,y:.88},drop:{x:.9,y:.72}};
+  const PAD_KEY='skmPad1', HOLD_MS=420, JOY_R=46, DODGE_T=.48;
+  const STANCES=['stand','crouch','kneel','prone'];
+  const POSE_CODE={stand:'',crouch:'c',kneel:'k',prone:'p'};
+  let padPos={joy:{x:.14,y:.82},auto:{x:.14,y:.56},crouch:{x:.32,y:.56},prone:{x:.32,y:.40},dodge:{x:.32,y:.26},fire:{x:.9,y:.88},drop:{x:.9,y:.72}};
+  let stance='stand', dodgeT=0, dodgeDir=1, lastStrafe=1;
 
   function later(fn,ms){const id=setTimeout(()=>{timers.delete(id);fn();},ms);timers.add(id);return id;}
   function loadPad(){
     try{
       const raw=JSON.parse(localStorage.getItem(PAD_KEY)||'{}');
-      if(raw&&raw.joy&&raw.fire&&raw.drop) padPos=Object.assign({auto:{x:.14,y:.56}}, raw);
+      if(raw&&raw.joy&&raw.fire&&raw.drop) padPos=Object.assign({auto:{x:.14,y:.56},crouch:{x:.32,y:.56},prone:{x:.32,y:.40},dodge:{x:.32,y:.26}}, raw);
     }catch(_){}
   }
   function savePad(){
@@ -57,7 +60,7 @@
   function placeCtl(el, x, y, key){
     if(!el) return {x,y};
     const half=Math.max(18, (el.getBoundingClientRect().width||80)/2);
-    const leftPad=key==='joy'||key==='auto';
+    const leftPad=key==='joy'||key==='auto'||key==='crouch'||key==='prone'||key==='dodge';
     const minX=half;
     const maxX=leftPad?Math.max(minX+8, W*0.5-half):W-half;
     x=clamp(x, minX+4, maxX-4);
@@ -71,19 +74,88 @@
     if(!hud.joy) return;
     placeCtl(hud.joy, (padPos.joy.x||.14)*W, (padPos.joy.y||.82)*H, 'joy');
     placeCtl(hud.auto, (padPos.auto.x||.14)*W, (padPos.auto.y||.56)*H, 'auto');
+    placeCtl(hud.crouch, (padPos.crouch.x||.32)*W, (padPos.crouch.y||.56)*H, 'crouch');
+    placeCtl(hud.prone, (padPos.prone.x||.32)*W, (padPos.prone.y||.40)*H, 'prone');
+    placeCtl(hud.dodge, (padPos.dodge.x||.32)*W, (padPos.dodge.y||.26)*H, 'dodge');
     placeCtl(hud.fire, (padPos.fire.x||.9)*W, (padPos.fire.y||.88)*H, 'fire');
     placeCtl(hud.drop, (padPos.drop.x||.9)*W, (padPos.drop.y||.72)*H, 'drop');
   }
+  function paintAuto(){
+    if(!hud.auto) return;
+    hud.auto.classList.toggle('skm-on', autoRun);
+    hud.auto.setAttribute('aria-pressed', autoRun?'true':'false');
+    hud.auto.textContent=autoRun?'ไปบ้าน':'AUTO';
+  }
+  function atOwnHome(){
+    const h=homeOf(player.seat);
+    return Math.hypot(player.x-h.x, player.z-h.z)<=HOME_R;
+  }
+  function homeApproach(seat){
+    const h=homeOf(seat==null?player.seat:seat);
+    const len=Math.hypot(h.x,h.z)||1;
+    const fx=-h.x/len, fz=-h.z/len;
+    return {x:h.x+fx*4.5, z:h.z+fz*4.5, home:h};
+  }
+  function finishAutoHome(){
+    if(carried) tryDeposit();
+    setAutoRun(false);
+    showToast('ถึงบ้านแล้ว');
+  }
   function setAutoRun(on){
-    autoRun=!!on;
-    if(hud.auto){
-      hud.auto.classList.toggle('skm-on', autoRun);
-      hud.auto.setAttribute('aria-pressed', autoRun?'true':'false');
-      hud.auto.textContent=autoRun?'AUTO ON':'AUTO';
+    if(on && atOwnHome()){
+      autoRun=false;
+      paintAuto();
+      if(carried) tryDeposit();
+      showToast('ถึงบ้านแล้ว');
+      return false;
     }
+    autoRun=!!on;
+    paintAuto();
+    if(autoRun) showToast('วิ่งกลับ'+homeOf(player.seat).name);
     return autoRun;
   }
   function toggleAuto(){ return setAutoRun(!autoRun); }
+  function stanceSpec(name){
+    const p=name||stance;
+    if(p==='crouch') return {y:-.2, rx:0, cam:2.35, look:.02, spd:.55};
+    if(p==='kneel') return {y:-.36, rx:.06, cam:2.02, look:-.08, spd:.32};
+    if(p==='prone') return {y:.4, rx:-1.18, cam:1.28, look:-.55, spd:.2};
+    return {y:0, rx:0, cam:CAM_H, look:CAM_LOOK, spd:1};
+  }
+  function paintPose(){
+    if(hud.crouch) hud.crouch.classList.toggle('skm-on', stance==='crouch');
+    if(hud.prone) hud.prone.classList.toggle('skm-on', stance==='prone');
+  }
+  function setStance(name){
+    stance=STANCES.indexOf(name)>=0?name:'stand';
+    paintPose();
+    return stance;
+  }
+  function toggleStance(name){
+    return setStance(stance===name?'stand':name);
+  }
+  function poseTag(){
+    const base=POSE_CODE[stance]||'';
+    if(dodgeT>0) return base+(dodgeDir<0?'L':'R');
+    return base;
+  }
+  function packAv(){ return 'sk'+(player.seat+1)+poseTag(); }
+  function parseAv(av){
+    const m=String(av||'').match(/^sk(\d)([ckp]?)([LR]?)/i);
+    const pose={c:'crouch',k:'kneel',p:'prone'}[(m&&m[2]||'').toLowerCase()]||'stand';
+    const dodge=(m&&m[3]==='L')?-1:(m&&m[3]==='R')?1:0;
+    return {seat:m?clamp((parseInt(m[1],10)||1)-1,0,3):0, pose, dodge};
+  }
+  function dodgeAmt(){
+    if(dodgeT<=0) return 0;
+    return dodgeDir*Math.sin((1-dodgeT/DODGE_T)*Math.PI);
+  }
+  function startDodge(dir){
+    if(dir) dodgeDir=dir<0?-1:1;
+    else dodgeDir=lastStrafe<0?-1:1;
+    dodgeT=DODGE_T;
+    return dodgeDir;
+  }
   function setJoyKnob(x,z){
     if(!hud.joyKnob) return;
     hud.joyKnob.style.transform='translate('+((x||0)*22)+'px,'+((z||0)*22)+'px)';
@@ -222,11 +294,14 @@
     poseChibi(g,{moving:false,bob:0,recoil:0,lookX:0,alive:true});
     return g;
   }
-  /* ท่าถือปืนสองมือ: ไหล่ยก + ศอกงอ ปืนชี้ -Z · ขาแกว่งที่สะโพก/เข่า */
+  /* ท่าถือปืนสองมือ: ไหล่ยก + ศอกงอ ปืนชี้ -Z · ขาแกว่งที่สะโพก/เข่า
+     ท่า Free Fire: ย่อ / คุกเข่าข้างเดียว / หมอบ / หลบเอียงตัว */
   function poseChibi(mesh, st){
     const r=mesh&&mesh.userData&&mesh.userData.rig; if(!r) return r;
     const moving=!!(st&&st.moving), bob=Number(st&&st.bob)||0, recoil=Number(st&&st.recoil)||0;
     const alive=!(st&&st.alive===false);
+    const pose=(st&&st.pose)||'stand';
+    const dodge=Number(st&&st.dodge)||0;
     const swing=Math.sin(bob)*(moving?.62:.07);
     r.hipL.rotation.set(swing,0,.05);
     r.hipR.rotation.set(-swing,0,-.05);
@@ -240,8 +315,29 @@
       r.neck.rotation.set(.35,0,0);
       return r;
     }
+    if(pose==='crouch'){
+      r.hipL.rotation.set(.95+swing*.12,0,.1);
+      r.hipR.rotation.set(.95-swing*.12,0,-.1);
+      r.kneeL.rotation.set(1.48,0,0);
+      r.kneeR.rotation.set(1.48,0,0);
+      r.ankleL.rotation.set(-.58,0,0);
+      r.ankleR.rotation.set(-.58,0,0);
+    }else if(pose==='kneel'){
+      r.hipR.rotation.set(1.48,0,-.16);
+      r.kneeR.rotation.set(2.18,0,0);
+      r.ankleR.rotation.set(.22,0,0);
+      r.hipL.rotation.set(.58+swing*.1,0,.18);
+      r.kneeL.rotation.set(1.08,0,0);
+      r.ankleL.rotation.set(-.22,0,0);
+    }else if(pose==='prone'){
+      r.hipL.rotation.set(.18,0,.42);
+      r.hipR.rotation.set(.18,0,-.42);
+      r.kneeL.rotation.set(.55,0,0);
+      r.kneeR.rotation.set(.55,0,0);
+      r.ankleL.rotation.set(.12,0,0);
+      r.ankleR.rotation.set(.12,0,0);
+    }
     const kick=recoil;
-    /* Rx บวก = เหวี่ยงชิ้นที่ห้อยลง (-Y) ไปข้างหน้า (-Z) · ศอกบวก = งอแขนยกมือขึ้นอก */
     r.shoulderR.rotation.set(1.18+kick*.28, .12, .38);
     r.elbowR.rotation.set(1.22-kick*.1, -.06, -.18);
     r.wristR.rotation.set(-.18, .2, .16);
@@ -258,7 +354,11 @@
     r.shoulderL.rotation.set(1.05+hold, -.18, -.42);
     r.elbowL.rotation.set(1.12, .1, .12);
     r.wristL.rotation.set(-.1, -.2, -.18);
-    r.neck.rotation.set(Number(st&&st.lookX)||0, 0, 0);
+    r.neck.rotation.set(Number(st&&st.lookX)||0, 0, dodge*.28);
+    if(dodge){
+      r.hipL.rotation.z+=dodge*.45; r.hipR.rotation.z+=dodge*.45;
+      r.shoulderL.rotation.z+=dodge*.55; r.shoulderR.rotation.z+=dodge*.35;
+    }
     return r;
   }
   function makeHouse(spec){
@@ -451,6 +551,7 @@
     player.x=h.x+fx*4.5; player.z=h.z+fz*4.5;
     player.yaw=Math.atan2(-fx,-fz); lookYaw=player.yaw;
     player.hp=MAX_HP; player.alive=true; player.respawnAt=0;
+    setStance('stand'); dodgeT=0;
   }
   function applyDamage(kind, fromName){
     if(!player.alive) return false;
@@ -527,9 +628,9 @@
     if(!room || typeof room.send!=='function') return;
     room.send({
       n:String((typeof state!=='undefined'&&state.profileName)||'แอดมิน').slice(0,40),
-      x:+player.x.toFixed(2), z:+player.z.toFixed(2), y:0,
+      x:+player.x.toFixed(2), z:+player.z.toFixed(2), y:+stanceSpec().y.toFixed(2),
       yaw:+player.yaw.toFixed(3),
-      av:'sk'+(player.seat+1),
+      av:packAv(),
       hp:packHp(), cw:lastEvent, w:wordsDone, c:'-', m:player.alive?0:1
     });
   }
@@ -547,10 +648,13 @@
         scene.add(mesh); vis=peersVis[uid]={mesh,uid}; 
       }
       const st=parseHp(rec.hp);
-      vis.mesh.position.set(Number(rec.x)||0, 0, Number(rec.z)||0);
-      vis.mesh.rotation.y=Number(rec.yaw)||0;
+      const pose=parseAv(rec.av);
+      const spec=stanceSpec(pose.pose);
+      const lean=pose.dodge;
+      vis.mesh.position.set(Number(rec.x)||0, spec.y, Number(rec.z)||0);
+      vis.mesh.rotation.set(st.hp>0?spec.rx:0, Number(rec.yaw)||0, st.hp>0?lean*.42:Math.PI/2);
       vis.mesh.visible=st.hp>0;
-      poseChibi(vis.mesh,{moving:true,bob:elapsed*7,alive:st.hp>0});
+      poseChibi(vis.mesh,{moving:true,bob:elapsed*7,alive:st.hp>0,pose:pose.pose,dodge:lean});
     });
     Object.keys(peersVis).forEach(uid=>{
       if(!peers[uid]){ scene.remove(peersVis[uid].mesh); delete peersVis[uid]; }
@@ -616,17 +720,19 @@
   }
   function aimPoint(){
     const o=shoulderOrigin();
+    const spec=stanceSpec();
     const fx=-Math.sin(lookYaw), fz=-Math.cos(lookYaw);
     return {
       x:o.x+fx*AIM_AHEAD,
-      y:CAM_LOOK+(PITCH_DEF-lookPitch)*PITCH_GAIN,
+      y:spec.look+(PITCH_DEF-lookPitch)*PITCH_GAIN,
       z:o.z+fz*AIM_AHEAD
     };
   }
   function cameraTick(){
     if(!camera) return;
     const o=shoulderOrigin();
-    camera.position.set(o.x+Math.sin(lookYaw)*CAM_DIST, CAM_H, o.z+Math.cos(lookYaw)*CAM_DIST);
+    const spec=stanceSpec();
+    camera.position.set(o.x+Math.sin(lookYaw)*CAM_DIST, spec.cam, o.z+Math.cos(lookYaw)*CAM_DIST);
     const a=aimPoint();
     camera.lookAt(a.x, a.y, a.z);
     if(shake>0){
@@ -637,14 +743,17 @@
   }
   function walkAnim(dt, moving){
     if(!playerMesh) return;
-    playerMesh.position.set(player.x, player.alive?0:-.4, player.z);
-    playerMesh.rotation.y=player.yaw;
+    const spec=stanceSpec();
+    const lean=player.alive?dodgeAmt():0;
+    playerMesh.position.set(player.x, player.alive?spec.y:-.4, player.z);
+    playerMesh.rotation.set(player.alive?spec.rx:0, player.yaw, player.alive?lean*.42:Math.PI/2);
     playerMesh.visible=true;
     player.bob+=dt*(moving?10:2);
     if(player.recoil>0) player.recoil=Math.max(0, player.recoil-dt*8);
     poseChibi(playerMesh,{
       moving, bob:player.bob, recoil:player.recoil||0,
-      lookX:(PITCH_DEF-lookPitch)*0.9, alive:player.alive
+      lookX:(PITCH_DEF-lookPitch)*0.9, alive:player.alive,
+      pose:stance, dodge:lean
     });
   }
 
@@ -654,20 +763,39 @@
     if(!player.alive){
       if(player.respawnAt && elapsed>=player.respawnAt) spawnAtHome();
     }else{
-      /* เดินหน้า/ถอยหลังอิสระ: คีย์บอร์ดและจอยสติ๊กรวมกันเป็นแกนเดียว
-         (เกมยิงเป้าคำยืนติดที่ เกมนี้เดินได้ทุกทิศเทียบกับกล้อง) */
-      const fx=clamp(((keys.f?1:0)+(autoRun?1:0)+(joy.z<0?-joy.z:0)) - ((keys.b?1:0)+(joy.z>0?joy.z:0)),-1,1);
+      const fx=clamp(((keys.f?1:0)+(joy.z<0?-joy.z:0)) - ((keys.b?1:0)+(joy.z>0?joy.z:0)),-1,1);
       const sx=clamp(((keys.r?1:0)+(joy.x>0?joy.x:0)) - ((keys.l?1:0)+(joy.x<0?-joy.x:0)),-1,1);
-      const moving=Math.abs(fx)>.05||Math.abs(sx)>.05;
+      if(sx) lastStrafe=sx>0?1:-1;
+      /* จอย/คีย์ = เดินตามกล้อง · AUTO = วิ่งเข้าหน้าบ้านตัวเอง (เล็งกล้องได้อยู่) */
+      let mx=-Math.sin(lookYaw)*fx + Math.cos(lookYaw)*sx;
+      let mz=-Math.cos(lookYaw)*fx - Math.sin(lookYaw)*sx;
+      if(autoRun){
+        if(atOwnHome()){ finishAutoHome(); mx=0; mz=0; }
+        else{
+          const t=homeApproach();
+          const dx=t.x-player.x, dz=t.z-player.z, len=Math.hypot(dx,dz)||1;
+          if(len<0.85){ collideMove(t.x,t.z); finishAutoHome(); mx=0; mz=0; }
+          else{
+            mx+=dx/len; mz+=dz/len;
+            const mag=Math.hypot(mx,mz); if(mag>1){ mx/=mag; mz/=mag; }
+          }
+        }
+      }
+      if(dodgeT>0){
+        const d=dodgeAmt();
+        mx+=Math.cos(lookYaw)*d; mz+=-Math.sin(lookYaw)*d;
+        const mag=Math.hypot(mx,mz); if(mag>1){ mx/=mag; mz/=mag; }
+      }
+      const moving=Math.abs(mx)>.05||Math.abs(mz)>.05;
       if(moving){
-        const mx=-Math.sin(lookYaw)*fx + Math.cos(lookYaw)*sx;
-        const mz=-Math.cos(lookYaw)*fx - Math.sin(lookYaw)*sx;
-        collideMove(player.x+mx*SPEED*dt, player.z+mz*SPEED*dt);
-        player.yaw=Math.atan2(-mx, -mz);     // โมเดลหันหน้า -Z ที่ yaw 0
+        const spd=SPEED*stanceSpec().spd;
+        collideMove(player.x+mx*spd*dt, player.z+mz*spd*dt);
+        player.yaw=Math.atan2(-mx, -mz);
       }else{
-        player.yaw=lookYaw;                  // ยืนนิ่ง = หันตามกล้องเพื่อเล็งตรงกากบาท
+        player.yaw=lookYaw;
       }
       walkAnim(dt, moving);
+      if(dodgeT>0) dodgeT=Math.max(0, dodgeT-dt);
       tickLetters();
     }
     tickBots(dt);
@@ -676,7 +804,6 @@
     syncPeers();
     netSend();
     if(playerMesh && !player.alive) playerMesh.rotation.z=Math.PI/2;
-    else if(playerMesh) playerMesh.rotation.z=0;
   }
 
   function renderHud(){
@@ -693,7 +820,8 @@
     }
     if(hud.drop) hud.drop.disabled=!carried;
     if(hud.hint) hud.hint.textContent=player.alive
-      ? (carried?('ถือ '+carried+' · ฝากที่บ้านแล้วปลอดภัย หรือ DROP ทิ้ง'):('เก็บตัวอักษรแล้วฝากที่'+homeOf(player.seat).name+' · ในบ้าน = ปลอดภัย'))
+      ? (autoRun?('กำลังวิ่งกลับ'+homeOf(player.seat).name+' · กด AUTO เพื่อหยุด · เล็งขวายังได้')
+        :(carried?('ถือ '+carried+' · ฝากที่บ้านแล้วปลอดภัย หรือ DROP ทิ้ง'):('เก็บตัวอักษรแล้วฝากที่'+homeOf(player.seat).name+' · ในบ้าน = ปลอดภัย')))
       : (stored?('กำลังเกิดใหม่ · ตัวอักษรในบ้านปลอดภัย ('+stored+')'):'กำลังเกิดใหม่ที่บ้าน…');
   }
   function showToast(msg){
@@ -708,7 +836,7 @@
       if(hud.intro && !hud.intro.hidden) return;
       const hold=e.target.getAttribute && e.target.getAttribute('data-hold');
       const id=e.pointerId;
-      if(hold==='fire' || hold==='drop' || hold==='auto'){
+      if(hold==='fire' || hold==='drop' || hold==='auto' || hold==='crouch' || hold==='prone' || hold==='dodge'){
         e.preventDefault(); e.stopPropagation();
         try{ e.target.setPointerCapture(id); }catch(_){}
         pointers.set(id,{kind:'btn',act:hold,el:e.target,x:e.clientX,y:e.clientY,t0:performance.now(),drag:false});
@@ -744,6 +872,7 @@
           dx=e.clientX-p.x; dy=e.clientY-p.y; dist=Math.hypot(dx,dy);
         }
         joy.x=clamp(dx/JOY_R,-1,1); joy.z=clamp(dy/JOY_R,-1,1);
+        if(Math.abs(joy.x)>.2) lastStrafe=joy.x>0?1:-1;
         setJoyKnob(joy.x, joy.z);
       }else if(p.kind==='btn'){
         const moved=Math.hypot(e.clientX-p.x, e.clientY-p.y);
@@ -768,6 +897,9 @@
           if(p.act==='fire') fire();
           else if(p.act==='drop') dropCarried();
           else if(p.act==='auto') toggleAuto();
+          else if(p.act==='crouch') toggleStance('crouch');
+          else if(p.act==='prone') toggleStance('prone');
+          else if(p.act==='dodge') startDodge();
         }
       }
       pointers.delete(e.pointerId);
@@ -787,6 +919,9 @@
     if(e.code==='Space'||e.code==='KeyF'){ e.preventDefault(); fire(); }
     if(e.code==='KeyQ') dropCarried();
     if(e.code==='KeyE'){ e.preventDefault(); toggleAuto(); }
+    if(e.code==='KeyC'){ e.preventDefault(); toggleStance('crouch'); }
+    if(e.code==='KeyZ'){ e.preventDefault(); toggleStance('prone'); }
+    if(e.code==='KeyX'||e.code==='ControlLeft'){ e.preventDefault(); startDodge(); }
     if(e.code==='Escape') close();
   }
   function onKeyUp(e){
@@ -840,7 +975,10 @@
         <div class="skm-zone" id="skm-zone-look"></div>
       </div>
       <button type="button" class="skm-joy" data-hold="joy" id="skm-joy" aria-label="เดิน"><span class="skm-joy-knob"></span><span class="skm-joy-lab">เดิน</span></button>
-      <button type="button" class="skm-float" id="skm-auto" data-hold="auto" aria-label="วิ่งอัตโนมัติ" aria-pressed="false">AUTO</button>
+      <button type="button" class="skm-float" id="skm-auto" data-hold="auto" aria-label="วิ่งกลับบ้านอัตโนมัติ" aria-pressed="false">AUTO</button>
+      <button type="button" class="skm-float" id="skm-crouch" data-hold="crouch" aria-label="ย่อ">ย่อ</button>
+      <button type="button" class="skm-float" id="skm-prone" data-hold="prone" aria-label="หมอบ">หมอบ</button>
+      <button type="button" class="skm-float" id="skm-dodge" data-hold="dodge" aria-label="หลบ">หลบ</button>
       <button type="button" class="skm-float" id="skm-drop" data-hold="drop">DROP</button>
       <button type="button" class="skm-float" id="skm-fire" data-hold="fire">FIRE</button>
       <div class="skm-toast" id="skm-toast"></div>
@@ -850,7 +988,7 @@
           <p>มุมมองบุคคลที่สาม เดินอิสระ ยิงปืนลมแบบยิงเป้าคำ</p>
           <p>โดนหัว = ตายทันที · โดนตัว = ลด HP ตามดาเมจปืน</p>
           <p>เก็บตัวอักษร ฝากที่บ้านตัวเอง สะกดคำได้ 1,000 เหรียญ · ของในบ้านปลอดภัย ตายแล้วไม่หลุด</p>
-          <p>ซ้ายครึ่งจอ = เดิน (ฐานตามนิ้ว) · AUTO = วิ่งค้าง กดซ้ำหยุด · ขวาครึ่งจอ = หัน/ก้มเงย · กดค้างปุ่มเพื่อย้าย</p>
+          <p>ซ้าย = เดิน · AUTO กลับบ้าน · ย่อ/หมอบคนละปุ่ม · หลบเอียงตัว · ขวา = เล็ง · เพื่อนเห็นท่าเดียวกัน</p>
           <p>เล่นออนไลน์ได้หลายคน (เฉพาะแอดมินขณะทดสอบ)</p>
           <button type="button" id="skm-intro-ok">เริ่มเล่น</button>
         </div>
@@ -865,6 +1003,7 @@
       introOk:root.querySelector('#skm-intro-ok'), drop:root.querySelector('#skm-drop'),
       fire:root.querySelector('#skm-fire'), joy:root.querySelector('#skm-joy'),
       auto:root.querySelector('#skm-auto'),
+      crouch:root.querySelector('#skm-crouch'), prone:root.querySelector('#skm-prone'), dodge:root.querySelector('#skm-dodge'),
       joyKnob:root.querySelector('.skm-joy-knob'), net:root.querySelector('#skm-net')
     };
     bind(); built=true;
@@ -924,7 +1063,7 @@
     opening=false;
   }
   function close(){
-    running=false; paused=true; setAutoRun(false); settleCoinSession();
+    running=false; paused=true; setAutoRun(false); setStance('stand'); dodgeT=0; settleCoinSession();
     if(raf) cancelAnimationFrame(raf); raf=0;
     clearTimers();
     if(room && room.leave) room.leave(); room=null;
@@ -943,13 +1082,15 @@
     pool, takeWord, wordMarks, hasWord, creditReward, settleCoinSession, beginCoinSession, walletCoins,
     tryPickup, tryDeposit, dropCarried, completeWord, placeLetter, spawnLetters, applyDamage, packHp, parseHp,
     fire, step, resetRun, collideMove, homeBlocked, homeOf, adminAllowed, aimPoint, poseChibi, makeChibi,
-    placeCtl, layoutPad, syncVault, HOLD_MS, JOY_R, toggleAuto, setAutoRun,
+    placeCtl, layoutPad, syncVault, HOLD_MS, JOY_R, toggleAuto, setAutoRun, homeApproach, atOwnHome,
+    STANCES, stanceSpec, setStance, toggleStance, startDodge, packAv, parseAv,
     setLook(y,p){ if(y!=null) lookYaw=y; if(p!=null) lookPitch=p; return {lookYaw,lookPitch}; },
     applyLook,
     get word(){return word;}, get stored(){return stored;}, get carried(){return carried;}, get letters(){return fieldLetters;},
     get player(){return player;}, get bots(){return bots;}, get running(){return running;}, get coinsRun(){return coinsRun;},
     get camera(){return camera;}, get scene(){return scene;}, get renderer(){return renderer;}, get playerMesh(){return playerMesh;},
     get padPos(){return padPos;}, get vaultMeshes(){return vaultMeshes;}, get autoRun(){return autoRun;},
+    get stance(){return stance;}, get dodgeT(){return dodgeT;},
     setStored(s){ stored=String(s||''); syncVault(); return stored; }, setCarried(s){ carried=String(s||''); return carried; },
     setPlayer(p){ Object.assign(player,p||{}); return player; },
     setRunning(v){ running=!!v; }
