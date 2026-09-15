@@ -6273,3 +6273,29 @@
 - unit wordship ผ่าน · ค้าง: ลองชนกำแพงน้ำแข็งบนมือถือ
 - **รอบ 1465 · กองเรือ ไม่ทิ่มดาดฟ้า:** มุมก้มกระบอกไม่ต่ำกว่าแนวนอน (`ELEV_MIN=0`) จึงไม่ทิ่มดาดฟ้า
 - `js/wordship.js` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
+
+
+## ⏬ ย้ายเมื่อ 2026-09-15 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- unit wordship ผ่าน · ค้าง: ยิงตกน้ำบนมือถือดูขนาดไฟ
+- **รอบ 1474 · กองเรือ ทะเลโทนเงาการ์ด:** น้ำใช้ `CARD_SHADOW=0x284664` สีเดียวกับวงรีเงาใต้การ์ด A–Z
+- `js/wordship.js` `css/wordship.css` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: เปิดกองเรือดูน้ำกับเงาการ์ด
+- **รอบ 1473 · กองเรือ ทะเลฟ้าคราม:** แผ่นน้ำ `0x2f92c9` หมอก/พื้นหลังฟ้าอ่อน กันขอบเทา
+- `js/wordship.js` `css/wordship.css` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: เปิดกองเรือบนมือถือดูสีน้ำ
+- **รอบ 1472 · กองเรือ ลูกไฟจุดตก:** กระสุนตกน้ำ/โดนเรือขึ้นเปลวตั้งแบบ Arena (shader ชุดเดียว) + ประกายส้ม
+- `js/wordship.js` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: ยิงตกน้ำบนมือถือดูลูกไฟ
+- **รอบ 1471 · กองเรือ ลูกปืนส้มขาว:** แกน `0xffc090` + AdditiveBlending เปลวร้อนสุดขาวส้ม
+- `js/wordship.js` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: ยิงบนมือถือดูแสงทับขาว
+- **รอบ 1470 · Vocab World Pick-Up Truck ขึ้นเว็บ:** สำเนา Kart เป็นรถกระบะ 170 กม./ชม. ห้อง/สถิติแยก pickup*
+- `js/pickup3d.js` `js/f1_3d.js` `js/kart3d.js` `js/ui.js` `js/home-v2.js` `js/netroom.js` `js/account-deletion.js` `handoff/RULES.md`
+- unit Kart 28 + Pickup 31 · ค้าง: publish RTDB rules เพื่อเล่นห้องออนไลน์
+- **รอบ 1469 · กองเรือ ลูกปืนส้มแดง:** แกนลูกไฟ `0xff3b10` เปลวไม่ผสมขาว · ไม่ใช้ additive ที่แกน
+- `js/wordship.js` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: ยิงบนมือถือดูโทนส้มแดง
+- **รอบ 1468 · ล็อบบี้เหลือโหมดปกติ:** เอาปุ่มกลางคืน/ตั้งค่า NightUI ออก บังคับโทนกลางวัน
+- `js/home-v2.js` `js/util.js` `js/city3d.js` `css/lobby.css` `css/home-v2.css` `index_classic.html`
+- Home V2 test ผ่าน · เบราว์เซอร์: ปุ่มเหลือข้อความ/เพลง/ตั้งค่า/ติดตั้ง/ออกระบบ · `--night-k`=0

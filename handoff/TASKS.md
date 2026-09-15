@@ -12,6 +12,9 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1479 · ภารกิจวันนี้ภาษาไทย:** `js/state.js` โดนแปลง UTF-8 เป็น `?` ตั้งแต่รอบ 1426 ทำให้ชื่อภารกิจขึ้น `?????????? 3D 3 ??`
+- กู้ไทยจาก commit `1cef9dca` คง `wsh*`/`applyMarketSystemBuy`/`acPurchaseLog` · กันซ้ำใน `tools/test_home_v2_mobile_preview.js`
+- QUEST_POOL 7 ชื่อมีไทย · market/AC/wordship unit ผ่าน · ค้าง: รีเฟรชล็อบบี้ดูการ์ดภารกิจ
 - **รอบ 1478 · กันซื้อแอร์ซ้ำ + คืนเหรียญ:** `buyAC` กันกล่องยืนยันซ้อน/ตรวจ `state.ac` ซ้ำตอน commit และเก็บ `acPurchaseLog`
 - forensic snapshot พบ 3 บัญชีถูกหักเกิน 10 ครั้ง: คืน 50,000 + 25,000 + 175,000 = 250,000 ผ่าน server ledger/campaign marker + stale-save healer
 - `js/{ui,state,main}.js` `functions/{index,ac-duplicate-refund,test_ac_duplicate_refund}.js` `tools/test_ac_purchase_guard.js`
@@ -24,28 +27,6 @@
 - unit wordship ผ่าน · ค้าง: เปิดดูสีน้ำบนมือถือ
 - **รอบ 1475 · กองเรือ ลูกไฟจุดตก 10 เท่า:** `SPLASH_SCALE=10` ขยายเปลวและประกายตอนกระสุนตก
 - `js/wordship.js` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
-- unit wordship ผ่าน · ค้าง: ยิงตกน้ำบนมือถือดูขนาดไฟ
-- **รอบ 1474 · กองเรือ ทะเลโทนเงาการ์ด:** น้ำใช้ `CARD_SHADOW=0x284664` สีเดียวกับวงรีเงาใต้การ์ด A–Z
-- `js/wordship.js` `css/wordship.css` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
-- unit wordship ผ่าน · ค้าง: เปิดกองเรือดูน้ำกับเงาการ์ด
-- **รอบ 1473 · กองเรือ ทะเลฟ้าคราม:** แผ่นน้ำ `0x2f92c9` หมอก/พื้นหลังฟ้าอ่อน กันขอบเทา
-- `js/wordship.js` `css/wordship.css` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
-- unit wordship ผ่าน · ค้าง: เปิดกองเรือบนมือถือดูสีน้ำ
-- **รอบ 1472 · กองเรือ ลูกไฟจุดตก:** กระสุนตกน้ำ/โดนเรือขึ้นเปลวตั้งแบบ Arena (shader ชุดเดียว) + ประกายส้ม
-- `js/wordship.js` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
-- unit wordship ผ่าน · ค้าง: ยิงตกน้ำบนมือถือดูลูกไฟ
-- **รอบ 1471 · กองเรือ ลูกปืนส้มขาว:** แกน `0xffc090` + AdditiveBlending เปลวร้อนสุดขาวส้ม
-- `js/wordship.js` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
-- unit wordship ผ่าน · ค้าง: ยิงบนมือถือดูแสงทับขาว
-- **รอบ 1470 · Vocab World Pick-Up Truck ขึ้นเว็บ:** สำเนา Kart เป็นรถกระบะ 170 กม./ชม. ห้อง/สถิติแยก pickup*
-- `js/pickup3d.js` `js/f1_3d.js` `js/kart3d.js` `js/ui.js` `js/home-v2.js` `js/netroom.js` `js/account-deletion.js` `handoff/RULES.md`
-- unit Kart 28 + Pickup 31 · ค้าง: publish RTDB rules เพื่อเล่นห้องออนไลน์
-- **รอบ 1469 · กองเรือ ลูกปืนส้มแดง:** แกนลูกไฟ `0xff3b10` เปลวไม่ผสมขาว · ไม่ใช้ additive ที่แกน
-- `js/wordship.js` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
-- unit wordship ผ่าน · ค้าง: ยิงบนมือถือดูโทนส้มแดง
-- **รอบ 1468 · ล็อบบี้เหลือโหมดปกติ:** เอาปุ่มกลางคืน/ตั้งค่า NightUI ออก บังคับโทนกลางวัน
-- `js/home-v2.js` `js/util.js` `js/city3d.js` `css/lobby.css` `css/home-v2.css` `index_classic.html`
-- Home V2 test ผ่าน · เบราว์เซอร์: ปุ่มเหลือข้อความ/เพลง/ตั้งค่า/ติดตั้ง/ออกระบบ · `--night-k`=0
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
