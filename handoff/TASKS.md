@@ -12,6 +12,9 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1495 · ยิงรบคำก้มเงยแบบกล้องเกม:** ลากนิ้วลง = ก้ม · ลากขึ้น = เงย (เลิกเชิดหัวแบบคันโยกเครื่องบิน)
+- ไฟล์: `js/wordskirmish.js` `tools/test_wordskirmish.js`
+- unit 53 ผ่าน · ค้าง: แอดมินลองเล็งบน live
 - **รอบ 1494 · ขึ้นเว็บยิงรบคำ แอดมินเท่านั้น:** rig ข้อต่อ + ปืนชี้หน้า + จอยครึ่งจอ/ย้ายปุ่ม + ตัวอักษรในบ้านปลอดภัย · ปุ่มซ่อนถ้าไม่ใช่แอดมิน (rail hidden, Home V2 ADMIN_ONLY, NetRoom `isAdmin`, city lock)
 - ไฟล์: `js/wordskirmish.js` `css/wordskirmish.css` `tools/{test_wordskirmish.js,wordskirmish_preview.html}` `docs/{PLAYER_CHARACTER_STYLE,PROJECT_MAP}.md`
 - unit 51 ผ่าน · ค้าง: ล็อกอินแอดมินบน live ดูปุ่ม 🔫 · ห้องออนไลน์ต้อง Publish Rules map `skirmish` (รอค้างใน RULES.md รอบ 1480)

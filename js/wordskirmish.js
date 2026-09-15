@@ -12,7 +12,7 @@
   const SPEED=8, PICKUP_R=2.4, HOME_R=5.6, HOUSE_HALF=2.9, ARENA=28, DPR_CAP=1.5;
   /* กล้องอยู่กลางหลังตัวละครแต่กดมุมลง เล็งไปจุดไกล AIM_AHEAD ตามแนวหน้า
      → หัวตัวละครต่ำกว่ากากบาท กากบาทกลางจอคือแนวกระสุนจริงและตรงกับทิศที่ตัวละครหัน
-     ลากนิ้วขึ้น-ลง (lookPitch) เลื่อนจุดเล็งไปที่หัวหรือลำตัวของเป้า */
+     ลากนิ้วลง = ก้ม · ลากนิ้วขึ้น = เงย (กล้องเกมปกติ ไม่ใช่คันโยกเครื่องบิน) */
   const CAM_DIST=6.4, CAM_H=3, CAM_LOOK=.25, CAM_SHOULDER=0, AIM_AHEAD=26, PITCH_GAIN=6, FOV=52;
   const ALPHABET='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const FALLBACK=[['CAT','แมว'],['DOG','สุนัข'],['BOOK','หนังสือ'],['FISH','ปลา'],['BIRD','นก']];
@@ -595,6 +595,10 @@
       if(camera) m.lookAt(camera.position.x, m.position.y, camera.position.z);
     });
   }
+  function applyLook(dx, dy){
+    lookYaw-=dx*0.006;
+    lookPitch=clamp(lookPitch+dy*0.004, .08, .62);
+  }
   function shoulderOrigin(){
     return {x:player.x+Math.cos(lookYaw)*CAM_SHOULDER, z:player.z-Math.sin(lookYaw)*CAM_SHOULDER};
   }
@@ -716,7 +720,7 @@
     root.addEventListener('pointermove', e=>{
       const p=pointers.get(e.pointerId); if(!p) return;
       if(p.kind==='look'){
-        lookYaw-=(e.clientX-p.x)*0.006; lookPitch=clamp(lookPitch-(e.clientY-p.y)*0.004, .08, .62);
+        applyLook(e.clientX-p.x, e.clientY-p.y);
         p.x=e.clientX; p.y=e.clientY;
       }else if(p.kind==='joy'){
         let dx=e.clientX-p.x, dy=e.clientY-p.y, dist=Math.hypot(dx,dy);
@@ -924,6 +928,7 @@
     fire, step, resetRun, collideMove, homeBlocked, homeOf, adminAllowed, aimPoint, poseChibi, makeChibi,
     placeCtl, layoutPad, syncVault, HOLD_MS, JOY_R,
     setLook(y,p){ if(y!=null) lookYaw=y; if(p!=null) lookPitch=p; return {lookYaw,lookPitch}; },
+    applyLook,
     get word(){return word;}, get stored(){return stored;}, get carried(){return carried;}, get letters(){return fieldLetters;},
     get player(){return player;}, get bots(){return bots;}, get running(){return running;}, get coinsRun(){return coinsRun;},
     get camera(){return camera;}, get scene(){return scene;}, get renderer(){return renderer;}, get playerMesh(){return playerMesh;},
