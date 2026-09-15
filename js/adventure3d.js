@@ -12455,8 +12455,8 @@ function soccerKitGo(){
    ============================================================ */
 const MechaAudio={
   ctx:null,
-  /* 🔊 รอบ 1485: กด FIRE = MissileLaunch · กระทบเป้า = คลิปรีเจิดเดิม (Arena fire / วงเพลิง) */
-  _launch:{file:'MissileLaunch.mp3',dir:'/sound/robot/',hash:'683da1de39e52b3d',vol:.62,gap:160,sfx:null,blob:null,url:'',load:null,busy:false,at:-1e9,gen:0},
+  /* 🔊 รอบ 1487: กด FIRE = fire.mp3 ตัดสั้นต่อนัด (ไฟล์ยาว ~5.5s ห้ามเล่นทั้งคลิป) · กระทบ = Arena fire */
+  _launch:{file:'fire.mp3',dir:'/sound/robot/',hash:'6cc1dcf3aaf465f9',vol:.62,gap:120,sliceMs:320,stopT:0,sfx:null,blob:null,url:'',load:null,busy:false,at:-1e9,gen:0},
   _boom:{file:'fire-a6fea31058694941.mp3',dir:'/sound/arena/',hash:'a6fea31058694941',vol:.55,gap:220,sfx:null,blob:null,url:'',load:null,busy:false,at:-1e9,gen:0},
   ac(){ if(!this.ctx){ try{ this.ctx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return this.ctx; },
   fireOn(){ return !!(typeof state!=='undefined' && state.sound!==false) && !(typeof document!=='undefined' && document.hidden); },
@@ -12477,6 +12477,7 @@ const MechaAudio={
   prepareFire(){ if(!this.fireOn()) return; void this.loadClip('launch'); void this.loadClip('boom'); },
   stopClip(name){
     const F=this._slot(name); F.gen++; F.busy=false; F.at=-1e9;
+    if(F.stopT){ try{ clearTimeout(F.stopT); }catch(e){} F.stopT=0; }
     if(F.sfx){ try{ F.sfx.pause(); F.sfx.removeAttribute('src'); F.sfx.load(); }catch(e){} F.sfx=null; }
     if(F.url){ try{ URL.revokeObjectURL(F.url); }catch(e){} F.url=''; }
   },
@@ -12493,7 +12494,16 @@ const MechaAudio={
       void this.loadClip(name).then(blob=>{
         if(!blob||el!==F.sfx||at!==F.gen||!this.fireOn()) return;
         if(!F.url){ F.url=URL.createObjectURL(blob); el.src=F.url; }
-        try{ el.currentTime=0; }catch(e){}
+        try{ el.pause(); el.currentTime=0; }catch(e){}
+        /* 🤖 รอบ 1487: 1 นัด = เล่นแค่ต้นคลิปแล้วหยุด — ห้ามปล่อยทั้งไฟล์ยาว */
+        if(F.sliceMs>0){
+          if(F.stopT) clearTimeout(F.stopT);
+          F.stopT=setTimeout(()=>{
+            if(el!==F.sfx||at!==F.gen) return;
+            try{ el.pause(); el.currentTime=0; }catch(e){}
+            F.stopT=0;
+          }, F.sliceMs);
+        }
         return el.play();
       }).catch(()=>{}).finally(()=>{ if(el===F.sfx) F.busy=false; });
       return true;
@@ -12509,7 +12519,7 @@ const MechaAudio={
     n.buffer=buf; const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=2600; bp.Q.value=.8;
     const ng=c.createGain(); ng.gain.value=.14; n.connect(bp); bp.connect(ng); ng.connect(c.destination); n.start(t); },
   fire(color){
-    if(this.playClip('launch')) return;             // 🤖 รอบ 1485: MissileLaunch ตอนกด FIRE
+    if(this.playClip('launch')) return;             // 🤖 รอบ 1487: fire.mp3 ตัดสั้น 1 นัด
     if(!state.sound) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
     const o=c.createOscillator(); o.type='square'; const f0=520+((color>>8)&0xff);
     o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(130,t+.14);
@@ -13282,7 +13292,7 @@ function start(md,opt){
     MechaModels.prepare(rid).catch(()=>{}); // warm only the selected model
     mechaWeapon=MECHA_WEAPONS[rid]||MECHA_WEAPONS.robot_01;
     setMechaHudSkin(rid);                          // 🤖 รอบ 224: กรอบ HUD + สีตามหุ่น
-    MechaAudio.prepareFire();                      // 🤖 รอบ 1485: พรีโหลด MissileLaunch + เสียงระเบิดกระทบ
+    MechaAudio.prepareFire();                      // 🤖 รอบ 1487: พรีโหลด fire.mp3 (ตัดสั้นต่อนัด) + เสียงระเบิดกระทบ
     clearMechaSmoke();
     camera.position.set(0,MECHA_EYE,26); yaw=0; pitch=-0.06;
   }else if(M.hotel){

@@ -12,6 +12,9 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1487 · เสียง FIRE = fire.mp3 ตัดสั้นต่อนัด:** เปลี่ยนจาก MissileLaunch · ไฟล์ยาว ~5.5s เล่นแค่ ~320ms แล้วหยุด (1 เสียงต่อ 1 นัด)
+- ไฟล์: js/adventure3d.js sound/robot/fire.mp3 tools/test_mecha_1487.js
+- unit 1487 ผ่าน · ค้าง: เปิดมือถือยิงฟังบน live
 - **รอบ 1486 · ป้ายจบภารกิจหุ่นใหญ่ขึ้นบน Home V2:** ต้นเหตุ CSS ย่อ toast เหลือ 9–14px จึงมองไม่เห็นปุ่มปิด
 - ไฟล์: css/home-v2.css tools/test_home_v2_mobile_preview.js
 - ป้ายเงิน/เตือน font 16–22px ปุ่มปิด 44px กว้าง ~82vw · 812×375 ยังอยู่ในจอ กดปิดแล้วป้ายหาย
@@ -25,10 +28,6 @@ efreshMechaLock
 - unit admin-lock + mecha 1480/1481/icon ผ่าน · ค้าง: ล็อกอินแอดมินดูปุ่ม/ยิงบน live
 - **รอบ 1483 · ไอคอนเข้าโลกหุ่นรบ:** เปลี่ยนจาก emoji 🤖 เป็นหุ่นชิบิ `robot_01-thumb` + ป้าย💥 · Classic rail + Home V2 การ์ดพื้น HUD
 - ไฟล์: `js/ui.js` `js/home-v2.js` `css/lobby.css` `css/home-v2.css` `tools/test_mecha_lobby_icon.js` `tools/test_home_v2_mobile_preview.js`
-- unit icon + Home V2 ผ่าน · ค้าง: เปิดล็อบบี้ดูไอคอนจริง
-- **รอบ 1482 · หุ่นรบวิถีกระสุนโค้ง:** ยิงจากปากกระบอก + แรงโน้มถ่วงชุดเดียวกับกองเรือ (`G=8.4`/`mass=1.2`/`muzzle=62`) · FX `launch/sync/impact`
-- ไฟล์: `js/adventure3d.js` `js/mecha-combat-fx.js` `docs/PROJECT_MAP.md` `tools/test_mecha_1481.js`
-- unit ballistic + 1480 ผ่าน · ค้าง: เปิดมือถือยิงดูวิถีโค้ง/ตกพื้น
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
