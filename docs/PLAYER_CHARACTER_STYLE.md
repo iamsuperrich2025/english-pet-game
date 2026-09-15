@@ -66,7 +66,7 @@ This register turns the rule into an actionable reskin plan. A status of **audit
 | P1 | Helicopter and Drone modes | Some player/peer phases use profile-image sprites rather than the shared 3D character | Audit each visible phase and migrate any visible human player representation to the canonical style. Vehicle-only phases are not character assets. |
 | P1 | Vocab City live presence | Nearby players are rendered as sprites in the 3D city | Audit and migrate the visible player representation to a matching Soft Cuboid Chibi asset or lightweight baked equivalent. |
 | Review when introduced | Moto and F1 | Multiplayer currently renders vehicles without a separate visible human character | No reskin is required while only vehicles are visible. Any future rider/driver character must conform. |
-| P0 ✅ | Cute Word Skirmish | New Soft Cuboid Chibi 3D toy-gun avatars for the local player, bots, and NetRoom peers | Conforming at introduction; keep head/body hitboxes and chibi proportions. |
+| P0 ✅ | Cute Word Skirmish | Soft Cuboid Chibi 3D toy-gun avatars with hip/knee/shoulder/elbow/wrist pivots; gun parented to the right wrist | Conforming; keep head/body hitboxes, chibi proportions, and the bent-elbow aim pose. |
 | Exempt | Invasion/Mothership | Established soldier/player style | Preserve unchanged under this rule. |
 | Exempt | Original Adventure mode | Established Adventure player style | Preserve unchanged; do not let shared-helper changes alter this mode. |
 

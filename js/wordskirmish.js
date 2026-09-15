@@ -33,16 +33,49 @@
   let word=null,queue=[],qGrade=null,lastWord='';
   let stored='',carried='',fieldLetters=[],wordsDone=0,coinsRun=0;
   let coinSession={id:'',total:0,paid:0};
-  let player={x:0,z:0,yaw:0,hp:MAX_HP,alive:true,seat:0,bob:0,respawnAt:0};
+  let player={x:0,z:0,yaw:0,hp:MAX_HP,alive:true,seat:0,bob:0,recoil:0,respawnAt:0};
   const PITCH_DEF=0.28;
   let lookYaw=0,lookPitch=PITCH_DEF,shake=0;
   let keys={f:0,b:0,l:0,r:0}, joy={x:0,z:0}, pointers=new Map();
   let lastShot=0,eventSeq=0,lastEvent='-',seenShot={};
-  let playerMesh=null,gunMesh=null,homeMeshes=[],bots=[],peersVis={};
+  let playerMesh=null,gunMesh=null,homeMeshes=[],vaultMeshes=[],bots=[],peersVis={};
   let room=null,myUid='',netToast='';
   let audio=null,saveTimer=0,timers=new Set();
+  const PAD_KEY='skmPad1', HOLD_MS=420, JOY_R=46;
+  let padPos={joy:{x:.14,y:.82},fire:{x:.9,y:.88},drop:{x:.9,y:.72}};
 
   function later(fn,ms){const id=setTimeout(()=>{timers.delete(id);fn();},ms);timers.add(id);return id;}
+  function loadPad(){
+    try{
+      const raw=JSON.parse(localStorage.getItem(PAD_KEY)||'{}');
+      if(raw&&raw.joy&&raw.fire&&raw.drop) padPos=raw;
+    }catch(_){}
+  }
+  function savePad(){
+    try{ localStorage.setItem(PAD_KEY, JSON.stringify(padPos)); }catch(_){}
+  }
+  function placeCtl(el, x, y, key){
+    if(!el) return {x,y};
+    const half=Math.max(18, (el.getBoundingClientRect().width||80)/2);
+    const minX=key==='joy'?half:half;
+    const maxX=key==='joy'?Math.max(minX+8, W*0.5-half):W-half;
+    x=clamp(x, minX+4, maxX-4);
+    y=clamp(y, half+4, H-half-4);
+    el.style.left=x+'px'; el.style.top=y+'px';
+    el.style.right='auto'; el.style.bottom='auto';
+    if(key) padPos[key]={x:W?x/W:padPos[key].x, y:H?y/H:padPos[key].y};
+    return {x,y};
+  }
+  function layoutPad(){
+    if(!hud.joy) return;
+    placeCtl(hud.joy, (padPos.joy.x||.14)*W, (padPos.joy.y||.82)*H, 'joy');
+    placeCtl(hud.fire, (padPos.fire.x||.9)*W, (padPos.fire.y||.88)*H, 'fire');
+    placeCtl(hud.drop, (padPos.drop.x||.9)*W, (padPos.drop.y||.72)*H, 'drop');
+  }
+  function setJoyKnob(x,z){
+    if(!hud.joyKnob) return;
+    hud.joyKnob.style.transform='translate('+((x||0)*22)+'px,'+((z||0)*22)+'px)';
+  }
   function clearTimers(){timers.forEach(clearTimeout);timers.clear();}
   function queueSave(){
     if(saveTimer){clearTimeout(saveTimer);timers.delete(saveTimer);}
@@ -109,35 +142,112 @@
   function cyl(rt,rb,h,col){
     return new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,10), mat(col));
   }
-  /* Soft Cuboid Chibi 3D — หัวใหญ่ตัวสั้น ถือปืนของเล่น สัดส่วนเด็ก */
+  function stampHit(node, kind){ node.traverse(m=>{ m.userData.hit=kind; }); }
+  function bone(w,h,d,col){ return box(w,h,d,col,0,-h/2,0); }  // พิвотอยู่หัวกระดูก หมุนที่ข้อต่อ
+  function joint(x,y,z){ const p=new THREE.Group(); p.position.set(x,y,z); return p; }
+  /* Soft Cuboid Chibi 3D — ข้อต่อมนุษย์ (สะโพก/เข่า/ไหล่/ศอก/ข้อมือ) ปืนติดมือขวา งอแขนยกปืนได้ */
   function makeChibi(palette, withGun){
     const g=new THREE.Group();
     const skin=palette.skin||0xffcf9e, shirt=palette.shirt||0xff8fab, pants=palette.pants||0x5b8def, hair=palette.hair||0x3b2a24;
-    const L=box(.28,.42,.3,pants,-.16,.32,0), R=box(.28,.42,.3,pants,.16,.32,0);
-    g.add(L,R);
-    const torso=box(.72,.58,.46,shirt,0,.86,0); g.add(torso);
-    const armL=box(.22,.48,.24,shirt,-.5,.86,0), armR=box(.22,.48,.24,shirt,.5,.86,0);
-    g.add(armL,armR);
-    const head=box(.78,.7,.7,skin,0,1.52,0); g.add(head);
-    const hairM=box(.82,.22,.74,hair,0,1.9,0); g.add(hairM);
-    const eyeL=box(.1,.12,.06,0x2b1c14,-.16,1.54,-.34), eyeR=box(.1,.12,.06,0x2b1c14,.16,1.54,-.34);
-    const blushL=box(.12,.08,.04,0xff9bb5,-.28,1.42,-.32), blushR=box(.12,.08,.04,0xff9bb5,.28,1.42,-.32);
-    const smile=box(.22,.05,.04,0xe11d48,0,1.34,-.34);
-    g.add(eyeL,eyeR,blushL,blushR,smile);
-    /* ติดป้ายจุดโดนให้ทุกชิ้น: ผม/ตา/แก้ม/ปาก นับเป็นหัว (ตายทันที) ที่เหลือเป็นลำตัว */
-    [head,hairM,eyeL,eyeR,blushL,blushR,smile].forEach(m=>{ m.userData.hit='head'; });
-    [torso,armL,armR,L,R].forEach(m=>{ m.userData.hit='body'; });
-    if(withGun){
-      const gun=new THREE.Group(); gun.position.set(.58,.78,-.55);
-      const body=box(.18,.22,.7,0xffd54f,0,0,0);
-      const barrel=cyl(.07,.09,.85,0xff8a65); barrel.rotation.x=Math.PI/2; barrel.position.set(0,.02,-.7);
-      const grip=box(.14,.28,.16,0xff7043,0,-.2,.18);
-      const sight=box(.06,.12,.08,0x29b6f6,0,.16,-.18);
-      gun.add(body,barrel,grip,sight); gun.userData.hit='body'; g.add(gun); g.userData.gun=gun;
+    const pelvis=box(.56,.2,.38,pants,0,.62,0);
+    const torso=box(.7,.52,.44,shirt,0,.98,0);
+    g.add(pelvis,torso);
+    function makeLeg(side){
+      const hip=joint(side*.16,.62,0);
+      hip.add(bone(.26,.28,.28,pants));
+      const knee=joint(0,-.28,0); hip.add(knee);
+      knee.add(bone(.24,.24,.26,pants));
+      const ankle=joint(0,-.24,0); knee.add(ankle);
+      const foot=box(.22,.1,.32,0x5d4037,0,-.05,-.06); ankle.add(foot);
+      g.add(hip); return {hip,knee,ankle};
     }
-    g.userData.limbs=[L,R,armL,armR];
+    function makeArm(side){
+      const shoulder=joint(side*.4,1.16,.02);
+      shoulder.add(bone(.2,.28,.22,shirt));
+      const elbow=joint(0,-.28,0); shoulder.add(elbow);
+      elbow.add(bone(.18,.26,.2,skin));
+      const wrist=joint(0,-.26,0); elbow.add(wrist);
+      const hand=box(.16,.14,.18,skin,0,-.06,-.02); wrist.add(hand);
+      g.add(shoulder); return {shoulder,elbow,wrist,hand};
+    }
+    const legL=makeLeg(-1), legR=makeLeg(1);
+    const armL=makeArm(-1), armR=makeArm(1);
+    const neck=joint(0,1.24,0);
+    const head=box(.78,.7,.7,skin,0,.38,0);
+    const hairM=box(.82,.22,.74,hair,0,.74,0);
+    const eyeL=box(.1,.12,.06,0x2b1c14,-.16,.4,-.34), eyeR=box(.1,.12,.06,0x2b1c14,.16,.4,-.34);
+    const blushL=box(.12,.08,.04,0xff9bb5,-.28,.28,-.32), blushR=box(.12,.08,.04,0xff9bb5,.28,.28,-.32);
+    const smile=box(.22,.05,.04,0xe11d48,0,.2,-.34);
+    neck.add(head,hairM,eyeL,eyeR,blushL,blushR,smile); g.add(neck);
+    stampHit(neck,'head');
+    stampHit(pelvis,'body'); stampHit(torso,'body');
+    stampHit(legL.hip,'body'); stampHit(legR.hip,'body');
+    stampHit(armL.shoulder,'body'); stampHit(armR.shoulder,'body');
+    let gun=null;
+    if(withGun){
+      gun=new THREE.Group();
+      /* แกนปืน: +Z = กระบอก (lookAt ของ THREE หัน +Z ไปหาเป้า) · -Z = พานท้าย */
+      const body=box(.16,.2,.62,0xffd54f,0,.02,.16);
+      const barrel=cyl(.065,.08,.78,0xff8a65); barrel.rotation.x=Math.PI/2; barrel.position.set(0,.04,.72);
+      const grip=box(.12,.26,.14,0xff7043,0,-.16,-.06);
+      const stock=box(.14,.18,.34,0xffcc80,0,.02,-.4);
+      const sight=box(.05,.1,.07,0x29b6f6,0,.16,.28);
+      gun.add(body,barrel,grip,stock,sight);
+      gun.position.set(.1,-.02,-.14);
+      armR.wrist.add(gun); stampHit(gun,'body');
+    }
+    const rig={
+      hipL:legL.hip,kneeL:legL.knee,ankleL:legL.ankle,
+      hipR:legR.hip,kneeR:legR.knee,ankleR:legR.ankle,
+      shoulderL:armL.shoulder,elbowL:armL.elbow,wristL:armL.wrist,
+      shoulderR:armR.shoulder,elbowR:armR.elbow,wristR:armR.wrist,
+      neck, gun
+    };
+    g.userData.rig=rig;
+    g.userData.gun=gun;
+    g.userData.limbs=[rig.hipL,rig.hipR,rig.shoulderL,rig.shoulderR];
     g.userData.playerStyle='soft-cuboid-chibi-3d';
+    poseChibi(g,{moving:false,bob:0,recoil:0,lookX:0,alive:true});
     return g;
+  }
+  /* ท่าถือปืนสองมือ: ไหล่ยก + ศอกงอ ปืนชี้ -Z · ขาแกว่งที่สะโพก/เข่า */
+  function poseChibi(mesh, st){
+    const r=mesh&&mesh.userData&&mesh.userData.rig; if(!r) return r;
+    const moving=!!(st&&st.moving), bob=Number(st&&st.bob)||0, recoil=Number(st&&st.recoil)||0;
+    const alive=!(st&&st.alive===false);
+    const swing=Math.sin(bob)*(moving?.62:.07);
+    r.hipL.rotation.set(swing,0,.05);
+    r.hipR.rotation.set(-swing,0,-.05);
+    r.kneeL.rotation.set(Math.max(.08, moving?(.4-swing)*.85:.14),0,0);
+    r.kneeR.rotation.set(Math.max(.08, moving?(.4+swing)*.85:.14),0,0);
+    r.ankleL.rotation.set(-Math.max(0,r.kneeL.rotation.x-.1),0,0);
+    r.ankleR.rotation.set(-Math.max(0,r.kneeR.rotation.x-.1),0,0);
+    if(!alive){
+      r.shoulderL.rotation.set(.4,.1,.5); r.elbowL.rotation.set(-.5,0,0); r.wristL.rotation.set(0,0,0);
+      r.shoulderR.rotation.set(.35,-.1,-.5); r.elbowR.rotation.set(-.45,0,0); r.wristR.rotation.set(0,0,0);
+      r.neck.rotation.set(.35,0,0);
+      return r;
+    }
+    const kick=recoil;
+    /* Rx บวก = เหวี่ยงชิ้นที่ห้อยลง (-Y) ไปข้างหน้า (-Z) · ศอกบวก = งอแขนยกมือขึ้นอก */
+    r.shoulderR.rotation.set(1.18+kick*.28, .12, .38);
+    r.elbowR.rotation.set(1.22-kick*.1, -.06, -.18);
+    r.wristR.rotation.set(-.18, .2, .16);
+    if(r.gun){
+      r.gun.rotation.set(0,0,0);
+      if(tmpV && tmpV2){
+        mesh.updateWorldMatrix(true,true);
+        r.gun.getWorldPosition(tmpV);
+        tmpV2.set(0, .04+kick*.3, -5).applyQuaternion(mesh.quaternion).add(tmpV);
+        r.gun.lookAt(tmpV2);
+      }
+    }
+    const hold=Math.sin(bob*.55)*0.04;
+    r.shoulderL.rotation.set(1.05+hold, -.18, -.42);
+    r.elbowL.rotation.set(1.12, .1, .12);
+    r.wristL.rotation.set(-.1, -.2, -.18);
+    r.neck.rotation.set(Number(st&&st.lookX)||0, 0, 0);
+    return r;
   }
   function makeHouse(spec){
     const g=new THREE.Group();
@@ -203,11 +313,26 @@
     it.up=false;
     if(it.mesh) it.mesh.visible=false;
   }
+  /* ตัวอักษรในบ้าน = ของเราคนเดียว ใครมายิง/เดินทับ/ตายก็ขโมยไม่ได้ */
+  function syncVault(){
+    vaultMeshes.forEach(m=>{ if(scene&&m.parent) scene.remove(m); });
+    vaultMeshes=[];
+    if(!scene || typeof THREE==='undefined' || !THREE) return;
+    const h=homeOf(player.seat);
+    const chars=String(stored||'');
+    for(let i=0;i<chars.length;i++){
+      const card=makeLetterCard(chars[i]);
+      const ang=-.7+i*.2, rad=1.55;
+      card.position.set(h.x+Math.sin(ang)*rad, .2, h.z+Math.cos(ang)*rad);
+      card.userData.safe=true;
+      scene.add(card); vaultMeshes.push(card);
+    }
+  }
   function tryPickup(){
     if(carried || !player.alive) return '';
     for(let i=0;i<fieldLetters.length;i++){
       const it=fieldLetters[i];
-      if(!it.up) continue;
+      if(!it.up || it.safe) continue;
       if(Math.hypot(player.x-it.x, player.z-it.z)>PICKUP_R) continue;
       carried=it.letter; hideLetter(it.letter);
       emitEvent('P|'+it.letter);
@@ -223,7 +348,10 @@
     if(Math.hypot(player.x-h.x, player.z-h.z)>HOME_R) return '';
     stored+=carried;
     const got=carried; carried='';
+    hideLetter(got);
+    syncVault();
     beep('hit'); completeWord(); renderHud();
+    showToast('ฝาก '+got+' ไว้ในบ้านแล้ว · ปลอดภัย');
     return got;
   }
   function dropCarried(){
@@ -242,6 +370,7 @@
     let next=stored;
     for(const ch of word.w) next=next.replace(ch,'');
     stored=next; wordsDone++; creditReward();
+    syncVault();
     beep('win');
     word=takeWord(); spawnLetters(); renderHud();
     showToast('ครบคำ! +'+LETTER_REWARD+' เหรียญ');
@@ -315,8 +444,9 @@
     if(!player.alive) return false;
     if(kind==='H' || kind==='head'){
       player.hp=0; player.alive=false; player.respawnAt=elapsed+2.2;
-      if(carried){ dropCarried(); }
-      beep('head'); showToast((fromName||'โดนหัว')+' · ตายทันที');
+      if(carried) dropCarried();
+      const kept=stored?(' · ตัวอักษรในบ้านปลอดภัย ('+stored+')'):'';
+      beep('head'); showToast((fromName||'โดนหัว')+' · ตายทันที'+kept);
       return true;
     }
     player.hp=Math.max(0, player.hp-BODY_DMG);
@@ -324,7 +454,7 @@
     if(player.hp<=0){
       player.alive=false; player.respawnAt=elapsed+2.2;
       if(carried) dropCarried();
-      showToast('หมดแรง · เกิดใหม่ที่บ้าน');
+      showToast(stored?('หมดแรง · ตัวอักษรในบ้านปลอดภัย'):'หมดแรง · เกิดใหม่ที่บ้าน');
     }
     renderHud(); return true;
   }
@@ -336,7 +466,7 @@
   function fire(){
     const now=performance.now();
     if(now-lastShot<COOLDOWN || !running || !player.alive) return false;
-    lastShot=now; shotSound(); shake=.035;
+    lastShot=now; shotSound(); shake=.035; player.recoil=1;
     if(!raycaster||!camera) return false;
     camera.updateMatrixWorld();          // กันเรย์ใช้เมทริกซ์กล้องค้างจากเฟรมก่อน
     raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
@@ -408,6 +538,7 @@
       vis.mesh.position.set(Number(rec.x)||0, 0, Number(rec.z)||0);
       vis.mesh.rotation.y=Number(rec.yaw)||0;
       vis.mesh.visible=st.hp>0;
+      poseChibi(vis.mesh,{moving:true,bob:elapsed*7,alive:st.hp>0});
     });
     Object.keys(peersVis).forEach(uid=>{
       if(!peers[uid]){ scene.remove(peersVis[uid].mesh); delete peersVis[uid]; }
@@ -444,7 +575,10 @@
       b.t=(b.t||0)+dt;
       const h=HOMES[(i+2)%HOMES.length];
       b.x=h.x+Math.sin(b.t*.6+i)*5; b.z=h.z+Math.cos(b.t*.6+i)*5;
-      if(b.mesh){ b.mesh.position.set(b.x,0,b.z); b.mesh.rotation.y=b.t; b.mesh.visible=true; }
+      if(b.mesh){
+        b.mesh.position.set(b.x,0,b.z); b.mesh.rotation.y=b.t; b.mesh.visible=true;
+        poseChibi(b.mesh,{moving:true,bob:b.t*8,alive:true});
+      }
     });
   }
   function tickLetters(){
@@ -454,6 +588,11 @@
         it.mesh.position.y=Math.sin(elapsed*3+(it.x||0))*.12;
         if(camera) it.mesh.lookAt(camera.position.x, it.mesh.position.y, camera.position.z);
       }
+    });
+    vaultMeshes.forEach((m,i)=>{
+      if(!m) return;
+      m.position.y=.2+Math.sin(elapsed*2+i)*.06;
+      if(camera) m.lookAt(camera.position.x, m.position.y, camera.position.z);
     });
   }
   function shoulderOrigin(){
@@ -484,10 +623,12 @@
     playerMesh.position.set(player.x, player.alive?0:-.4, player.z);
     playerMesh.rotation.y=player.yaw;
     playerMesh.visible=true;
-    const limbs=playerMesh.userData.limbs||[];
     player.bob+=dt*(moving?10:2);
-    limbs.forEach((m,i)=>{ m.rotation.x=Math.sin(player.bob+(i&1?Math.PI:0))*(moving?.55:.08); });
-    if(playerMesh.userData.gun) playerMesh.userData.gun.rotation.x=moving?-0.15:-0.05;
+    if(player.recoil>0) player.recoil=Math.max(0, player.recoil-dt*8);
+    poseChibi(playerMesh,{
+      moving, bob:player.bob, recoil:player.recoil||0,
+      lookX:(PITCH_DEF-lookPitch)*0.9, alive:player.alive
+    });
   }
 
   function step(dt){
@@ -535,8 +676,8 @@
     }
     if(hud.drop) hud.drop.disabled=!carried;
     if(hud.hint) hud.hint.textContent=player.alive
-      ? (carried?('ถือ '+carried+' · ฝากที่บ้านตัวเอง หรือ DROP ทิ้ง'):('เก็บตัวอักษรแล้วฝากที่'+homeOf(player.seat).name+' · สะกด “'+(word?word.th:'')+'”'))
-      : 'กำลังเกิดใหม่ที่บ้าน…';
+      ? (carried?('ถือ '+carried+' · ฝากที่บ้านแล้วปลอดภัย หรือ DROP ทิ้ง'):('เก็บตัวอักษรแล้วฝากที่'+homeOf(player.seat).name+' · ในบ้าน = ปลอดภัย'))
+      : (stored?('กำลังเกิดใหม่ · ตัวอักษรในบ้านปลอดภัย ('+stored+')'):'กำลังเกิดใหม่ที่บ้าน…');
   }
   function showToast(msg){
     if(!hud.toast) return;
@@ -545,17 +686,32 @@
   }
 
   function bind(){
+    loadPad();
     root.addEventListener('pointerdown', e=>{
+      if(hud.intro && !hud.intro.hidden) return;
       const hold=e.target.getAttribute && e.target.getAttribute('data-hold');
-      if(hold==='fire'){ e.preventDefault(); fire(); pointers.set(e.pointerId,{kind:'fire'}); return; }
-      if(hold==='joy'){
-        const r=e.target.getBoundingClientRect();
-        pointers.set(e.pointerId,{kind:'joy',x:r.left+r.width/2,y:r.top+r.height/2,el:e.target});
+      const id=e.pointerId;
+      if(hold==='fire' || hold==='drop'){
+        e.preventDefault(); e.stopPropagation();
+        try{ e.target.setPointerCapture(id); }catch(_){}
+        pointers.set(id,{kind:'btn',act:hold,el:e.target,x:e.clientX,y:e.clientY,t0:performance.now(),drag:false});
         return;
       }
-      if(e.clientX>W*.42){
-        pointers.set(e.pointerId,{kind:'look',x:e.clientX,y:e.clientY});
+      if(e.target.closest && (e.target.closest('#skm-exit') || e.target.closest('.skm-card'))) return;
+      const left=e.clientX < W*0.5;
+      if(left){
+        e.preventDefault();
+        if([...pointers.values()].some(p=>p.kind==='joy')) return;
+        const origin=placeCtl(hud.joy, e.clientX, e.clientY, 'joy');
+        setJoyKnob(0,0); if(hud.joy) hud.joy.classList.add('skm-dragging');
+        try{ root.setPointerCapture(id); }catch(_){}
+        pointers.set(id,{kind:'joy',x:origin.x,y:origin.y});
+        joy.x=0; joy.z=0;
+        return;
       }
+      e.preventDefault();
+      try{ root.setPointerCapture(id); }catch(_){}
+      pointers.set(id,{kind:'look',x:e.clientX,y:e.clientY});
     });
     root.addEventListener('pointermove', e=>{
       const p=pointers.get(e.pointerId); if(!p) return;
@@ -563,16 +719,42 @@
         lookYaw-=(e.clientX-p.x)*0.006; lookPitch=clamp(lookPitch-(e.clientY-p.y)*0.004, .08, .62);
         p.x=e.clientX; p.y=e.clientY;
       }else if(p.kind==='joy'){
-        joy.x=clamp((e.clientX-p.x)/46,-1,1); joy.z=clamp((e.clientY-p.y)/46,-1,1);
+        let dx=e.clientX-p.x, dy=e.clientY-p.y, dist=Math.hypot(dx,dy);
+        if(dist>JOY_R){
+          p.x+=dx*(dist-JOY_R)/dist; p.y+=dy*(dist-JOY_R)/dist;
+          const origin=placeCtl(hud.joy, p.x, p.y, 'joy');
+          p.x=origin.x; p.y=origin.y;
+          dx=e.clientX-p.x; dy=e.clientY-p.y; dist=Math.hypot(dx,dy);
+        }
+        joy.x=clamp(dx/JOY_R,-1,1); joy.z=clamp(dy/JOY_R,-1,1);
+        setJoyKnob(joy.x, joy.z);
+      }else if(p.kind==='btn'){
+        const moved=Math.hypot(e.clientX-p.x, e.clientY-p.y);
+        if(!p.drag && performance.now()-p.t0>=HOLD_MS){
+          p.drag=true; if(p.el) p.el.classList.add('skm-dragging');
+        }
+        if(p.drag){
+          placeCtl(p.el, e.clientX, e.clientY, p.act);
+        }else if(moved>16){
+          p.slid=true;
+        }
       }
     });
     const up=e=>{
       const p=pointers.get(e.pointerId); if(!p) return;
-      if(p.kind==='joy'){ joy.x=0; joy.z=0; }
+      if(p.kind==='joy'){
+        joy.x=0; joy.z=0; setJoyKnob(0,0); if(hud.joy) hud.joy.classList.remove('skm-dragging'); savePad();
+      }else if(p.kind==='btn'){
+        if(p.el) p.el.classList.remove('skm-dragging');
+        if(p.drag) savePad();
+        else if(!p.slid && performance.now()-p.t0<HOLD_MS){
+          if(p.act==='fire') fire();
+          else if(p.act==='drop') dropCarried();
+        }
+      }
       pointers.delete(e.pointerId);
     };
     root.addEventListener('pointerup', up); root.addEventListener('pointercancel', up);
-    if(hud.drop) hud.drop.addEventListener('click', ()=>{ dropCarried(); });
     if(hud.exit) hud.exit.addEventListener('click', ()=>{ close(); });
     if(hud.introOk) hud.introOk.addEventListener('click', ()=>{ if(hud.intro) hud.intro.hidden=true; });
     window.addEventListener('keydown', onKey); window.addEventListener('keyup', onKeyUp);
@@ -634,20 +816,21 @@
         <button type="button" class="skm-exit" id="skm-exit">ออก</button>
         <div class="skm-hint" id="skm-hint"></div>
       </div>
-      <div class="skm-pad">
-        <button type="button" class="skm-joy" data-hold="joy" aria-label="เดิน">เดิน</button>
-        <div class="skm-attack">
-          <button type="button" id="skm-drop" disabled>DROP</button>
-          <button type="button" data-hold="fire">FIRE</button>
-        </div>
+      <div class="skm-zones" aria-hidden="true">
+        <div class="skm-zone" id="skm-zone-move"></div>
+        <div class="skm-zone" id="skm-zone-look"></div>
       </div>
+      <button type="button" class="skm-joy" data-hold="joy" id="skm-joy" aria-label="เดิน"><span class="skm-joy-knob"></span><span class="skm-joy-lab">เดิน</span></button>
+      <button type="button" class="skm-float" id="skm-drop" data-hold="drop">DROP</button>
+      <button type="button" class="skm-float" id="skm-fire" data-hold="fire">FIRE</button>
       <div class="skm-toast" id="skm-toast"></div>
       <div class="skm-modal" id="skm-intro">
         <div class="skm-card">
           <h2>🔫 ยิงรบคำ</h2>
           <p>มุมมองบุคคลที่สาม เดินอิสระ ยิงปืนลมแบบยิงเป้าคำ</p>
           <p>โดนหัว = ตายทันที · โดนตัว = ลด HP ตามดาเมจปืน</p>
-          <p>เก็บตัวอักษร ฝากที่บ้านตัวเอง สะกดคำได้ 1,000 เหรียญ</p>
+          <p>เก็บตัวอักษร ฝากที่บ้านตัวเอง สะกดคำได้ 1,000 เหรียญ · ของในบ้านปลอดภัย ตายแล้วไม่หลุด</p>
+          <p>ซ้ายครึ่งจอ = เดิน (ฐานตามนิ้ว) · ขวาครึ่งจอ = หัน/ก้มเงย · กดค้าง DROP/FIRE เพื่อย้ายปุ่ม</p>
           <p>เล่นออนไลน์ได้หลายคน (เฉพาะแอดมินขณะทดสอบ)</p>
           <button type="button" id="skm-intro-ok">เริ่มเล่น</button>
         </div>
@@ -659,7 +842,9 @@
       th:root.querySelector('#skm-th'), en:root.querySelector('#skm-en'),
       hint:root.querySelector('#skm-hint'), toast:root.querySelector('#skm-toast'),
       exit:root.querySelector('#skm-exit'), intro:root.querySelector('#skm-intro'),
-      introOk:root.querySelector('#skm-intro-ok'), drop:root.querySelector('#skm-drop'), net:root.querySelector('#skm-net')
+      introOk:root.querySelector('#skm-intro-ok'), drop:root.querySelector('#skm-drop'),
+      fire:root.querySelector('#skm-fire'), joy:root.querySelector('#skm-joy'),
+      joyKnob:root.querySelector('.skm-joy-knob'), net:root.querySelector('#skm-net')
     };
     bind(); built=true;
   }
@@ -669,6 +854,7 @@
     dpr=Math.min(DPR_CAP, window.devicePixelRatio||1);
     if(camera){ camera.aspect=W/Math.max(1,H); camera.updateProjectionMatrix(); }
     if(renderer) renderer.setSize(W,H,false);
+    layoutPad();
   }
   function loop(t){
     if(!running) return;
@@ -681,6 +867,7 @@
     word=takeWord(); stored=''; carried=''; wordsDone=0;
     beginCoinSession(); player.seat=0; spawnAtHome(); spawnLetters();
     bots.forEach(b=>{ b.hp=MAX_HP; b.alive=true; });
+    syncVault();
   }
 
   async function open(){
@@ -722,6 +909,7 @@
     if(room && room.leave) room.leave(); room=null;
     Object.keys(peersVis).forEach(uid=>{ if(scene&&peersVis[uid].mesh) scene.remove(peersVis[uid].mesh); });
     peersVis={};
+    vaultMeshes.forEach(m=>{ if(scene&&m.parent) scene.remove(m); }); vaultMeshes=[];
     if(root) root.style.display='none';
     if(typeof Music!=='undefined'&&Music.resumeBg) Music.resumeBg();
     try{ if(audio&&audio.state==='running') audio.suspend(); }catch(_){}
@@ -733,12 +921,14 @@
     MINLEN, MAXLEN, LETTER_REWARD, COOLDOWN, BODY_DMG, MAX_HP, SPEED, PICKUP_R, HOME_R, HOUSE_HALF, ARENA, CAM_DIST, FOV, HOMES, LOCK_MSG,
     pool, takeWord, wordMarks, hasWord, creditReward, settleCoinSession, beginCoinSession, walletCoins,
     tryPickup, tryDeposit, dropCarried, completeWord, placeLetter, spawnLetters, applyDamage, packHp, parseHp,
-    fire, step, resetRun, collideMove, homeBlocked, homeOf, adminAllowed, aimPoint,
+    fire, step, resetRun, collideMove, homeBlocked, homeOf, adminAllowed, aimPoint, poseChibi, makeChibi,
+    placeCtl, layoutPad, syncVault, HOLD_MS, JOY_R,
     setLook(y,p){ if(y!=null) lookYaw=y; if(p!=null) lookPitch=p; return {lookYaw,lookPitch}; },
     get word(){return word;}, get stored(){return stored;}, get carried(){return carried;}, get letters(){return fieldLetters;},
     get player(){return player;}, get bots(){return bots;}, get running(){return running;}, get coinsRun(){return coinsRun;},
-    get camera(){return camera;}, get scene(){return scene;},
-    setStored(s){ stored=String(s||''); return stored; }, setCarried(s){ carried=String(s||''); return carried; },
+    get camera(){return camera;}, get scene(){return scene;}, get renderer(){return renderer;}, get playerMesh(){return playerMesh;},
+    get padPos(){return padPos;}, get vaultMeshes(){return vaultMeshes;},
+    setStored(s){ stored=String(s||''); syncVault(); return stored; }, setCarried(s){ carried=String(s||''); return carried; },
     setPlayer(p){ Object.assign(player,p||{}); return player; },
     setRunning(v){ running=!!v; }
   }};

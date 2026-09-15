@@ -12,7 +12,7 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
-- **รอบ 1493 · ขึ้นเว็บยิงรบคำ แอดมินเท่านั้น:** rig ข้อต่อ + ปืนชี้หน้า + จอยครึ่งจอ/ย้ายปุ่ม + ตัวอักษรในบ้านปลอดภัย · ปุ่มซ่อนถ้าไม่ใช่แอดมิน (rail hidden, Home V2 ADMIN_ONLY, NetRoom `isAdmin`, city lock)
+- **รอบ 1494 · ขึ้นเว็บยิงรบคำ แอดมินเท่านั้น:** rig ข้อต่อ + ปืนชี้หน้า + จอยครึ่งจอ/ย้ายปุ่ม + ตัวอักษรในบ้านปลอดภัย · ปุ่มซ่อนถ้าไม่ใช่แอดมิน (rail hidden, Home V2 ADMIN_ONLY, NetRoom `isAdmin`, city lock)
 - ไฟล์: `js/wordskirmish.js` `css/wordskirmish.css` `tools/{test_wordskirmish.js,wordskirmish_preview.html}` `docs/{PLAYER_CHARACTER_STYLE,PROJECT_MAP}.md`
 - unit 51 ผ่าน · ค้าง: ล็อกอินแอดมินบน live ดูปุ่ม 🔫 · ห้องออนไลน์ต้อง Publish Rules map `skirmish` (รอค้างใน RULES.md รอบ 1480)
 - **รอบ 1492 · กระสุนตกที่ใดก็วงเพลิง:** ballistic impact ทั้งพื้น/เป้า ใช้ประกายไฟแบบ Arena วงเพลิง (~920ms)
