@@ -277,6 +277,44 @@ button.vw2-wallet-pill:active{transform:translateY(1px)}
 body.vw2-home-active .toast{left:54%!important;bottom:auto!important;top:clamp(112px,28vh,129px)!important;transform:translateX(-50%)!important;width:auto!important;max-width:min(42vw,680px)!important;min-height:0!important;padding:7px 12px!important;border-radius:14px!important;font-size:clamp(10px,.72vw,14px)!important;line-height:1.2!important;z-index:80!important;box-shadow:0 5px 14px rgba(49,35,90,.26)!important}
 body.vw2-home-active .toast.toast-link,body.vw2-home-active .toast.toast-financial,body.vw2-home-active .toast.toast-warn{pointer-events:auto!important}
 body.vw2-home-active .toast button,body.vw2-home-active .toast .toast-close{min-width:24px;min-height:24px}
+/* Persistent recap/money/warn banners stay large and tappable so players can read them and tap ปิด. */
+body.vw2-home-active .toast.toast-financial,
+body.vw2-home-active .toast.toast-warn,
+body.vw2-home-active .toast.toast-link{
+  left:50%!important;
+  top:clamp(96px,24vh,132px)!important;
+  width:min(82vw,980px)!important;
+  max-width:min(82vw,980px)!important;
+  padding:14px 16px 14px 20px!important;
+  border-radius:22px!important;
+  font-size:clamp(16px,1.8vw,22px)!important;
+  line-height:1.35!important;
+  z-index:9990!important;
+  gap:12px!important;
+  white-space:normal!important;
+  box-shadow:0 12px 32px rgba(49,35,90,.42)!important;
+}
+body.vw2-home-active .toast.toast-financial .toast-msg,
+body.vw2-home-active .toast.toast-warn .toast-msg,
+body.vw2-home-active .toast.toast-link .toast-msg{
+  font-size:inherit!important;
+  font-weight:800!important;
+}
+body.vw2-home-active .toast.toast-financial button,
+body.vw2-home-active .toast.toast-warn button,
+body.vw2-home-active .toast.toast-link button{
+  min-width:44px!important;
+  min-height:44px!important;
+  font-size:20px!important;
+}
+body.vw2-home-active .toast.toast-financial .toast-ok,
+body.vw2-home-active .toast.toast-link .toast-go{
+  width:auto!important;
+  min-width:76px!important;
+  padding:8px 18px!important;
+  font-size:18px!important;
+  font-weight:800!important;
+}
 
 
 /* ======================== R11.5.1 SAFE LIGHTWEIGHT ASSET BRIDGE REBASE ======================== */
@@ -413,6 +451,15 @@ body.vw2-home-active .toast button,body.vw2-home-active .toast .toast-close{min-
   .vw2-right{gap:4px}.vw2-mission,.vw2-online{border-radius:15px;padding:6px}.vw2-progress{height:5px;margin:3px 2px 4px}.vw2-quests{top:39px;left:5px;right:5px;bottom:5px;gap:3px}.vw2-quest-row{flex-basis:38px;min-height:38px;grid-template-columns:29px minmax(0,1fr) 34px;gap:3px;padding:3px 4px;border-radius:9px!important}.vw2-qemoji{width:29px;height:29px}.vw2-qscore .vw2-icon{width:22px;height:22px}.vw2-online{padding-bottom:32px}.vw2-online-list{top:35px;left:5px;right:5px;bottom:32px}.vw2-online-list>.ss-chunk{gap:3px}.vw2-online-row{min-height:35px;grid-template-columns:30px 1fr;gap:4px;padding:2px 4px;border-radius:9px!important}.vw2-online-row+.vw2-online-row{margin-top:3px}.vw2-online-avatar-wrap,.vw2-online-avatar-wrap>.vw2-icon{width:30px;height:30px}.vw2-online-avatar-wrap .pmini,.vw2-online-avatar-wrap img{width:30px!important;height:30px!important}.vw2-friends-btn{height:24px;bottom:4px}
   .vw2-bottom{gap:2px;padding:2px 3px;border-radius:14px}.vw2-mode{padding:1px 2px;gap:1px;flex-direction:column;line-height:1}.vw2-mode>span{width:17px;height:17px;flex:0 0 17px}.vw2-mode>b{width:100%;text-align:center;line-height:1;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   body.vw2-home-active .toast{top:clamp(106px,28vh,121px)!important;max-width:46vw!important;padding:5px 9px!important;font-size:9px!important}
+  body.vw2-home-active .toast.toast-financial,
+  body.vw2-home-active .toast.toast-warn,
+  body.vw2-home-active .toast.toast-link{
+    top:clamp(72px,20vh,108px)!important;
+    width:min(88vw,980px)!important;
+    max-width:min(88vw,980px)!important;
+    padding:10px 12px!important;
+    font-size:clamp(15px,4.2vh,20px)!important;
+  }
 }
 
 @media (max-width:760px){
@@ -2280,7 +2327,7 @@ body.vw2-home-active.vw2-page-hidden #vw-home-v2-root *:after{animation-play-sta
   #vw-home-v2-root .vw2-feature-title,
   #vw-home-v2-root .vw2-word-ribbon{top:48px!important}
 }
-/* Five current tools fill the panel exactly after night mode was removed. */
+/* Six current tools fill the panel exactly after adding the direct gameplay guide. */
 #vw-home-v2-root .vw2-top-actions{grid-template-rows:repeat(3,minmax(0,1fr))!important}
 @media (min-width:1181px) and (min-height:521px){
   #vw-home-v2-root .vw2-top-actions{
@@ -2522,3 +2569,9 @@ body.vw2-home-active #screen-dashboard.vw2-active>#panel-overlay.open{
 #vw-home-v2-root .vw2-mecha-entry-art img{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:78%!important;height:108%!important;object-fit:contain;object-position:50% 0%;filter:drop-shadow(0 2px 4px #091534)!important}
 #vw-home-v2-root .vw2-mecha-entry-art .mecha-lobby-sigil{position:absolute;right:5px;bottom:4px;display:grid;place-items:center;width:22px;height:22px;border:1px solid #ffe9a8;border-radius:50%;background:#19385bd9;font:13px/1 'Segoe UI Emoji',sans-serif;filter:none;text-shadow:0 0 5px #ffae52}
 #vw-home-v2-root .vw2-rail-worldMecha .vw2-rail-label{color:#dff5ff!important;font-weight:900!important}
+
+/* 📖 รอบ 1486: ชื่อปุ่มคู่มือยาวกว่าปุ่มเดิม — แบ่งได้สองบรรทัดโดยไม่ตัดคำออก */
+#vw-home-v2-root .vw2-tool-btn[data-vw2-action="help"] b{
+  white-space:normal!important;overflow:hidden!important;text-align:center!important;
+  padding-block:1px!important;font-size:clamp(10px,1.18vw,11px)!important;line-height:1.05!important;
+}
