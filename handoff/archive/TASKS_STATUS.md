@@ -6299,3 +6299,21 @@
 - **รอบ 1468 · ล็อบบี้เหลือโหมดปกติ:** เอาปุ่มกลางคืน/ตั้งค่า NightUI ออก บังคับโทนกลางวัน
 - `js/home-v2.js` `js/util.js` `js/city3d.js` `css/lobby.css` `css/home-v2.css` `index_classic.html`
 - Home V2 test ผ่าน · เบราว์เซอร์: ปุ่มเหลือข้อความ/เพลง/ตั้งค่า/ติดตั้ง/ออกระบบ · `--night-k`=0
+
+
+## ⏬ ย้ายเมื่อ 2026-09-15 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- ⚠️ ค้าง: **ผู้ใช้ต้อง Publish Rules** (`skirmish` ใน `/world`,`/wroom`,`/winfo` ล็อกอีเมลแอดมิน) ก่อนเล่นออนไลน์จริง · ยังไม่ commit/deploy (รอผู้ใช้สั่ง) · index_classic.html/build_web.mjs ใช้ EOL แบบ CR — แก้ด้วย editor ปกติจะบวมทั้งไฟล์ ให้แทรกบนไบต์
+- **รอบ 1480 · โลกหุ่นรบกลางวัน+HUD:** คำศัพท์กลางบน · ปุ่ม FIRE โทน HUD · กระสุน/เสียงยิงแบบกองเรือ · FX พิเศษอลังการ · ฉากกลางวันไร้หิน · เหรียญเข้ากระเป๋าหลัก (`mechaBankCoins`) · คง admin-only
+- ไฟล์: `js/adventure3d.js` `js/adv3d_css.js` `js/mecha-combat-fx.js` `docs/PROJECT_MAP.md` `tools/test_mecha_1480.js`
+- unit `test_mecha_1480.js` ผ่าน · ค้าง: เปิดมือถือดูกลางวัน/ปุ่ม FIRE/เสียงยิง
+- **รอบ 1479 · ภารกิจวันนี้ภาษาไทย:** `js/state.js` โดนแปลง UTF-8 เป็น `?` ตั้งแต่รอบ 1426 ทำให้ชื่อภารกิจขึ้น `?????????? 3D 3 ??`
+- กู้ไทยจาก commit `1cef9dca` คง `wsh*`/`applyMarketSystemBuy`/`acPurchaseLog` · กันซ้ำใน `tools/test_home_v2_mobile_preview.js`
+- QUEST_POOL 7 ชื่อมีไทย · market/AC/wordship unit ผ่าน · ค้าง: รีเฟรชล็อบบี้ดูการ์ดภารกิจ
+- **รอบ 1478 · กันซื้อแอร์ซ้ำ + คืนเหรียญ:** `buyAC` กันกล่องยืนยันซ้อน/ตรวจ `state.ac` ซ้ำตอน commit และเก็บ `acPurchaseLog`
+- forensic snapshot พบ 3 บัญชีถูกหักเกิน 10 ครั้ง: คืน 50,000 + 25,000 + 175,000 = 250,000 ผ่าน server ledger/campaign marker + stale-save healer
+- `js/{ui,state,main}.js` `functions/{index,ac-duplicate-refund,test_ac_duplicate_refund}.js` `tools/test_ac_purchase_guard.js`
+- live 2026-09-15.1279 · dry-run/apply ผ่าน: 3 บัญชี 10 รายการ 250,000 เหรียญ · marker/ledger/notice ครบ ไม่มี deferred
+- **รอบ 1477 · กองเรือ ทะเลตามภาพ:** น้ำ `SEA_COLOR=0x003464` จากค่าเฉลี่ยรูปมหาสมุทรที่ส่งมา
+- `js/wordship.js` `css/wordship.css` `tools/test_wordship.js` `docs/PROJECT_MAP.md` `handoff/GAME_RULES.md`
+- unit wordship ผ่าน · ค้าง: เปิดดูสีน้ำบนมือถือ
