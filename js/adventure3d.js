@@ -374,6 +374,7 @@ let mechaFX=null; // bounded projectile renderer, disposed on exit
 let mechaRobotId='robot_01'; // selected once on entry; HUD, weapon and network agree
 let aliens=[], mechaWeapon=MECHA_WEAPONS.robot_01, mechaTracers=[], mFocusAlien=null;
 let mechaShells=[];   // 🤖 รอบ 1482: กระสุนวิถีโค้ง (physics ใน tickMechaShells)
+let mechaSmoke=[], _mechaSmokeTex=null; // 💨 รอบ 1485: ควันหางมิสไซล์แบบยานแม่
 let mhUI=null, mHeat=0, mHudAt=0;   // 🤖 รอบ 224: กรอบ HUD ห้องนักบิน (ภาพตามหุ่น + ค่าตัวเลขเรียลไทม์ + ความร้อนปืน)
 let mOverheat=false, mHitAt=0, mLowHp=false;   // 🤖 รอบ 225: ปืนโอเวอร์ฮีต + iframe โดนตี + สถานะพลังงานต่ำ
 let alienShots=[], powerups=[], mNextPowerAt=0;   // 🤖 รอบ 226: กระสุนเอเลี่ยน + ของเก็บ (คูลแดนต์/ซ่อม)
@@ -12454,13 +12455,15 @@ function soccerKitGo(){
    ============================================================ */
 const MechaAudio={
   ctx:null,
-  /* 🔊 รอบ 1480: เสียงยิงชุดเดียวกับกองเรือคำศัพท์ (Arena fire-ring) */
-  _fire:{file:'fire-a6fea31058694941.mp3',hash:'a6fea31058694941',sfx:null,blob:null,url:'',load:null,busy:false,at:-1e9,gen:0},
+  /* 🔊 รอบ 1485: กด FIRE = MissileLaunch · กระทบเป้า = คลิปรีเจิดเดิม (Arena fire / วงเพลิง) */
+  _launch:{file:'MissileLaunch.mp3',dir:'/sound/robot/',hash:'683da1de39e52b3d',vol:.62,gap:160,sfx:null,blob:null,url:'',load:null,busy:false,at:-1e9,gen:0},
+  _boom:{file:'fire-a6fea31058694941.mp3',dir:'/sound/arena/',hash:'a6fea31058694941',vol:.55,gap:220,sfx:null,blob:null,url:'',load:null,busy:false,at:-1e9,gen:0},
   ac(){ if(!this.ctx){ try{ this.ctx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return this.ctx; },
   fireOn(){ return !!(typeof state!=='undefined' && state.sound!==false) && !(typeof document!=='undefined' && document.hidden); },
-  loadFireClip(){
-    const F=this._fire; if(F.blob) return Promise.resolve(F.blob); if(F.load) return F.load;
-    const path='/sound/arena/'+F.file, key=(typeof location!=='undefined'?location.origin:'')+'/__vw_asset__'+path+'?v='+F.hash;
+  _slot(name){ return name==='boom'?this._boom:this._launch; },
+  loadClip(name){
+    const F=this._slot(name); if(F.blob) return Promise.resolve(F.blob); if(F.load) return F.load;
+    const path=F.dir+F.file, key=(typeof location!=='undefined'?location.origin:'')+'/__vw_asset__'+path+'?v='+F.hash;
     F.load=Promise.resolve().then(()=>{
       if(typeof caches==='undefined') return null;
       return caches.open('vw-assets-content-v1').then(cache=>cache.match(key).then(hit=>hit?{cache,hit}:{cache})).catch(()=>({}));
@@ -12471,22 +12474,23 @@ const MechaAudio={
     }).then(blob=>blob?(F.blob=blob):null).catch(()=>null).finally(()=>{ F.load=null; });
     return F.load;
   },
-  prepareFire(){ if(this.fireOn()) void this.loadFireClip(); },
-  stopFireClip(){
-    const F=this._fire; F.gen++; F.busy=false; F.at=-1e9;
+  prepareFire(){ if(!this.fireOn()) return; void this.loadClip('launch'); void this.loadClip('boom'); },
+  stopClip(name){
+    const F=this._slot(name); F.gen++; F.busy=false; F.at=-1e9;
     if(F.sfx){ try{ F.sfx.pause(); F.sfx.removeAttribute('src'); F.sfx.load(); }catch(e){} F.sfx=null; }
     if(F.url){ try{ URL.revokeObjectURL(F.url); }catch(e){} F.url=''; }
   },
-  playFireClip(){
+  stopFireClip(){ this.stopClip('launch'); this.stopClip('boom'); },
+  playClip(name){
     if(!this.fireOn()) return false;
-    const F=this._fire, now=(typeof performance!=='undefined'?performance.now():0);
-    if(F.busy || now-F.at<250) return false;
+    const F=this._slot(name), now=(typeof performance!=='undefined'?performance.now():0);
+    if(F.busy || now-F.at<(F.gap||250)) return false;
     const Ctor=typeof Audio!=='undefined'?Audio:(typeof window!=='undefined'?window.Audio:null);
     if(!Ctor) return false;
     try{
-      if(!F.sfx){ F.sfx=new Ctor(); F.sfx.preload='none'; F.sfx.volume=.55; }
+      if(!F.sfx){ F.sfx=new Ctor(); F.sfx.preload='none'; F.sfx.volume=F.vol!=null?F.vol:.55; }
       const el=F.sfx, at=F.gen; F.busy=true; F.at=now;
-      void this.loadFireClip().then(blob=>{
+      void this.loadClip(name).then(blob=>{
         if(!blob||el!==F.sfx||at!==F.gen||!this.fireOn()) return;
         if(!F.url){ F.url=URL.createObjectURL(blob); el.src=F.url; }
         try{ el.currentTime=0; }catch(e){}
@@ -12495,6 +12499,7 @@ const MechaAudio={
       return true;
     }catch(e){ F.busy=false; return false; }
   },
+  playFireClip(){ return this.playClip('boom'); },   // alias เก่า = เสียงระเบิดกระทบ
   step(){ if(!state.sound) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
     const o=c.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(120,t); o.frequency.exponentialRampToValueAtTime(38,t+.18);
     const g=c.createGain(); g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.5,t+.012); g.gain.exponentialRampToValueAtTime(.0001,t+.26);
@@ -12504,12 +12509,13 @@ const MechaAudio={
     n.buffer=buf; const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=2600; bp.Q.value=.8;
     const ng=c.createGain(); ng.gain.value=.14; n.connect(bp); bp.connect(ng); ng.connect(c.destination); n.start(t); },
   fire(color){
-    if(this.playFireClip()) return;   // 🤖 รอบ 1480: คลิปกองเรือก่อน · fallback synth เดิม
+    if(this.playClip('launch')) return;             // 🤖 รอบ 1485: MissileLaunch ตอนกด FIRE
     if(!state.sound) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
     const o=c.createOscillator(); o.type='square'; const f0=520+((color>>8)&0xff);
     o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(130,t+.14);
     const g=c.createGain(); g.gain.setValueAtTime(.2,t); g.gain.exponentialRampToValueAtTime(.001,t+.15);
     o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.16); },
+  impactBoom(){ if(this.playClip('boom')) return; this.boom(); },
   boom(){ if(!state.sound) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
     const n=c.createBufferSource(), buf=c.createBuffer(1,Math.floor(c.sampleRate*.6),c.sampleRate), d=buf.getChannelData(0);
     for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2);
@@ -12800,6 +12806,7 @@ function spawnMechaShell(side=0){
 function mechaKillShell(o,hit,now){
   if(!o||!o.alive) return;
   o.alive=false;
+  if(hit) MechaAudio.impactBoom();                 // 🤖 รอบ 1485: กระทบเป้า = เสียงระเบิด (คลิป fire เดิม)
   if(mechaFX){
     if(o.fx && mechaFX.impact) mechaFX.impact(o.fx,!!hit,now||performance.now());
     else if(o.fx && mechaFX.kill) mechaFX.kill(o.fx);
@@ -12825,12 +12832,52 @@ function mechaApplyLetterHit(a,l){
   }
   return true;
 }
+/* ==== 💨 รอบ 1485: ควันหางมิสไซล์หุ่นรบ (แบบยานแม่) ==== */
+function mechaSmokeTex(){
+  if(_mechaSmokeTex) return _mechaSmokeTex;
+  const c=document.createElement('canvas'); c.width=c.height=64;
+  const g=c.getContext('2d');
+  const gr=g.createRadialGradient(32,32,0,32,32,32);
+  gr.addColorStop(0,'rgba(255,255,255,0.85)');
+  gr.addColorStop(.45,'rgba(214,210,200,0.5)');
+  gr.addColorStop(1,'rgba(190,185,175,0)');
+  g.fillStyle=gr; g.beginPath(); g.arc(32,32,32,0,Math.PI*2); g.fill();
+  _mechaSmokeTex=new THREE.CanvasTexture(c); return _mechaSmokeTex;
+}
+function spawnMechaSmoke(x,y,z){
+  if(!scene || mechaSmoke.length>120) return;
+  const mat=new THREE.SpriteMaterial({map:mechaSmokeTex(),transparent:true,opacity:.58,
+    depthWrite:false,color:0xe8e2d4});
+  const s=new THREE.Sprite(mat); s.position.set(x,y,z);
+  const g0=1.05+Math.random()*.35; s.scale.setScalar(g0); scene.add(s);
+  mechaSmoke.push({s,born:performance.now(),life:1000+Math.random()*280,g0,op:.58,
+    vx:(Math.random()-.5)*.35, vy:.55+Math.random()*.45, vz:(Math.random()-.5)*.35, grow:2.2});
+}
+function tickMechaSmoke(dt,now){
+  for(let i=mechaSmoke.length-1;i>=0;i--){
+    const p=mechaSmoke[i], age=(now-p.born)/p.life;
+    if(age>=1){ scene.remove(p.s); p.s.material.dispose(); mechaSmoke.splice(i,1); continue; }
+    p.s.material.opacity=p.op*(1-age);
+    p.s.scale.setScalar(p.g0*(1+age*p.grow));
+    p.s.position.x+=p.vx*dt; p.s.position.y+=p.vy*dt; p.s.position.z+=p.vz*dt;
+  }
+}
+function clearMechaSmoke(){
+  mechaSmoke.forEach(p=>{ if(p.s){ scene&&scene.remove(p.s); p.s.material&&p.s.material.dispose(); } });
+  mechaSmoke=[];
+}
 function tickMechaShells(dt,now){
   for(let i=mechaShells.length-1;i>=0;i--){
     const o=mechaShells[i]; if(!o.alive){ mechaShells.splice(i,1); continue; }
     o.vy-=MECHA_G*MECHA_SHELL_MASS*dt;                 // แรงโน้มถ่วงชุดเดียวกับกองเรือ
     o.x+=o.vx*dt; o.y+=o.vy*dt; o.z+=o.vz*dt; o.life-=dt;
     if(mechaFX&&o.fx&&mechaFX.sync) mechaFX.sync(o.fx,o.x,o.y,o.z,o.vx,o.vy,o.vz);
+    /* 💨 ควันต่อท้ายจรวด ~22 ครั้ง/วิ — วางหลังทิศความเร็วเหมือนยานแม่ */
+    if(!o.smokeAt || now>=o.smokeAt){
+      o.smokeAt=now+45;
+      const sp=Math.hypot(o.vx,o.vy,o.vz)||1;
+      spawnMechaSmoke(o.x-o.vx/sp*1.05, o.y-o.vy/sp*1.05, o.z-o.vz/sp*1.05);
+    }
     let hitLetter=false;
     for(let ai=0;ai<aliens.length&&!hitLetter;ai++){
       const a=aliens[ai], gs=a.gs||1;
@@ -12942,6 +12989,7 @@ function tickMecha(dt,now){
   tickAlienShots(dt,now);                            // 👾 รอบ 226: กระสุนเอเลี่ยน (โดน→เสียหาย+กะพริบแดง)
   tickPowerups(dt,now);                              // ❄️❤️ รอบ 226: ของเก็บ (ลดร้อน/ฟื้นพลัง) + ตัวจับเวลาสปอว์น
   tickMechaShells(dt,now);                           // 🤖 รอบ 1482: กระสุนวิถีโค้ง + ชนตัวอักษร
+  tickMechaSmoke(dt,now);                            // 💨 รอบ 1485: ควันหางมิสไซล์
   updateMechaHud(dt,now);                            // 🤖 รอบ 224: อัปเดตค่าตัวเลข HUD (ทิศ/ระยะ/เป้า/เหรียญ/ความร้อน)
   if(mechaFX)mechaFX.tick(now);
   // tracer + particle ระเบิด
@@ -13013,6 +13061,7 @@ function savePhoto(){
    ============================================================ */
 function clearEntities(){
   if(mechaFX){mechaFX.dispose();mechaFX=null;}
+  clearMechaSmoke();
   while(letters.length) removeLetter(0);
   letterRespawns=[];                                // 🔠⏱️ รอบ 847: ออกโลก/เปลี่ยนด่าน = ล้างคิวรอเกิดใหม่ (กันตัวอักษรโลกเก่าโผล่ในโลกใหม่)
   /* 🧟 รอบ 689: ผีโรงแรมเป็น Group ของโมเดล 3D (ไม่มี .material ของตัวเอง) — โลกอื่นยังเป็น Sprite
@@ -13233,7 +13282,8 @@ function start(md,opt){
     MechaModels.prepare(rid).catch(()=>{}); // warm only the selected model
     mechaWeapon=MECHA_WEAPONS[rid]||MECHA_WEAPONS.robot_01;
     setMechaHudSkin(rid);                          // 🤖 รอบ 224: กรอบ HUD + สีตามหุ่น
-    MechaAudio.prepareFire();                      // 🤖 รอบ 1480: พรีโหลดเสียงยิงกองเรือ
+    MechaAudio.prepareFire();                      // 🤖 รอบ 1485: พรีโหลด MissileLaunch + เสียงระเบิดกระทบ
+    clearMechaSmoke();
     camera.position.set(0,MECHA_EYE,26); yaw=0; pitch=-0.06;
   }else if(M.hotel){
     /* 🏨 รอบ 684: เกิด "นอกโรงแรม" หันหน้าเข้าประตูหลัก — ให้เด็กได้เห็นตึกสวย ๆ ก่อนเดินเข้าไป (ข้อ 3) */

@@ -1,5 +1,6 @@
-/* Round 1482 — mecha projectiles.
+/* Round 1485 — mecha projectiles.
    Ballistic shells (Word Fleet gravity): Adventure3D owns physics via launch/sync/impact.
+   Hit impacts use Arena-style fire-ring burst (~920ms). Smoke trails live in Adventure3D.
    Legacy fire(from,to) kept for tools/mecha/fx-preview.html flash previews.
    Six instanced batches, 12 live shots, zero raster assets. */
 (function(root){
@@ -120,8 +121,32 @@ function create(scene){
   }
  }
  function drawImpact(shot,s,age){
-  const e=Math.min(1,age/260),k=Math.sin(e*Math.PI),fade=1-e,special=s.kind!=='shell',boom=special?1.55:1;
+  const hitBoom=!!shot.hit;
+  const dur=hitBoom?920:260;
+  const e=Math.min(1,age/dur),k=Math.sin(e*Math.PI),fade=1-e,special=s.kind!=='shell',boom=special?1.55:1;
   p.copy(shot.pos);
+  if(hitBoom){
+   /* 🔥 รอบ 1485: ลูกไฟ/แสงแบบวงเพลิง Arena — วงขยาย + เปลวหลายจุด + ประกาย */
+   const fire=0xff812e, bright=0xffebbd, ember=0xffad45;
+   local('ring',shot,p,0,0,0,.45+e*2.4,.45+e*2.4,.55,fire,e);
+   local('ring',shot,p,0,0,.03,.32+e*1.9,.32+e*1.9,.4,bright,-e);
+   local('ring',shot,p,0,0,-.02,.22+e*1.35,.22+e*1.35,.35,ember,e*.6);
+   local('halo',shot,p,0,0,.2,(.9+e*1.6),(.9+e*1.6),.55,fire);
+   local('orb',shot,p,0,.15,0,(.35+e*.55)*fade,(.45+e*.7)*fade,(.35+e*.55)*fade,bright);
+   local('star',shot,p,0,.1,.08,.55*fade,.55*fade,.7,bright,age*.008);
+   const n=8;
+   for(let j=0;j<n;j++){
+    const a=j*Math.PI*2/n+e*.8, r=(.55+e*1.15);
+    local('orb',shot,p,Math.cos(a)*r,.12+Math.sin(j+e)*0.2,Math.sin(a)*r,.22*k,.38*k,.22*k,j%2?fire:ember);
+    local('halo',shot,p,Math.cos(a)*r*.85,.25,Math.sin(a)*r*.85,.42*k,.55*k,.42*k,fire);
+    local('star',shot,p,Math.cos(a)*(r*.7),.35+e*.4,Math.sin(a)*(r*.7),.16*fade,.16*fade,.5,j%2?bright:ember,a+e);
+   }
+   for(let j=0;j<6;j++){
+    const a=j*Math.PI/3+age*.01, lift=.4+e*1.1+j*.08;
+    local('orb',shot,p,Math.cos(a)*.35,lift,Math.sin(a)*.35,.1*fade,.14*fade,.1*fade,ember);
+   }
+   return;
+  }
   local('ring',shot,p,0,0,0,(.28+e*.95)*boom,(.28+e*.95)*boom,.55,s.color,e);
   local('ring',shot,p,0,0,.02,(.18+e*1.25)*boom,(.18+e*1.25)*boom,.4,s.accent,-e);
   local('star',shot,p,0,0,.05,.38*fade*boom,.38*fade*boom,.6,s.accent,age*.006);
@@ -135,8 +160,9 @@ function create(scene){
    if(!shot.active)continue;
    const s=style(shot.id),spin=(now-shot.born)*.018,age=now-shot.born;
    if(shot.impacting){
+    const idur=shot.hit?920:260;
     drawImpact(shot,s,now-shot.impactAt);
-    if(now-shot.impactAt>260){shot.active=false;shot.impacting=false;}
+    if(now-shot.impactAt>idur){shot.active=false;shot.impacting=false;}
     continue;
    }
    if(shot.ballistic){
