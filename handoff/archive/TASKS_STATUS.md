@@ -6383,3 +6383,18 @@ efreshMechaLock
 - ไฟล์: js/adventure3d.js js/adv3d_css.js tools/test_mecha_1491.js
 - unit 1491 ผ่าน · ค้าง: เปิดมือถือลองกด auto บน live
 
+
+
+## ⏬ ย้ายเมื่อ 2026-09-15 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- ไฟล์: `js/wordskirmish.js` `css/wordskirmish.css` `tools/{test_wordskirmish.js,wordskirmish_preview.html}` `docs/{PLAYER_CHARACTER_STYLE,PROJECT_MAP}.md`
+- unit 51 ผ่าน · ค้าง: ล็อกอินแอดมินบน live ดูปุ่ม 🔫 · ห้องออนไลน์ต้อง Publish Rules map `skirmish` (รอค้างใน RULES.md รอบ 1480)
+- **รอบ 1492 · กระสุนตกที่ใดก็วงเพลิง:** ballistic impact ทั้งพื้น/เป้า ใช้ประกายไฟแบบ Arena วงเพลิง (~920ms)
+- ไฟล์: js/mecha-combat-fx.js tools/test_mecha_1492.js
+- unit 1492 ผ่าน · ค้าง: ยิงลงพื้นดูประกายบน live
+
+
+
+## ⏬ ย้ายเมื่อ 2026-09-15 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1329 · ด่านซื้ออาหาร/แฟชั่นไม่มีค่าปรับ:** ถอดการสะสม/หักเหรียญจากไม่คาดเข็มขัด ขับเกิน 90 และชนทั้งหมด; ยังคงไฟเตือน เสียง/แรงเด้ง และป้ายย้ำว่าไม่เสียค่าปรับ

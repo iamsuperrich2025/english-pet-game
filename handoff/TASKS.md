@@ -24,12 +24,6 @@
 - ไฟล์: `js/wordskirmish.js` `tools/test_wordskirmish.js`
 - unit 53 ผ่าน · ค้าง: แอดมินลองเล็งบน live
 - **รอบ 1494 · ขึ้นเว็บยิงรบคำ แอดมินเท่านั้น:** rig ข้อต่อ + ปืนชี้หน้า + จอยครึ่งจอ/ย้ายปุ่ม + ตัวอักษรในบ้านปลอดภัย · ปุ่มซ่อนถ้าไม่ใช่แอดมิน (rail hidden, Home V2 ADMIN_ONLY, NetRoom `isAdmin`, city lock)
-- ไฟล์: `js/wordskirmish.js` `css/wordskirmish.css` `tools/{test_wordskirmish.js,wordskirmish_preview.html}` `docs/{PLAYER_CHARACTER_STYLE,PROJECT_MAP}.md`
-- unit 51 ผ่าน · ค้าง: ล็อกอินแอดมินบน live ดูปุ่ม 🔫 · ห้องออนไลน์ต้อง Publish Rules map `skirmish` (รอค้างใน RULES.md รอบ 1480)
-- **รอบ 1492 · กระสุนตกที่ใดก็วงเพลิง:** ballistic impact ทั้งพื้น/เป้า ใช้ประกายไฟแบบ Arena วงเพลิง (~920ms)
-- ไฟล์: js/mecha-combat-fx.js tools/test_mecha_1492.js
-- unit 1492 ผ่าน · ค้าง: ยิงลงพื้นดูประกายบน live
-
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
@@ -258,7 +252,6 @@
 - ปุ่มรางซ้าย Classic/Home V2 เฉพาะ verified admin; fresh server admission + RTDB rules คุม kartAccess/wroom/kart/winfo/kart/kartRank และปิด legacy; publish rules สำเร็จและเทียบสดครบ44โซนแล้ว; ไม่มี runtime raster/model/audio ใหม่ ใช้ lazy hashed modules+geometry batching/cache
 - ผ่าน entry17/browser29 (5สี, touch, speed109.91, CAT66coins, F1เดิม)/rules45/สองbrowser7/lobby8 source+dist; F1ทั้ง19+HomeV2+build9,467files612.9MiB+validatorผ่าน; COMMIT_DEPLOY เปิด1ครั้งและผู้ใช้เห็น[SUCCESS]; Hosting live **2026-09-09.1230**, source48636383/handoffafde5e43 pushแล้ว; rulesสดตรงครบ44โซน; live匿名5paths401/menuซ่อน/hashedassets200+immutable/noJSerror
 
-- **รอบ 1329 · ด่านซื้ออาหาร/แฟชั่นไม่มีค่าปรับ:** ถอดการสะสม/หักเหรียญจากไม่คาดเข็มขัด ขับเกิน 90 และชนทั้งหมด; ยังคงไฟเตือน เสียง/แรงเด้ง และป้ายย้ำว่าไม่เสียค่าปรับ
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`
