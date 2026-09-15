@@ -25,10 +25,6 @@
 - ไฟล์: js/mecha-combat-fx.js tools/test_mecha_1492.js
 - unit 1492 ผ่าน · ค้าง: ยิงลงพื้นดูประกายบน live
 
-- **รอบ 1491 · ปุ่มเดินหุ่น auto ซ้ายล่าง:** เอา ▲▼ ขวามือออก · ซ้ายเป็น D-pad ▲▼◀▶ กดเปิด/กดซ้ำปิด (สเตรฟ+เดิน)
-- ไฟล์: js/adventure3d.js js/adv3d_css.js tools/test_mecha_1491.js
-- unit 1491 ผ่าน · ค้าง: เปิดมือถือลองกด auto บน live
-
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน

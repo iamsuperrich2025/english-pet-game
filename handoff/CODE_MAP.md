@@ -1070,7 +1070,7 @@ vbRender:148 · vbCardHTML:194
 
 ## js/wordship.js (1,496 บรรทัด · 0 รายการ)
 
-## js/wordskirmish.js (940 บรรทัด · 0 รายการ)
+## js/wordskirmish.js (957 บรรทัด · 0 รายการ)
 
 ## js/wsaward.js (32 บรรทัด · 0 รายการ)
 
@@ -1457,8 +1457,8 @@ vbRender:148 · vbCardHTML:194
 .wsh-speed-foot:36 · .wsh-toast:37 · #wsh-arrows:38 · .wsh-nav:39,40,41,42(+2) · .wsh-modal:45,46 · .wsh-card:47,48,49
 .wsh-buttons:50,51
 
-## css/wordskirmish.css (42 บรรทัด · 21 selector)
+## css/wordskirmish.css (44 บรรทัด · 22 selector)
 #skm-game:2,3 · .skm-stage:4 · .skm-cross:5 · .skm-hud:6 · .skm-glass:7 · .skm-stats:8,9
 #skm-hp:10 · .skm-word:11,12,13,14 · .skm-bank:15 · .skm-exit:16 · .skm-hint:17 · .skm-zones:18
-.skm-zone:19 · .skm-joy:20,21 · .skm-joy-knob:22 · .skm-joy-lab:23 · .skm-float:24,27 · #skm-drop:25,26
-.skm-toast:28 · .skm-modal:29,30 · .skm-card:31,32,33,34
+.skm-zone:19 · .skm-joy:20,21 · .skm-joy-knob:22 · .skm-joy-lab:23 · .skm-float:24,29 · #skm-drop:25,26
+#skm-auto:27,28 · .skm-toast:30 · .skm-modal:31,32 · .skm-card:33,34,35,36
