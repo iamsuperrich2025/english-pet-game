@@ -1170,7 +1170,7 @@ function openSettings(initialTab){
       </div>
     </div>
     <div class="set-foot">
-      <button class="set-help" id="set-help">📖 วิธีเล่นเกม</button>
+      <button class="set-help" id="set-help">📖 คู่มือการเล่น</button>
       ${(typeof isTeacher==='function' && isTeacher()) ?
         `<button class="set-help" id="set-teacher">👩‍🏫 คู่มือครู (เครื่องมือคุมห้อง)</button>` : ''}
       <button class="set-close">เสร็จแล้ว</button>
@@ -1353,31 +1353,121 @@ function openSettings(initialTab){
   refreshPack();
 }
 
-/* ---------- วิธีเล่นเกม (เปิดจากหน้าตั้งค่า) ---------- */
+/* ---------- คู่มือการเล่น (เปิดตรงจาก Lobby หรือจากหน้าตั้งค่า) ---------- */
 function openHelp(){
+  const coin = n=>`🪙${(typeof fmtNum === 'function' ? fmtNum(n) : Number(n).toLocaleString('th-TH'))}`;
+  const hours = ms=>Math.round(Number(ms||0)/3600000);
+  const homeOf = id=>(typeof HOMES !== 'undefined' && HOMES.find(h=>h.id===id)) || null;
+  const homePrice = (id, fallback)=>coin((homeOf(id)||{}).price || fallback);
+  const homeName = (id, fallback)=>(homeOf(id)||{}).name || fallback;
+  const cureCost = typeof CURE_COST === 'number' ? CURE_COST : 100;
+  const heatHours = typeof HEAT_SICK_MS === 'number' ? hours(HEAT_SICK_MS) : 6;
+  const thirstHours = typeof THIRST_SICK_MS === 'number' ? hours(THIRST_SICK_MS) : 6;
+  const mealHour = typeof MEAL_HOUR === 'number' ? MEAL_HOUR : 18;
+  const sleepHour = typeof SLEEP_FROM_HOUR === 'number' ? SLEEP_FROM_HOUR : 20;
+  const sleepSickHour = typeof SLEEP_SICK_HOUR === 'number' ? SLEEP_SICK_HOUR : 23;
+  const wakeHour = typeof WAKE_HOUR === 'number' ? WAKE_HOUR : 6;
+  const lv2Need = typeof expNeed === 'function' ? expNeed(1) : 250;
+  const lv3Need = typeof expNeed === 'function' ? expNeed(2) : 600;
+  const acTotal = (typeof AC_PRICE === 'number' ? AC_PRICE : 20000) + (typeof AC_INSTALL === 'number' ? AC_INSTALL : 5000);
+  const pages = [
+    {tab:'เริ่มเล่น', icon:'🌱', title:'เริ่มอย่างไรไม่ให้สับสน', lead:'จำวงจรง่าย ๆ: ฝึกคำศัพท์ → รับเหรียญ → ดูแลน้อง → ค่อย ๆ เปิดโลกและกิจกรรมใหม่', items:[
+      ['🎯 เกมนี้เล่นไปเพื่ออะไร','Vocab World เป็นเกมฝึกภาษาอังกฤษที่มีสัตว์เลี้ยงเป็นเพื่อน เราเล่นเกมคำศัพท์เพื่อหาเหรียญ แล้วนำเหรียญไปซื้ออาหาร ที่พัก ของแต่งตัว และต่อยอดเป็นฟาร์ม โรงงาน หรือตลาดของเราเอง'],
+      ['👣 สามก้าวแรก','ยังไม่มีสัตว์ก็เล่นเกมและหาเหรียญได้ เริ่มจากเกมจับคู่หรือหมวดคำศัพท์ก่อน พอมีเงินค่อยซื้อสัตว์ ตั้งชื่อให้น้อง แล้วเตรียมชั้นอาหารกับที่พัก ไม่จำเป็นต้องซื้อทุกอย่างพร้อมกัน']
+    ]},
+    {tab:'เลี้ยงน้อง', icon:'🐾', title:'เลี้ยงน้องให้แข็งแรงและโตไว', lead:'น้องแต่ละตัวมีเลเวล ความอิ่ม สุขภาพ และชุดของตัวเอง การสลับไปดูตัวอื่นไม่ได้หยุดเวลาของตัวที่เหลือ', items:[
+      ['🍽️ มื้อเย็นสำคัญที่สุด',`ไข่และน้องแรกเกิด Lv.1 ยังไม่หิว ไม่ร้อน และไม่ต้องนอน ตั้งแต่ Lv.2 เป็นต้นไป น้องเริ่มหิวเวลา ${String(mealHour).padStart(2,'0')}:00 น. ให้หยิบอาหารจากชั้นมาป้อนจนหลอดเต็ม 100 ก่อน 20:00 น. ถ้าปล่อยให้หิวนานเกิน 2 ชั่วโมง น้องจะป่วย`],
+      ['🌟 โตจากการฝึกคำศัพท์',`น้องได้ EXP เมื่อเราตอบคำศัพท์ถูก Lv.1 → Lv.2 ใช้ ${lv2Need} EXP และ Lv.2 → โตเต็มวัย Lv.3 ใช้อีก ${lv3Need} EXP เมนูโปรดกับการสอบผ่านช่วยเพิ่ม EXP ได้ แต่ถ้าน้องป่วย EXP และความสามารถพิเศษของน้องจะพักไว้ก่อน`]
+    ]},
+    {tab:'ไม่ให้ป่วย', icon:'🩺', title:'ห้าสิ่งที่ต้องระวังทุกวัน', lead:'โรคในเกมป้องกันได้เกือบทั้งหมด แค่ดูเวลา บ้าน และบิลที่มีจุดแดง', items:[
+      ['⚠️ สาเหตุที่น้องป่วย',`1) หิวหลัง 20:00 น.  2) ยังไม่นอนเมื่อถึง ${sleepSickHour}:00 น.  3) เปียกฝนช่วง 19:00–20:00 เพราะไม่มีบ้านสภาพดี  4) ร้อนสะสม ${heatHours} ชั่วโมงเพราะไม่มีแอร์หรือไฟถูกตัด  5) บ้านถูกตัดน้ำครบ ${thirstHours} ชั่วโมง — ข้อนี้มังกรก็ไม่รอด`],
+      ['💊 ถ้าป่วยแล้วทำอย่างไร',`กดปุ่ม “รักษา” ที่หน้าข้อมูลน้อง ค่ารักษาปัจจุบัน ${coin(cureCost)} ระหว่างป่วยยังเล่นเกมและหาเหรียญได้ แต่ควรรักษาก่อนให้อาหารหรือหวัง EXP โดยเฉพาะถ้าป่วยเพราะหิว ระบบจะพักการซื้อของกินไว้จนกว่าจะรักษาหาย`]
+    ]},
+    {tab:'ที่พัก', icon:'🏠', title:'ที่พักมี 3 แบบ และแต่ละแบบป้องกันไม่เท่ากัน', lead:'คิดเสียว่าบ้านคือเกราะของน้องตอนเราไม่ได้เปิดเกม บ้านทุกหลังช่วยกันฝนได้เมื่อยังไม่ทรุด แต่กันร้อนได้ไม่เหมือนกัน', items:[
+      ['⛺🏡🏰 เลือกบ้านให้เหมาะกับเงิน',`1) ${homeName('basic','เพิงหลังคาไม้')} ${homePrice('basic',1000)} — กันฝนอย่างเดียว ติดแอร์ไม่ได้  2) ${homeName('medium','บ้านสองชั้นน่ารัก')} ${homePrice('medium',100000)} — กันฝนและซื้อแอร์เพิ่มได้ ${coin(acTotal)}  3) ${homeName('castle','ปราสาทราชวังอังกฤษ')} ${homePrice('castle',1000000)} — มีแอร์ในตัว`],
+      ['🌦️ เรื่องที่คนมักเข้าใจผิด','เพิงไม่ได้กันความร้อน และบ้านกลางจะกันร้อนได้ต่อเมื่อซื้อแอร์แล้วเท่านั้น แอร์ทุกแบบต้องมีไฟจึงจะทำงาน หากย้ายบ้าน แอร์เดิมจะไม่ย้ายตามไปด้วย ส่วนบ้านกลางและปราสาทยังให้โบนัสเมื่อทำแบบทดสอบครบ 10 ข้อ']
+    ]},
+    {tab:'อาหาร', icon:'🥣', title:'ตุนอาหารให้พร้อมก่อนถึงมื้อเย็น', lead:'อาหารของน้องไม่ได้หักเหรียญตอนป้อน เพราะต้องซื้อมาเก็บบนชั้นไว้ล่วงหน้า', items:[
+      ['🗄️ ชั้นอาหารและการไปซื้อของ','ซื้อชั้นก่อน เลือกได้ 30 / 75 / 160 ช่อง แล้วกด “ออกไปซื้ออาหาร” ขับตาม GPS ไป Paws & Pantry ถ้ายังไม่มีรถหรือรถค้างค่างวด เกมจะให้ยืมรถไปซื้อของฟรี หากน้องป่วยเพราะหิว ต้องรักษาก่อนจึงจะซื้อของกินได้ แต่ร้านแฟชั่นยังเข้าได้ตามปกติ'],
+      ['🛡️ ปลอดภัยไว้ก่อน','เมนูสัตว์แสดงเฉพาะอาหารที่ปลอดภัยจริง อาหารคนหรือของที่เป็นอันตรายถูกซ่อนและกดป้อนไม่ได้ จัดอาหารหลายชิ้นให้ความอิ่มรวมครบ 100; ถ้ากินดีเต็มหลอด 3 มื้อติด น้องจะมีกล้ามและได้ EXP แถม ส่วนชุดอาหารพิเศษบางแบบอิ่มข้ามถึงมื้อถัดไปได้']
+    ]},
+    {tab:'บ้านและบิล', icon:'🧾', title:'บ้านอยู่ต่อได้เมื่อดูแลบิล', lead:'จุดแดงบนปุ่มหมายถึงมีเรื่องต้องจัดการ อย่าปล่อยข้ามเดือนเพราะผลเสียไปถึงสุขภาพน้อง', items:[
+      ['📅 ค่าบำรุงบ้าน','บิลออกวันที่ 1 ของเดือนและเดือนแรกฟรี ค่าบำรุงคือ 0.5% ของราคาบ้าน: เพิง 5 / บ้านกลาง 500 / ปราสาท 5,000 เหรียญ ถ้ายังค้างถึงวันที่ 5 บ้านจะทรุดและกันฝนไม่ได้; ถ้าค้างข้ามเดือน บ้านพังและหายไป'],
+      ['⚡💧🗑️ ค่าสาธารณูปโภค','ค่าไฟค้างข้ามเดือนทำให้แอร์หยุดและต้องซื้อหม้อแปลงก่อนเปิดไฟกลับ ค่าน้ำค้างทำให้น้องขาดน้ำและต้องติดตั้งระบบน้ำใหม่ ส่วนค่าขยะไม่ตัดบริการแต่มีค่าปรับสะสม โทรศัพท์และคอมพิวเตอร์ก็มีค่าบริการของตัวเอง ตรวจป้ายจุดแดงเป็นประจำ']
+    ]},
+    {tab:'เรียนและหาเงิน', icon:'🎮', title:'เล่นอะไรก็ได้ แต่ทุกอย่างพากลับมาฝึกคำศัพท์', lead:'เลือกกิจกรรมตามอารมณ์ได้เลย เกมหลักทั้งหมดเข้าเล่นฟรี ไม่มีค่าตั๋วหรือค่าเข้า', items:[
+      ['📚 ทางเริ่มที่ง่าย','เกมจับคู่เหมาะกับการเก็บเหรียญและ EXP แบบสั้น ๆ หมวดคำศัพท์ช่วยเลือกเรื่องที่อยากฝึก แบบทดสอบให้รางวัลผ่านครั้งแรก และภารกิจประจำวันมีโบนัสเมื่อทำครบ อ่าน “คำใหม่” บน lobby ทุกวันก็รับเหรียญได้'],
+      ['🌍 โลกและธุรกิจ','โลก 3D ให้เก็บตัวอักษรมาประกอบคำหรือเล่นตามกติกาของโลกนั้น โลกผจญภัยต้องมีน้องโตเต็มวัย Lv.3 อย่างน้อยหนึ่งตัว ส่วนฟาร์ม โรงงาน ตลาด มือถือ และคอมพิวเตอร์ช่วยสร้างรายได้เพิ่ม—โรงงานได้แต้มผลิตทุกครั้งที่ตอบคำศัพท์ถูก']
+    ]},
+    {tab:'เพื่อนและอันดับ', icon:'👥', title:'เล่นกับเพื่อนได้ โดยเราคุมความเป็นส่วนตัวเอง', lead:'ชื่อในเกมและรหัสผู้เล่น 6 ตัวใช้สำหรับค้นหาเพื่อน ไม่จำเป็นต้องเปิดเผยข้อมูลจริง', items:[
+      ['💬 เพื่อน แชท และของขวัญ','เพิ่มเพื่อนด้วยรหัส 6 ตัว แล้วคุยแชท ส่งของขวัญ หรือชวนกันเข้าโลกได้ ของขวัญที่ส่งจะพักไว้จนผู้รับกดรับ; หากไม่รับหรือหมดเวลา ระบบคืนของหรือเหรียญให้ผู้ส่ง'],
+      ['🏆 อันดับคิดอย่างไร','กระดานออนไลน์ดูจากเหรียญคงเหลือ ส่วนแรงค์ของเราใช้ “มูลค่ารวม” = เหรียญ + ทรัพย์สิน จึงซื้อของแล้วแรงค์ไม่ตกทันที กิจกรรมที่แชร์ขึ้นฟีดเลือกเปิดหรือปิดแยกหมวดได้ในตั้งค่า']
+    ]},
+    {tab:'ตั้งค่า', icon:'⚙️', title:'ตั้งค่าเกมให้เหมาะกับเครื่องและความสบายใจ', lead:'กด ⚙️ ตั้งค่าบน lobby ได้ทุกเมื่อ การเปลี่ยนส่วนใหญ่มีผลทันทีและบันทึกไว้ให้', items:[
+      ['🔊 ภาพและเสียง','แท็บ “ทั่วไป” ใช้เปิด/ปิดเสียงเอฟเฟกต์และเสียงอ่านคำ แยกเสียงฝน เปิดสั่นเตือนบนมือถือ และปิดเอฟเฟกต์เคลื่อนไหวเมื่อเครื่องช้า ปุ่ม “เพลง” บน lobby ปิดเฉพาะเพลงพื้นหลัง จึงยังเก็บเสียงคำศัพท์ไว้ได้'],
+      ['🦸 ความเป็นส่วนตัวและออฟไลน์','แท็บ “ตัวละคร” ใช้เปลี่ยนตัวที่ยืนข้างน้อง; รูปโปรไฟล์ใส่หรือไม่ใส่ก็ได้ แท็บ “เปิดเผย” เลือกได้ว่าเพื่อนเห็นกิจกรรมหมวดใด แท็บ “ออฟไลน์” ดาวน์โหลดหรือลบชุดเพลง ส่วนแท็บ “บัญชี” มีนโยบายความเป็นส่วนตัวและคำสั่งลบบัญชี']
+    ]},
+    {tab:'เช็กทุกวัน', icon:'✅', title:'เช็กลิสต์สั้น ๆ ก่อนออกไปผจญภัย', lead:'ใช้เวลาไม่ถึงหนึ่งนาที แต่ช่วยไม่ให้น้องป่วยและไม่พลาดรางวัล', items:[
+      ['☀️ ตอนเข้าเกม','ดูว่ามีน้องป่วยหรือไม่ → เช็กหลอดความอิ่มและอาหารบนชั้น → ดูจุดแดงเรื่องบ้าน/บิล → รับคำใหม่และเปิดภารกิจวันนี้ จากนั้นเลือกเกมที่อยากเล่นได้เลย'],
+      ['🌙 ช่วงเย็นและก่อนปิดเกม',`หลัง ${String(mealHour).padStart(2,'0')}:00 น. ป้อนให้อิ่ม 100 และระหว่าง ${String(sleepHour).padStart(2,'0')}:00–${String(sleepSickHour).padStart(2,'0')}:00 น. กดพาน้องเข้านอน น้องจะตื่นเองเวลา ${String(wakeHour).padStart(2,'0')}:00 น. ถ้ามีหลายตัวต้องเช็กทีละตัว—แค่นี้ก็กลับไปเล่นคำศัพท์ได้อย่างสบายใจ`]
+    ]}
+  ];
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay help-overlay';
-  overlay.innerHTML = `<div class="levelup-box help-box">
-    <h2 style="margin:0 0 8px">📖 วิธีเล่น Vocab World</h2>
-    <div class="help-body">
-      <div class="help-item"><b>🎮 เล่นเกมจับคู่คำศัพท์</b><br>กดปุ่ม "เล่นเกมจับคู่คำศัพท์!" ตอบให้ถูกเพื่อรับ 🪙 เหรียญ ยิ่งเก่งยิ่งได้เยอะ</div>
-      <div class="help-item"><b>🐾 เลี้ยงน้อง</b><br>น้องหิวข้าวเย็นทุกวันตอน <b>18:00 น.</b> หยิบอาหารที่ตุนไว้บนชั้นให้กินจนหลอดอิ่มเต็ม 100 ก่อน 20:00 · พาเข้านอนก่อน <b>23:00 น.</b> (เข้านอนได้ตั้งแต่ 2 ทุ่ม ตื่นเอง 6 โมงเช้า) · อย่าให้ร้อนเกินไป — พลาดข้อไหนน้องจะป่วย 🤒 (ต้องจ่ายค่ารักษา)</div>
-      <div class="help-item"><b>🗄️ ชั้นอาหาร &amp; โลกช้อปปิ้ง 3D</b><br>ซื้อชั้นเก็บอาหารก่อน (30 / 75 / 160 ช่อง) แล้วกด <b>🚗 ออกไปซื้ออาหาร</b> ขับตาม GPS ไปที่ร้าน · น้องป่วยก็ซื้ออาหารมาตุนได้ และถ้าไม่มีรถ ระบบให้ยืมรถไปซื้ออาหารฟรี · เสื้อผ้าและเครื่องประดับต้องขับไปซื้อที่ร้านแฟชั่น แล้วกลับมาเลือกสวมในตู้เสื้อผ้าของน้อง</div>
-      <div class="help-item"><b>🍚 ข้าวเย็นของหนู</b><br>กิจกรรมเสริมช่วง 18:00–06:00 แตะปุ่ม 🍚 ในแถวชื่อน้องได้ (มื้อละ 🪙200) จะกินหรือข้ามก็ได้ — ผู้เล่นไม่ป่วยและไม่เสียค่ารักษา</div>
-      <div class="help-item"><b>☠️ อาหารคน vs อาหารสัตว์</b><br>อาหารในร้านแบ่ง 2 ชุด — <b>ชุดอาหารสัตว์</b> ปลอดภัยเสมอ ส่วน <b>ชุดอาหารคน</b> บางอย่างเป็นโทษกับสัตว์จริงๆ (เช่น ช็อกโกแลต องุ่น นมวัว เป็นพิษกับหมาแมว · มังกรกินเผ็ดได้แต่แพ้ของหวาน) ซื้อเก็บได้ แต่ถ้าหยิบของโทษให้กิน <b>พิษจะสะสม</b> ไม่ลดเอง — เต็ม 100 น้องป่วยทันที! ขับพิษที่หลอด ☠️ ได้ (🪙1,000) · ฝึกความรู้ได้ที่ปุ่ม <b>🛡️ ควิซอาหารปลอดภัย</b></div>
-      <div class="help-item"><b>💪 รูปร่างของน้องเปลี่ยนตามการกิน</b><br>กินดีเต็มหลอด <b>3 มื้อติด</b> → <b>ล่ำกำยำ</b> ได้ EXP แถม +2 ทุกคำ! · กินของโทษ 3 มื้อติด → <b>อ้วนกลม</b> 🍩 · อดข้าวบ่อย → <b>ผอมโซ</b> 🦴 — กลับมากินดีๆ ต่อเนื่อง หุ่นก็กลับมาปกติได้เสมอ</div>
-      <div class="help-item"><b>🏠 บ้าน &amp; บิล</b><br>ซื้อบ้านให้น้องหลบแดดหลบฝน · ทุกเดือนมีค่าบำรุง/ค่าไฟ/ค่าน้ำ/ค่าขยะ — ถ้ามี <span style="color:#e8483f;font-weight:bold">จุดแดง</span> บนปุ่มแปลว่ามีบิลค้าง รีบไปจ่ายนะ</div>
-      <div class="help-item"><b>💰 หาเงินเพิ่ม</b><br>🌳 ฟาร์มปลูกผัก · 🏭 โรงงานผลิตของ · 🏪 ตลาดขายของ · 📱 มือถือ/💻 คอมพิวเตอร์ ช่วยเพิ่มรายได้</div>
-      <div class="help-item"><b>📚 หมวดคำศัพท์ &amp; แบบทดสอบ</b><br>ฝึกคำศัพท์เป็นหมวด สอบผ่านรับรางวัลใหญ่ครั้งแรก</div>
-      <div class="help-item"><b>👥 เพื่อน &amp; 🎁 ของขวัญ</b><br>เพิ่มเพื่อนด้วยรหัส 6 ตัว แชทและส่งของขวัญให้กันได้</div>
-      <div class="help-item"><b>🌍 โลก 3D (ตั๋วที่ตลาด)</b><br>เลี้ยงน้องให้โตเต็มวัย (Lv.3) แล้วซื้อ <b>🎫 ตั๋วโลกผจญภัย</b> (🪙5,000) — เดินเก็บตัวอักษรมาประกอบคำศัพท์ คำละ 🪙15 ระวัง monster 👾 ยิงสู้ได้ · เก่งแล้วลอง <b>🎃 ตั๋วโลกผีสิง</b> (🪙10,000) คำละ 🪙25 แต่ผีสู้ไม่ได้ต้องหนี! · ในโลกเจอเพื่อนจริงๆ เดินไปมา แชทลอยหัว 💬 คุยเสียง 🎤 ได้ · 📨 ชวนเพื่อนเข้าโลกพร้อมกันครั้งแรก รับเงินคืนคนละ 🪙2,000 · กระดาน 🏆 มุมซ้ายบนโชว์ว่าใครประกอบคำเก่งสุดรอบนี้</div>
-      <div class="help-item"><b>⚙️ ตั้งค่า</b><br>เปิด/ปิด เสียง สั่นเตือน และเอฟเฟกต์เคลื่อนไหว (ปิดได้ถ้าเครื่องช้า) · เปลี่ยนตัวละครของหนู 🦸 ได้ที่นี่ด้วย</div>
-    </div>
-    <div style="margin-top:14px"><button class="set-close">เข้าใจแล้ว!</button></div>
+  overlay.innerHTML = `<div class="levelup-box help-box help-guide-box" role="dialog" aria-modal="true" aria-labelledby="help-guide-title">
+    <button class="help-guide-x" type="button" aria-label="ปิดคู่มือ">✕</button>
+    <header class="help-guide-head">
+      <h2 id="help-guide-title">📖 คู่มือการเล่น Vocab World</h2>
+      <p>เลือกหัวข้อที่สงสัยได้เลย อ่านทีละหน้า ไม่ต้องจำทั้งหมดในครั้งเดียว</p>
+    </header>
+    <nav class="help-guide-tabs" aria-label="หัวข้อคู่มือ">
+      ${pages.map((p,i)=>`<button class="help-guide-tab${i===0?' active':''}" type="button" data-help-page="${i}" aria-selected="${i===0?'true':'false'}"><span>${p.icon}</span>${p.tab}</button>`).join('')}
+    </nav>
+    <section class="help-guide-page" aria-live="polite">
+      <div class="help-guide-page-head"><h3></h3><p></p></div>
+      <div class="help-body"></div>
+    </section>
+    <footer class="help-guide-foot">
+      <span class="help-guide-count"></span>
+      <div class="help-guide-nav">
+        <button class="help-guide-prev" type="button">‹ ก่อนหน้า</button>
+        <button class="help-guide-next" type="button">ถัดไป ›</button>
+        <button class="set-close" type="button">ปิดคู่มือ</button>
+      </div>
+    </footer>
   </div>`;
-  overlay.querySelector('.set-close').addEventListener('click', ()=>overlay.remove());
-  overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.remove(); });
+  let pageIndex = 0;
+  const close = ()=>overlay.remove();
+  const paint = next=>{
+    pageIndex = Math.max(0, Math.min(pages.length-1, next));
+    const page = pages[pageIndex];
+    overlay.querySelectorAll('.help-guide-tab').forEach((tab,i)=>{
+      const active = i===pageIndex;
+      tab.classList.toggle('active', active);
+      tab.setAttribute('aria-selected', String(active));
+    });
+    overlay.querySelector('.help-guide-page-head h3').textContent = `${page.icon} ${page.title}`;
+    overlay.querySelector('.help-guide-page-head p').textContent = page.lead;
+    overlay.querySelector('.help-body').innerHTML = page.items.map(item=>`<article class="help-item"><b>${item[0]}</b><p>${item[1]}</p></article>`).join('');
+    overlay.querySelector('.help-guide-count').textContent = `หน้า ${pageIndex+1} / ${pages.length}`;
+    overlay.querySelector('.help-guide-prev').disabled = pageIndex===0;
+    const nextBtn = overlay.querySelector('.help-guide-next');
+    nextBtn.disabled = pageIndex===pages.length-1;
+    nextBtn.textContent = pageIndex===pages.length-1 ? 'อ่านครบแล้ว ✓' : 'ถัดไป ›';
+  };
+  overlay.querySelectorAll('.help-guide-tab').forEach(tab=>tab.addEventListener('click', ()=>paint(Number(tab.dataset.helpPage))));
+  overlay.querySelector('.help-guide-prev').addEventListener('click', ()=>paint(pageIndex-1));
+  overlay.querySelector('.help-guide-next').addEventListener('click', ()=>paint(pageIndex+1));
+  overlay.querySelector('.set-close').addEventListener('click', close);
+  overlay.querySelector('.help-guide-x').addEventListener('click', close);
+  overlay.addEventListener('keydown', e=>{
+    if(e.key==='Escape') close();
+    else if(e.key==='ArrowLeft') paint(pageIndex-1);
+    else if(e.key==='ArrowRight') paint(pageIndex+1);
+  });
   document.body.appendChild(overlay);
+  paint(0);
+  requestAnimationFrame(()=>overlay.querySelector('.help-guide-x').focus());
 }
 
 /* ---------- 👩‍🏫 คู่มือครู (เปิดจากหน้าตั้งค่า — เห็นเฉพาะบัญชีใน TEACHER_EMAILS) ---------- */

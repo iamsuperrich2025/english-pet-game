@@ -25,6 +25,7 @@
    R39 / รอบ 1325 — Uniform pet-action hitboxes, optical frames and measured spacing
    R40 / รอบ 1327 — Home V2 promoted to the primary Lobby; admin worlds stay role-gated
    R41 / รอบ 1328 — Prebuilt Home + class-only activation observer; no Classic first paint
+   R43 / รอบ 1489 — Direct Thai gameplay guide entry in the primary Lobby
    ------------------------------------------------------------
    Additive UI shell only. It does NOT own economy, auth, quests,
    Firebase, purchases, or game routing. Existing Lobby DOM stays
@@ -847,6 +848,11 @@
       market:'panel-market', friends:'panel-friends', gifts:'panel-gifts'
     };
     const standards = {ielts:'ielts',toeic:'toeic',toefl:'toefl',onetp6:'onetp6',onetm3:'onetm3',onetm6:'onetm6'};
+    if(name === 'help'){
+      if(typeof openHelp === 'function') openHelp();
+      else try{ if(typeof showToast === 'function') showToast('คู่มือกำลังโหลด กรุณาลองใหม่อีกครั้ง'); }catch(_){ }
+      return;
+    }
     if(name === 'shop'){ openPetShop(); return; }
     if(name === 'petProfile'){ openActivePetProfile(); return; }
     if(name === 'petRename'){ renameActivePet(); return; }
@@ -1187,6 +1193,7 @@
             ${toolButton('chat','chat','ข้อความ','', '#btn-chat')}
             ${toolButton('music','music','เพลง','', '#btn-music')}
             ${toolButton('settings','settings','ตั้งค่า','', '#btn-settings')}
+            ${toolButton('help','book','คู่มือการเล่น')}
             ${toolButton('install','install','ติดตั้ง','vw2-install', '#btn-install-top', true)}
             ${toolButton('logout','logout','ออกระบบ','', '#btn-logout')}
           </section>

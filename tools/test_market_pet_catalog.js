@@ -27,6 +27,6 @@ assert.ok(ui.includes("askNameDialog({"), 'mandatory pet naming dialog missing')
 assert.ok(ui.includes("showScreen('screen-dashboard')"), 'post-purchase dashboard route missing');
 assert.ok(lobby.includes('🐾 รอบ 1317') && lobby.includes('.mkt-pet-card'), 'Market pet presentation CSS missing');
 assert.ok(lobby.includes('.mkt-pet-card.owned-pet') && lobby.includes('.mkt-pet-card.cant-afford'), 'owned/affordability states missing');
-assert.ok(index.includes('css/lobby.css?v=1317') && index.includes('js/ui.js?v=1317'), 'Market pet cache-bust missing');
+assert.ok(index.includes('css/lobby.css?v=1486') && index.includes('js/ui.js?v=1317'), 'Market pet/guide cache-bust missing');
 
 console.log(`PASS market pet catalog: all ${petKeys.length} PETS entries render below robots and share one guarded purchase flow`);
