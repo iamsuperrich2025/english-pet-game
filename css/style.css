@@ -11,6 +11,16 @@
   --orange:#ffe3c9; --orange-d:#f2994a;
   --ink:#5a4a6a;
   --card-shadow:0 6px 0 rgba(0,0,0,.08);
+  --toast-fin-fg:#f7f0e4;
+  --toast-fin-muted:rgba(255,244,214,.78);
+  --toast-fin-bg:linear-gradient(135deg,#2a2158 0%,#3a2d74 42%,#1e4f96 100%);
+  --toast-fin-border:rgba(232,197,71,.55);
+  --toast-fin-glow:0 16px 36px rgba(32,22,72,.38),inset 0 1px 0 rgba(255,255,255,.28);
+  --toast-fin-chip:rgba(255,255,255,.12);
+  --toast-fin-chip-line:rgba(255,255,255,.16);
+  --toast-fin-chip-gold:linear-gradient(180deg,#ffe9a8,#e4b34f);
+  --toast-fin-chip-gold-fg:#5a3a12;
+  --toast-fin-btn:rgba(255,255,255,.16);
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html,body{margin:0;padding:0;}
@@ -1753,32 +1763,50 @@ html.no-anim .tapglow-on::after{animation:none !important;}
 .toast-warn .toast-x:hover{background:rgba(255,255,255,.4);}
 .toast-financial{
   pointer-events:auto;cursor:default;
-  display:flex;align-items:center;gap:10px;
-  background:linear-gradient(135deg,#1f7f9f,#2663c8);
-  white-space:normal;max-width:88vw;line-height:1.45;
-  padding:12px 14px 12px 16px;transition:bottom .18s;
+  display:flex;align-items:flex-start;gap:10px;
+  background:var(--toast-fin-bg);color:var(--toast-fin-fg);
+  border:1px solid var(--toast-fin-border);
+  box-shadow:var(--toast-fin-glow);
+  white-space:normal;max-width:88vw;line-height:1.35;
+  padding:12px 14px 12px 16px;border-radius:20px;transition:bottom .18s,background .2s,color .2s,border-color .2s,box-shadow .2s;
 }
 .toast-financial .toast-msg{
-  flex:1;text-align:left;white-space:pre-line;
+  flex:1;min-width:0;text-align:left;white-space:normal;
+  display:flex;flex-direction:column;gap:7px;
+}
+.toast-fin-title{
+  display:block;font-weight:800;letter-spacing:.03em;line-height:1.2;
+}
+.toast-fin-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.toast-fin-chip{
+  display:inline-flex;align-items:center;font-style:normal;font-weight:800;
+  padding:4px 10px;border-radius:999px;line-height:1.2;font-size:.78em;
+  background:var(--toast-fin-chip);border:1px solid var(--toast-fin-chip-line);
+  color:var(--toast-fin-fg);
+}
+.toast-fin-chip.gold{
+  background:var(--toast-fin-chip-gold);color:var(--toast-fin-chip-gold-fg);
+  border-color:rgba(255,255,255,.28);
 }
 .toast-financial .toast-x{
-  flex:none;border:none;cursor:pointer;color:#fff;
-  background:rgba(255,255,255,.22);
+  flex:none;border:1px solid var(--toast-fin-chip-line);cursor:pointer;color:var(--toast-fin-fg);
+  background:var(--toast-fin-btn);
   width:28px;height:28px;border-radius:999px;
   font-size:14px;line-height:1;padding:0;
 }
-.toast-financial .toast-x:hover{background:rgba(255,255,255,.4);}
+.toast-financial .toast-x:hover{filter:brightness(1.08);}
 .toast-financial .toast-ok{
-  flex:none;border:none;cursor:pointer;color:#fff;
-  background:rgba(255,255,255,.22);
+  flex:none;border:1px solid var(--toast-fin-chip-line);cursor:pointer;color:var(--toast-fin-fg);
+  background:var(--toast-fin-btn);
   border-radius:999px;
   padding:8px 14px;
   font-size:14px;
   line-height:1;
-  font-weight:700;
+  font-weight:800;
   white-space:nowrap;
+  letter-spacing:.04em;
 }
-.toast-financial .toast-ok:hover{background:rgba(255,255,255,.4);}
+.toast-financial .toast-ok:hover{filter:brightness(1.08);}
 /* 🔗 รอบ 974: แจ้งเตือนที่มี "ลิงก์ไปดูต้นเรื่อง" — สีน้ำเงินฟีด (ไม่ใช่สีคำเตือน) กดหรือไม่กดก็ได้ */
 .toast-link{
   pointer-events:auto;cursor:default;
@@ -1866,6 +1894,14 @@ html.no-anim .tapglow-on::after{animation:none !important;}
 .set-seg .set-seg-btn span{font-size:11px;line-height:1.1;}
 .set-seg .set-seg-btn.active{background:#fff;color:#5a4a6a;box-shadow:0 2px 6px rgba(90,74,106,.22);}
 .set-seg .set-seg-btn:active{transform:scale(.96);box-shadow:none;}
+/* 🎨 รอบ 1502: แถวเลือกธีมหน้าหลักในตั้งค่า — เห็นเฉพาะแอดมิน */
+.set-theme-row{flex-wrap:wrap;align-items:center;}
+.set-theme-seg{flex:1;min-width:min(100%,168px);}
+.set-theme-sw{min-width:72px;}
+.set-theme-chip{
+  display:block;width:28px;height:12px;border-radius:999px;flex:none;font-style:normal;
+  border:1px solid rgba(0,0,0,.18);box-shadow:inset 0 1px 0 rgba(255,255,255,.35);
+}
 .set-close{
   background:linear-gradient(135deg,#8a6fb0,#7358a0);box-shadow:0 4px 0 #5c467f;
   color:#fff;border:none;border-radius:999px;padding:10px 28px;

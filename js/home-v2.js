@@ -26,6 +26,7 @@
    R40 / รอบ 1327 — Home V2 promoted to the primary Lobby; admin worlds stay role-gated
    R41 / รอบ 1328 — Prebuilt Home + class-only activation observer; no Classic first paint
    R43 / รอบ 1489 — Direct Thai gameplay guide entry in the primary Lobby
+   R44 / รอบ 1502 — Admin-only luxury dark Home theme (black / gray / gold)
    ------------------------------------------------------------
    Additive UI shell only. It does NOT own economy, auth, quests,
    Firebase, purchases, or game routing. Existing Lobby DOM stays
@@ -51,6 +52,51 @@
     try{ return typeof isAdmin === 'function' && isAdmin() === true; }
     catch(_){ return false; }
   }
+  /* 🎨 รอบ 1502: ธีมหน้าหลัก Home V2 — พาสเทลเป็นค่าเริ่มต้นของทุกคน
+     หรูดำ (noir) ทดลองเฉพาะแอดมินก่อน เก็บใน localStorage คนละคีย์กับ ThemeUI กรมท่าเดิม */
+  const HOME_THEME_KEY = 'vwHomeTheme';
+  const HOME_THEME_DEFAULT = 'pastel';
+  const HOME_THEMES = Object.freeze({
+    pastel: {id:'pastel', label:'พาสเทล', swatch:'linear-gradient(90deg,#8dc5f8,#e96da9,#e4b34f)', admin:false},
+    noir: {id:'noir', label:'หรูดำ', swatch:'linear-gradient(90deg,#111114,#6b6b70,#e4c056)', admin:true}
+  });
+  function readHomeTheme(){
+    let id = HOME_THEME_DEFAULT;
+    try{ id = localStorage.getItem(HOME_THEME_KEY) || HOME_THEME_DEFAULT; }catch(_){ }
+    const spec = HOME_THEMES[id];
+    if(!spec) id = HOME_THEME_DEFAULT;
+    else if(spec.admin && !adminWorldAllowed()) id = HOME_THEME_DEFAULT;
+    return id;
+  }
+  function paintHomeTheme(id){
+    const next = HOME_THEMES[id] ? id : readHomeTheme();
+    const useNoir = next === 'noir' && adminWorldAllowed();
+    document.documentElement.classList.toggle('theme-noir', useNoir);
+    document.body.classList.toggle('theme-noir', useNoir);
+    if(root) root.classList.toggle('theme-noir', useNoir);
+    if(useNoir){
+      document.documentElement.classList.remove('theme-emerald','theme-plum');
+    }
+    return useNoir ? 'noir' : HOME_THEME_DEFAULT;
+  }
+  function setHomeTheme(id){
+    const spec = HOME_THEMES[id];
+    const next = (!spec || (spec.admin && !adminWorldAllowed())) ? HOME_THEME_DEFAULT : spec.id;
+    try{ localStorage.setItem(HOME_THEME_KEY, next); }catch(_){ }
+    return paintHomeTheme(next);
+  }
+  function visibleHomeThemes(){
+    return Object.keys(HOME_THEMES).map(id=>HOME_THEMES[id]).filter(t=>!t.admin || adminWorldAllowed());
+  }
+  window.HomeTheme = {
+    KEY: HOME_THEME_KEY,
+    DEFAULT: HOME_THEME_DEFAULT,
+    catalog: HOME_THEMES,
+    list: visibleHomeThemes,
+    get: readHomeTheme,
+    set: setHomeTheme,
+    paint: paintHomeTheme
+  };
   function dashboard(){ return document.getElementById('screen-dashboard'); }
   function dashboardActive(){
     const el = dashboard();
@@ -539,7 +585,7 @@
     const style = document.createElement('style');
     style.id = STYLE_ID;
     style.textContent = '#vw-home-v2-root{--vw2-r111-runtime-ready:1;--vw2-r112-runtime-ready:1;--vw2-r113-runtime-ready:1;--vw2-r114-runtime-ready:1;--vw2-r1279-runtime-ready:1;--vw2-r1280-runtime-ready:1;--vw2-r1281-runtime-ready:1;--vw2-r1282-runtime-ready:1;--vw2-r1283-runtime-ready:1;--vw2-r1284-runtime-ready:1;--vw2-r1286-runtime-ready:1;--vw2-r1287-runtime-ready:1;--vw2-r1288-runtime-ready:1;--vw2-r1289-runtime-ready:1;--vw2-r1290-runtime-ready:1;--vw2-r1291-runtime-ready:1;--vw2-r1293-runtime-ready:1;--vw2-r1294-runtime-ready:1;--vw2-r1295-runtime-ready:1;--vw2-r1296-runtime-ready:1;--vw2-r1300-runtime-ready:1;--vw2-r1305-runtime-ready:1;--vw2-r1309-runtime-ready:1;--vw2-r1311-runtime-ready:1;--vw2-r1313-runtime-ready:1;--vw2-r1314-runtime-ready:1;--vw2-r1316-runtime-ready:1;--vw2-r1319-runtime-ready:1;--vw2-r1323-runtime-ready:1;--vw2-r1325-runtime-ready:1}';
-    style.textContent += '#vw-home-v2-root{--vw2-r1327-runtime-ready:1;--vw2-r1328-runtime-ready:1}';
+    style.textContent += '#vw-home-v2-root{--vw2-r1327-runtime-ready:1;--vw2-r1328-runtime-ready:1;--vw2-r1502-runtime-ready:1}';
     document.head.appendChild(style);
   }
   function clickExisting(selector){
@@ -1297,6 +1343,7 @@
     // Mount at body level so the fixed admin preview is not clipped by the
     // Classic dashboard's translated/scaled screen container.
     document.body.appendChild(root);
+    paintHomeTheme(readHomeTheme());
     bindVisiblePetPat();
     setupLeftRailCue();
     setupWalletScroll();
@@ -1742,6 +1789,7 @@
   }
   function sync(){
     if(!root) return;
+    paintHomeTheme(readHomeTheme());
     const name = (typeof state !== 'undefined' && state && state.profileName) ? state.profileName : textOf('#student-chip','ผู้เล่น');
     const uid = (typeof onlineKey === 'function') ? onlineKey() : '';
     const id = (typeof idTag === 'function') ? idTag(uid) : '';

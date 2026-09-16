@@ -3298,6 +3298,27 @@ html.no-anim .cert-lightbox,html.no-anim .cert-lightbox .clb-inner{transition:no
 .set-tabs .lb-tab:active{transform:scale(.95);}
 .set-tabs .lb-tab.active{background:linear-gradient(180deg,#c39df0,#9a6fdc);color:#fff;
   box-shadow:0 3px 0 #7d5fc0,inset 0 0 0 1.5px rgba(255,255,255,.5);}
+/* 🎨 รอบ 1502: กล่องตั้งค่าตามธีมหรูดำ */
+html.theme-noir .settings-box{
+  background:linear-gradient(180deg,#16161a,#101014);color:#f0e6c8;
+}
+html.theme-noir .settings-box h2,html.theme-noir .set-label{color:#f3e6c8;}
+html.theme-noir .set-hint,html.theme-noir .set-desc,html.theme-noir .set-hint-off{color:#b7ad96;}
+html.theme-noir .set-row{background:#1c1c22;}
+html.theme-noir .set-tabs .lb-tab{
+  background:#2a2a32;color:#cfc6b0;
+  box-shadow:inset 0 0 0 1.5px rgba(212,175,55,.35),0 1px 0 rgba(0,0,0,.35);
+}
+html.theme-noir .set-tabs .lb-tab.active{
+  background:linear-gradient(180deg,#d4af37,#a8892a);color:#16140c;
+  box-shadow:0 3px 0 #7a6418,inset 0 0 0 1.5px rgba(255,244,200,.45);
+}
+html.theme-noir .set-seg{background:#2a2a32;}
+html.theme-noir .set-seg .set-seg-btn{color:#cfc6b0;}
+html.theme-noir .set-seg .set-seg-btn.active{background:#111114;color:#f3e6c8;box-shadow:0 0 0 1px rgba(212,175,55,.55);}
+html.theme-noir .set-help{background:#1c1c22;color:#e4c056;border-color:#3a3a42;}
+html.theme-noir .set-close{background:linear-gradient(135deg,#d4af37,#a8892a);box-shadow:0 4px 0 #7a6418;color:#16140c;}
+html.theme-noir .set-close:active{box-shadow:0 2px 0 #7a6418;}
 .settings-box .set-attention-bar{
   flex:0 0 auto;display:flex;align-items:center;gap:8px;width:100%;min-height:clamp(32px,6.5vh,42px);
   margin:0 0 clamp(5px,1vh,8px);padding:5px 10px;border:2px solid #ffb0a6;border-radius:12px;

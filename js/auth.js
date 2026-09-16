@@ -90,6 +90,7 @@ function syncAdminAccess(){
   if(typeof refreshWordShipLock==='function')refreshWordShipLock();
   if(typeof refreshSkirmishLock==='function')refreshSkirmishLock();
   if(typeof refreshMechaLock==='function')refreshMechaLock();
+  if(typeof HomeTheme!=='undefined' && HomeTheme && typeof HomeTheme.paint==='function') HomeTheme.paint();
 }
 
 /* ---------- บัญชีผู้ทดสอบเกม (รอบ 56 + 59) ----------

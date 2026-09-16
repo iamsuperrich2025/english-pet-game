@@ -216,6 +216,38 @@ const isFinancialToastMsg = (msg) => {
   const text = String(msg || '');
   return TOAST_FINANCIAL_RE.test(text) || TOAST_FINANCIAL_AMOUNT_RE.test(text);
 };
+function financialToastParts(msg){
+  const raw = String(msg || '').trim();
+  const recap = raw.split(' · ').map(s => s.trim()).filter(Boolean);
+  if(recap.length < 2) return {title:'', chips:[raw]};
+  const headed = recap[0].match(/^(.{2,48}[!！])\s+(.+)$/);
+  if(headed){ recap[0] = headed[2]; return {title:headed[1], chips:recap}; }
+  return {title:'', chips:recap};
+}
+function fillFinancialToastMsg(span, msg){
+  if(!span) return;
+  const parts = financialToastParts(msg);
+  span.textContent = '';
+  if(parts.title){
+    const title = document.createElement('b');
+    title.className = 'toast-fin-title';
+    title.textContent = parts.title;
+    span.appendChild(title);
+  }
+  if(parts.chips.length === 1 && !parts.title){
+    span.textContent = parts.chips[0];
+    return;
+  }
+  const row = document.createElement('span');
+  row.className = 'toast-fin-chips';
+  parts.chips.forEach(text=>{
+    const chip = document.createElement('i');
+    chip.className = 'toast-fin-chip' + (/🪙|รวม|\+\d/.test(text) ? ' gold' : '');
+    chip.textContent = text;
+    row.appendChild(chip);
+  });
+  span.appendChild(row);
+}
 let lastWrongAt = 0;                       // กันเสียงเตือนซ้ำ (call site เรียก sfx.wrong ก่อน toast อยู่แล้ว)
 const nowMs = ()=> (window.performance ? performance.now() : Date.now());
 function restackToasts(){
@@ -265,7 +297,9 @@ function toast(msg, ms=1800, onDismiss){
   if(isWarnLike){
     t.className = financial ? 'toast toast-financial' : 'toast toast-warn';
     const span = document.createElement('span');
-    span.className = 'toast-msg'; span.textContent = msg;
+    span.className = 'toast-msg';
+    if(financial) fillFinancialToastMsg(span, msg);
+    else span.textContent = msg;
     let dismissed = false;
     const close = ()=>{
       if(dismissed) return;
