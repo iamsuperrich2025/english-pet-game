@@ -6439,3 +6439,10 @@ efreshMechaLock
 - **รอบ 1504 · ยิงรบคำย่อ/หมอบคนละปุ่ม + เพื่อนเห็นท่า:** ไม่วนท่าแล้ว · รหัสท่าใน `av` (sk1c/sk1p) ให้ peer ย่อ/หมอบ/หลบตาม · รวม AUTO กลับบ้าน
 - ไฟล์: `js/wordskirmish.js` `css/wordskirmish.css` `tools/test_wordskirmish.js` `docs/PLAYER_CHARACTER_STYLE.md`
 - unit 73 ผ่าน · ค้าง: สองแอดมินเข้าห้องเดียวกันดูท่าย่อ/หมอบ
+
+
+## ⏬ ย้ายเมื่อ 2026-09-16 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1508 · ตัดกล่องยืนยันเข้าเกม:** กดโลก 3D แล้วเข้าทันที ไม่มี “เข้าเลย/เล่นฟรี” มาขวาง
+- ไฟล์: `js/ui.js` `css/skyplay3d.css` tests kart/sky/tinv/refund · Sky เลือกตัวละครในโลกที่ `#sp-character`
+- unit + Playwright Kart ผ่าน · ค้าง: ผู้ใช้ลองกดหุ่นรบบน live

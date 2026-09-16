@@ -24,9 +24,6 @@
 - **รอบ 1510 · ธีมหรูดำแอดมินเท่านั้น:** Home V2 ธีม noir ดำ/เถา/ทอง + แบนเนอร์จบภารกิจหรู · คนทั่วไปยังพาสเทล
 - ไฟล์: `css/home-v2.css` `js/home-v2.js` `css/style.css` `css/lobby.css` `js/util.js` `js/auth.js` `index_classic.html`
 - เกต `isAdmin()===true` · unit noir ผ่าน · ค้าง: แอดมินลอง Settings ⚙️ → 🎨 ธีมหน้าหลัก บน live
-- **รอบ 1508 · ตัดกล่องยืนยันเข้าเกม:** กดโลก 3D แล้วเข้าทันที ไม่มี “เข้าเลย/เล่นฟรี” มาขวาง
-- ไฟล์: `js/ui.js` `css/skyplay3d.css` tests kart/sky/tinv/refund · Sky เลือกตัวละครในโลกที่ `#sp-character`
-- unit + Playwright Kart ผ่าน · ค้าง: ผู้ใช้ลองกดหุ่นรบบน live
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
