@@ -12,6 +12,9 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1517 · BGM หุ่น lazy+cache:** ใช้ `sound/robot/bgm.mp3` · โหลดตอนเข้าหุ่นเท่านั้น · Cache ตาม hash · Blob loop · ออกโลก fade หยุด
+- ไฟล์: `js/adventure3d.js` `sound/robot/bgm.mp3` `tools/test_mecha_1517.js`
+- unit 1517 ผ่าน · ค้าง: เข้าหุ่นบน live ฟังเพลง / ออกแล้วเงียบ
 - **รอบ 1515 · โปรไฟล์แสดงสัตว์ที่ซื้อครบ — ตรวจซ้ำและส่งขึ้น live:** ต้นเหตุรอบ 1512 ยังอยู่ใน staging ไม่เคยเข้า commit/deploy จึงไม่มีบน live 2026-09-16.1302
 - ยืนยันเส้นทางจริงจากการกดการ์ด Home V2 ส่ง UID เจ้าของ แล้วอ่าน `state.pets` ทั้งหมดโดยไม่ผ่าน payload สาธารณะที่จำกัด 3 ตัว; ทรัพย์สินเจ้าของอ่านจากเซฟสดทุกหมวดแม้ปิดเผยแพร่
 - ไฟล์: `js/online.js` `js/state.js` `js/ui.js` `css/profile-modern.css` `tools/test_profile_modern.cjs`

@@ -1,4 +1,4 @@
-﻿/* ============================================================
+/* ============================================================
    adventure3d.js — โลก 3D First-person 2 โหมด (คิว 7725691507 ข้อ 8 + ต่อยอด)
    🌍 adv   = โลกผจญภัยกลางวัน: เก็บตัวอักษรประกอบคำ 15🪙/คำ · monster ยิงสู้ได้
    👻 haunt = โรงแรมผีสิง: 25🪙/คำ · ผี PNG ไล่ผู้เล่นใกล้สุดหลังไฟดับ
@@ -334,14 +334,14 @@ const BOSS_SCALE=1.85, BOSS_BONUS=45;   // 👾 บอส: คำยาวพิ
 const COMBO_X2=3, COMBO_X3=6, SHIELD_MS=3500;   // 🔥 รอบ 227: คอมโบ ×2/×3 · 🛡️ โล่กันกระสุน 3.5 วิ
 /* 🤖 รอบ 1482: วิถีกระสุนแบบกองเรือคำศัพท์ — G/มวล/ความเร็วปากกระบอกชุดเดียว */
 const MECHA_G=8.4, MECHA_SHELL_MASS=1.2, MECHA_MUZZLE=62, MECHA_SHELL_HIT=2.2, MECHA_MAX_SHELLS=12;
-/* 👾 รอบ 229: บอสหลายสายพันธุ์ — ต่างกันที่ รูปทรง/สี/ตา/สีกระสุน/ความเร็วยิง/ความยาวคำ (หมุนเวียนทีละสาย)
-   ธีมน่ารักเหมาะเด็ก (ไม่ใช้หัวกะโหลก/เลือด) · geo() คืน geometry ใหม่ทุกครั้ง (dispose ได้อิสระ) */
+/* 👾 รอบ 1511: ซอมบี้เลือดแดง (บอสยังต่างสีตามสายพันธุ์ · โครงร่างซอมบี้เหมือนกัน)
+   geo() คืน geometry ใหม่ทุกครั้ง (dispose ได้อิสระ) */
 const BOSS_SPECIES=[
-  {key:'ember', name:'Ember', th:'อีมเบอร์ จอมเพลิง',   emoji:'🔥', geo:()=>new THREE.IcosahedronGeometry(2.2,1), body:0xff5a2f, emis:0x551126, eye:0xffdd55, shot:0xff6a3a, scale:1.9,  shotSpd:1.0,  wordPick:8 },
-  {key:'frost', name:'Frost', th:'ฟรอสต์ ราชันน้ำแข็ง', emoji:'❄️', geo:()=>new THREE.OctahedronGeometry(2.6,0),  body:0x6fd8ff, emis:0x14384f, eye:0xffffff, shot:0x9fe6ff, scale:1.85, shotSpd:1.28, wordPick:8 },
-  {key:'venom', name:'Venom', th:'เวน่อม พิษมรกต',      emoji:'🟢', geo:()=>new THREE.DodecahedronGeometry(2.3,0),body:0x6bd23a, emis:0x1d4a12, eye:0xeaff5a, shot:0x9bff5a, scale:1.85, shotSpd:1.1,  wordPick:9 },
-  {key:'volt',  name:'Volt',  th:'โวลต์ สายฟ้า',         emoji:'⚡', geo:()=>new THREE.TetrahedronGeometry(2.8,0), body:0xffd23a, emis:0x5a4400, eye:0xfff2a0, shot:0xffe14d, scale:1.72, shotSpd:1.4,  wordPick:7 },
-  {key:'titan', name:'Titan', th:'ไททัน เหล็กกล้า',      emoji:'🛡️', geo:()=>new THREE.BoxGeometry(3.4,3.4,3.4),  body:0x9aa7b4, emis:0x2a3540, eye:0xff8a8a, shot:0xcfe0ff, scale:2.05, shotSpd:0.85, wordPick:10 },
+  {key:'ember', name:'Ember', th:'อีมเบอร์ จอมเพลิง',   emoji:'🔥', geo:()=>new THREE.BoxGeometry(2.1,2.4,1.2), body:0x8a5a3a, emis:0x331108, eye:0xff4422, shot:0xff6a3a, scale:1.9,  shotSpd:1.0,  wordPick:8 },
+  {key:'frost', name:'Frost', th:'ฟรอสต์ ราชันน้ำแข็ง', emoji:'❄️', geo:()=>new THREE.BoxGeometry(2.1,2.4,1.2), body:0x6a8a8a, emis:0x14384f, eye:0xff3344, shot:0x9fe6ff, scale:1.85, shotSpd:1.28, wordPick:8 },
+  {key:'venom', name:'Venom', th:'เวน่อม พิษมรกต',      emoji:'🟢', geo:()=>new THREE.BoxGeometry(2.1,2.4,1.2), body:0x4a6a32, emis:0x1d4a12, eye:0xff2222, shot:0x9bff5a, scale:1.85, shotSpd:1.1,  wordPick:9 },
+  {key:'volt',  name:'Volt',  th:'โวลต์ สายฟ้า',         emoji:'⚡', geo:()=>new THREE.BoxGeometry(2.1,2.4,1.2), body:0x7a7a3a, emis:0x5a4400, eye:0xff1a1a, shot:0xffe14d, scale:1.72, shotSpd:1.4,  wordPick:7 },
+  {key:'titan', name:'Titan', th:'ไททัน เหล็กกล้า',      emoji:'🛡️', geo:()=>new THREE.BoxGeometry(2.4,2.7,1.4), body:0x6a7078, emis:0x2a3540, eye:0xff2a2a, shot:0xcfe0ff, scale:2.05, shotSpd:0.85, wordPick:10 },
 ];
 let mBossSpeciesIdx=0;
 function pickBossSpecies(){ const sp=BOSS_SPECIES[mBossSpeciesIdx%BOSS_SPECIES.length]; mBossSpeciesIdx++; return sp; }
@@ -12639,6 +12639,74 @@ const MechaAudio={
     if(this.playClip('shield')) return;
     this.pickup();
   },
+  /* 🎵 รอบ 1517: BGM หุ่น — โหลดตอนเข้าโลกเท่านั้น · Cache ตาม content-hash · เล่นจาก Blob (ไม่ decode PCM) */
+  bgmMeta:{file:'bgm.mp3',dir:'/sound/robot/',hash:'55c48aa88a519fcb',vol:.36},
+  _bgm:null,
+  _bgmEnsure(){
+    if(this._bgm) return this._bgm;
+    const self=this;
+    this._bgm={sfx:null,blob:null,url:'',load:null,session:false,fadeT:0,playTok:0,visBound:false};
+    if(typeof document!=='undefined' && !this._bgm.visBound){
+      document.addEventListener('visibilitychange',()=>{ if(self._bgm&&self._bgm.session) self.syncBgm(); });
+      this._bgm.visBound=true;
+    }
+    return this._bgm;
+  },
+  loadBgm(){
+    const B=this._bgmEnsure(), M=this.bgmMeta;
+    if(B.blob) return Promise.resolve(B.blob); if(B.load) return B.load;
+    const path=M.dir+M.file, key=(typeof location!=='undefined'?location.origin:'')+'/__vw_asset__'+path+'?v='+M.hash;
+    B.load=Promise.resolve().then(()=>{
+      if(typeof caches==='undefined') return null;
+      return caches.open('vw-assets-content-v1').then(cache=>cache.match(key).then(hit=>hit?{cache,hit}:{cache})).catch(()=>({}));
+    }).then(got=>{
+      got=got||{}; if(got.hit) return got.hit.blob();
+      if(typeof fetch!=='function') return null;
+      return fetch(path).then(res=>{ if(!res.ok) throw 0; if(got.cache) got.cache.put(key,res.clone()).catch(()=>{}); return res.blob(); });
+    }).then(blob=>blob?(B.blob=blob):null).catch(()=>null).finally(()=>{ B.load=null; });
+    return B.load;
+  },
+  syncBgm(){
+    const B=this._bgm; if(!B||!B.session) return;
+    if(!this.fireOn()){ if(B.sfx&&!B.sfx.paused) try{ B.sfx.pause(); }catch(e){} return; }
+    this.startBgm();
+  },
+  startBgm(){
+    if(!(typeof state!=='undefined' && state.sound!==false)) return false;
+    if(typeof document!=='undefined' && document.hidden) return false;
+    const B=this._bgmEnsure(), M=this.bgmMeta, Ctor=typeof Audio!=='undefined'?Audio:(typeof window!=='undefined'?window.Audio:null);
+    if(!Ctor) return false;
+    B.session=true;
+    if(B.fadeT){ try{ clearTimeout(B.fadeT); }catch(e){} B.fadeT=0; }
+    try{
+      if(!B.sfx){ B.sfx=new Ctor(); B.sfx.preload='none'; B.sfx.loop=true; B.sfx.volume=M.vol; }
+      else{ B.sfx.loop=true; B.sfx.volume=M.vol; }
+      const el=B.sfx, tok=++B.playTok;
+      if(B.blob&&B.url&&!el.paused) return true;
+      void this.loadBgm().then(blob=>{
+        if(!blob||el!==B.sfx||tok!==B.playTok||!B.session||!this.fireOn()) return;
+        if(!B.url){ B.url=URL.createObjectURL(blob); el.src=B.url; }
+        return el.play().catch(()=>{});
+      });
+      return true;
+    }catch(e){ return false; }
+  },
+  stopBgm(fadeMs=800){
+    const B=this._bgm; if(!B) return;
+    B.session=false; B.playTok++;
+    if(B.fadeT){ try{ clearTimeout(B.fadeT); }catch(e){} B.fadeT=0; }
+    const a=B.sfx;
+    const finish=()=>{ if(a){ try{ a.pause(); a.volume=this.bgmMeta.vol; }catch(e){} } B.fadeT=0; };
+    if(!a||a.paused||!(fadeMs>0)){ finish(); return; }
+    const startAt=(typeof performance!=='undefined'?performance.now():Date.now()), startVol=a.volume;
+    const step=()=>{
+      if(B.session) return;
+      const k=Math.min(1,(((typeof performance!=='undefined'?performance.now():Date.now())-startAt)/fadeMs));
+      try{ a.volume=Math.max(0,startVol*(1-k)); }catch(e){}
+      if(k>=1) finish(); else B.fadeT=setTimeout(step,40);
+    };
+    step();
+  },
 };
 /* ✨ รอบ 226: สไปรต์ไอคอนอิโมจิ (ของเก็บ) */
 function emojiSprite(emoji){
@@ -12647,17 +12715,35 @@ function emojiSprite(emoji){
   return new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv),transparent:true,depthTest:false}));
 }
 function makeAlien(bossArg){
+  /* 🧟 รอบ 1511: ซอมบี้เลือดแดง · หันหน้า -Z · ตอนโจมตีหันหาผู้เล่นใน tickMecha */
   const boss=!!bossArg;
-  const sp = boss ? (typeof bossArg==='object' ? bossArg : pickBossSpecies()) : null;   // 👾 รอบ 229: บอสมีสายพันธุ์
+  const sp = boss ? (typeof bossArg==='object' ? bossArg : pickBossSpecies()) : null;
   const grp=new THREE.Group();
-  const bodyCol = boss ? sp.body : new THREE.Color().setHSL(.28+Math.random()*.5,.55,.45).getHex();
-  const body=new THREE.Mesh(boss ? sp.geo() : new THREE.IcosahedronGeometry(2.2,1),new THREE.MeshLambertMaterial({color:bodyCol,emissive:boss?sp.emis:0x000000}));
-  body.scale.set(1,1.15,1); grp.add(body);
-  for(let i=0;i<3;i++){ const e=new THREE.Mesh(new THREE.SphereGeometry(.34,10,8),new THREE.MeshBasicMaterial({color:boss?sp.eye:0xffee55}));
-    e.position.set((i-1)*.8,.5,-1.95); grp.add(e); }
-  const tCol=new THREE.MeshLambertMaterial({color:bodyCol});
-  for(let i=0;i<6;i++){ const a=i/6*Math.PI*2; const leg=new THREE.Mesh(new THREE.CylinderGeometry(.18,.05,2.8,6),tCol);
-    leg.position.set(Math.cos(a)*1.6,-1.7,Math.sin(a)*1.6); leg.rotation.z=Math.cos(a)*.5; leg.rotation.x=Math.sin(a)*.5; grp.add(leg); }
+  const skin=boss?sp.body:0x6e8f52, skinDark=boss?((sp.body&0xfefefe)>>>1):0x3d4f2e;
+  const blood=0xc41e1e, bloodDeep=0x7a0a0a, eyeCol=boss?sp.eye:0xff1a1a;
+  const torso=new THREE.Mesh(boss?sp.geo():new THREE.BoxGeometry(1.8,2.2,1.1),
+    new THREE.MeshLambertMaterial({color:skin,emissive:boss?sp.emis:0x1a2208}));
+  torso.position.y=1.15; grp.add(torso);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.82,10,8),new THREE.MeshLambertMaterial({color:skin,emissive:0x110800}));
+  head.position.set(0,2.55,0); head.scale.set(1,1.05,.92); grp.add(head);
+  for(const sx of [-.3,.3]){
+    const e=new THREE.Mesh(new THREE.SphereGeometry(.15,8,6),new THREE.MeshBasicMaterial({color:eyeCol}));
+    e.position.set(sx,2.58,-.7); grp.add(e);
+  }
+  for(let i=0;i<5;i++){
+    const blot=new THREE.Mesh(new THREE.SphereGeometry(.2+.08*(i%2),6,5),
+      new THREE.MeshLambertMaterial({color:i%2?blood:bloodDeep,emissive:0x2a0000}));
+    blot.position.set((i-2)*.32,.85+(i%2)*.45,.56); blot.scale.set(1.15,.55,.35); grp.add(blot);
+  }
+  const limbM=new THREE.MeshLambertMaterial({color:skinDark});
+  for(const side of [-1,1]){
+    const arm=new THREE.Mesh(new THREE.CylinderGeometry(.17,.13,1.75,6),limbM);
+    arm.position.set(side*1.12,1.55,-.65); arm.rotation.x=-Math.PI/2.35; arm.rotation.z=side*.12; grp.add(arm);
+    const hand=new THREE.Mesh(new THREE.SphereGeometry(.26,6,5),limbM);
+    hand.position.set(side*1.12,1.4,-1.5); grp.add(hand);
+    const leg=new THREE.Mesh(new THREE.CylinderGeometry(.26,.2,1.55,6),limbM);
+    leg.position.set(side*.38,-.05,.05); grp.add(leg);
+  }
   let word;
   if(boss){ const c=pickWords(sp.wordPick); word=(c.slice().sort((a,b)=>b.en.length-a.en.length)[0])||{en:'dragon',th:'มังกร'}; }
   else word=(pickWords(1)[0])||{en:'cat',th:'แมว'};
@@ -12665,17 +12751,17 @@ function makeAlien(bossArg){
   word.en.split('').forEach((ch,i)=>{
     const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:letterTexture(ch),transparent:true}));
     spr.scale.set(1.9,1.9,1);
-    const off={x:(i-(n-1)/2)*2.3, y:3.3, z:0};      // แถวเรียงซ้าย→ขวา ตามลำดับคำ เหนือหัวเอเลี่ยน
+    const off={x:(i-(n-1)/2)*2.3, y:3.5, z:0};
     spr.position.set(off.x,off.y,off.z); grp.add(spr);
     letters.push({ch,spr,idx:i,off,done:false});
   });
   const p=alienSpawnPos();
   const scl=boss?sp.scale:1;
-  grp.position.set(p.x,4.5,p.z); if(boss) grp.scale.setScalar(scl); scene.add(grp);
+  grp.position.set(p.x,1.55,p.z); if(boss) grp.scale.setScalar(scl); scene.add(grp);
   const al={grp,word,letters,nextIdx:0,tgt:{x:p.x,z:p.z},wanderAt:0,born:performance.now(),
-            boss:!!boss, species:sp, gs:scl, shotAt:performance.now()+1400+Math.random()*1600};
+            boss:!!boss, species:sp, gs:scl, shotAt:performance.now()+1400+Math.random()*1600, baseY:1.55};
   aliens.push(al);
-  if(boss) showBanner(`${sp.emoji} <b>บอส${escapeHTML(sp.th)} มาแล้ว!</b><br>คำยาวพิเศษ — ยิงให้ครบรับโบนัส 🪙`);
+  if(boss) showBanner(`${sp.emoji} <b>บอสซอมบี้${escapeHTML(sp.th)} มาแล้ว!</b><br>คำยาวพิเศษ — ยิงให้ครบรับโบนัส 🪙`);
   return al;
 }
 /* 🌊 รอบ 229: Endless Wave — เริ่มเวฟใหม่ (ตั้งเป้า/จำนวน/ความยาก) แล้วปล่อยเอเลี่ยนให้ครบ */
@@ -12686,7 +12772,7 @@ function startWave(w){
   if(w>(state.mechaWaveBest||0)) state.mechaWaveBest=w;              // 🏅 สถิติเวฟสูงสุด
   updateWaveHud();
   if(cfg.boss) showBanner(`🌊 <b>เวฟ ${w}</b> · 👾 <b>Boss Wave!</b><br>ล้มบอสให้ได้เพื่อไปต่อ 💪`);
-  else showBanner(`🌊 <b>เวฟ ${w}</b> — ล้มเอเลี่ยน ${cfg.goal} ตัว!`);
+  else showBanner(`🌊 <b>เวฟ ${w}</b> — ล้มซอมบี้ ${cfg.goal} ตัว!`);
   waveSpawnFill();
 }
 /* เติมเอเลี่ยนบนสนามให้ครบจำนวนพร้อมกัน (ไม่เกินเป้าเวฟ) · Boss Wave: บอสมาเป็นตัวสุดท้าย */
@@ -12780,12 +12866,12 @@ function mechaHitByAlien(a){
 }
 /* 👾 รอบ 226: เอเลี่ยนยิงกระสุนใส่หุ่น (เล็งตรงตำแหน่งปัจจุบัน — หลบได้ด้วยการสเตรฟ/เดิน) */
 function spawnAlienShot(a){
-  const from=a.grp.position.clone(); from.y=4.2;
+  const from=a.grp.position.clone(); from.y=(a.baseY||1.55)+1.4;
   const dir=camera.position.clone().sub(from); dir.y+=.5; dir.normalize();
   const m=new THREE.Mesh(new THREE.SphereGeometry(a.boss?.6:.4,10,8),
-    new THREE.MeshBasicMaterial({color:a.boss?(a.species?a.species.shot:0xff3b6b):0xffb43a}));
+    new THREE.MeshBasicMaterial({color:a.boss?(a.species?a.species.shot:0xff3b6b):0xc41e1e}));
   m.position.copy(from); scene.add(m);
-  const spd=ALIEN_SHOT_SPD*(a.boss?(a.species?a.species.shotSpd:1.1):1)*(mWaveSpd||1);   // 👾🌊 สายพันธุ์ + เวฟ
+  const spd=ALIEN_SHOT_SPD*(a.boss?(a.species?a.species.shotSpd:1.1):1)*(mWaveSpd||1);
   alienShots.push({mesh:m,vel:dir.multiplyScalar(spd),life:5,dmg:a.boss?ALIEN_SHOT_DMG+3:ALIEN_SHOT_DMG});
   MechaAudio.enemyShot();
 }
@@ -13017,30 +13103,32 @@ function mechaFire(now){
 }
 function explodeAlien(a){
   MechaAudio.boom();
-  let col=0x88ff88; try{ col=a.grp.children[0].material.color.getHex(); }catch(e){}
-  for(let i=0;i<20;i++){
-    const pc=new THREE.Mesh(new THREE.SphereGeometry(.42,6,5),new THREE.MeshBasicMaterial({color:i%2?0xffaa33:col,transparent:true}));
-    pc.position.copy(a.grp.position); scene.add(pc);
-    const dir=new THREE.Vector3(Math.random()*2-1,Math.random()*2-1,Math.random()*2-1).normalize();
-    mechaTracers.push({line:pc,until:performance.now()+650,vel:dir.multiplyScalar(7+Math.random()*9),particle:true});
+  /* 🩸 รอบ 1511: ระเบิดเลือดแดง */
+  const BLOOD=0xc41e1e, BLOOD2=0x8b0000, BLOOD3=0xff4444;
+  for(let i=0;i<26;i++){
+    const col=i%3===0?BLOOD3:(i%2?BLOOD:BLOOD2);
+    const pc=new THREE.Mesh(new THREE.SphereGeometry(.28+.2*Math.random(),6,5),new THREE.MeshBasicMaterial({color:col,transparent:true}));
+    pc.position.copy(a.grp.position); pc.position.y+=(a.baseY||1.55)+.8; scene.add(pc);
+    const dir=new THREE.Vector3(Math.random()*2-1,Math.random()*1.6+.2,Math.random()*2-1).normalize();
+    mechaTracers.push({line:pc,until:performance.now()+720,vel:dir.multiplyScalar(6+Math.random()*10),particle:true});
   }
-  const reward=M.reward+(a.boss?BOSS_BONUS:0);       // 👾 บอส = โบนัสเหรียญเพิ่ม
+  const reward=M.reward+(a.boss?BOSS_BONUS:0);
   mechaBankCoins(reward); sessionWords++;
-  if(a.boss){ mBossKills++; state.mechaBoss=(state.mechaBoss||0)+1;   // 📊 รอบ 228: นับล้มบอส (เซสชัน + สะสมถาวร → กระดานออนไลน์)
+  if(a.boss){ mBossKills++; state.mechaBoss=(state.mechaBoss||0)+1;
     if(typeof onlinePushScore==='function') onlinePushScore();
-    checkMechaBossBadge(); }                                          // 🤖 รอบ 229: เช็ก/มอบเข็มนักล่าบอส
+    checkMechaBossBadge(); }
   if(!sessionWordLog.some(x=>x.en===a.word.en)) sessionWordLog.push({en:a.word.en,th:a.word.th});
-  if(typeof vbRecord==='function') vbRecord(a.word.en,a.word.th,true);   // 📒 รอบ 291: ลงสมุดคำศัพท์ถาวร
+  if(typeof vbRecord==='function') vbRecord(a.word.en,a.word.th,true);
   doneList().push(a.word.en); questEvent('word3d'); sfx.levelup();
   if(state.haptic!==false && navigator.vibrate) navigator.vibrate(a.boss?[90,60,120]:80);
-  showBanner(`${a.boss?'👾💥':'💥'} <b>${escapeHTML(a.word.en.toUpperCase())}</b> = ${escapeHTML(a.word.th)}<br><span class="adv-ban-coin">+${reward} 🪙</span>`);
+  showBanner(`${a.boss?'🧟💥':'💥'} <b>${escapeHTML(a.word.en.toUpperCase())}</b> = ${escapeHTML(a.word.th)}<br><span class="adv-ban-coin">+${reward} 🪙</span>`);
   setTimeout(()=>speakWord(a.word.en),500);
   const wasFocus=(mFocusAlien===a);
   removeAlien(a);
   if(wasFocus){ mFocusAlien=null; mechaHudWord(null); }
-  mWaveKilled++;                                    // 🌊 รอบ 229: นับความคืบหน้าเวฟ
-  if(mWaveKilled>=mWaveGoal) waveComplete();        // เคลียร์เวฟครบ → โบนัส + เวฟถัดไป
-  else waveSpawnFill();                             // ยังไม่ครบ → เติมตัวใหม่คงจำนวนบนสนาม
+  mWaveKilled++;
+  if(mWaveKilled>=mWaveGoal) waveComplete();
+  else waveSpawnFill();
   updateWaveHud();
   renderHudTop(); renderBoard();
   if(netUp()) sendPos(true);
@@ -13070,15 +13158,24 @@ function tickMecha(dt,now){
   camera.updateMatrixWorld(); camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
   // ยิง (กดค้าง = ยิงรัวตามจังหวะอาวุธ)
   if((mFireHeld||keys.Space) && now-mLastFire>mechaWeapon.gap) mechaFire(now);
-  // เอเลี่ยนเคลื่อนที่ + ไฮไลต์ตัวถัดไปที่ต้องยิง
+  // 🧟 รอบ 1511: ซอมบี้เดิน + ตอนโจมตีหันหน้าหาผู้เล่นเสมอ
   aliens.forEach(a=>{
-    if(now>a.wanderAt){ a.tgt={x:(Math.random()*2-1)*(HALF-12),z:(Math.random()*2-1)*(HALF-12)}; a.wanderAt=now+2600+Math.random()*3200; }
-    const g=a.grp.position, dx=a.tgt.x-g.x, dz=a.tgt.z-g.z, d=Math.hypot(dx,dz)||1;
-    g.x+=dx/d*ALIEN_SPEED*dt; g.z+=dz/d*ALIEN_SPEED*dt; g.y=4.5+Math.sin(now/500+g.x)*.4;
-    // 🚨 รอบ 225-226: เข้าประชิด→ทุบ (iframe 900ms · คูลดาวน์ 2.2s) · ระยะกลาง→ยิงกระสุน (หลบได้)
-    if(running){ const dc=Math.hypot(g.x-camera.position.x,g.z-camera.position.z);
-      if(dc<MECHA_ATK_RANGE && now>mHitAt && now>(a.atkAt||0)){ a.atkAt=now+2200; mHitAt=now+900; mechaHitByAlien(a); }
-      else if(dc>=MECHA_ATK_RANGE && dc<75 && now>(a.shotAt||0)){ a.shotAt=now+ALIEN_SHOT_GAP+Math.random()*1600; spawnAlienShot(a); } }
+    const g=a.grp.position, baseY=a.baseY||1.55;
+    const dc=Math.hypot(g.x-camera.position.x,g.z-camera.position.z);
+    const engaging=running && dc<75;
+    if(engaging){
+      a.tgt={x:camera.position.x,z:camera.position.z};
+      a.grp.rotation.y=Math.atan2(g.x-camera.position.x, g.z-camera.position.z); // หน้า -Z หันหาผู้เล่น
+    }else if(now>a.wanderAt){
+      a.tgt={x:(Math.random()*2-1)*(HALF-12),z:(Math.random()*2-1)*(HALF-12)}; a.wanderAt=now+2600+Math.random()*3200;
+    }
+    const dx=a.tgt.x-g.x, dz=a.tgt.z-g.z, d=Math.hypot(dx,dz)||1;
+    g.x+=dx/d*ALIEN_SPEED*(engaging?1.15:1)*dt; g.z+=dz/d*ALIEN_SPEED*(engaging?1.15:1)*dt;
+    g.y=baseY+Math.sin(now/380+g.x)*.1;
+    if(!engaging) a.grp.rotation.y=Math.atan2(-dx, -dz);
+    if(running){
+      if(dc<MECHA_ATK_RANGE && now>mHitAt && now>(a.atkAt||0)){ a.atkAt=now+2200; mHitAt=now+900; a.grp.rotation.y=Math.atan2(g.x-camera.position.x, g.z-camera.position.z); mechaHitByAlien(a); }
+      else if(dc>=MECHA_ATK_RANGE && dc<75 && now>(a.shotAt||0)){ a.shotAt=now+ALIEN_SHOT_GAP+Math.random()*1600; a.grp.rotation.y=Math.atan2(g.x-camera.position.x, g.z-camera.position.z); spawnAlienShot(a); } }
     a.letters.forEach(l=>{ if(!l.done && l.spr.material){ const nx2=(l.idx===a.nextIdx);
       l.spr.scale.setScalar(nx2?2.5:1.9); l.spr.material.opacity=nx2?1:.8; } });
   });
@@ -13387,6 +13484,7 @@ function start(md,opt){
     mechaWeapon=MECHA_WEAPONS[rid]||MECHA_WEAPONS.robot_01;
     setMechaHudSkin(rid);                          // 🤖 รอบ 224: กรอบ HUD + สีตามหุ่น
     MechaAudio.prepareFire();                      // 🤖 รอบ 1502: พรีโหลดคลิปหุ่นจาก allroboteffect + fire.mp3
+    MechaAudio.startBgm();                         // 🎵 รอบ 1517: BGM โหลด lazy + Cache hash (ไม่พรีโหลดตอนเปิดเกม)
     clearMechaSmoke();
     camera.position.set(0,MECHA_EYE,26); yaw=0; pitch=-0.06;
   }else if(M.hotel){
@@ -13547,7 +13645,10 @@ function exitWorld(){
   { const pkb=overlayEl&&overlayEl.querySelector('#adv-pk');
     if(pkb){ pkb.classList.remove('on'); pkb.textContent='🎯 จุดโทษ'; } }
   ATC.reset();
-  if(typeof MechaAudio!=='undefined' && MechaAudio.stopFireClip) MechaAudio.stopFireClip();
+  if(typeof MechaAudio!=='undefined'){
+    if(MechaAudio.stopBgm) MechaAudio.stopBgm(900);
+    if(MechaAudio.stopFireClip) MechaAudio.stopFireClip();
+  }
   toggleChatBox(false);
   selfMsgEl.classList.remove('on');
   myChat=null;
