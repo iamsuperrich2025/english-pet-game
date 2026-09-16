@@ -26,7 +26,7 @@ PRIMARY FILE: `js/home-v2.js`
 RELATED FILES: `css/home-v2.css`, `js/util.js` (`openSettings`), `js/auth.js` (`isAdmin`, `syncAdminAccess`), `index_classic.html`
 PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.HomeTheme`, `#vw-home-v2-root`, `adminWorldAllowed`
 DEPENDENCIES: Classic buttons/state, `isAdmin()`.
-NOTES: Round 1510 ships admin-only luxury dark theme `noir` (black/gray/gold) via `html.theme-noir` and `localStorage.vwHomeTheme`. Public default remains pastel. Settings shows the picker only when `isAdmin()===true`. Recap/money toasts (`.toast-financial`) sit on `body` and follow `--toast-fin-*` so theme changes restyle them. Do not use mix-blend veils for Home skins.
+NOTES: Round 1520 refreshes admin-only `noir` (graphite/gray/yellow) with flat buttons, readable panel headings and a quiet pet stage via `html.theme-noir` and `localStorage.vwHomeTheme`. Public default remains pastel. Settings shows the picker only when `isAdmin()===true`. Recap/money toasts (`.toast-financial`) sit on `body` and follow `--toast-fin-*` so theme changes restyle them. Do not use mix-blend veils for Home skins.
 
 SYSTEM: Screen routing and level admission
 PURPOSE: Switches classic-lobby DOM screens and lazy-loads 3D engines when a world is entered.

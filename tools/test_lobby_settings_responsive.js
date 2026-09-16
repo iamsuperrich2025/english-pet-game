@@ -18,6 +18,8 @@ ok(/\.topbar-icons\{[\s\S]*?position:absolute;top:66px;right:0;/.test(narrow[1])
 ok(/width:calc\(var\(--top-h\) \* 5 \+ 32px\)/.test(narrow[1]), 'ก้อนปุ่มสำรองความกว้างครบทั้ง 5 ปุ่ม');
 ok(/\.topbar-icons-row\{[\s\S]*?display:flex;justify-content:flex-end;gap:8px;width:100%;/.test(narrow[1]), 'ปุ่ม 5 ตัวอยู่แถวเดียวและชิดขวา');
 ok(/\.topbar-icons \.rank-move-box\{display:none;\}/.test(narrow[1]), 'จอแคบซ่อนฟีดอันดับเพื่อให้ปุ่มระบบครบ');
-ok(/css\/lobby\.css\?v=1169b/.test(classic), 'หน้า Classic บังคับโหลด CSS responsive รุ่นใหม่');
+// Later cache revisions include the original responsive fix too.
+const lobbyVersion = classic.match(/css\/lobby\.css\?v=(\d+)/);
+ok(lobbyVersion && Number(lobbyVersion[1]) >= 1169, 'หน้า Classic บังคับโหลด CSS responsive รุ่นใหม่');
 
 console.log('PASS lobby settings responsive regression');

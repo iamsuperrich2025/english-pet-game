@@ -58,7 +58,7 @@
   const HOME_THEME_DEFAULT = 'pastel';
   const HOME_THEMES = Object.freeze({
     pastel: {id:'pastel', label:'พาสเทล', swatch:'linear-gradient(90deg,#8dc5f8,#e96da9,#e4b34f)', admin:false},
-    noir: {id:'noir', label:'หรูดำ', swatch:'linear-gradient(90deg,#111114,#6b6b70,#e4c056)', admin:true}
+    noir: {id:'noir', label:'ดำเทาเหลือง', swatch:'linear-gradient(90deg,#101114,#535862,#f5cf42)', admin:true}
   });
   function readHomeTheme(){
     let id = HOME_THEME_DEFAULT;

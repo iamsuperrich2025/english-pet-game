@@ -14,7 +14,7 @@ const fail = [];
 const must = (ok, msg) => { if (!ok) fail.push(msg); };
 
 must(home.includes("R44 / รอบ 1502") && home.includes("window.HomeTheme") && home.includes("vwHomeTheme"), "HomeTheme API / round marker missing");
-must(home.includes("admin:true") && home.includes("id:'noir'") && home.includes("label:'หรูดำ'"), "noir catalog entry missing");
+must(home.includes("admin:true") && home.includes("id:'noir'") && home.includes("label:'ดำเทาเหลือง'"), "noir catalog entry missing");
 must(util.includes("id=\"set-theme\"") && util.includes("isAdmin()===true") && util.includes("HomeTheme.list()"), "settings theme row is not admin-gated");
 must(auth.includes("HomeTheme.paint"), "login/admin sync does not repaint Home theme");
 must(css.includes("html.theme-noir") && css.includes("--vw2-r1502-ready:1") && css.includes("#070709"), "Home V2 noir skin missing");

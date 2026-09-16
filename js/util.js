@@ -1150,7 +1150,7 @@ function openSettings(initialTab){
         </div>
         ${(typeof HomeTheme!=='undefined' && HomeTheme && typeof isAdmin==='function' && isAdmin()===true) ? `<div class="set-row set-theme-row" id="set-theme">
           <span class="set-lwrap"><span class="set-label">🎨 ธีมหน้าหลัก</span>
-            <span class="set-desc">ทดลองเฉพาะแอดมิน · หรูดำใช้โทนดำ เทา เหลืองทอง</span></span>
+            <span class="set-desc">เฉพาะแอดมิน · ธีมดำ เทา เหลือง พร้อมปุ่มแบบเรียบ</span></span>
           <div class="set-seg set-theme-seg" role="radiogroup" aria-label="เลือกธีมหน้าหลัก">${HomeTheme.list().map(t=>`<button class="set-seg-btn set-theme-sw" type="button" role="radio" data-theme="${t.id}" aria-checked="false" title="${t.label}"><i class="set-theme-chip" style="background:${t.swatch}"></i><span>${t.label}</span></button>`).join('')}</div>
         </div>` : ''}
       </div>
