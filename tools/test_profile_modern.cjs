@@ -41,6 +41,8 @@ async function openProfile(page){
     state.collection=COLLECTIBLES.slice(0,46).map(x=>x.id);
     state.listings=COLLECTIBLES.slice(0,6).map((x,i)=>({id:x.id,price:x.price,at:Date.now()+i}));
     state.feedShare=Object.assign({},state.feedShare||{},{assets:false});
+    const badgeKeys=Object.keys(BADGE_META).slice(0,20);
+    window.badgeSuffix=()=>badgeKeys.join('');
     const homeProfile=document.querySelector('[data-vw2-action="profile"]');
     if(homeProfile){
       homeProfile.dispatchEvent(new MouseEvent("click",{bubbles:true,cancelable:true,view:window}));
@@ -48,7 +50,7 @@ async function openProfile(page){
       showPlayerCard(Auth.user.uid,"admin","ป.6");
     }
     return {pets:state.pets.length, assets:Object.values(localProfileAssetCounts()).reduce((a,b)=>a+b,0),
-      homeRoute:!!homeProfile, renderedUid:document.querySelector('.pl-card.pl-wide') ? Auth.user.uid : ''};
+      badges:badgeKeys.length, homeRoute:!!homeProfile, renderedUid:document.querySelector('.pl-card.pl-wide') ? Auth.user.uid : ''};
   });
 }
 async function inspect(page, expected, width, height){
@@ -58,9 +60,10 @@ async function inspect(page, expected, width, height){
   await page.waitForTimeout(350);
   const info=await page.evaluate(()=>{
     const rect=e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom}};
-    const card=document.querySelector(".pl-card.pl-wide"), body=document.querySelector(".pl-body"), panel=document.querySelector(".pl-collection-panel"), assets=document.querySelector(".pl-assets"), pets=document.querySelector(".pl-pets");
+    const card=document.querySelector(".pl-card.pl-wide"), body=document.querySelector(".pl-body"), panel=document.querySelector(".pl-collection-panel"), assets=document.querySelector(".pl-assets"), pets=document.querySelector(".pl-pets"), photoWrap=document.querySelector(".pl-blk-wrap");
     return {
       card:rect(card),body:rect(body),panel:rect(panel),assets:rect(assets),pets:rect(pets),
+      photoWrap:rect(photoWrap),photoRadius:getComputedStyle(photoWrap).borderRadius,
       bodyOverflow:body.scrollHeight-body.clientHeight,panelOverflow:panel.scrollHeight-panel.clientHeight,
       petCards:document.querySelectorAll(".pl-pet").length,assetCards:document.querySelectorAll(".pl-asset").length,
       assetQty:document.querySelector("[data-pl-asset-count]").textContent,petQty:document.querySelector("[data-pl-pet-count]").textContent,
@@ -72,14 +75,24 @@ async function inspect(page, expected, width, height){
   });
   ok(`${width}x${height} profile fills viewport`,Math.abs(info.card.width-width)<=1&&Math.abs(info.card.height-height)<=1&&info.card.x===0&&info.card.y===0);
   ok(`${width}x${height} profile shell has no vertical overflow`,info.bodyOverflow<=1&&info.panelOverflow<=1&&info.card.bottom<=height+1);
+  ok(`${width}x${height} profile photo frame is a true circle`,Math.abs(info.photoWrap.width-info.photoWrap.height)<=1&&info.photoRadius!=="0px");
   ok(`${width}x${height} Home V2 opens the owner's complete profile`,expected.homeRoute&&expected.renderedUid==="profile-modern-test");
   ok(`${width}x${height} every owned pet is rendered`,info.petCards===expected.pets&&info.petQty.includes(String(expected.pets)));
-  ok(`${width}x${height} complete local asset quantity is reported`,info.assetQty.replace(/\D/g,"")==String(expected.assets));
+  ok(`${width}x${height} complete local asset quantity is reported`,info.assetQty.replace(/\D/g,"")===String(expected.assets));
   ok(`${width}x${height} all durable asset categories are represented`,["บ้านและความสบาย","เทคโนโลยี","รถและหุ่นรบ","แฟชั่นน้อง","สวนผลไม้","ของสะสม"].every(x=>info.categoryText.includes(x)));
   ok(`${width}x${height} long collections stay reachable horizontally`,info.assetScroll>20&&info.petScroll>=0);
   ok(`${width}x${height} modern stylesheet is active`,info.styleLoaded==="#d9bd78"&&Number(info.tabTotal.replace(/,/g,""))===expected.assets+expected.pets);
   await page.click('[data-pl-tab="honors"]');
-  ok(`${width}x${height} honors tab switches without moving shell`,await page.locator('[data-pl-panel="honors"]').evaluate(e=>e.classList.contains("active")&&e.getBoundingClientRect().bottom<=innerHeight+1));
+  const honorInfo=await page.locator('[data-pl-panel="honors"]').evaluate(e=>{
+    const card=e.querySelector('.pl-badge-card'), icon=e.querySelector('.pl-badge-card-ic'), strip=e.querySelector('.pl-badges-strip');
+    const cr=card.getBoundingClientRect(), ir=icon.getBoundingClientRect();
+    return {active:e.classList.contains('active'),bottom:e.getBoundingClientRect().bottom,count:e.querySelectorAll('.pl-badge-card').length,
+      cardH:cr.height,iconW:ir.width,iconH:ir.height,stripOverflow:strip.scrollHeight-strip.clientHeight};
+  });
+  ok(`${width}x${height} honors tab switches without moving shell`,honorInfo.active&&honorInfo.bottom<=height+1);
+  ok(`${width}x${height} every earned honor uses its image card`,honorInfo.count===expected.badges);
+  ok(`${width}x${height} honor images keep the original large-card scale`,honorInfo.cardH>=129&&honorInfo.iconW>=70&&honorInfo.iconH>=70);
+  ok(`${width}x${height} extra honors remain reachable inside the panel`,honorInfo.stripOverflow>20);
   await page.click('[data-pl-tab="story"]');
   ok(`${width}x${height} story tab switches without moving shell`,await page.locator('[data-pl-panel="story"]').evaluate(e=>e.classList.contains("active")&&e.getBoundingClientRect().bottom<=innerHeight+1));
   await page.click('[data-pl-tab="collection"]');

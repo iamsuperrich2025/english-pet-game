@@ -12,6 +12,9 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1518 · รูปโปรไฟล์วงกลม + เหรียญเกียรติยศภาพใหญ่:** ล็อกกรอบรูปเป็นจัตุรัสไม่ให้ flex บีบเป็นวงรี และคืนความสูงการ์ดเหรียญเดิม 130–210px พร้อมเลื่อนในแผง
+- ไฟล์: `css/profile-modern.css` `tools/test_profile_modern.cjs`
+- Playwright 45 checks ผ่านที่ 1366×768, 1367×617, 812×375 + Home V2 regression ผ่าน; กรอบกว้าง=สูงทุกจอ/เหรียญครบ/ไม่มี overflow/runtime error
 - **รอบ 1517 · BGM หุ่น lazy+cache:** ใช้ `sound/robot/bgm.mp3` · โหลดตอนเข้าหุ่นเท่านั้น · Cache ตาม hash · Blob loop · ออกโลก fade หยุด
 - ไฟล์: `js/adventure3d.js` `sound/robot/bgm.mp3` `tools/test_mecha_1517.js`
 - unit 1517 ผ่าน · ค้าง: เข้าหุ่นบน live ฟังเพลง / ออกแล้วเงียบ

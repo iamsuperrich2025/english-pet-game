@@ -72,7 +72,7 @@
 .pl-rail-kicker{font:700 10px/1 "Kanit";letter-spacing:.23em;color:#7f91ad;margin-bottom:12px;text-align:center}
 .pl-stats-col{height:calc(100% - 22px);display:flex;flex-direction:column;min-height:0}
 .pl-stats-col>.pl-loading,.pl-stats-col>.pl-none{margin:auto;color:#9fb0c8}
-.pl-blk-wrap{position:relative;flex:1 1 auto;min-height:84px;margin:0 0 10px!important;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:18px;
+.pl-blk-wrap{--pl-photo-size:clamp(150px,39vh,250px);position:relative;flex:0 0 var(--pl-photo-size);width:min(100%,var(--pl-photo-size));aspect-ratio:1/1;min-height:0;margin:0 auto 10px!important;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:50%;
   border:1px solid rgba(221,193,125,.22);background:radial-gradient(circle at 50% 38%,rgba(74,112,172,.28),rgba(9,16,31,.72) 68%)}
 .pl-blk-wrap:after{content:"";position:absolute;left:18%;right:18%;bottom:7%;height:14%;border-radius:50%;background:rgba(0,0,0,.34);filter:blur(8px)}
 .pl-blk,.pl-photo{position:relative;z-index:1;max-width:92%;height:100%!important;max-height:none!important;width:auto;object-fit:contain;filter:drop-shadow(0 12px 18px rgba(0,0,0,.42))}
@@ -143,7 +143,7 @@
 
 .pl-honors-panel.active{display:flex;flex-direction:column}.pl-honors-panel .pl-badges-col{flex:1 1 auto;min-height:0}
 .pl-honors-panel .pl-badges-vwrap{height:100%}.pl-honors-panel .pl-badges-strip{height:100%;max-height:none!important;padding:9px;background:linear-gradient(180deg,rgba(22,35,63,.72),rgba(9,17,34,.8));border-color:rgba(255,255,255,.07)}
-.pl-honors-panel .grid3x5{--badge-row:calc((100% - 18px)/3)}
+.pl-honors-panel .grid3x5{--badge-row:clamp(130px,28vh,210px)}
 .pl-honors-panel .pl-badge-card{background:linear-gradient(155deg,#182844,#0d192d);border:1px solid rgba(127,159,204,.25);box-shadow:0 7px 18px rgba(0,0,0,.22)}
 .pl-honors-panel .pl-badge-card-ic{background:radial-gradient(circle at 50% 38%,#f6f0dc,#9cb5d5 75%);border-color:rgba(223,197,131,.4)}
 .pl-honors-panel .pl-badge-card-nm{background:linear-gradient(90deg,rgba(43,75,122,.92),rgba(31,54,91,.95));color:#f4f7fc}
@@ -161,7 +161,7 @@ html.no-anim .pl-tab-panel.active{animation:none}
   .pl-card.pl-wide .pl-head{flex-basis:66px;padding-top:8px!important;padding-bottom:8px!important}.pl-head-mark{width:42px;height:42px;border-radius:14px}.pl-eyebrow{font-size:8px}.pl-name-line>span{font-size:21px}.pl-name-line>em{display:none}
   .pl-card.pl-wide .pl-body{grid-template-columns:clamp(190px,23vw,250px) minmax(0,1fr);padding:8px 14px 10px!important;gap:10px}
   .pl-profile-rail,.pl-portfolio{border-radius:18px}.pl-profile-rail{padding:9px 10px}.pl-rail-kicker{margin-bottom:5px;font-size:8px}.pl-stats-col{height:calc(100% - 13px)}
-  .pl-blk-wrap{min-height:58px;margin-bottom:5px!important;border-radius:13px}.pl-me-tag{top:26px}.pl-value-hero{padding:5px 8px;margin-bottom:5px}.pl-value-hero>strong{font-size:17px}.pl-value-hero>small{display:none}.pl-stat-grid{gap:4px}.pl-card.pl-wide .pl-stat{min-height:31px;padding:4px 7px}.pl-stat-ico{width:21px;height:21px}.pl-card.pl-wide .pl-tip{display:none}
+  .pl-blk-wrap{--pl-photo-size:clamp(112px,36vh,160px);min-height:0;margin:0 auto 5px!important;border-radius:50%}.pl-me-tag{top:26px}.pl-value-hero{padding:5px 8px;margin-bottom:5px}.pl-value-hero>strong{font-size:17px}.pl-value-hero>small{display:none}.pl-stat-grid{gap:4px}.pl-card.pl-wide .pl-stat{min-height:31px;padding:4px 7px}.pl-stat-ico{width:21px;height:21px}.pl-card.pl-wide .pl-tip{display:none}
   .pl-tabs{padding:5px}.pl-tab{min-height:34px;padding:5px 10px;font-size:10.5px}.pl-tab-panel{padding:7px 9px}.pl-collection-panel.active{grid-template-rows:minmax(102px,.82fr) minmax(116px,1fr);gap:6px}
   .pl-section-heading{min-height:29px;margin-bottom:3px}.pl-section-icon{width:24px;height:24px;border-radius:8px}.pl-section-heading strong{font-size:11px}.pl-section-heading small{font-size:8px}.pl-section-heading>b{font-size:9px;padding:2px 7px}
   .pl-card.pl-wide .strip-wrap{padding:0 27px}.pl-card.pl-wide .strip-arrow{width:22px;height:40px;border-radius:9px}
