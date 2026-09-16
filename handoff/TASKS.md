@@ -12,6 +12,9 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1505 · FX วงเพลิงอลังการ:** แกนขาวร้อน→เปลว→ember · ประกายถ่วงแรงโน้มถ่วง · ลิ้นไฟ 10 · trail กระสุนร้อนขึ้น · CAPACITY 384 · impact ~1.2s
+- ไฟล์: `js/mecha-combat-fx.js` `tools/test_mecha_1505.js` (+1485/1492 รับ duration/สีใหม่)
+- unit 1505+1485+1492 ผ่าน · ค้าง: ยิงบน live ดูความสมจริง
 - **รอบ 1504 · ยิงรบคำย่อ/หมอบคนละปุ่ม + เพื่อนเห็นท่า:** ไม่วนท่าแล้ว · รหัสท่าใน `av` (sk1c/sk1p) ให้ peer ย่อ/หมอบ/หลบตาม · รวม AUTO กลับบ้าน
 - ไฟล์: `js/wordskirmish.js` `css/wordskirmish.css` `tools/test_wordskirmish.js` `docs/PLAYER_CHARACTER_STYLE.md`
 - unit 73 ผ่าน · ค้าง: สองแอดมินเข้าห้องเดียวกันดูท่าย่อ/หมอบ
