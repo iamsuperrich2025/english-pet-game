@@ -12,6 +12,9 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1507 · ตัดกล่องยืนยันเข้าเกม:** กดโลก 3D แล้วเข้าทันที ไม่มี “เข้าเลย/เล่นฟรี” มาขวาง
+- ไฟล์: `js/ui.js` `css/skyplay3d.css` tests kart/sky/tinv/refund · Sky เลือกตัวละครในโลกที่ `#sp-character`
+- unit + Playwright Kart ผ่าน · ค้าง: ผู้ใช้ลองกดหุ่นรบบน live
 - **รอบ 1506 · ระเบิดแบบลูกไฟตัวอย่าง:** ไม่ใช่วงแบนแล้ว · แกนขาว+เปลวบิลโลว์+ควันดำ+เศษหิน+เส้นประกาย · ~1.5s · CAPACITY 512
 - ไฟล์: `js/mecha-combat-fx.js` `tools/test_mecha_1506.js`
 - unit 1506 ผ่าน · ค้าง: ยิงบน live เทียบภาพตัวอย่าง
@@ -24,9 +27,6 @@
 - **รอบ 1502 · ตัด allroboteffect เป็น SFX หุ่น:** 16 คลิป sound/robot/mecha/ ใช้ร่วมทุกหุ่น (ยิง/กระทบ/ระเบิด/ก้าว/เตือน/ศัตรู/เก็บของ/โล่)
 - ไฟล์: js/adventure3d.js sound/robot/mecha/* tools/mecha/split_robot_sfx.py tools/test_mecha_1502.js
 - unit 1502 ผ่าน · ค้าง: ฟังบน live
-- **รอบ 1499 · คู่มือบอกทางเปิดข้อมูลน้อง:** หน้า “เลี้ยงน้อง” ระบุชัดให้ “แตะ” ที่ตัวน้องบน Lobby ก่อน จึงจะเปิด Profile/หน้ารายละเอียดได้
-- ปรับ `js/util.js` + regression `tools/test_lobby_guide_1489.js`; syntax/static ผ่าน และ browser 30 สถานะ (3 viewport) ไม่ล้น/ไม่มี scroll
-- **รอบ 1496 · ยิงรบคำปุ่ม AUTO ซ้าย:** กดเปิดวิ่งค้างตามกล้อง กดซ้ำหยุด · กดค้างย้ายปุ่มได้ · คีย์ E
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน

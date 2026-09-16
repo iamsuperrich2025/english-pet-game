@@ -720,7 +720,7 @@ PANEL_TITLES:9 · openPanel:19 · closePanel:29
 settingsButtonClick:104 · syncMusicBtn:120 · showPetShoppingGrantNotice:154 · showPetShoppingFineRefundNotice:187 · showRankRewardNotice:218 · showQuizBackPay:268
 showGiantRefund:313 · showTicketRefund:354 · showAcDuplicateRefundNotice:393 · fitQbp:426 · bootGame:440 · showCakeGiftRefundNotice:467
 
-## js/mecha-combat-fx.js (221 บรรทัด · 3 รายการ)
+## js/mecha-combat-fx.js (267 บรรทัด · 3 รายการ)
 STYLES:8 · style:20 · create:21
 
 ## js/mecha-models.js (85 บรรทัด · 0 รายการ)
@@ -906,7 +906,7 @@ thLocaleOpt:46
 
 ## js/typing.js (370 บรรทัด · 0 รายการ)
 
-## js/ui.js (10,611 บรรทัด · 467 รายการ)
+## js/ui.js (10,534 บรรทัด · 465 รายการ)
 ### 🗂️ สารบัญโซน js/ui.js (Read/Edit เฉพาะช่วง)
 - 2-77 UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
 - 78-144 🎬 เวทีน้องน่ารัก (Cute Pet Show) — รอบ 604 (ผู้ใช้สั่ง 26 ก.ค. 2026)
@@ -950,19 +950,18 @@ thLocaleOpt:46
 - 7769-7859 🏝️ รอบ 1377 — KART (public entry; separate persistent keys)
 - 7860-7881 🌍 ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย (ผู้ใช้สั่ง 9 ก.ค. 2026)
 - 7882-7947 🔒 รอบ 1070/1132: โลกที่ยังไม่เปิดสาธารณะ — เปิดให้บัญชีทดสอบ 2 ชื่อเท่านั้น
-- 7948-8065 ↩️🪙 Legacy recovery — คืนค่าเข้าที่เวอร์ชันเก่าอาจหักค้างไว้ก่อนเปลี่ยนเป็นเข้าฟรี
-- 8066-8150 ☁️🧸 รอบ 1258 — เลือกตัวละคร Sky ก่อนเข้าโลก
-- 8151-8345 🧭 ป้ายบอกทางของรางเมนูซ้าย (รอบ 601 · ผู้ใช้สั่ง 26 ก.ค. 2026)
-- 8346-8515 การ์ดสวนผลไม้ (ข้อ 12): ซื้อต้นไม้ปลูกได้ไม่จำกัด แต่ละต้นออกผล
-- 8516-8530 โรงงานผลิตสินค้า 🏭 + ตลาดขายต่อ (แนวคิดใหม่ 5 ก.ค. 2026)
-- 8531-8554 โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
-- 8555-8829 ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
-- 8830-9966 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
-- 9967-10029 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
-- 10030-10066 เลเวลอัพ (รายตัว)
-- 10067-10172 สถิติผลการเรียนรู้
-- 10173-10210 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
-- 10211-10611 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
+- 7948-8073 ↩️🪙 Legacy recovery — คืนค่าเข้าที่เวอร์ชันเก่าอาจหักค้างไว้ก่อนเปลี่ยนเป็นเข้าฟรี
+- 8074-8268 🧭 ป้ายบอกทางของรางเมนูซ้าย (รอบ 601 · ผู้ใช้สั่ง 26 ก.ค. 2026)
+- 8269-8438 การ์ดสวนผลไม้ (ข้อ 12): ซื้อต้นไม้ปลูกได้ไม่จำกัด แต่ละต้นออกผล
+- 8439-8453 โรงงานผลิตสินค้า 🏭 + ตลาดขายต่อ (แนวคิดใหม่ 5 ก.ค. 2026)
+- 8454-8477 โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
+- 8478-8752 ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
+- 8753-9889 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
+- 9890-9952 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
+- 9953-9989 เลเวลอัพ (รายตัว)
+- 9990-10095 สถิติผลการเรียนรู้
+- 10096-10133 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
+- 10134-10534 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
 ### รายการ js/ui.js
 startHTML:10 · PET_ANIM:30 · petAnimHTML:35 · petVisualHTML:50 · PET_SHOW:91 · PET_SHOW_STAGE:96
 PET_SHOW_H:99 · petShowBgHTML:102 · petBondLine:153 · PET_HEALTH_TIPS:177 · nextPetHealthTip:215 · petBondActionLine:223
@@ -1027,21 +1026,21 @@ enterDrone3D:7533 · confirmPetShoppingEntry:7554 · enterPetShopping3D:7580 · 
 enterSoccer3D:7726 · enterMoto3D:7746 · kartLobbyIconHTML:7772 · mechaLobbyIconHTML:7776 · enterKart3D:7781 · enterPickup3D:7796
 enterF1_3D:7811 · enterInvasion3D:7839 · WORLD3D:7867 · WORLD3D_COMING_SOON:7886 · world3DComingSoon:7887 · gotoRobotShop:7890
 openHealDialog:7896 · world3DFail:7917 · worldEntryStarted:7952 · worldEntryStopped:7953 · GAME_ENTRY_STABLE_MS:7954 · gameEntryCommit:7956
-gameEntryRefund:7964 · recoverInterruptedGameEntry:7981 · showGameEntryRefundNotice:7989 · startWorldEntry:8016 · railWorldClick:8041 · skyEntryCatalog:8070
-skyEntryPickerHTML:8074 · openWorldEntryDialog:8084 · railScrollHint:8156 · railScrollTop:8164 · initRailScroll:8169 · renderRailWorlds:8189
-tinvOnlineFriends:8283 · refreshTinvOnlineUI:8287 · tinvNoticeHTML:8298 · openTinvPicker:8307 · fruitCountdown:8351 · renderFarmCard:8363
-renderFarmClock:8438 · buyFruit:8454 · sellFruit:8474 · sellAllFruit:8495 · collectImg:8524 · renderFactoryCard:8535
-renderMarketCard:8559 · updateWishBadge:8617 · openWishlistDialog:8628 · bindStripArrows:8675 · renderMarketBrowse:8689 · openMarketBuyDialog:8716
-carImg:8836 · renderVehicleShop:8837 · CS_CYCLE_MS:8889 · carInteriorImg:8890 · carStatHtml:8892 · renderCarShowroom:8899
-csShowBig:8926 · csInit:8953 · RS_CYCLE_MS:8976 · robotImg:8977 · robotShopImg:8979 · renderRobotShop:8982
-renderPetMarketShop:9002 · rsShowBig:9020 · rsInit:9040 · buyRobot:9059 · mechaAdminAllowed:9084 · refreshMechaLock:9091
-enterMecha3D:9101 · pickMechaRobot:9133 · pickDriveCar:9165 · openCarBuyDialog:9208 · buyCarInsurance:9269 · payCarLoanMonthly:9288
-payCarLoanFull:9300 · carDriveBlock:9319 · gotoVehicleShop:9324 · gotoMyStock:9329 · showNeedCarDialog:9335 · craftDiscount:9347
-renderFactory:9350 · renderOrdersUI:9419 · startProduce:9438 · buyCollectible:9466 · cancelProduce:9496 · deliverOrder:9510
-renderOrderClock:9527 · renderCollectMine:9537 · openListDialog:9586 · cancelListing:9643 · listingMarketStatus:9667 · maybeOfferStaleMarketBuy:9671
-openStaleMarketOffer:9682 · acceptStaleMarketBuy:9720 · buyMarketItem:9756 · showCollectReveal:9821 · buyAC:9859 · openHomeShop:9897
-openPetPurchase:9971 · renderPetShop:10008 · showLevelUp:10033 · renderStats:10070 · showTeacherCard:10177 · CALL_REACT_EMOS:10221
-CALL_TALK_MIN:10224 · CALL_TALK_HOLD:10225 · CALL_ORDER_GAP:10227 · CALL_TONES:10233 · startCall:10607
+gameEntryRefund:7964 · recoverInterruptedGameEntry:7981 · showGameEntryRefundNotice:7989 · startWorldEntry:8016 · railWorldClick:8041 · openWorldEntryDialog:8068
+railScrollHint:8079 · railScrollTop:8087 · initRailScroll:8092 · renderRailWorlds:8112 · tinvOnlineFriends:8206 · refreshTinvOnlineUI:8210
+tinvNoticeHTML:8221 · openTinvPicker:8230 · fruitCountdown:8274 · renderFarmCard:8286 · renderFarmClock:8361 · buyFruit:8377
+sellFruit:8397 · sellAllFruit:8418 · collectImg:8447 · renderFactoryCard:8458 · renderMarketCard:8482 · updateWishBadge:8540
+openWishlistDialog:8551 · bindStripArrows:8598 · renderMarketBrowse:8612 · openMarketBuyDialog:8639 · carImg:8759 · renderVehicleShop:8760
+CS_CYCLE_MS:8812 · carInteriorImg:8813 · carStatHtml:8815 · renderCarShowroom:8822 · csShowBig:8849 · csInit:8876
+RS_CYCLE_MS:8899 · robotImg:8900 · robotShopImg:8902 · renderRobotShop:8905 · renderPetMarketShop:8925 · rsShowBig:8943
+rsInit:8963 · buyRobot:8982 · mechaAdminAllowed:9007 · refreshMechaLock:9014 · enterMecha3D:9024 · pickMechaRobot:9056
+pickDriveCar:9088 · openCarBuyDialog:9131 · buyCarInsurance:9192 · payCarLoanMonthly:9211 · payCarLoanFull:9223 · carDriveBlock:9242
+gotoVehicleShop:9247 · gotoMyStock:9252 · showNeedCarDialog:9258 · craftDiscount:9270 · renderFactory:9273 · renderOrdersUI:9342
+startProduce:9361 · buyCollectible:9389 · cancelProduce:9419 · deliverOrder:9433 · renderOrderClock:9450 · renderCollectMine:9460
+openListDialog:9509 · cancelListing:9566 · listingMarketStatus:9590 · maybeOfferStaleMarketBuy:9594 · openStaleMarketOffer:9605 · acceptStaleMarketBuy:9643
+buyMarketItem:9679 · showCollectReveal:9744 · buyAC:9782 · openHomeShop:9820 · openPetPurchase:9894 · renderPetShop:9931
+showLevelUp:9956 · renderStats:9993 · showTeacherCard:10100 · CALL_REACT_EMOS:10144 · CALL_TALK_MIN:10147 · CALL_TALK_HOLD:10148
+CALL_ORDER_GAP:10150 · CALL_TONES:10156 · startCall:10530
 
 ## js/util.js (1,593 บรรทัด · 59 รายการ)
 ### 🗂️ สารบัญโซน js/util.js (Read/Edit เฉพาะช่วง)
@@ -1339,12 +1338,11 @@ vbRender:148 · vbCardHTML:194
 .rank-graph-btn:2,5 · .rg-overlay:6 · .rg-box:7,9,10,21 · .rg-close:11,12 · .rg-tabs:13 · .rg-tab:14,15,16
 .rg-stage:17 · .rg-chart:18 · .rg-point:19 · .rg-loading:20
 
-## css/skyplay3d.css (46 บรรทัด · 26 selector)
+## css/skyplay3d.css (38 บรรทัด · 22 selector)
 #sp-root:2,3 · #sp-canvas:4 · .sp-sky-glow:5 · .sp-top:6,28 · .sp-pill:7,8 · .sp-play:9
 .sp-daily:10 · .sky-hint:11 · .sky-word:12 · .sp-toast:13 · .sp-joy:14 · .sp-actions:15
 .sp-activity:16 · .sp-gate:17 · .sp-tower:18 · .sp-classroom:19 · .sp-class-finish:20 · .sp-packbar:21
-.sp-character-btn:29 · .sp-character-picker:30 · .sp-character-card:31,32 · .sp-character-grid:33,34,35 · .sky-entry-box:40 · .sky-entry-character-picker:41
-.sky-entry-character-grid:42,43 · .sky-entry-actions:44
+.sp-character-btn:29 · .sp-character-picker:30 · .sp-character-card:31,32 · .sp-character-grid:33,34,35
 
 ## css/style.css (2,539 บรรทัด · 613 selector)
 :root:5 · *:25 · html:26,31 · input:35 · body:39 · #app:45
