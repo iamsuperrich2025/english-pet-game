@@ -1137,6 +1137,27 @@ function petDescriptor(p){
            e:((typeof equippedItem==='function' && equippedItem(p))||{}).id || '',
            nm:String(p.name||'').slice(0,20) };
 }
+/* เจ้าของโปรไฟล์เห็นทรัพย์สินของตัวเองครบทุกหมวดจาก state สดเสมอ
+   ฟังก์ชันนี้ไม่ส่งข้อมูลเพิ่มขึ้น Firebase; โปรไฟล์คนอื่นยังเคารพสวิตช์เปิดเผยเดิม */
+function localProfileAssetCounts(){
+  const counts = {};
+  const add = (key, n=1)=>{
+    n = Math.max(0, Math.round(Number(n) || 0));
+    if(key && n) counts[key] = (counts[key] || 0) + n;
+  };
+  if(state.home) add('home:' + state.home);
+  if(state.ac) add('ac');
+  for(const id of (state.owned || [])) add('wear:' + id);
+  if(state.petPantry && state.petPantry.shelfId) add('pantry:' + state.petPantry.shelfId);
+  if(state.phone) add('phone');
+  if(state.computer) add('computer');
+  for(const id of (state.robots || [])) add('robot:' + id);
+  for(const car of (state.cars || [])) if(car && car.id) add('car:' + car.id);
+  for(const tree of (state.farm || [])) if(tree && tree.id) add('fruit:' + tree.id);
+  for(const id of (state.collection || [])) add('collect:' + id);
+  for(const listing of (state.listings || [])) if(listing && listing.id) add('collect:' + listing.id);
+  return counts;
+}
 /* ดันสัตว์เลี้ยงขึ้น /feed/<me>/pt (JSON สูงสุด 3 ตัว) — เปิดเผยพร้อมทรัพย์สิน (feedShare.assets) · กันเขียนซ้ำด้วย sig */
 function feedPushPets(){
   if(!Online.ready || !state.student) return;
@@ -1156,7 +1177,7 @@ function fetchPlayerPets(uid){
   if(!uid) return Promise.resolve(null);
   if(uid === onlineKey()){
     if(!Array.isArray(state.pets) || !state.pets.length) return Promise.resolve(null);
-    return Promise.resolve(state.pets.slice(0,3).map(petDescriptor));
+    return Promise.resolve(state.pets.map(petDescriptor));
   }
   if(!Online.ready) return Promise.resolve(null);
   return Online.db.ref('feed/' + uid + '/pt').get().then(s=>{
@@ -1241,11 +1262,7 @@ function fetchPlayerFeed(uid){
 function fetchPlayerAssets(uid){
   if(!uid) return Promise.resolve(null);
   if(uid === onlineKey()){
-    if(!state.feedShare || !state.feedShare.assets) return Promise.resolve(null);
-    const counts = {};
-    for(const id of state.collection) counts[id] = (counts[id]||0) + 1;
-    for(const l of state.listings) counts[l.id] = (counts[l.id]||0) + 1;
-    return Promise.resolve(counts);
+    return Promise.resolve(localProfileAssetCounts());
   }
   if(!Online.ready) return Promise.resolve(null);
   return Online.db.ref('feed/' + uid + '/a').get().then(s=>{

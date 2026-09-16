@@ -912,6 +912,7 @@ function assetCount(){
   n += state.collection.length;            // สินค้าสะสมในคลัง
   n += state.listings.length;              // ของที่ลงขายอยู่
   n += (state.cars ? state.cars.length : 0); // 🚗 รอบ 211: รถส่วนตัว (นับทุกคัน)
+  n += (state.robots ? state.robots.length : 0); // 🤖 หุ่นยนต์นักรบทุกตัว
   return n;
 }
 

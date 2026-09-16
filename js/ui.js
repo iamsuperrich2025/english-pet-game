@@ -2431,6 +2431,81 @@ function bindPlayerClicks(){
   });
 }
 
+function ensureProfileModernStyles(){
+  if(document.querySelector('link[data-profile-modern]')) return;
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = 'css/profile-modern.css?v=20260916a';
+  link.dataset.profileModern = '1';
+  document.head.appendChild(link);
+}
+
+function bindProfileTabs(ov){
+  const buttons = Array.from(ov.querySelectorAll('[data-pl-tab]'));
+  const panels = Array.from(ov.querySelectorAll('[data-pl-panel]'));
+  const open = (id, focus)=>{
+    buttons.forEach(btn=>{
+      const on = btn.dataset.plTab === id;
+      btn.classList.toggle('active', on);
+      btn.setAttribute('aria-selected', on ? 'true' : 'false');
+      btn.tabIndex = on ? 0 : -1;
+      if(on && focus) btn.focus({preventScroll:true});
+    });
+    panels.forEach(panel=>panel.classList.toggle('active', panel.dataset.plPanel === id));
+    requestAnimationFrame(()=>{
+      ov.querySelectorAll('.pl-badges-strip').forEach(el=>el.dispatchEvent(new Event('scroll')));
+      ov.querySelectorAll('.pl-collection-panel .strip-wrap').forEach(bindStripArrows);
+    });
+  };
+  buttons.forEach((btn, i)=>{
+    btn.addEventListener('click', ()=>{ sfx.select(); open(btn.dataset.plTab, false); });
+    btn.addEventListener('keydown', e=>{
+      if(e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      e.preventDefault();
+      const step = e.key === 'ArrowRight' ? 1 : -1;
+      open(buttons[(i + step + buttons.length) % buttons.length].dataset.plTab, true);
+    });
+  });
+}
+
+/* แปล typed asset id ของโปรไฟล์เจ้าของบัญชีเป็น metadata จาก catalog กลาง
+   และยังอ่าน payload รุ่นเก่าของโปรไฟล์คนอื่นที่เป็น collectId ตรง ๆ ได้ */
+function profileAssetMeta(key){
+  const raw = String(key || '');
+  const has = p=>raw.startsWith(p);
+  const pack = (catKey, cat, name, emoji, img, value)=>({key:raw, catKey, cat, name, emoji, img:img || '', value:Number(value)||0});
+  if(has('home:')){
+    const id = raw.slice(5), h = (typeof homeInfo === 'function') ? homeInfo(id) : null;
+    return h ? pack('home','บ้านและความสบาย',h.name,h.emoji,IMG_FILES[`home_${id}`],h.price) : null;
+  }
+  if(raw === 'ac') return pack('home','บ้านและความสบาย','เครื่องปรับอากาศ','❄️','',AC_PRICE + AC_INSTALL);
+  if(has('wear:')){
+    const id = raw.slice(5), it = (typeof ITEMS !== 'undefined') ? ITEMS.find(x=>x.id===id) : null;
+    return it ? pack('fashion','แฟชั่นน้อง',it.name,it.emoji,it.img || IMG_FILES[`item_${id}`],it.price) : null;
+  }
+  if(has('pantry:')){
+    const id = raw.slice(7), shelf = (typeof PET_PANTRY_SHELVES !== 'undefined') ? PET_PANTRY_SHELVES.find(x=>x.id===id) : null;
+    return shelf ? pack('home','บ้านและความสบาย',`${shelf.name} · ${shelf.capacity} ช่อง`,shelf.emoji,'',shelf.price) : null;
+  }
+  if(raw === 'phone') return pack('tech','เทคโนโลยี','โทรศัพท์มือถือ','📱',IMG_FILES.item_phone,PHONE_PRICE);
+  if(raw === 'computer') return pack('tech','เทคโนโลยี','คอมพิวเตอร์สร้างรายได้','💻',IMG_FILES.item_computer,COMP_PRICE);
+  if(has('robot:')){
+    const id = raw.slice(6), r = (typeof ROBOTS !== 'undefined') ? ROBOTS.find(x=>x.id===id) : null;
+    return r ? pack('vehicle','รถและหุ่นรบ',r.name,'🤖',robotShopImg(id,true),r.price) : null;
+  }
+  if(has('car:')){
+    const id = raw.slice(4), car = (typeof carInfo === 'function') ? carInfo(id) : null;
+    return car ? pack('vehicle','รถและหุ่นรบ',car.name,'🚗',carImg(id),car.price) : null;
+  }
+  if(has('fruit:')){
+    const id = raw.slice(6), fruit = (typeof fruitInfo === 'function') ? fruitInfo(id) : null;
+    return fruit ? pack('garden','สวนผลไม้',`ต้น${fruit.name}`,fruit.emoji,'',fruit.price) : null;
+  }
+  const id = has('collect:') ? raw.slice(8) : raw;
+  const item = (typeof collectInfo === 'function') ? collectInfo(id) : null;
+  return item ? pack('collect','ของสะสม',item.name,item.emoji,collectImg(id),item.price) : null;
+}
+
 function showPlayerCard(uid, name, grade){
   // แยกเข็มระดับสูงสุดที่ baked มากับชื่อ แล้วขยายเป็นทุกระดับที่ผู้เล่นเคยได้ (รอบ 1082)
   const sp = (typeof splitNameBadges === 'function') ? splitNameBadges(name) : {name, badges:''};
@@ -2456,54 +2531,71 @@ function showPlayerCard(uid, name, grade){
     ? (Online.myFriends || []).find(f=>f.uid === uid) : null;
   const ov = document.createElement('div');
   ov.className = 'pl-overlay';
+  ensureProfileModernStyles();
   ov.innerHTML = `<div class="pl-card pl-wide">
-      <button class="pl-close">✕</button>
-      <div class="pl-head">👤 <span>${escapeHTML(sp.name)}</span>
-        ${myFriend ? `<button class="pl-chat" title="ส่งข้อความหาเพื่อน">💬 แชท</button>
-        <button class="pl-call" type="button" title="โทรหาเพื่อนด้วยเสียง">📞</button>` : ''}
-        ${(!me && typeof Online !== 'undefined' && Online.ready && typeof greetSend === 'function')
-          ? `<button class="pl-greet" title="ส่งคำทักทายถึงสัตว์เลี้ยงของเพื่อน">🐾 ทักทายน้อง</button>` : ''}
-        ${canFollow ? `<button class="pl-unfollow" style="display:none">Unfollow<small>เลิกติดตาม</small></button><button class="pl-follow"></button>` : ''}
-      </div>
-      <div class="pl-grade">${idTag(uid) || 'ผู้เล่น Vocab World'}${(()=>{   // 🎖️ รอบ 643: ระดับชั้นใต้ชื่อ (กันโกงชั้นปั๊มเหรียญ)
-          const mk = gradeMark(gradeOf(uid, grade));
-          return mk ? `<span class="pl-glabel">ระดับชั้น</span>${mk}` : '';
-        })()}<span class="pl-followers"></span></div>
+      <div class="pl-ambient pl-ambient-a"></div><div class="pl-ambient pl-ambient-b"></div>
+      <button class="pl-close" aria-label="ปิดโปรไฟล์">✕</button>
+      <header class="pl-head">
+        <div class="pl-head-mark" aria-hidden="true"><span>VW</span></div>
+        <div class="pl-identity">
+          <span class="pl-eyebrow">VOCAB WORLD · PLAYER PROFILE</span>
+          <div class="pl-name-line"><span>${escapeHTML(sp.name)}</span>${me ? '<em>บัญชีของฉัน</em>' : ''}</div>
+          <div class="pl-grade">${idTag(uid) || 'ผู้เล่น Vocab World'}${(()=>{
+              const mk = gradeMark(gradeOf(uid, grade));
+              return mk ? `<span class="pl-grade-label">ระดับชั้น</span>${mk}` : '';
+            })()}<span class="pl-followers"></span></div>
+        </div>
+        <div class="pl-head-actions">
+          ${myFriend ? `<button class="pl-chat" title="ส่งข้อความหาเพื่อน">💬 <span>แชท</span></button>
+          <button class="pl-call" type="button" title="โทรหาเพื่อนด้วยเสียง">📞</button>` : ''}
+          ${(!me && typeof Online !== 'undefined' && Online.ready && typeof greetSend === 'function')
+            ? `<button class="pl-greet" title="ส่งคำทักทายถึงสัตว์เลี้ยงของเพื่อน">🐾 <span>ทักทายน้อง</span></button>` : ''}
+          ${canFollow ? `<button class="pl-unfollow" style="display:none">Unfollow<small>เลิกติดตาม</small></button><button class="pl-follow"></button>` : ''}
+        </div>
+      </header>
       <div class="pl-body">
-        <div class="pl-cols pl-cols-top">
+        <aside class="pl-profile-rail">
+          <div class="pl-rail-kicker">PLAYER VALUE</div>
           <div class="pl-col pl-stats-col"><div class="pl-loading">⏳ กำลังโหลดข้อมูล...</div></div>
-          <div class="pl-col pl-badges-col">
-            <div class="pl-sec-title">🎖️ เข็มเกียรติยศ</div>
-            ${badgesHTML}
+        </aside>
+        <main class="pl-portfolio">
+          <nav class="pl-tabs" role="tablist" aria-label="หมวดข้อมูลโปรไฟล์">
+            <button class="pl-tab active" type="button" role="tab" aria-selected="true" data-pl-tab="collection">✦ คอลเลกชัน <b class="pl-tab-count" data-pl-total>—</b></button>
+            <button class="pl-tab" type="button" role="tab" aria-selected="false" data-pl-tab="honors" tabindex="-1">🎖️ เกียรติยศ <b class="pl-tab-count">${arr.length}</b></button>
+            <button class="pl-tab" type="button" role="tab" aria-selected="false" data-pl-tab="story" tabindex="-1">◌ เรื่องราว</button>
+          </nav>
+          <div class="pl-panels">
+            <section class="pl-tab-panel pl-collection-panel active" data-pl-panel="collection">
+              <div class="pl-collection-status">⏳ กำลังจัดแฟ้มสะสม...</div>
+              <div class="pl-pets-wrap" style="display:none">
+                <div class="pl-section-heading"><div><span class="pl-section-icon">🐾</span><strong>สัตว์เลี้ยงทุกตัว</strong><small>แตะการ์ดเพื่อดูรายละเอียด</small></div><b data-pl-pet-count>0 ตัว</b></div>
+                <div class="strip-wrap pl-pets-strip"><button class="strip-arrow sa-l" aria-label="เลื่อนสัตว์ไปทางซ้าย">❮</button>
+                  <div class="strip-x pl-pets"></div><button class="strip-arrow sa-r" aria-label="เลื่อนสัตว์ไปทางขวา">❯</button></div>
+              </div>
+              <div class="pl-assets-wrap" style="display:none">
+                <div class="pl-section-heading"><div><span class="pl-section-icon">✦</span><strong>${me ? 'ทรัพย์สินทั้งหมด' : 'ทรัพย์สินที่เปิดเผย'}</strong><small>${me ? 'รวมบ้าน แฟชั่น เทคโนโลยี รถ หุ่น สวน และของสะสม' : 'รายการที่เจ้าของอนุญาตให้เพื่อนเห็น'}</small></div><b data-pl-asset-count>0 ชิ้น</b></div>
+                <div class="strip-wrap pl-assets-strip"><button class="strip-arrow sa-l" aria-label="เลื่อนทรัพย์สินไปทางซ้าย">❮</button>
+                  <div class="strip-x pl-assets grid2x8"></div><button class="strip-arrow sa-r" aria-label="เลื่อนทรัพย์สินไปทางขวา">❯</button></div>
+              </div>
+            </section>
+            <section class="pl-tab-panel pl-honors-panel" data-pl-panel="honors">
+              <div class="pl-section-heading"><div><span class="pl-section-icon">🎖️</span><strong>หอเกียรติยศ</strong><small>ผลงานจากการเรียน เกม และภารกิจพิเศษ</small></div><b>${arr.length} เข็ม</b></div>
+              <div class="pl-badges-col">${badgesHTML}</div>
+            </section>
+            <section class="pl-tab-panel pl-story-panel" data-pl-panel="story">
+              <div class="pl-story-grid pl-cols-bottom">
+                <div class="pl-col"><div class="pl-section-heading"><div><span class="pl-section-icon">◌</span><strong>กิจกรรมล่าสุด</strong><small>เรื่องราวที่เจ้าของเลือกเปิดเผย</small></div></div>
+                  <div class="pl-feed"><div class="pl-loading">⏳ กำลังโหลด...</div></div></div>
+                <div class="pl-col pl-certs-wrap" style="display:none"><div class="pl-section-heading"><div><span class="pl-section-icon">🏅</span><strong>ประกาศนียบัตร</strong><small>แตะเพื่อดูใบใหญ่</small></div></div><div class="pl-certs"></div></div>
+              </div>
+            </section>
           </div>
-        </div>
-        <!-- 🔁 รอบ 737 (ผู้ใช้สั่ง): กิจกรรมล่าสุด+ประกาศนียบัตร ย้ายลงแถวล่าง ให้เข็มเกียรติยศขึ้นแทนแถวบน -->
-        <div class="pl-cols pl-cols-bottom">
-          <div class="pl-col">
-            <div class="pl-sec-title">📰 กิจกรรมล่าสุด</div>
-            <div class="pl-feed"><div class="pl-loading">⏳ กำลังโหลด...</div></div>
-          </div>
-          <!-- 🎖️ รอบ 712: ตู้ใบประกาศ = คอลัมน์ที่ 2 ของแถวล่าง
-               ของตัวเองอ่านจากเซฟครบทุกใบ · ของเพื่อนอ่านจากโพสต์สอบผ่านที่เขาเปิดเผย -->
-          <div class="pl-col pl-certs-wrap" style="display:none">
-            <div class="pl-sec-title">🎖️ ประกาศนียบัตร <small class="pl-sec-sub">แตะดูใบใหญ่</small></div>
-            <div class="pl-certs"></div>
-          </div>
-        </div>
-        <div class="pl-pets-wrap" style="display:none">
-          <div class="pl-sec-title">🐾 สัตว์เลี้ยง</div>
-          <div class="pl-pets"></div>
-        </div>
-        <div class="pl-assets-wrap" style="display:none">
-          <div class="pl-sec-title">🏆 ทรัพย์สินที่เปิดเผย</div>
-          <!-- รอบ 616: เรียงแบบเดียวกับแคตตาล็อกโรงงาน (2 แถว × 8 คอลัมน์ + ลูกศรเลื่อน) -->
-          <div class="strip-wrap"><button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button>
-            <div class="strip-x pl-assets grid2x8"></div>
-            <button class="strip-arrow sa-r" aria-label="เลื่อนขวา">❯</button></div>
-        </div>
+        </main>
       </div>
     </div>`;
+
   document.body.appendChild(ov);
+  bindProfileTabs(ov);
   bindProfileBadgeScroll(ov.querySelector('.pl-badges-vwrap'));   // 🎖️ รอบ 1082: 3 แถว × 5 คอลัมน์ ปัดขึ้นลง
   const close = ()=>ov.remove();
   ov.addEventListener('click', (e)=>{ if(e.target === ov) close(); });
@@ -2584,20 +2676,18 @@ function showPlayerCard(uid, name, grade){
         ? `<div class="pl-blk-wrap"><img class="pl-blk" src="img/blocks/${d.ba}.png" alt="ตัวละคร"></div>` : '');
     body.innerHTML = `
       ${blkImg}
-      ${d.me ? `<div class="pl-me-tag">⭐ นี่คือ${selfTag()}</div>` : ''}
-      <div class="pl-stat">
-        <span class="pl-lbl">💰 เงินรวม</span>
-        <span class="pl-val pl-gold">${fmtNum(d.coins)} 🪙</span>
+      ${d.me ? `<div class="pl-me-tag">✦ โปรไฟล์ของ${selfTag()}</div>` : ''}
+      <div class="pl-value-hero">
+        <span>มูลค่าพอร์ตทรัพย์สิน</span>
+        <strong>${av}</strong>
+        <small>ASSET PORTFOLIO</small>
       </div>
-      <div class="pl-stat">
-        <span class="pl-lbl">📦 จำนวนทรัพย์สิน</span>
-        <span class="pl-val">${ni}</span>
+      <div class="pl-stat-grid">
+        <div class="pl-stat"><span class="pl-stat-ico">◈</span><span class="pl-lbl">เหรียญคงเหลือ</span><span class="pl-val pl-gold">${fmtNum(d.coins)} 🪙</span></div>
+        <div class="pl-stat"><span class="pl-stat-ico">✦</span><span class="pl-lbl">ทรัพย์สินที่ถือครอง</span><span class="pl-val">${ni}</span></div>
       </div>
-      <div class="pl-stat">
-        <span class="pl-lbl">🏆 มูลค่าทรัพย์สินรวม</span>
-        <span class="pl-val pl-gold">${av}</span>
-      </div>
-      <div class="pl-tip">✨ ตั้งใจเล่น เก็บเงินและสะสมทรัพย์สินให้เยอะๆ นะ!</div>`;
+      <div class="pl-tip">คอลเลกชันทุกชิ้นบันทึกเรื่องราวความตั้งใจของผู้เล่น</div>`;
+
     /* 📷 รอบ 709: รูปโปรไฟล์ของ "เพื่อน" อ่านทีหลัง (/pphoto อยู่คนละ node กับ leaderboard
        ตั้งใจแยก เพราะรูป ~20KB ถ้าอยู่ใน leaderboard จะถูกดึงมาทุกครั้งที่โหลดกระดาน)
        ต้องเรียกหลัง body.innerHTML เสมอ ไม่งั้นรูปที่แทรกไว้จะถูกเขียนทับ */
@@ -2649,50 +2739,69 @@ function showPlayerCard(uid, name, grade){
   };
   if(me) plCerts(null);                              // ของตัวเองอ่านจากเซฟได้ทันที (ออฟไลน์ก็เห็น)
 
-  /* ---- แถวล่าง: กริดทรัพย์สินที่เปิดเผย (ตารางแบบหน้าโรงงาน · ชิ้นซ้ำใส่เลขจำนวนซ้อนมุม) ---- */
+  /* ---- คอลเลกชันทรัพย์สิน: เจ้าของเห็นครบจาก state; คนอื่นเห็นเฉพาะ payload ที่เปิดเผย ---- */
+  let profileCollectionLoads = 0;
+  const finishProfileCollection = ()=>{
+    profileCollectionLoads++;
+    if(profileCollectionLoads < 2) return;
+    const status = ov.querySelector('.pl-collection-status');
+    const shown = ov.querySelector('.pl-pets-wrap').style.display !== 'none'
+      || ov.querySelector('.pl-assets-wrap').style.display !== 'none';
+    if(status) status.innerHTML = shown ? '' : `<div class="pl-none">🔒 ยังไม่มีคอลเลกชันที่เปิดเผย<br><small>${me ? 'ยังไม่มีรายการสะสมในบัญชีนี้' : 'เจ้าของโปรไฟล์เลือกเก็บรายการทรัพย์สินเป็นส่วนตัว'}</small></div>`;
+    if(status) status.classList.toggle('done', shown);
+  };
   const assetsFn = (typeof fetchPlayerAssets === 'function') ? fetchPlayerAssets(uid) : Promise.resolve(null);
   assetsFn.then(counts=>{
     if(!counts) return;
-    const ids = Object.keys(counts).filter(id=>collectInfo(id));
-    if(!ids.length) return;
+    const order = {home:0,tech:1,vehicle:2,fashion:3,garden:4,collect:5};
+    const rows = Object.keys(counts).map(key=>({meta:profileAssetMeta(key), n:Math.max(1,Math.min(999,Math.round(counts[key]||1))) }))
+      .filter(row=>row.meta)
+      .sort((a,b)=>(order[a.meta.catKey]??9)-(order[b.meta.catKey]??9) || b.meta.value-a.meta.value || a.meta.name.localeCompare(b.meta.name,'th'));
+    if(!rows.length) return;
     const wrap = ov.querySelector('.pl-assets-wrap');
     const gridEl = ov.querySelector('.pl-assets');
     if(!wrap || !gridEl) return;
-    // เรียงตามมูลค่าแพง→ถูก ให้ของเด่นขึ้นก่อน
-    ids.sort((a,b)=>collectInfo(b).price - collectInfo(a).price);
-    gridEl.innerHTML = ids.map(id=>{
-      const c = collectInfo(id);
-      const img = collectImg(id);
-      const n = Math.max(1, Math.min(999, Math.round(counts[id])));
-      return `<div class="pl-asset" title="${escapeHTML(c.name)}">
-        ${img ? `<img src="${img}" alt="">` : `<span class="pl-asset-emoji">${c.emoji}</span>`}
-        <span class="pl-asset-nm">${escapeHTML(c.name)}</span>
+    const total = rows.reduce((sum,row)=>sum+row.n,0);
+    gridEl.innerHTML = rows.map(({meta:m,n})=>`<button type="button" class="pl-asset" title="${escapeHTML(m.name)}" data-name="${escapeHTML(m.name)}">
+        <span class="pl-asset-cat">${escapeHTML(m.cat)}</span>
+        ${m.img ? `<img src="${escapeHTML(m.img)}" alt="">` : `<span class="pl-asset-emoji">${m.emoji || '✦'}</span>`}
+        <span class="pl-asset-nm">${escapeHTML(m.name)}</span>
+        ${m.value ? `<span class="pl-asset-price">🪙${fmtNum(m.value)}</span>` : ''}
         ${n > 1 ? `<span class="pl-asset-n">×${n}</span>` : ''}
-      </div>`;
-    }).join('');
+      </button>`).join('');
     wrap.style.display = '';
-    bindStripArrows(wrap.querySelector('.strip-wrap'));   // ของน้อยกว่า 2 แถวเต็ม = ลูกศรซ่อนเอง (.no-x)
-  });
+    const count = ov.querySelector('[data-pl-asset-count]');
+    if(count) count.textContent = `${fmtNum(total)} ชิ้น`;
+    const tabTotal = ov.querySelector('[data-pl-total]');
+    if(tabTotal){ tabTotal.dataset.assets=String(total); tabTotal.textContent=fmtNum(total + Number(tabTotal.dataset.pets||0)); }
+    bindStripArrows(wrap.querySelector('.strip-wrap'));
+  }).finally(finishProfileCollection);
 
-  /* ---- 🐾 รอบ 195: สัตว์เลี้ยง (สูงสุด 3 ตัว) — ของตัวเองจาก state · คนอื่นจาก DB ถ้าเปิดเผย ---- */
+  /* ---- สัตว์เลี้ยงทุกตัว: เจ้าของอ่านจาก state สด; คนอื่นตามสิทธิ์เปิดเผยเดิม ---- */
   const petsFn = (typeof fetchPlayerPets === 'function') ? fetchPlayerPets(uid) : Promise.resolve(null);
-  let plPets = null;   // รอบ 276: เก็บ descriptor ไว้เปิดการ์ดข้อมูลน้องตอนคลิก
+  let plPets = null;
   petsFn.then(list=>{
     if(!list || !list.length) return;
     const wrap = ov.querySelector('.pl-pets-wrap');
     const gridEl = ov.querySelector('.pl-pets');
     if(!wrap || !gridEl) return;
     plPets = list;
+    const stage = {egg:'ยังเป็นไข่',baby:'วัยเด็ก',adult:'โตเต็มวัย'};
     gridEl.innerHTML = list.map((d,i)=>{
       const img = petDescImg(d);
       const nm = d.nm || ((PETS[d.t] || {}).name) || 'สัตว์เลี้ยง';
-      return `<div class="pl-pet" title="${escapeHTML(nm)}" data-name="${escapeHTML(nm)}" data-pi="${i}">
+      return `<button type="button" class="pl-pet" title="${escapeHTML(nm)}" data-name="${escapeHTML(nm)}" data-pi="${i}">
         ${img ? `<img src="${img}" alt="">` : `<span class="pl-asset-emoji">${(PETS[d.t] || {}).adult || '🐾'}</span>`}
-        <span class="pl-pet-nm">${escapeHTML(nm)}</span>
-      </div>`;
+        <span class="pl-pet-nm">${escapeHTML(nm)}</span><span class="pl-pet-stage">${stage[d.s] || 'สัตว์เลี้ยง'}</span>
+      </button>`;
     }).join('');
     wrap.style.display = '';
-  });
+    const count = ov.querySelector('[data-pl-pet-count]');
+    if(count) count.textContent = `${fmtNum(list.length)} ตัว`;
+    const tabTotal = ov.querySelector('[data-pl-total]');
+    if(tabTotal){ tabTotal.dataset.pets=String(list.length); tabTotal.textContent=fmtNum(list.length + Number(tabTotal.dataset.assets||0)); }
+    bindStripArrows(wrap.querySelector('.strip-wrap'));
+  }).finally(finishProfileCollection);
 
   /* ---- 🖼️ รอบ 195: แตะภาพเล็ก → ภาพใหญ่ · รอบ 276: น้อง → การ์ดข้อมูลย่อ openPetPeek
      รอบ 277: เจ้าของเป็นเพื่อนกัน → การ์ดน้องมีปุ่ม 🎁 (onGift ปิดการ์ดโปรไฟล์ก่อน กันบังกล่องของขวัญ) ---- */
