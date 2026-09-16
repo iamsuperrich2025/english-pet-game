@@ -24,9 +24,6 @@
 - **รอบ 1499 · คู่มือบอกทางเปิดข้อมูลน้อง:** หน้า “เลี้ยงน้อง” ระบุชัดให้ “แตะ” ที่ตัวน้องบน Lobby ก่อน จึงจะเปิด Profile/หน้ารายละเอียดได้
 - ปรับ `js/util.js` + regression `tools/test_lobby_guide_1489.js`; syntax/static ผ่าน และ browser 30 สถานะ (3 viewport) ไม่ล้น/ไม่มี scroll
 - **รอบ 1496 · ยิงรบคำปุ่ม AUTO ซ้าย:** กดเปิดวิ่งค้างตามกล้อง กดซ้ำหยุด · กดค้างย้ายปุ่มได้ · คีย์ E
-- ไฟล์: `js/wordskirmish.js` `css/wordskirmish.css` `tools/test_wordskirmish.js`
-- unit 58 ผ่าน · ค้าง: แอดมินลองกด AUTO บนมือถือ
-- **รอบ 1495 · ยิงรบคำก้มเงยแบบกล้องเกม:** ลากนิ้วลง = ก้ม · ลากขึ้น = เงย (เลิกเชิดหัวแบบคันโยกเครื่องบิน)
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน

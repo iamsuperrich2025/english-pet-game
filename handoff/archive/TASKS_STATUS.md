@@ -6405,3 +6405,10 @@ efreshMechaLock
 - ไฟล์: `js/wordskirmish.js` `tools/test_wordskirmish.js`
 - unit 53 ผ่าน · ค้าง: แอดมินลองเล็งบน live
 - **รอบ 1494 · ขึ้นเว็บยิงรบคำ แอดมินเท่านั้น:** rig ข้อต่อ + ปืนชี้หน้า + จอยครึ่งจอ/ย้ายปุ่ม + ตัวอักษรในบ้านปลอดภัย · ปุ่มซ่อนถ้าไม่ใช่แอดมิน (rail hidden, Home V2 ADMIN_ONLY, NetRoom `isAdmin`, city lock)
+
+
+## ⏬ ย้ายเมื่อ 2026-09-16 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- ไฟล์: `js/wordskirmish.js` `css/wordskirmish.css` `tools/test_wordskirmish.js`
+- unit 58 ผ่าน · ค้าง: แอดมินลองกด AUTO บนมือถือ
+- **รอบ 1495 · ยิงรบคำก้มเงยแบบกล้องเกม:** ลากนิ้วลง = ก้ม · ลากขึ้น = เงย (เลิกเชิดหัวแบบคันโยกเครื่องบิน)
