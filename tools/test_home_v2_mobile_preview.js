@@ -277,8 +277,8 @@ const semanticRailIcons = [
   ['trophy','pinboard']
 ];
 semanticRailIcons.forEach(([action, iconName])=>must(home.includes(`['${action}','${iconName}'`), `left rail icon does not explain its destination: ${action}`));
-const adminOnlyWorlds = ["worldSky","worldDrive","worldMoto","worldInvasion","worldMecha","wordship","skirmish"];
-const publicWorlds = ["worldAdv","worldHaunt","worldHeli","worldDrone","worldSoccer"];
+const adminOnlyWorlds = ["worldSky","worldDrive","worldMoto","worldInvasion","wordship","skirmish"];
+const publicWorlds = ["worldAdv","worldHaunt","worldHeli","worldDrone","worldSoccer","worldMecha"];
 const adminWorldSetBlock = (home.match(/const ADMIN_ONLY_WORLD_ACTIONS = new Set\(\[([\s\S]*?)\]\)/) || [])[1] || "";
 const adminWorldSetNames = Array.from(adminWorldSetBlock.matchAll(/'([^']+)'/g), match=>match[1]);
 must(JSON.stringify(adminWorldSetNames) === JSON.stringify(adminOnlyWorlds), "admin-only destination set changed");

@@ -20,6 +20,6 @@ assert(!mechaBlock.includes('Dodecahedron'),'no mecha rocks');
 assert(a.includes('mh-fire-ico')&&a.includes('>FIRE<')||a.includes('<b>FIRE</b>'),'fire HUD label');
 assert(css.includes('.adv-mecha #adv-words{top:6px'),'words top');
 assert(css.includes('#mecha-fire .mh-fire-ico'),'fire ico css');
-assert(home.includes('worldMecha')&&home.includes('ADMIN_ONLY_WORLD_ACTIONS'),'admin gate');
+assert(home.includes('ADMIN_ONLY_WORLD_ACTIONS')&&!/['"]worldMecha['"]/.test((home.match(/const ADMIN_ONLY_WORLD_ACTIONS = new Set\(\[([\s\S]*?)\]\)/)||[])[1]||''),'mecha public not admin-only');
 assert(a.includes('function mechaHudWord'),'hud word intact');
 console.log('mecha-1480 checks passed');

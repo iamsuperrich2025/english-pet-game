@@ -8149,9 +8149,6 @@ async function startWorldEntry(w, info, unlocked, overlay, button){
 
 function railWorldClick(w){
   if(w && w.mode === 'sky' && !ensureSkyBetaAccess()) return;
-  if(w && w.mode === 'mecha' && !mechaAdminAllowed()){
-    sfx.wrong(); toast('🔒 โลกหุ่นรบกำลังทดสอบ — เปิดให้ผู้ดูแลระบบเท่านั้น'); return;
-  }
   if(world3DComingSoon(w)){
     sfx.wrong(); toast('🔒 Coming soon'); return;
   }
@@ -8264,12 +8261,6 @@ function renderRailWorlds(){
     if(w.mode==='kart'){
       b.disabled=!betaVisible;b.style.display=betaVisible?'':'none';b.setAttribute('aria-hidden',String(!betaVisible));
       if(b.dataset.kartAllowed!==String(betaVisible)){b.dataset.kartAllowed=String(betaVisible);window.dispatchEvent(new Event('vw-kart-access-changed'));}
-    }
-    if(w.mode==='mecha'){
-      const ok=mechaAdminAllowed();
-      b.hidden=!ok; b.disabled=!ok; b.style.display=ok?'':'none';
-      b.setAttribute('aria-hidden',String(!ok));
-      if(!ok) return;
     }
     if(!betaVisible) return;
     const done = Array.isArray(state[w.doneKey]) ? state[w.doneKey].length : 0;
@@ -9113,28 +9104,18 @@ function buyRobot(id){
 
 /* เลือกหุ่นก่อนเข้าโลก (ถ้ามีหลายตัว) แล้วเข้าโลก mecha
    🔓 รอบ 943: ไม่มีหุ่นของตัวเอง = ระบบให้ยืมหุ่นตัวแรก (robot_01) ฟรีสำหรับรอบนั้น — ไม่บันทึกเป็นทรัพย์สิน */
-function mechaAdminAllowed(){
-  try{
-    if(typeof isAdmin==='function' && isAdmin()===true) return true;
-    if(typeof state!=='undefined' && state.adminAccess===true) return true;
-  }catch(_){}
-  return false;
-}
+/* 🤖 รอบ 1521: เปิดโลกหุ่นรบให้ทุกคน — คงฟังก์ชันเดิมไว้ให้ auth/sync เรียกได้โดยไม่บล็อก */
+function mechaAdminAllowed(){ return true; }
 function refreshMechaLock(){
   const b=document.getElementById('btn-world-mecha');
   if(!b) return;
-  const ok=mechaAdminAllowed();
-  b.hidden=!ok; b.disabled=!ok; b.style.display=ok?'':'none';
-  b.setAttribute('aria-hidden', ok?'false':'true');
-  b.setAttribute('aria-disabled', ok?'false':'true');
-  b.title=ok?'เข้าโลกหุ่นรบ (กำลังทดสอบ · แอดมิน)':'🔒 โลกหุ่นรบกำลังทดสอบ — เปิดให้ผู้ดูแลระบบเท่านั้น';
-  if(ok) b.removeAttribute('tabindex'); else b.tabIndex=-1;
+  b.hidden=false; b.disabled=false; b.style.display='';
+  b.setAttribute('aria-hidden','false');
+  b.setAttribute('aria-disabled','false');
+  b.title='เข้าโลกหุ่นรบ';
+  b.removeAttribute('tabindex');
 }
 async function enterMecha3D(){
-  if(!mechaAdminAllowed()){
-    sfx.wrong(); toast('🔒 โลกหุ่นรบกำลังทดสอบ — เปิดให้ผู้ดูแลระบบเท่านั้น');
-    return worldEntryStopped('เฉพาะผู้ดูแลระบบ');
-  }
   if(state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
   if(advLoading){ advBusyMsg(enterMecha3D); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
   let chosen;

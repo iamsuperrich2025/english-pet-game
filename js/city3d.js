@@ -1169,7 +1169,7 @@ function buildCity(){
     scene.add(g);
     BLD_AT[b.key] = {x, z, ry:g.rotation.y, h:g.userData.h||8};
     const ic = iconSprite(b.ico, b.label,
-      cityWorldComingSoon(b.go) || ((b.go==='wordship'||b.go==='skirmish'||b.go==='w3d_mecha') && !cityAdminAccess()));
+      cityWorldComingSoon(b.go) || ((b.go==='wordship'||b.go==='skirmish') && !cityAdminAccess()));
     ic.position.set(x, (g.userData.h||8)+1.8, z);
     ic.userData.baseY = ic.position.y;
     ic.userData.ph = rnd(0, TAU);
@@ -2954,7 +2954,7 @@ function captureCityShot(goKey, bldKey){
   }catch(e){}
 }
 function travelTo(b){
-  if(b && (b.go==='wordship' || b.go==='skirmish' || b.go==='w3d_mecha') && !cityAdminAccess()){
+  if(b && (b.go==='wordship' || b.go==='skirmish') && !cityAdminAccess()){
     const msg='🔒 กำลังทดสอบ — เปิดให้แอดมินเท่านั้น';
     setChip(msg);
     if(Live.self && Live.self.g) showBubble('__self', msg, Date.now());

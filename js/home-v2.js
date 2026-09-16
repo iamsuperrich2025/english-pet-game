@@ -309,8 +309,8 @@
     return ` data-vw2-source="${htmlEscape(sourceSelector)}"${mirrorVisibility ? ' data-vw2-mirror-visibility="1"' : ''}`;
   }
   const ADMIN_ONLY_WORLD_ACTIONS = new Set([
-    'worldSky','worldDrive','worldMoto','worldInvasion','worldMecha','wordship','skirmish'
-  ]);
+    'worldSky','worldDrive','worldMoto','worldInvasion','wordship','skirmish'
+  ]);   // 🤖 รอบ 1521: worldMecha เปิดสาธารณะ
   const CLASSIC_RAIL_GLYPHS = Object.freeze({
     cure:'💊',city:'🏙️',worldAdv:'🌍',worldSky:'☁️',worldHaunt:'👻',worldHeli:'🚁',worldDrone:'🛸',
     worldDrive:'🚗',worldSoccer:'⚽',worldMoto:'🏍️',worldInvasion:'🛸',worldMecha:'🤖',worldFrontline:'🪖',home:'🏠',
