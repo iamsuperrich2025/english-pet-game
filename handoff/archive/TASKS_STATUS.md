@@ -6457,3 +6457,10 @@ efreshMechaLock
 - **รอบ 1510 · ธีมหรูดำแอดมินเท่านั้น:** Home V2 ธีม noir ดำ/เถา/ทอง + แบนเนอร์จบภารกิจหรู · คนทั่วไปยังพาสเทล
 - ไฟล์: `css/home-v2.css` `js/home-v2.js` `css/style.css` `css/lobby.css` `js/util.js` `js/auth.js` `index_classic.html`
 - เกต `isAdmin()===true` · unit noir ผ่าน · ค้าง: แอดมินลอง Settings ⚙️ → 🎨 ธีมหน้าหลัก บน live
+
+
+## ⏬ ย้ายเมื่อ 2026-09-16 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- unit 1513 ผ่าน · ค้าง: ยิงบน live เทียบวงไล่สี
+- **รอบ 1512 · โปรไฟล์ Modern Luxury + คอลเลกชันครบ:** เจ้าของเห็นสัตว์ทุกตัวและทรัพย์สินทุกหมวดจากเซฟสด แม้ปิดสวิตช์เผยแพร่; โปรไฟล์คนอื่นยังเคารพสิทธิ์เดิม
+- ไฟล์: `js/ui.js` `js/online.js` `js/state.js` `css/profile-modern.css` `tools/test_profile_modern.cjs`

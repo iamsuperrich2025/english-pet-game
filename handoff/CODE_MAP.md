@@ -16,7 +16,7 @@ probeGhostImages:71 · whenGhostsReady:83 · ghostTexture:87 · ghostScareSrc:92
 addAdBillboard:160 · ringAds:172 · BUILDING_TINTS:182 · FACADE_ROWS:184 · buildingFacadeTexture:185 · makePeerSprite:210
 bind:246
 
-## js/adventure3d.js (13,871 บรรทัด · 681 รายการ)
+## js/adventure3d.js (13,943 บรรทัด · 681 รายการ)
 ### 🗂️ สารบัญโซน js/adventure3d.js (Read/Edit เฉพาะช่วง)
 - 1-217 adventure3d.js — โลก 3D First-person 2 โหมด (คิว 7725691507 ข้อ 8 + ต่อยอด)
 - 218-322 ⚽ โหมดสนามฟุตบอล (โหมด soccer · รอบ 196) — เล็ง+ชาร์จพลังเตะบอลใส่ป้ายตัวอักษร
@@ -75,9 +75,9 @@ bind:246
 - 10146-10761 📏 แถบเตือนความเร็วดิ่ง (รอบ 349) — ลงเร็วเกินกรอบกล้องกะพริบแดง สอนให้ร่อนลงนุ่มๆ
 - 10762-10764 Loop หลัก
 - 10765-12480 ⚽ โหมดสนามฟุตบอล — ฟิสิกส์บอล + เล็ง + ชาร์จพลัง + กล้อง 1st/3rd + ชุดนักเตะ
-- 12481-13190 🤖 โหมดหุ่นยนต์นักรบ — เดินยิงเอเลี่ยนตัวอักษร (ต้องยิงเรียงลำดับในคำ)
-- 13191-13215 เข้า/ออกโลก
-- 13216-13871 ❓ การ์ด "วิธีเล่น" ตอนเข้าโลกครั้งแรก (จำแยกต่อโลกใน localStorage — ไม่แตะ state.js)
+- 12481-13258 🤖 โหมดหุ่นยนต์นักรบ — เดินยิงเอเลี่ยนตัวอักษร (ต้องยิงเรียงลำดับในคำ)
+- 13259-13283 เข้า/ออกโลก
+- 13284-13943 ❓ การ์ด "วิธีเล่น" ตอนเข้าโลกครั้งแรก (จำแยกต่อโลกใน localStorage — ไม่แตะ state.js)
 ### รายการ js/adventure3d.js
 GUIDE_WORDS:19 · LETTER_RESPAWN_MS:20 · HALF:21 · PLAYER_SPEED:22 · HAUNT_ATTACKS:23 · HAUNT_IFRAME:24
 PICK_DIST:25 · EYE_H:26 · NET_SEND_MS:27 · MODES:30 · SHOOT_GAP_MS:94 · MONSTER_REWARD:95
@@ -183,16 +183,16 @@ auraTick:11833 · buildDrill:11884 · drillTick:11897 · ballFXTex:11937 · buil
 ballFXTick:11972 · buildLandRing:12018 · buildGuideRibbon:12028 · renderSpinPad:12053 · spinPadToggle:12065 · spinPadPick:12071
 renderCurl:12083 · kickLaunch:12094 · updateSoccerGuide:12103 · soccerCamera:12167 · tickSoccer:12191 · ssShirtPath:12385
 ssShortsPath:12393 · ssPaintSwatchShirt:12398 · ssPaintSwatchShorts:12403 · ssPreviewDraw:12410 · soccerKitShow:12439 · soccerKitGo:12468
-emojiSprite:12644 · makeAlien:12649 · startWave:12700 · waveSpawnFill:12711 · waveComplete:12720 · updateWaveHud:12730
-checkMechaBossBadge:12732 · alienSpawnPos:12741 · removeAlien:12746 · mechaBankCoins:12751 · mechaHudWord:12761 · setMechaHudSkin:12769
-mechaComboPop:12782 · mechaShielded:12787 · mechaDamageFx:12789 · mechaHitByAlien:12794 · spawnAlienShot:12800 · removeAlienShot:12810
-tickAlienShots:12815 · spawnPowerup:12827 · removePowerup:12840 · collectPowerup:12845 · tickPowerups:12852 · updateMechaHud:12861
-mechaTracer:12901 · mechaMuzzlePoint:12909 · spawnMechaShell:12919 · mechaKillShell:12927 · mechaApplyLetterHit:12936 · mechaSmokeTex:12957
-spawnMechaSmoke:12968 · tickMechaSmoke:12977 · clearMechaSmoke:12986 · tickMechaShells:12990 · mechaFire:13022 · explodeAlien:13036
-tickMecha:13068 · loop:13136 · grabShot:13171 · savePhoto:13182 · clearEntities:13194 · INTRO_KEY:13220
-introSeenObj:13221 · introSeen:13222 · markIntroSeen:13223 · INTRO:13224 · INTRO_MODE:13226 · showIntro:13228
-HELI_KPP_BANNER:13254 · HAUNT_ENTRY_NOTICE:13256 · showHauntedEntryNotice:13260 · showModeIntro:13268 · closeIntro:13272 · beginPlay:13278
-start:13280 · exitWorld:13523 · mechaRecapLine:13603
+emojiSprite:12712 · makeAlien:12717 · startWave:12768 · waveSpawnFill:12779 · waveComplete:12788 · updateWaveHud:12798
+checkMechaBossBadge:12800 · alienSpawnPos:12809 · removeAlien:12814 · mechaBankCoins:12819 · mechaHudWord:12829 · setMechaHudSkin:12837
+mechaComboPop:12850 · mechaShielded:12855 · mechaDamageFx:12857 · mechaHitByAlien:12862 · spawnAlienShot:12868 · removeAlienShot:12878
+tickAlienShots:12883 · spawnPowerup:12895 · removePowerup:12908 · collectPowerup:12913 · tickPowerups:12920 · updateMechaHud:12929
+mechaTracer:12969 · mechaMuzzlePoint:12977 · spawnMechaShell:12987 · mechaKillShell:12995 · mechaApplyLetterHit:13004 · mechaSmokeTex:13025
+spawnMechaSmoke:13036 · tickMechaSmoke:13045 · clearMechaSmoke:13054 · tickMechaShells:13058 · mechaFire:13090 · explodeAlien:13104
+tickMecha:13136 · loop:13204 · grabShot:13239 · savePhoto:13250 · clearEntities:13262 · INTRO_KEY:13288
+introSeenObj:13289 · introSeen:13290 · markIntroSeen:13291 · INTRO:13292 · INTRO_MODE:13294 · showIntro:13296
+HELI_KPP_BANNER:13322 · HAUNT_ENTRY_NOTICE:13324 · showHauntedEntryNotice:13328 · showModeIntro:13336 · closeIntro:13340 · beginPlay:13346
+start:13348 · exitWorld:13592 · mechaRecapLine:13675
 
 ## js/app-update.js (214 บรรทัด · 0 รายการ)
 
