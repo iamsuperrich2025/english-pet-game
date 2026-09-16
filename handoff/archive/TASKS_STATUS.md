@@ -6495,3 +6495,12 @@ efreshMechaLock
 - ไฟล์: `css/profile-modern.css` `tools/test_profile_modern.cjs`
 - Playwright 45 checks ผ่านที่ 1366×768, 1367×617, 812×375 + Home V2 regression ผ่าน; กรอบกว้าง=สูงทุกจอ/เหรียญครบ/ไม่มี overflow/runtime error
 - **รอบ 1517 · BGM หุ่น lazy+cache:** ใช้ `sound/robot/bgm.mp3` · โหลดตอนเข้าหุ่นเท่านั้น · Cache ตาม hash · Blob loop · ออกโลก fade หยุด
+
+
+## ⏬ ย้ายเมื่อ 2026-09-16 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1520 · Home แอดมินดำ–เทา–เหลือง:** แทนกรอบ/ปุ่มภาพสีรุ้งด้วยการ์ด graphite ปุ่มเหลือง หัวข้ออ่านชัด; คงสีสัตว์จริงและ gate `isAdmin()` เดิม + settings picker “ดำเทาเหลือง”
+- ไฟล์: `css/home-v2.css` `css/lobby.css` `js/home-v2.js` `js/util.js` `docs/PROJECT_MAP.md`; เพิ่ม browser test และแก้ test cache revision เก่าให้รับรุ่นใหม่โดยยังตรวจขั้นต่ำเดิม
+- ผ่าน theme/Home/pet/settings regressions, browser source+dist อย่างละ 31 checks ที่ 1367×617, 1366×768, 812×375 (role switch/logout/storage gate, AA contrast, geometry, settings); build+PWA/cache validator ผ่าน
+- เตรียม `handoff/SHIP.txt` แบบ FILE manifest เฉพาะงานนี้; รอผู้ใช้ยืนยันใน COMMIT_DEPLOY ก่อนยืนยัน live · ภาพ WebP: `Documents/Codex/2026-09-16/new-chat-3/outputs/`
+

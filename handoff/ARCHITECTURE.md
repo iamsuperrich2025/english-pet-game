@@ -127,7 +127,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/vocabbook.js** (207 บรรทัด) — 📒 สมุดคำศัพท์ของฉัน + ข้อสอบทบทวนส่วนตัว (รอบ 288) · เก็บทุกคำที่เด็กเจอในเกมจับคู่/ข้อสอบทุกแบบ (รวม band) ลง state.vocabBook · ถาวรข้ามเซสชัน: {en: {th, c:ถูกกี่ครั้ง, w:ผิดกี่ครั้ง, t:เจอล่าสุด, lw:ครั้งล่าสุดผิด?}}
 - **js/wordsearch.js** (524 บรรทัด) — 🔎 wordsearch.js — เกมค้นหาคำศัพท์ (Word Search) รอบ 194 · แผงฟ้าล้ำยุคเลื่อนออกจากซ้าย · สุ่มคำไม่ซ้ำในแต่ละเกม · 🆕 รอบ 588: กระดานเกือบเต็มจอ · แถบ "หาคำเหล่านี้ให้เจอ" ย้ายขึ้นบนสุด จัดกึ่งกลาง
 - **js/wordship.js** (1,496 บรรทัด) — ⚓ wordship.js — กองเรือคำศัพท์ (Cute Word Fleet) รอบ 1477 · โลก 3D ของเล่นแบบ Vocab World Kart (Soft Cuboid) + ยิงวิถีโค้งแบบ World of Warships · คลังคำ = vocabForStudent() ชุดเดียวกับยิงเป้าคำ · ยิงใช้คลิปวงเพลิง Arena ชุดเดียว · ไม่ดึงคลังคำเน็ต
-- **js/wordskirmish.js** (1,098 บรรทัด) — 🔫 wordskirmish.js — ยิงรบคำ (Cute Word Skirmish) รอบ 1480 · คัดลอกกติกาปืนลมจากยิงเป้าคำ + เดินอิสระมุม 3rd-person + บ้าน/ตัวอักษรแบบ Frontline · Soft Cuboid Chibi 3D น่ารัก · ออนไลน์ NetRoom map `skirmish` สูงสุด 8 คน
+- **js/wordskirmish.js** (1,133 บรรทัด) — 🔫 wordskirmish.js — ยิงรบคำ (Cute Word Skirmish) รอบ 1480 · คัดลอกกติกาปืนลมจากยิงเป้าคำ + เดินอิสระมุม 3rd-person + บ้าน/ตัวอักษรแบบ Frontline · Soft Cuboid Chibi 3D น่ารัก · ออนไลน์ NetRoom map `skirmish` สูงสุด 8 คน
 - **js/wsaward.js** (32 บรรทัด) — 🏆 wsaward.js — รางวัลรายเดือนของกระดานอันดับ 🔎 ค้นหาคำ (รอบ 592) · ผู้ใช้สั่ง 26 ก.ค. 2026: · ① Top 10 ได้เหรียญรางวัลทุกวันที่ 1 ของเดือน (10,000 ลดหลั่นถึง 1,000)
 - **css/account-deletion.css** (15 บรรทัด) — Protected account deletion — compact landscape-first dialogs
 - **css/arena-heroes.css** (20 บรรทัด) — Round 1381 — full-body hero selection. Portrait owns a single animation context.
@@ -153,6 +153,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/wordskirmish.css** (46 บรรทัด) — 🔫 ยิงรบคำ — HUD น่ารักจอเตี้ย 812×375 รอบ 1480
 - **sw.js** (281 บรรทัด) — Vocab World service worker · Delivery contract: · - HTML navigations are network-first with the last valid shell as fallback.
 <!-- AUTO-FILES:END -->
+
 
 
 
