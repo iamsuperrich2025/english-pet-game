@@ -131,9 +131,10 @@ function fakeMesh(){
 const kneel=fakeMesh(); T.poseChibi(kneel,{pose:'kneel',alive:true,bob:0});
 assert(kneel.userData.rig.kneeR.rotation.x>kneel.userData.rig.kneeL.rotation.x,'kneel drops one knee');
 const crouch=fakeMesh(); T.poseChibi(crouch,{pose:'crouch',alive:true,bob:0});
-assert(crouch.userData.rig.kneeL.rotation.x>1 && crouch.userData.rig.kneeR.rotation.x>1,'crouch bends both knees');
+assert(crouch.userData.rig.kneeL.rotation.x< -1 && crouch.userData.rig.kneeR.rotation.x< -1,'crouch knees bend backward while hips bend forward');
 const prone=fakeMesh(); T.poseChibi(prone,{pose:'prone',alive:true,bob:0});
 assert(prone.userData.rig.hipL.rotation.z*prone.userData.rig.hipR.rotation.z<0,'prone splits the hips');
 const dodge=fakeMesh(); T.poseChibi(dodge,{pose:'stand',alive:true,bob:0,dodge:1});
-assert(dodge.userData.rig.neck.rotation.z>0,'dodge leans the torso');
+// Full torso/head displacement is asserted with real Three.js matrices at eight headings in test_wordskirmish_poses.cjs. The neck now stays aligned with the torso.
+assert(T.parseAv('sk1cR5').dodge===5/9 && T.parseAv('sk1pL9').dodge===-1,'peer dodge preserves direction and phase');
 console.log('wordskirmish ok',n);

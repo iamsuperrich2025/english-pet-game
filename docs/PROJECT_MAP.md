@@ -161,10 +161,10 @@ NOTES: Separate from Invasion combat.
 SYSTEM: Cute Word Skirmish minigame
 PURPOSE: Admin-only third-person cute PvP vocab raid copied from Shoot Word movement/gun feel, with Frontline/Arena letter banking.
 PRIMARY FILE: `js/wordskirmish.js`
-RELATED FILES: `css/wordskirmish.css`, `js/ui.js` (`openWordSkirmish`), `js/home-v2.js`, `js/city3d.js`, `js/netroom.js`, `index_classic.html`, `tools/test_wordskirmish.js`
+RELATED FILES: `css/wordskirmish.css`, `js/ui.js` (`openWordSkirmish`), `js/home-v2.js`, `js/city3d.js`, `js/netroom.js`, `index_classic.html`, `tools/test_wordskirmish.js`, `tools/test_wordskirmish_poses.cjs`
 PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.WordSkirmish`, `open`, `close`, `fire`, `tryPickup`, `tryDeposit`
 DEPENDENCIES: `vocabForStudent`, lazily loaded `THREE`, optional `NetRoom` map `skirmish`.
-NOTES: Hidden from non-admins. Free walk + chase camera. Headshot KO, body uses gun `BODY_DMG`. Carry-one letters banked at a private pastel house for 1,000 coins. Soft Cuboid Chibi 3D toy-gun avatars. Rules publish required for live rooms.
+NOTES: Hidden from non-admins. Free walk + chase camera. Headshot KO, body uses gun `BODY_DMG`. Carry-one letters banked at a private pastel house for 1,000 coins. Soft Cuboid Chibi 3D toy-gun avatars. Posture belongs to body/upper-body pivots below the yaw-only actor root; cached support bounds keep feet, knees and elbows above ground. Crouch bends knees backward; prone holds the torso horizontal and keeps the head/barrel forward. Dodge is a two-unit lateral step with a local torso lean and single-action input. Existing av codes accept an optional 0-9 dodge phase after L/R (legacy codes still decode); no new network fields. Real-rig/input/hitbox/mobile checks: tools/test_wordskirmish_poses.cjs. Rules publish required for live rooms.
 
 SYSTEM: Cute Word Fleet minigame
 PURPOSE: Landscape toy-battleship vocab game: pick up letter cards, bank them at your home island, and complete Frontline-style words for central coins.

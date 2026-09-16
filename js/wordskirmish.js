@@ -45,7 +45,7 @@
   const STANCES=['stand','crouch','kneel','prone'];
   const POSE_CODE={stand:'',crouch:'c',kneel:'k',prone:'p'};
   let padPos={joy:{x:.14,y:.82},auto:{x:.14,y:.56},crouch:{x:.32,y:.56},prone:{x:.32,y:.40},dodge:{x:.32,y:.26},fire:{x:.9,y:.88},drop:{x:.9,y:.72}};
-  let stance='stand', dodgeT=0, dodgeDir=1, lastStrafe=1;
+  let stance='stand', dodgeT=0, dodgeDir=1, dodgeYaw=0, lastStrafe=1;
 
   function later(fn,ms){const id=setTimeout(()=>{timers.delete(id);fn();},ms);timers.add(id);return id;}
   function loadPad(){
@@ -117,14 +117,18 @@
   function toggleAuto(){ return setAutoRun(!autoRun); }
   function stanceSpec(name){
     const p=name||stance;
-    if(p==='crouch') return {y:-.2, rx:0, cam:2.35, look:.02, spd:.55};
-    if(p==='kneel') return {y:-.36, rx:.06, cam:2.02, look:-.08, spd:.32};
-    if(p==='prone') return {y:.4, rx:-1.18, cam:1.28, look:-.55, spd:.2};
+    if(p==='crouch') return {y:0, rx:0, cam:2.35, look:.02, spd:.55};
+    if(p==='kneel') return {y:0, rx:0, cam:2.02, look:-.08, spd:.32};
+    if(p==='prone') return {y:0, rx:0, cam:1.28, look:-.55, spd:.2};
     return {y:0, rx:0, cam:CAM_H, look:CAM_LOOK, spd:1};
   }
   function paintPose(){
-    if(hud.crouch) hud.crouch.classList.toggle('skm-on', stance==='crouch');
-    if(hud.prone) hud.prone.classList.toggle('skm-on', stance==='prone');
+    ['crouch','prone','dodge'].forEach(key=>{
+      const el=hud[key]; if(!el) return;
+      const on=key==='dodge'?dodgeT>0:stance===key;
+      el.classList.toggle('skm-on',on);
+      el.setAttribute('aria-pressed',on?'true':'false');
+    });
   }
   function setStance(name){
     stance=STANCES.indexOf(name)>=0?name:'stand';
@@ -136,14 +140,15 @@
   }
   function poseTag(){
     const base=POSE_CODE[stance]||'';
-    if(dodgeT>0) return base+(dodgeDir<0?'L':'R');
+    if(dodgeT>0) return base+(dodgeDir<0?'L':'R')+Math.round(Math.abs(dodgeAmt())*9);
     return base;
   }
   function packAv(){ return 'sk'+(player.seat+1)+poseTag(); }
   function parseAv(av){
-    const m=String(av||'').match(/^sk(\d)([ckp]?)([LR]?)/i);
+    const m=String(av||'').match(/^sk(\d)([ckp]?)([LR]?)([0-9]?)/i);
     const pose={c:'crouch',k:'kneel',p:'prone'}[(m&&m[2]||'').toLowerCase()]||'stand';
-    const dodge=(m&&m[3]==='L')?-1:(m&&m[3]==='R')?1:0;
+    const side=m&&m[3].toUpperCase();
+    const dodge=(side==='L'?-1:side==='R'?1:0)*(m&&m[4]!==''?Number(m[4])/9:1);
     return {seat:m?clamp((parseInt(m[1],10)||1)-1,0,3):0, pose, dodge};
   }
   function dodgeAmt(){
@@ -151,9 +156,11 @@
     return dodgeDir*Math.sin((1-dodgeT/DODGE_T)*Math.PI);
   }
   function startDodge(dir){
+    if(!player.alive || dodgeT>0) return 0;
     if(dir) dodgeDir=dir<0?-1:1;
-    else dodgeDir=lastStrafe<0?-1:1;
-    dodgeT=DODGE_T;
+    else dodgeDir=keys.l||joy.x<-.2?-1:keys.r||joy.x>.2?1:lastStrafe<0?-1:1;
+    dodgeT=DODGE_T; dodgeYaw=lookYaw;
+    paintPose();
     return dodgeDir;
   }
   function setJoyKnob(x,z){
@@ -231,28 +238,30 @@
   function joint(x,y,z){ const p=new THREE.Group(); p.position.set(x,y,z); return p; }
   /* Soft Cuboid Chibi 3D — ข้อต่อมนุษย์ (สะโพก/เข่า/ไหล่/ศอก/ข้อมือ) ปืนติดมือขวา งอแขนยกปืนได้ */
   function makeChibi(palette, withGun){
-    const g=new THREE.Group();
+    const g=new THREE.Group(), body=new THREE.Group(), upper=joint(0,.62,0);
+    g.add(body); body.add(upper);
+    const support=[];
     const skin=palette.skin||0xffcf9e, shirt=palette.shirt||0xff8fab, pants=palette.pants||0x5b8def, hair=palette.hair||0x3b2a24;
     const pelvis=box(.56,.2,.38,pants,0,.62,0);
     const torso=box(.7,.52,.44,shirt,0,.98,0);
-    g.add(pelvis,torso);
+    body.add(pelvis); upper.add(torso); torso.position.y-=.62; support.push(pelvis,torso);
     function makeLeg(side){
       const hip=joint(side*.16,.62,0);
-      hip.add(bone(.26,.28,.28,pants));
+      const thigh=bone(.26,.28,.28,pants); hip.add(thigh);
       const knee=joint(0,-.28,0); hip.add(knee);
-      knee.add(bone(.24,.24,.26,pants));
+      const shin=bone(.24,.24,.26,pants); knee.add(shin);
       const ankle=joint(0,-.24,0); knee.add(ankle);
       const foot=box(.22,.1,.32,0x5d4037,0,-.05,-.06); ankle.add(foot);
-      g.add(hip); return {hip,knee,ankle};
+      body.add(hip); support.push(thigh,shin,foot); return {hip,knee,ankle};
     }
     function makeArm(side){
       const shoulder=joint(side*.4,1.16,.02);
       shoulder.add(bone(.2,.28,.22,shirt));
       const elbow=joint(0,-.28,0); shoulder.add(elbow);
-      elbow.add(bone(.18,.26,.2,skin));
+      const forearm=bone(.18,.26,.2,skin); elbow.add(forearm);
       const wrist=joint(0,-.26,0); elbow.add(wrist);
       const hand=box(.16,.14,.18,skin,0,-.06,-.02); wrist.add(hand);
-      g.add(shoulder); return {shoulder,elbow,wrist,hand};
+      shoulder.position.y-=.62; upper.add(shoulder); support.push(forearm,hand); return {shoulder,elbow,wrist,hand};
     }
     const legL=makeLeg(-1), legR=makeLeg(1);
     const armL=makeArm(-1), armR=makeArm(1);
@@ -262,7 +271,7 @@
     const eyeL=box(.1,.12,.06,0x2b1c14,-.16,.4,-.34), eyeR=box(.1,.12,.06,0x2b1c14,.16,.4,-.34);
     const blushL=box(.12,.08,.04,0xff9bb5,-.28,.28,-.32), blushR=box(.12,.08,.04,0xff9bb5,.28,.28,-.32);
     const smile=box(.22,.05,.04,0xe11d48,0,.2,-.34);
-    neck.add(head,hairM,eyeL,eyeR,blushL,blushR,smile); g.add(neck);
+    neck.add(head,hairM,eyeL,eyeR,blushL,blushR,smile); neck.position.y-=.62; upper.add(neck);
     stampHit(neck,'head');
     stampHit(pelvis,'body'); stampHit(torso,'body');
     stampHit(legL.hip,'body'); stampHit(legR.hip,'body');
@@ -285,8 +294,9 @@
       hipR:legR.hip,kneeR:legR.knee,ankleR:legR.ankle,
       shoulderL:armL.shoulder,elbowL:armL.elbow,wristL:armL.wrist,
       shoulderR:armR.shoulder,elbowR:armR.elbow,wristR:armR.wrist,
-      neck, gun
+      neck, gun, body, upper, support, groundBox:new THREE.Box3()
     };
+    support.forEach(m=>m.geometry.computeBoundingBox());
     g.userData.rig=rig;
     g.userData.gun=gun;
     g.userData.limbs=[rig.hipL,rig.hipR,rig.shoulderL,rig.shoulderR];
@@ -302,13 +312,19 @@
     const alive=!(st&&st.alive===false);
     const pose=(st&&st.pose)||'stand';
     const dodge=Number(st&&st.dodge)||0;
-    const swing=Math.sin(bob)*(moving?.62:.07);
+    const swing=Math.sin(bob)*(moving?.62:0);
+    if(r.body){
+      r.body.rotation.set(alive&&pose==='prone'?-Math.PI/2:0,0,0);
+      r.body.position.y=0;
+      r.upper.rotation.set(alive&&pose==='crouch'?-.22:0,0,alive&&pose!=='prone'?-dodge*.38:0);
+      r.upper.position.x=alive&&pose==='prone'?dodge*.12:0;
+    }
     r.hipL.rotation.set(swing,0,.05);
     r.hipR.rotation.set(-swing,0,-.05);
-    r.kneeL.rotation.set(Math.max(.08, moving?(.4-swing)*.85:.14),0,0);
-    r.kneeR.rotation.set(Math.max(.08, moving?(.4+swing)*.85:.14),0,0);
-    r.ankleL.rotation.set(-Math.max(0,r.kneeL.rotation.x-.1),0,0);
-    r.ankleR.rotation.set(-Math.max(0,r.kneeR.rotation.x-.1),0,0);
+    r.kneeL.rotation.set(-Math.max(.04, moving?(.4-swing)*.85:.04),0,0);
+    r.kneeR.rotation.set(-Math.max(.04, moving?(.4+swing)*.85:.04),0,0);
+    r.ankleL.rotation.set(-r.hipL.rotation.x-r.kneeL.rotation.x,0,0);
+    r.ankleR.rotation.set(-r.hipR.rotation.x-r.kneeR.rotation.x,0,0);
     if(!alive){
       r.shoulderL.rotation.set(.4,.1,.5); r.elbowL.rotation.set(-.5,0,0); r.wristL.rotation.set(0,0,0);
       r.shoulderR.rotation.set(.35,-.1,-.5); r.elbowR.rotation.set(-.45,0,0); r.wristR.rotation.set(0,0,0);
@@ -316,48 +332,52 @@
       return r;
     }
     if(pose==='crouch'){
-      r.hipL.rotation.set(.95+swing*.12,0,.1);
-      r.hipR.rotation.set(.95-swing*.12,0,-.1);
-      r.kneeL.rotation.set(1.48,0,0);
-      r.kneeR.rotation.set(1.48,0,0);
-      r.ankleL.rotation.set(-.58,0,0);
-      r.ankleR.rotation.set(-.58,0,0);
+      r.hipL.rotation.set(1.2+swing*.12,0,.08);
+      r.hipR.rotation.set(1.2-swing*.12,0,-.08);
+      r.kneeL.rotation.set(-2,0,0); r.kneeR.rotation.set(-2,0,0);
+      r.ankleL.rotation.set(-r.hipL.rotation.x+2,0,0);
+      r.ankleR.rotation.set(-r.hipR.rotation.x+2,0,0);
     }else if(pose==='kneel'){
-      r.hipR.rotation.set(1.48,0,-.16);
-      r.kneeR.rotation.set(2.18,0,0);
-      r.ankleR.rotation.set(.22,0,0);
-      r.hipL.rotation.set(.58+swing*.1,0,.18);
-      r.kneeL.rotation.set(1.08,0,0);
-      r.ankleL.rotation.set(-.22,0,0);
+      r.hipR.rotation.set(-.35,0,-.08); r.kneeR.rotation.set(-1.45,0,0);
+      r.ankleR.rotation.set(1.8,0,0);
+      r.hipL.rotation.set(1.4,0,.08); r.kneeL.rotation.set(-1.65,0,0);
+      r.ankleL.rotation.set(.25,0,0);
     }else if(pose==='prone'){
-      r.hipL.rotation.set(.18,0,.42);
-      r.hipR.rotation.set(.18,0,-.42);
-      r.kneeL.rotation.set(.55,0,0);
-      r.kneeR.rotation.set(.55,0,0);
-      r.ankleL.rotation.set(.12,0,0);
-      r.ankleR.rotation.set(.12,0,0);
+      r.hipL.rotation.set(.04,0,.16+swing*.08);
+      r.hipR.rotation.set(.04,0,-.16-swing*.08);
+      r.kneeL.rotation.set(-.08,0,0); r.kneeR.rotation.set(-.08,0,0);
+      r.ankleL.rotation.set(0,0,0); r.ankleR.rotation.set(0,0,0);
     }
     const kick=recoil;
     r.shoulderR.rotation.set(1.18+kick*.28, .12, .38);
     r.elbowR.rotation.set(1.22-kick*.1, -.06, -.18);
     r.wristR.rotation.set(-.18, .2, .16);
-    if(r.gun){
-      r.gun.rotation.set(0,0,0);
-      if(tmpV && tmpV2){
-        mesh.updateWorldMatrix(true,true);
-        r.gun.getWorldPosition(tmpV);
-        tmpV2.set(0, .04+kick*.3, -5).applyQuaternion(mesh.quaternion).add(tmpV);
-        r.gun.lookAt(tmpV2);
-      }
-    }
     const hold=Math.sin(bob*.55)*0.04;
     r.shoulderL.rotation.set(1.05+hold, -.18, -.42);
     r.elbowL.rotation.set(1.12, .1, .12);
     r.wristL.rotation.set(-.1, -.2, -.18);
-    r.neck.rotation.set(Number(st&&st.lookX)||0, 0, dodge*.28);
-    if(dodge){
-      r.hipL.rotation.z+=dodge*.45; r.hipR.rotation.z+=dodge*.45;
-      r.shoulderL.rotation.z+=dodge*.55; r.shoulderR.rotation.z+=dodge*.35;
+    if(pose==='prone'){
+      r.shoulderR.rotation.set(1.05+kick*.1,0,.12); r.elbowR.rotation.set(2,0,0);
+      r.shoulderL.rotation.set(1.05,0,-.12); r.elbowL.rotation.set(2,0,0);
+    }
+    r.neck.rotation.set((pose==='prone'?Math.PI/2:pose==='crouch'?.22:0)+(Number(st&&st.lookX)||0),0,0);
+    if(r.body){
+      // Root owns yaw only. Pose axes stay local at every compass heading.
+      // Reuse cached bounds: feet/knees/elbows support the same rendered hit meshes.
+      mesh.updateWorldMatrix(true,true);
+      let floor=Infinity;
+      for(const part of r.support){
+        r.groundBox.copy(part.geometry.boundingBox).applyMatrix4(part.matrixWorld);
+        floor=Math.min(floor,r.groundBox.min.y);
+      }
+      r.body.position.y=mesh.position.y+.03-floor;
+    }
+    if(r.gun && tmpV && tmpV2){
+      // Aim in world space: lying down must never rotate the barrel into the floor.
+      mesh.updateWorldMatrix(true,true);
+      r.gun.getWorldPosition(tmpV);
+      tmpV2.set(0,.04+kick*.3+(Number(st&&st.lookX)||0)*5,-5).applyQuaternion(mesh.quaternion).add(tmpV);
+      r.gun.lookAt(tmpV2);
     }
     return r;
   }
@@ -551,7 +571,7 @@
     player.x=h.x+fx*4.5; player.z=h.z+fz*4.5;
     player.yaw=Math.atan2(-fx,-fz); lookYaw=player.yaw;
     player.hp=MAX_HP; player.alive=true; player.respawnAt=0;
-    setStance('stand'); dodgeT=0;
+    dodgeT=0; setStance('stand'); clearInput();
   }
   function applyDamage(kind, fromName){
     if(!player.alive) return false;
@@ -652,9 +672,12 @@
       const spec=stanceSpec(pose.pose);
       const lean=pose.dodge;
       vis.mesh.position.set(Number(rec.x)||0, spec.y, Number(rec.z)||0);
-      vis.mesh.rotation.set(st.hp>0?spec.rx:0, Number(rec.yaw)||0, st.hp>0?lean*.42:Math.PI/2);
+      vis.mesh.rotation.set(0, Number(rec.yaw)||0, st.hp>0?0:Math.PI/2);
       vis.mesh.visible=st.hp>0;
-      poseChibi(vis.mesh,{moving:true,bob:elapsed*7,alive:st.hp>0,pose:pose.pose,dodge:lean});
+      if(vis.lastX!=null&&Math.hypot(vis.mesh.position.x-vis.lastX,vis.mesh.position.z-vis.lastZ)>.001) vis.movingUntil=elapsed+.2;
+      const moving=!lean&&elapsed<(vis.movingUntil||0);
+      vis.lastX=vis.mesh.position.x; vis.lastZ=vis.mesh.position.z;
+      poseChibi(vis.mesh,{moving,bob:elapsed*7,alive:st.hp>0,pose:pose.pose,dodge:lean});
     });
     Object.keys(peersVis).forEach(uid=>{
       if(!peers[uid]){ scene.remove(peersVis[uid].mesh); delete peersVis[uid]; }
@@ -746,7 +769,7 @@
     const spec=stanceSpec();
     const lean=player.alive?dodgeAmt():0;
     playerMesh.position.set(player.x, player.alive?spec.y:-.4, player.z);
-    playerMesh.rotation.set(player.alive?spec.rx:0, player.yaw, player.alive?lean*.42:Math.PI/2);
+    playerMesh.rotation.set(0, player.yaw, player.alive?0:Math.PI/2);
     playerMesh.visible=true;
     player.bob+=dt*(moving?10:2);
     if(player.recoil>0) player.recoil=Math.max(0, player.recoil-dt*8);
@@ -781,21 +804,23 @@
           }
         }
       }
-      if(dodgeT>0){
-        const d=dodgeAmt();
-        mx+=Math.cos(lookYaw)*d; mz+=-Math.sin(lookYaw)*d;
-        const mag=Math.hypot(mx,mz); if(mag>1){ mx/=mag; mz/=mag; }
+      const dodging=dodgeT>0;
+      if(dodging){
+        const before=1-dodgeT/DODGE_T, after=Math.min(1,before+dt/DODGE_T);
+        // Integral of a half-sine: a two-unit sidestep, independent of frame rate.
+        const distance=dodgeDir*(Math.cos(before*Math.PI)-Math.cos(after*Math.PI));
+        collideMove(player.x+Math.cos(dodgeYaw)*distance,player.z-Math.sin(dodgeYaw)*distance);
       }
       const moving=Math.abs(mx)>.05||Math.abs(mz)>.05;
       if(moving){
         const spd=SPEED*stanceSpec().spd;
         collideMove(player.x+mx*spd*dt, player.z+mz*spd*dt);
-        player.yaw=Math.atan2(-mx, -mz);
+        player.yaw=dodging?lookYaw:Math.atan2(-mx, -mz);
       }else{
         player.yaw=lookYaw;
       }
+      if(dodging){ dodgeT=Math.max(0,dodgeT-dt); if(!dodgeT) paintPose(); }
       walkAnim(dt, moving);
-      if(dodgeT>0) dodgeT=Math.max(0, dodgeT-dt);
       tickLetters();
     }
     tickBots(dt);
@@ -876,7 +901,7 @@
         setJoyKnob(joy.x, joy.z);
       }else if(p.kind==='btn'){
         const moved=Math.hypot(e.clientX-p.x, e.clientY-p.y);
-        if(!p.drag && performance.now()-p.t0>=HOLD_MS){
+        if(!p.drag && moved>8 && performance.now()-p.t0>=HOLD_MS){
           p.drag=true; if(p.el) p.el.classList.add('skm-dragging');
         }
         if(p.drag){
@@ -893,7 +918,7 @@
       }else if(p.kind==='btn'){
         if(p.el) p.el.classList.remove('skm-dragging');
         if(p.drag) savePad();
-        else if(!p.slid && performance.now()-p.t0<HOLD_MS){
+        else if(e.type==='pointerup' && !p.slid){
           if(p.act==='fire') fire();
           else if(p.act==='drop') dropCarried();
           else if(p.act==='auto') toggleAuto();
@@ -909,9 +934,18 @@
     if(hud.introOk) hud.introOk.addEventListener('click', ()=>{ if(hud.intro) hud.intro.hidden=true; });
     window.addEventListener('keydown', onKey); window.addEventListener('keyup', onKeyUp);
     window.addEventListener('resize', resize);
+    window.addEventListener('blur', clearInput);
+    document.addEventListener('visibilitychange',()=>{if(document.hidden) clearInput();});
+  }
+  function clearInput(){
+    keys.f=keys.b=keys.l=keys.r=0; joy.x=joy.z=0;
+    pointers.forEach(p=>{if(p.el) p.el.classList.remove('skm-dragging');}); pointers.clear();
+    if(hud.joy) hud.joy.classList.remove('skm-dragging');
+    setJoyKnob(0,0);
   }
   function onKey(e){
-    if(!running) return;
+    if(!running || paused || (hud.intro&&!hud.intro.hidden)) return;
+    if(e.repeat && ['KeyE','KeyC','KeyZ','KeyX','ControlLeft'].includes(e.code)){e.preventDefault(); return;}
     if(e.code==='KeyW'||e.code==='ArrowUp') keys.f=1;
     if(e.code==='KeyS'||e.code==='ArrowDown') keys.b=1;
     if(e.code==='KeyA'||e.code==='ArrowLeft') keys.l=1;
@@ -1063,7 +1097,7 @@
     opening=false;
   }
   function close(){
-    running=false; paused=true; setAutoRun(false); setStance('stand'); dodgeT=0; settleCoinSession();
+    running=false; paused=true; setAutoRun(false); dodgeT=0; setStance('stand'); clearInput(); settleCoinSession();
     if(raf) cancelAnimationFrame(raf); raf=0;
     clearTimers();
     if(room && room.leave) room.leave(); room=null;
@@ -1083,7 +1117,8 @@
     tryPickup, tryDeposit, dropCarried, completeWord, placeLetter, spawnLetters, applyDamage, packHp, parseHp,
     fire, step, resetRun, collideMove, homeBlocked, homeOf, adminAllowed, aimPoint, poseChibi, makeChibi,
     placeCtl, layoutPad, syncVault, HOLD_MS, JOY_R, toggleAuto, setAutoRun, homeApproach, atOwnHome,
-    STANCES, stanceSpec, setStance, toggleStance, startDodge, packAv, parseAv,
+    STANCES, stanceSpec, setStance, toggleStance, startDodge, packAv, parseAv, onKey, onKeyUp, clearInput,
+    syncPeers, setRoom(value){room=value;}, get peersVis(){return peersVis;},
     setLook(y,p){ if(y!=null) lookYaw=y; if(p!=null) lookPitch=p; return {lookYaw,lookPitch}; },
     applyLook,
     get word(){return word;}, get stored(){return stored;}, get carried(){return carried;}, get letters(){return fieldLetters;},
