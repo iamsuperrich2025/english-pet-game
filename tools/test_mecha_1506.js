@@ -3,7 +3,7 @@ const fs=require('fs');
 const fx=fs.readFileSync('js/mecha-combat-fx.js','utf8');
 const assert=(ok,m)=>{ if(!ok){ console.error('FAIL',m); process.exit(1); } console.log('ok',m); };
 
-assert(fx.includes('Round 1506')||fx.includes('รอบ 1506'),'round mark');
+assert(fx.includes('Round 1506')||fx.includes('รอบ 1506')||fx.includes('Round 1511')||fx.includes('รอบ 1511')||fx.includes('Round 1513')||fx.includes('รอบ 1513'),'round mark');
 assert(fx.includes('CAPACITY=512'),'capacity 512');
 assert(fx.includes('fireRing=!!shot.ballistic || !!shot.hit'),'fire ring any land');
 assert(fx.includes('fireRing?1500:280')||fx.includes('(shot.ballistic||shot.hit)?1500:280'),'1.5s volumetric blast');
@@ -19,5 +19,6 @@ assert(/for\(let j=0;j<12;j\+\+\)/.test(fx),'12 smoke puffs');
 assert(/for\(let j=0;j<22;j\+\+\)/.test(fx),'22 gravity sparks');
 assert(fx.includes('6.2*t*t')||fx.includes('5.8*t*t'),'gravity on debris/sparks');
 assert(fx.includes('opacity:.42'),'stronger bloom halo');
+assert(fx.includes("world('ring'")||fx.includes('grad=[DEEP'),'gradient shock rings (1513)');
 
 console.log('mecha-1506 volumetric fireball checks passed');

@@ -1,6 +1,6 @@
-/* Round 1506 — mecha projectiles.
+/* Round 1513 — mecha projectiles.
    Ballistic shells (Word Fleet gravity): Adventure3D owns physics via launch/sync/impact.
-   Impact FX: volumetric fireball (white-hot core · billow fire · dark smoke · rock debris · radial streaks) ~1.5s.
+   Impact FX: volumetric fireball + stacked shock rings (orange inner → white outer) · billow · smoke · debris · streaks ~1.5s.
    Legacy fire(from,to) kept for tools/mecha/fx-preview.html flash previews.
    Instanced batches, 12 live shots, zero raster assets. */
 (function(root){
@@ -135,7 +135,7 @@ function create(scene){
   }
  }
  function drawImpact(shot,s,age){
-  /* 🔥 รอบ 1506: ลูกไฟมีมิติแบบตัวอย่าง — แกนขาว · เปลวบิลโลว์ · ควันดำ · เศษหิน · เส้นประกาย */
+  /* 🔥 รอบ 1513: ลูกไฟ + วงกระแทกไล่เฉดส้ม→ขาว + วงขาวนอก */
   const fireRing=!!shot.ballistic || !!shot.hit;
   const dur=fireRing?1500:280;
   const e=Math.min(1,age/dur),k=Math.sin(e*Math.PI),fade=1-e,special=s.kind!=='shell',boom=special?1.65:1.15;
@@ -146,11 +146,21 @@ function create(scene){
    const cx=p.x, cy=p.y, cz=p.z;
    const coreLife=Math.max(0,1-e*1.15);
    const puff=Math.min(1,e*2.2)*power;
-   /* พื้นเรืองแสง + คลื่นกระแทกบาง ๆ */
-   world('halo',cx,cy+.05,cz,(1.4+e*2.8)*power,(.25+e*.2)*power,(1.4+e*2.8)*power,BLOOM);
-   world('halo',cx,cy+.08,cz,(.9+e*1.6)*power,(.18+e*.15)*power,(.9+e*1.6)*power,CORE);
-   world('ring',cx,cy+.04,cz,(.5+e*2.4)*power,(.5+e*2.4)*power,.45,FLAME,e*.8);
-   world('ring',cx,cy+.06,cz,(.35+e*1.7)*power,(.35+e*1.7)*power,.35,CORE,-e);
+   /* วงทึบไล่เฉด: ใน=ส้มเข้ม → นอก=ขาว (ซ้อนหลายวง) + วงขาวกระแทกแบบเดิม */
+   const shockFade=Math.max(0,1-e*1.05);
+   if(shockFade>.04){
+    const grad=[DEEP,FLAME,BLOOM,CORE,HOT,0xfff4e8,0xffffff];
+    const layers=grad.length;
+    for(let ri=0;ri<layers;ri++){
+     const u=ri/(layers-1);
+     const rad=(.26+u*(.55+e*2.35))*power*shockFade;
+     const tube=(.14-u*.06)*power*(.85+.15*shockFade);
+     world('ring',cx,cy+.03+ri*.012,cz,rad,rad,tube,grad[ri],e*(ri%2?1:-.7));
+    }
+    world('ring',cx,cy+.06,cz,(.35+e*1.75)*power*shockFade,(.35+e*1.75)*power*shockFade,.38,HOT,-e);
+    world('ring',cx,cy+.04,cz,(.55+e*2.5)*power*shockFade,(.55+e*2.5)*power*shockFade,.32,0xffffff,e*.55);
+   }
+   world('halo',cx,cy+.12,cz,.55*power,.2*power,.55*power,BLOOM);
    /* แกนขาวร้อน */
    world('orb',cx,cy+.35*power,cz,(.55+.25*coreLife)*power,(.55+.25*coreLife)*power,(.55+.25*coreLife)*power,HOT);
    world('orb',cx,cy+.4*power,cz,(.32+.12*coreLife)*power,(.32+.12*coreLife)*power,(.32+.12*coreLife)*power,0xffffff);
