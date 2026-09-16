@@ -96,7 +96,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/lobby.js** (52 บรรทัด) — LOBBY แนวนอน — ระบบแผงรายละเอียดกลางจอ (อัพเดท 5725691826) · คลิกเมนูซ้าย → เปิดแผง (panel) ทับฉาก Lobby · เนื้อหา scroll ในแผง · การ์ดเดิมทั้งหมด (home/phone/computer/farm/collect/rank) ย้ายเข้าแผง
 - **js/lobby3d.js** (811 บรรทัด) — lobby3d.js — โมเดล 3D ตัวละครในหน้า Lobby (รอบ 114) · โหลด GLB ผู้เลี้ยง + น้อง (img/models/*.glb) · idle เบาๆ (หายใจ/โยกตัว) + เล่น animation clip จากไฟล์ (Tripo ชื่อ NlaTrack → ใช้ clip แรก)
 - **js/main.js** (617 บรรทัด) — ปุ่มหลัก + INIT
-- **js/mecha-combat-fx.js** (286 บรรทัด) — Round 1514 — mecha projectiles. · Ballistic shells (Word Fleet gravity): Adventure3D owns physics via launch/sync/impact. · Impact FX: fireball + orange→white shock rings · billow fire · orange/white ember sparks (no dark spheres) · streaks ~1.5s.
+- **js/mecha-combat-fx.js** (286 บรรทัด) — Round 1516 — mecha projectiles. · Ballistic shells (Word Fleet gravity): Adventure3D owns physics via launch/sync/impact. · Impact FX: fireball + orange→white shock rings · billow fire · orange/white ember sparks (no dark spheres) · streaks ~1.5s.
 - **js/mecha-models.js** (85 บรรทัด) — 🤖 Round 1399 — selected GLB mecha peers. Shared geometry, independent pivots. · Soft Cuboid Chibi 3D; ten allowlisted files; existing m_01..m_10 wire format.
 - **js/moto3d.js** (2,776 บรรทัด) — 🏍️ moto3d.js — โลกมอเตอร์ไซค์บ้านโพธิ์สวัสดิ์ (รอบ 293) · ขับมอเตอร์ไซค์ third-person บนถนนจริงรอบโรงเรียนบ้านโพธิ์สวัสดิ์ รัศมี 30 กม. (js/data/moto_phosawat.js · OSM) · เล่นบน "เครื่องเกมพกพา" เต็มจอ — จอเกมอยู่ตรงกลางเครื่อง · สไลเดอร์ส้มซ้าย=เลี้ยว · ปุ่มฟ้าขวา=เร่ง · ปุ่มแดงบน=ปิดเครื่อง
 - **js/music.js** (347 บรรทัด) — music.js — ระบบเพลง (รอบ 181) · เพลงพื้นหลัง (instrument) เล่นวนทั้งเกม เริ่มหลัง gesture แรก (autoplay policy) · เข้าโลก 3D ใดๆ → พัก bg (โลกมี soundscape ของตัวเอง) · ออก → เล่นต่อ
@@ -152,6 +152,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/wordskirmish.css** (46 บรรทัด) — 🔫 ยิงรบคำ — HUD น่ารักจอเตี้ย 812×375 รอบ 1480
 - **sw.js** (281 บรรทัด) — Vocab World service worker · Delivery contract: · - HTML navigations are network-first with the last valid shell as fallback.
 <!-- AUTO-FILES:END -->
+
 
 
 
