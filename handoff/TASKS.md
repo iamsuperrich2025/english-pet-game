@@ -12,6 +12,11 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1522 · ปุ่มธีมแอดมินเลือกแล้วจึงเป็นทอง:** ปุ่มทั่วไป/O-NET/โปรไฟล์/เพื่อน/ปิด/ยืนยันเป็น graphite; ตัวเลือก active และสวิตช์ on ใช้เหลืองทองหม่นไล่ 3 เฉด พร้อมขอบแสงบางและข้อความเข้ม
+- ไฟล์: `css/home-v2.css` `css/lobby.css` `js/util.js` `tools/test_home_theme_modern.cjs`; ป้ายเปิด/ปิดอธิบายตำแหน่งสวิตช์แทนชื่อสี; ไม่มี asset runtime ใหม่
+- ผ่าน theme/Home regressions + browser 32 checks ที่ 1367×617, 1366×768, 812×375: ปุ่ม inactive เทา, selected gradient อ่านได้ AA ทุก stop, role/storage/logout gate, geometry; syntax/diff ผ่าน
+- เตรียม FILE manifest เฉพาะ 5 ไฟล์สำหรับ COMMIT_DEPLOY; ต้องตรวจ live หลัง launcher เสร็จ · ภาพ WebP ใน `Documents/Codex/2026-09-16/new-chat-3/outputs/`
+
 - **รอบ 1520 · Home แอดมินดำ–เทา–เหลือง:** แทนกรอบ/ปุ่มภาพสีรุ้งด้วยการ์ด graphite ปุ่มเหลือง หัวข้ออ่านชัด; คงสีสัตว์จริงและ gate `isAdmin()` เดิม + settings picker “ดำเทาเหลือง”
 - ไฟล์: `css/home-v2.css` `css/lobby.css` `js/home-v2.js` `js/util.js` `docs/PROJECT_MAP.md`; เพิ่ม browser test และแก้ test cache revision เก่าให้รับรุ่นใหม่โดยยังตรวจขั้นต่ำเดิม
 - ผ่าน theme/Home/pet/settings regressions, browser source+dist อย่างละ 31 checks ที่ 1367×617, 1366×768, 812×375 (role switch/logout/storage gate, AA contrast, geometry, settings); build+PWA/cache validator ผ่าน

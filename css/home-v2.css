@@ -2600,18 +2600,21 @@ html.theme-noir{
   --vw2-gold:#f5cf42;--vw2-pink:#f5cf42;--vw2-blue:#b9bec8;
   --vw2-shadow:rgba(0,0,0,.25);--vw2-rim:#353941;
   --noir-bg:#101114;--noir-panel:#1d2025;--noir-raised:#282b31;
-  --noir-line:#3b4049;--noir-yellow:#f5cf42;--noir-muted:#b9bec8;
+  --noir-line:#3b4049;--noir-yellow:#d8be7a;--noir-muted:#b9bec8;
+  --noir-selected-bg:linear-gradient(160deg,#e6d099 0%,#cdb06b 52%,#ad8e4b 100%);
+  --noir-selected-ink:#211d14;
+  --noir-selected-shadow:inset 0 1px 0 rgba(255,247,222,.45),inset 0 -1px 0 rgba(84,62,20,.22),0 2px 5px rgba(0,0,0,.2);
   --toast-fin-fg:#f4f5f7;--toast-fin-muted:#b9bec8;
   --toast-fin-bg:linear-gradient(135deg,#1c1c22 0%,#1d2025 100%);
   --toast-fin-border:#3b4049;--toast-fin-glow:0 12px 32px rgba(0,0,0,.35);
   --toast-fin-chip:#282b31;--toast-fin-chip-line:#3b4049;
-  --toast-fin-chip-gold:#f5cf42;--toast-fin-chip-gold-fg:#17191d;--toast-fin-btn:#282b31;
+  --toast-fin-chip-gold:var(--noir-selected-bg);--toast-fin-chip-gold-fg:#17191d;--toast-fin-btn:#282b31;
 }
 html.theme-noir #screen-dashboard.vw2-primary.active,
 html.theme-noir #screen-dashboard.vw2-active{background:#070709!important}
 html.theme-noir #vw-home-v2-root{background:var(--noir-bg);color:var(--vw2-ink)}
 html.theme-noir #vw-home-v2-root::before,html.theme-noir #vw-home-v2-root::after{display:none!important}
-html.theme-noir #vw-home-v2-root .vw2-wallet-pill>em{background:var(--noir-yellow)!important;color:#17191d!important;box-shadow:none!important}
+html.theme-noir #vw-home-v2-root .vw2-wallet-pill>em{background:var(--noir-raised)!important;color:var(--vw2-ink)!important;box-shadow:none!important}
 html.theme-noir #vw-home-v2-root .vw2-rank{color:var(--noir-yellow)!important}
 html.theme-noir #vw-home-v2-root .vw2-feed-market-note{background:var(--noir-raised)!important;border-color:var(--noir-line)!important;box-shadow:none!important}
 html.theme-noir #vw-home-v2-root .vw2-pet-halo::before,html.theme-noir #vw-home-v2-root .vw2-pet-halo::after{display:none!important}
@@ -2651,24 +2654,16 @@ html.theme-noir #vw-home-v2-root .vw2-feature-action-track>button{
   transition:background-color .15s ease,border-color .15s ease!important;
 }
 html.theme-noir #vw-home-v2-root :is(.vw2-tool-btn,.vw2-rail-btn,.vw2-mode,.vw2-friends-btn,.vw2-feed-coin,.vw2-reward-card):hover,
-html.theme-noir #vw-home-v2-root .vw2-feature-action-track>button:hover{background:#34383f!important;border-color:var(--noir-yellow)!important;filter:none!important}
+html.theme-noir #vw-home-v2-root .vw2-feature-action-track>button:hover{background:#34383f!important;border-color:#626975!important;filter:none!important}
 html.theme-noir #vw-home-v2-root button:focus-visible,
-html.theme-noir #vw-home-v2-root [tabindex="0"]:focus-visible{outline:2px solid var(--noir-yellow)!important;outline-offset:-3px!important;box-shadow:none!important}
+html.theme-noir #vw-home-v2-root [tabindex="0"]:focus-visible{outline:2px solid var(--vw2-ink)!important;outline-offset:-3px!important;box-shadow:none!important}
 html.theme-noir #vw-home-v2-root button:disabled{opacity:.45;cursor:not-allowed}
 html.theme-noir #vw-home-v2-root :is(.vw2-mode>b,.vw2-rail-label,.vw2-reward-card b){color:inherit!important;text-shadow:none!important}
 html.theme-noir #vw-home-v2-root .vw2-mode>span{
   background:#353941!important;border:0!important;box-shadow:none!important;border-radius:8px!important;filter:none!important;
 }
 html.theme-noir #vw-home-v2-root .vw2-mode>span .vw2-icon{filter:grayscale(1) brightness(1)!important}
-html.theme-noir #vw-home-v2-root .vw2-mode.gold,
-html.theme-noir #vw-home-v2-root .vw2-friends-btn,
-html.theme-noir #vw-home-v2-root .vw2-feature-action-track>button:first-child{
-  background:var(--noir-yellow)!important;border-color:var(--noir-yellow)!important;color:#17191d!important;
-}
-html.theme-noir #vw-home-v2-root :is(.vw2-mode.gold,.vw2-friends-btn):hover,
-html.theme-noir #vw-home-v2-root .vw2-feature-action-track>button:first-child:hover{background:#ffdf6a!important}
-html.theme-noir #vw-home-v2-root .vw2-mode.gold>span{background:rgba(0,0,0,.1)!important}
-html.theme-noir #vw-home-v2-root .vw2-mode.gold>span .vw2-icon{filter:grayscale(1) brightness(.7)!important}
+/* Inactive actions stay graphite; yellow denotes a selected/on state only. */
 html.theme-noir #vw-home-v2-root .vw2-feature-action-track>button{flex-basis:clamp(158px,14vw,200px)!important}
 html.theme-noir #vw-home-v2-root .vw2-feature-action-track>button>span{width:94%!important;max-width:94%!important;color:inherit!important;text-shadow:none!important;filter:none!important}
 html.theme-noir #vw-home-v2-root .vw2-feature-action-track>button>span :is(b,small){color:inherit!important;text-shadow:none!important}
@@ -2713,7 +2708,7 @@ html.theme-noir #vw-home-v2-root .vw2-pedestal-aura{background:radial-gradient(e
 html.theme-noir #vw-home-v2-root .vw2-pet-halo{background:radial-gradient(ellipse,rgba(245,207,66,.12),transparent 65%)!important;filter:none!important}
 html.theme-noir #vw-home-v2-root .vw2-feature-title{background:var(--noir-raised)!important;border:1px solid var(--noir-line)!important;border-radius:12px!important;box-shadow:0 4px 12px rgba(0,0,0,.2)!important}
 html.theme-noir #vw-home-v2-root .vw2-word-ribbon{background:transparent!important;border:0!important;box-shadow:none!important;border-radius:12px!important}
-html.theme-noir #vw-home-v2-root :is(.vw2-word-kicker,.vw2-word-reward){background:var(--noir-yellow)!important;color:#17191d!important;border:0!important;border-radius:6px!important;box-shadow:none!important;text-shadow:none!important}
+html.theme-noir #vw-home-v2-root :is(.vw2-word-kicker,.vw2-word-reward){background:var(--noir-selected-bg)!important;color:var(--noir-selected-ink)!important;border:0!important;border-radius:6px!important;box-shadow:none!important;text-shadow:none!important}
 html.theme-noir #vw-home-v2-root .vw2-word-kicker::before{display:none}
 html.theme-noir #vw-home-v2-root .vw2-word-copy strong{color:var(--vw2-ink)!important;text-shadow:none!important}
 html.theme-noir #vw-home-v2-root .vw2-word-copy small{color:var(--noir-muted)!important;text-shadow:none!important}

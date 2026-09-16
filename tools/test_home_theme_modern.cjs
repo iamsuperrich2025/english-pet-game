@@ -55,7 +55,7 @@ async function inspect(page,width,height){
       contrast:contrast(style('.vw2-section-head strong').color,style('.vw2-feed').backgroundColor),
       primaryContrast:contrast(style('.vw2-feature-action-track>button').color,style('.vw2-feature-action-track>button').backgroundColor),
       flat:style('.vw2-mode').backgroundImage==='none'&&getComputedStyle(get('.vw2-mode'),'::before').display==='none'&&getComputedStyle(get('.vw2-feature-action-track>button'),'::before').display==='none',
-      yellow:style('.vw2-feature-action-track>button').backgroundColor==='rgb(245, 207, 66)',
+      neutral:[...root.querySelectorAll('.vw2-mode,.vw2-friends-btn,.vw2-feature-action-track>button')].every(e=>getComputedStyle(e).backgroundColor==='rgb(40, 43, 49)'),
       pet:get('#vw2-pet img').complete&&get('#vw2-pet img').naturalWidth>0&&style('#vw2-pet img').filter==='none',
       row:get('.vw2-feature-action-scroll').scrollHeight<=get('.vw2-feature-action-scroll').clientHeight+1,
       scene:style('.vw2-world-scene').display,frame:getComputedStyle(root,'::before').display};
@@ -64,7 +64,7 @@ async function inspect(page,width,height){
   ok(prefix+' panels stay in the viewport',m.bounds&&m.noPageOverflow);
   ok(prefix+' headers fit their panels',m.headers);
   ok(prefix+' labels and primary action have AA contrast',m.contrast>=4.5&&m.primaryContrast>=4.5);
-  ok(prefix+' buttons use flat graphite/yellow skin',m.flat&&m.yellow);
+  ok(prefix+' inactive actions stay graphite, including O-NET/profile/friends',m.flat&&m.neutral);
   ok(prefix+' loaded pet stays in full color',m.pet);
   ok(prefix+' pet action row has no vertical clipping',m.row);
   ok(prefix+' ornamental frame and scenery are removed',m.frame==='none'&&m.scene==='none');
@@ -91,6 +91,19 @@ async function openSettingsUI(page){
     ok('admin can switch back to pastel',await page.evaluate(()=>!document.documentElement.classList.contains('theme-noir')));
     await page.locator('#set-theme [data-theme="noir"]').click();
     ok('picker applies noir and marks selection',await page.locator('#set-theme [data-theme="noir"]').getAttribute('aria-checked')==='true');
+    await page.waitForFunction(()=>getComputedStyle(document.querySelector('#set-theme [data-theme="noir"]')).backgroundImage.includes('linear-gradient')&&getComputedStyle(document.querySelector('#set-theme [data-theme="pastel"]')).backgroundColor==='rgb(40, 43, 49)');
+    ok('soft gold gradient is reserved for selected settings and stays readable',await page.evaluate(()=>{
+      const style=s=>getComputedStyle(document.querySelector(s));
+      const lum=rgb=>rgb.slice(0,3).map(x=>x/255).map(x=>x<=.04045?x/12.92:((x+.055)/1.055)**2.4).reduce((sum,x,i)=>sum+x*[.2126,.7152,.0722][i],0);
+      const selected=['#set-theme [data-theme="noir"]','.set-tabs .lb-tab.active','.set-switch.on'];
+      const readable=selected.every(s=>{
+        const css=style(s),text=lum(css.color.match(/[\d.]+/g).map(Number));
+        const stops=[...css.backgroundImage.matchAll(/rgb\(([^)]+)\)/g)].map(m=>lum(m[1].match(/[\d.]+/g).map(Number)));
+        return css.backgroundImage.includes('linear-gradient')&&stops.length>=2&&stops.every(bg=>(Math.max(text,bg)+.05)/(Math.min(text,bg)+.05)>=4.5);
+      });
+      return readable&&style('#set-theme [data-theme="pastel"]').backgroundColor==='rgb(40, 43, 49)'&&style('.settings-box .set-close').backgroundColor==='rgb(40, 43, 49)';
+    }));
+    await capture(page,'admin-settings-812x375');
     ok('compact settings fit the viewport',await page.locator('.settings-box').evaluate(e=>{const r=e.getBoundingClientRect();return r.top>=-1&&r.bottom<=innerHeight+1&&e.scrollHeight<=e.clientHeight+1}));
     await page.locator('.set-close').click();
     await page.evaluate(()=>{Auth.user={uid:'ordinary-player',email:'ordinary@test.local'};state.adminAccess=true;HomeTheme.paint();});

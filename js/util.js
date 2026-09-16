@@ -1108,7 +1108,7 @@ function openSettings(initialTab){
   overlay.innerHTML = `<div class="levelup-box settings-box">
     <button class="set-x" id="set-x" type="button" aria-label="ปิด">✕</button>
     <h2 style="margin:0 0 4px">⚙️ ตั้งค่า</h2>
-    <p class="set-hint">แตะสวิตช์เพื่อสลับ — <b class="set-hint-on">เขียว = เปิดอยู่</b> · <b class="set-hint-off">เทา = ปิดอยู่</b></p>
+    <p class="set-hint">แตะสวิตช์เพื่อสลับ — <b class="set-hint-on">ขวา = เปิดอยู่</b> · <b class="set-hint-off">ซ้าย = ปิดอยู่</b></p>
     <div class="set-tabs">
       <button class="lb-tab set-tab${startTab==='general'?' active':''}" data-tab="general">🔊 ทั่วไป</button>
       <button class="lb-tab set-tab${startTab==='avatar'?' active':''}" data-tab="avatar">🦸 ตัวละคร</button>
