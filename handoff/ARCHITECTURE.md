@@ -49,7 +49,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/adv3d_css.js** (1,344 บรรทัด) — adv3d_css.js — CSS ของ DOM overlay โลก 3D ทุกโหมด (adv/haunt/heli/drone/ · drive/soccer/mecha) — 🪓 รอบ 544 เฟส 1: ผ่าออกจาก js/adventure3d.js · ไฟล์นี้เป็น "ข้อมูลล้วน" ห้ามมี logic — ประกาศ window.ADV3D_CSS อย่างเดียว
 - **js/adv3d_intro.js** (86 บรรทัด) — ❓ ADV3D_INTRO — data การ์ด "วิธีเล่น" ทุกโลก (ผ่าจาก js/adventure3d.js เฟส 2 รอบ 545) · data ล้วน ไม่มี logic · โหลดผ่าน loadAdv3d() ใน js/ui.js ก่อนไฟล์หลักเสมอ
 - **js/adv3d_tex.js** (250 บรรทัด) — adv3d_tex.js — 🪓 เฟส 3 (รอบ 546): ผ่าจาก js/adventure3d.js โซน "Texture ตัวอักษร / emoji / ป้ายชื่อผู้เล่น (canvas → sprite)" · IIFE จบในตัว expose window.Adv3dTex — ไฟล์หลักคง alias ชื่อเดิม จุดเรียกทั้งไฟล์ไม่ต้องแก้ · โหลดก่อนไฟล์หลักใน loadAdv3d() (js/ui.js) · deps ตอนรัน: THREE (global) · ค่าจาก closure ไฟล์หลัก inject ผ่าน Adv3dTex.bind({adRenterActive…
-- **js/adventure3d.js** (13,842 บรรทัด) — ---------- ค่ากติกากลาง ----------
+- **js/adventure3d.js** (13,871 บรรทัด) — adventure3d.js — โลก 3D First-person 2 โหมด (คิว 7725691507 ข้อ 8 + ต่อยอด) · 🌍 adv   = โลกผจญภัยกลางวัน: เก็บตัวอักษรประกอบคำ 15🪙/คำ · monster ยิงสู้ได้ · 👻 haunt = โรงแรมผีสิง: 25🪙/คำ · ผี PNG ไล่ผู้เล่นใกล้สุดหลังไฟดับ
 - **js/app-update.js** (214 บรรทัด) — (ไม่มี comment หัวไฟล์)
 - **js/arena-audio.js** (175 บรรทัด) — Arena music + user-approved MEGA, elemental cast, shield impact, healing, lightning and fire clips; previous SFX remain removed (round 1394).
 - **js/arena-elements.js** (74 บรรทัด) — ==== 🔥🌪 Round 1381 — elemental combat, independent of rendering and account rewards ====
@@ -96,13 +96,13 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/lobby.js** (52 บรรทัด) — LOBBY แนวนอน — ระบบแผงรายละเอียดกลางจอ (อัพเดท 5725691826) · คลิกเมนูซ้าย → เปิดแผง (panel) ทับฉาก Lobby · เนื้อหา scroll ในแผง · การ์ดเดิมทั้งหมด (home/phone/computer/farm/collect/rank) ย้ายเข้าแผง
 - **js/lobby3d.js** (811 บรรทัด) — lobby3d.js — โมเดล 3D ตัวละครในหน้า Lobby (รอบ 114) · โหลด GLB ผู้เลี้ยง + น้อง (img/models/*.glb) · idle เบาๆ (หายใจ/โยกตัว) + เล่น animation clip จากไฟล์ (Tripo ชื่อ NlaTrack → ใช้ clip แรก)
 - **js/main.js** (617 บรรทัด) — ปุ่มหลัก + INIT
-- **js/mecha-combat-fx.js** (264 บรรทัด) — Round 1509 — mecha projectiles. · Ballistic shells (Word Fleet gravity): Adventure3D owns physics via launch/sync/impact. · Impact FX: volumetric fireball only (no orange/white shock rings) — core · billow fire · smoke · debris · streaks ~1.5s.
+- **js/mecha-combat-fx.js** (264 บรรทัด) — Round 1511 — mecha projectiles. · Ballistic shells (Word Fleet gravity): Adventure3D owns physics via launch/sync/impact. · Impact FX: volumetric fireball only (no orange/white shock rings) — core · billow fire · smoke · debris · streaks ~1.5s.
 - **js/mecha-models.js** (85 บรรทัด) — 🤖 Round 1399 — selected GLB mecha peers. Shared geometry, independent pivots. · Soft Cuboid Chibi 3D; ten allowlisted files; existing m_01..m_10 wire format.
 - **js/moto3d.js** (2,776 บรรทัด) — 🏍️ moto3d.js — โลกมอเตอร์ไซค์บ้านโพธิ์สวัสดิ์ (รอบ 293) · ขับมอเตอร์ไซค์ third-person บนถนนจริงรอบโรงเรียนบ้านโพธิ์สวัสดิ์ รัศมี 30 กม. (js/data/moto_phosawat.js · OSM) · เล่นบน "เครื่องเกมพกพา" เต็มจอ — จอเกมอยู่ตรงกลางเครื่อง · สไลเดอร์ส้มซ้าย=เลี้ยว · ปุ่มฟ้าขวา=เร่ง · ปุ่มแดงบน=ปิดเครื่อง
 - **js/music.js** (347 บรรทัด) — music.js — ระบบเพลง (รอบ 181) · เพลงพื้นหลัง (instrument) เล่นวนทั้งเกม เริ่มหลัง gesture แรก (autoplay policy) · เข้าโลก 3D ใดๆ → พัก bg (โลกมี soundscape ของตัวเอง) · ออก → เล่นต่อ
 - **js/netroom.js** (840 บรรทัด) — 🏟️ netroom.js — ระบบ "หลายสนาม" (room sharding) กลางของทุกโลก 3D (รอบ 640) · ใช้ร่วมกันทั้ง js/adventure3d.js · js/invasion3d.js · js/moto3d.js — ห้ามก๊อปโค้ดซ้ำอีก · (ยกก้อน "กันผู้เล่นล้นสนาม" ของรอบ 637 ออกมาจาก invasion3d.js แล้วทำให้ทุกโลกใช้ได้)
 - **js/onetpromo.js** (259 บรรทัด) — 🇹🇭 รอบ 1186: ป้าย O-NET เกือบเต็มจอ · สูงสุด 3 login/บัญชี · เลือกไม่แสดงอีกได้
-- **js/online.js** (2,289 บรรทัด) — ENGINE: ระบบออนไลน์จริงผ่าน Firebase Realtime Database · - เพื่อนออนไลน์จริง (presence): เห็นผู้เล่นคนอื่นที่เปิดเกมอยู่จริง · - Leaderboard: อันดับผู้เล่นที่มีเหรียญมากที่สุด Top 100
+- **js/online.js** (2,306 บรรทัด) — ENGINE: ระบบออนไลน์จริงผ่าน Firebase Realtime Database · - เพื่อนออนไลน์จริง (presence): เห็นผู้เล่นคนอื่นที่เปิดเกมอยู่จริง · - Leaderboard: อันดับผู้เล่นที่มีเหรียญมากที่สุด Top 100
 - **js/onlinecoinaward.js** (22 บรรทัด) — 🌐🏆 รางวัลรายเดือน Top 10 กระดานเหรียญออนไลน์สะสมตลอดกาล
 - **js/petbehavior.js** (187 บรรทัด) — petbehavior.js — 🐾 ระบบพฤติกรรมน้องหน้า Lobby (รอบ 1030 · ป้าย/จังหวะชัดขึ้นรอบ 1031) · แบ่งคลิป 8 วินาทีเดิมเป็นท่าสั้น ๆ แล้วเลือกต่อกันแบบมีน้ำหนัก · เครื่องที่เล่นคลิปไม่ได้ยังใช้ state เดียวกันกับภาพ/sprite fallback
 - **js/petpantry.js** (235 บรรทัด) — 🗄️ PET PANTRY — รอบ 1158 · ศูนย์กลาง mutation ของชั้น/stock/การซื้อหน้าร้าน 3D
@@ -118,11 +118,11 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/shootword.js** (1,266 บรรทัด) — 🎯 shootword.js — เกม "ยิงเป้าคำศัพท์" (Carnival Word Shooting) รอบ 917 · ผู้ใช้สั่ง 2 ส.ค. 2026 (อนุมัติทำเป็นโลก 3D เต็มรูปแบบ): · ① โลก 3D มุมมองบุคคลที่หนึ่ง — ยืนในซุ้มยิงปืนของสวนสนุก สีสันสดใสน่ารัก
 - **js/skyplay3d.js** (640 บรรทัด) — ☁️📚 รอบ 1235 — VOCAB SKY PLAYGROUND · PHASE 5 · Bright Fantasy Social World + Obby ของ Vocab World · - standalone Three.js engine: ไม่แตะ Adventure World / Invasion
 - **js/specialmission.js** (229 บรรทัด) — specialmission.js — ภารกิจพิเศษแบบเดี่ยว (รอบ 1354) · แยกจาก Daily Quest และ canonical progress ของเพื่อนโดยตั้งใจ
-- **js/state.js** (1,427 บรรทัด) — STATE + LocalStorage + กติกากลางของเกม · (แยกจากไฟล์ data — อัปเกรดคำศัพท์/สัตว์/ไอเทมได้โดยไม่กระทบเซฟ)
+- **js/state.js** (1,428 บรรทัด) — STATE + LocalStorage + กติกากลางของเกม · (แยกจากไฟล์ data — อัปเกรดคำศัพท์/สัตว์/ไอเทมได้โดยไม่กระทบเซฟ)
 - **js/thaitime.js** (52 บรรทัด) — 🇹🇭 js/thaitime.js — "เวลาไทย" กลางของทั้งเกม (รอบ 988) · ปัญหาที่แก้: ทุกจุดในเกมอ่านเวลาจาก `new Date().getHours()` = **นาฬิกาของเครื่องผู้เล่น · เครื่องที่ตั้งไทม์โซนเป็นต่างประเทศ (หรือ tablet/PC ที่ตั้งเวลาไม่ตรง) จะได้ชั่วโมงผิด
 - **js/tpaward.js** (42 บรรทัด) — 🏆 tpaward.js — รางวัลรายเดือนของกระดานอันดับ ⌨️ พิมพ์คำ (รอบ 649 · แก้กติกาอันดับรอบ 654) · ผู้ใช้สั่ง 28 ก.ค. 2026: "ทำแบบเดียวกับแท็บ 🔎 ค้นหาคำ" · ① Top 10 ได้เหรียญรางวัลทุกวันที่ 1 ของเดือน (10,000 ลดหลั่นถึง 1,000)
 - **js/typing.js** (370 บรรทัด) — ⌨️ typing.js — เกม "พิมพ์คำศัพท์" (Keyboard Typing) รอบ 648 · ผู้ใช้สั่ง 28 ก.ค. 2026 · ปุ่มรางซ้ายล็อบบี้ → กระดานเต็มจอ (มีปุ่มปิดชัดเจน) · - แป้นวางตามตำแหน่งคีย์บอร์ดจริง (QWERTY เหลื่อมแถว) · ปุ่มนูน 3 มิติ กดแล้วยุบ-เด้งขึ้นทันที
-- **js/ui.js** (10,534 บรรทัด) — UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
+- **js/ui.js** (10,643 บรรทัด) — UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
 - **js/util.js** (1,593 บรรทัด) — UTIL: เสียง / เอฟเฟกต์ / เครื่องมือทั่วไป
 - **js/vocabbook.js** (207 บรรทัด) — 📒 สมุดคำศัพท์ของฉัน + ข้อสอบทบทวนส่วนตัว (รอบ 288) · เก็บทุกคำที่เด็กเจอในเกมจับคู่/ข้อสอบทุกแบบ (รวม band) ลง state.vocabBook · ถาวรข้ามเซสชัน: {en: {th, c:ถูกกี่ครั้ง, w:ผิดกี่ครั้ง, t:เจอล่าสุด, lw:ครั้งล่าสุดผิด?}}
 - **js/wordsearch.js** (524 บรรทัด) — 🔎 wordsearch.js — เกมค้นหาคำศัพท์ (Word Search) รอบ 194 · แผงฟ้าล้ำยุคเลื่อนออกจากซ้าย · สุ่มคำไม่ซ้ำในแต่ละเกม · 🆕 รอบ 588: กระดานเกือบเต็มจอ · แถบ "หาคำเหล่านี้ให้เจอ" ย้ายขึ้นบนสุด จัดกึ่งกลาง
@@ -144,6 +144,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/petshopping3d.css** (26 บรรทัด) — 🚗🐾 Pet Shopping 3D — รอบ 1168: collision bounce + responsive cockpit/equalizer mask; GPS คงเดิม
 - **css/picdict.css** (108 บรรทัด) — 🖼️ Picture Dictionary — หน้าเดียว 18 คำ (รอบ 1123) · 6×3 ทุกขนาดจอแนวนอน ไม่มี scrollbar และไม่มีรูปแบบหนังสือ
 - **css/picquiz_online.css** (119 บรรทัด) — 🌐🎧 ห้องแข่งครูถามศัพท์จากหนังสือ · ห้อง/Modal/HUD ทุกใบต้อง fit 812×375 โดยไม่มี scrollbar ทั้งหน้า
+- **css/profile-modern.css** (183 บรรทัด) — PLAYER PROFILE · MODERN LUXURY PORTFOLIO · Loaded on demand by showPlayerCard; intentionally isolated from lobby.css.
 - **css/rankgraph.css** (23 บรรทัด) — 📈 กราฟอันดับ Top 30
 - **css/skyplay3d.css** (38 บรรทัด) — ☁️🏫 รอบ 1235 — Vocab Sky Playground Phase 5 · additive Lesson Packs + Reports · landscape-first
 - **css/style.css** (2,539 บรรทัด) — Pet Vocab Adventure — สไตล์พื้นฐานรุ่นแรกทั้งเกม (โดน lobby.css โหลดทับบางส่วน — แก้หน้าตาโซนล็อบบี้/UI ใหม่ให้ไปที่ lobby.css ก่อน) · ครอบคลุม: screens/login/dashboard · เกมจับคู่ .word-card + แบบทดสอบ .quiz-* · shop/ที่พัก/หมวดคำศัพท์ · หิว-ป่วย/สภาพอากาศ · ตั้งค่า/วิธีเล่น/level-up overlay · คลังของฉัน/กล่องขาย · เอฟเฟกต์ลอย/เหรียญ/rotate-overlay
@@ -151,6 +152,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/wordskirmish.css** (46 บรรทัด) — 🔫 ยิงรบคำ — HUD น่ารักจอเตี้ย 812×375 รอบ 1480
 - **sw.js** (281 บรรทัด) — Vocab World service worker · Delivery contract: · - HTML navigations are network-first with the last valid shell as fallback.
 <!-- AUTO-FILES:END -->
+
 
 
 

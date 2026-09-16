@@ -6426,3 +6426,16 @@ efreshMechaLock
 - **รอบ 1502 · ตัด allroboteffect เป็น SFX หุ่น:** 16 คลิป sound/robot/mecha/ ใช้ร่วมทุกหุ่น (ยิง/กระทบ/ระเบิด/ก้าว/เตือน/ศัตรู/เก็บของ/โล่)
 - ไฟล์: js/adventure3d.js sound/robot/mecha/* tools/mecha/split_robot_sfx.py tools/test_mecha_1502.js
 - unit 1502 ผ่าน · ค้าง: ฟังบน live
+
+
+## ⏬ ย้ายเมื่อ 2026-09-16 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1506 · ระเบิดแบบลูกไฟตัวอย่าง:** ไม่ใช่วงแบนแล้ว · แกนขาว+เปลวบิลโลว์+ควันดำ+เศษหิน+เส้นประกาย · ~1.5s · CAPACITY 512
+- ไฟล์: `js/mecha-combat-fx.js` `tools/test_mecha_1506.js`
+- unit 1506 ผ่าน · ค้าง: ยิงบน live เทียบภาพตัวอย่าง
+- **รอบ 1505 · FX วงเพลิงอลังการ:** แกนขาวร้อน→เปลว→ember · ประกายถ่วงแรงโน้มถ่วง · ลิ้นไฟ 10 · trail กระสุนร้อนขึ้น · CAPACITY 384 · impact ~1.2s
+- ไฟล์: `js/mecha-combat-fx.js` `tools/test_mecha_1505.js` (+1485/1492 รับ duration/สีใหม่)
+- unit 1505+1485+1492 ผ่าน · ค้าง: ยิงบน live ดูความสมจริง
+- **รอบ 1504 · ยิงรบคำย่อ/หมอบคนละปุ่ม + เพื่อนเห็นท่า:** ไม่วนท่าแล้ว · รหัสท่าใน `av` (sk1c/sk1p) ให้ peer ย่อ/หมอบ/หลบตาม · รวม AUTO กลับบ้าน
+- ไฟล์: `js/wordskirmish.js` `css/wordskirmish.css` `tools/test_wordskirmish.js` `docs/PLAYER_CHARACTER_STYLE.md`
+- unit 73 ผ่าน · ค้าง: สองแอดมินเข้าห้องเดียวกันดูท่าย่อ/หมอบ

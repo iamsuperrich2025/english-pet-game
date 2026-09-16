@@ -16,8 +16,9 @@ probeGhostImages:71 · whenGhostsReady:83 · ghostTexture:87 · ghostScareSrc:92
 addAdBillboard:160 · ringAds:172 · BUILDING_TINTS:182 · FACADE_ROWS:184 · buildingFacadeTexture:185 · makePeerSprite:210
 bind:246
 
-## js/adventure3d.js (13,842 บรรทัด · 681 รายการ)
+## js/adventure3d.js (13,871 บรรทัด · 681 รายการ)
 ### 🗂️ สารบัญโซน js/adventure3d.js (Read/Edit เฉพาะช่วง)
+- 1-217 adventure3d.js — โลก 3D First-person 2 โหมด (คิว 7725691507 ข้อ 8 + ต่อยอด)
 - 218-322 ⚽ โหมดสนามฟุตบอล (โหมด soccer · รอบ 196) — เล็ง+ชาร์จพลังเตะบอลใส่ป้ายตัวอักษร
 - 323-401 🤖 โหมดหุ่นยนต์นักรบ (โหมด mecha · รอบ 199) — มุมมองในหุ่นสูง 5m เดินยิงเอเลี่ยนตัวอักษร
 - 402-547 📻 หอบังคับการบิน (รอบ 64 · รอบ 66 เปลี่ยนเป็นอังกฤษล้วนตามผู้ใช้สั่ง)
@@ -74,9 +75,9 @@ bind:246
 - 10146-10761 📏 แถบเตือนความเร็วดิ่ง (รอบ 349) — ลงเร็วเกินกรอบกล้องกะพริบแดง สอนให้ร่อนลงนุ่มๆ
 - 10762-10764 Loop หลัก
 - 10765-12480 ⚽ โหมดสนามฟุตบอล — ฟิสิกส์บอล + เล็ง + ชาร์จพลัง + กล้อง 1st/3rd + ชุดนักเตะ
-- 12481-13161 🤖 โหมดหุ่นยนต์นักรบ — เดินยิงเอเลี่ยนตัวอักษร (ต้องยิงเรียงลำดับในคำ)
-- 13162-13186 เข้า/ออกโลก
-- 13187-13842 ❓ การ์ด "วิธีเล่น" ตอนเข้าโลกครั้งแรก (จำแยกต่อโลกใน localStorage — ไม่แตะ state.js)
+- 12481-13190 🤖 โหมดหุ่นยนต์นักรบ — เดินยิงเอเลี่ยนตัวอักษร (ต้องยิงเรียงลำดับในคำ)
+- 13191-13215 เข้า/ออกโลก
+- 13216-13871 ❓ การ์ด "วิธีเล่น" ตอนเข้าโลกครั้งแรก (จำแยกต่อโลกใน localStorage — ไม่แตะ state.js)
 ### รายการ js/adventure3d.js
 GUIDE_WORDS:19 · LETTER_RESPAWN_MS:20 · HALF:21 · PLAYER_SPEED:22 · HAUNT_ATTACKS:23 · HAUNT_IFRAME:24
 PICK_DIST:25 · EYE_H:26 · NET_SEND_MS:27 · MODES:30 · SHOOT_GAP_MS:94 · MONSTER_REWARD:95
@@ -182,16 +183,16 @@ auraTick:11833 · buildDrill:11884 · drillTick:11897 · ballFXTex:11937 · buil
 ballFXTick:11972 · buildLandRing:12018 · buildGuideRibbon:12028 · renderSpinPad:12053 · spinPadToggle:12065 · spinPadPick:12071
 renderCurl:12083 · kickLaunch:12094 · updateSoccerGuide:12103 · soccerCamera:12167 · tickSoccer:12191 · ssShirtPath:12385
 ssShortsPath:12393 · ssPaintSwatchShirt:12398 · ssPaintSwatchShorts:12403 · ssPreviewDraw:12410 · soccerKitShow:12439 · soccerKitGo:12468
-emojiSprite:12644 · makeAlien:12649 · startWave:12682 · waveSpawnFill:12693 · waveComplete:12702 · updateWaveHud:12712
-checkMechaBossBadge:12714 · alienSpawnPos:12723 · removeAlien:12728 · mechaBankCoins:12733 · mechaHudWord:12743 · setMechaHudSkin:12751
-mechaComboPop:12764 · mechaShielded:12769 · mechaDamageFx:12771 · mechaHitByAlien:12776 · spawnAlienShot:12782 · removeAlienShot:12792
-tickAlienShots:12797 · spawnPowerup:12809 · removePowerup:12822 · collectPowerup:12827 · tickPowerups:12834 · updateMechaHud:12843
-mechaTracer:12883 · mechaMuzzlePoint:12891 · spawnMechaShell:12901 · mechaKillShell:12909 · mechaApplyLetterHit:12918 · mechaSmokeTex:12939
-spawnMechaSmoke:12950 · tickMechaSmoke:12959 · clearMechaSmoke:12968 · tickMechaShells:12972 · mechaFire:13004 · explodeAlien:13018
-tickMecha:13048 · loop:13107 · grabShot:13142 · savePhoto:13153 · clearEntities:13165 · INTRO_KEY:13191
-introSeenObj:13192 · introSeen:13193 · markIntroSeen:13194 · INTRO:13195 · INTRO_MODE:13197 · showIntro:13199
-HELI_KPP_BANNER:13225 · HAUNT_ENTRY_NOTICE:13227 · showHauntedEntryNotice:13231 · showModeIntro:13239 · closeIntro:13243 · beginPlay:13249
-start:13251 · exitWorld:13494 · mechaRecapLine:13574
+emojiSprite:12644 · makeAlien:12649 · startWave:12700 · waveSpawnFill:12711 · waveComplete:12720 · updateWaveHud:12730
+checkMechaBossBadge:12732 · alienSpawnPos:12741 · removeAlien:12746 · mechaBankCoins:12751 · mechaHudWord:12761 · setMechaHudSkin:12769
+mechaComboPop:12782 · mechaShielded:12787 · mechaDamageFx:12789 · mechaHitByAlien:12794 · spawnAlienShot:12800 · removeAlienShot:12810
+tickAlienShots:12815 · spawnPowerup:12827 · removePowerup:12840 · collectPowerup:12845 · tickPowerups:12852 · updateMechaHud:12861
+mechaTracer:12901 · mechaMuzzlePoint:12909 · spawnMechaShell:12919 · mechaKillShell:12927 · mechaApplyLetterHit:12936 · mechaSmokeTex:12957
+spawnMechaSmoke:12968 · tickMechaSmoke:12977 · clearMechaSmoke:12986 · tickMechaShells:12990 · mechaFire:13022 · explodeAlien:13036
+tickMecha:13068 · loop:13136 · grabShot:13171 · savePhoto:13182 · clearEntities:13194 · INTRO_KEY:13220
+introSeenObj:13221 · introSeen:13222 · markIntroSeen:13223 · INTRO:13224 · INTRO_MODE:13226 · showIntro:13228
+HELI_KPP_BANNER:13254 · HAUNT_ENTRY_NOTICE:13256 · showHauntedEntryNotice:13260 · showModeIntro:13268 · closeIntro:13272 · beginPlay:13278
+start:13280 · exitWorld:13523 · mechaRecapLine:13603
 
 ## js/app-update.js (214 บรรทัด · 0 รายการ)
 
@@ -781,7 +782,7 @@ create:180 · drawBudget:813
 
 ## js/onetpromo.js (259 บรรทัด · 0 รายการ)
 
-## js/online.js (2,289 บรรทัด · 124 รายการ)
+## js/online.js (2,306 บรรทัด · 125 รายการ)
 ### 🗂️ สารบัญโซน js/online.js (Read/Edit เฉพาะช่วง)
 - 2-246 ENGINE: ระบบออนไลน์จริงผ่าน Firebase Realtime Database
 - 247-342 ระบบเพื่อน (ข้อ 0.3): รหัสเพื่อน + ค้นหา + ส่ง/รับคำขอ
@@ -789,11 +790,11 @@ create:180 · drawBudget:813
 - 533-715 ระบบส่งของขวัญ (ข้อ 0.5)
 - 716-929 🏪 ตลาดออนไลน์จริง (item 2 backlog): ซื้อ-ขายสินค้าที่เพื่อน "ผลิตเอง" ข้ามผู้เล่น
 - 930-1071 คำเชิญเล่นโลก 3D ด้วยกัน — /tinv/<toUid>/<fromUid> = {map,n,ts}
-- 1072-1268 📰 Follow + Feed กิจกรรม (รอบ 155) · 🌍 หน้า Feed ทุกคน + ไลก์/คอมเมนต์ (รอบ 639)
-- 1269-1276 🌍 หน้า Feed ทุกคน + ไลก์/คอมเมนต์ (รอบ 639)
-- 1277-1419 📰 รอบ 701 — ฟีดล็อบบี้ทีละโพสต์ + รีแอ็กชัน + แจ้งเตือน (ต่อยอดรอบ 639)
-- 1420-1652 🔔📥 รอบ 976 — เก็บแจ้งเตือนไลก์/คอมเมนต์ลง DB โซนใหม่ /gnotif/<uid>
-- 1653-2289 📞 โทรหาเพื่อน — Voice call / Video call แบบ LINE (รอบ 625 · กลุ่ม 3 คนรอบ 631)
+- 1072-1285 📰 Follow + Feed กิจกรรม (รอบ 155) · 🌍 หน้า Feed ทุกคน + ไลก์/คอมเมนต์ (รอบ 639)
+- 1286-1293 🌍 หน้า Feed ทุกคน + ไลก์/คอมเมนต์ (รอบ 639)
+- 1294-1436 📰 รอบ 701 — ฟีดล็อบบี้ทีละโพสต์ + รีแอ็กชัน + แจ้งเตือน (ต่อยอดรอบ 639)
+- 1437-1669 🔔📥 รอบ 976 — เก็บแจ้งเตือนไลก์/คอมเมนต์ลง DB โซนใหม่ /gnotif/<uid>
+- 1670-2306 📞 โทรหาเพื่อน — Voice call / Video call แบบ LINE (รอบ 625 · กลุ่ม 3 คนรอบ 631)
 ### รายการ js/online.js
 ONLINE_STALE_MS:81 · ONLINE_BEAT_MS:82 · LEADERBOARD_SIZE:83 · LEADERBOARD_QUERY_SIZE:84 · onlineDisplayName:88 · onlineActivity:96
 ensureOnlineId:117 · onlineKey:127 · onlinePushPresence:132 · onlinePushScore:142 · fetchPlayerStats:196 · onlineRerender:218
@@ -808,14 +809,14 @@ marketRequestId:749 · marketRememberTx:755 · marketTxHasRole:765 · marketReso
 marketList:858 · marketUnlist:866 · marketBuy:874 · marketSoldWatch:899 · tinvSend:935 · tinvClear:948
 tinvPartyTick:956 · TINV_WORLD_LABEL:978 · tinvFingerprint:982 · TINV_SESSION_GRACE_MS:985 · tinvPeerOnline:986 · tinvInviteCurrent:989
 tinvSentCurrent:995 · tinvCancel:999 · tinvReconcile:1005 · tinvWatch:1058 · FEED_MAX:1080 · feedEvent:1083
-feedPrune:1095 · feedPurgeCat:1106 · feedPushAssets:1117 · petDescriptor:1135 · feedPushPets:1141 · fetchPlayerPets:1155
-followSet:1171 · followUnset:1182 · feedRebuild:1189 · feedWatchSync:1201 · fetchPlayerFeed:1228 · fetchPlayerAssets:1241
-fetchFollowers:1260 · GFEED_READ:1286 · GFEED_KEEP_ME:1287 · gfeedPush:1290 · gfeedPrune:1304 · gfeedParse:1317
-gfeedWatchStart:1346 · gfeedWatchStop:1373 · gfeedNotifDiff:1381 · gfeedNotifPush:1416 · GNOTIF_KEEP:1444 · GNOTIF_QUIET:1446
-gnotifKeyOf:1449 · gnotifSend:1456 · gnotifAdd:1469 · gnotifRecount:1489 · gnotifMarkSeen:1494 · gnotifWatchStart:1505
-gnotifListen:1514 · gnotifWatchStop:1532 · gnotifPrune:1537 · uidDisplayName:1550 · gfeedRebuild:1561 · gfeedToggleLike:1578
-gfeedSetReaction:1583 · gfeedToggleCommentLike:1599 · gnotifTellComment:1617 · gfeedAddComment:1629 · CALL_RTC_CFG:1677 · CALL_RING_MS:1678
-CALL_MAX_MS:1679 · CALL_MAX_PEERS:1680 · onlineStart:2096 · onlineLoadSDK:2263
+feedPrune:1095 · feedPurgeCat:1106 · feedPushAssets:1117 · petDescriptor:1135 · localProfileAssetCounts:1142 · feedPushPets:1162
+fetchPlayerPets:1176 · followSet:1192 · followUnset:1203 · feedRebuild:1210 · feedWatchSync:1222 · fetchPlayerFeed:1249
+fetchPlayerAssets:1262 · fetchFollowers:1277 · GFEED_READ:1303 · GFEED_KEEP_ME:1304 · gfeedPush:1307 · gfeedPrune:1321
+gfeedParse:1334 · gfeedWatchStart:1363 · gfeedWatchStop:1390 · gfeedNotifDiff:1398 · gfeedNotifPush:1433 · GNOTIF_KEEP:1461
+GNOTIF_QUIET:1463 · gnotifKeyOf:1466 · gnotifSend:1473 · gnotifAdd:1486 · gnotifRecount:1506 · gnotifMarkSeen:1511
+gnotifWatchStart:1522 · gnotifListen:1531 · gnotifWatchStop:1549 · gnotifPrune:1554 · uidDisplayName:1567 · gfeedRebuild:1578
+gfeedToggleLike:1595 · gfeedSetReaction:1600 · gfeedToggleCommentLike:1616 · gnotifTellComment:1634 · gfeedAddComment:1646 · CALL_RTC_CFG:1694
+CALL_RING_MS:1695 · CALL_MAX_MS:1696 · CALL_MAX_PEERS:1697 · onlineStart:2113 · onlineLoadSDK:2280
 
 ## js/onlinecoinaward.js (22 บรรทัด · 0 รายการ)
 
@@ -867,17 +868,17 @@ animate:314 · decorateDom:315 · paintDom:338 · preview:340
 
 ## js/specialmission.js (229 บรรทัด · 0 รายการ)
 
-## js/state.js (1,427 บรรทัด · 97 รายการ)
+## js/state.js (1,428 บรรทัด · 97 รายการ)
 ### 🗂️ สารบัญโซน js/state.js (Read/Edit เฉพาะช่วง)
 - 2-256 STATE + LocalStorage + กติกากลางของเกม
 - 257-313 🗄️🐾 ระบบชั้นอาหาร + เงินช่วยปรับตัว
 - 314-813 👍 รอบ 701: รีแอ็กชันฟีด (กดค้างปุ่มถูกใจแล้วเลือกได้เหมือน Facebook)
 - 814-869 Daily Quest (item 3 backlog): ภารกิจรายวัน 3 อย่าง สุ่มตามวันที่
-- 870-980 มูลค่าทรัพย์สินสุทธิ (net worth) — ฐานของระบบแรงค์
-- 981-1030 🚫🍽️ สัตว์ป่วยเพราะหิว = ซื้อของกินไม่ได้ (รอบ 952)
-- 1031-1124 เครื่องยนต์บิลรายเดือน (กลาง — ค่าบำรุงบ้านตอนนี้ / ค่าไฟ-น้ำ-เน็ต เสียบเพิ่มได้)
-- 1125-1267 🍖 เงินค่าอาหารสัตว์รายเดือน — ทุกวันที่ 1 ของเดือน จ่ายตามจำนวนสัตว์ที่เลี้ยงอยู่
-- 1268-1427 โรงงานผลิตสินค้า: จ่ายค่าผลิตด้วย "แต้มคำศัพท์"
+- 870-981 มูลค่าทรัพย์สินสุทธิ (net worth) — ฐานของระบบแรงค์
+- 982-1031 🚫🍽️ สัตว์ป่วยเพราะหิว = ซื้อของกินไม่ได้ (รอบ 952)
+- 1032-1125 เครื่องยนต์บิลรายเดือน (กลาง — ค่าบำรุงบ้านตอนนี้ / ค่าไฟ-น้ำ-เน็ต เสียบเพิ่มได้)
+- 1126-1268 🍖 เงินค่าอาหารสัตว์รายเดือน — ทุกวันที่ 1 ของเดือน จ่ายตามจำนวนสัตว์ที่เลี้ยงอยู่
+- 1269-1428 โรงงานผลิตสินค้า: จ่ายค่าผลิตด้วย "แต้มคำศัพท์"
 ### รายการ js/state.js
 STORAGE_KEY:6 · QUIZ_PASS_REWARD:11 · CURE_COST:13 · HUNGRY_SICK_MS:14 · MEAL_HOUR:16 · MEAL_FULL:17
 SLEEP_FROM_HOUR:18 · SLEEP_SICK_HOUR:19 · WAKE_HOUR:20 · DINNER_COST:21 · TOXIN_FULL:23 · DETOX_COST:24
@@ -887,15 +888,15 @@ FEED_CATS:306 · FEED_REACTIONS:320 · feedRx:328 · FEED_QUICK_CM:330 · SLOT_M
 nextSlotStart:349 · mealDayKey:351 · nightKeyOf:353 · isNightNow:361 · newPet:366 · loadState:391
 saveState:771 · activePet:781 · petStage:782 · isAdult:787 · abilityOn:788 · hasPetType:789
 todayStr:792 · dailyTick:796 · addCoins:799 · QUEST_POOL:819 · QUEST_PER_DAY:828 · questsToday:829
-questTick:836 · questEvent:840 · assetValue:876 · netWorth:900 · assetCount:902 · grantRankPromotionRewards:920
-refreshRank:950 · heatProtected:968 · rainProtected:972 · petHungry:975 · petCanEat:979 · hungerSickLock:987
-hungerSickMsg:995 · petShapeOf:1003 · updatePetShape:1009 · shapeMealDone:1016 · heatPct:1026 · ymStr:1035
-billOutstanding:1039 · UTILITIES:1046 · HOME_UTILITIES:1052 · homeDecayed:1054 · billTick:1057 · PET_FOOD_PER_PET:1129
-petFoodTick:1130 · myCar:1156 · carLoanDue:1161 · carLoanOverdue:1166 · carLoanPayable:1171 · carLoanPay:1178
-compTick:1191 · ONLINE_RATE:1205 · onlineEarnActive:1206 · onlineEarnTick:1210 · onlineEarnFlush:1221 · marketTick:1231
-applyMarketSystemBuy:1252 · addCraft:1273 · ORDER_MAX:1292 · ORDER_LIFE_MS:1293 · ORDER_GAP_MIN_MS:1294 · ORDER_GAP_SPAN_MS:1295
-ORDER_TIER_WEIGHT:1296 · newOrder:1297 · orderTick:1310 · careTick:1318 · expNeed:1398 · addExp:1403
-addRP:1423
+questTick:836 · questEvent:840 · assetValue:876 · netWorth:900 · assetCount:902 · grantRankPromotionRewards:921
+refreshRank:951 · heatProtected:969 · rainProtected:973 · petHungry:976 · petCanEat:980 · hungerSickLock:988
+hungerSickMsg:996 · petShapeOf:1004 · updatePetShape:1010 · shapeMealDone:1017 · heatPct:1027 · ymStr:1036
+billOutstanding:1040 · UTILITIES:1047 · HOME_UTILITIES:1053 · homeDecayed:1055 · billTick:1058 · PET_FOOD_PER_PET:1130
+petFoodTick:1131 · myCar:1157 · carLoanDue:1162 · carLoanOverdue:1167 · carLoanPayable:1172 · carLoanPay:1179
+compTick:1192 · ONLINE_RATE:1206 · onlineEarnActive:1207 · onlineEarnTick:1211 · onlineEarnFlush:1222 · marketTick:1232
+applyMarketSystemBuy:1253 · addCraft:1274 · ORDER_MAX:1293 · ORDER_LIFE_MS:1294 · ORDER_GAP_MIN_MS:1295 · ORDER_GAP_SPAN_MS:1296
+ORDER_TIER_WEIGHT:1297 · newOrder:1298 · orderTick:1311 · careTick:1319 · expNeed:1399 · addExp:1404
+addRP:1424
 
 ## js/thaitime.js (52 บรรทัด · 13 รายการ)
 TH_TZ_MIN:22 · TH_DAY_MS:23 · thShift:28 · thMs:30 · thDate:31 · thHour:32
@@ -906,7 +907,7 @@ thLocaleOpt:46
 
 ## js/typing.js (370 บรรทัด · 0 รายการ)
 
-## js/ui.js (10,534 บรรทัด · 465 รายการ)
+## js/ui.js (10,643 บรรทัด · 468 รายการ)
 ### 🗂️ สารบัญโซน js/ui.js (Read/Edit เฉพาะช่วง)
 - 2-77 UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
 - 78-144 🎬 เวทีน้องน่ารัก (Cute Pet Show) — รอบ 604 (ผู้ใช้สั่ง 26 ก.ค. 2026)
@@ -922,46 +923,46 @@ thLocaleOpt:46
 - 1467-1561 รอบ 153: เมนูลัดแตะแถวเพื่อนออนไลน์ในกล่อง aside
 - 1562-1844 การ์ด Leaderboard — สลับแท็บในการ์ดเดียว (ประหยัดพื้นที่):
 - 1845-2418 📈 ฟีดอันดับดีขึ้นบนหัวล็อบบี้
-- 2419-2803 การ์ดข้อมูลผู้เล่น 👤 — คลิกชื่อในการ์ดเพื่อน/กระดาน แล้วโชว์
-- 2804-3098 แผงเพื่อน 👥 (ข้อ 0.3): รหัสเพื่อน + ค้นหา + คำขอ + รายชื่อเพื่อน
-- 3099-3194 🌍 เพื่อนอยู่โลก 3D ไหน + ปุ่ม "ตามเข้าไป" (รอบ 642)
-- 3195-3233 แชทกับเพื่อน (ข้อ 0.4) — กล่องแชทลอยกลางจอ + แผง emoji
-- 3234-3635 รอบ 179: หน้ารวมข้อความ (inbox แบบ Messenger — ธีมกระจกฟ้า sci-fi ของเกม)
-- 3636-4035 ระบบส่งของขวัญ (ข้อ 0.5) — ห้องของขวัญ + กล่องเลือกส่ง + ฉากเปิด
-- 4036-4128 RANK CARD + ฉากเลื่อนแรงค์
-- 4129-4131 PET DASHBOARD
-- 4132-4207 📰 รอบ 155: overlay ข้อมูลน้อง & การดูแล + ฟีดกิจกรรมเพื่อน
-- 4208-4829 📰 รอบ 701 — ฟีดล็อบบี้ "ทีละโพสต์" แบบ Facebook (ผู้ใช้สั่ง 29 ก.ค. 2026)
-- 4830-5024 🌍 รอบ 639: หน้า Feed เต็มจอ — ทุกคน (ไม่ใช่แค่ follow) + ไลก์/คอมเมนต์
-- 5025-5708 📖 Dictionary ค้นหาคำศัพท์ (รอบ 254 ผู้ใช้สั่ง 16 ก.ค. 2026)
-- 5709-5752 การนอน (คิว 7725691507 ข้อ 1)
-- 5753-5755 ให้อาหาร (ระบบมื้อเย็น 18:00 + ความอิ่มสะสม — ข้อ 2+3)
-- 5756-6282 🐾🍽️ แผงให้อาหารสัตว์ทุกตัวในคราวเดียว — รอบ 1345
-- 6283-6401 🛡️ ควิซอาหารปลอดภัย (ต่อยอดข้อ 5.1)
-- 6402-6515 🎀 ตู้เสื้อผ้าสัตว์เลี้ยง — ใช้สวมเฉพาะของที่ซื้อมาแล้ว
-- 6516-6703 ที่พัก (หลบแดด/หลบฝน) + เครื่องปรับอากาศ
-- 6704-6821 บิลสาธารณูปโภค (ค่าไฟ/ค่าน้ำ — เครื่องยนต์อยู่ใน state.js: UTILITIES/billTick)
-- 6822-6904 การ์ดมือถือ (ข้อ 7): ซื้อ 10,000 ขายคืน 6,000
-- 6905-6915 การ์ดคอมพิวเตอร์ (ข้อ 11): ซื้อ 50,000 ขายคืน 30,000
-- 6916-6960 item 8: โบนัสออนไลน์ +0.01 เหรียญ/วิ ฟรีทุกคนที่เปิดเกมออนไลน์อยู่
-- 6961-7327 💻 รอบ 706 (ผู้ใช้สั่ง 29 ก.ค. 2026): ช่องรายได้คอมพิวเตอร์บนแถบบนล็อบบี้
-- 7328-7345 🌀🔤 รอบ 1045 — Vocab Arena (โลกผจญภัยฉบับใหม่)
-- 7346-7768 ☁️📚 รอบ 1229 — Vocab Sky Playground
-- 7769-7859 🏝️ รอบ 1377 — KART (public entry; separate persistent keys)
-- 7860-7881 🌍 ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย (ผู้ใช้สั่ง 9 ก.ค. 2026)
-- 7882-7947 🔒 รอบ 1070/1132: โลกที่ยังไม่เปิดสาธารณะ — เปิดให้บัญชีทดสอบ 2 ชื่อเท่านั้น
-- 7948-8073 ↩️🪙 Legacy recovery — คืนค่าเข้าที่เวอร์ชันเก่าอาจหักค้างไว้ก่อนเปลี่ยนเป็นเข้าฟรี
-- 8074-8268 🧭 ป้ายบอกทางของรางเมนูซ้าย (รอบ 601 · ผู้ใช้สั่ง 26 ก.ค. 2026)
-- 8269-8438 การ์ดสวนผลไม้ (ข้อ 12): ซื้อต้นไม้ปลูกได้ไม่จำกัด แต่ละต้นออกผล
-- 8439-8453 โรงงานผลิตสินค้า 🏭 + ตลาดขายต่อ (แนวคิดใหม่ 5 ก.ค. 2026)
-- 8454-8477 โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
-- 8478-8752 ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
-- 8753-9889 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
-- 9890-9952 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
-- 9953-9989 เลเวลอัพ (รายตัว)
-- 9990-10095 สถิติผลการเรียนรู้
-- 10096-10133 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
-- 10134-10534 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
+- 2419-2912 การ์ดข้อมูลผู้เล่น 👤 — คลิกชื่อในการ์ดเพื่อน/กระดาน แล้วโชว์
+- 2913-3207 แผงเพื่อน 👥 (ข้อ 0.3): รหัสเพื่อน + ค้นหา + คำขอ + รายชื่อเพื่อน
+- 3208-3303 🌍 เพื่อนอยู่โลก 3D ไหน + ปุ่ม "ตามเข้าไป" (รอบ 642)
+- 3304-3342 แชทกับเพื่อน (ข้อ 0.4) — กล่องแชทลอยกลางจอ + แผง emoji
+- 3343-3744 รอบ 179: หน้ารวมข้อความ (inbox แบบ Messenger — ธีมกระจกฟ้า sci-fi ของเกม)
+- 3745-4144 ระบบส่งของขวัญ (ข้อ 0.5) — ห้องของขวัญ + กล่องเลือกส่ง + ฉากเปิด
+- 4145-4237 RANK CARD + ฉากเลื่อนแรงค์
+- 4238-4240 PET DASHBOARD
+- 4241-4316 📰 รอบ 155: overlay ข้อมูลน้อง & การดูแล + ฟีดกิจกรรมเพื่อน
+- 4317-4938 📰 รอบ 701 — ฟีดล็อบบี้ "ทีละโพสต์" แบบ Facebook (ผู้ใช้สั่ง 29 ก.ค. 2026)
+- 4939-5133 🌍 รอบ 639: หน้า Feed เต็มจอ — ทุกคน (ไม่ใช่แค่ follow) + ไลก์/คอมเมนต์
+- 5134-5817 📖 Dictionary ค้นหาคำศัพท์ (รอบ 254 ผู้ใช้สั่ง 16 ก.ค. 2026)
+- 5818-5861 การนอน (คิว 7725691507 ข้อ 1)
+- 5862-5864 ให้อาหาร (ระบบมื้อเย็น 18:00 + ความอิ่มสะสม — ข้อ 2+3)
+- 5865-6391 🐾🍽️ แผงให้อาหารสัตว์ทุกตัวในคราวเดียว — รอบ 1345
+- 6392-6510 🛡️ ควิซอาหารปลอดภัย (ต่อยอดข้อ 5.1)
+- 6511-6624 🎀 ตู้เสื้อผ้าสัตว์เลี้ยง — ใช้สวมเฉพาะของที่ซื้อมาแล้ว
+- 6625-6812 ที่พัก (หลบแดด/หลบฝน) + เครื่องปรับอากาศ
+- 6813-6930 บิลสาธารณูปโภค (ค่าไฟ/ค่าน้ำ — เครื่องยนต์อยู่ใน state.js: UTILITIES/billTick)
+- 6931-7013 การ์ดมือถือ (ข้อ 7): ซื้อ 10,000 ขายคืน 6,000
+- 7014-7024 การ์ดคอมพิวเตอร์ (ข้อ 11): ซื้อ 50,000 ขายคืน 30,000
+- 7025-7069 item 8: โบนัสออนไลน์ +0.01 เหรียญ/วิ ฟรีทุกคนที่เปิดเกมออนไลน์อยู่
+- 7070-7436 💻 รอบ 706 (ผู้ใช้สั่ง 29 ก.ค. 2026): ช่องรายได้คอมพิวเตอร์บนแถบบนล็อบบี้
+- 7437-7454 🌀🔤 รอบ 1045 — Vocab Arena (โลกผจญภัยฉบับใหม่)
+- 7455-7877 ☁️📚 รอบ 1229 — Vocab Sky Playground
+- 7878-7968 🏝️ รอบ 1377 — KART (public entry; separate persistent keys)
+- 7969-7990 🌍 ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย (ผู้ใช้สั่ง 9 ก.ค. 2026)
+- 7991-8056 🔒 รอบ 1070/1132: โลกที่ยังไม่เปิดสาธารณะ — เปิดให้บัญชีทดสอบ 2 ชื่อเท่านั้น
+- 8057-8182 ↩️🪙 Legacy recovery — คืนค่าเข้าที่เวอร์ชันเก่าอาจหักค้างไว้ก่อนเปลี่ยนเป็นเข้าฟรี
+- 8183-8377 🧭 ป้ายบอกทางของรางเมนูซ้าย (รอบ 601 · ผู้ใช้สั่ง 26 ก.ค. 2026)
+- 8378-8547 การ์ดสวนผลไม้ (ข้อ 12): ซื้อต้นไม้ปลูกได้ไม่จำกัด แต่ละต้นออกผล
+- 8548-8562 โรงงานผลิตสินค้า 🏭 + ตลาดขายต่อ (แนวคิดใหม่ 5 ก.ค. 2026)
+- 8563-8586 โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
+- 8587-8861 ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
+- 8862-9998 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
+- 9999-10061 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
+- 10062-10098 เลเวลอัพ (รายตัว)
+- 10099-10204 สถิติผลการเรียนรู้
+- 10205-10242 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
+- 10243-10643 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
 ### รายการ js/ui.js
 startHTML:10 · PET_ANIM:30 · petAnimHTML:35 · petVisualHTML:50 · PET_SHOW:91 · PET_SHOW_STAGE:96
 PET_SHOW_H:99 · petShowBgHTML:102 · petBondLine:153 · PET_HEALTH_TIPS:177 · nextPetHealthTip:215 · petBondActionLine:223
@@ -986,61 +987,61 @@ bindLbGroupOpen:1741 · lbRankRows:1753 · RANK_MOVE_TOPICS:1851 · RANK_MOVE_MA
 rankMoveRewardCheck:1887 · showRankMoveRewardNotice:1906 · rankMoveFeedCheck:1944 · LB_BCAT_TOP:1977 · lbBadgeSections:1982 · lbDemoRows:2008
 lbChar:2030 · lbfAwardBarHtml:2040 · openLeaderboardFull:2059 · BLK_PAD:2198 · BLK_PAD_NEW:2203 · BLK_TOP_FIX:2204
 seatPodChars:2205 · lbOnlineCoinHtml:2217 · lbCoinHtml:2234 · lbBadgeHtml:2250 · lbBossHtml:2276 · lbWordSearchHtml:2299
-lbTypingHtml:2335 · lbBubbleHtml:2367 · lbShootHtml:2389 · bindPlayerClicks:2424 · showPlayerCard:2434 · bindProfileBadgeScroll:2715
-petDescImg:2733 · openImgLightbox:2746 · openPetPeek:2766 · updateBillBadges:2810 · setBadge:2820 · tinvPendingCount:2836
-attentionPendingItems:2844 · attentionUnseenCount:2864 · attentionAcknowledge:2869 · updateSettingsBadge:2884 · attentionSummaryData:2900 · openAttentionSummary:2928
-updateFriendBadge:2962 · renderFriendPanel:2972 · friendDoSearch:3020 · refreshFriendData:3044 · FRW_TTL_MS:3109 · FRW_MIN_GAP:3110
-frwWorldOf:3114 · frwPanelOpen:3117 · frwScan:3122 · frwPaint:3144 · frwPaintHint:3165 · frwFollow:3179
-CHAT_EMOJI_CATS:3200 · CHAT_THEMES:3222 · CHAT_SECRET_MS:3231 · chatBadgeSync:3239 · ibTimeStr:3247 · IB_CALL_RE:3256
-ibCallInfo:3257 · openChatInbox:3262 · chatFitKeyboard:3432 · openChat:3448 · versionedAssetPath:3639 · giftImg:3643
-LAZY_ASSET_PIXEL:3652 · lazyAssetHTML:3653 · bindLazyAssets:3656 · giftDateStr:3678 · GREETS:3686 · GREET_EXP:3694
-greetInfo:3695 · openGreetPicker:3699 · giftItemPic:3743 · foodGiftBlocked:3753 · giftItemName:3759 · updateGiftBadge:3765
-renderGiftPanel:3774 · acceptGift:3833 · declineGift:3856 · showGreetReveal:3865 · showGiftReveal:3892 · openGiftPicker:3918
-confirmSendGift:3987 · doSendGift:4013 · rankBadgeHTML:4039 · renderRankCard:4044 · renderRankTab:4078 · showRankUp:4106
-bindPetPlateButtons:4141 · openPetInfoOverlay:4174 · feedAgo:4200 · FEED_DECK_MAX:4220 · FEED_SLIDE_MS:4221 · FEED_RESUME_MS:4222
-feedPostImgIndex:4227 · feedPostImg:4238 · feedPostByKey:4247 · feedCanReact:4250 · fpStatsHTML:4255 · fpNameBadgesHTML:4271
-fpostHTML:4275 · renderFeedCard:4310 · feedDeckGo:4348 · feedDeckTick:4368 · renderFeedBell:4390 · FNT_JUMP:4399
-fntGiftName:4405 · feedNotifText:4409 · feedNotifGo:4424 · feedNotifArrived:4439 · openFeedNotif:4446 · closeRxPicker:4501
-openRxPicker:4505 · feedFlyWord:4525 · feedPickRx:4536 · FCM_REP_SHOW:4551 · FCM_FOCUS_POST:4552 · openFeedComments:4554
-closeFeedComments:4576 · fcmRowHTML:4585 · showCommentLikers:4608 · fcmTreeHTML:4630 · renderFeedComments:4655 · bindFeedPostEvents:4783
-openFeedBoard:4836 · renderFeedBoardLive:4857 · renderFeedBoard:4875 · stageColLeft:4894 · alignPetTabs:4903 · alignFeedPlate:4915
-alignProfilePlate:4931 · COIN_K_MIN:4949 · alignCoinBlock:4950 · alignStageLeft:4978 · laneModeOn:4990 · alignStageCols:5003
-watchStageCols:5017 · dictRecordLookup:5036 · DICT_FILE_COUNT:5047 · loadDict:5048 · dictSearch:5063 · dictTapWords:5078
-dictEntryHTML:5082 · openDictOverlay:5093 · renderDashboard:5177 · sleepBtnHTML:5714 · sleepHintHTML:5721 · sleepAllPets:5732
-wakeAllPets:5745 · feedPet:5760 · feedFoodsForPet:5766 · feedFoodById:5771 · feedFoodCanUse:5772 · feedPetBlockText:5777
-feedPetThumbHTML:5784 · openFoodMenu:5790 · applyFoodToPet:5924 · feedWith:5941 · AVATAR_UI:5961 · playerAvatarHTML:5965
-SHAPE_UI:5973 · showFeedResult:5982 · applyCureState:6025 · curePet:6039 · cureAllPets:6062 · heartsFx:6090
-PAT_HOLD_MS:6113 · PAT_EXP:6114 · bindPetTap:6115 · petBounce:6133 · petMood:6139 · shortPatPet:6146
-longPatPet:6154 · patCalendarHTML:6174 · patDayKey:6208 · patStreakNow:6212 · patStreakTick:6217 · cureCelebrateFx:6242
-railCureClick:6253 · detoxPet:6265 · openFoodQuiz:6288 · closeDressUpBoard:6406 · dressItemRarity:6410 · dressRarityLabel:6417
-dressSlotLabel:6420 · openDressUpBoard:6423 · renderShop:6456 · homeVisualHTML:6519 · showHomeRuined:6533 · showCutNotice:6554
-renderHomeCard:6572 · payMaint:6656 · trashBillUI:6672 · payTrash:6689 · UTILITY_UI:6708 · utilityBillUI:6757
-payUtility:6782 · buyUtilityFix:6808 · renderPhoneCard:6826 · buyPhone:6866 · sellPhone:6888 · compLiveTotal:6909
-onlineLiveTotal:6920 · syncCoinHeader:6927 · flashPillGain:6932 · renderOnlineEarnPill:6941 · renderCompEarnPill:6966 · openPillInfo:6999
-renderComputerCard:7082 · buyComputer:7117 · sellComputer:7140 · soldCount:7161 · soldBadge:7162 · loadScriptOnce:7168
-WORDSHIP_LOCK_MSG:7192 · wordShipAdminAllowed:7193 · refreshWordShipLock:7200 · loadStylesheetOnce:7210 · openWordShip:7220 · bindWordShipRail:7239
-SKIRMISH_LOCK_MSG:7249 · skirmishAdminAllowed:7250 · refreshSkirmishLock:7257 · openWordSkirmish:7267 · bindSkirmishRail:7286 · advBusyMsg:7297
-advResetLoad:7309 · loadAdv3d:7315 · loadVocabArena3d:7333 · loadSkyPlayground3d:7350 · SKY_BETA_DENIED_MSG:7353 · ensureSkyBetaAccess:7354
-enterSkyPlayground3D:7362 · enterAdventure3D:7379 · pickAdvMap:7412 · enterHaunted3D:7447 · enterHeli3D:7470 · pickHeliMap:7497
-enterDrone3D:7533 · confirmPetShoppingEntry:7554 · enterPetShopping3D:7580 · enterDrive3D:7632 · pickDriveMap:7671 · enterMotoMapAsCar:7707
-enterSoccer3D:7726 · enterMoto3D:7746 · kartLobbyIconHTML:7772 · mechaLobbyIconHTML:7776 · enterKart3D:7781 · enterPickup3D:7796
-enterF1_3D:7811 · enterInvasion3D:7839 · WORLD3D:7867 · WORLD3D_COMING_SOON:7886 · world3DComingSoon:7887 · gotoRobotShop:7890
-openHealDialog:7896 · world3DFail:7917 · worldEntryStarted:7952 · worldEntryStopped:7953 · GAME_ENTRY_STABLE_MS:7954 · gameEntryCommit:7956
-gameEntryRefund:7964 · recoverInterruptedGameEntry:7981 · showGameEntryRefundNotice:7989 · startWorldEntry:8016 · railWorldClick:8041 · openWorldEntryDialog:8068
-railScrollHint:8079 · railScrollTop:8087 · initRailScroll:8092 · renderRailWorlds:8112 · tinvOnlineFriends:8206 · refreshTinvOnlineUI:8210
-tinvNoticeHTML:8221 · openTinvPicker:8230 · fruitCountdown:8274 · renderFarmCard:8286 · renderFarmClock:8361 · buyFruit:8377
-sellFruit:8397 · sellAllFruit:8418 · collectImg:8447 · renderFactoryCard:8458 · renderMarketCard:8482 · updateWishBadge:8540
-openWishlistDialog:8551 · bindStripArrows:8598 · renderMarketBrowse:8612 · openMarketBuyDialog:8639 · carImg:8759 · renderVehicleShop:8760
-CS_CYCLE_MS:8812 · carInteriorImg:8813 · carStatHtml:8815 · renderCarShowroom:8822 · csShowBig:8849 · csInit:8876
-RS_CYCLE_MS:8899 · robotImg:8900 · robotShopImg:8902 · renderRobotShop:8905 · renderPetMarketShop:8925 · rsShowBig:8943
-rsInit:8963 · buyRobot:8982 · mechaAdminAllowed:9007 · refreshMechaLock:9014 · enterMecha3D:9024 · pickMechaRobot:9056
-pickDriveCar:9088 · openCarBuyDialog:9131 · buyCarInsurance:9192 · payCarLoanMonthly:9211 · payCarLoanFull:9223 · carDriveBlock:9242
-gotoVehicleShop:9247 · gotoMyStock:9252 · showNeedCarDialog:9258 · craftDiscount:9270 · renderFactory:9273 · renderOrdersUI:9342
-startProduce:9361 · buyCollectible:9389 · cancelProduce:9419 · deliverOrder:9433 · renderOrderClock:9450 · renderCollectMine:9460
-openListDialog:9509 · cancelListing:9566 · listingMarketStatus:9590 · maybeOfferStaleMarketBuy:9594 · openStaleMarketOffer:9605 · acceptStaleMarketBuy:9643
-buyMarketItem:9679 · showCollectReveal:9744 · buyAC:9782 · openHomeShop:9820 · openPetPurchase:9894 · renderPetShop:9931
-showLevelUp:9956 · renderStats:9993 · showTeacherCard:10100 · CALL_REACT_EMOS:10144 · CALL_TALK_MIN:10147 · CALL_TALK_HOLD:10148
-CALL_ORDER_GAP:10150 · CALL_TONES:10156 · startCall:10530
+lbTypingHtml:2335 · lbBubbleHtml:2367 · lbShootHtml:2389 · bindPlayerClicks:2424 · ensureProfileModernStyles:2434 · bindProfileTabs:2443
+profileAssetMeta:2473 · showPlayerCard:2509 · bindProfileBadgeScroll:2824 · petDescImg:2842 · openImgLightbox:2855 · openPetPeek:2875
+updateBillBadges:2919 · setBadge:2929 · tinvPendingCount:2945 · attentionPendingItems:2953 · attentionUnseenCount:2973 · attentionAcknowledge:2978
+updateSettingsBadge:2993 · attentionSummaryData:3009 · openAttentionSummary:3037 · updateFriendBadge:3071 · renderFriendPanel:3081 · friendDoSearch:3129
+refreshFriendData:3153 · FRW_TTL_MS:3218 · FRW_MIN_GAP:3219 · frwWorldOf:3223 · frwPanelOpen:3226 · frwScan:3231
+frwPaint:3253 · frwPaintHint:3274 · frwFollow:3288 · CHAT_EMOJI_CATS:3309 · CHAT_THEMES:3331 · CHAT_SECRET_MS:3340
+chatBadgeSync:3348 · ibTimeStr:3356 · IB_CALL_RE:3365 · ibCallInfo:3366 · openChatInbox:3371 · chatFitKeyboard:3541
+openChat:3557 · versionedAssetPath:3748 · giftImg:3752 · LAZY_ASSET_PIXEL:3761 · lazyAssetHTML:3762 · bindLazyAssets:3765
+giftDateStr:3787 · GREETS:3795 · GREET_EXP:3803 · greetInfo:3804 · openGreetPicker:3808 · giftItemPic:3852
+foodGiftBlocked:3862 · giftItemName:3868 · updateGiftBadge:3874 · renderGiftPanel:3883 · acceptGift:3942 · declineGift:3965
+showGreetReveal:3974 · showGiftReveal:4001 · openGiftPicker:4027 · confirmSendGift:4096 · doSendGift:4122 · rankBadgeHTML:4148
+renderRankCard:4153 · renderRankTab:4187 · showRankUp:4215 · bindPetPlateButtons:4250 · openPetInfoOverlay:4283 · feedAgo:4309
+FEED_DECK_MAX:4329 · FEED_SLIDE_MS:4330 · FEED_RESUME_MS:4331 · feedPostImgIndex:4336 · feedPostImg:4347 · feedPostByKey:4356
+feedCanReact:4359 · fpStatsHTML:4364 · fpNameBadgesHTML:4380 · fpostHTML:4384 · renderFeedCard:4419 · feedDeckGo:4457
+feedDeckTick:4477 · renderFeedBell:4499 · FNT_JUMP:4508 · fntGiftName:4514 · feedNotifText:4518 · feedNotifGo:4533
+feedNotifArrived:4548 · openFeedNotif:4555 · closeRxPicker:4610 · openRxPicker:4614 · feedFlyWord:4634 · feedPickRx:4645
+FCM_REP_SHOW:4660 · FCM_FOCUS_POST:4661 · openFeedComments:4663 · closeFeedComments:4685 · fcmRowHTML:4694 · showCommentLikers:4717
+fcmTreeHTML:4739 · renderFeedComments:4764 · bindFeedPostEvents:4892 · openFeedBoard:4945 · renderFeedBoardLive:4966 · renderFeedBoard:4984
+stageColLeft:5003 · alignPetTabs:5012 · alignFeedPlate:5024 · alignProfilePlate:5040 · COIN_K_MIN:5058 · alignCoinBlock:5059
+alignStageLeft:5087 · laneModeOn:5099 · alignStageCols:5112 · watchStageCols:5126 · dictRecordLookup:5145 · DICT_FILE_COUNT:5156
+loadDict:5157 · dictSearch:5172 · dictTapWords:5187 · dictEntryHTML:5191 · openDictOverlay:5202 · renderDashboard:5286
+sleepBtnHTML:5823 · sleepHintHTML:5830 · sleepAllPets:5841 · wakeAllPets:5854 · feedPet:5869 · feedFoodsForPet:5875
+feedFoodById:5880 · feedFoodCanUse:5881 · feedPetBlockText:5886 · feedPetThumbHTML:5893 · openFoodMenu:5899 · applyFoodToPet:6033
+feedWith:6050 · AVATAR_UI:6070 · playerAvatarHTML:6074 · SHAPE_UI:6082 · showFeedResult:6091 · applyCureState:6134
+curePet:6148 · cureAllPets:6171 · heartsFx:6199 · PAT_HOLD_MS:6222 · PAT_EXP:6223 · bindPetTap:6224
+petBounce:6242 · petMood:6248 · shortPatPet:6255 · longPatPet:6263 · patCalendarHTML:6283 · patDayKey:6317
+patStreakNow:6321 · patStreakTick:6326 · cureCelebrateFx:6351 · railCureClick:6362 · detoxPet:6374 · openFoodQuiz:6397
+closeDressUpBoard:6515 · dressItemRarity:6519 · dressRarityLabel:6526 · dressSlotLabel:6529 · openDressUpBoard:6532 · renderShop:6565
+homeVisualHTML:6628 · showHomeRuined:6642 · showCutNotice:6663 · renderHomeCard:6681 · payMaint:6765 · trashBillUI:6781
+payTrash:6798 · UTILITY_UI:6817 · utilityBillUI:6866 · payUtility:6891 · buyUtilityFix:6917 · renderPhoneCard:6935
+buyPhone:6975 · sellPhone:6997 · compLiveTotal:7018 · onlineLiveTotal:7029 · syncCoinHeader:7036 · flashPillGain:7041
+renderOnlineEarnPill:7050 · renderCompEarnPill:7075 · openPillInfo:7108 · renderComputerCard:7191 · buyComputer:7226 · sellComputer:7249
+soldCount:7270 · soldBadge:7271 · loadScriptOnce:7277 · WORDSHIP_LOCK_MSG:7301 · wordShipAdminAllowed:7302 · refreshWordShipLock:7309
+loadStylesheetOnce:7319 · openWordShip:7329 · bindWordShipRail:7348 · SKIRMISH_LOCK_MSG:7358 · skirmishAdminAllowed:7359 · refreshSkirmishLock:7366
+openWordSkirmish:7376 · bindSkirmishRail:7395 · advBusyMsg:7406 · advResetLoad:7418 · loadAdv3d:7424 · loadVocabArena3d:7442
+loadSkyPlayground3d:7459 · SKY_BETA_DENIED_MSG:7462 · ensureSkyBetaAccess:7463 · enterSkyPlayground3D:7471 · enterAdventure3D:7488 · pickAdvMap:7521
+enterHaunted3D:7556 · enterHeli3D:7579 · pickHeliMap:7606 · enterDrone3D:7642 · confirmPetShoppingEntry:7663 · enterPetShopping3D:7689
+enterDrive3D:7741 · pickDriveMap:7780 · enterMotoMapAsCar:7816 · enterSoccer3D:7835 · enterMoto3D:7855 · kartLobbyIconHTML:7881
+mechaLobbyIconHTML:7885 · enterKart3D:7890 · enterPickup3D:7905 · enterF1_3D:7920 · enterInvasion3D:7948 · WORLD3D:7976
+WORLD3D_COMING_SOON:7995 · world3DComingSoon:7996 · gotoRobotShop:7999 · openHealDialog:8005 · world3DFail:8026 · worldEntryStarted:8061
+worldEntryStopped:8062 · GAME_ENTRY_STABLE_MS:8063 · gameEntryCommit:8065 · gameEntryRefund:8073 · recoverInterruptedGameEntry:8090 · showGameEntryRefundNotice:8098
+startWorldEntry:8125 · railWorldClick:8150 · openWorldEntryDialog:8177 · railScrollHint:8188 · railScrollTop:8196 · initRailScroll:8201
+renderRailWorlds:8221 · tinvOnlineFriends:8315 · refreshTinvOnlineUI:8319 · tinvNoticeHTML:8330 · openTinvPicker:8339 · fruitCountdown:8383
+renderFarmCard:8395 · renderFarmClock:8470 · buyFruit:8486 · sellFruit:8506 · sellAllFruit:8527 · collectImg:8556
+renderFactoryCard:8567 · renderMarketCard:8591 · updateWishBadge:8649 · openWishlistDialog:8660 · bindStripArrows:8707 · renderMarketBrowse:8721
+openMarketBuyDialog:8748 · carImg:8868 · renderVehicleShop:8869 · CS_CYCLE_MS:8921 · carInteriorImg:8922 · carStatHtml:8924
+renderCarShowroom:8931 · csShowBig:8958 · csInit:8985 · RS_CYCLE_MS:9008 · robotImg:9009 · robotShopImg:9011
+renderRobotShop:9014 · renderPetMarketShop:9034 · rsShowBig:9052 · rsInit:9072 · buyRobot:9091 · mechaAdminAllowed:9116
+refreshMechaLock:9123 · enterMecha3D:9133 · pickMechaRobot:9165 · pickDriveCar:9197 · openCarBuyDialog:9240 · buyCarInsurance:9301
+payCarLoanMonthly:9320 · payCarLoanFull:9332 · carDriveBlock:9351 · gotoVehicleShop:9356 · gotoMyStock:9361 · showNeedCarDialog:9367
+craftDiscount:9379 · renderFactory:9382 · renderOrdersUI:9451 · startProduce:9470 · buyCollectible:9498 · cancelProduce:9528
+deliverOrder:9542 · renderOrderClock:9559 · renderCollectMine:9569 · openListDialog:9618 · cancelListing:9675 · listingMarketStatus:9699
+maybeOfferStaleMarketBuy:9703 · openStaleMarketOffer:9714 · acceptStaleMarketBuy:9752 · buyMarketItem:9788 · showCollectReveal:9853 · buyAC:9891
+openHomeShop:9929 · openPetPurchase:10003 · renderPetShop:10040 · showLevelUp:10065 · renderStats:10102 · showTeacherCard:10209
+CALL_REACT_EMOS:10253 · CALL_TALK_MIN:10256 · CALL_TALK_HOLD:10257 · CALL_ORDER_GAP:10259 · CALL_TONES:10265 · startCall:10639
 
 ## js/util.js (1,593 บรรทัด · 59 รายการ)
 ### 🗂️ สารบัญโซน js/util.js (Read/Edit เฉพาะช่วง)
@@ -1333,6 +1334,15 @@ vbRender:148 · vbCardHTML:194
 .pqr-chat:63 · .pqr-msg:64,65,66 · .pqr-chat-form:67,68 · .pqr-hud:70 · .pqr-hud-main:72,73,74,75 · .pqr-hud-actions:76,77,78
 .pqr-drawer:80 · .pqr-drawer-card:81 · #pqr-drawer-body:82 · .pqr-chat-draw:83 · .pqr-score-row:84,85 · .pqr-incoming:87,88,89,90
 #screen-picdict:97,98,99,100(+2)
+
+## css/profile-modern.css (183 บรรทัด · 41 selector)
+.pl-overlay:5 · .pl-card:9,19,27,32(+29) · .pl-ambient:24 · .pl-ambient-a:25 · .pl-ambient-b:26 · .pl-head-mark:41,44
+.pl-identity:45 · .pl-eyebrow:46 · .pl-name-line:47,48,49 · .pl-grade-label:51 · .pl-head-actions:52,53 · .pl-chat:54
+.pl-call:58 · .pl-profile-rail:68,70,71 · .pl-rail-kicker:72 · .pl-stats-col:73,74 · .pl-blk-wrap:75,77 · .pl-blk:78
+.pl-photo:79 · .pl-me-tag:80 · .pl-value-hero:82,84,85,86 · .pl-stat-grid:87 · .pl-stat-ico:90 · .pl-portfolio:94
+.pl-tabs:95 · .pl-tab:96,97,98 · .pl-tab-count:99 · .pl-panels:100 · .pl-tab-panel:101,102 · .pl-collection-panel:104
+.pl-collection-status:105 · .pl-pets-wrap:106 · .pl-section-heading:107,108,110,111 · .pl-section-icon:109 · .pl-pet-stage:128 · .pl-asset-cat:137
+.pl-asset-price:141 · .pl-honors-panel:144,145,146,147(+3) · .pl-story-panel:152 · .pl-story-grid:153,155 · .no-anim:158
 
 ## css/rankgraph.css (23 บรรทัด · 10 selector)
 .rank-graph-btn:2,5 · .rg-overlay:6 · .rg-box:7,9,10,21 · .rg-close:11,12 · .rg-tabs:13 · .rg-tab:14,15,16

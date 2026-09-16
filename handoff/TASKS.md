@@ -12,21 +12,18 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
-- **รอบ 1509 · ซอมบี้เลือดแดง + ตัดวงกลมระเบิดเก่า:** ศัตรูหุ่นเป็นซอมบี้ · เลือดแดงตอนระเบิด · หันหน้าหาผู้เล่นตอนโจมตี · ไม่มี shock ring ส้ม/ขาว
-- ไฟล์: `js/adventure3d.js` `js/mecha-combat-fx.js` `tools/test_mecha_1509.js`
-- unit 1509 ผ่าน · ค้าง: ยิงบน live ดูซอมบี้หันหน้า + ระเบิดไม่มีวงซ้อน
+- **รอบ 1512 · โปรไฟล์ Modern Luxury + คอลเลกชันครบ:** เจ้าของเห็นสัตว์ทุกตัวและทรัพย์สินทุกหมวดจากเซฟสด แม้ปิดสวิตช์เผยแพร่; โปรไฟล์คนอื่นยังเคารพสิทธิ์เดิม
+- ไฟล์: `js/ui.js` `js/online.js` `js/state.js` `css/profile-modern.css` `tools/test_profile_modern.cjs`
+- Playwright 30 checks ผ่านที่ 1366×768, 1367×617, 812×375 + Home V2 regression ผ่าน; ไม่มี vertical overflow/runtime error
+- **รอบ 1511 · ซอมบี้เลือดแดง + ตัดวงกลมระเบิดเก่า:** ศัตรูหุ่นเป็นซอมบี้ · เลือดแดงตอนระเบิด · หันหน้าหาผู้เล่นตอนโจมตี · ไม่มี shock ring ส้ม/ขาว
+- ไฟล์: `js/adventure3d.js` `js/mecha-combat-fx.js` `tools/test_mecha_1511.js`
+- unit 1511 ผ่าน · ค้าง: ยิงบน live ดูซอมบี้หันหน้า + ระเบิดไม่มีวงซ้อน
+- **รอบ 1510 · ธีมหรูดำแอดมินเท่านั้น:** Home V2 ธีม noir ดำ/เถา/ทอง + แบนเนอร์จบภารกิจหรู · คนทั่วไปยังพาสเทล
+- ไฟล์: `css/home-v2.css` `js/home-v2.js` `css/style.css` `css/lobby.css` `js/util.js` `js/auth.js` `index_classic.html`
+- เกต `isAdmin()===true` · unit noir ผ่าน · ค้าง: แอดมินลอง Settings ⚙️ → 🎨 ธีมหน้าหลัก บน live
 - **รอบ 1508 · ตัดกล่องยืนยันเข้าเกม:** กดโลก 3D แล้วเข้าทันที ไม่มี “เข้าเลย/เล่นฟรี” มาขวาง
 - ไฟล์: `js/ui.js` `css/skyplay3d.css` tests kart/sky/tinv/refund · Sky เลือกตัวละครในโลกที่ `#sp-character`
 - unit + Playwright Kart ผ่าน · ค้าง: ผู้ใช้ลองกดหุ่นรบบน live
-- **รอบ 1506 · ระเบิดแบบลูกไฟตัวอย่าง:** ไม่ใช่วงแบนแล้ว · แกนขาว+เปลวบิลโลว์+ควันดำ+เศษหิน+เส้นประกาย · ~1.5s · CAPACITY 512
-- ไฟล์: `js/mecha-combat-fx.js` `tools/test_mecha_1506.js`
-- unit 1506 ผ่าน · ค้าง: ยิงบน live เทียบภาพตัวอย่าง
-- **รอบ 1505 · FX วงเพลิงอลังการ:** แกนขาวร้อน→เปลว→ember · ประกายถ่วงแรงโน้มถ่วง · ลิ้นไฟ 10 · trail กระสุนร้อนขึ้น · CAPACITY 384 · impact ~1.2s
-- ไฟล์: `js/mecha-combat-fx.js` `tools/test_mecha_1505.js` (+1485/1492 รับ duration/สีใหม่)
-- unit 1505+1485+1492 ผ่าน · ค้าง: ยิงบน live ดูความสมจริง
-- **รอบ 1504 · ยิงรบคำย่อ/หมอบคนละปุ่ม + เพื่อนเห็นท่า:** ไม่วนท่าแล้ว · รหัสท่าใน `av` (sk1c/sk1p) ให้ peer ย่อ/หมอบ/หลบตาม · รวม AUTO กลับบ้าน
-- ไฟล์: `js/wordskirmish.js` `css/wordskirmish.css` `tools/test_wordskirmish.js` `docs/PLAYER_CHARACTER_STYLE.md`
-- unit 73 ผ่าน · ค้าง: สองแอดมินเข้าห้องเดียวกันดูท่าย่อ/หมอบ
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
