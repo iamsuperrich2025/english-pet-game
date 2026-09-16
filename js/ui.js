@@ -5284,6 +5284,7 @@ function openDictOverlay(q){
 }
 
 function renderDashboard(){
+  grantWorldPlayAccess();
   careTick();
   dailyTick();
   if(Array.isArray(state.pendingCut) && state.pendingCut.length) showCutNotice();
@@ -7470,7 +7471,6 @@ function ensureSkyBetaAccess(){
 }
 async function enterSkyPlayground3D(){
   if(!ensureSkyBetaAccess()) return worldEntryStopped(SKY_BETA_DENIED_MSG);
-  if(!state.skyTicket) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
   if(advLoading){ advBusyMsg(enterSkyPlayground3D); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
   advLoading=Date.now();toast('☁️ กำลังเปิด Vocab Sky Playground...');
   try{
@@ -7486,7 +7486,7 @@ async function enterSkyPlayground3D(){
 }
 let advLoading = false;
 async function enterAdventure3D(){
-  if(!state.advTicket || state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
+  if(state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
   if(advLoading){ advBusyMsg(enterAdventure3D); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
   // 🗺️ รอบ 1045: เลือกแผนที่ก่อน แล้วค่อยโหลดเฉพาะเอนจินที่ใช้จริง
   // Vocab Arena เบากว่า adventure3d.js มาก จึงไม่บังคับมือถือโหลดโลกเฮลิคอปเตอร์ทั้งก้อนก่อนเข้าต่อสู้
@@ -7554,7 +7554,7 @@ function pickAdvMap(){
 
 /* เข้าโลกผีสิงกลางคืน 👻 (ตั๋วแยก · ใช้ engine เดียวกัน โหมด haunt) */
 async function enterHaunted3D(){
-  if(!state.hauntTicket || state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
+  if(state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
   if(advLoading){ advBusyMsg(enterHaunted3D); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
   if(!window.Adventure3D){
     advLoading = Date.now();
@@ -7577,7 +7577,7 @@ async function enterHaunted3D(){
 
 /* เข้าโลกเฮลิคอปเตอร์ (engine เดียวกัน โหมด heli) */
 async function enterHeli3D(){
-  if(!state.heliTicket || state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
+  if(state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
   if(advLoading){ advBusyMsg(enterHeli3D); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
   // 🗺️ รอบ 815 (ผู้ใช้สั่ง): เลือกแผนที่ก่อนขึ้นบิน เหมือนตอนเข้าโลกขับรถ
   const hmap = await pickHeliMap();
@@ -7640,7 +7640,7 @@ function pickHeliMap(){
 
 /* เข้าโลกโดรน (engine เดียวกัน โหมด drone) */
 async function enterDrone3D(){
-  if(!state.droneTicket || state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
+  if(state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
   if(advLoading){ advBusyMsg(enterDrone3D); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
   if(!window.Adventure3D){
     advLoading = Date.now();
@@ -7739,7 +7739,7 @@ async function enterPetShopping3D(target='food'){
 
 /* เข้าโลกขับรถ (engine เดียวกัน โหมด drive) — โหลดแผนที่เมืองจริงเพิ่ม 1 ไฟล์ (~240KB โหลดครั้งเดียว) */
 async function enterDrive3D(){
-  if(!state.driveTicket || state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
+  if(state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
   if(advLoading){ advBusyMsg(enterDrive3D); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
   // 🔓 รอบ 943: ไม่มีรถไม่บล็อกแล้ว — ระบบให้ยืมรถขับฟรีสำหรับรอบนั้น (myCar()=null → โมเดล car_01 + สมรรถนะกลาง 3/3/3)
   const loanCar = !(state.cars && state.cars.length);
@@ -7833,7 +7833,7 @@ async function enterMotoMapAsCar(){
 
 /* เข้าโลกสนามฟุตบอล (engine เดียวกัน โหมด soccer) */
 async function enterSoccer3D(){
-  if(!state.soccerTicket || state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
+  if(state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
   if(advLoading){ advBusyMsg(enterSoccer3D); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
   if(!window.Adventure3D){
     advLoading = Date.now();
@@ -7853,7 +7853,7 @@ async function enterSoccer3D(){
 
 /* เข้าโลกมอเตอร์ไซค์ — engine แยก (js/moto3d.js) + แผนที่จริง 1 ไฟล์ (~190KB โหลดครั้งเดียว) */
 async function enterMoto3D(){
-  if(!state.motoTicket || state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
+  if(state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
   if(advLoading){ advBusyMsg(enterMoto3D); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
   if(!window.MotoWorld || !window.MOTO_MAP){
     advLoading = Date.now();
@@ -7888,7 +7888,7 @@ function mechaLobbyIconHTML(){
     + '<i class="mecha-lobby-sigil">💥</i></span>';
 }
 async function enterKart3D(){
-  if(!state.kartTicket||state.advHurt)return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
+  if(state.advHurt)return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
   if(advLoading)return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่');
   advLoading=Date.now();toast('🏝️ กำลังเปิด Vocab World Kart...');
   try{
@@ -7903,7 +7903,7 @@ async function enterKart3D(){
 }
 
 async function enterPickup3D(){
-  if(!state.pickupTicket||state.advHurt)return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
+  if(state.advHurt)return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
   if(advLoading)return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่');
   advLoading=Date.now();toast('🛻 กำลังเปิด Vocab World Pick-Up Truck...');
   try{
@@ -7918,7 +7918,7 @@ async function enterPickup3D(){
 }
 
 async function enterF1_3D(){
-  if(!state.f1Ticket || state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
+  if(state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
   if(advLoading){ advBusyMsg(enterF1_3D); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
   if(!window.F1World || !window.F1_MAP){
     advLoading = Date.now();
@@ -7946,7 +7946,7 @@ async function enterF1_3D(){
 
 /* เข้าโลกยานแม่บุกโลก — engine แยก (js/invasion3d.js) ไม่แตะ adventure3d.js */
 async function enterInvasion3D(){
-  if(!state.invasionTicket || state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
+  if(state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
   if(advLoading){ advBusyMsg(enterInvasion3D); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
   if(!window.InvasionWorld){
     advLoading = Date.now();
@@ -8058,6 +8058,12 @@ function world3DFail(label, err){
    ↩️🪙 Legacy recovery — คืนค่าเข้าที่เวอร์ชันเก่าอาจหักค้างไว้ก่อนเปลี่ยนเป็นเข้าฟรี
    ระบบใหม่ห้ามสร้างธุรกรรมหรือหักเหรียญเมื่อเข้าเกมทุกกรณี
    ============================================================ */
+const WORLD_PLAY_TICKETS=['advTicket','skyTicket','hauntTicket','heliTicket','droneTicket','driveTicket',
+  'soccerTicket','motoTicket','invasionTicket','mechaTicket','kartTicket','pickupTicket','f1Ticket'];
+function grantWorldPlayAccess(){
+  if(typeof state==='undefined') return;
+  WORLD_PLAY_TICKETS.forEach(k=>{ state[k]=true; });
+}
 function worldEntryStarted(){ return {started:true}; }
 function worldEntryStopped(reason, err){ return {started:false, reason:String(reason||'เกมไม่ตอบสนองก่อนเปิดสำเร็จ'), error:err||null}; }
 const GAME_ENTRY_STABLE_MS = 15000; // ถ้าค้าง/reload ช่วงเริ่มเกม ให้ boot คืนค่าเข้า
@@ -8126,7 +8132,8 @@ async function startWorldEntry(w, info, unlocked, overlay, button){
   if(w && w.mode === 'sky' && !ensureSkyBetaAccess()) return;
   if(button) button.disabled = true;
   // info คงอยู่ใน signature เพื่อ compatibility เท่านั้น — ห้ามใช้ราคา/หักเหรียญเมื่อเข้าเกม
-  state[w.ticketKey] = true; // ฟังก์ชัน enter ใช้เป็น guard; ถ้าล้มเหลวจะ rollback ให้
+  grantWorldPlayAccess();
+  state[w.ticketKey] = true; // บันทึกว่าเคยเข้าโลกนี้; ถ้าล้มเหลวจะ rollback แค่คีย์นี้
   saveState();
   renderRailWorlds();
   if(overlay && typeof overlay.remove === 'function') overlay.remove();

@@ -13448,15 +13448,8 @@ function start(md,opt){
   M=MODES[mode];
   // 🚁🌳 รอบ 816: แผนที่ย่อยของโหมดเฮลิฯ — 'kpp' = ยืมฉากเมืองกำแพงเพชรของโลกขับรถ (ต้องมี KPP_CITY โหลดแล้ว)
   heliMap=(mode==='heli' && opt && opt.map==='kpp' && window.KPP_CITY)?'kpp':'city';
-  if(mode==='adv' && !state.advTicket){ toast('🎫 ต้องมีตั๋วโลกผจญภัยก่อนนะ'); return; }
-  if(mode==='haunt' && !state.hauntTicket){ toast('🏨 ต้องมีตั๋วโรงแรมผีสิงก่อนนะ'); return; }
-  // 🗺️ รอบ 356: เข้าเมืองเฮลิฯ แบบ "เดินเท้า" ผ่านแผนที่โลกผจญภัยได้โดยไม่ต้องมีตั๋วเฮลิฯ
-  //    (เดิน/นั่งโดยสาร/วิงสูทฟรี — ขับเองค่อยเช็กตั๋วที่ beginPilot)
-  if(mode==='heli' && !state.heliTicket && !(opt&&opt.walkIn)){ toast('🚁 ต้องมีตั๋วโลกเฮลิคอปเตอร์ก่อนนะ'); return; }
-  if(mode==='drone' && !state.droneTicket){ toast('🛸 ต้องมีตั๋วโลกโดรน FPV ก่อนนะ'); return; }
-  if(mode==='drive' && !state.driveTicket){ toast('🚗 ต้องมีตั๋วโลกขับรถกำแพงเพชรก่อนนะ'); return; }
-  if(mode==='soccer' && !state.soccerTicket){ toast('⚽ ต้องมีตั๋วโลกสนามฟุตบอลก่อนนะ'); return; }
-  if(mode==='mecha' && !state.mechaTicket && !(state.robots&&state.robots.length)){ toast('🤖 ต้องจ่ายค่าเข้าโลกหุ่นรบก่อนนะ'); return; }   // 🔓 รอบ 943: ไม่มีหุ่น=ยืมระบบฟรี (จ่ายค่าเข้าแล้วเข้าได้)
+  // 🤖 รอบ 1522: ทุกโลก 3D เข้าเล่นฟรี — ไม่บล็อกด้วยตั๋ว/ค่าเข้า (heli walkIn ยังไม่ต้องมีตั๋วเช่นเดิม)
+  if(typeof grantWorldPlayAccess==='function') grantWorldPlayAccess();
   if(mode==='drive' && !window.KPP_CITY){ toast('🗺️ แผนที่เมืองยังโหลดไม่เสร็จ ลองใหม่อีกครั้งนะ'); return; }
   /* รอบ 255: เลิกระบบบาดเจ็บล็อกเข้าโลก (advHurt) — โลก 3D ไม่มีตาย/เกมโอเวอร์แล้ว เข้าได้เสมอ */
   // 🧹 รอบ 941: ผ่านด่านเช็กทุกข้อ = เข้าโลกจริง → ล้าง toast เตือนค้างของล็อบบี้ (เช่น "ยังไม่มีหุ่นยนต์" ก่อนซื้อ)

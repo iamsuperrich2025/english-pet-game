@@ -9,7 +9,7 @@ const main = fs.readFileSync('js/main.js', 'utf8');
 const items = fs.readFileSync('js/data/items.js', 'utf8');
 const calendar = fs.readFileSync('js/data/calendar.js', 'utf8');
 
-const blockStart = ui.indexOf('function worldEntryStarted()');
+const blockStart = ui.indexOf('const WORLD_PLAY_TICKETS=');
 const blockEnd = ui.indexOf('function railWorldClick(', blockStart);
 assert.ok(blockStart >= 0 && blockEnd > blockStart, 'free-entry and legacy-refund block must exist');
 

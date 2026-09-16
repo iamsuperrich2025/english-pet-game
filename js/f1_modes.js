@@ -94,12 +94,12 @@ function openSelector(options){
   </style>
   <div class="f1m-box" role="dialog" aria-modal="true" aria-labelledby="f1m-title">
     <h2 id="f1m-title">🏁 เลือกโหมดการแข่งขัน</h2>
-    <p class="f1m-sub">เลือกกราฟิกก่อนดูค่าเข้า · เปลี่ยนใหม่ได้ทุกครั้ง</p>
+    <p class="f1m-sub">เลือกกราฟิกก่อนเข้าเล่น · เปลี่ยนใหม่ได้ทุกครั้ง · ฟรี</p>
     <div class="f1m-grid">${Object.keys(MODES).map(id=>{const m=MODES[id];return `<button type="button" class="f1m-card" data-mode="${id}" aria-pressed="false">
       <img src="${m.preview}" alt="ภาพตัวอย่าง ${m.label}" width="768" height="432" draggable="false">
       <span class="f1m-title">${m.icon} ${m.label} <small>${m.thai}</small>${m.recommended?'<span class="f1m-rec">แนะนำ</span>':''}</span>
       <span class="f1m-desc">${m.summary}</span></button>`;}).join('')}</div>
-    <div class="f1m-actions"><button type="button" class="f1m-cancel">ยกเลิก</button><button type="button" class="f1m-go">ดูค่าเข้า →</button></div>
+    <div class="f1m-actions"><button type="button" class="f1m-cancel">ยกเลิก</button><button type="button" class="f1m-go">เข้าเล่น →</button></div>
   </div>`;
   root.document.body.appendChild(overlay);
   const cards=Array.from(overlay.querySelectorAll('.f1m-card'));

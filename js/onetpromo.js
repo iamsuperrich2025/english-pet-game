@@ -98,7 +98,7 @@
       <h2 id="racing-promo-title">Vocab World Racing</h2>
       <p class="racing-promo-lead">ซิ่งรถ F1 บนสนามจริง ฝึกคำศัพท์ระหว่างแข่ง<br><b>สนุกกับเพื่อนได้ทั้งห้อง!</b></p>
       <div class="racing-promo-features"><span>🌍 สนาม 3D</span><span>👥 Multiplayer</span><span>📚 คำศัพท์ 5 ระดับ</span></div>
-      <p class="racing-promo-price">ค่าเข้าเพียง <b>🪙 500</b> ต่อรอบ</p>
+      <p class="racing-promo-price">เข้าเล่น <b>ฟรี</b> ทุกรอบ</p>
       <button class="racing-promo-go" type="button">🏎️ ไปสนามแข่งเลย!</button>
       <small>ปิดป้ายนี้แล้วจะไม่แสดงอีก</small>
     </section>`;
