@@ -19,10 +19,11 @@ assert(a.includes('clearMechaSmoke'),'smoke cleanup');
 assert(fs.existsSync('sound/robot/MissileLaunch.mp3')||fs.existsSync('sound/robot/fire.mp3'),'robot launch asset on disk');
 
 assert(fx.includes('fireRing')||fx.includes('hitBoom'),'fx fire-ring hit branch');
-assert(fx.includes('0xff812e')||fx.includes('0xff6a14')||fx.includes('FLAME=0xff6a14'),'fx fire orange');
+assert(fx.includes('0xff812e')||fx.includes('0xff6a14')||fx.includes('FLAME=0xff6a14')||fx.includes('FLAME=0xff7a18'),'fx fire orange');
 assert(
   fx.includes('920:260')||fx.includes('shot.hit?920:260')||fx.includes('(shot.ballistic||shot.hit)?920:260')||
-  fx.includes('1200:280')||fx.includes('fireRing?1200:280')||fx.includes('(shot.ballistic||shot.hit)?1200:280'),
+  fx.includes('1200:280')||fx.includes('fireRing?1200:280')||fx.includes('(shot.ballistic||shot.hit)?1200:280')||
+  fx.includes('1500:280')||fx.includes('fireRing?1500:280')||fx.includes('(shot.ballistic||shot.hit)?1500:280'),
   'longer hit impact duration'
 );
 

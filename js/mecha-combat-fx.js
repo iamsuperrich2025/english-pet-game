@@ -1,6 +1,6 @@
-/* Round 1505 — mecha projectiles.
+/* Round 1506 — mecha projectiles.
    Ballistic shells (Word Fleet gravity): Adventure3D owns physics via launch/sync/impact.
-   Impact FX: multi-layer fire-ring with white-hot core → amber → deep ember + gravity sparks (~1.2s).
+   Impact FX: volumetric fireball (white-hot core · billow fire · dark smoke · rock debris · radial streaks) ~1.5s.
    Legacy fire(from,to) kept for tools/mecha/fx-preview.html flash previews.
    Instanced batches, 12 live shots, zero raster assets. */
 (function(root){
@@ -19,9 +19,10 @@ const STYLES=[
 ];
 function style(id){return STYLES.find(s=>s.id===id)||STYLES[0];}
 function create(scene){
- const T=root.THREE,MAX_SHOTS=12,CAPACITY=384;
+ const T=root.THREE,MAX_SHOTS=12,CAPACITY=512;
  const material=new T.MeshPhongMaterial({color:0xffffff,emissive:0x222222,shininess:110,specular:0x888888,toneMapped:false});
- const haloMaterial=new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.32,depthWrite:false,blending:T.AdditiveBlending,toneMapped:false});
+ const haloMaterial=new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.42,depthWrite:false,blending:T.AdditiveBlending,toneMapped:false});
+ const idQ=new T.Quaternion();
  const starShape=new T.Shape();for(let i=0;i<16;i++){const a=i*Math.PI/8,r=i%2?.55:1;const x=Math.cos(a)*r,y=Math.sin(a)*r;if(!i)starShape.moveTo(x,y);else starShape.lineTo(x,y);}starShape.closePath();
  const sphere=new T.SphereGeometry(1,10,7),rod=new T.CylinderGeometry(1,1,1,8);rod.rotateX(Math.PI/2);
  const star=new T.ExtrudeGeometry(starShape,{depth:.12,bevelEnabled:true,bevelSegments:1,steps:1,bevelSize:.055,bevelThickness:.03});star.translate(0,0,-.06);
@@ -39,6 +40,11 @@ function create(scene){
   draw.position.set(x,y,z);draw.scale.set(Math.max(.0001,sx),Math.max(.0001,sy),Math.max(.0001,sz));draw.quaternion.copy(rotation||q);if(spin)draw.rotateZ(spin);draw.updateMatrix();mesh.setMatrixAt(i,draw.matrix);color.setHex(col);mesh.setColorAt(i,color);mesh.count++;
  }
  function local(name,shot,p,dx,dy,dz,sx,sy,sz,col,spin=0){tmp.set(dx,dy,dz).applyQuaternion(shot.q).add(p);item(name,tmp.x,tmp.y,tmp.z,sx,sy,sz,col,shot.q,spin);}
+ function world(name,x,y,z,sx,sy,sz,col,spin=0){item(name,x,y,z,sx,sy,sz,col,idQ,spin);}
+ function streak(ox,oy,oz,dx,dy,dz,len,r,col){
+  const L=Math.hypot(dx,dy,dz)||1; direction.set(dx/L,dy/L,dz/L); q.setFromUnitVectors(axis,direction);
+  item('rod',ox+direction.x*len*.5,oy+direction.y*len*.5,oz+direction.z*len*.5,r,r,len,col,q);
+ }
  function segment(from,to,r,col){direction.subVectors(to,from);const length=direction.length();if(length<.001)return;q.setFromUnitVectors(axis,direction.multiplyScalar(1/length));position.copy(from).add(to).multiplyScalar(.5);item('rod',position.x,position.y,position.z,r,r,length,col,q);}
  function orientFromVel(shot){
   const sp=shot.vel.length(); if(sp<1e-4) return;
@@ -76,7 +82,8 @@ function create(scene){
  function kill(serial){ const slot=bySerial(serial); if(!slot) return false; slot.active=false; slot.impacting=false; return true; }
 
  const p=new T.Vector3(),tail=new T.Vector3(),zigA=new T.Vector3(),zigB=new T.Vector3();
- const HOT=0xfff8e6, CORE=0xffe066, FLAME=0xff6a14, DEEP=0xff2a00, EMBER=0xc43a08, BLOOM=0xff4010;
+ const HOT=0xfffce8, CORE=0xfff066, FLAME=0xff7a18, DEEP=0xff2e00, EMBER=0xc43a08, BLOOM=0xff4a10;
+ const SMOKE=0x2a1a12, SMOKE2=0x4a3020, ROCK=0x3a3228, STREAK=0xffaa28;
  function drawKind(shot,s,spin,age){
   const special=s.kind!=='shell';
   if(s.kind==='shell'){
@@ -128,48 +135,87 @@ function create(scene){
   }
  }
  function drawImpact(shot,s,age){
-  /* 🔥 รอบ 1505: วงเพลิงพลังสูง — แกนขาวร้อน · คลื่นกระแทก · เปลวไฟ · ประกายถ่วงแรงโน้มถ่วง */
+  /* 🔥 รอบ 1506: ลูกไฟมีมิติแบบตัวอย่าง — แกนขาว · เปลวบิลโลว์ · ควันดำ · เศษหิน · เส้นประกาย */
   const fireRing=!!shot.ballistic || !!shot.hit;
-  const dur=fireRing?1200:280;
+  const dur=fireRing?1500:280;
   const e=Math.min(1,age/dur),k=Math.sin(e*Math.PI),fade=1-e,special=s.kind!=='shell',boom=special?1.65:1.15;
   const t=age/1000;
   p.copy(shot.pos);
   if(fireRing){
-   const power=shot.hit?1.2:1;
-   local('ring',shot,p,0,.02,0,(.55+e*3.1)*power,(.55+e*3.1)*power,.7,FLAME,e);
-   local('ring',shot,p,0,.05,0,(.4+e*2.55)*power,(.4+e*2.55)*power,.55,CORE,-e*1.2);
-   local('ring',shot,p,0,.08,0,(.28+e*1.85)*power,(.28+e*1.85)*power,.45,HOT,e*.7);
-   local('ring',shot,p,0,.04,0,(.7+e*3.6)*power,(.7+e*3.6)*power,.35,BLOOM,e*.4);
-   local('halo',shot,p,0,.2,0,(1.15+e*2.2)*power,(1.15+e*2.2)*power,.75,BLOOM);
-   local('halo',shot,p,0,.35,0,(.7+e*1.3)*power,(.9+e*1.5)*power,.55,FLAME);
-   local('orb',shot,p,0,.22,0,(.42+e*.7)*fade*power,(.55+e*.9)*fade*power,(.42+e*.7)*fade*power,CORE);
-   local('orb',shot,p,0,.28,0,(.22+e*.28)*fade,(.28+e*.35)*fade,(.22+e*.28)*fade,HOT);
-   local('star',shot,p,0,.25,.1,.7*fade*power,.7*fade*power,.85,HOT,age*.01);
-   const tongues=10;
-   for(let j=0;j<tongues;j++){
-    const a=j*Math.PI*2/tongues+e*1.1, r=(.7+e*1.55)*power;
-    const lift=.2+Math.sin(j*1.7+e*6)*.18+e*.45;
-    const h=(.35+e*.55)*k*power;
-    local('orb',shot,p,Math.cos(a)*r,lift,Math.sin(a)*r,.2*k*power,h,.2*k*power,j%2?FLAME:CORE);
-    local('halo',shot,p,Math.cos(a)*r*.92,lift+.15,Math.sin(a)*r*.92,.48*k*power,.65*k*power,.48*k*power,BLOOM);
-    local('orb',shot,p,Math.cos(a)*r*.55,lift+.35+e*.5,Math.sin(a)*r*.55,.12*fade,.2*fade,.12*fade,HOT);
+   const power=shot.hit?1.25:1.05;
+   const cx=p.x, cy=p.y, cz=p.z;
+   const coreLife=Math.max(0,1-e*1.15);
+   const puff=Math.min(1,e*2.2)*power;
+   /* พื้นเรืองแสง + คลื่นกระแทกบาง ๆ */
+   world('halo',cx,cy+.05,cz,(1.4+e*2.8)*power,(.25+e*.2)*power,(1.4+e*2.8)*power,BLOOM);
+   world('halo',cx,cy+.08,cz,(.9+e*1.6)*power,(.18+e*.15)*power,(.9+e*1.6)*power,CORE);
+   world('ring',cx,cy+.04,cz,(.5+e*2.4)*power,(.5+e*2.4)*power,.45,FLAME,e*.8);
+   world('ring',cx,cy+.06,cz,(.35+e*1.7)*power,(.35+e*1.7)*power,.35,CORE,-e);
+   /* แกนขาวร้อน */
+   world('orb',cx,cy+.35*power,cz,(.55+.25*coreLife)*power,(.55+.25*coreLife)*power,(.55+.25*coreLife)*power,HOT);
+   world('orb',cx,cy+.4*power,cz,(.32+.12*coreLife)*power,(.32+.12*coreLife)*power,(.32+.12*coreLife)*power,0xffffff);
+   world('halo',cx,cy+.4*power,cz,(1.1+e*.4)*power,(1.1+e*.4)*power,(1.1+e*.4)*power,HOT);
+   world('halo',cx,cy+.55*power,cz,(.7+e*.5)*power,(.9+e*.6)*power,(.7+e*.5)*power,CORE);
+   /* ก้อนเปลวบิลโลว์ (ส้ม→แดง) */
+   for(let j=0;j<14;j++){
+    const seed=j*2.399963+1.1;
+    const a=seed, elev=.25+((j%5)*.18);
+    const rr=(.35+e*1.1+ (j%3)*.18)*puff;
+    const fx=cx+Math.cos(a)*rr, fz=cz+Math.sin(a)*rr;
+    const fy=cy+elev*power+e*(.9+(j%4)*.22)*power+Math.sin(seed+e*4)*.12;
+    const sz=(.38+(j%4)*.1)*k*power*(1-e*.35);
+    const col=j%3===0?CORE:(j%3===1?FLAME:DEEP);
+    world('orb',fx,fy,fz,sz,sz*1.15,sz,col);
+    world('halo',fx,fy,fz,sz*1.7,sz*1.9,sz*1.7,j%2?BLOOM:FLAME);
    }
-   for(let j=0;j<18;j++){
-    const seed=j*2.399963+.37;
-    const spd=(2.4+(j%6)*.42)*power;
-    const life=Math.max(0,1-t/(0.85+(j%4)*.08));
+   /* ควันดำรอบนอก */
+   for(let j=0;j<12;j++){
+    const seed=j*1.7+.9;
+    const a=seed+e*.6, rr=(.85+e*1.55+(j%3)*.2)*power;
+    const fx=cx+Math.cos(a)*rr, fz=cz+Math.sin(a)*rr;
+    const fy=cy+.45*power+e*(1.1+(j%4)*.35)*power;
+    const sz=(.45+(j%3)*.14)*(0.55+k*.45)*power;
+    const smokeFade=Math.min(1,e*3)*fade;
+    if(smokeFade<.08) continue;
+    world('orb',fx,fy,fz,sz*smokeFade,sz*1.2*smokeFade,sz*smokeFade,j%2?SMOKE:SMOKE2);
+   }
+   /* เส้นประกายพุ่งรัศมี */
+   for(let j=0;j<14;j++){
+    const seed=j*2.513+.21;
+    const life=Math.max(0,1-t/(0.55+(j%3)*.12));
     if(life<=0) continue;
-    const sx=Math.cos(seed)*spd*t;
-    const sz=Math.sin(seed)*spd*t;
-    const sy=.2+spd*t*1.25-5.2*t*t+(j%3)*.05;
-    const col=life>.72?HOT:(life>.42?CORE:(life>.22?FLAME:EMBER));
-    const szz=.055+.09*life;
-    local('orb',shot,p,sx,Math.max(-.05,sy),sz,szz,szz*1.15,szz,col);
-    if(life>.4) local('halo',shot,p,sx,Math.max(0,sy),sz,szz*2.2,szz*2.4,szz*2.2,col);
+    const spd=(3.2+(j%5)*.55)*power;
+    const ux=Math.cos(seed), uz=Math.sin(seed), uy=.35+(j%4)*.18;
+    const len=(.55+life*1.35)*power;
+    const ox=cx+ux*spd*t*.35, oy=cy+.25+uy*spd*t*.5, oz=cz+uz*spd*t*.35;
+    streak(ox,oy,oz,ux,uy,uz,len,.028+.02*life,life>.55?STREAK:FLAME);
+    if(life>.4) world('orb',ox+ux*len,oy+uy*len,oz+uz*len,.06*life,.06*life,.06*life,HOT);
    }
-   for(let j=0;j<8;j++){
-    const a=j*Math.PI/4+age*.012, lift=.5+e*1.6+j*.12, rr=.2+e*.25;
-    local('orb',shot,p,Math.cos(a)*rr,lift,Math.sin(a)*rr,.08*fade,.12*fade,.08*fade,j%2?EMBER:CORE);
+   /* เศษหิน/ซากพุ่ง + ถ่วงแรงโน้มถ่วง */
+   for(let j=0;j<10;j++){
+    const seed=j*1.918+.5;
+    const spd=(2.1+(j%4)*.5)*power;
+    const life=Math.max(0,1-t/(0.95+(j%3)*.1));
+    if(life<=0) continue;
+    const ux=Math.cos(seed), uz=Math.sin(seed);
+    const sx=cx+ux*spd*t, sz=cz+uz*spd*t;
+    const sy=cy+.3+spd*t*1.35-6.2*t*t+(j%3)*.08;
+    const rs=(.1+.08*(j%3))*life*power;
+    world('crystal',sx,Math.max(cy+.02,sy),sz,rs,rs*1.1,rs,j%2?ROCK:SMOKE2,seed+age*.008);
+   }
+   /* ประกายเล็กถ่วงแรงโน้มถ่วง */
+   for(let j=0;j<22;j++){
+    const seed=j*2.399963+.37;
+    const spd=(2.6+(j%7)*.4)*power;
+    const life=Math.max(0,1-t/(0.9+(j%4)*.08));
+    if(life<=0) continue;
+    const sx=cx+Math.cos(seed)*spd*t;
+    const sz=cz+Math.sin(seed)*spd*t;
+    const sy=cy+.25+spd*t*1.35-5.8*t*t+(j%3)*.05;
+    const col=life>.7?HOT:(life>.4?CORE:(life>.22?FLAME:EMBER));
+    const szz=.05+.08*life;
+    world('orb',sx,Math.max(cy,sy),sz,szz,szz*1.2,szz,col);
+    if(life>.45) world('halo',sx,Math.max(cy,sy),sz,szz*2.4,szz*2.6,szz*2.4,col);
    }
    return;
   }
@@ -186,7 +232,7 @@ function create(scene){
    if(!shot.active)continue;
    const s=style(shot.id),spin=(now-shot.born)*.018,age=now-shot.born;
    if(shot.impacting){
-    const idur=(shot.ballistic||shot.hit)?1200:280;
+    const idur=(shot.ballistic||shot.hit)?1500:280;
     drawImpact(shot,s,now-shot.impactAt);
     if(now-shot.impactAt>idur){shot.active=false;shot.impacting=false;}
     continue;
