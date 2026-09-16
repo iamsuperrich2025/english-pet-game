@@ -31,8 +31,9 @@ try{
  for(const field of ['kartPlayedV1','kartTicket','kartDone','kartRecent','kartBest']){await setup('kart-played-'+field);await page.evaluate(field=>state[field]=field==='kartBest'?120:field==='kartDone'||field==='kartRecent'?['cat']:true,field);assert.equal(await page.evaluate(()=>kartPromoEligible()),false,'Played detection '+field);}
  await setup('kart-cloud-seen');await page.evaluate(()=>state.kartPromoSeenV1=Auth.user.uid);assert.equal(await page.evaluate(()=>kartPromoEligible()),false,'Synced save marker prevents showing on another device');
  await setup('kart-invite-b');assert.equal(await page.evaluate(()=>kartPromoMaybeShow()),true);await page.locator('#kart-promo-overlay').waitFor({state:'visible'});const coins=await page.evaluate(()=>state.coins);
- await page.locator('.kart-promo-go').click();const entry=page.locator('.levelup-overlay .levelup-box').last();await entry.waitFor({state:'visible'});assert((await entry.innerText()).includes('Vocab World Kart'));
- await page.evaluate(()=>{window.__kartStarts=0;loadScriptOnce=async()=>{};window.KartWorld={start:()=>window.__kartStarts++};});await entry.getByRole('button',{name:/เข้าเลย/}).click();await page.waitForTimeout(100);
+ await page.evaluate(()=>{window.__kartStarts=0;loadScriptOnce=async()=>{};window.KartWorld={start:()=>window.__kartStarts++};});
+ await page.locator('.kart-promo-go').click();await page.waitForTimeout(100);
+ assert.equal(await page.locator('.levelup-overlay .levelup-box').count(),0);
  assert.equal(await page.evaluate(()=>__kartStarts),1);assert.equal(await page.evaluate(()=>state.kartPlayedV1),true);assert.equal(await page.evaluate(()=>state.coins),coins);assert.equal(await page.evaluate(()=>kartPromoEligible()),false);assert.deepEqual(errors,[]);
  console.log('PASS 24 Kart invitation checks: once/account/reload/cloud/played/4 viewport fits/blocked deferral/native free entry');
  if(process.env.KART_OUTPUT)await fs.writeFile(path.join(process.env.KART_OUTPUT,'kart-invitation-1379.json'),JSON.stringify({checks:24,viewports:sizes,errors,passed:true},null,2));

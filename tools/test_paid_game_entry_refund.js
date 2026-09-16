@@ -75,6 +75,20 @@ const worldFail = {mode:'adv', label:'ทดสอบ', ticketKey:'advTicket', e
   assert.match(main, /showGameEntryRefundNotice\(\(\)=>showPetShoppingGrantNotice\(/);
   const startEntry = ui.slice(ui.indexOf('async function startWorldEntry('), ui.indexOf('function railWorldClick('));
   assert.doesNotMatch(startEntry, /state\.coins|gameEntryTx|\.fee/);
+  assert.match(startEntry, /if\(overlay && typeof overlay\.remove === 'function'\) overlay\.remove\(\)/);
+  const openDlg = ui.slice(ui.indexOf('function openWorldEntryDialog('), ui.indexOf('function railScrollHint('));
+  assert.match(openDlg, /startWorldEntry\(w, \{fee:0, free:true\}, unlocked, null, null\)/);
+  assert.doesNotMatch(openDlg, /levelup-overlay|เข้าเลย!|ทุกเกมเข้าเล่นฟรี<br>/);
+  vm.runInContext(openDlg, ctx);
+  ctx.document = {
+    createElement(){ throw new Error('direct entry must not create a confirm overlay'); },
+    body:{ appendChild(){ throw new Error('direct entry must not append a confirm overlay'); } }
+  };
+  ctx.ensureSkyBetaAccess = ()=>true;
+  ctx.state = {coins:1000, gameEntryTx:null, gameEntryRefundNotice:null, mechaTicket:false};
+  await ctx.openWorldEntryDialog({mode:'mecha', ticketKey:'mechaTicket', label:'หุ่นรบ', enter:async()=>ctx.worldEntryStarted()});
+  assert.strictEqual(ctx.state.mechaTicket, true);
+  assert.strictEqual(ctx.state.coins, 1000);
   assert.match(items, /const WORLD_ENTRY_FEE\s*=\s*0\s*;/);
   const calendarCtx = {};
   vm.runInNewContext(`${calendar};globalThis.results=['adv','sky','haunt','heli','drone','drive','soccer','moto','invasion','mecha','f1'].map(worldEntryInfo);`, calendarCtx);

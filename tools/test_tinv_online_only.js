@@ -49,6 +49,7 @@ if(run.context.Online.tinv.friend1 || run.context.state.tinvSent.friend1) throw 
 const ui=fs.readFileSync(path.join(root,"js","ui.js"),"utf8");
 if(!/const friends = tinvOnlineFriends\(\)/.test(ui)) throw new Error("invite picker must list online friends only");
 if(!/onlineIds\.has\(String\(f\.uid\)\) \? \`<button class="ib-world"/.test(ui)) throw new Error("chat inbox invite button must render only for online friends");
-if(!/tinvOnlineFriends\(\)\.length \? \`<button class="big-btn blue home-btn" id="we-invite"/.test(ui)) throw new Error("world entry invite button must be absent with no online friends");
+if(/id="we-invite"/.test(ui) || /เข้าเลย!/.test(ui)) throw new Error("world entry confirm overlay must stay removed");
+if(!/function openTinvPicker\(map\)/.test(ui) || !/const friends = tinvOnlineFriends\(\)/.test(ui)) throw new Error("friends can still invite from the dedicated picker");
 
 console.log("PASS invitations exist only while both players share the current online session");
