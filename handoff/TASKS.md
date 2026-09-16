@@ -26,10 +26,6 @@
 - ไฟล์: `css/profile-modern.css` `tools/test_profile_modern.cjs`
 - Playwright 45 checks ผ่านที่ 1366×768, 1367×617, 812×375 + Home V2 regression ผ่าน; กรอบกว้าง=สูงทุกจอ/เหรียญครบ/ไม่มี overflow/runtime error
 - **รอบ 1517 · BGM หุ่น lazy+cache:** ใช้ `sound/robot/bgm.mp3` · โหลดตอนเข้าหุ่นเท่านั้น · Cache ตาม hash · Blob loop · ออกโลก fade หยุด
-- ไฟล์: `js/adventure3d.js` `sound/robot/bgm.mp3` `tools/test_mecha_1517.js`
-- unit 1517 ผ่าน · ค้าง: เข้าหุ่นบน live ฟังเพลง / ออกแล้วเงียบ
-- **รอบ 1515 · โปรไฟล์แสดงสัตว์ที่ซื้อครบ — ตรวจซ้ำและส่งขึ้น live:** ต้นเหตุรอบ 1512 ยังอยู่ใน staging ไม่เคยเข้า commit/deploy จึงไม่มีบน live 2026-09-16.1302
-- ยืนยันเส้นทางจริงจากการกดการ์ด Home V2 ส่ง UID เจ้าของ แล้วอ่าน `state.pets` ทั้งหมดโดยไม่ผ่าน payload สาธารณะที่จำกัด 3 ตัว; ทรัพย์สินเจ้าของอ่านจากเซฟสดทุกหมวดแม้ปิดเผยแพร่
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
