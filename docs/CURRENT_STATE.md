@@ -78,3 +78,7 @@ Public Kart clone with a procedural Soft Cuboid pick-up truck. Same island track
 - Eight animated full-body heroes remain. The 60-spell library loads only selected extra family code; 50 relics have real cached bonuses. Ordinary accounts start shot/light and buy permanent unlocks for 3,000–5,000 coins; admins use every spell/relic free. Existing purchased IDs persist in state.arenaItems. Session-earned coins survive map changes, reset at new entry. Inventory rendering pauses scene drawing.
 
 - Arena round1384: six letter-crystal pedestals respawn after18 active seconds; five fresh crystals unlock five uses of the selected hero elemental MEGA. Radius18 real AoE, remaining-use badge distinct from seconds, cargo/home preserved, session charges reset on down/exit. See docs/ARENA_FIELD.md.
+
+## Word Skirmish Battle Royale
+
+Admin-only Word Skirmish now offers an original tactical Battle Royale and the existing respawning vocabulary practice mode. Solo matches add seven local AI; rooms with multiple humans use only their admitted roster (up to eight). A warm-up admission window, late-join waiting, shrinking circle and last-survivor result reuse existing NetRoom fields. No new Firebase Rules or server combat authority were added. Supplies are personal; vocabulary rewards retain the existing central coin settlement. See `docs/WORDSKIRMISH.md` for controls, protocol and the two-device acceptance boundary.

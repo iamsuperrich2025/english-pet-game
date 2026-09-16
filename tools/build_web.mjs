@@ -318,7 +318,8 @@ async function sourceFiles() {
 
 
       'js/lettercannon.js', 'css/lettercannon.css', 'sound/letter_cannon/Wordflight_Beyond_the_Stars.mp3',
-      'js/wordship.js', 'css/wordship.css',      'js/wordskirmish.js', 'css/wordskirmish.css',
+      'js/wordship.js', 'css/wordship.css',
+      'js/wordskirmish-br.js','js/wordskirmish-field.js','js/wordskirmish.js', 'css/wordskirmish.css',
       'img/letter_cannon/letter_cannon_bg1.avif', 'img/letter_cannon/letter_cannon_bg2.avif', 'img/letter_cannon/letter_cannon_bg3.avif',
       'sound/shootWord/Fairgame_Fun.mp3',
       'sound/football/Stadium_Celebration.mp3', 'img/sky/sky_soccer_day.avif', 'img/tex/soccer_crowd_matchday.avif',

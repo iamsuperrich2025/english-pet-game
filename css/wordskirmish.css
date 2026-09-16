@@ -2,7 +2,22 @@
 #skm-game{position:fixed;inset:0;z-index:2147483000;display:none;overflow:hidden;background:#8ee08a;color:#14324a;font-family:Kanit,system-ui,sans-serif;touch-action:none;user-select:none;-webkit-user-select:none}
 #skm-game canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
 .skm-stage{position:absolute;inset:0}
-.skm-cross{position:absolute;left:50%;top:46%;z-index:2;width:22px;height:22px;margin:-11px 0 0 -11px;color:#be123c;font-weight:900;font-size:22px;line-height:22px;text-align:center;text-shadow:0 0 4px #fff;pointer-events:none}
+/* The reticle and centre ray use exactly 50% of the rendered canvas. */
+.skm-cross{position:absolute;left:50%;top:50%;z-index:3;width:22px;height:22px;transform:translate(-50%,-50%);pointer-events:none;background:radial-gradient(circle,#be123c 0 2px,transparent 2.5px)}
+.skm-cross::before,.skm-cross::after{content:"";position:absolute;background:#be123c;box-shadow:0 0 1px #fff}
+.skm-cross::before{height:1px;left:0;right:0;top:calc(50% - .5px)}
+.skm-cross::after{width:1px;top:0;bottom:0;left:calc(50% - .5px)}
+.skm-scope-view{--scope-radius:min(32vh,32vw);display:none;position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(circle at 50% 50%,transparent calc(var(--scope-radius) - 2px),rgba(8,24,34,.7) calc(var(--scope-radius) + 2px))}
+.skm-scoped .skm-scope-view{display:block}
+.skm-scope-ring{position:absolute;left:50%;top:50%;width:calc(var(--scope-radius)*2);height:calc(var(--scope-radius)*2);transform:translate(-50%,-50%);border:2px solid #d5e8ed;border-radius:50%;box-sizing:border-box;box-shadow:0 0 0 4px #163342,0 0 0 6px #4c6671,inset 0 0 16px #142a3733}
+.skm-scope-ring::before,.skm-scope-ring::after{content:"";position:absolute;background:#163342cc}
+.skm-scope-ring::before{left:0;right:0;height:1px;top:calc(50% - .5px)}
+.skm-scope-ring::after{top:0;bottom:0;width:1px;left:calc(50% - .5px)}
+.skm-scope-ring b{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);padding:1px 6px;border-radius:4px;color:#fff;background:#163342b3;font-size:11px}
+.skm-scoped .skm-hint{visibility:hidden}
+.skm-scoped .skm-toast{top:auto;bottom:8px;transform:translateX(-50%);max-width:30vw;padding:4px 10px;font-size:clamp(11px,2.3vh,16px)}
+#skm-scope{min-width:110px;background:linear-gradient(#e0f2fe,#7dd3fc);color:#0c4a6e}
+#skm-scope.skm-on{background:linear-gradient(#fde047,#f59e0b);color:#713f12}
 .skm-hud{position:absolute;inset:0;z-index:4;pointer-events:none;padding:calc(6px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left));display:grid;grid-template-columns:minmax(120px,22vw) 1fr auto;grid-template-rows:auto 1fr auto;gap:6px}
 .skm-glass{background:linear-gradient(145deg,rgba(255,255,255,.8),rgba(255,236,186,.55));border:1px solid rgba(255,255,255,.92);border-radius:14px;box-shadow:0 4px 12px rgba(40,80,20,.16);backdrop-filter:blur(4px)}
 .skm-stats{grid-column:1;grid-row:1;padding:6px 10px;font-size:clamp(10px,1.3vw,13px);display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
@@ -44,3 +59,59 @@
   .skm-joy{width:86px;height:86px}
   .skm-float{min-height:32px}
 }
+/* Battle Royale: original tactical HUD; safe landscape touch targets. */
+.skm-br-ui,.skm-br-button{display:none}
+.skm-kicker{display:block;font-size:11px;letter-spacing:.2em;color:#d7b675;margin-bottom:8px}
+#skm-intro .skm-card{background:linear-gradient(135deg,#132a32,#294348);color:#dce7df;border:1px solid #80978f;text-align:left;border-radius:16px;box-shadow:0 20px 80px #001b}
+#skm-intro h2{color:#f5ddb0;font-size:clamp(21px,4.2vh,30px)}
+#skm-intro .skm-keys{color:#aabebb;font-size:clamp(10px,2.4vh,13px);padding:8px 0;border-top:1px solid #56716d;margin-top:10px}
+#skm-intro button{margin:8px 6px 0 0;border-radius:6px;background:#e5bd76;color:#152a30}
+#skm-intro #skm-training{background:transparent;border:1px solid #80978f;color:#d1e1d9}
+.skm-battle .skm-br-ui{display:block;position:absolute;inset:0;z-index:4;pointer-events:none}
+.skm-battle .skm-br-button{display:block}
+#skm-game.skm-battle{background:#233d3f;color:#e5ece5}
+.skm-battle .skm-stats{position:absolute;left:12px;top:164px;width:145px;box-sizing:border-box;padding:4px 7px;font-size:10px;gap:2px 5px;background:#142a30aa;border:0;border-radius:4px;color:#c7d7d1;backdrop-filter:none}
+.skm-battle .skm-stats #skm-hp{display:none}
+.skm-battle .skm-stats b{color:#efcf92}
+.skm-battle #skm-net{font-size:9px;display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.skm-battle .skm-word{position:absolute;right:72px;top:12px;min-width:0;width:clamp(180px,24vw,300px);padding:6px 8px;box-sizing:border-box;background:#142a30c2;border:1px solid #e0d4b544;border-radius:6px;backdrop-filter:none}
+.skm-battle .skm-word strong{font-size:clamp(15px,2vw,22px);color:#f2dab0}.skm-battle .skm-word em{color:#fff}.skm-battle .skm-bank{color:#aacdc4}
+.skm-battle .skm-exit{background:#1a303bc9;border:1px solid #d4e5de66;border-radius:5px}
+.skm-battle .skm-hint{position:absolute;left:50%;bottom:75px;transform:translateX(-50%);margin:0;max-width:31vw;text-align:center;background:#10282f80;color:#d1e0d7;border-radius:3px;font-size:10px;padding:3px 6px}
+.skm-battle .skm-float,.skm-battle #skm-scope,.skm-battle #skm-auto,.skm-battle #skm-drop,.skm-battle #skm-crouch,.skm-battle #skm-prone,.skm-battle #skm-dodge{min-width:0;width:58px;height:58px;min-height:0;padding:0 3px;border-radius:50%;border:1px solid #edf1dbb0;background:radial-gradient(circle at 50% 30%,#46636b99,#182f36bb);color:#edf2e3;box-shadow:inset 0 0 0 3px #132b3744,0 2px 7px #0b252744;font-size:11px;font-weight:700}
+.skm-battle #skm-fire{width:82px;height:82px;background:radial-gradient(circle,#e5c98788,#8e7753aa);border:2px solid #ffe6b9;font-size:17px;box-shadow:inset 0 0 0 5px #20303666}
+.skm-battle #skm-scope{font-size:10px}
+.skm-battle .skm-float.skm-on,.skm-battle #skm-scope.skm-on{background:#a98543cc;color:#fff2d1;border-color:#ffe2a2}
+.skm-battle .skm-joy{width:100px;height:100px;background:radial-gradient(circle,#91aca63b,#17353d77);border:1px solid #f1efdc77;box-shadow:inset 0 0 0 15px #adc4bf17;color:#e8eddd}
+.skm-battle .skm-joy-knob{background:#d5e2d49c;border:1px solid #ffffd599;box-shadow:0 2px 10px #102323aa}
+#skm-game #skm-map{position:absolute;inset:auto;top:12px;left:12px;width:145px;height:145px;border:1px solid #e5d0a888;border-radius:10px;box-shadow:0 5px 18px #112b3944}
+.skm-match{position:absolute;left:180px;top:17px;display:flex;gap:4px;flex-direction:column;text-shadow:0 1px 3px #183339;color:#fff3d8}
+.skm-match b{font-size:18px;letter-spacing:.09em}.skm-match span{font-size:13px;color:#cce7ed}.skm-match small{font-size:12px}
+#skm-edit{position:absolute;top:90px;right:12px;background:#16313cb3;color:#d5e2d9;border:1px solid #c0d4c466;border-radius:4px;padding:6px 8px;pointer-events:auto;font-size:10px}
+.skm-editing .skm-float{outline:2px dashed #f9d89e}.skm-editing .skm-cross{display:none}
+.skm-vitals{position:absolute;bottom:15px;left:37%;width:26%;font-size:11px;text-shadow:0 1px 2px #102930}
+.skm-vitals>div{margin-bottom:4px}.skm-vitals span{float:right;color:#9bd6e6}.skm-vitals b{font-size:15px}
+.skm-vitals i{display:block;height:6px;background:#193c4199;border:1px solid #d4e6c944;border-radius:3px;overflow:hidden}.skm-vitals em{display:block;height:100%;background:#d5e5ab;transition:width .1s}.skm-vitals .skm-armor{height:3px;margin-top:3px}.skm-armor em{background:#89cede}.skm-vitals small{font-size:10px;display:block;margin-top:3px;text-align:center}
+.skm-weapon-panel{position:absolute;right:12px;top:128px;pointer-events:auto;min-width:180px;padding:6px;border-radius:6px;background:#102b35ad}
+#skm-ammo{font-size:17px;text-align:right;color:#f2d5a0;font-weight:800;letter-spacing:.02em}
+.skm-weapon-slots{display:flex;gap:4px;margin-top:4px}.skm-weapon-slots button{border:1px solid #a6bab65c;background:#344e5266;color:#c4d3ca;padding:5px;font-size:10px;border-radius:3px;cursor:pointer;min-width:54px}.skm-weapon-slots button small{display:inline-block;margin-right:3px;color:#e1c38e}.skm-weapon-slots button.selected{color:#fff0ce;border-color:#e5c580;background:#92774466}.skm-weapon-slots button:disabled{opacity:.35}
+.skm-battle .skm-toast{top:auto;bottom:82px;max-width:29vw;transform:translateX(-50%);padding:5px 9px;background:#18363ddb;color:#eedfbb;border:1px solid #e0c98c55;border-radius:5px;font-size:12px}
+.skm-round-result{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);text-align:center;background:linear-gradient(100deg,#15353ae8,#1c343cdc);border:1px solid #d6bc7d99;padding:16px 30px;border-radius:8px;min-width:280px;box-shadow:0 10px 60px #0019}
+.skm-round-result[hidden]{display:none}.skm-round-result span{display:block;color:#d7bd82;font-size:10px;letter-spacing:.2em}.skm-round-result strong{display:block;font-size:28px;color:#ffdf95;margin:6px 0}.skm-round-result small{display:block;color:#d2e2d8;font-size:11px}
+.skm-zone-warning{position:absolute;top:24%;left:50%;transform:translateX(-50%);background:#9c3437ce;color:#fff1d4;font-size:12px;padding:5px 10px;border-radius:4px;white-space:nowrap}
+@media(max-height:430px){
+ #skm-game #skm-map{width:88px;height:88px;top:8px;left:8px;border-radius:6px}
+ .skm-battle .skm-stats{top:101px;left:8px;width:124px;font-size:9px}.skm-battle #skm-net{font-size:8px}
+ .skm-match{left:109px;top:10px}.skm-match b{font-size:14px}.skm-match span,.skm-match small{font-size:10px}
+ .skm-battle .skm-word{right:60px;top:8px;width:clamp(160px,24vw,225px);padding:3px 6px}.skm-battle .skm-word small{font-size:8px}.skm-battle .skm-word em{font-size:12px}
+ #skm-edit{top:47px;right:9px;padding:4px 6px}.skm-weapon-panel{top:83px;right:9px;min-width:0;padding:4px}
+ #skm-ammo{font-size:13px}.skm-weapon-slots button{font-size:8px;min-width:42px;padding:4px 2px}
+ .skm-battle .skm-float,.skm-battle #skm-scope,.skm-battle #skm-auto,.skm-battle #skm-drop,.skm-battle #skm-crouch,.skm-battle #skm-prone,.skm-battle #skm-dodge{width:44px;height:44px;font-size:9px}
+ .skm-battle #skm-fire{width:64px;height:64px;font-size:14px}.skm-battle .skm-joy{width:82px;height:82px}
+ .skm-vitals{bottom:8px;font-size:9px}.skm-vitals b{font-size:12px}.skm-vitals small{font-size:8px}
+ .skm-battle .skm-hint{bottom:57px;font-size:8px;max-width:26vw}.skm-battle .skm-toast{bottom:59px;font-size:10px;max-width:28vw}
+ .skm-round-result{padding:11px 20px}.skm-round-result strong{font-size:23px}
+}
+@media(max-width:700px){.skm-match{left:108px}.skm-battle .skm-word{width:160px}.skm-weapon-panel{top:85px}.skm-weapon-slots button{min-width:38px;font-size:7px}.skm-battle .skm-hint{max-width:23vw}}
+
+.skm-battle .skm-hint{display:none}

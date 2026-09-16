@@ -7385,6 +7385,8 @@ async function openWordSkirmish(){
     await loadStylesheetOnce('skirmish-css','css/wordskirmish.css');
     if(typeof WordSkirmish==='undefined' || !WordSkirmish.open){
       if(typeof loadScriptOnce!=='function') throw new Error('no loader');
+      await loadScriptOnce('js/wordskirmish-br.js');
+      await loadScriptOnce('js/wordskirmish-field.js');
       await loadScriptOnce('js/wordskirmish.js');
     }
     return WordSkirmish.open();

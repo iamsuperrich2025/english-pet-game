@@ -158,13 +158,14 @@ PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.ShootWord`, `open`, `close`, `buildSc
 DEPENDENCIES: Lazily loaded `THREE`, shared state/UI/audio.
 NOTES: Separate from Invasion combat.
 
-SYSTEM: Cute Word Skirmish minigame
-PURPOSE: Admin-only third-person cute PvP vocab raid copied from Shoot Word movement/gun feel, with Frontline/Arena letter banking.
-PRIMARY FILE: `js/wordskirmish.js`
-RELATED FILES: `css/wordskirmish.css`, `js/ui.js` (`openWordSkirmish`), `js/home-v2.js`, `js/city3d.js`, `js/netroom.js`, `index_classic.html`, `tools/test_wordskirmish.js`, `tools/test_wordskirmish_poses.cjs`
-PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.WordSkirmish`, `open`, `close`, `fire`, `tryPickup`, `tryDeposit`
-DEPENDENCIES: `vocabForStudent`, lazily loaded `THREE`, optional `NetRoom` map `skirmish`.
-NOTES: Hidden from non-admins. Free walk + chase camera. Headshot KO, body uses gun `BODY_DMG`. Carry-one letters banked at a private pastel house for 1,000 coins. Soft Cuboid Chibi 3D toy-gun avatars. Posture belongs to body/upper-body pivots below the yaw-only actor root; cached support bounds keep feet, knees and elbows above ground. Crouch bends knees backward; prone holds the torso horizontal and keeps the head/barrel forward. Dodge is a two-unit lateral step with a local torso lean and single-action input. Existing av codes accept an optional 0-9 dodge phase after L/R (legacy codes still decode); no new network fields. Real-rig/input/hitbox/mobile checks: tools/test_wordskirmish_poses.cjs. Rules publish required for live rooms.
+SYSTEM: Word Skirmish Battle Royale / training
+PURPOSE: Admin-only vocabulary survival shooter with an original tactical arena and a respawning practice mode.
+PRIMARY FILE: `js/wordskirmish.js` (lifecycle, rig, controls, combat, HUD and NetRoom bridge)
+RELATED FILES: `js/wordskirmish-br.js` (pure rules/inventory/round protocol), `js/wordskirmish-field.js` (instanced map/colliders/supplies), `css/wordskirmish.css`, `js/ui.js` (`openWordSkirmish`), `js/netroom.js`, `tools/build_web.mjs`, `docs/WORDSKIRMISH.md`
+PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.WordSkirmish.open/close`, `resolveShot`, `poseChibi`, `startBattle`, `tickBattle`, `window.WordSkirmishBR`, `window.WordSkirmishField`
+DEPENDENCIES: `vocabForStudent`, lazily loaded `THREE`; load BR then Field before the main module; optional NetRoom map `skirmish` (max 8).
+NOTES: SCOPE/V uses 2.5x FOV and an exact centre ray, then checks the real muzzle path for cover; damage and four pooled trails share the same endpoint. Independent stance pivots and cached support bounds retain the corrected crouch/prone/dodge geometry. Default intro action starts Battle Royale: 10s warm-up, finite ammo/3 weapons, armor/healing, no active-round respawn, shrinking zone and last survivor; solo has 7 AI, human rooms have no independent local AI. Training retains original headshot KO/body 35 and auto-respawn. Personal supplies reset each round. Letter banking still rewards 1,000 coins. Metadata/bursts reuse c/ct/cw/hp and existing rate limits; no Rules/config changes. Full controls, protocol and limitations: docs/WORDSKIRMISH.md.
+VALIDATION: `tools/test_wordskirmish.js`, `tools/test_wordskirmish_poses.cjs`, `tools/test_wordskirmish_scope.cjs`, `tools/test_wordskirmish_br.cjs`, `tools/test_wordskirmish_battle.cjs`; source and dist browser fixtures cover mobile geometry, actual rays, AI/cover/zone, complete matches and simulated peers.
 
 SYSTEM: Cute Word Fleet minigame
 PURPOSE: Landscape toy-battleship vocab game: pick up letter cards, bank them at your home island, and complete Frontline-style words for central coins.
