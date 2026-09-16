@@ -6504,3 +6504,12 @@ efreshMechaLock
 - ผ่าน theme/Home/pet/settings regressions, browser source+dist อย่างละ 31 checks ที่ 1367×617, 1366×768, 812×375 (role switch/logout/storage gate, AA contrast, geometry, settings); build+PWA/cache validator ผ่าน
 - เตรียม `handoff/SHIP.txt` แบบ FILE manifest เฉพาะงานนี้; รอผู้ใช้ยืนยันใน COMMIT_DEPLOY ก่อนยืนยัน live · ภาพ WebP: `Documents/Codex/2026-09-16/new-chat-3/outputs/`
 
+
+
+## ⏬ ย้ายเมื่อ 2026-09-16 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1522 · ปุ่มธีมแอดมินเลือกแล้วจึงเป็นทอง:** ปุ่มทั่วไป/O-NET/โปรไฟล์/เพื่อน/ปิด/ยืนยันเป็น graphite; ตัวเลือก active และสวิตช์ on ใช้เหลืองทองหม่นไล่ 3 เฉด พร้อมขอบแสงบางและข้อความเข้ม
+- ไฟล์: `css/home-v2.css` `css/lobby.css` `js/util.js` `tools/test_home_theme_modern.cjs`; ป้ายเปิด/ปิดอธิบายตำแหน่งสวิตช์แทนชื่อสี; ไม่มี asset runtime ใหม่
+- ผ่าน theme/Home regressions + browser 32 checks ที่ 1367×617, 1366×768, 812×375: ปุ่ม inactive เทา, selected gradient อ่านได้ AA ทุก stop, role/storage/logout gate, geometry; syntax/diff ผ่าน
+- เตรียม FILE manifest เฉพาะ 5 ไฟล์สำหรับ COMMIT_DEPLOY; ต้องตรวจ live หลัง launcher เสร็จ · ภาพ WebP ใน `Documents/Codex/2026-09-16/new-chat-3/outputs/`
+
