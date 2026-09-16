@@ -84,7 +84,7 @@ const MODES = {
   mecha: {
     label:'โลกหุ่นยนต์นักรบ', emoji:'🤖', reward:35, doneKey:'mechaDone',
     shoot:false, ghost:false, mecha:true,
-    sky:0x87c8f0, fogN:55, fogF:280, ground:0x6db84a,   // 🤖 รอบ 1480: กลางวันสดใส
+    sky:0xa8d4f0, fogN:42, fogF:240, ground:0x5ec652,   // 🤖 รอบ 1519: ทุ่งหญ้า+ขุนเขาไกลแบบการ์ตูน
     intro:'🤖 <b>หุ่นยนต์นักรบ!</b><br><small>มุมมองในหุ่นยักษ์สูง 5 เมตร — เดินบุกยิง<b>เอเลี่ยนตัวอักษร</b><br>ยิงตัวอักษร<b>เรียงตามลำดับในคำ</b> ครบคำ = เอเลี่ยนระเบิด! · เอเลี่ยนเคลื่อนที่ตลอด เล็งดีๆ</small>',
     hint:'W/S เดินหน้า-ถอย · A/D หันตัว · คลิก/ปุ่มยิง = ยิงตัวอักษร (ต้องเรียงลำดับ!) · เมาส์/ลากขวา = เล็ง',
     koTitle:'🤖💥 หุ่นยนต์ถูกทำลาย!',
@@ -2488,6 +2488,99 @@ function tickHauntSky(dt,now){
   }
 }
 
+/* ============================================================
+   🤖 รอบ 1519: ฟ้ากลางวัน+เมฆ+ขุนเขาไกล (mecha) — โดมไล่สีอุ่นแบบภาพอ้างอิง ไม่ใช้ panorama
+   ============================================================ */
+const MSKY_R=198;                          // 198+85≈283 < camera.far 320
+function buildMechaSky(sc){
+  const domeTex=hskyTex(8,512,c=>{
+    const g=c.createLinearGradient(0,0,0,512);
+    g.addColorStop(0,'#5eb8ef');
+    g.addColorStop(.18,'#8fd0f8');
+    g.addColorStop(.36,'#b8e4ff');
+    g.addColorStop(.46,'#ffe8cc');
+    g.addColorStop(.50,'#ffd4a0');
+    g.addColorStop(.54,'#c8ddf5');
+    g.addColorStop(.72,'#9ec4e8');
+    g.addColorStop(1,'#a8d4f0');
+    c.fillStyle=g; c.fillRect(0,0,8,512);
+  });
+  const dome=new THREE.Mesh(new THREE.SphereGeometry(MSKY_R,28,20),
+    new THREE.MeshBasicMaterial({map:domeTex,side:THREE.BackSide,fog:false,
+      transparent:true,opacity:1,depthWrite:false}));
+  dome.renderOrder=-1; sc.add(dome);
+  const cloudTex=hskyTex(256,128,c=>{
+    c.fillStyle='rgba(255,255,255,0)'; c.fillRect(0,0,256,128);
+    [[40,52,38,22],[98,44,52,26],[168,58,44,20]].forEach(([x,y,w,h])=>{
+      c.fillStyle='rgba(255,255,255,.92)';
+      c.beginPath(); c.ellipse(x,y,w*.5,h*.45,0,0,6.2832); c.fill();
+      c.beginPath(); c.ellipse(x-w*.22,y+h*.08,w*.38,h*.36,0,0,6.2832); c.fill();
+      c.beginPath(); c.ellipse(x+w*.2,y+h*.1,w*.34,h*.32,0,0,6.2832); c.fill();
+    });
+  });
+  const cloudGrp=new THREE.Group();
+  for(let i=0;i<9;i++){
+    const p=new THREE.Mesh(new THREE.PlaneGeometry(22+Math.random()*16,10+Math.random()*6),
+      new THREE.MeshBasicMaterial({map:cloudTex,transparent:true,opacity:.78+Math.random()*.14,
+        fog:false,depthWrite:false}));
+    const a=Math.random()*Math.PI*2, y=.22+Math.random()*.32;
+    const r=Math.sqrt(Math.max(0,1-y*y));
+    p.position.set(Math.cos(a)*r*MSKY_R*.92, y*MSKY_R*.88+6, Math.sin(a)*r*MSKY_R*.92);
+    p.lookAt(0,EYE_H,0); cloudGrp.add(p);
+  }
+  sc.add(cloudGrp);
+}
+function buildMechaScenery(sc, tr){
+  const hillA=new THREE.MeshLambertMaterial({color:0x8eb4d8});
+  const hillB=new THREE.MeshLambertMaterial({color:0x7a9cc8});
+  [[-48,-58,36,12,16],[-8,-55,46,14,18],[28,-57,40,13,17],[62,-60,34,11,15],
+   [-72,-52,28,10,14],[44,-48,32,9,13]].forEach(([x,z,w,h,d],i)=>{
+    const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d), i%2?hillB:hillA);
+    m.position.set(x,h/2-1.5,z); sc.add(m);
+  });
+  const rockM=new THREE.MeshLambertMaterial({color:0x7a8a72});
+  const grassTop=new THREE.MeshLambertMaterial({color:0x45b842});
+  const cliffX=HALF-11;
+  for(let tier=0;tier<4;tier++){
+    const w=13-tier*2.2, h=3.6+tier*1.15, d=26+tier*3.5;
+    const bx=cliffX-tier*2.4, bz=-6+tier*2.8;
+    const block=new THREE.Mesh(new THREE.BoxGeometry(w,h,d), rockM);
+    block.position.set(bx,h/2+.05,bz); sc.add(block);
+    const top=new THREE.Mesh(new THREE.BoxGeometry(w+.5,.32,d+.5), grassTop);
+    top.position.set(bx,h+.18,bz); sc.add(top);
+    if(tier>=1){
+      const pineX=bx-w*.35, pineZ=bz-d*.28+tier*2;
+      for(let p=0;p<3;p++){
+        const px=pineX+p*2.8, pz=pineZ+p*1.6;
+        const t=new THREE.Mesh(new THREE.CylinderGeometry(.22,.32,1.6,5),
+          new THREE.MeshLambertMaterial({color:0x6b4a2a}));
+        t.position.set(px,.8,pz); sc.add(t);
+        const cr=new THREE.Mesh(new THREE.CylinderGeometry(0,.85,2.2,6),
+          new THREE.MeshLambertMaterial({color:0x2a9a3d}));
+        cr.position.set(px,2.5,pz); sc.add(cr);
+        tr.push({x:px,z:pz,r:1.1});
+      }
+    }
+  }
+  const tuftG=new THREE.ConeGeometry(.2,.5,4);
+  const tuftM=new THREE.MeshLambertMaterial({color:0x3dab44});
+  for(let i=0;i<62;i++){
+    const x=(Math.random()*2-1)*(HALF-10), z=(Math.random()*2-1)*(HALF-10);
+    if(x>HALF-16) continue;
+    const t=new THREE.Mesh(tuftG,tuftM);
+    t.position.set(x,.25,z); t.rotation.y=Math.random()*Math.PI;
+    sc.add(t);
+  }
+  const pebG=new THREE.DodecahedronGeometry(.32,0);
+  const pebM=new THREE.MeshLambertMaterial({color:0x95a888});
+  for(let i=0;i<10;i++){
+    const x=(Math.random()*2-1)*(HALF-8), z=(Math.random()*2-1)*(HALF-8);
+    const r=new THREE.Mesh(pebG,pebM);
+    const s=.6+Math.random()*.5;
+    r.scale.set(s,s*.65,s); r.position.set(x,s*.22,z); sc.add(r);
+  }
+}
+
 function buildScene(md){
   if(md==='drive'){
     const sc=new THREE.Scene();
@@ -2536,17 +2629,20 @@ function buildScene(md){
   /* 🌑 รอบ 694: หม่นลงอีกจาก 0x7d8490 — พื้นสว่างโพลนทำให้สวนกลางคืนดูเหมือนกลางวัน
      (ทั้งที่ฟ้ามืด) เป็นอีกต้นเหตุที่ผู้ใช้บอกว่า "ข้างนอกไม่น่ากลัว" */
   else if(md==='haunt') applyTex(ground.material,'tex_ground',20,20,0x4d525c);
+  else if(md==='mecha') applyTex(ground.material,'tex_ground',34,34,0x7ad858);
 
-  // รั้วรอบแผนที่
-  const fenceMat=new THREE.MeshLambertMaterial({color:md==='adv'?0xb98a5a:0x3a3a4a});
-  [[worldMidX,-HALF],[worldMidX,HALF]].forEach(([x,z])=>{
-    const f=new THREE.Mesh(new THREE.BoxGeometry(worldSpanX,1.6,.4),fenceMat);
-    f.position.set(x,.8,z); sc.add(f);
-  });
-  [[worldMinX,0],[worldMaxX,0]].forEach(([x,z])=>{
-    const f=new THREE.Mesh(new THREE.BoxGeometry(.4,1.6,HALF*2),fenceMat);
-    f.position.set(x,.8,z); sc.add(f);
-  });
+  // รั้วรอบแผนที่ (mecha ใช้หน้าผาหญ้าแทน — รั้นเทาเดิมดูเป็นบล็อกหินขวางวิว)
+  if(md!=='mecha'){
+    const fenceMat=new THREE.MeshLambertMaterial({color:md==='adv'?0xb98a5a:0x3a3a4a});
+    [[worldMidX,-HALF],[worldMidX,HALF]].forEach(([x,z])=>{
+      const f=new THREE.Mesh(new THREE.BoxGeometry(worldSpanX,1.6,.4),fenceMat);
+      f.position.set(x,.8,z); sc.add(f);
+    });
+    [[worldMinX,0],[worldMaxX,0]].forEach(([x,z])=>{
+      const f=new THREE.Mesh(new THREE.BoxGeometry(.4,1.6,HALF*2),fenceMat);
+      f.position.set(x,.8,z); sc.add(f);
+    });
+  }
 
   if(md==='adv'){
     // ต้นไม้เขียว + หิน + ดอกไม้
@@ -2795,23 +2891,25 @@ function buildScene(md){
     worlds[md]={scene:sc, trees:[], buildings:[]};
     return;
   }else if(md==='mecha'){
-    // 🤖 รอบ 1480: สมรภูมิกลางวันโล่ง — ไม่มีก้อนหิน/อิฐขวางวิว (เอเลี่ยนสร้างตอน start)
-    sc.add(new THREE.HemisphereLight(0xfff6e8,0x6aa84f,1.08));
-    const key=new THREE.DirectionalLight(0xfff1c8,1.12); key.position.set(36,72,28); sc.add(key);
-    const fill=new THREE.DirectionalLight(0xc5e4ff,.32); fill.position.set(-28,40,-22); sc.add(fill);
+    // 🤖 รอบ 1519: ทุ่งหญ้าสด+ฟ้าอุ่น+ขุนเขาไกล+หน้าผาขวา (เอเลี่ยนสร้างตอน start)
+    buildMechaSky(sc);
+    sc.add(new THREE.HemisphereLight(0xfff8ec,0x58a842,1.05));
+    const key=new THREE.DirectionalLight(0xfff0c0,1.08); key.position.set(36,72,28); sc.add(key);
+    const fill=new THREE.DirectionalLight(0xc5e4ff,.38); fill.position.set(-28,40,-22); sc.add(fill);
     const tr=[];
-    // ดอกไม้เตี้ยริมขอบสนาม (ไม่บังกลางวิว)
-    const flG=new THREE.SphereGeometry(.18,6,5);
+    buildMechaScenery(sc, tr);
+    const flG=new THREE.SphereGeometry(.16,6,5);
     [0xff6b81,0xffd54f,0xffffff,0xb388ff].forEach(col=>{
       const m=new THREE.MeshBasicMaterial({color:col});
-      for(let i=0;i<18;i++){
-        const ang=Math.random()*Math.PI*2, rad=HALF-4-Math.random()*6;
+      for(let i=0;i<28;i++){
+        const x=(Math.random()*2-1)*(HALF-6), z=(Math.random()*2-1)*(HALF-6);
+        if(x>HALF-14) continue;
         const f=new THREE.Mesh(flG,m);
-        f.position.set(Math.cos(ang)*rad,.18,Math.sin(ang)*rad); sc.add(f);
+        f.position.set(x,.16,z); sc.add(f);
       }
     });
     ringAds(sc, 5, 45, 0, null);               // 📢 ป้ายโฆษณารอบสมรภูมิ (mecha)
-    worlds[md]={scene:sc, trees:tr, buildings:[], rev:1480};
+    worlds[md]={scene:sc, trees:tr, buildings:[], rev:1519};
     return;
   }else{
     /* ============================================================
@@ -13380,12 +13478,12 @@ function start(md,opt){
   if(scene) clearEntities();                       // ล้างของโหมดก่อนหน้า (ถ้าเคยเข้า)
   // 🚁🌳 รอบ 816: เฮลิฯ แผนที่ 'kpp' ใช้ฉากของโลกขับรถทั้งก้อน (worlds.drive) — ไม่สร้างฉากซ้ำ
   const wk=heliKpp()?'drive':mode;
-  if(!worlds[wk] || (wk==='mecha' && worlds[wk].rev!==1480)){
-    if(wk==='mecha' && worlds[wk]) delete worlds[wk];   // 🤖 รอบ 1480: รีบิลด์ฉากกลางวันครั้งเดียว
+  if(!worlds[wk] || (wk==='mecha' && worlds[wk].rev!==1519)){
+    if(wk==='mecha' && worlds[wk]) delete worlds[wk];   // 🤖 รอบ 1519: รีบิลด์ฉากทุ่งหญ้า
     buildScene(wk);
   }
   scene=worlds[wk].scene; trees=worlds[wk].trees||[]; buildings=worlds[wk].buildings||[];
-  if(!worlds[wk]._sky){ worlds[wk]._sky=1; applySky(scene, wk); }   // 🌅 ท้องฟ้าภาพจริง (ครั้งเดียว/โลก · ไม่มีไฟล์=คงสีพื้น)
+  if(!worlds[wk]._sky){ worlds[wk]._sky=1; if(wk!=='mecha') applySky(scene, wk); }   // mecha = buildMechaSky ในฉาก
   solids=worlds[wk].solids||[];
 
   maxHp=100; hp=100; sessionCoins=0; sessionWords=0; sessionWordLog=[]; inv={}; keys={}; yaw=0; pitch=0;   // maxHp ปรับต่อโลกด้านล่าง

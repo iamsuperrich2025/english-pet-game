@@ -12,9 +12,9 @@ assert(/kind:'twin'|kind:'rocket'|kind:'rail'|kind:'bolt'|kind:'flame'/.test(c),
 assert(a.includes('mechaBankCoins'),'bank coins');
 assert(a.includes('playFireClip'),'arena fire sfx');
 assert(a.includes('fire-a6fea31058694941.mp3'),'arena fire file');
-assert(a.includes('rev:1480'),'scene rev');
+assert(a.includes('buildMechaSky'),'mecha painted sky');
 assert(a.includes("mecha:'sky_day'"),'day sky');
-assert(a.includes('sky:0x87c8f0'),'bright sky color');
+assert(a.includes('sky:0xa8d4f0'),'bright sky color');
 const mechaBlock=a.slice(a.indexOf("}else if(md==='mecha'){"), a.indexOf('ringAds(sc, 5, 45, 0, null)'));
 assert(!mechaBlock.includes('Dodecahedron'),'no mecha rocks');
 assert(a.includes('mh-fire-ico')&&a.includes('>FIRE<')||a.includes('<b>FIRE</b>'),'fire HUD label');
