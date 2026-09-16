@@ -24,13 +24,6 @@
 - unit 1513 ผ่าน · ค้าง: ยิงบน live เทียบวงไล่สี
 - **รอบ 1512 · โปรไฟล์ Modern Luxury + คอลเลกชันครบ:** เจ้าของเห็นสัตว์ทุกตัวและทรัพย์สินทุกหมวดจากเซฟสด แม้ปิดสวิตช์เผยแพร่; โปรไฟล์คนอื่นยังเคารพสิทธิ์เดิม
 - ไฟล์: `js/ui.js` `js/online.js` `js/state.js` `css/profile-modern.css` `tools/test_profile_modern.cjs`
-- Playwright 30 checks ผ่านที่ 1366×768, 1367×617, 812×375 + Home V2 regression ผ่าน; ไม่มี vertical overflow/runtime error
-- **รอบ 1511 · ซอมบี้เลือดแดง + ตัดวงกลมระเบิดเก่า:** ศัตรูหุ่นเป็นซอมบี้ · เลือดแดงตอนระเบิด · หันหน้าหาผู้เล่นตอนโจมตี · ไม่มี shock ring ส้ม/ขาว
-- ไฟล์: `js/adventure3d.js` `js/mecha-combat-fx.js` `tools/test_mecha_1511.js`
-- unit 1511 ผ่าน · ค้าง: ยิงบน live ดูซอมบี้หันหน้า + ระเบิดไม่มีวงซ้อน
-- **รอบ 1510 · ธีมหรูดำแอดมินเท่านั้น:** Home V2 ธีม noir ดำ/เถา/ทอง + แบนเนอร์จบภารกิจหรู · คนทั่วไปยังพาสเทล
-- ไฟล์: `css/home-v2.css` `js/home-v2.js` `css/style.css` `css/lobby.css` `js/util.js` `js/auth.js` `index_classic.html`
-- เกต `isAdmin()===true` · unit noir ผ่าน · ค้าง: แอดมินลอง Settings ⚙️ → 🎨 ธีมหน้าหลัก บน live
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน

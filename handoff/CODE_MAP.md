@@ -721,7 +721,7 @@ PANEL_TITLES:9 · openPanel:19 · closePanel:29
 settingsButtonClick:104 · syncMusicBtn:120 · showPetShoppingGrantNotice:154 · showPetShoppingFineRefundNotice:187 · showRankRewardNotice:218 · showQuizBackPay:268
 showGiantRefund:313 · showTicketRefund:354 · showAcDuplicateRefundNotice:393 · fitQbp:426 · bootGame:440 · showCakeGiftRefundNotice:467
 
-## js/mecha-combat-fx.js (277 บรรทัด · 3 รายการ)
+## js/mecha-combat-fx.js (286 บรรทัด · 3 รายการ)
 STYLES:8 · style:20 · create:21
 
 ## js/mecha-models.js (85 บรรทัด · 0 รายการ)

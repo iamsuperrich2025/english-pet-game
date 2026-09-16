@@ -6446,3 +6446,14 @@ efreshMechaLock
 - **รอบ 1508 · ตัดกล่องยืนยันเข้าเกม:** กดโลก 3D แล้วเข้าทันที ไม่มี “เข้าเลย/เล่นฟรี” มาขวาง
 - ไฟล์: `js/ui.js` `css/skyplay3d.css` tests kart/sky/tinv/refund · Sky เลือกตัวละครในโลกที่ `#sp-character`
 - unit + Playwright Kart ผ่าน · ค้าง: ผู้ใช้ลองกดหุ่นรบบน live
+
+
+## ⏬ ย้ายเมื่อ 2026-09-16 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- Playwright 30 checks ผ่านที่ 1366×768, 1367×617, 812×375 + Home V2 regression ผ่าน; ไม่มี vertical overflow/runtime error
+- **รอบ 1511 · ซอมบี้เลือดแดง + ตัดวงกลมระเบิดเก่า:** ศัตรูหุ่นเป็นซอมบี้ · เลือดแดงตอนระเบิด · หันหน้าหาผู้เล่นตอนโจมตี · ไม่มี shock ring ส้ม/ขาว
+- ไฟล์: `js/adventure3d.js` `js/mecha-combat-fx.js` `tools/test_mecha_1511.js`
+- unit 1511 ผ่าน · ค้าง: ยิงบน live ดูซอมบี้หันหน้า + ระเบิดไม่มีวงซ้อน
+- **รอบ 1510 · ธีมหรูดำแอดมินเท่านั้น:** Home V2 ธีม noir ดำ/เถา/ทอง + แบนเนอร์จบภารกิจหรู · คนทั่วไปยังพาสเทล
+- ไฟล์: `css/home-v2.css` `js/home-v2.js` `css/style.css` `css/lobby.css` `js/util.js` `js/auth.js` `index_classic.html`
+- เกต `isAdmin()===true` · unit noir ผ่าน · ค้าง: แอดมินลอง Settings ⚙️ → 🎨 ธีมหน้าหลัก บน live
