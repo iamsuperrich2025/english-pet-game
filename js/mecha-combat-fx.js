@@ -1,6 +1,6 @@
-/* Round 1513 — mecha projectiles.
+/* Round 1516 — mecha projectiles.
    Ballistic shells (Word Fleet gravity): Adventure3D owns physics via launch/sync/impact.
-   Impact FX: volumetric fireball + stacked shock rings (orange inner → white outer) · billow · smoke · debris · streaks ~1.5s.
+   Impact FX: fireball + orange→white shock rings · billow fire · orange/white ember sparks (no dark spheres) · streaks ~1.5s.
    Legacy fire(from,to) kept for tools/mecha/fx-preview.html flash previews.
    Instanced batches, 12 live shots, zero raster assets. */
 (function(root){
@@ -178,16 +178,18 @@ function create(scene){
     world('orb',fx,fy,fz,sz,sz*1.15,sz,col);
     world('halo',fx,fy,fz,sz*1.7,sz*1.9,sz*1.7,j%2?BLOOM:FLAME);
    }
-   /* ควันดำรอบนอก */
-   for(let j=0;j<12;j++){
+   /* สะเก็ดไฟลอยรอบนอก (ส้ม→ขาว แทนลูกดำ) */
+   for(let j=0;j<16;j++){
     const seed=j*1.7+.9;
-    const a=seed+e*.6, rr=(.85+e*1.55+(j%3)*.2)*power;
+    const a=seed+e*.6, rr=(.75+e*1.45+(j%3)*.18)*power;
     const fx=cx+Math.cos(a)*rr, fz=cz+Math.sin(a)*rr;
-    const fy=cy+.45*power+e*(1.1+(j%4)*.35)*power;
-    const sz=(.45+(j%3)*.14)*(0.55+k*.45)*power;
-    const smokeFade=Math.min(1,e*3)*fade;
-    if(smokeFade<.08) continue;
-    world('orb',fx,fy,fz,sz*smokeFade,sz*1.2*smokeFade,sz*smokeFade,j%2?SMOKE:SMOKE2);
+    const fy=cy+.42*power+e*(1.05+(j%4)*.32)*power+Math.sin(seed*2+e*5)*.08;
+    const emberFade=Math.min(1,e*3.2)*fade;
+    if(emberFade<.06) continue;
+    const sz=(.12+(j%4)*.05)*emberFade*power;
+    const col=j%3===0?HOT:(j%3===1?CORE:FLAME);
+    world('orb',fx,fy,fz,sz,sz*1.35,sz,col);
+    world('halo',fx,fy,fz,sz*2.1,sz*2.4,sz*2.1,j%2?0xffffff:STREAK);
    }
    /* เส้นประกายพุ่งรัศมี */
    for(let j=0;j<14;j++){
@@ -201,17 +203,24 @@ function create(scene){
     streak(ox,oy,oz,ux,uy,uz,len,.028+.02*life,life>.55?STREAK:FLAME);
     if(life>.4) world('orb',ox+ux*len,oy+uy*len,oz+uz*len,.06*life,.06*life,.06*life,HOT);
    }
-   /* เศษหิน/ซากพุ่ง + ถ่วงแรงโน้มถ่วง */
-   for(let j=0;j<10;j++){
+   /* สะเก็ดไฟพุ่ง + ถ่วงแรงโน้มถ่วง (แทนเศษก้อนดำ) */
+   for(let j=0;j<14;j++){
     const seed=j*1.918+.5;
-    const spd=(2.1+(j%4)*.5)*power;
-    const life=Math.max(0,1-t/(0.95+(j%3)*.1));
+    const spd=(2.3+(j%4)*.55)*power;
+    const life=Math.max(0,1-t/(0.88+(j%3)*.09));
     if(life<=0) continue;
-    const ux=Math.cos(seed), uz=Math.sin(seed);
+    const ux=Math.cos(seed), uz=Math.sin(seed), uy=.22+(j%3)*.12;
     const sx=cx+ux*spd*t, sz=cz+uz*spd*t;
-    const sy=cy+.3+spd*t*1.35-6.2*t*t+(j%3)*.08;
-    const rs=(.1+.08*(j%3))*life*power;
-    world('crystal',sx,Math.max(cy+.02,sy),sz,rs,rs*1.1,rs,j%2?ROCK:SMOKE2,seed+age*.008);
+    const sy=cy+.28+spd*t*1.35-6.2*t*t+(j%3)*.08;
+    const py=Math.max(cy+.02,sy);
+    const col=life>.65?0xffffff:(life>.38?HOT:(life>.2?CORE:FLAME));
+    const rs=(.045+.06*life)*power;
+    world('orb',sx,py,sz,rs,rs*1.4,rs,col);
+    if(life>.35) world('halo',sx,py,sz,rs*2.5,rs*2.8,rs*2.5,j%2?STREAK:CORE);
+    if(life>.5){
+     const slen=(.25+life*.55)*power;
+     streak(sx,py,sz,ux,uy,uz,slen,.018+.014*life,life>.7?HOT:FLAME);
+    }
    }
    /* ประกายเล็กถ่วงแรงโน้มถ่วง */
    for(let j=0;j<22;j++){

@@ -16,9 +16,9 @@
 - ยืนยันเส้นทางจริงจากการกดการ์ด Home V2 ส่ง UID เจ้าของ แล้วอ่าน `state.pets` ทั้งหมดโดยไม่ผ่าน payload สาธารณะที่จำกัด 3 ตัว; ทรัพย์สินเจ้าของอ่านจากเซฟสดทุกหมวดแม้ปิดเผยแพร่
 - ไฟล์: `js/online.js` `js/state.js` `js/ui.js` `css/profile-modern.css` `tools/test_profile_modern.cjs`
 - Playwright 33 checks ผ่านที่ 1366×768, 1367×617, 812×375 + Home V2 regression ผ่าน; ไม่มีสัตว์ตกหล่น/vertical overflow/runtime error
-- **รอบ 1514 · สะเก็ดไฟแทนลูกดำ:** ตอนระเบิดไม่มีก้อนดำ/เศษ crystal · เป็นประกายส้ม–ขาวลอย+พุ่ง
-- ไฟล์: `js/mecha-combat-fx.js` `tools/test_mecha_1514.js`
-- unit 1514 ผ่าน · ค้าง: ยิงบน live ดูสะเก็ด
+- **รอบ 1516 · สะเก็ดไฟแทนลูกดำ:** ตอนระเบิดไม่มีก้อนดำ/เศษ crystal · เป็นประกายส้ม–ขาวลอย+พุ่ง
+- ไฟล์: `js/mecha-combat-fx.js` `tools/test_mecha_1516.js`
+- unit 1516 ผ่าน · ค้าง: ยิงบน live ดูสะเก็ด
 - **รอบ 1513 · วงระเบิดไล่เฉดส้ม→ขาว:** คืนวงขาวกระแทก · วงส้มทึบซ้อน 7 ชั้น ใน=ส้ม นอก=ขาว · ยังมีลูกไฟมีมิติ
 - ไฟล์: `js/mecha-combat-fx.js` `tools/test_mecha_1513.js`
 - unit 1513 ผ่าน · ค้าง: ยิงบน live เทียบวงไล่สี
