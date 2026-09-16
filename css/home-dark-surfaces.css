@@ -1,0 +1,557 @@
+/*
+ * Dark system surfaces for the admin-only Noir home theme.
+ * This layer is loaded after feature stylesheets so legacy boards, dialogs,
+ * message boxes, and controls inherit the same restrained graphite palette.
+ */
+
+html.theme-noir {
+  --noir-surface-0: #111317;
+  --noir-surface-1: #191c21;
+  --noir-surface-2: #22262c;
+  --noir-surface-3: #2b3037;
+  --noir-surface-line: #414750;
+  --noir-surface-text: #f1f2f4;
+  --noir-surface-muted: #aeb4bd;
+  --noir-surface-gold: #cfb26d;
+  --noir-surface-danger: #7d3439;
+}
+
+html.theme-noir :where(
+  .panel-overlay,
+  .levelup-overlay,
+  .fq-overlay,
+  .lbf-overlay,
+  .wsa-overlay,
+  .gift-pick-overlay,
+  .fcm-overlay,
+  .fnt-overlay,
+  .fdb-overlay,
+  .pi-overlay,
+  .inbox-overlay,
+  .chat-overlay,
+  .onet-promo-overlay,
+  .racing-promo-overlay,
+  .kart-promo-overlay,
+  .ad-overlay,
+  .rg-overlay
+) {
+  background: rgba(3, 5, 8, 0.84) !important;
+  backdrop-filter: blur(6px) saturate(0.75);
+}
+
+html.theme-noir :where(
+  .panel-box,
+  .levelup-box,
+  .settings-box,
+  .alert-box,
+  .attn-box,
+  .help-box,
+  .bill-box,
+  .fq-box,
+  .lbf-box,
+  .wsa-box,
+  .gift-pick-box,
+  .fcm-box,
+  .fcm-likers-box,
+  .fnt-box,
+  .fdb-box,
+  .pi-box,
+  .ib-box,
+  .chat-box,
+  .dict-card,
+  .dmap-box,
+  .car-buy-box,
+  .photo-box,
+  .ph-crop-box,
+  .report-box,
+  .summary-box,
+  .food-box,
+  .home-shop-box,
+  .wl-box,
+  .mkt-buy-box,
+  .list-dialog,
+  .craft-box,
+  .db-card,
+  .rg-box,
+  .ad-box,
+  .onet-promo-card,
+  .racing-promo-card,
+  .kart-promo-card,
+  .vw2-online-modal-panel,
+  .vw2-pet-modal-panel
+) {
+  color: var(--noir-surface-text) !important;
+  background: linear-gradient(155deg, #25292f 0%, #191c21 58%, #131519 100%) !important;
+  border-color: var(--noir-surface-line) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.52), inset 0 1px rgba(255, 255, 255, 0.045) !important;
+}
+
+html.theme-noir :where(
+  .panel-head,
+  .panel-body,
+  .chat-msgs,
+  .chat-empty,
+  .dict-box,
+  .dmap-card,
+  .hq-card,
+  .q-bigcard,
+  .inv-card,
+  .mkt-listing,
+  .shop-item,
+  .home-option,
+  .mkt-pet-card,
+  .rs-stage,
+  .rs-info,
+  .rs-thumb,
+  .db-pick,
+  .rg-head,
+  .rg-body,
+  .rg-foot,
+  .ad-section,
+  .vw2-online-modal-card,
+  .vw2-pet-modal-card
+) {
+  color: var(--noir-surface-text) !important;
+  background: var(--noir-surface-2) !important;
+  border-color: var(--noir-surface-line) !important;
+  box-shadow: none !important;
+}
+
+html.theme-noir :where(
+  .panel-box,
+  .levelup-box,
+  .settings-box,
+  .alert-box,
+  .attn-box,
+  .help-box,
+  .bill-box,
+  .fq-box,
+  .lbf-box,
+  .wsa-box,
+  .gift-pick-box,
+  .fcm-box,
+  .fcm-likers-box,
+  .fnt-box,
+  .fdb-box,
+  .pi-box,
+  .ib-box,
+  .chat-box,
+  .dict-card,
+  .dmap-box,
+  .car-buy-box,
+  .photo-box,
+  .ph-crop-box,
+  .report-box,
+  .summary-box,
+  .food-box,
+  .home-shop-box,
+  .wl-box,
+  .mkt-buy-box,
+  .list-dialog,
+  .craft-box,
+  .db-card,
+  .rg-box,
+  .ad-box,
+  .onet-promo-card,
+  .racing-promo-card,
+  .kart-promo-card,
+  .vw2-online-modal-panel,
+  .vw2-pet-modal-panel
+) :where(h1, h2, h3, h4, h5, strong, label, legend) {
+  color: var(--noir-surface-text) !important;
+  text-shadow: none !important;
+}
+
+html.theme-noir :where(
+  .panel-box,
+  .levelup-box,
+  .settings-box,
+  .alert-box,
+  .attn-box,
+  .help-box,
+  .bill-box,
+  .fq-box,
+  .lbf-box,
+  .wsa-box,
+  .gift-pick-box,
+  .fcm-box,
+  .fcm-likers-box,
+  .fnt-box,
+  .fdb-box,
+  .pi-box,
+  .ib-box,
+  .chat-box,
+  .dict-card,
+  .dmap-box,
+  .car-buy-box,
+  .photo-box,
+  .ph-crop-box,
+  .report-box,
+  .summary-box,
+  .food-box,
+  .home-shop-box,
+  .wl-box,
+  .mkt-buy-box,
+  .list-dialog,
+  .craft-box,
+  .db-card,
+  .rg-box,
+  .ad-box,
+  .onet-promo-card,
+  .racing-promo-card,
+  .kart-promo-card,
+  .vw2-online-modal-panel,
+  .vw2-pet-modal-panel
+) :where(p, small, .muted, .sub, .desc, .hint, .note, .meta, .time) {
+  color: var(--noir-surface-muted) !important;
+}
+
+html.theme-noir :where(
+  .panel-box,
+  .levelup-box,
+  .settings-box,
+  .alert-box,
+  .attn-box,
+  .help-box,
+  .bill-box,
+  .fq-box,
+  .lbf-box,
+  .wsa-box,
+  .gift-pick-box,
+  .fcm-box,
+  .fcm-likers-box,
+  .fnt-box,
+  .fdb-box,
+  .pi-box,
+  .ib-box,
+  .chat-box,
+  .dict-card,
+  .dmap-box,
+  .car-buy-box,
+  .photo-box,
+  .ph-crop-box,
+  .report-box,
+  .summary-box,
+  .food-box,
+  .home-shop-box,
+  .wl-box,
+  .mkt-buy-box,
+  .list-dialog,
+  .craft-box,
+  .db-card,
+  .rg-box,
+  .ad-box,
+  .onet-promo-card,
+  .racing-promo-card,
+  .kart-promo-card,
+  .vw2-online-modal-panel,
+  .vw2-pet-modal-panel
+) :where(input, textarea, select) {
+  color: var(--noir-surface-text) !important;
+  background: var(--noir-surface-0) !important;
+  border-color: #4b515b !important;
+  box-shadow: inset 0 1px 5px rgba(0, 0, 0, 0.42) !important;
+}
+
+html.theme-noir :where(
+  .panel-box,
+  .levelup-box,
+  .settings-box,
+  .alert-box,
+  .attn-box,
+  .help-box,
+  .bill-box,
+  .fq-box,
+  .lbf-box,
+  .wsa-box,
+  .gift-pick-box,
+  .fcm-box,
+  .fcm-likers-box,
+  .fnt-box,
+  .fdb-box,
+  .pi-box,
+  .ib-box,
+  .chat-box,
+  .dict-card,
+  .dmap-box,
+  .car-buy-box,
+  .photo-box,
+  .ph-crop-box,
+  .report-box,
+  .summary-box,
+  .food-box,
+  .home-shop-box,
+  .wl-box,
+  .mkt-buy-box,
+  .list-dialog,
+  .craft-box,
+  .db-card,
+  .rg-box,
+  .ad-box,
+  .onet-promo-card,
+  .racing-promo-card,
+  .kart-promo-card,
+  .vw2-online-modal-panel,
+  .vw2-pet-modal-panel
+) :where(input, textarea)::placeholder {
+  color: #858c96 !important;
+}
+
+html.theme-noir :where(
+  .panel-box,
+  .levelup-box,
+  .settings-box,
+  .alert-box,
+  .attn-box,
+  .help-box,
+  .bill-box,
+  .fq-box,
+  .lbf-box,
+  .wsa-box,
+  .gift-pick-box,
+  .fcm-box,
+  .fcm-likers-box,
+  .fnt-box,
+  .fdb-box,
+  .pi-box,
+  .ib-box,
+  .chat-box,
+  .dict-card,
+  .dmap-box,
+  .car-buy-box,
+  .photo-box,
+  .ph-crop-box,
+  .report-box,
+  .summary-box,
+  .food-box,
+  .home-shop-box,
+  .wl-box,
+  .mkt-buy-box,
+  .list-dialog,
+  .craft-box,
+  .db-card,
+  .rg-box,
+  .ad-box,
+  .onet-promo-card,
+  .racing-promo-card,
+  .kart-promo-card,
+  .vw2-online-modal-panel,
+  .vw2-pet-modal-panel
+) :where(input, textarea, select):focus {
+  outline: none !important;
+  border-color: var(--noir-surface-gold) !important;
+  box-shadow: 0 0 0 3px rgba(207, 178, 109, 0.14) !important;
+}
+
+html.theme-noir :where(
+  .panel-box,
+  .levelup-box,
+  .settings-box,
+  .alert-box,
+  .attn-box,
+  .help-box,
+  .bill-box,
+  .fq-box,
+  .lbf-box,
+  .wsa-box,
+  .gift-pick-box,
+  .fcm-box,
+  .fcm-likers-box,
+  .fnt-box,
+  .fdb-box,
+  .pi-box,
+  .ib-box,
+  .chat-box,
+  .dict-card,
+  .dmap-box,
+  .car-buy-box,
+  .photo-box,
+  .ph-crop-box,
+  .report-box,
+  .summary-box,
+  .food-box,
+  .home-shop-box,
+  .wl-box,
+  .mkt-buy-box,
+  .list-dialog,
+  .craft-box,
+  .db-card,
+  .rg-box,
+  .ad-box,
+  .onet-promo-card,
+  .racing-promo-card,
+  .kart-promo-card,
+  .vw2-online-modal-panel,
+  .vw2-pet-modal-panel
+) button {
+  color: var(--noir-surface-text) !important;
+  background: #282b31 !important;
+  border-color: #505761 !important;
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.25), inset 0 1px rgba(255, 255, 255, 0.06) !important;
+  text-shadow: none !important;
+  filter: none !important;
+}
+
+html.theme-noir :where(
+  .panel-box,
+  .levelup-box,
+  .settings-box,
+  .alert-box,
+  .attn-box,
+  .help-box,
+  .bill-box,
+  .fq-box,
+  .lbf-box,
+  .wsa-box,
+  .gift-pick-box,
+  .fcm-box,
+  .fcm-likers-box,
+  .fnt-box,
+  .fdb-box,
+  .pi-box,
+  .ib-box,
+  .chat-box,
+  .dict-card,
+  .dmap-box,
+  .car-buy-box,
+  .photo-box,
+  .ph-crop-box,
+  .report-box,
+  .summary-box,
+  .food-box,
+  .home-shop-box,
+  .wl-box,
+  .mkt-buy-box,
+  .list-dialog,
+  .craft-box,
+  .db-card,
+  .rg-box,
+  .ad-box,
+  .onet-promo-card,
+  .racing-promo-card,
+  .kart-promo-card,
+  .vw2-online-modal-panel,
+  .vw2-pet-modal-panel
+) button:hover:not(:disabled) {
+  background: #343941 !important;
+  border-color: #626a75 !important;
+  transform: translateY(-1px);
+}
+
+html.theme-noir :where(
+  .panel-box,
+  .levelup-box,
+  .settings-box,
+  .alert-box,
+  .attn-box,
+  .help-box,
+  .bill-box,
+  .fq-box,
+  .lbf-box,
+  .wsa-box,
+  .gift-pick-box,
+  .fcm-box,
+  .fcm-likers-box,
+  .fnt-box,
+  .fdb-box,
+  .pi-box,
+  .ib-box,
+  .chat-box,
+  .dict-card,
+  .dmap-box,
+  .car-buy-box,
+  .photo-box,
+  .ph-crop-box,
+  .report-box,
+  .summary-box,
+  .food-box,
+  .home-shop-box,
+  .wl-box,
+  .mkt-buy-box,
+  .list-dialog,
+  .craft-box,
+  .db-card,
+  .rg-box,
+  .ad-box,
+  .onet-promo-card,
+  .racing-promo-card,
+  .kart-promo-card,
+  .vw2-online-modal-panel,
+  .vw2-pet-modal-panel
+) button:where(.active, .on, .sel, .selected, .current, [aria-selected="true"], [aria-pressed="true"], [aria-checked="true"]) {
+  color: var(--noir-selected-ink, #211d14) !important;
+  background: var(--noir-selected-bg, linear-gradient(160deg, #e6d099 0%, #cdb06b 52%, #ad8e4b 100%)) !important;
+  border-color: #dbc27f !important;
+  box-shadow: var(--noir-selected-shadow, 0 7px 18px rgba(173, 142, 75, 0.23), inset 0 1px rgba(255, 255, 255, 0.38)) !important;
+}
+
+html.theme-noir :where(.ph-del, .pl-unfollow, .ad-danger, .danger, .btn-danger) {
+  color: #ffe9ea !important;
+  background: linear-gradient(180deg, #7d3439 0%, #562329 100%) !important;
+  border-color: #9b4a50 !important;
+}
+
+html.theme-noir :where(.chat-mine, .chat-theirs, .ib-msg, .fnt-item, .fdb-row, .fcm-item) {
+  color: var(--noir-surface-text) !important;
+  background: var(--noir-surface-3) !important;
+  border-color: var(--noir-surface-line) !important;
+}
+
+html.theme-noir :where(.db-ack, .alert-ok, .attn-ok, .report-ok) {
+  color: var(--noir-surface-text) !important;
+  background: linear-gradient(180deg, #3a3f47 0%, #262a30 100%) !important;
+  border-color: #545b65 !important;
+}
+
+html.theme-noir :where(.rg-bar-track, .progress-track, .meter-track) {
+  background: #101216 !important;
+  border-color: #373c44 !important;
+}
+
+html.theme-noir :where(.rg-empty, .ad-note, .bill-note, .help-note) {
+  color: var(--noir-surface-muted) !important;
+  background: #20242a !important;
+  border-color: var(--noir-surface-line) !important;
+}
+
+@media (max-width: 820px) {
+  html.theme-noir :where(
+    .panel-box,
+    .levelup-box,
+    .settings-box,
+    .alert-box,
+    .attn-box,
+    .help-box,
+    .bill-box,
+    .fq-box,
+    .lbf-box,
+    .wsa-box,
+    .gift-pick-box,
+    .fcm-box,
+    .fnt-box,
+    .fdb-box,
+    .pi-box,
+    .ib-box,
+    .chat-box,
+    .dict-card,
+    .dmap-box,
+    .car-buy-box,
+    .photo-box,
+    .ph-crop-box,
+    .report-box,
+    .summary-box,
+    .food-box,
+    .home-shop-box,
+    .wl-box,
+    .mkt-buy-box,
+    .list-dialog,
+    .craft-box,
+    .db-card,
+    .rg-box,
+    .ad-box
+  ) {
+    max-height: calc(100dvh - 18px) !important;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+}

@@ -274,7 +274,7 @@ async function sourceFiles() {
 
 
 
-      'js/home-v2.js', 'css/home-v2.css',
+      'js/home-v2.js', 'css/home-v2.css', 'css/home-dark-surfaces.css',
       'img/home-v2/r10_screen_backdrop.svg', 'img/home-v2/r10_pet_world.svg', 'img/home-v2/r10_cloud_pedestal.svg',
 
       'img/home-v2/r11_screen_frame.svg', 'img/home-v2/r11_pet_world.svg', 'img/home-v2/r11_cloud_pedestal.svg',

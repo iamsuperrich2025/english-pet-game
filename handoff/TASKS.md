@@ -12,6 +12,11 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1524 · กระดานและกล่องธีมมืดครบชุด:** เพิ่มชั้น css/home-dark-surfaces.css หลัง feature CSS ให้บอร์ด/dialog/ข้อความ/input เป็นดำเทา; ปุ่มปกติ graphite เรียบ และเฉพาะ active/on/selected เป็นทองหม่นไล่เฉด
+- ครอบคลุม 39 surface classes รวม chat, inbox, daily box, rank graph, account deletion, promo และ Home V2 modals; public/pastel ไม่รับกฎนี้เพราะ scope html.theme-noir`r
+- QA source+dist: dark-surface browser 10/10 และ Home/admin regression 32/32 ที่ 1367×617, 1366×768, 812×375; build 2026-09-16.1313`r
+- ไฟล์งาน: index_classic.html css/home-dark-surfaces.css 	ools/build_web.mjs 	ools/test_home_dark_surfaces.cjs docs/PROJECT_MAP.md; ภาพ WebP ใน outputs
+
 - **รอบ 1522 · ปุ่มธีมแอดมินเลือกแล้วจึงเป็นทอง:** ปุ่มทั่วไป/O-NET/โปรไฟล์/เพื่อน/ปิด/ยืนยันเป็น graphite; ตัวเลือก active และสวิตช์ on ใช้เหลืองทองหม่นไล่ 3 เฉด พร้อมขอบแสงบางและข้อความเข้ม
 - ไฟล์: `css/home-v2.css` `css/lobby.css` `js/util.js` `tools/test_home_theme_modern.cjs`; ป้ายเปิด/ปิดอธิบายตำแหน่งสวิตช์แทนชื่อสี; ไม่มี asset runtime ใหม่
 - ผ่าน theme/Home regressions + browser 32 checks ที่ 1367×617, 1366×768, 812×375: ปุ่ม inactive เทา, selected gradient อ่านได้ AA ทุก stop, role/storage/logout gate, geometry; syntax/diff ผ่าน

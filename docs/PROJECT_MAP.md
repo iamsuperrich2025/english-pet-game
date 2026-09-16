@@ -23,10 +23,10 @@ NOTES: No module loader or bundler. Script order is part of the architecture.
 SYSTEM: Home V2 primary lobby
 PURPOSE: Asset-driven fantasy lobby shell that is the public Home. Classic dashboard stays mounted underneath as the authoritative state/action source.
 PRIMARY FILE: `js/home-v2.js`
-RELATED FILES: `css/home-v2.css`, `js/util.js` (`openSettings`), `js/auth.js` (`isAdmin`, `syncAdminAccess`), `index_classic.html`
+RELATED FILES: `css/home-v2.css`, `css/home-dark-surfaces.css`, `js/util.js` (`openSettings`), `js/auth.js` (`isAdmin`, `syncAdminAccess`), `index_classic.html`
 PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.HomeTheme`, `#vw-home-v2-root`, `adminWorldAllowed`
 DEPENDENCIES: Classic buttons/state, `isAdmin()`.
-NOTES: Round 1520 refreshes admin-only `noir` (graphite/gray/yellow) with flat buttons, readable panel headings and a quiet pet stage via `html.theme-noir` and `localStorage.vwHomeTheme`. Public default remains pastel. Settings shows the picker only when `isAdmin()===true`. Recap/money toasts (`.toast-financial`) sit on `body` and follow `--toast-fin-*` so theme changes restyle them. Do not use mix-blend veils for Home skins.
+NOTES: Round 1520 refreshes admin-only `noir` (graphite/gray/yellow) with flat buttons, readable panel headings and a quiet pet stage via `html.theme-noir` and `localStorage.vwHomeTheme`. Round 1524 adds a late-loaded `home-dark-surfaces.css` layer for legacy boards, dialogs, message boxes, form fields and controls; inactive buttons stay flat graphite and only selected/on controls use muted gold. Public default remains pastel. Settings shows the picker only when `isAdmin()===true`. Recap/money toasts (`.toast-financial`) sit on `body` and follow `--toast-fin-*` so theme changes restyle them. Do not use mix-blend veils for Home skins.
 
 SYSTEM: Screen routing and level admission
 PURPOSE: Switches classic-lobby DOM screens and lazy-loads 3D engines when a world is entered.
