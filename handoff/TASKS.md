@@ -12,6 +12,11 @@
 
 ### 📌 สรุปสถานะล่าสุด
 
+- **รอบ 1527 · ป้ายธีม Dark อ่านง่าย:** แก้ข้อความม่วงตกค้างบนปุ่มกราฟอันดับ/อันดับ, ปุ่มราง Classic และหน้ากราฟอันดับ ให้ขาว/เทาอ่อนบน graphite; active tab ใช้ทองหม่นพร้อมข้อความเข้ม
+- เพิ่ม override ท้าย css/home-dark-surfaces.css ครอบ Home V2 wallet labels, rail labels, rank dialog, tabs, chart labels และ badges โดยไม่เปลี่ยน pastel/public theme
+- QA source+dist: label contrast 7/7 และ Home/admin regression 32/32 ที่ 1367×617, 1366×768, 812×375; build 2026-09-16.1316 ผ่าน
+- ไฟล์รอบนี้: css/home-dark-surfaces.css, tools/test_home_dark_labels.cjs; ภาพ WebP ใน Documents/Codex/2026-09-16/new-chat-3/outputs/
+
 - **รอบ 1526 · รบคำ Battle Royale + SCOPE:** กล้องซูม 2.5x ยิงตามกึ่งกลางจริงจากปากกระบอก/กำแพงบังได้, ยิงค้าง, วิ่ง/กระโดด/เติมกระสุน/รักษา/เลือก 3 ปืน; สนาม tactical geometry มุมมน, minimap/เกราะ/กระสุน/จัดปุ่มแยก; คงท่าหลบ/หมอบ/ย่อและโหมดฝึกเดิม
 - เพิ่ม BR/Field modules: warm-up 10s, solo 7 AI, PvP 2–8 คน, วงบีบ/ไม่เกิดใหม่/ผู้รอดคนสุดท้าย/รอเมื่อเข้ากลางรอบ; host failover + event burst 170ms แก้ยิงซ้ำหายผ่าน c/ct/cw/hp เดิม, ไม่มี Rules/config ใหม่; เสบียงส่วนตัวและรางวัลคำเดิม 1,000 เหรียญ
 - ผ่าน unit เดิม 73 + BR/loader 10; browser source/dist อย่างละ 64 checks (poses 23/384 rigs, scope 16/72 shots, BR 25 รวมแมตช์ AI เต็ม/2 peers/late join/host gone/667×320); build 10,065 files/1,317.8 MiB + PWA validator; สนามตัวอย่าง ~302–305 draws/40.5k triangles, DPR 1.5 เดิม
@@ -231,7 +236,7 @@
 #### 🏍️ งานโลกใหม่: ขับมอเตอร์ไซค์/รถยนต์ (30 ก.ค.)
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
-### ### 📌 สรุปสถานะล่าสุด
+### 📌 สรุปสถานะล่าสุด
 
 - **รอบ 1390 · แก้ไฟเป็นแท่งซ้ำ:** เปลี่ยน shader/การวางเปลวใน js/arena-field-visuals.js เป็นเปลวแตกตัว8กลุ่ม (low5) พร้อมควัน/พื้นร้อน/สะเก็ด/คลื่นกระแทก; ส่ง phase+fade แยกทุก draw แก้ opacity เดิมไม่เข้า shader; ไฟ MEGA ใช้คลื่นไฟแทนโดมฟ้า
 - ใช้ pool640/48 และ low256/28 เดิม; lazy shared shader/forceSinglePass ไม่มีภาพหรือวิดีโอ runtime เพิ่ม; ordinary fire peak120draws/sustain118/กลับ105/18textures; คงดาเมจและ5ครั้งMEGA (js/arena-elements.js เปลี่ยนเฉพาะทางเรียกภาพ pulse)
