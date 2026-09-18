@@ -1132,8 +1132,8 @@ vbRender:148 · vbCardHTML:194
 .xsp-foot:235 · .xsb-box:250,277 · .xsb-head:255,256 · .xsb-grid:257 · .xsb-card:258,262 · .xsb-emoji:263
 .xsb-name:264 · .xsb-info:265 · .xsb-done:266 · .onet-picker:270,271,272,273(+3) · .onet-board:278,279,280
 
-## css/home-dark-surfaces.css (666 บรรทัด · 1 selector)
-.theme-noir:7,488,494,500(+23)
+## css/home-dark-surfaces.css (824 บรรทัด · 1 selector)
+.theme-noir:7,488,494,500(+28)
 
 ## css/home-v2.css (2,731 บรรทัด · 137 selector)
 :root:9,2536,2592 · #screen-dashboard:36,46 · #vw-home-v2-root:48,49,59,60(+134) · .vw2-screen-frame:81 · .vw2-sky:82,83,92,99(+1) · .vw2-shell:102,107,646

@@ -6522,3 +6522,12 @@ efreshMechaLock
 - QA source+dist: dark-surface browser 10/10 และ Home/admin regression 32/32 ที่ 1367×617, 1366×768, 812×375; build 2026-09-16.1313`r
 - ไฟล์งาน: index_classic.html css/home-dark-surfaces.css 	ools/build_web.mjs 	ools/test_home_dark_surfaces.cjs docs/PROJECT_MAP.md; ภาพ WebP ใน outputs
 
+
+
+## ⏬ ย้ายเมื่อ 2026-09-18 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1525 · ยิงรบคำแก้หลบ/หมอบ/ย่อ:** เข่าเดิมพับกลับด้านจนเท้าลอย, หมอบ/หลบหมุนรวมกับ yaw จนท่าผิดทิศและปืนจมพื้น; แยก body/upper pivots, ยึดพื้นจาก bounds เดิม, หมอบราบ/ปืนเล็งหน้า และหลบด้านข้าง 2 หน่วยโดยคงทิศเล็ง
+- แก้ held-key repeat, long stationary press, pointercancel/blur, สถานะปุ่ม; peer ใช้ av เดิมต่อท้ายเฟสหลบ 0–9 และคง rate limit; ไฟล์ `js/wordskirmish.js`, `tools/test_wordskirmish.js`, `tools/test_wordskirmish_poses.cjs`, `docs/PROJECT_MAP.md`
+- ผ่าน unit 73 + browser source/dist อย่างละ 23 checks (384 rig cases/8 ทิศ, 48 dodges, hitbox, peer จำลอง, ปุ่มจริง, 1367×617/812×375); pose ~0.02ms, ไม่มี mesh/asset ใหม่; build 10,063 files/1,317.7 MiB + PWA/cache validator ผ่าน
+- เตรียม manifest 5 ไฟล์สำหรับ COMMIT_DEPLOY; ยังไม่ยืนยัน commit/deploy/live จนมีหลักฐานสำเร็จ · หลักฐาน WebP/report: `Documents/Codex/2026-09-16/gd/outputs/`
+

@@ -27,11 +27,6 @@
 - ผ่าน unit เดิม 73 + BR/loader 10; browser source/dist อย่างละ 64 checks (poses 23/384 rigs, scope 16/72 shots, BR 25 รวมแมตช์ AI เต็ม/2 peers/late join/host gone/667×320); build 10,065 files/1,317.8 MiB + PWA validator; สนามตัวอย่าง ~302–305 draws/40.5k triangles, DPR 1.5 เดิม
 - เจ้าของไฟล์/ข้อจำกัด/วิธีทดสอบ: `docs/WORDSKIRMISH.md` + PROJECT_MAP; เตรียม FILE manifest 15 ไฟล์และ COMMIT_DEPLOY รอบนี้; ยังไม่ยืนยัน commit/deploy/live และต้องรับรองออนไลน์สองบัญชีบนอุปกรณ์จริงหลังเผยแพร่ · ภาพ WebP/สรุปอยู่ `Documents/Codex/2026-09-16/gd/outputs/`
 
-- **รอบ 1525 · ยิงรบคำแก้หลบ/หมอบ/ย่อ:** เข่าเดิมพับกลับด้านจนเท้าลอย, หมอบ/หลบหมุนรวมกับ yaw จนท่าผิดทิศและปืนจมพื้น; แยก body/upper pivots, ยึดพื้นจาก bounds เดิม, หมอบราบ/ปืนเล็งหน้า และหลบด้านข้าง 2 หน่วยโดยคงทิศเล็ง
-- แก้ held-key repeat, long stationary press, pointercancel/blur, สถานะปุ่ม; peer ใช้ av เดิมต่อท้ายเฟสหลบ 0–9 และคง rate limit; ไฟล์ `js/wordskirmish.js`, `tools/test_wordskirmish.js`, `tools/test_wordskirmish_poses.cjs`, `docs/PROJECT_MAP.md`
-- ผ่าน unit 73 + browser source/dist อย่างละ 23 checks (384 rig cases/8 ทิศ, 48 dodges, hitbox, peer จำลอง, ปุ่มจริง, 1367×617/812×375); pose ~0.02ms, ไม่มี mesh/asset ใหม่; build 10,063 files/1,317.7 MiB + PWA/cache validator ผ่าน
-- เตรียม manifest 5 ไฟล์สำหรับ COMMIT_DEPLOY; ยังไม่ยืนยัน commit/deploy/live จนมีหลักฐานสำเร็จ · หลักฐาน WebP/report: `Documents/Codex/2026-09-16/gd/outputs/`
-
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
