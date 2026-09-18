@@ -6531,3 +6531,12 @@ efreshMechaLock
 - ผ่าน unit 73 + browser source/dist อย่างละ 23 checks (384 rig cases/8 ทิศ, 48 dodges, hitbox, peer จำลอง, ปุ่มจริง, 1367×617/812×375); pose ~0.02ms, ไม่มี mesh/asset ใหม่; build 10,063 files/1,317.7 MiB + PWA/cache validator ผ่าน
 - เตรียม manifest 5 ไฟล์สำหรับ COMMIT_DEPLOY; ยังไม่ยืนยัน commit/deploy/live จนมีหลักฐานสำเร็จ · หลักฐาน WebP/report: `Documents/Codex/2026-09-16/gd/outputs/`
 
+
+
+## ⏬ ย้ายเมื่อ 2026-09-18 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1526 · รบคำ Battle Royale + SCOPE:** กล้องซูม 2.5x ยิงตามกึ่งกลางจริงจากปากกระบอก/กำแพงบังได้, ยิงค้าง, วิ่ง/กระโดด/เติมกระสุน/รักษา/เลือก 3 ปืน; สนาม tactical geometry มุมมน, minimap/เกราะ/กระสุน/จัดปุ่มแยก; คงท่าหลบ/หมอบ/ย่อและโหมดฝึกเดิม
+- เพิ่ม BR/Field modules: warm-up 10s, solo 7 AI, PvP 2–8 คน, วงบีบ/ไม่เกิดใหม่/ผู้รอดคนสุดท้าย/รอเมื่อเข้ากลางรอบ; host failover + event burst 170ms แก้ยิงซ้ำหายผ่าน c/ct/cw/hp เดิม, ไม่มี Rules/config ใหม่; เสบียงส่วนตัวและรางวัลคำเดิม 1,000 เหรียญ
+- ผ่าน unit เดิม 73 + BR/loader 10; browser source/dist อย่างละ 64 checks (poses 23/384 rigs, scope 16/72 shots, BR 25 รวมแมตช์ AI เต็ม/2 peers/late join/host gone/667×320); build 10,065 files/1,317.8 MiB + PWA validator; สนามตัวอย่าง ~302–305 draws/40.5k triangles, DPR 1.5 เดิม
+- เจ้าของไฟล์/ข้อจำกัด/วิธีทดสอบ: `docs/WORDSKIRMISH.md` + PROJECT_MAP; เตรียม FILE manifest 15 ไฟล์และ COMMIT_DEPLOY รอบนี้; ยังไม่ยืนยัน commit/deploy/live และต้องรับรองออนไลน์สองบัญชีบนอุปกรณ์จริงหลังเผยแพร่ · ภาพ WebP/สรุปอยู่ `Documents/Codex/2026-09-16/gd/outputs/`
+

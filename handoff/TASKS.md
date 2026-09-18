@@ -27,11 +27,6 @@
 - QA source+dist: label contrast 7/7 และ Home/admin regression 32/32 ที่ 1367×617, 1366×768, 812×375; build 2026-09-16.1316 ผ่าน
 - ไฟล์รอบนี้: css/home-dark-surfaces.css, tools/test_home_dark_labels.cjs; ภาพ WebP ใน Documents/Codex/2026-09-16/new-chat-3/outputs/
 
-- **รอบ 1526 · รบคำ Battle Royale + SCOPE:** กล้องซูม 2.5x ยิงตามกึ่งกลางจริงจากปากกระบอก/กำแพงบังได้, ยิงค้าง, วิ่ง/กระโดด/เติมกระสุน/รักษา/เลือก 3 ปืน; สนาม tactical geometry มุมมน, minimap/เกราะ/กระสุน/จัดปุ่มแยก; คงท่าหลบ/หมอบ/ย่อและโหมดฝึกเดิม
-- เพิ่ม BR/Field modules: warm-up 10s, solo 7 AI, PvP 2–8 คน, วงบีบ/ไม่เกิดใหม่/ผู้รอดคนสุดท้าย/รอเมื่อเข้ากลางรอบ; host failover + event burst 170ms แก้ยิงซ้ำหายผ่าน c/ct/cw/hp เดิม, ไม่มี Rules/config ใหม่; เสบียงส่วนตัวและรางวัลคำเดิม 1,000 เหรียญ
-- ผ่าน unit เดิม 73 + BR/loader 10; browser source/dist อย่างละ 64 checks (poses 23/384 rigs, scope 16/72 shots, BR 25 รวมแมตช์ AI เต็ม/2 peers/late join/host gone/667×320); build 10,065 files/1,317.8 MiB + PWA validator; สนามตัวอย่าง ~302–305 draws/40.5k triangles, DPR 1.5 เดิม
-- เจ้าของไฟล์/ข้อจำกัด/วิธีทดสอบ: `docs/WORDSKIRMISH.md` + PROJECT_MAP; เตรียม FILE manifest 15 ไฟล์และ COMMIT_DEPLOY รอบนี้; ยังไม่ยืนยัน commit/deploy/live และต้องรับรองออนไลน์สองบัญชีบนอุปกรณ์จริงหลังเผยแพร่ · ภาพ WebP/สรุปอยู่ `Documents/Codex/2026-09-16/gd/outputs/`
-
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
