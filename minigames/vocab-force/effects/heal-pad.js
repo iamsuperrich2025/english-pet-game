@@ -7,6 +7,11 @@
   const TURQ = 0x00ffd5;
   const BLUE = 0x49cfff;
 
+  function bright(){
+    const v = VF.HealPadTune && VF.HealPadTune.BRIGHTNESS;
+    return v == null ? 0.48 : Math.max(0.15, Math.min(1, v));
+  }
+
   function canvasTex(draw, size){
     if(typeof document === 'undefined' || !document.createElement) return null;
     const c = document.createElement('canvas');
@@ -230,6 +235,8 @@
     const heartS = T.HEART_SIZE || 2.45;
     this.heartY = heartY;
     this.heartS = heartS;
+    const b = bright();
+    const glowScale = T.GLOW_SCALE != null ? T.GLOW_SCALE : 1.05;
     const add = THREE.AdditiveBlending != null ? THREE.AdditiveBlending : 2;
     const g = new THREE.Group();
     g.name = 'VFHealPad';
@@ -253,8 +260,8 @@
     this.floor = new THREE.Mesh(
       this._keep(new THREE.CircleGeometry(pr, 40)),
       mat(THREE, {
-        map: platTex || null, color: platTex ? 0xdeffff : TEAL,
-        transparent: true, opacity: 0.96, depthWrite: false, side: THREE.DoubleSide
+        map: platTex || null, color: platTex ? 0xb8e8ee : TEAL,
+        transparent: true, opacity: 0.9, depthWrite: false, side: THREE.DoubleSide
       })
     );
     this.floor.rotation.x = -Math.PI / 2;
@@ -263,10 +270,10 @@
     g.add(this.floor);
 
     this.glow = new THREE.Mesh(
-      this._keep(new THREE.CircleGeometry(pr * 1.22, 32)),
+      this._keep(new THREE.CircleGeometry(pr * glowScale, 32)),
       mat(THREE, {
-        map: glowTex || null, color: glowTex ? BLUE : TEAL,
-        transparent: true, opacity: 0.42, depthWrite: false, side: THREE.DoubleSide
+        map: glowTex || null, color: glowTex ? TEAL : BLUE,
+        transparent: true, opacity: 0.42 * b, depthWrite: false, side: THREE.DoubleSide
       })
     );
     this.glow.rotation.x = -Math.PI / 2;
@@ -280,7 +287,7 @@
       const ring = new THREE.Mesh(
         this._keep(new THREE.RingGeometry(pr * rs[0], pr * rs[1], 36)),
         mat(THREE, {
-          color: i === 1 ? CYAN : TEAL, transparent: true, opacity: 0.38,
+          color: i === 1 ? CYAN : TEAL, transparent: true, opacity: 0.38 * b,
           blending: add, depthWrite: false, side: THREE.DoubleSide
         })
       );
@@ -292,7 +299,7 @@
 
     const colMat = mat(THREE, {
       map: colTex || null, color: colTex ? TEAL : CYAN,
-      transparent: true, opacity: 0.12, blending: add, depthWrite: false, side: THREE.DoubleSide
+      transparent: true, opacity: 0.12 * b, blending: add, depthWrite: false, side: THREE.DoubleSide
     });
     const colGeo = this._keep(new THREE.PlaneGeometry(pr * 1.15, h));
     for(let i = 0; i < 2; i++){
@@ -306,7 +313,7 @@
     this.beam = new THREE.Mesh(
       this._keep(new THREE.CylinderGeometry(pr * 0.52, pr * 0.62, h, 14, 1, true)),
       mat(THREE, {
-        color: TEAL, transparent: true, opacity: 0.09, blending: add,
+        color: TEAL, transparent: true, opacity: 0.09 * b, blending: add,
         depthWrite: false, side: THREE.DoubleSide
       })
     );
@@ -316,7 +323,7 @@
     this.core = new THREE.Mesh(
       this._keep(new THREE.CylinderGeometry(0.16, 0.22, h * 0.82, 10, 1, true)),
       mat(THREE, {
-        color: CYAN, transparent: true, opacity: 0.12, blending: add,
+        color: CYAN, transparent: true, opacity: 0.12 * b, blending: add,
         depthWrite: false, side: THREE.DoubleSide
       })
     );
@@ -328,7 +335,7 @@
     const torusYs = [0.55, 1.55, heartY + heartS * 0.18];
     for(let i = 0; i < 3; i++){
       const halo = new THREE.Mesh(torusGeo, mat(THREE, {
-        color: i === 1 ? TURQ : CYAN, transparent: true, opacity: 0.62,
+        color: i === 1 ? TURQ : CYAN, transparent: true, opacity: 0.62 * b,
         blending: add, depthWrite: false
       }));
       halo.position.y = torusYs[i];
@@ -342,7 +349,7 @@
     this.heartGlow = new THREE.Mesh(
       this._keep(new THREE.PlaneGeometry(heartS * 1.28, heartS * 1.28)),
       mat(THREE, {
-        map: heartTex || null, color: TEAL, transparent: true, opacity: 0.22,
+        map: heartTex || null, color: TEAL, transparent: true, opacity: 0.22 * b,
         blending: add, depthWrite: false, side: THREE.DoubleSide
       })
     );
@@ -440,47 +447,48 @@
     this.inside = inside;
     this._heat += ((inside ? 1 : 0) - this._heat) * Math.min(1, (dt || 0) * 4);
     const heat = this._heat;
+    const b = bright();
     const pulse = 1 + Math.sin(this.t * 2.2) * (0.04 + heat * 0.05);
     const flick = 0.82 + Math.sin(this.t * 11.5) * 0.06 + Math.sin(this.t * 23) * 0.03;
     if(this.heart){
       this.heart.scale.set(pulse, pulse, 1);
-      if(this.heart.material) this.heart.material.opacity = (0.78 + heat * 0.12) * flick;
+      if(this.heart.material) this.heart.material.opacity = (0.72 + heat * 0.1) * flick;
       this._face(this.heart, camera);
     }
     if(this.heartGlow){
       const gp = pulse * (1.04 + heat * 0.08);
       this.heartGlow.scale.set(gp, gp, 1);
-      if(this.heartGlow.material) this.heartGlow.material.opacity = 0.16 + heat * 0.12;
+      if(this.heartGlow.material) this.heartGlow.material.opacity = (0.16 + heat * 0.12) * b;
       this._face(this.heartGlow, camera);
     }
     if(this.beam && this.beam.material){
-      this.beam.material.opacity = 0.07 + Math.sin(this.t * 2.6) * 0.02 + heat * 0.05;
+      this.beam.material.opacity = (0.07 + Math.sin(this.t * 2.6) * 0.02 + heat * 0.05) * b;
     }
     if(this.core && this.core.material){
-      this.core.material.opacity = 0.1 + Math.sin(this.t * 3.4) * 0.03 + heat * 0.06;
+      this.core.material.opacity = (0.1 + Math.sin(this.t * 3.4) * 0.03 + heat * 0.06) * b;
     }
     for(let i = 0; i < this.columnPlanes.length; i++){
       const p = this.columnPlanes[i];
-      if(p && p.material) p.material.opacity = 0.1 + Math.sin(this.t * 2.1) * 0.03 + heat * 0.05;
+      if(p && p.material) p.material.opacity = (0.1 + Math.sin(this.t * 2.1) * 0.03 + heat * 0.05) * b;
     }
     if(this.floor && this.floor.material){
-      this.floor.material.opacity = 0.9 + heat * 0.08;
+      this.floor.material.opacity = 0.86 + heat * 0.06;
     }
     if(this.glow && this.glow.material){
-      this.glow.material.opacity = 0.32 + heat * 0.16 + Math.sin(this.t * 1.8) * 0.04;
+      this.glow.material.opacity = (0.32 + heat * 0.16 + Math.sin(this.t * 1.8) * 0.04) * b;
     }
     for(let i = 0; i < this.halos.length; i++){
       const h = this.halos[i];
       if(!h) continue;
       if(i < 3){
         h.rotation.z += dt * (0.28 + i * 0.12);
-        if(h.material) h.material.opacity = 0.3 + heat * 0.18 + Math.sin(this.t * 2 + i) * 0.05;
+        if(h.material) h.material.opacity = (0.3 + heat * 0.18 + Math.sin(this.t * 2 + i) * 0.05) * b;
       }else{
         const spin = (h.userData && h.userData.spin) || 0.4;
         h.rotation.z += dt * spin;
         const baseY = (h.userData && h.userData.baseY) || h.position.y;
         h.position.y = baseY + Math.sin(this.t * 1.15 + i) * 0.06;
-        if(h.material) h.material.opacity = 0.5 + heat * 0.18 + Math.sin(this.t * 2.4 + i) * 0.08;
+        if(h.material) h.material.opacity = (0.5 + heat * 0.18 + Math.sin(this.t * 2.4 + i) * 0.08) * b;
       }
     }
     const liftSpan = 2.4 + heat * 0.35;
@@ -499,7 +507,7 @@
         p.scale.setScalar(0.85 + (1 - lift / liftSpan) * 0.35);
       }
       p.rotation.y = a;
-      if(p.material) p.material.opacity = (0.22 + (1 - lift / liftSpan) * 0.45 + heat * 0.18) * (inside || aroundHeart ? 1 : 0.85);
+      if(p.material) p.material.opacity = (0.22 + (1 - lift / liftSpan) * 0.45 + heat * 0.18) * (inside || aroundHeart ? 1 : 0.85) * Math.max(0.55, b);
     }
     const lx = player ? (player.x || 0) - this.x : 0;
     const lz = player ? (player.z || 0) - this.z : 0;
@@ -512,14 +520,14 @@
       const a = this.t * 1.7 + i * 1.57;
       s.position.set(lx + Math.cos(a) * 0.38, 0.55 + ((this.t * 1.1 + i * 0.4) % 1.6), lz + Math.sin(a) * 0.38);
       s.rotation.y = a;
-      if(s.material) s.material.opacity = 0.18 * heat;
+      if(s.material) s.material.opacity = 0.18 * heat * b;
     }
     if(this.aura){
       const show = heat > 0.08;
       this.aura.visible = show;
       this.aura.position.set(lx, 0.08, lz);
       this.aura.rotation.z += dt * 1.2;
-      if(this.aura.material) this.aura.material.opacity = 0.28 * heat;
+      if(this.aura.material) this.aura.material.opacity = 0.28 * heat * b;
       const as = 1 + Math.sin(this.t * 3.2) * 0.08;
       this.aura.scale.set(as, as, 1);
     }

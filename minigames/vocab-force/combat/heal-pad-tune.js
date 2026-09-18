@@ -13,7 +13,11 @@
     HUM_MS: 420,
     PLATFORM_R: 1.55,
     HEART_Y: 3.35,
-    HEART_SIZE: 2.45
+    HEART_SIZE: 2.45,
+    /* Dim pass. Restore previous look with BRIGHTNESS=PREV.BRIGHTNESS and GLOW_SCALE=PREV.GLOW_SCALE */
+    BRIGHTNESS: 0.48,
+    GLOW_SCALE: 1.05,
+    PREV: { BRIGHTNESS: 1, GLOW_SCALE: 1.22 }
   };
 
   VF._t = VF._t || {};

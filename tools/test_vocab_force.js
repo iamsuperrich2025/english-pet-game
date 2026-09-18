@@ -362,6 +362,7 @@ const HP=VF.HealPadTune;
 assert(HP.RADIUS>=5&&HP.HEAL_PER_SEC===24&&HP.Z===22,'heal pad sits in the plaza and refills over a few seconds');
 assert(HP.PLATFORM_R>1&&HP.PLATFORM_R<2&&HP.PLATFORM_R<HP.RADIUS,'visual platform is compact; heal zone stays the same');
 assert(HP.HEART_Y>=3&&HP.HEART_SIZE>=2,'holographic heart sits above the player and is readable from far');
+assert(HP.BRIGHTNESS<1&&HP.PREV&&HP.PREV.BRIGHTNESS===1&&HP.PREV.GLOW_SCALE===1.22,'heal glow can revert to the previous brighter look');
 assert(VF._t.healPadContains(HP.X,HP.Z)&&!VF._t.healPadContains(HP.X+40,HP.Z),'standing on the pad is inside, far away is not');
 assert(Math.abs(VF._t.healPadAmount(1)-24)<0.001,'heal amount scales with time');
 const medic=new VF.NexCharacterController();
