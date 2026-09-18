@@ -115,9 +115,10 @@ async function openSettingsUI(page){
     ok('ordinary account can switch back to pastel',await page.evaluate(()=>HomeTheme.get()==='pastel'&&!document.documentElement.classList.contains('theme-noir')));
     await page.locator('#set-theme [data-theme="noir"]').click();
     await page.locator('.set-close').click();
+    await page.waitForTimeout(3400); // Home V2 private sync runs every 3s; catch brief-then-reset regressions.
     const publicTheme=await page.evaluate(()=>{const r=document.getElementById('vw-home-v2-root');return {htmlNoir:document.documentElement.classList.contains('theme-noir'),modeBg:getComputedStyle(r.querySelector('.vw2-mode')).backgroundColor,scene:getComputedStyle(r.querySelector('.vw2-world-scene')).display,stored:HomeTheme.get()}});
     console.log('PUBLIC_THEME '+JSON.stringify(publicTheme));
-    ok('ordinary account receives the full dark Home treatment',publicTheme.htmlNoir&&publicTheme.modeBg.includes('40, 43, 49')&&publicTheme.scene==='none'&&publicTheme.stored==='noir');
+    ok('ordinary dark choice survives the Home V2 refresh and keeps the full treatment',publicTheme.htmlNoir&&publicTheme.modeBg.includes('40, 43, 49')&&publicTheme.scene==='none'&&publicTheme.stored==='noir');
     await capture(page,'public-theme-812x375');
     await page.evaluate(()=>{Auth.user={uid:'theme-test',email:'freddommun@gmail.com'};HomeTheme.set('noir');Auth.user=null;HomeTheme.paint();});
     ok('device theme preference remains after logout',await page.evaluate(()=>HomeTheme.get()==='noir'&&document.documentElement.classList.contains('theme-noir')));

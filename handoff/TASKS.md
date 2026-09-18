@@ -11,6 +11,11 @@
 > ประวัติ Frontline 1372–1373: `handoff/archive/frontline-1372-1373.md`
 
 ### 📌 สรุปสถานะล่าสุด
+- รอบ 1540 · แก้ธีม Dark ผู้เล่นทั่วไปเด้งกลับ: Home V2 sync ทุก 3 วินาทีถอดคลาส theme-noir
+- เพิ่ม observer คืนค่าธีมที่ผู้เล่นบันทึกเฉพาะเมื่อ class ของ root ไม่ตรง ลด loop และไม่แตะ Home V2 ที่มีงานคู่ขนาน
+- QA: source + dist 33/33 หลังรอ 3.4 วินาที · dark labels 10/10 · Home V2 mobile PASS
+- ไฟล์: js/util.js, tools/test_home_theme_modern.cjs
+
 - รอบ 1529 · เปิดธีม Dark ให้ทุกบัญชี: ผู้เล่นทั่วไปเห็นตัวเลือกพาสเทล/ดำเทาเหลืองใน Settings และสลับได้เหมือนแอดมิน
 - ค่าธีมจำในอุปกรณ์เดิมและคงอยู่หลัง logout; ใช้ public facade ใน js/util.js เพื่อไม่ชน js/home-v2.js ที่มีงานคู่ขนานค้าง
 - QA source+dist: theme 33/33 ทั้งคู่, dark labels 10/10, Home V2 mobile PASS, syntax/diff ผ่านที่ 1367×617, 1366×768, 812×375

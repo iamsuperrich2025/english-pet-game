@@ -1122,6 +1122,19 @@ function enablePublicHomeTheme(){
     return paint(next);
   };
   theme.paint = paint;
+  /* Home V2 still has a private legacy painter that runs every 3 seconds. It
+     cannot be replaced from here, so restore the player's saved public choice
+     in the same microtask whenever that painter changes one of the theme roots. */
+  if(typeof MutationObserver === 'function'){
+    const observer = new MutationObserver(()=>{
+      const wantNoir = read() === 'noir';
+      const roots = [document.documentElement, document.body, document.getElementById('vw-home-v2-root')].filter(Boolean);
+      if(roots.some(el=>el.classList.contains('theme-noir') !== wantNoir)) paint(wantNoir ? 'noir' : fallback);
+    });
+    [document.documentElement, document.body, document.getElementById('vw-home-v2-root')]
+      .filter(Boolean).forEach(el=>observer.observe(el,{attributes:true,attributeFilter:['class']}));
+    theme.publicAccessObserver = observer;
+  }
   theme.publicAccess = true;
   paint(read());
   return true;
