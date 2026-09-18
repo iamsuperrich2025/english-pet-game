@@ -1092,8 +1092,46 @@ const BLK_VOCAB = {
   blk87:{en:'Rock Star',pron:'รอค สตาร์',th:'ร็อกสตาร์'}, blk88:{en:'Ballerina',pron:"แบลเลอะรี'น่า",th:'นักบัลเล่ต์'},
 };
 
+/* 🎨 Public dark Home theme: keep the existing local device preference, but expose
+   every registered Home theme to ordinary players as well as administrators. */
+function enablePublicHomeTheme(){
+  const theme = window.HomeTheme;
+  if(!theme) return false;
+  if(theme.publicAccess === true) return true;
+  const catalog = theme.catalog || {};
+  const fallback = theme.DEFAULT || 'pastel';
+  const key = theme.KEY || 'vwHomeTheme';
+  const read = ()=>{
+    let id = fallback;
+    try{ id = localStorage.getItem(key) || fallback; }catch(_){ }
+    return catalog[id] ? id : fallback;
+  };
+  const paint = id=>{
+    const next = catalog[id] ? id : read();
+    const useNoir = next === 'noir';
+    [document.documentElement, document.body, document.getElementById('vw-home-v2-root')]
+      .filter(Boolean).forEach(el=>el.classList.toggle('theme-noir', useNoir));
+    if(useNoir) document.documentElement.classList.remove('theme-emerald','theme-plum');
+    return next;
+  };
+  theme.list = ()=>Object.keys(catalog).map(id=>catalog[id]);
+  theme.get = read;
+  theme.set = id=>{
+    const next = catalog[id] ? id : fallback;
+    try{ localStorage.setItem(key, next); }catch(_){ }
+    return paint(next);
+  };
+  theme.paint = paint;
+  theme.publicAccess = true;
+  paint(read());
+  return true;
+}
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', enablePublicHomeTheme, {once:true});
+else setTimeout(enablePublicHomeTheme, 0);
+window.addEventListener('load', enablePublicHomeTheme, {once:true});
 /* ---------- หน้าตั้งค่า (รวมสวิตช์ เสียง/สั่น/แอนิเมชัน + วิธีเล่น ไว้ที่เดียว) ---------- */
 function openSettings(initialTab){
+  enablePublicHomeTheme();
   const startTab = ['general','avatar','feed','offline','account'].includes(initialTab) ? initialTab : 'general';
   const hapticSupported = ('vibrate' in navigator);   // แถวสั่นโผล่เฉพาะเครื่องที่รองรับ
   const attn = (typeof attentionSummaryData === 'function') ? attentionSummaryData() : {rows:[]};
@@ -1148,9 +1186,9 @@ function openSettings(initialTab){
             <span class="set-desc">อัปโหลดรูปของหนูเอง (ให้ผู้ปกครองช่วยเลือก) · ไม่ใส่ก็ได้ ใช้ตัวการ์ตูนแทน</span></span>
           <button class="ph-open" type="button" aria-label="เปลี่ยนรูปโปรไฟล์"></button>
         </div>
-        ${(typeof HomeTheme!=='undefined' && HomeTheme && typeof isAdmin==='function' && isAdmin()===true) ? `<div class="set-row set-theme-row" id="set-theme">
+        ${(typeof HomeTheme!=='undefined' && HomeTheme) ? `<div class="set-row set-theme-row" id="set-theme">
           <span class="set-lwrap"><span class="set-label">🎨 ธีมหน้าหลัก</span>
-            <span class="set-desc">เฉพาะแอดมิน · ธีมดำ เทา เหลือง พร้อมปุ่มแบบเรียบ</span></span>
+            <span class="set-desc">ผู้เล่นทุกคนเลือกใช้ธีมพาสเทลหรือธีมดำ เทา เหลืองได้</span></span>
           <div class="set-seg set-theme-seg" role="radiogroup" aria-label="เลือกธีมหน้าหลัก">${HomeTheme.list().map(t=>`<button class="set-seg-btn set-theme-sw" type="button" role="radio" data-theme="${t.id}" aria-checked="false" title="${t.label}"><i class="set-theme-chip" style="background:${t.swatch}"></i><span>${t.label}</span></button>`).join('')}</div>
         </div>` : ''}
       </div>

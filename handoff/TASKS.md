@@ -11,6 +11,11 @@
 > ประวัติ Frontline 1372–1373: `handoff/archive/frontline-1372-1373.md`
 
 ### 📌 สรุปสถานะล่าสุด
+- รอบ 1529 · เปิดธีม Dark ให้ทุกบัญชี: ผู้เล่นทั่วไปเห็นตัวเลือกพาสเทล/ดำเทาเหลืองใน Settings และสลับได้เหมือนแอดมิน
+- ค่าธีมจำในอุปกรณ์เดิมและคงอยู่หลัง logout; ใช้ public facade ใน js/util.js เพื่อไม่ชน js/home-v2.js ที่มีงานคู่ขนานค้าง
+- QA source+dist: theme 33/33 ทั้งคู่, dark labels 10/10, Home V2 mobile PASS, syntax/diff ผ่านที่ 1367×617, 1366×768, 812×375
+- ไฟล์รอบนี้: js/util.js, tools/test_home_theme_modern.cjs; ภาพ WebP ใน Documents/Codex/2026-09-16/new-chat-3/outputs/public-dark-theme-dist/
+
 - รอบ 1528 · ขยายตัวอักษรธีม Dark: เพิ่มขั้นต่ำป้าย/ปุ่ม/ข้อความรองให้อ่านง่ายขึ้น และคงสี graphite/ทองหม่นเดิม
 - ซ่อน scrollbar ของกล่องที่เลื่อนได้ในธีม Dark โดยยังเลื่อนด้วย touch/เมาส์/คีย์บอร์ดได้
 - QA source: dark label test 10/10 และ Home/admin regression ผ่านที่ 1367×617, 1366×768, 812×375
@@ -232,6 +237,11 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด
+- รอบ 1529 · เปิดธีม Dark ให้ทุกบัญชี: ผู้เล่นทั่วไปเห็นตัวเลือกพาสเทล/ดำเทาเหลืองใน Settings และสลับได้เหมือนแอดมิน
+- ค่าธีมจำในอุปกรณ์เดิมและคงอยู่หลัง logout; ใช้ public facade ใน js/util.js เพื่อไม่ชน js/home-v2.js ที่มีงานคู่ขนานค้าง
+- QA source+dist: theme 33/33 ทั้งคู่, dark labels 10/10, Home V2 mobile PASS, syntax/diff ผ่านที่ 1367×617, 1366×768, 812×375
+- ไฟล์รอบนี้: js/util.js, tools/test_home_theme_modern.cjs; ภาพ WebP ใน Documents/Codex/2026-09-16/new-chat-3/outputs/public-dark-theme-dist/
+
 - รอบ 1528 · ขยายตัวอักษรธีม Dark: เพิ่มขั้นต่ำป้าย/ปุ่ม/ข้อความรองให้อ่านง่ายขึ้น และคงสี graphite/ทองหม่นเดิม
 - ซ่อน scrollbar ของกล่องที่เลื่อนได้ในธีม Dark โดยยังเลื่อนด้วย touch/เมาส์/คีย์บอร์ดได้
 - QA source: dark label test 10/10 และ Home/admin regression ผ่านที่ 1367×617, 1366×768, 812×375

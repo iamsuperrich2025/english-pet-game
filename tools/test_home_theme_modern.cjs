@@ -1,5 +1,5 @@
 "use strict";
-// Offline browser regression for the admin-only graphite/yellow Home skin.
+// Offline browser regression for the public graphite/yellow Home skin.
 const fs=require('fs'),path=require('path'),http=require('http'),assert=require('assert');
 const repo=path.resolve(process.env.VW_THEME_ROOT||path.join(__dirname,'..'));
 const deps=path.join(require('os').homedir(),'.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules');
@@ -86,7 +86,7 @@ async function openSettingsUI(page){
     for(const [w,h] of [[1367,617],[1366,768],[812,375]])await inspect(page,w,h);
     await openSettingsUI(page);
     await page.locator('.settings-box').waitFor({state:'visible'});
-    ok('admin sees the theme picker',await page.locator('#set-theme [data-theme="noir"]').isVisible());
+    ok('admin sees the public theme picker',await page.locator('#set-theme [data-theme="noir"]').isVisible());
     await page.locator('#set-theme [data-theme="pastel"]').click();
     ok('admin can switch back to pastel',await page.evaluate(()=>!document.documentElement.classList.contains('theme-noir')));
     await page.locator('#set-theme [data-theme="noir"]').click();
@@ -106,16 +106,21 @@ async function openSettingsUI(page){
     await capture(page,'admin-settings-812x375');
     ok('compact settings fit the viewport',await page.locator('.settings-box').evaluate(e=>{const r=e.getBoundingClientRect();return r.top>=-1&&r.bottom<=innerHeight+1&&e.scrollHeight<=e.clientHeight+1}));
     await page.locator('.set-close').click();
-    await page.evaluate(()=>{Auth.user={uid:'ordinary-player',email:'ordinary@test.local'};state.adminAccess=true;HomeTheme.paint();});
-    ok('stored admin skin cannot leak to an ordinary account',await page.evaluate(()=>HomeTheme.get()==='pastel'&&HomeTheme.list().length===1&&![document.documentElement,document.body,document.getElementById('vw-home-v2-root')].some(e=>e.classList.contains('theme-noir'))));
-    ok('direct paint/set cannot bypass the real admin check',await page.evaluate(()=>HomeTheme.paint('noir')==='pastel'&&HomeTheme.set('noir')==='pastel'));
+    await page.evaluate(()=>{Auth.user={uid:'ordinary-player',email:'ordinary@test.local'};state.adminAccess=false;HomeTheme.paint();});
+    ok('stored dark theme remains available to an ordinary account',await page.evaluate(()=>HomeTheme.get()==='noir'&&HomeTheme.list().length===2&&[document.documentElement,document.body,document.getElementById('vw-home-v2-root')].every(e=>e.classList.contains('theme-noir'))));
+    ok('ordinary account can use both direct paint and set',await page.evaluate(()=>HomeTheme.paint('pastel')==='pastel'&&HomeTheme.set('noir')==='noir'));
     await openSettingsUI(page);
-    ok('ordinary account has no theme picker',await page.locator('#set-theme').count()===0);
+    ok('ordinary account sees and can use the theme picker',await page.locator('#set-theme [data-theme="noir"]').isVisible());
+    await page.locator('#set-theme [data-theme="pastel"]').click();
+    ok('ordinary account can switch back to pastel',await page.evaluate(()=>HomeTheme.get()==='pastel'&&!document.documentElement.classList.contains('theme-noir')));
+    await page.locator('#set-theme [data-theme="noir"]').click();
     await page.locator('.set-close').click();
-    ok('public buttons and scenic art restore automatically',await page.evaluate(()=>{const r=document.getElementById('vw-home-v2-root');return getComputedStyle(r.querySelector('.vw2-mode')).backgroundImage.includes('gradient')&&getComputedStyle(r.querySelector('.vw2-world-scene')).display!=='none'}));
+    const publicTheme=await page.evaluate(()=>{const r=document.getElementById('vw-home-v2-root');return {htmlNoir:document.documentElement.classList.contains('theme-noir'),modeBg:getComputedStyle(r.querySelector('.vw2-mode')).backgroundColor,scene:getComputedStyle(r.querySelector('.vw2-world-scene')).display,stored:HomeTheme.get()}});
+    console.log('PUBLIC_THEME '+JSON.stringify(publicTheme));
+    ok('ordinary account receives the full dark Home treatment',publicTheme.htmlNoir&&publicTheme.modeBg.includes('40, 43, 49')&&publicTheme.scene==='none'&&publicTheme.stored==='noir');
     await capture(page,'public-theme-812x375');
     await page.evaluate(()=>{Auth.user={uid:'theme-test',email:'freddommun@gmail.com'};HomeTheme.set('noir');Auth.user=null;HomeTheme.paint();});
-    ok('logout clears admin skin',await page.evaluate(()=>!document.documentElement.classList.contains('theme-noir')));
+    ok('device theme preference remains after logout',await page.evaluate(()=>HomeTheme.get()==='noir'&&document.documentElement.classList.contains('theme-noir')));
     ok('no browser runtime errors',errors.length===0);
     await page.evaluate(()=>{localStorage.removeItem('petVocabAdventure_v1');localStorage.removeItem('vwHomeTheme')});
     fs.writeFileSync(path.join(out,'theme-checks.json'),JSON.stringify({passed:checks.length,checks,errors},null,2));
