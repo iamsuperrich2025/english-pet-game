@@ -159,7 +159,7 @@ assert(!build.includes('ly_Run.glb')&&!build.includes('characters/Lyravyn/animat
 const animDir=path.join(root,'minigames/vocab-force/characters/next/animations');
 const glbs=fs.readdirSync(animDir).filter(f=>/\.glb$/i.test(f)).sort();
 assert(glbs.length>=21,'21+ NEX GLBs on disk');
-['nex_walk.glb','nex_Walk_Backward.glb','nex_Standard_Forward_Char.glb','nex_Right_Jab_from_Guard.glb','nex_Step_in_High_Kick.glb','nex_Block1.glb','nex_Vault_and_Land.glb','nex_Hop_with_Arms_Raised.glb'].forEach(f=>{
+['nex_walk.glb','nex_Walk_Backward.glb','nex_Standard_Forward_Char.glb','nex_Right_Jab_from_Guard.glb','nex_Step_in_High_Kick.glb','nex_Block1.glb','nex_Vault_and_Land.glb','nex_Jump_with_Arms_Open.glb','nex_Hop_with_Arms_Raised.glb'].forEach(f=>{
   assert(glbs.includes(f),'required V1 file '+f);
 });
 const zomDir=path.join(root,'minigames/vocab-force/characters/zom/animations');
@@ -220,7 +220,7 @@ assert(spec('run').clip==='Standard_Forward_Charge_inplace','run uses charge cli
 assert(spec('dash').file==='nex_Standard_Forward_Char.glb'&&spec('dash').clip==='Standard_Forward_Charge_inplace','dash fallback is charge clip, not a new GLB');
 assert(!glbs.some(function(f){ return /dash/i.test(f); }),'no dedicated dash GLB on disk');
 assert(spec('idle').clip==='Walking.001','idle mapping');
-assert(spec('jump').file==='nex_Hop_with_Arms_Raised.glb','jump uses hop clip');
+assert(spec('jump').file==='nex_Jump_with_Arms_Open.glb'&&spec('jump').clip==='Jump_with_Arms_Open','NEX jump uses arms-open clip');
 const lspec=VF.LyraManifest.spec;
 assert(lspec('run').file==='ly_Run.glb'&&lspec('run').clip==='Running','Lyravyn run mapping');
 assert(lspec('idle').clip==='Running.001','Lyravyn idle uses leftover run pose');
