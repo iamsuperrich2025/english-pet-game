@@ -1046,11 +1046,11 @@ showCollectReveal:9898 · buyAC:9936 · openHomeShop:9974 · openPetPurchase:100
 renderStats:10147 · showTeacherCard:10254 · CALL_REACT_EMOS:10298 · CALL_TALK_MIN:10301 · CALL_TALK_HOLD:10302 · CALL_ORDER_GAP:10304
 CALL_TONES:10310 · startCall:10684
 
-## js/util.js (1,631 บรรทัด · 60 รายการ)
+## js/util.js (1,644 บรรทัด · 60 รายการ)
 ### 🗂️ สารบัญโซน js/util.js (Read/Edit เฉพาะช่วง)
 - 2-23 UTIL: เสียง / เอฟเฟกต์ / เครื่องมือทั่วไป
-- 24-1600 🎖️ รอบ 643: สัญลักษณ์ระดับชั้น (ผู้ใช้สั่ง 28 ก.ค. 2026)
-- 1601-1631 🖱️🚫 รอบ 833: กันกล่องดำ "To show your cursor, switch apps, reload the page…"
+- 24-1613 🎖️ รอบ 643: สัญลักษณ์ระดับชั้น (ผู้ใช้สั่ง 28 ก.ค. 2026)
+- 1614-1644 🖱️🚫 รอบ 833: กันกล่องดำ "To show your cursor, switch apps, reload the page…"
 ### รายการ js/util.js
 shuffle:6 · fmtNum:15 · escapeHTML:19 · gradeSymbol:32 · gradeMark:47 · nameWithGrade:55
 gradeMarkCanvas:61 · gradeOf:77 · seededRand:92 · fmtThaiDT:104 · fmtThaiDate:108 · gameIsPortrait:117
@@ -1060,8 +1060,8 @@ clearWarnToasts:279 · toast:283 · toastLink:338 · floatFx:356 · beep:367 · 
 PET_MOOD:504 · petVoiceSynth:511 · sirenSynth:588 · playCashier:612 · cashierSynth:626 · keyTapSynth:659
 bubblePopSynth:697 · bubbleTapSynth:716 · playSpark:727 · sparkSynth:741 · thunderFx:776 · wordAudioFile:844
 speakCutOff:853 · speakWord:857 · speakLetter:896 · pickSpeakVoice:919 · speakWordTTS:930 · askNameDialog:957
-askConfirm:1003 · alertBox:1021 · applyNoAnim:1041 · BLK_VOCAB:1048 · enablePublicHomeTheme:1097 · openSettings:1133
-openHelp:1449 · openTeacherGuide:1566 · TAPGLOW_SEL:1590 · TOUCH_INPUT_SEEN:1609 · mouseLockOK:1618 · lockMouse3D:1624
+askConfirm:1003 · alertBox:1021 · applyNoAnim:1041 · BLK_VOCAB:1048 · enablePublicHomeTheme:1097 · openSettings:1146
+openHelp:1462 · openTeacherGuide:1579 · TAPGLOW_SEL:1603 · TOUCH_INPUT_SEEN:1622 · mouseLockOK:1631 · lockMouse3D:1637
 
 ## js/vocabbook.js (207 บรรทัด · 14 รายการ)
 VB_MAX:11 · VB_QUIZ_N:12 · VB_QUIZ_MIN:13 · vbGroup:16 · VB_GROUP_UI:21 · vbRecord:24

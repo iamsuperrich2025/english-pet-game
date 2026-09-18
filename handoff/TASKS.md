@@ -11,26 +11,20 @@
 > ประวัติ Frontline 1372–1373: `handoff/archive/frontline-1372-1373.md`
 
 ### 📌 สรุปสถานะล่าสุด
-- รอบ 1540 · แก้ธีม Dark ผู้เล่นทั่วไปเด้งกลับ: Home V2 sync ทุก 3 วินาทีถอดคลาส theme-noir
-- เพิ่ม observer คืนค่าธีมที่ผู้เล่นบันทึกเฉพาะเมื่อ class ของ root ไม่ตรง ลด loop และไม่แตะ Home V2 ที่มีงานคู่ขนาน
-- QA: source + dist 33/33 หลังรอ 3.4 วินาที · dark labels 10/10 · Home V2 mobile PASS
-- ไฟล์: js/util.js, tools/test_home_theme_modern.cjs
+- รอบ 1554 · Vocab Force: แท่นเติมเลือดเป็นสถานีโฮโลแกรมฟ้า (แท่นโลหะ ~3.1 ม. + เสาพลัง + หัวใจลอย) แทนวงขาวใหญ่บนพื้น
+- cache `?v=holo` · HP ยังเติม 24/วิ ในรัศมี 5.4 ม. ที่ z=22
+- QA: `node tools/test_vocab_force.js` 516 ผ่าน · ยืนในแท่นตัวละครยังเห็น · มองไกลเห็นเสา+หัวใจ · ไม่ deploy
+- ไฟล์: heal-pad.js, heal-pad-tune.js, vocab-force-runtime.js, index.html, test_vocab_force.js, docs/PROJECT_MAP.md
 
-- รอบ 1529 · เปิดธีม Dark ให้ทุกบัญชี: ผู้เล่นทั่วไปเห็นตัวเลือกพาสเทล/ดำเทาเหลืองใน Settings และสลับได้เหมือนแอดมิน
-- ค่าธีมจำในอุปกรณ์เดิมและคงอยู่หลัง logout; ใช้ public facade ใน js/util.js เพื่อไม่ชน js/home-v2.js ที่มีงานคู่ขนานค้าง
-- QA source+dist: theme 33/33 ทั้งคู่, dark labels 10/10, Home V2 mobile PASS, syntax/diff ผ่านที่ 1367×617, 1366×768, 812×375
-- ไฟล์รอบนี้: js/util.js, tools/test_home_theme_modern.cjs; ภาพ WebP ใน Documents/Codex/2026-09-16/new-chat-3/outputs/public-dark-theme-dist/
+- รอบ 1553 · Vocab Force: โดนตีแล้ว HP ลด จะมีขอบแดงกะพริบรอบจอ
+- cache `?v=hurt`
+- QA: `node tools/test_vocab_force.js` 513 ผ่าน · ไม่ deploy
+- ไฟล์: vocab-force-hud.js, vocab-force.css, vocab-force-runtime.js, index.html, test_vocab_force.js, docs/PROJECT_MAP.md
 
-- รอบ 1528 · ขยายตัวอักษรธีม Dark: เพิ่มขั้นต่ำป้าย/ปุ่ม/ข้อความรองให้อ่านง่ายขึ้น และคงสี graphite/ทองหม่นเดิม
-- ซ่อน scrollbar ของกล่องที่เลื่อนได้ในธีม Dark โดยยังเลื่อนด้วย touch/เมาส์/คีย์บอร์ดได้
-- QA source: dark label test 10/10 และ Home/admin regression ผ่านที่ 1367×617, 1366×768, 812×375
-- ไฟล์รอบนี้: css/home-dark-surfaces.css, tools/test_home_dark_labels.cjs; ภาพตัวอย่างอยู่ใน outputs/
-
-
-- **รอบ 1527 · ป้ายธีม Dark อ่านง่าย:** แก้ข้อความม่วงตกค้างบนปุ่มกราฟอันดับ/อันดับ, ปุ่มราง Classic และหน้ากราฟอันดับ ให้ขาว/เทาอ่อนบน graphite; active tab ใช้ทองหม่นพร้อมข้อความเข้ม
-- เพิ่ม override ท้าย css/home-dark-surfaces.css ครอบ Home V2 wallet labels, rail labels, rank dialog, tabs, chart labels และ badges โดยไม่เปลี่ยน pastel/public theme
-- QA source+dist: label contrast 7/7 และ Home/admin regression 32/32 ที่ 1367×617, 1366×768, 812×375; build 2026-09-16.1316 ผ่าน
-- ไฟล์รอบนี้: css/home-dark-surfaces.css, tools/test_home_dark_labels.cjs; ภาพ WebP ใน Documents/Codex/2026-09-16/new-chat-3/outputs/
+- รอบ 1552 · Vocab Force: แท่นเติมเลือดนีออน (หัวใจโฮโลแกรม + วงแหวนฟ้า) ที่ z=22 · ยืนในรัศมี 5.4 ม. HP เติม 24/วิ
+- cache `?v=heal`
+- QA: `node tools/test_vocab_force.js` 512 ผ่าน · ไม่ deploy
+- ไฟล์: heal-pad-tune.js, heal-pad.js, nex-character-controller.js, vocab-force-runtime.js, vocab-force-audio.js, vocab-force.css, namespace/index/build, test_vocab_force.js, docs/PROJECT_MAP.md
 
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic

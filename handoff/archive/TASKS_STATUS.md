@@ -6540,3 +6540,131 @@ efreshMechaLock
 - ผ่าน unit เดิม 73 + BR/loader 10; browser source/dist อย่างละ 64 checks (poses 23/384 rigs, scope 16/72 shots, BR 25 รวมแมตช์ AI เต็ม/2 peers/late join/host gone/667×320); build 10,065 files/1,317.8 MiB + PWA validator; สนามตัวอย่าง ~302–305 draws/40.5k triangles, DPR 1.5 เดิม
 - เจ้าของไฟล์/ข้อจำกัด/วิธีทดสอบ: `docs/WORDSKIRMISH.md` + PROJECT_MAP; เตรียม FILE manifest 15 ไฟล์และ COMMIT_DEPLOY รอบนี้; ยังไม่ยืนยัน commit/deploy/live และต้องรับรองออนไลน์สองบัญชีบนอุปกรณ์จริงหลังเผยแพร่ · ภาพ WebP/สรุปอยู่ `Documents/Codex/2026-09-16/gd/outputs/`
 
+
+
+## ⏬ ย้ายเมื่อ 2026-09-18 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- รอบ 1551 · Vocab Force: BGM วนเล่นต่อเนื่อง จบแล้วเริ่มใหม่เอง · หยุดเฉพาะสวิตช์ปิดเสียงหรือออกเกม
+- cache `?v=loop`
+- QA: `node tools/test_vocab_force.js` 500 ผ่าน · ไม่ deploy
+- ไฟล์: vocab-force-audio.js, index.html, test_vocab_force.js, docs/PROJECT_MAP.md
+
+- รอบ 1550 · Vocab Force: JUMP+ทิศทาง = Power Jump สูง ~12 ม. ไกล ~64 ม. · JUMP อย่างเดียวยังฮ็อปสั้น
+- cache `?v=soar`
+- QA: `node tools/test_vocab_force.js` 499 ผ่าน · ไม่ deploy
+- ไฟล์: power-jump-tune.js, dash-tune.js, nex-character-controller.js, third-person-camera.js, index.html, test_vocab_force.js, docs/PROJECT_MAP.md
+
+- รอบ 1549 · Vocab Force: ค้าง ATTACK ชาร์จอย่างเดียว ไม่ยิงจนกว่านิ้วจะยก · ชาร์จเต็มยังค้างลูกไฟไว้
+- cache `?v=hold`
+- QA: `node tools/test_vocab_force.js` 498 ผ่าน · ไม่ deploy
+- ไฟล์: energy-attack-controller.js, index.html, test_vocab_force.js, docs/PROJECT_MAP.md
+
+- รอบ 1548 · Vocab Force: ปลายทางลูกพลังระเบิดเป็นลูกไฟ Arena + วงแหวนช็อกขยายตามชาร์จ 2.4→7.2 ม. (ลูกสุดท้าย ×1.15)
+- หมดระยะก็ระเบิด · cache `?v=blast`
+- QA: `node tools/test_vocab_force.js` 495 ผ่าน · ไม่ deploy
+- ไฟล์: energy-attack-tune.js, energy-projectile-manager.js, impact-fx-manager.js, index.html, test_vocab_force.js, docs/PROJECT_MAP.md
+
+- รอบ 1547 · Vocab Force: ไฟดับเบิลแดชเลิกกรวยส้มทึบ ใช้แบบวงเพลิง Arena — วงถ่านบนพื้น + เปลวแดง/เหลือง/ขาวร้อน + ควัน
+- เว้นระยะ 0.42 ม. ลดพรมส้ม · cache `?v=ring`
+- QA: `node tools/test_vocab_force.js` 490 ผ่าน · ไม่ deploy
+- ไฟล์: overdrive-fire-trail.js, overdrive-dash-tune.js, index.html, test_vocab_force.js, docs/PROJECT_MAP.md
+
+- รอบ 1546 · Vocab Force: กระโดด+ปุ่มทิศทางพุ่งความเร็วแดช 4.6 ม. ใน 0.16 วินาที แล้วค่อยลอยต่อแบบฮ็อป · ไม่ใช่ Power Jump 12–22 ม.
+- JUMP อย่างเดียวยังเป็นฮ็อปสั้น · cache `?v=leap`
+- QA: `node tools/test_vocab_force.js` 490 ผ่าน · ไม่ deploy
+- ไฟล์: nex-character-controller.js, dash-tune.js, index.html, test_vocab_force.js, docs/PROJECT_MAP.md
+
+- รอบ 1545 · Vocab Force: Lyravyn กระโดดใช้ `ly_Jump_with_Arms_Open.glb` (คลิป `Jump_with_Arms_Open`) แทนท่าหมุน 360 ที่ไม่เนียน
+- ไฟล์เดิม `ly_Power_Spin_Jump.glb` ยังอยู่บนดิสก์แต่ไม่โหลด · cache `?v=jump`
+- QA: `node tools/test_vocab_force.js` 487 ผ่าน · ไม่ deploy
+- ไฟล์: lyravyn-animation-manifest.js, index.html, test_vocab_force.js, docs/PROJECT_MAP.md
+
+- รอบ 1544 · Vocab Force: พลังยิงออกที่ความสูงอก (1.22 ม. บินตรง ไม่ดำตามกล้อง) · ค้าง ATTACK+สติกโชว์เป้า `+` ขยับได้
+- QA: `node tools/test_vocab_force.js` 486 ผ่าน · cache `?v=aim` · ไม่ deploy
+- ไฟล์: energy-attack-tune.js, energy-attack-controller.js, energy-projectile-manager.js, vocab-force-runtime.js, index.html, test_vocab_force.js, docs/PROJECT_MAP.md
+
+- รอบ 1543 · Vocab Force: เส้นไฟ Overdrive เป็นกรวยส้มลุกบนพื้น สูงชัด ไม่ใช่เส้นขาว
+- บังคับโหลดใหม่ด้วย `?v=blaze` เพราะมือถือค้างไฟล์เก่า (แถบ HP ยังโชว์ล่างในภาพ)
+- QA: `node tools/test_vocab_force.js` 477 ผ่าน · ไม่ deploy
+- ไฟล์: overdrive-fire-trail.js, overdrive-dash-tune.js, index.html, test_vocab_force.js, docs/PROJECT_MAP.md
+
+- รอบ 1542 · Vocab Force: ย้ายแถบ HP ไปมุมบนขวา ใต้ปุ่มเสียง/ออก ไม่บังตัวละครกลางจอ
+- QA: `node tools/test_vocab_force.js` 477 ผ่าน · ไม่ deploy
+- ไฟล์: vocab-force.css, test_vocab_force.js, docs/PROJECT_MAP.md
+
+- รอบ 1541 · Vocab Force: ดับเบิล DASH ใช้เปลวไฟบนพื้นแทนเส้นขาว · ไม่แตะความเร็ว/ระยะ Overdrive
+- ตัด motion line `drive` ตอน Overdrive · เส้นไฟเป็นสไปรต์ตั้งบนพื้น ปูตามทางจริง 0.32 ม.
+- QA: `node tools/test_vocab_force.js` 476 ผ่าน · ไม่ deploy
+- ไฟล์: overdrive-fire-trail.js, overdrive-dash-tune.js, nex-character-controller.js, test_vocab_force.js, docs/PROJECT_MAP.md
+
+- รอบ 1540 · แก้ธีม Dark ผู้เล่นทั่วไปเด้งกลับ: Home V2 sync ทุก 3 วินาทีถอดคลาส theme-noir
+- เพิ่ม observer คืนค่าธีมที่ผู้เล่นบันทึกเฉพาะเมื่อ class ของ root ไม่ตรง ลด loop และไม่แตะ Home V2 ที่มีงานคู่ขนาน
+- QA: source + dist 33/33 หลังรอ 3.4 วินาที · dark labels 10/10 · Home V2 mobile PASS
+- ไฟล์: js/util.js, tools/test_home_theme_modern.cjs
+
+- รอบ 1539 · Vocab Force: คืน JUMP เป็นกระโดดสั้นเดิม (`PowerJumpTune.ENABLED=false`) ไม่พุ่งไกลตอนค้างสติก
+- ระบบโค้ง/กระแทกยังอยู่ในไฟล์จูน แต่ปุ่ม JUMP ไม่เรียกแล้ว
+- QA: `node tools/test_vocab_force.js` 474 ผ่าน · ไม่ deploy
+- ไฟล์: power-jump-tune.js, nex-character-controller.js, test_vocab_force.js, docs/PROJECT_MAP.md
+
+- รอบ 1538 · Vocab Force: คืนพื้นยางมะตอยเดิม (`arena-ground.jpg` ปู 32×32) เพราะภาพลานมุมมองถูกยืดผิดรูป
+- `arena-lot.jpg` ยังใช้แค่หน้าเลือกตัวละคร · แสงนีออน/ฟ้าเดิมไม่แตะ
+- QA: `node tools/test_vocab_force.js` 477 ผ่าน · ไม่ deploy
+- ไฟล์: prototype-arena.js, test_vocab_force.js, docs/PROJECT_MAP.md
+
+- รอบ 1537 · Vocab Force: ดับเบิล DASH ใน 1 วิ = Overdrive เร็ว 5 เท่า และไกล 5 เท่า (ระยะเวลา dash เดิม) มีเส้นไฟตามทางจริง
+- จูนรวมใน `combat/overdrive-dash-tune.js` · เส้นไฟพูลตามระยะ 0.6 ม. · ซิงก์แค่ start/end ใน `hp` · กล้องกระตุกเฉพาะเครื่องตัวเอง
+- QA: `node tools/test_vocab_force.js` 476 ผ่าน · ไม่ deploy
+- ไฟล์: overdrive-dash-tune.js, overdrive-fire-trail.js, nex-character-controller.js, vocab-force-runtime.js, vocab-force-net.js, vocab-force-audio.js, namespace/index/build, test_vocab_force.js, docs/PROJECT_MAP.md
+
+- รอบ 1536 · Vocab Force: JUMP+ทิศ = Power Jump โค้งไกล แล้วกระแทกพื้นแรงเมื่อแตะพื้นจริง
+- จูนรวมใน `combat/power-jump-tune.js` · FX พูลเดิม · กล้องสั่นเฉพาะเครื่องตัวเอง · sync แค่ launch/impact ใน `hp`
+- QA: `node tools/test_vocab_force.js` 432 ผ่าน · ไม่ deploy
+- ไฟล์: power-jump-tune.js, nex-character-controller.js, impact-fx-manager.js, vocab-force-runtime.js, vocab-force-net.js, vocab-force-audio.js, third-person-camera.js, playable-roster.js, namespace/index/build, test_vocab_force.js, docs/PROJECT_MAP.md
+
+- รอบ 1535 · Vocab Force: ลูกพลังจากปุ่ม ATTACK ยิงได้ทั่วแมพ (ระยะทแยงของลาน 10×)
+- `EnergyAttackTune.maxRange = VF._t.energyMapRange()` · ความเร็ว 420 ตามสเกลแมพ ชนกำแพง/ซอมบี้ยังตัดลูกเหมือนเดิม
+- QA: `node tools/test_vocab_force.js` 385 ผ่าน
+- ไฟล์: energy-attack-tune.js, test_vocab_force.js, docs/PROJECT_MAP.md
+
+- รอบ 1534 · Vocab Force: ปรับภาพลานกลางคืน (แผ่น lot + แสงนีออน + filmic) และเอาแถบเลือดออกจากผู้เล่น/เพื่อน
+- ซอมบี้ยังมีแถบเหนือหัวแบบหันเข้ากล้อง ไม่หมุนตามตัว · HUD ล่างแสดง 100 / 100
+- QA: `node tools/test_vocab_force.js` 384 ผ่าน
+- ไฟล์: health-bar.js, zombie-enemy.js, enemy-manager.js, nex-character-controller.js, vocab-force-net.js, prototype-arena.js, vocab-force-runtime.js, vocab-force-hud.js, vocab-force.css, test_vocab_force.js, README.md, docs/PROJECT_MAP.md
+
+- รอบ 1533 · Vocab Force: ถ้ามีคนยืนเปิดทาง/ไม่แย่งตัวอักษรให้คนเดียวเก็บนาน 6 วิ จะเรียกซอมบี้โจมตีทุกคนในกลุ่มนั้น
+- ใช้ตำแหน่งที่มีอยู่แล้ว ไม่มี path Firebase ใหม่ · ซอมบี้พิเศษเร็วขึ้น ไม่ถูกตัดด้วย HUNTER_FILL · กัดเฉพาะเหยื่อฝั่งเครื่องตัวเอง
+- QA: `node tools/test_vocab_force.js` 377 ผ่าน
+- ไฟล์: vocab-force-namespace.js, enemy-manager.js, zombie-enemy.js, vocab-force-runtime.js, vocab-force-net.js, test_vocab_force.js, README.md, docs/PROJECT_MAP.md
+
+- รอบ 1532 · Vocab Force: การ์ดฉลองใส่รูปโปรไฟล์ผู้ชนะ (photoOf/photoFetch ถ้ามี ไม่มีก็ภาพตัวละคร) และนับถอยหลัง 8 วิ ถ้าไม่กดรับทราบจะเริ่มคำใหม่เอง
+- `VF.WIN_ACK_SEC=8` · HUD `_startWinCount` เรียก `onAck` ชุดเดียวกับปุ่ม · ส่ง uid/av/def จาก runtime+net
+- QA: `node tools/test_vocab_force.js` 367 ผ่าน
+- ไฟล์: vocab-force-hud.js, vocab-force.css, vocab-force-namespace.js, vocab-force-runtime.js, vocab-force-net.js, test_vocab_force.js, README.md, docs/PROJECT_MAP.md
+
+- รอบ 1531 · Vocab Force: จบคำแล้วขึ้นฉากผู้ชนะ (ชื่อ+เหรียญ) มีเสียงเหรียญ 3 จังหวะและเหรียญบินเข้าตัวนับ กดรับทราบแล้วเริ่มคำใหม่ทันที
+- ไม่รอ timer 2.2 วิ; host เริ่มคำใหม่ตอนกดรับทราบ, ลูกข่ายเก็บคำจาก host ไว้แล้วเริ่มหลังกดรับทราบ
+- QA: `node tools/test_vocab_force.js` 357 ผ่าน
+- ไฟล์: vocab-force-hud.js, vocab-force.css, vocab-force-runtime.js, vocab-force-audio.js, vocab-force-net.js, vocab-force-namespace.js, test_vocab_force.js
+
+- รอบ 1530 · Vocab Force: ตายแล้วตัวอักษรในกระเป๋ากระเด็นตกพื้นรอบศพเป็นของบนแมพ ให้เพื่อนเก็บได้ ไม่คืนจุด spawn เดิม
+- `LetterField.dropAround` + `applyPeerDrop`; runtime วางของตอน `loseLifeLetters`; กระเป๋าส่งใน `hp` เดิม ≤28 ตัว ไม่มี path Firebase ใหม่
+- QA: `node tools/test_vocab_force.js` 350 ผ่าน; syntax letter-field/runtime/net ผ่าน
+- ไฟล์: letter-field.js, vocab-force-runtime.js, vocab-force-net.js, tools/test_vocab_force.js, docs/PROJECT_MAP.md, README.md
+
+- รอบ 1529 · เปิดธีม Dark ให้ทุกบัญชี: ผู้เล่นทั่วไปเห็นตัวเลือกพาสเทล/ดำเทาเหลืองใน Settings และสลับได้เหมือนแอดมิน
+- ค่าธีมจำในอุปกรณ์เดิมและคงอยู่หลัง logout; ใช้ public facade ใน js/util.js เพื่อไม่ชน js/home-v2.js ที่มีงานคู่ขนานค้าง
+- QA source+dist: theme 33/33 ทั้งคู่, dark labels 10/10, Home V2 mobile PASS, syntax/diff ผ่านที่ 1367×617, 1366×768, 812×375
+- ไฟล์รอบนี้: js/util.js, tools/test_home_theme_modern.cjs; ภาพ WebP ใน Documents/Codex/2026-09-16/new-chat-3/outputs/public-dark-theme-dist/
+
+- รอบ 1528 · ขยายตัวอักษรธีม Dark: เพิ่มขั้นต่ำป้าย/ปุ่ม/ข้อความรองให้อ่านง่ายขึ้น และคงสี graphite/ทองหม่นเดิม
+- ซ่อน scrollbar ของกล่องที่เลื่อนได้ในธีม Dark โดยยังเลื่อนด้วย touch/เมาส์/คีย์บอร์ดได้
+- QA source: dark label test 10/10 และ Home/admin regression ผ่านที่ 1367×617, 1366×768, 812×375
+- ไฟล์รอบนี้: css/home-dark-surfaces.css, tools/test_home_dark_labels.cjs; ภาพตัวอย่างอยู่ใน outputs/
+
+
+- **รอบ 1527 · ป้ายธีม Dark อ่านง่าย:** แก้ข้อความม่วงตกค้างบนปุ่มกราฟอันดับ/อันดับ, ปุ่มราง Classic และหน้ากราฟอันดับ ให้ขาว/เทาอ่อนบน graphite; active tab ใช้ทองหม่นพร้อมข้อความเข้ม
+- เพิ่ม override ท้าย css/home-dark-surfaces.css ครอบ Home V2 wallet labels, rail labels, rank dialog, tabs, chart labels และ badges โดยไม่เปลี่ยน pastel/public theme
+- QA source+dist: label contrast 7/7 และ Home/admin regression 32/32 ที่ 1367×617, 1366×768, 812×375; build 2026-09-16.1316 ผ่าน
+- ไฟล์รอบนี้: css/home-dark-surfaces.css, tools/test_home_dark_labels.cjs; ภาพ WebP ใน Documents/Codex/2026-09-16/new-chat-3/outputs/
+
