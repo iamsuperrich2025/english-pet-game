@@ -11,6 +11,11 @@
 > ประวัติ Frontline 1372–1373: `handoff/archive/frontline-1372-1373.md`
 
 ### 📌 สรุปสถานะล่าสุด
+- รอบ 1528 · ขยายตัวอักษรธีม Dark: เพิ่มขั้นต่ำป้าย/ปุ่ม/ข้อความรองให้อ่านง่ายขึ้น และคงสี graphite/ทองหม่นเดิม
+- ซ่อน scrollbar ของกล่องที่เลื่อนได้ในธีม Dark โดยยังเลื่อนด้วย touch/เมาส์/คีย์บอร์ดได้
+- QA source: dark label test 10/10 และ Home/admin regression ผ่านที่ 1367×617, 1366×768, 812×375
+- ไฟล์รอบนี้: css/home-dark-surfaces.css, tools/test_home_dark_labels.cjs; ภาพตัวอย่างอยู่ใน outputs/
+
 
 - **รอบ 1527 · ป้ายธีม Dark อ่านง่าย:** แก้ข้อความม่วงตกค้างบนปุ่มกราฟอันดับ/อันดับ, ปุ่มราง Classic และหน้ากราฟอันดับ ให้ขาว/เทาอ่อนบน graphite; active tab ใช้ทองหม่นพร้อมข้อความเข้ม
 - เพิ่ม override ท้าย css/home-dark-surfaces.css ครอบ Home V2 wallet labels, rail labels, rank dialog, tabs, chart labels และ badges โดยไม่เปลี่ยน pastel/public theme
@@ -232,6 +237,11 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด
+- รอบ 1528 · ขยายตัวอักษรธีม Dark: เพิ่มขั้นต่ำป้าย/ปุ่ม/ข้อความรองให้อ่านง่ายขึ้น และคงสี graphite/ทองหม่นเดิม
+- ซ่อน scrollbar ของกล่องที่เลื่อนได้ในธีม Dark โดยยังเลื่อนด้วย touch/เมาส์/คีย์บอร์ดได้
+- QA source: dark label test 10/10 และ Home/admin regression ผ่านที่ 1367×617, 1366×768, 812×375
+- ไฟล์รอบนี้: css/home-dark-surfaces.css, tools/test_home_dark_labels.cjs; ภาพตัวอย่างอยู่ใน outputs/
+
 
 - **รอบ 1390 · แก้ไฟเป็นแท่งซ้ำ:** เปลี่ยน shader/การวางเปลวใน js/arena-field-visuals.js เป็นเปลวแตกตัว8กลุ่ม (low5) พร้อมควัน/พื้นร้อน/สะเก็ด/คลื่นกระแทก; ส่ง phase+fade แยกทุก draw แก้ opacity เดิมไม่เข้า shader; ไฟ MEGA ใช้คลื่นไฟแทนโดมฟ้า
 - ใช้ pool640/48 และ low256/28 เดิม; lazy shared shader/forceSinglePass ไม่มีภาพหรือวิดีโอ runtime เพิ่ม; ordinary fire peak120draws/sustain118/กลับ105/18textures; คงดาเมจและ5ครั้งMEGA (js/arena-elements.js เปลี่ยนเฉพาะทางเรียกภาพ pulse)

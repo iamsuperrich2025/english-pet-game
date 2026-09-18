@@ -664,3 +664,161 @@ html.theme-noir :is(.rg-loading, .rg-empty) { color: #f1f2f4 !important; }
 html.theme-noir :is(.rg-loading span, .rg-empty small) { color: #c5cad2 !important; }
 html.theme-noir .rg-retry { color: #f1f2f4 !important; background: #282b31 !important; border: 1px solid #505761 !important; }
 html.theme-noir .rg-box > footer { color: #c5cad2 !important; background: #191c21 !important; border-top: 1px solid #414750 !important; }
+
+
+/* Round 1528: readable compact type and scrollbar-free dark surfaces. */
+
+/* Compact HUD labels use a larger floor so Thai glyphs stay legible on short screens. */
+html.theme-noir #vw-home-v2-root :is(
+  .vw2-wallet-pill .vw2-stat-copy b,
+  .vw2-tool-btn b,
+  .vw2-rail-label,
+  .vw2-mode>b,
+  .vw2-reward-card b,
+  .vw2-section-head strong,
+  .vw2-feed-card-head b,
+  .vw2-qbody b,
+  .vw2-online-name-line>b
+) {
+  font-size: clamp(11px, .92vw, 14px) !important;
+  line-height: 1.16 !important;
+}
+
+html.theme-noir #vw-home-v2-root :is(
+  .vw2-wallet-pill .vw2-stat-copy small,
+  .vw2-wallet-pill .vw2-pill-status,
+  .vw2-tool-btn small,
+  .vw2-feed-card-head small,
+  .vw2-online-copy small,
+  .vw2-qbody small,
+  .vw2-reward-card small,
+  .vw2-stage-copy span
+) {
+  font-size: clamp(10px, .78vw, 12px) !important;
+  line-height: 1.18 !important;
+}
+
+/* Keep narrow left-rail cards readable without forcing a page-wide scrollbar. */
+@media (max-width: 760px), (max-height: 420px) {
+  html.theme-noir #vw-home-v2-root .vw2-rail-label,
+  html.theme-noir #vw-home-v2-root .vw2-rail-racing .vw2-rail-label {
+    font-size: 10.5px !important;
+    line-height: 1.12 !important;
+  }
+  html.theme-noir #vw-home-v2-root .vw2-tool-btn b { font-size: 11px !important; }
+}
+
+/* Ranking controls keep a clear minimum even in short landscape dialogs. */
+html.theme-noir :is(.rank-graph-btn, .rail-btn) {
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+}
+html.theme-noir .rg-tab {
+  font-size: 12px !important;
+  line-height: 1.18 !important;
+}
+html.theme-noir .rg-chart-head b { font-size: 18px !important; }
+html.theme-noir .rg-chart-head span { font-size: 12px !important; }
+html.theme-noir .rg-box > footer { font-size: 11px !important; line-height: 1.2 !important; }
+
+/* Preserve touch/keyboard scrolling while removing visual scrollbar chrome. */
+html.theme-noir :where(
+  .panel-box,
+  .levelup-box,
+  .settings-box,
+  .alert-box,
+  .attn-box,
+  .help-box,
+  .bill-box,
+  .fq-box,
+  .lbf-box,
+  .wsa-box,
+  .gift-pick-box,
+  .fcm-box,
+  .fnt-box,
+  .fdb-box,
+  .pi-box,
+  .ib-box,
+  .chat-box,
+  .dict-card,
+  .dmap-box,
+  .car-buy-box,
+  .photo-box,
+  .ph-crop-box,
+  .report-box,
+  .summary-box,
+  .food-box,
+  .home-shop-box,
+  .wl-box,
+  .mkt-buy-box,
+  .list-dialog,
+  .craft-box,
+  .db-card,
+  .rg-box,
+  .ad-box,
+  #vw-home-v2-root .vw2-left,
+  #vw-home-v2-root .vw2-wallet,
+  #vw-home-v2-root .vw2-feed-items,
+  #vw-home-v2-root .vw2-quests,
+  #vw-home-v2-root .vw2-online-list,
+  #vw-home-v2-root .vw2-feature-action-scroll,
+  #vw-home-v2-root .vw2-bottom-scroll,
+  #vw-home-v2-root .vw2-online-modal-list,
+  #vw-home-v2-root .vw2-pet-modal-list,
+  #vw-home-v2-root .vw2-adventure-menu-scroll,
+  .rg-stage
+) {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+html.theme-noir :where(
+  .panel-box,
+  .levelup-box,
+  .settings-box,
+  .alert-box,
+  .attn-box,
+  .help-box,
+  .bill-box,
+  .fq-box,
+  .lbf-box,
+  .wsa-box,
+  .gift-pick-box,
+  .fcm-box,
+  .fnt-box,
+  .fdb-box,
+  .pi-box,
+  .ib-box,
+  .chat-box,
+  .dict-card,
+  .dmap-box,
+  .car-buy-box,
+  .photo-box,
+  .ph-crop-box,
+  .report-box,
+  .summary-box,
+  .food-box,
+  .home-shop-box,
+  .wl-box,
+  .mkt-buy-box,
+  .list-dialog,
+  .craft-box,
+  .db-card,
+  .rg-box,
+  .ad-box,
+  #vw-home-v2-root .vw2-left,
+  #vw-home-v2-root .vw2-wallet,
+  #vw-home-v2-root .vw2-feed-items,
+  #vw-home-v2-root .vw2-quests,
+  #vw-home-v2-root .vw2-online-list,
+  #vw-home-v2-root .vw2-feature-action-scroll,
+  #vw-home-v2-root .vw2-bottom-scroll,
+  #vw-home-v2-root .vw2-online-modal-list,
+  #vw-home-v2-root .vw2-pet-modal-list,
+  #vw-home-v2-root .vw2-adventure-menu-scroll,
+  .rg-stage
+)::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
