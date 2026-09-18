@@ -6677,3 +6677,12 @@ efreshMechaLock
 - QA: `node tools/test_vocab_force.js` 512 ผ่าน · ไม่ deploy
 - ไฟล์: heal-pad-tune.js, heal-pad.js, nex-character-controller.js, vocab-force-runtime.js, vocab-force-audio.js, vocab-force.css, namespace/index/build, test_vocab_force.js, docs/PROJECT_MAP.md
 
+
+
+## ⏬ ย้ายเมื่อ 2026-09-18 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- รอบ 1553 · Vocab Force: โดนตีแล้ว HP ลด จะมีขอบแดงกะพริบรอบจอ
+- cache `?v=hurt`
+- QA: `node tools/test_vocab_force.js` 513 ผ่าน · ไม่ deploy
+- ไฟล์: vocab-force-hud.js, vocab-force.css, vocab-force-runtime.js, index.html, test_vocab_force.js, docs/PROJECT_MAP.md
+
