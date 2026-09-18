@@ -206,6 +206,8 @@
     this.aura = null;
     this.light = null;
     this.t = 0;
+    this.heartY = T.HEART_Y || 3.35;
+    this.heartS = T.HEART_SIZE || 2.45;
     this.inside = false;
     this._heat = 0;
     this._humAt = 0;
@@ -223,9 +225,11 @@
     if(this.group) this.dispose();
     const T = VF.HealPadTune || {};
     const pr = T.PLATFORM_R || 1.55;
-    const h = T.HEIGHT || 2.8;
-    const heartY = T.HEART_Y || 1.68;
-    const heartS = T.HEART_SIZE || 1.12;
+    const h = T.HEIGHT || 3.55;
+    const heartY = T.HEART_Y || 3.35;
+    const heartS = T.HEART_SIZE || 2.45;
+    this.heartY = heartY;
+    this.heartS = heartS;
     const add = THREE.AdditiveBlending != null ? THREE.AdditiveBlending : 2;
     const g = new THREE.Group();
     g.name = 'VFHealPad';
@@ -321,7 +325,7 @@
     g.add(this.core);
 
     const torusGeo = this._keep(new THREE.TorusGeometry(pr * 0.58, 0.018, 6, 32));
-    const torusYs = [0.52, 1.42, 2.18];
+    const torusYs = [0.55, 1.55, heartY + heartS * 0.18];
     for(let i = 0; i < 3; i++){
       const halo = new THREE.Mesh(torusGeo, mat(THREE, {
         color: i === 1 ? TURQ : CYAN, transparent: true, opacity: 0.62,
@@ -488,7 +492,7 @@
       const lift = (this.t * (0.42 + heat * 0.22) + k * 0.31) % liftSpan;
       const aroundHeart = (p.userData && p.userData.kind) === 'dot' && k % 4 === 0;
       if(aroundHeart){
-        p.position.set(Math.cos(a * 1.6) * 0.38, 1.55 + Math.sin(a * 2.1) * 0.22, Math.sin(a * 1.6) * 0.38);
+        p.position.set(Math.cos(a * 1.6) * 0.55, (this.heartY || 3.35) + Math.sin(a * 2.1) * 0.32, Math.sin(a * 1.6) * 0.55);
         p.scale.setScalar(0.7 + heat * 0.2);
       }else{
         p.position.set(Math.cos(a) * rad, 0.28 + lift, Math.sin(a) * rad);

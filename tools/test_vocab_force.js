@@ -361,6 +361,7 @@ assert(blocked>0&&blocked<12&&vit.hp<88,'block reduces bite');
 const HP=VF.HealPadTune;
 assert(HP.RADIUS>=5&&HP.HEAL_PER_SEC===24&&HP.Z===22,'heal pad sits in the plaza and refills over a few seconds');
 assert(HP.PLATFORM_R>1&&HP.PLATFORM_R<2&&HP.PLATFORM_R<HP.RADIUS,'visual platform is compact; heal zone stays the same');
+assert(HP.HEART_Y>=3&&HP.HEART_SIZE>=2,'holographic heart sits above the player and is readable from far');
 assert(VF._t.healPadContains(HP.X,HP.Z)&&!VF._t.healPadContains(HP.X+40,HP.Z),'standing on the pad is inside, far away is not');
 assert(Math.abs(VF._t.healPadAmount(1)-24)<0.001,'heal amount scales with time');
 const medic=new VF.NexCharacterController();

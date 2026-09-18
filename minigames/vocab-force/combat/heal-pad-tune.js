@@ -8,12 +8,12 @@
     Z: 22,
     RADIUS: 5.4,
     HEAL_PER_SEC: 24,
-    HEIGHT: 2.8,
+    HEIGHT: 3.55,
     GLOW: 0x00cfcf,
     HUM_MS: 420,
     PLATFORM_R: 1.55,
-    HEART_Y: 1.96,
-    HEART_SIZE: 1.28
+    HEART_Y: 3.35,
+    HEART_SIZE: 2.45
   };
 
   VF._t = VF._t || {};
