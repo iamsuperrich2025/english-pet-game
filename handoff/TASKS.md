@@ -11,6 +11,11 @@
 > ประวัติ Frontline 1372–1373: `handoff/archive/frontline-1372-1373.md`
 
 ### 📌 สรุปสถานะล่าสุด
+- รอบ 1557 · Vocab Force: ลดแสงแท่นฮีล BRIGHTNESS 0.48 (ค่าเดิม PREV=1 ย้อนกลับได้)
+- cache `?v=dim` · หัวใจยัง 3.35/2.45 · HP ไม่เปลี่ยน
+- QA: `node tools/test_vocab_force.js` 519 ผ่าน · ไม่ deploy
+- ไฟล์: heal-pad-tune.js, heal-pad.js, index.html, test_vocab_force.js, docs/PROJECT_MAP.md
+
 - รอบ 1556 · Vocab Force: หัวใจแท่นฮีล ยกขึ้น 3.35 ม. ขนาด 2.45 ม. ให้มองเห็นจากไกล
 - cache `?v=beacon` · HP ยัง 24/วิ รัศมี 5.4 ม.
 - QA: `node tools/test_vocab_force.js` 518 ผ่าน · มองไกลเห็นหัวใจ+เสา · ใกล้ตัวละครยังอยู่ใต้หัวใจ · ไม่ deploy
@@ -20,11 +25,6 @@
 - cache `?v=arms` · ไฟล์ hop เดิมยังอยู่ ไม่โหลด
 - QA: `node tools/test_vocab_force.js` 517 ผ่าน · ในเกมคลิป Jump_with_Arms_Open ตอนอยู่ในอากาศ · ไม่ deploy
 - ไฟล์: nex-animation-manifest.js, index.html, test_vocab_force.js, nex_Jump_with_Arms_Open.glb, docs/PROJECT_MAP.md
-
-- รอบ 1554 · Vocab Force: แท่นเติมเลือดเป็นสถานีโฮโลแกรมฟ้า (แท่นโลหะ ~3.1 ม. + เสาพลัง + หัวใจลอย) แทนวงขาวใหญ่บนพื้น
-- cache `?v=holo` · HP ยังเติม 24/วิ ในรัศมี 5.4 ม. ที่ z=22
-- QA: `node tools/test_vocab_force.js` 516 ผ่าน · ยืนในแท่นตัวละครยังเห็น · มองไกลเห็นเสา+หัวใจ · ไม่ deploy
-- ไฟล์: heal-pad.js, heal-pad-tune.js, vocab-force-runtime.js, index.html, test_vocab_force.js, docs/PROJECT_MAP.md
 
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic

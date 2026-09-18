@@ -6686,3 +6686,12 @@ efreshMechaLock
 - QA: `node tools/test_vocab_force.js` 513 ผ่าน · ไม่ deploy
 - ไฟล์: vocab-force-hud.js, vocab-force.css, vocab-force-runtime.js, index.html, test_vocab_force.js, docs/PROJECT_MAP.md
 
+
+
+## ⏬ ย้ายเมื่อ 2026-09-18 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- รอบ 1554 · Vocab Force: แท่นเติมเลือดเป็นสถานีโฮโลแกรมฟ้า (แท่นโลหะ ~3.1 ม. + เสาพลัง + หัวใจลอย) แทนวงขาวใหญ่บนพื้น
+- cache `?v=holo` · HP ยังเติม 24/วิ ในรัศมี 5.4 ม. ที่ z=22
+- QA: `node tools/test_vocab_force.js` 516 ผ่าน · ยืนในแท่นตัวละครยังเห็น · มองไกลเห็นเสา+หัวใจ · ไม่ deploy
+- ไฟล์: heal-pad.js, heal-pad-tune.js, vocab-force-runtime.js, index.html, test_vocab_force.js, docs/PROJECT_MAP.md
+
