@@ -11,6 +11,11 @@
 > ประวัติ Frontline 1372–1373: `handoff/archive/frontline-1372-1373.md`
 
 ### 📌 สรุปสถานะล่าสุด
+- รอบ 1555 · Vocab Force: NEX กระโดดใช้ nex_Jump_with_Arms_Open.glb (คลิป Jump_with_Arms_Open) เหมือน Lyravyn
+- cache `?v=arms` · ไฟล์ hop เดิมยังอยู่ ไม่โหลด
+- QA: `node tools/test_vocab_force.js` 517 ผ่าน · ในเกมคลิป Jump_with_Arms_Open ตอนอยู่ในอากาศ · ไม่ deploy
+- ไฟล์: nex-animation-manifest.js, index.html, test_vocab_force.js, nex_Jump_with_Arms_Open.glb, docs/PROJECT_MAP.md
+
 - รอบ 1554 · Vocab Force: แท่นเติมเลือดเป็นสถานีโฮโลแกรมฟ้า (แท่นโลหะ ~3.1 ม. + เสาพลัง + หัวใจลอย) แทนวงขาวใหญ่บนพื้น
 - cache `?v=holo` · HP ยังเติม 24/วิ ในรัศมี 5.4 ม. ที่ z=22
 - QA: `node tools/test_vocab_force.js` 516 ผ่าน · ยืนในแท่นตัวละครยังเห็น · มองไกลเห็นเสา+หัวใจ · ไม่ deploy
@@ -20,11 +25,6 @@
 - cache `?v=hurt`
 - QA: `node tools/test_vocab_force.js` 513 ผ่าน · ไม่ deploy
 - ไฟล์: vocab-force-hud.js, vocab-force.css, vocab-force-runtime.js, index.html, test_vocab_force.js, docs/PROJECT_MAP.md
-
-- รอบ 1552 · Vocab Force: แท่นเติมเลือดนีออน (หัวใจโฮโลแกรม + วงแหวนฟ้า) ที่ z=22 · ยืนในรัศมี 5.4 ม. HP เติม 24/วิ
-- cache `?v=heal`
-- QA: `node tools/test_vocab_force.js` 512 ผ่าน · ไม่ deploy
-- ไฟล์: heal-pad-tune.js, heal-pad.js, nex-character-controller.js, vocab-force-runtime.js, vocab-force-audio.js, vocab-force.css, namespace/index/build, test_vocab_force.js, docs/PROJECT_MAP.md
 
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic

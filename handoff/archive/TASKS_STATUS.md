@@ -6668,3 +6668,12 @@ efreshMechaLock
 - QA source+dist: label contrast 7/7 และ Home/admin regression 32/32 ที่ 1367×617, 1366×768, 812×375; build 2026-09-16.1316 ผ่าน
 - ไฟล์รอบนี้: css/home-dark-surfaces.css, tools/test_home_dark_labels.cjs; ภาพ WebP ใน Documents/Codex/2026-09-16/new-chat-3/outputs/
 
+
+
+## ⏬ ย้ายเมื่อ 2026-09-18 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- รอบ 1552 · Vocab Force: แท่นเติมเลือดนีออน (หัวใจโฮโลแกรม + วงแหวนฟ้า) ที่ z=22 · ยืนในรัศมี 5.4 ม. HP เติม 24/วิ
+- cache `?v=heal`
+- QA: `node tools/test_vocab_force.js` 512 ผ่าน · ไม่ deploy
+- ไฟล์: heal-pad-tune.js, heal-pad.js, nex-character-controller.js, vocab-force-runtime.js, vocab-force-audio.js, vocab-force.css, namespace/index/build, test_vocab_force.js, docs/PROJECT_MAP.md
+
