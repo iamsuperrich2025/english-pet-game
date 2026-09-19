@@ -26,11 +26,6 @@
 - QA: `node tools/test_vocab_force.js` 519 ผ่าน · ไม่ deploy
 - ไฟล์: heal-pad-tune.js, heal-pad.js, index.html, test_vocab_force.js, docs/PROJECT_MAP.md
 
-- รอบ 1556 · Vocab Force: หัวใจแท่นฮีล ยกขึ้น 3.35 ม. ขนาด 2.45 ม. ให้มองเห็นจากไกล
-- cache `?v=beacon` · HP ยัง 24/วิ รัศมี 5.4 ม.
-- QA: `node tools/test_vocab_force.js` 518 ผ่าน · มองไกลเห็นหัวใจ+เสา · ใกล้ตัวละครยังอยู่ใต้หัวใจ · ไม่ deploy
-- ไฟล์: heal-pad-tune.js, heal-pad.js, index.html, test_vocab_force.js, docs/PROJECT_MAP.md
-
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน

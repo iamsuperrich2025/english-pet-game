@@ -6704,3 +6704,12 @@ efreshMechaLock
 - QA: `node tools/test_vocab_force.js` 517 ผ่าน · ในเกมคลิป Jump_with_Arms_Open ตอนอยู่ในอากาศ · ไม่ deploy
 - ไฟล์: nex-animation-manifest.js, index.html, test_vocab_force.js, nex_Jump_with_Arms_Open.glb, docs/PROJECT_MAP.md
 
+
+
+## ⏬ ย้ายเมื่อ 2026-09-19 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- รอบ 1556 · Vocab Force: หัวใจแท่นฮีล ยกขึ้น 3.35 ม. ขนาด 2.45 ม. ให้มองเห็นจากไกล
+- cache `?v=beacon` · HP ยัง 24/วิ รัศมี 5.4 ม.
+- QA: `node tools/test_vocab_force.js` 518 ผ่าน · มองไกลเห็นหัวใจ+เสา · ใกล้ตัวละครยังอยู่ใต้หัวใจ · ไม่ deploy
+- ไฟล์: heal-pad-tune.js, heal-pad.js, index.html, test_vocab_force.js, docs/PROJECT_MAP.md
+
