@@ -62,6 +62,7 @@
     }
     if(player && player.alive !== false) player.setPose(player.x || 0, arena.surfaceY(player.x || 0, player.z || 0), player.z || 0, player.yaw);
     if(collusionWatch && collusionWatch.reset) collusionWatch.reset();
+    if(enemies && enemies.resetHunterWave) enemies.resetHunterWave();
     syncHunters();
   }
 
@@ -163,7 +164,6 @@
     en._collected = true;
     setTimeout(function(){
       if(enemies && enemies.remove) enemies.remove(en);
-      syncHunters();
     }, 1400);
   }
 
@@ -185,11 +185,8 @@
   }
 
   function syncHunters(){
-    const humans = net && net.humanCount ? net.humanCount() : 1;
-    const want = Math.max(0, (VF.HUNTER_FILL || 6) - humans);
-    if((want > 0 || collusionPending) && !zomReady){ ensureZombies(); return; }
-    if(enemies && enemies.spawnHunters) enemies.spawnHunters(want, arena);
-    if(collusionPending && zomReady && enemies && enemies.spawnCollusionHunters){
+    if(!zomReady){ ensureZombies(); return; }
+    if(collusionPending && enemies && enemies.spawnCollusionHunters){
       enemies.spawnCollusionHunters(collusionPending.extra, arena, collusionPending.around);
       collusionPending = null;
     }
@@ -291,6 +288,7 @@
     if(chained) combat.tryAttack(chained, player, now);
     if(hud && hud.setDashCooldown) hud.setDashCooldown(player.dashCooldownFrac(now));
     if(enemies && enemies.setPrey) enemies.setPrey(peopleSnap());
+    if(zomReady && enemies && enemies.tickHuntSpawn && !ackOpen && !winLock) enemies.tickHuntSpawn(step, peopleSnap(), arena);
     const sim = enemies.tick(step, player, arena);
     (sim.dead || []).forEach(handleDefeat);
     (sim.bites || []).forEach(function(b){
@@ -372,7 +370,7 @@
       });
     });
     if(hud && hud.setNet) hud.setNet(net.statusText());
-    if(info && info.hunters != null) syncHunters();
+    if(info && info.collusion) syncHunters();
     if(letters && letters.applyPeerDrop && net.consumeDrops){
       net.consumeDrops().forEach(function(drop){
         letters.applyPeerDrop(THREE, drop, arena);
