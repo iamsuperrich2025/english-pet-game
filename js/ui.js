@@ -7404,24 +7404,15 @@ function bindSkirmishRail(){
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bindSkirmishRail);
 else bindSkirmishRail();
-/* ==== ⚡ VOCAB FORCE — isolated admin/dev combat vocab (do not show to public) ==== */
-const VOCABFORCE_LOCK_MSG='🔒 Vocab Force กำลังทดสอบ — เปิดให้ผู้ดูแลระบบเท่านั้น';
-function vocabForceAdminAllowed(){
-  try{
-    if(typeof isAdmin==='function' && isAdmin()===true) return true;
-    if(typeof state!=='undefined' && state.adminAccess===true) return true;
-  }catch(_){}
-  return false;
-}
+/* ==== ⚡ VOCAB FORCE — public combat vocabulary game ==== */
 function refreshVocabForceLock(){
   const b=document.getElementById('btn-rail-vocabforce');
   if(!b) return;
-  const ok=vocabForceAdminAllowed();
-  b.hidden=!ok;
-  b.setAttribute('aria-hidden', ok?'false':'true');
-  b.setAttribute('aria-disabled', ok?'false':'true');
-  b.title=ok?'เล่น Vocab Force (กำลังทดสอบ · แอดมิน)':VOCABFORCE_LOCK_MSG;
-  if(ok) b.removeAttribute('tabindex'); else b.tabIndex=-1;
+  b.hidden=false;
+  b.setAttribute('aria-hidden','false');
+  b.setAttribute('aria-disabled','false');
+  b.title='เล่น Vocab Force';
+  b.removeAttribute('tabindex');
 }
 async function loadVocabForceModules(){
   const base='minigames/vocab-force/';
@@ -7432,10 +7423,6 @@ async function loadVocabForceModules(){
 }
 async function openVocabForce(){
   if(typeof closePanel==='function') closePanel();
-  if(!vocabForceAdminAllowed()){
-    if(typeof toast==='function') toast(VOCABFORCE_LOCK_MSG);
-    return;
-  }
   try{
     if(typeof toast==='function' && (typeof VocabForce==='undefined' || !VocabForce.open)) toast('⚡ กำลังเปิด Vocab Force...');
     await loadVocabForceModules();

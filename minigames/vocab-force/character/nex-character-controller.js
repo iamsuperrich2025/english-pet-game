@@ -128,9 +128,9 @@
   NexCharacterController.prototype.takeHit = function(amount, blocked, info){
     info = info || {};
     if(!this.alive) return 0;
-    if(this.isDashing && this.isDashing()) return 0;
+    if(!info.bypassInvuln && this.isDashing && this.isDashing()) return 0;
     const head = !!(info.headshot || info.zone === 'head');
-    if(!head && this.invuln > 0) return 0;
+    if(!head && !info.bypassInvuln && this.invuln > 0) return 0;
     let dmg = Math.max(0, amount || 0);
     if(head) dmg = this.maxHp || VF.PLAYER_HP || 1000;
     else if(blocked || this.blocking){
@@ -143,7 +143,7 @@
     if(this.bar) this.bar.set(this.hp, this.maxHp);
     if(this.hp <= 0){
       this.alive = false;
-      this.respawnT = 2.4;
+      this.respawnT = Infinity;
       this.vx = 0; this.vz = 0;
       this._deathEvent = true;
     }
@@ -165,22 +165,63 @@
     return true;
   };
 
+  NexCharacterController.prototype.resetForRound = function(pos){
+    pos = pos || {};
+    this.hp = this.maxHp || VF.PLAYER_HP || 1000;
+    this.alive = true;
+    this.invuln = 1.2;
+    this.respawnT = 0;
+    this._deathEvent = false;
+    this.vx = 0; this.vy = 0; this.vz = 0;
+    this.speed = 0;
+    this.blocking = false;
+    this.grounded = true;
+    this._driveT = 0;
+    this._dash.active = false;
+    this._dash.leftT = 0;
+    this._dash.speed = 0;
+    this._dash.ghostT = 0;
+    this._dash.blocked = false;
+    this._dash.traveled = 0;
+    this._dash.lastManualAt = null;
+    this._dash.lastManualOk = false;
+    this._dash.pendingAttack = null;
+    this._dash.coolUntil = 0;
+    this._dash.overdrive = false;
+    this._dash.events = [];
+    this._dashAttack = '';
+    this._vfDash = null;
+    this._vfJump = null;
+    this._vfDrop = null;
+    this._jump.power = false;
+    this._jump.convertUntil = 0;
+    this._jump.lastMoveAt = 0;
+    this._jump.lastIx = 0;
+    this._jump.lastIz = 0;
+    this._jump.dirX = 0;
+    this._jump.dirZ = 0;
+    this._jump.lockVx = 0;
+    this._jump.lockVz = 0;
+    this._jump.landRecover = 0;
+    this._jump.compress = 0;
+    this._jump.prepLand = false;
+    this._jump.dashT = 0;
+    this._jump.events = [];
+    this.setPose(Number(pos.x) || 0, Number(pos.y) || 0, Number(pos.z) || 0, Number(pos.yaw) || 0);
+    if(this.anim) this.anim.play('idle', {loop: true, force: true});
+    if(this.bar){
+      this.bar.set(this.hp, this.maxHp);
+      if(this.bar.group) this.bar.group.visible = true;
+    }
+    return this;
+  };
+
   NexCharacterController.prototype.tickVitals = function(dt, arena, camera){
     this.invuln = Math.max(0, this.invuln - dt);
     if(this.bar){
       this.bar.set(this.hp, this.maxHp);
       this.bar.billboard(camera);
       if(this.bar.group) this.bar.group.visible = this.hp > 0;
-    }
-    if(!this.alive){
-      this.respawnT -= dt;
-      if(this.respawnT <= 0){
-        this.hp = this.maxHp;
-        this.alive = true;
-        this.invuln = 1.2;
-        this.setPose(0, arena && arena.surfaceY ? arena.surfaceY(0, 0) : 0, 0, this.yaw);
-        if(this.bar) this.bar.set(this.hp, this.maxHp);
-      }
     }
   };
 
@@ -517,7 +558,7 @@
   };
 
   NexCharacterController.prototype.tryManualDash = function(input, camera, arena, fx, camRig, now){
-    if(!this.ready || this.blocking) return false;
+    if(!this.ready || !this.alive || this.blocking) return false;
     if(this.isPowerJumping && this.isPowerJumping()) return false;
     const t = now != null ? now : VF.now();
     if(this._canOverdrive(t)){

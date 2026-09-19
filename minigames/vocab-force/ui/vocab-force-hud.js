@@ -35,6 +35,11 @@
           <div class="vf-hp-track"><i class="vf-hp-fill"></i></div>
           <span class="vf-hp-num">1000 / 1000</span>
         </div>
+        <div class="vf-spectator" hidden aria-live="polite">
+          <small>SPECTATING</small>
+          <strong class="vf-spectator-name"></strong>
+          <span class="vf-spectator-help">Swipe ← → to change player</span>
+        </div>
         <button class="vf-exit" type="button" data-vf-act="exit">ออก</button>
         <div class="vf-energy-charge" hidden>
           <small>ENERGY CHARGE</small>
@@ -42,7 +47,7 @@
         </div>
         <div class="vf-toast" hidden></div>
         <div class="vf-load">กำลังเรียก NEX… <span class="vf-load-pct">0%</span></div>
-        <p class="vf-hint">เก็บตัวอักษรได้ไม่จำกัด · ตายแล้วของรอบนั้นหาย · คำละ 5,000 เหรียญ</p>
+        <p class="vf-hint">เก็บตัวอักษรได้ไม่จำกัด · ตายแล้วชมเพื่อนจนจบรอบ · คำละ 1,000–10,000 เหรียญ</p>
       </div>
       <div class="vf-boot" hidden>
         <img class="vf-boot-art" alt="">
@@ -114,7 +119,7 @@
           <em class="vf-win-thai"></em>
           <div class="vf-win-coin">
             <img class="vf-win-coin-ic" alt="">
-            <span class="vf-win-reward">+5,000</span>
+            <span class="vf-win-reward">+1,000</span>
           </div>
           <button type="button" class="vf-win-ok">รับทราบ <span class="vf-win-count">8</span></button>
         </div>
@@ -134,6 +139,9 @@
       hp: root.querySelector('.vf-hp'),
       hpFill: root.querySelector('.vf-hp-fill'),
       hpNum: root.querySelector('.vf-hp-num'),
+      spectator: root.querySelector('.vf-spectator'),
+      spectatorName: root.querySelector('.vf-spectator-name'),
+      spectatorHelp: root.querySelector('.vf-spectator-help'),
       toast: root.querySelector('.vf-toast'),
       win: root.querySelector('.vf-win'),
       winKicker: root.querySelector('.vf-win-kicker'),
@@ -241,6 +249,17 @@
     el.classList.add('is-' + band);
     if(this.els.hpFill) this.els.hpFill.style.transform = 'scaleX(' + frac + ')';
     if(this.els.hpNum) this.els.hpNum.textContent = Math.round(v) + ' / ' + Math.round(m);
+  };
+
+  VocabForceHUD.prototype.setSpectator = function(on, name, count){
+    const el = this.els.spectator;
+    if(!el) return;
+    const active = !!on;
+    el.hidden = !active;
+    if(this.root) this.root.classList.toggle('is-spectating', active);
+    if(!active) return;
+    if(this.els.spectatorName) this.els.spectatorName.textContent = name || 'กำลังรอผลรอบ';
+    if(this.els.spectatorHelp) this.els.spectatorHelp.textContent = count > 1 ? 'Swipe ← → to change player' : (count === 1 ? 'ผู้เล่นที่ยังอยู่ในรอบ' : 'รอรอบถัดไป');
   };
 
   VocabForceHUD.prototype.hurtFlash = function(frac){
@@ -453,6 +472,7 @@
   VocabForceHUD.prototype.hide = function(){
     if(this.quest) this.quest.hide();
     this.hideWin();
+    this.setSpectator(false);
     if(this.root){
       this.root.classList.remove('is-winning');
       this.root.style.display = 'none';

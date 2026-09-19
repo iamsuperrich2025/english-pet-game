@@ -258,6 +258,7 @@ const expectedRail = [
   ["typing","#btn-rail-typing"], ["bubble","#btn-rail-bubble"],   ["shoot","#btn-rail-shootword"],
   ["wordship","#btn-rail-wordship"],
   ["skirmish","#btn-rail-skirmish"],
+  ["vocabforce","#btn-rail-vocabforce"],
   ["cannon","#btn-rail-lettercannon"], ["examstd","#btn-rail-examstd"], ["onet","#btn-rail-onet"],
   ["rank","#btn-rail-rank"], ["market",'.lobby-rail [data-panel="panel-market"]'],
   ["friends",'.lobby-rail [data-panel="panel-friends"]'], ["gifts",'.lobby-rail [data-panel="panel-gifts"]'],
@@ -269,7 +270,7 @@ const tuplePattern = (action, source) => {
 };
 expectedRail.forEach(([action, source]) => must(tuplePattern(action, source).test(home), `left rail marker missing: ${action}`));
 const railOrder = expectedRail.map(([action]) => home.indexOf(`['${action}',`));
-must(expectedRail.length === 31 && railOrder.every((p, i) => p >= 0 && (!i || p > railOrder[i - 1])), "authoritative left rail order changed");
+must(expectedRail.length === 32 && railOrder.every((p, i) => p >= 0 && (!i || p > railOrder[i - 1])), "authoritative left rail order changed");
 const semanticRailIcons = [
   ['worldAdv','adventure'],['worldSky','skyplay'],['worldHaunt','ghost'],
   ['worldHeli','helicopter'],['worldDrone','drone'],['worldSoccer','soccer'],
@@ -278,7 +279,7 @@ const semanticRailIcons = [
 ];
 semanticRailIcons.forEach(([action, iconName])=>must(home.includes(`['${action}','${iconName}'`), `left rail icon does not explain its destination: ${action}`));
 const adminOnlyWorlds = ["worldSky","worldDrive","worldMoto","worldInvasion","wordship","skirmish"];
-const publicWorlds = ["worldAdv","worldHaunt","worldHeli","worldDrone","worldSoccer","worldMecha"];
+const publicWorlds = ["worldAdv","worldHaunt","worldHeli","worldDrone","worldSoccer","worldMecha","vocabforce"];
 const adminWorldSetBlock = (home.match(/const ADMIN_ONLY_WORLD_ACTIONS = new Set\(\[([\s\S]*?)\]\)/) || [])[1] || "";
 const adminWorldSetNames = Array.from(adminWorldSetBlock.matchAll(/'([^']+)'/g), match=>match[1]);
 must(JSON.stringify(adminWorldSetNames) === JSON.stringify(adminOnlyWorlds), "admin-only destination set changed");

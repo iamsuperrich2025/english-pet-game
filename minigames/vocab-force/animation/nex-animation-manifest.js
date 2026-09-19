@@ -7,7 +7,7 @@
    Later Blender work: bake every clip into one NEX GLB (mesh+textures once). */
 (function(root){
   const VF = root.VocabForce = root.VocabForce || {};
-  const DIR = 'characters/next/animations/';
+  const DIR = 'runtime-models/nex/';
   const STATES = {
     idle: {
       file: 'nex_walk.glb',

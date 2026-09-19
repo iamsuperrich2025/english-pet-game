@@ -314,7 +314,7 @@
   const CLASSIC_RAIL_GLYPHS = Object.freeze({
     cure:'💊',city:'🏙️',worldAdv:'🌍',worldSky:'☁️',worldHaunt:'👻',worldHeli:'🚁',worldDrone:'🛸',
     worldDrive:'🚗',worldSoccer:'⚽',worldMoto:'🏍️',worldInvasion:'🛸',worldMecha:'🤖',worldFrontline:'🪖',home:'🏠',
-    invest:'📈',factory:'🏭',wordsearch:'🔎',typing:'⌨️',bubble:'🫧',shoot:'🎯',wordship:'⚓',skirmish:'🔫',cannon:'🐉🔥',
+    invest:'📈',factory:'🏭',wordsearch:'🔎',typing:'⌨️',bubble:'🫧',shoot:'🎯',wordship:'⚓',skirmish:'🔫',vocabforce:'⚡',cannon:'🐉🔥',
     examstd:'📋',onet:'🇹🇭',rank:'🥇',market:'🏪',friends:'👥',gifts:'🎁',stats:'📊',trophy:'🏆',racing:'🏎️',worldPickup:'🛻'
   });
   function classicRailGlyph(actionName, sourceSelector){
@@ -882,7 +882,7 @@
       worldInvasion:'#btn-world-invasion', worldMecha:'#btn-world-mecha',
       worldFrontline:'#btn-world-frontline', worldKart:'#btn-world-kart', worldPickup:'#btn-world-pickup',
       typing:'#btn-rail-typing', bubble:'#btn-rail-bubble', shoot:'#btn-rail-shootword',
-      wordship:'#btn-rail-wordship', skirmish:'#btn-rail-skirmish', cannon:'#btn-rail-lettercannon', examstd:'#btn-rail-examstd', onet:'#btn-rail-onet',
+      wordship:'#btn-rail-wordship', skirmish:'#btn-rail-skirmish', vocabforce:'#btn-rail-vocabforce', cannon:'#btn-rail-lettercannon', examstd:'#btn-rail-examstd', onet:'#btn-rail-onet',
       rank:'#btn-rail-rank', stats:'#btn-stats', trophy:'#btn-rail-trophy', chat:'#btn-chat',
       music:'#btn-music', settings:'#btn-settings', install:'#btn-install-top',
       logout:'#btn-logout', play:'#btn-play', cats:'#btn-cats', picmatch:'#btn-picmatch',
@@ -1171,6 +1171,7 @@
       ['shoot','target','ยิงเป้าคำ','#btn-rail-shootword'],
       ['wordship','ship','กองเรือคำศัพท์','#btn-rail-wordship'],
       ['skirmish','gun','ยิงรบคำ','#btn-rail-skirmish'],
+      ['vocabforce','sparkle','Vocab Force','#btn-rail-vocabforce'],
       ['cannon','dragon','Dragon Sky Siege','#btn-rail-lettercannon'],
       ['examstd','exam','ข้อสอบจริง','#btn-rail-examstd'],
       ['onet','flag','O-NET','#btn-rail-onet'],

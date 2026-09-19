@@ -105,6 +105,12 @@
     return this;
   };
 
+  EnemyManager.prototype.dropHunters = function(){
+    this.resetHunterWave();
+    this.waveOn = false;
+    return this;
+  };
+
   EnemyManager.prototype.makeHunter = function(opts){
     if(!VF.ZombieEnemy) return null;
     if(VF.ZomAssets && VF.ZomAssets.ready && !VF.ZomAssets.ready()) return null;
@@ -141,6 +147,8 @@
 
   EnemyManager.prototype.tickHuntSpawn = function(dt, people, arena){
     if(!this.waveOn) return this.list;
+    const crowd = (people || []).filter(function(p){ return p && p.alive !== false; }).length;
+    if(crowd >= (VF.HUNTER_SKIP_HUMANS || 5)) return this.list;
     this._spawnWait -= dt;
     if(this._spawnWait > 0) return this.list;
     if(this.liveHunterCount() >= (VF.HUNTER_LIVE_CAP || 50)){

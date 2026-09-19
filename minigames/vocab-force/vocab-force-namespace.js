@@ -11,8 +11,7 @@
   VF.lerp = function(a, b, t){ return a + (b - a) * t; };
   VF.rand = function(a, b){ return a + Math.random() * (b - a); };
   VF.now = function(){ return (root.performance && performance.now) ? performance.now() : Date.now(); };
-  VF.LOCK_MSG = '🔒 Vocab Force กำลังทดสอบ — เปิดให้ผู้ดูแลระบบเท่านั้น';
-  VF.LETTER_REWARD = 5000;
+  VF.LETTER_REWARD = 1000;
   VF.PLAYER_HP = 1000;
   VF.ZOMBIE_HP = 36;
   VF.ZOMBIE_BITE = 80;
@@ -25,6 +24,7 @@
   VF.HUNTER_RING_MAX = 19;
   VF.HUNTER_DETECT = 36;
   VF.HUNTER_LIVE_CAP = 50;
+  VF.HUNTER_SKIP_HUMANS = 5;
   VF.MAP_SCALE = 10;
   VF.ARENA_HALF = 280;
   VF.CAMERA_FAR = 980;
@@ -40,6 +40,8 @@
   VF.COLLUSION_CAP = 8;
   VF.COLLUSION_COOL = 16;
   VF.DPR_CAP = 1.5;
+  VF.TANKER_DAMAGE = 500;
+  VF.TANKER_SPAWN = {x: 84, z: -18, yaw: Math.PI * 0.5};
   VF.SCRIPTS = [
     'vocab-force-namespace.js',
     'animation/nex-animation-manifest.js',
@@ -83,19 +85,22 @@
     'ui/character-select.js',
     'ui/vocab-force-hud.js',
     'map/prototype-arena.js',
+    'map/oil-tanker-controller.js',
     'runtime/vocab-force-audio.js',
     'runtime/vocab-force-net.js',
+    'runtime/vocab-force-spectator.js',
     'runtime/vocab-force-runtime.js'
   ];
-  VF.adminAllowed = function(){
-    try{
-      if(VF.devPreview === true) return true;
-      if(typeof isAdmin === 'function' && isAdmin() === true) return true;
-      if(typeof state !== 'undefined' && state && state.adminAccess === true) return true;
-    }catch(_){}
-    return false;
-  };
   VF._t = VF._t || {};
+  VF._t.wordReward = function(here){
+    const players = VF.clamp(Math.floor(Number(here) || 1), 1, VF.ROOM_MAX || 14);
+    if(players <= 5) return 1000;
+    if(players <= 10) return 3000;
+    return 10000;
+  };
+  VF._t.wantHunters = function(here){
+    return (here == null ? 1 : here) < (VF.HUNTER_SKIP_HUMANS || 5);
+  };
   VF._t.coinSrc = function(){
     return VF.devPreview ? '../../img/coins/coin_gold.webp' : 'img/coins/coin_gold.webp';
   };
@@ -207,5 +212,37 @@
       if((rows[i] || 0) < max) return i;
     }
     return -1;
+  };
+  VF._t.stableHash = function(raw){
+    const s = String(raw == null ? '' : raw);
+    let h = 2166136261;
+    for(let i = 0; i < s.length; i++){
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  };
+  VF._t.fairSpawn = function(ids, myId, seed, arena, avoid){
+    const list = (ids || []).filter(Boolean).map(String).sort();
+    const mine = String(myId || list[0] || 'local');
+    if(list.indexOf(mine) < 0) list.push(mine);
+    list.sort();
+    const count = Math.max(1, list.length);
+    const index = Math.max(0, list.indexOf(mine));
+    const turn = ((VF._t.stableHash(seed || 1) % 360) / 180) * Math.PI;
+    const minAvoid = (avoid && avoid.radius) || 18;
+    for(let ring = 0; ring < 4; ring++){
+      const radius = 34 + ring * 12;
+      const angle = turn + index * Math.PI * 2 / count;
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+      if(avoid && Math.hypot(x - avoid.x, z - avoid.z) < minAvoid) continue;
+      if(arena && arena.collide){
+        const hit = arena.collide(x, 0, z, 0.9);
+        if(hit.wall || Math.hypot(hit.x - x, hit.z - z) > 0.08) continue;
+      }
+      return {x: x, z: z, y: arena && arena.surfaceY ? arena.surfaceY(x, z) : 0, yaw: angle + Math.PI};
+    }
+    return {x: 0, z: 0, y: arena && arena.surfaceY ? arena.surfaceY(0, 0) : 0, yaw: turn};
   };
 })(typeof window !== 'undefined' ? window : globalThis);

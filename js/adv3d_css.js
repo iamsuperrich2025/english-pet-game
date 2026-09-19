@@ -1183,8 +1183,10 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
     touch-action:none;background:rgba(120,200,255,.14);border:2px solid rgba(150,220,255,.5);color:#dff2ff;
     border-radius:16px;align-items:center;justify-content:center;font-size:26px;font-weight:800;backdrop-filter:blur(2px)}
   .mecha-btn:active{background:rgba(120,200,255,.34)}
-  .mecha-btn.on{background:rgba(80,210,255,.42);border-color:rgba(180,240,255,.95);box-shadow:0 0 14px rgba(80,200,255,.55);
-    color:#fff}
+  /* 🤖 รอบ 1500: ปุ่มที่กำลังกด/เปิด auto = สีทึบชัด (เลิกโปร่ง) */
+  .mecha-btn.on{background:#1ec8ff;border-color:#f2fcff;color:#00344a;
+    box-shadow:0 0 18px rgba(30,200,255,.95),inset 0 0 0 2px rgba(255,255,255,.4);
+    text-shadow:none;backdrop-filter:none}
   .adv-touch.adv-mecha .mecha-btn{display:flex}
   /* 🤖 รอบ 1491: คลัสเตอร์ซ้ายล่าง = auto ▲▼◀▶ (กดสลับเปิด/ปิด) · เอาปุ่มเดินขวามือออก */
   #mecha-fwd{left:96px;bottom:104px;width:70px;height:70px;border-radius:50%}
@@ -1199,7 +1201,8 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
     font-size:11px;font-weight:900;letter-spacing:1.2px;text-shadow:0 0 6px rgba(127,230,255,.85)}
   #mecha-fire{right:146px;top:186px;width:92px;height:92px;border-radius:50%}   /* รอบ 221: คอลัมน์เดียวกับ vmode */
   #mecha-fire2{left:24px;top:138px;width:84px;height:84px;border-radius:50%}   /* รอบ 223: ใต้ minimap ซ้าย */
-  #mecha-fire:active,#mecha-fire2:active{background:rgba(80,200,255,.28)}
+  #mecha-fire:active,#mecha-fire2:active{background:#ff6a28;border-color:#ffe8d0;color:#fff;
+    box-shadow:0 0 18px rgba(255,106,40,.9),inset 0 0 0 2px rgba(255,255,255,.35);text-shadow:none}
   #mecha-fire .mh-fire-ico,#mecha-fire2 .mh-fire-ico{width:22px;height:22px;border-radius:50%;
     border:2px solid currentColor;box-shadow:0 0 8px currentColor;position:relative}
   #mecha-fire .mh-fire-ico:before,#mecha-fire2 .mh-fire-ico:before{content:'';position:absolute;left:50%;top:50%;
@@ -1315,6 +1318,10 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
     box-shadow:0 0 16px rgba(255,210,80,.8)}
   #mecha-fire.fs-shield,#mecha-fire2.fs-shield{background:rgba(120,215,255,.45);border-color:#8fe6ff;
     box-shadow:0 0 16px rgba(120,215,255,.75)}
+  /* 🤖 รอบ 1500: กำลังกด FIRE = สีทึบทับสถานะอื่น */
+  #mecha-fire.on,#mecha-fire2.on{background:#ff6a28;border-color:#ffe8d0;color:#fff;
+    box-shadow:0 0 20px rgba(255,106,40,.95),inset 0 0 0 2px rgba(255,255,255,.4);
+    text-shadow:none;animation:none}
   html.no-anim #mecha-fire.fs-over,html.no-anim #mecha-fire2.fs-over{animation:none}
   /* 📊 รอบ 228: บรรทัดสถิติในหน้าจบเกม */
   .adv-ko-stat{margin:6px auto 2px;padding:5px 10px;border-radius:10px;font-size:13px;font-weight:700;

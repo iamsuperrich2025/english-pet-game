@@ -4,9 +4,10 @@
   const VF = root.VocabForce = root.VocabForce || {};
   let opening = false, running = false, raf = 0, last = 0;
   let renderer = null, scene = null, camera = null, THREE = null;
-  let player, camRig, input, combat, enemies, arena, fx, hud, round, flyers, trails, fireTrail, secondary, energy, letters, net, healPad;
+  let player, camRig, input, combat, enemies, arena, fx, hud, round, flyers, trails, fireTrail, secondary, energy, letters, net, healPad, oilTanker, spectator;
   let winLock = false, ackOpen = false, pendingWord = null;
   let collusionWatch = null, collusionPending = null;
+  let tankerEventSeq = 0;
   const CORE = ['run', 'punch', 'kick', 'block', 'jump', 'vault'];
 
   function loadThree(){
@@ -55,12 +56,32 @@
     ackOpen = false;
     pendingWord = null;
     round.start(preferred);
+    if(net && net.resetRound) net.resetRound(round.seed);
+    if(combat && combat.reset) combat.reset();
+    if(energy && energy.cancel) energy.cancel();
+    if(fireTrail && fireTrail.clear) fireTrail.clear();
+    if(oilTanker && oilTanker.reset) oilTanker.reset(round.seed);
     if(letters) letters.spawn(THREE, round.progress.word, arena, round.seed);
     if(hud){
       if(hud.hideWin) hud.hideWin();
       hud.paintRound(round);
+      if(hud.setSpectator) hud.setSpectator(false);
     }
-    if(player && player.alive !== false) player.setPose(player.x || 0, arena.surfaceY(player.x || 0, player.z || 0), player.z || 0, player.yaw);
+    if(spectator) spectator.exit();
+    if(input && input.setSpectating) input.setSpectating(false);
+    if(player){
+      const ids = net && net.participantIds ? net.participantIds() : ['local'];
+      const mine = net && net.myUid || 'local';
+      const avoid = oilTanker && oilTanker.spawnAvoidance ? oilTanker.spawnAvoidance() : {x: (VF.TANKER_SPAWN || {}).x || 84, z: (VF.TANKER_SPAWN || {}).z || -18, radius: 18};
+      const pos = VF._t.fairSpawn ? VF._t.fairSpawn(ids, mine, round.seed, arena, avoid) : {x: 0, y: arena.surfaceY(0, 0), z: 0, yaw: 0};
+      if(player.resetForRound) player.resetForRound(pos);
+      else{
+        player.hp = player.maxHp || VF.PLAYER_HP || 1000;
+        player.alive = true;
+        player.setPose(pos.x, pos.y, pos.z, pos.yaw);
+      }
+      if(hud && hud.setHp) hud.setHp(player.hp, player.maxHp);
+    }
     if(collusionWatch && collusionWatch.reset) collusionWatch.reset();
     if(enemies && enemies.resetHunterWave) enemies.resetHunterWave();
     syncHunters();
@@ -120,7 +141,7 @@
       VF.audio.letter();
       hud.paintRound(round);
       if(result.complete && result.reason !== 'extra'){
-        const reward = round.creditIfComplete();
+        const reward = round.creditIfComplete(net && net.humanCount ? net.humanCount() : 1);
         announceWin({
           name: playerName(),
           word: round.progress.word,
@@ -138,7 +159,7 @@
   function loseLifeLetters(){
     if(!round) return;
     if(round.progress && round.progress.complete){
-      hud.toast('หมดแรง · เกิดใหม่ที่กลางลาน');
+      hud.toast('หมดแรง · ชมเพื่อนจนกว่าจะขึ้นคำใหม่');
       return;
     }
     const bag = (round.progress && round.progress.bag || []).slice();
@@ -156,7 +177,56 @@
     }
     hud.showComplete('', false);
     hud.paintRound(round);
-    hud.toast(bag.length ? 'ตายแล้ว · ตัวอักษรตกที่พื้น ให้เพื่อนเก็บได้' : 'หมดแรง · เกิดใหม่ที่กลางลาน');
+    hud.toast(bag.length ? 'ตายแล้ว · ตัวอักษรตกที่พื้น · ชมเพื่อนจนจบรอบ' : 'หมดแรง · ชมเพื่อนจนจบรอบ');
+  }
+
+  function enterSpectator(){
+    if(!player || player.alive !== false) return;
+    if(combat && combat.reset) combat.reset();
+    if(energy && energy.cancel) energy.cancel();
+    if(fireTrail && fireTrail.clear) fireTrail.clear();
+    if(spectator && !spectator.active) spectator.enter();
+    if(input && input.setSpectating) input.setSpectating(true);
+    if(hud && hud.quest) hud.quest.hide();
+  }
+
+  function consumePlayerDeath(){
+    if(!player || !player.consumeDeath || !player.consumeDeath()) return false;
+    loseLifeLetters();
+    enterSpectator();
+    return true;
+  }
+
+  function requestTankerHit(req){
+    if(!req || !round || !net || !net.requestTankerHit) return;
+    net.requestTankerHit(req, round.seed);
+  }
+
+  function tankerExplosion(eventId, pos){
+    if(!player || player.alive === false || !eventId) return;
+    const dmg = player.takeHit(VF.TANKER_DAMAGE || 500, false, {from: 'tanker', bypassInvuln: true});
+    if(dmg > 0){
+      if(hud && hud.setHp) hud.setHp(player.hp, player.maxHp);
+      if(hud && hud.hurtFlash) hud.hurtFlash(dmg / (player.maxHp || 1000));
+      if(camRig && camRig.impulse) camRig.impulse(1.6, 8, {low: true});
+      consumePlayerDeath();
+    }
+  }
+
+  function tickTanker(dt){
+    if(!oilTanker || !oilTanker.ready) return;
+    if(net && net.isHost && net.isHost() && net.consumeTankerRequests){
+      const requests = net.consumeTankerRequests();
+      for(let i = 0; i < requests.length && oilTanker.state === 'idle'; i++){
+        const tag = String(round && round.seed || 0) + ':' + (++tankerEventSeq) + ':' + (VF._t.stableHash ? VF._t.stableHash(requests[i].id) : tankerEventSeq);
+        const ev = oilTanker.acceptRequest(requests[i], tag, round && round.seed);
+        if(ev && net.publishTankerEvent) net.publishTankerEvent(ev);
+      }
+    }
+    if(net && net.consumeTankerEvents){
+      net.consumeTankerEvents().forEach(function(ev){ oilTanker.applyEvent(ev); });
+    }
+    oilTanker.tick(dt);
   }
 
   function handleDefeat(en){
@@ -168,13 +238,19 @@
   }
 
   let zomReady = false, zomLoading = false;
+  function huntersAllowed(){
+    const here = net && net.humanCount ? net.humanCount() : 1;
+    return VF._t.wantHunters ? VF._t.wantHunters(here) : here < 5;
+  }
   function ensureZombies(){
+    if(!huntersAllowed()) return Promise.resolve(false);
     if(zomReady || zomLoading) return Promise.resolve(zomReady);
     if(!VF.ZomAssets || !VF.ZomAssets.prepare) return Promise.resolve(false);
     zomLoading = true;
     return VF.ZomAssets.prepare().then(function(){
-      zomReady = true;
       zomLoading = false;
+      if(!huntersAllowed()) return false;
+      zomReady = true;
       syncHunters();
       return true;
     }).catch(function(err){
@@ -185,6 +261,10 @@
   }
 
   function syncHunters(){
+    if(!huntersAllowed()){
+      if(enemies && enemies.dropHunters) enemies.dropHunters();
+      return;
+    }
     if(!zomReady){ ensureZombies(); return; }
     if(collusionPending && enemies && enemies.spawnCollusionHunters){
       enemies.spawnCollusionHunters(collusionPending.extra, arena, collusionPending.around);
@@ -205,7 +285,7 @@
   }
 
   function tickCollusion(dt){
-    if(ackOpen || winLock || !player) return;
+    if(ackOpen || winLock || !player || !huntersAllowed()) return;
     if(!collusionWatch && VF._t.makeCollusionWatch) collusionWatch = VF._t.makeCollusionWatch();
     if(!collusionWatch) return;
     const people = peopleSnap();
@@ -263,23 +343,27 @@
       if(player && player.anim) player.anim.tick(dt);
       if(player && player._sync) player._sync();
       if(fx) fx.tick(dt);
-      if(camRig) camRig.tick(dt, player);
       if(hud && hud.quest) hud.quest.hide();
       tickNet(dt);
+      tickTanker(dt);
+      const winnerView = spectator && spectator.active ? spectator.tick(poll, net, hud, arena) : player;
+      if(camRig) camRig.tick(dt, winnerView || player);
       renderer.render(scene, camera);
       return;
     }
-    if(poll.lookX || poll.lookY) camRig.look(poll.lookX, poll.lookY);
+    let active = !!(player && player.alive !== false);
+    if(active && (poll.lookX || poll.lookY)) camRig.look(poll.lookX, poll.lookY);
     const paused = combat.hitStop > 0;
     if(secondary && !paused) secondary.tickClock(dt);
     const scale = paused ? 0 : (secondary ? secondary.simScale(combat.hitStop) : 1);
     const step = paused ? 0 : dt * scale;
-    combat.tick(dt, now, player, enemies, fx, camRig, VF.audio, secondary, peopleSnap());
-    if(!paused && poll.dash) player.tryManualDash(poll, camRig, arena, fx, camRig, now);
-    if(!paused && poll.punch) combat.handleAttackPress('punch', player, now, enemies, camRig, arena, fx, energy, VF.audio, {hold: !!poll.punchHeld, people: peopleSnap()});
-    if(!paused && poll.kick) combat.tryAttackOrApproach(player.anim.has('kick') ? 'kick' : 'punch', player, now, enemies, camRig, arena, fx);
-    const freezeMove = energy && energy.hold && energy.hold.active && Math.hypot(poll.moveX || 0, poll.moveZ || 0) > ((VF.EnergyAttackTune && VF.EnergyAttackTune.aimStickDeadzone) || 0.12);
-    player.tick(step, freezeMove ? Object.assign({}, poll, {moveX: 0, moveZ: 0}) : poll, camRig, arena);
+    if(active) combat.tick(dt, now, player, enemies, fx, camRig, VF.audio, secondary, peopleSnap(), oilTanker);
+    if(active && !paused && poll.dash) player.tryManualDash(poll, camRig, arena, fx, camRig, now);
+    if(active && !paused && poll.punch) combat.handleAttackPress('punch', player, now, enemies, camRig, arena, fx, energy, VF.audio, {hold: !!poll.punchHeld, people: peopleSnap(), world: oilTanker});
+    if(active && !paused && poll.kick) combat.tryAttackOrApproach(player.anim.has('kick') ? 'kick' : 'punch', player, now, enemies, camRig, arena, fx);
+    const freezeMove = active && energy && energy.hold && energy.hold.active && Math.hypot(poll.moveX || 0, poll.moveZ || 0) > ((VF.EnergyAttackTune && VF.EnergyAttackTune.aimStickDeadzone) || 0.12);
+    const playerInput = active ? (freezeMove ? Object.assign({}, poll, {moveX: 0, moveZ: 0}) : poll) : {moveX: 0, moveZ: 0};
+    player.tick(step, playerInput, camRig, arena);
     if(player.consumePowerJumpEvents){
       player.consumePowerJumpEvents().forEach(function(ev){ handlePowerJumpEvent(ev, true); });
     }
@@ -288,7 +372,7 @@
     if(chained) combat.tryAttack(chained, player, now);
     if(hud && hud.setDashCooldown) hud.setDashCooldown(player.dashCooldownFrac(now));
     if(enemies && enemies.setPrey) enemies.setPrey(peopleSnap());
-    if(zomReady && enemies && enemies.tickHuntSpawn && !ackOpen && !winLock) enemies.tickHuntSpawn(step, peopleSnap(), arena);
+    if(zomReady && huntersAllowed() && enemies && enemies.tickHuntSpawn && !ackOpen && !winLock) enemies.tickHuntSpawn(step, peopleSnap(), arena);
     const sim = enemies.tick(step, player, arena);
     (sim.dead || []).forEach(handleDefeat);
     (sim.bites || []).forEach(function(b){
@@ -298,7 +382,7 @@
         camRig.impulse(0.28, 2.4);
         if(hud && hud.setHp) hud.setHp(player.hp, player.maxHp);
         if(hud && hud.hurtFlash) hud.hurtFlash(dmg / (player.maxHp || 1000));
-        if(player.consumeDeath && player.consumeDeath()) loseLifeLetters();
+        consumePlayerDeath();
       }
     });
     if(letters){
@@ -334,15 +418,15 @@
         camRig.impulse(0.22, 3);
       }
     });
-    if(healPad) healPad.tick(step, player, hud, VF.audio, camRig);
-    if(energy) energy.tick(step, now, player, enemies, arena, fx, camRig, combat, VF.audio, {held: !!poll.punchHeld, released: !!poll.punchReleased, moveX: poll.moveX || 0, moveZ: poll.moveZ || 0, people: peopleSnap()});
+    active = !!(player && player.alive !== false);
+    if(active && healPad) healPad.tick(step, player, hud, VF.audio, camRig);
+    if(active && energy) energy.tick(step, now, player, enemies, arena, fx, camRig, combat, VF.audio, {held: !!poll.punchHeld, released: !!poll.punchReleased, moveX: poll.moveX || 0, moveZ: poll.moveZ || 0, people: peopleSnap()});
     if(secondary) secondary.trails(step, enemies, fx, player);
     fx.tick(dt);
     if(trails) trails.tick(step);
     if(fireTrail) fireTrail.tick(dt, enemies, player);
-    camRig.tick(dt, player);
     const needed = round && round.progress && !round.progress.complete ? round.progress.required() : null;
-    if(hud && hud.quest){
+    if(player && player.alive !== false && hud && hud.quest){
       try{
         const target = needed && letters && letters.nearest ? letters.nearest(needed, player.x, player.z) : null;
         if(target && camera) hud.quest.update(camera, target, needed, THREE || root.THREE);
@@ -352,6 +436,15 @@
       }
     }
     if(net) tickNet(dt);
+    tickTanker(dt);
+    if(player && player.alive === false){
+      enterSpectator();
+      const watched = spectator && spectator.tick ? spectator.tick(poll, net, hud, arena) : null;
+      camRig.tick(dt, watched || player);
+    }else{
+      if(hud && hud.setSpectator) hud.setSpectator(false);
+      camRig.tick(dt, player);
+    }
     tickCollusion(dt);
     renderer.render(scene, camera);
   }
@@ -363,7 +456,7 @@
         name: name || 'เพื่อน',
         word: word,
         thai: thai || '',
-        reward: VF.LETTER_REWARD,
+        reward: VF._t.wordReward ? VF._t.wordReward(net.humanCount ? net.humanCount() : 1) : VF.LETTER_REWARD,
         local: false,
         uid: uid || '',
         av: av || ''
@@ -390,7 +483,7 @@
         player.takeHit(hit.dmg, !!player.blocking, {from: from, zone: hit.zone, headshot: hit.zone === 'head'});
         if(hud && hud.setHp) hud.setHp(player.hp, player.maxHp);
         if(hud && hud.hurtFlash) hud.hurtFlash((hit.dmg || 0) / (player.maxHp || 1000));
-        if(player.consumeDeath && player.consumeDeath()) loseLifeLetters();
+        consumePlayerDeath();
       });
     }
   }
@@ -405,10 +498,6 @@
   }
 
   async function open(){
-    if(!VF.adminAllowed()){
-      if(typeof toast === 'function') toast(VF.LOCK_MSG);
-      return;
-    }
     if(opening || running) return;
     opening = true;
     try{
@@ -450,6 +539,13 @@
       scene = new THREE.Scene();
       camera = new THREE.PerspectiveCamera(52, 1, 0.12, VF.CAMERA_FAR || 980);
       arena = new VF.PrototypeArena().build(scene);
+      oilTanker = new VF.OilTankerController();
+      oilTanker.onHitRequest = requestTankerHit;
+      oilTanker.onExplosion = tankerExplosion;
+      const tankerLoad = oilTanker.attach(scene, arena).catch(function(err){
+        console.warn('[VocabForce] oil tanker load skip', err);
+        return null;
+      });
       healPad = VF.HealPad ? new VF.HealPad().attach(scene) : null;
       fx = new VF.ImpactFXManager().attach(scene);
       trails = new VF.MotionTrailManager().attach(scene);
@@ -458,6 +554,7 @@
       energy = new VF.EnergyAttackController().attach(scene);
       enemies = new VF.EnemyManager().attach(scene);
       letters = new VF.LetterField().attach(scene);
+      spectator = new VF.SpectatorController();
       camRig = new VF.ThirdPersonCamera().attach(camera);
       player = new VF.NexCharacterController();
       hud.setLoad(0.18, 'กำลังโหลดตัวละคร ' + picked.displayName, picked);
@@ -466,13 +563,14 @@
       if(fireTrail && fireTrail.bind) fireTrail.bind(player);
       hud.setLoad(0.22, 'กำลังโหลดแอนิเมชัน', picked);
       await loadClips(picked);
+      hud.setLoad(0.58, 'กำลังเตรียมรถบรรทุกน้ำมัน', picked);
+      await tankerLoad;
       hud.setLoad(0.62, 'กำลังเข้าสนาม', picked);
       round = new VF.VocabularyRoundController();
       combat = new VF.CombatController();
       input = new VF.VocabForceInput();
       input.bind(hud.root, hud.els);
       if(energy && energy.bindHud) energy.bindHud(hud.root.querySelector('.vf-punch'), hud);
-      beginRound();
       net = new VF.VocabForceNet();
       net.start(scene, player, function(pair){
         if(!running || !pair || !pair.w) return;
@@ -483,6 +581,7 @@
         if(hud && hud.setNet && net) hud.setNet(net.roomHud ? net.roomHud() : net.statusText());
         syncHunters();
       });
+      beginRound();
       if(hud.setNet) hud.setNet(net.roomHud ? net.roomHud() : net.statusText());
       ensureZombies();
       hud.setLoad(1, 'พร้อม');
@@ -512,6 +611,7 @@
     pendingWord = null;
     collusionWatch = null;
     collusionPending = null;
+    tankerEventSeq = 0;
     if(raf) cancelAnimationFrame(raf);
     raf = 0;
     if(input) input.unbind();
@@ -528,6 +628,9 @@
     if(letters) letters.clear();
     if(hud) hud.hide();
     if(enemies) enemies.clear();
+    if(oilTanker && oilTanker.dispose) oilTanker.dispose();
+    oilTanker = null;
+    spectator = null;
     if(healPad && healPad.dispose) healPad.dispose();
     healPad = null;
     if(fx) fx.dispose();
@@ -540,5 +643,5 @@
 
   VF.open = open;
   VF.close = close;
-  VF._t.live = function(){ return {player: player, enemies: enemies, round: round, combat: combat, cam: camRig, secondary: secondary, fx: fx, character: player && player.def}; };
+  VF._t.live = function(){ return {player: player, enemies: enemies, round: round, combat: combat, cam: camRig, secondary: secondary, fx: fx, tanker: oilTanker, spectator: spectator, arena: arena, scene: scene, net: net, hud: hud, input: input, resetRound: beginRound, character: player && player.def}; };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -9,8 +9,14 @@
     this.last = {kind: '', at: 0};
   }
 
+  CombatController.prototype.reset = function(){
+    this.queue.length = 0;
+    this.hitStop = 0;
+    this.last = {kind: '', at: 0};
+  };
+
   CombatController.prototype.tryAttack = function(kind, player, now){
-    if(!player || !player.anim) return null;
+    if(!player || player.alive === false || !player.anim) return null;
     if(player.isDashing && player.isDashing()) return null;
     if(player.anim.isBusy(now)) return null;
     const man = player.manifest || (player.anim && player.anim.manifest) || VF.NexManifest;
@@ -67,7 +73,8 @@
 
   CombatController.prototype.handleAttackPress = function(kind, player, now, enemies, camera, arena, fx, energy, audio, flags){
     if(kind !== 'punch') return this.tryAttackOrApproach(kind, player, now, enemies, camera, arena, fx);
-    if(VF._t.hasMeleeTarget(player, enemies, 'punch', flags && flags.people)){
+    const worldNear = flags && flags.world && flags.world.canMelee && flags.world.canMelee(player, 3.1);
+    if(worldNear || VF._t.hasMeleeTarget(player, enemies, 'punch', flags && flags.people)){
       if(energy && energy.cancel) energy.cancel();
       return this.tryAttackOrApproach('punch', player, now, enemies, camera, arena, fx);
     }
@@ -76,7 +83,7 @@
     return this.tryAttackOrApproach('punch', player, now, enemies, camera, arena, fx);
   };
 
-  CombatController.prototype.tick = function(dt, now, player, enemies, fx, camera, audio, secondary, people){
+  CombatController.prototype.tick = function(dt, now, player, enemies, fx, camera, audio, secondary, people, world){
     if(this.hitStop > 0){
       this.hitStop = Math.max(0, this.hitStop - dt);
       return {paused: this.hitStop > 0, hits: []};
@@ -109,6 +116,12 @@
           reaction: tune.reaction,
           level: tune.level
         }) : [];
+        const worldStruck = !!(world && world.meleeHit && world.meleeHit(origin, atk.radius + atk.range * 0.15, {
+          kind: atk.kind,
+          force: atk.force,
+          dir: fwd,
+          player: player
+        }));
         let burst = false;
         struck.forEach(function(en){
           hits.push(en);
@@ -148,10 +161,11 @@
             secondary.slowT = Math.max(secondary.slowT || 0, (T.slowMotionMs || 110) / 1000);
             secondary.slowScale = T.slowScale || 0.32;
           }
-        }else if(struck.length){
+        }else if(struck.length || worldStruck){
           const stop = VF.clamp(tune.hitStop || 0.06, 0.04, VF.CombatTune.HIT_STOP_MAX);
           this.hitStop = stop;
-          if(camera && camera.impulse) camera.impulse(tune.cameraShake, tune.fovPunch);
+          if(camera && camera.impulse) camera.impulse(worldStruck ? Math.max(1.25, tune.cameraShake || 0) : tune.cameraShake, worldStruck ? 8 : tune.fovPunch, {low: worldStruck});
+          if(worldStruck && audio && audio.heavyImpact) audio.heavyImpact();
         }
         const folks = people || [];
         const pr = (VF.GunTune && VF.GunTune.PLAYER_R) || 0.62;

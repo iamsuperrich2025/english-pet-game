@@ -89,6 +89,7 @@ function syncAdminAccess(){
   if(typeof LetterCannon!=='undefined'&&LetterCannon.refreshLock)LetterCannon.refreshLock();
   if(typeof refreshWordShipLock==='function')refreshWordShipLock();
   if(typeof refreshSkirmishLock==='function')refreshSkirmishLock();
+  if(typeof refreshVocabForceLock==='function')refreshVocabForceLock();
   if(typeof refreshMechaLock==='function')refreshMechaLock();
   if(typeof HomeTheme!=='undefined' && HomeTheme && typeof HomeTheme.paint==='function') HomeTheme.paint();
 }

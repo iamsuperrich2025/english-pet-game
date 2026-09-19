@@ -52,6 +52,13 @@
 .vf-sound.is-off::after{content:"✕";left:auto;right:8px;color:#e8f6f299;font-size:11px}
 #vf-game.is-selecting .vf-sound{right:calc(12px + env(safe-area-inset-right));top:calc(10px + env(safe-area-inset-top))}
 .vf-hint{position:absolute;left:50%;bottom:calc(12px + env(safe-area-inset-bottom));transform:translateX(-50%);margin:0;padding:4px 12px;border-radius:999px;background:rgba(8,16,24,.55);font-size:clamp(10px,1.4vw,13px);max-width:90vw;text-align:center}
+.vf-spectator{position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:12;min-width:min(76vw,260px);max-width:86vw;padding:7px 14px 8px;border-radius:14px;text-align:center;background:linear-gradient(180deg,rgba(8,18,30,.82),rgba(5,10,18,.94));border:1px solid rgba(255,179,76,.58);box-shadow:0 0 20px rgba(255,100,24,.24),0 8px 22px #0008;pointer-events:none}
+.vf-spectator[hidden]{display:none !important}
+.vf-spectator small{display:block;color:#ffb34c;font-size:9px;letter-spacing:.26em;font-weight:900;line-height:1}
+.vf-spectator strong{display:block;margin-top:3px;color:#fff4d0;font-size:clamp(13px,2.4vw,18px);line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vf-spectator span{display:block;margin-top:2px;color:#d8e5ee;font-size:10px;opacity:.78}
+#vf-game.is-spectating .vf-touch,#vf-game.is-spectating .vf-energy-charge,#vf-game.is-spectating .vf-quest,#vf-game.is-spectating .vf-hint{display:none !important}
+#vf-game.is-spectating .vf-hp{opacity:.72}
 .vf-toast{position:absolute;left:50%;top:28%;transform:translate(-50%,-50%);padding:8px 16px;border-radius:999px;background:#081018ee;border:1px solid #7cffcf66;font-weight:700}
 .vf-win{position:absolute;inset:0;z-index:18;display:flex;align-items:center;justify-content:center;background:rgba(4,10,18,.72);pointer-events:auto;padding:10px}
 .vf-win[hidden]{display:none !important}
@@ -167,6 +174,8 @@
 .vf-dash .vf-act-ico::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:conic-gradient(rgba(8,16,24,.55) calc(var(--vf-cd) * 360deg), transparent 0);opacity:.9}
 @media(max-height:430px){
   .vf-hint{display:none}
+  .vf-spectator{bottom:calc(6px + env(safe-area-inset-bottom));padding:5px 12px 6px}
+  .vf-spectator span{font-size:9px}
   .vf-act{width:60px}
   .vf-act-ico{width:54px;height:54px}
   .vf-jump,.vf-block{bottom:calc(78px + env(safe-area-inset-bottom))}
@@ -206,7 +215,7 @@
 #vf-game.is-selecting{touch-action:manipulation}
 .vf-select{display:none;position:absolute;inset:0;z-index:20;pointer-events:auto;flex-direction:column;align-items:stretch;justify-content:stretch;min-height:0;overflow:hidden;background:
   linear-gradient(180deg,rgba(8,12,28,.62),rgba(8,12,28,.78)),
-  url('../map/arena-lot.jpg') center/cover no-repeat;
+  url('../map/arena-lot.avif') center/cover no-repeat;
   padding:calc(8px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left))}
 #vf-game.is-selecting .vf-select{display:flex}
 .vf-select[hidden]{display:none !important}

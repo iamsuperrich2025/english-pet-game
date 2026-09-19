@@ -11,6 +11,15 @@
 > ประวัติ Frontline 1372–1373: `handoff/archive/frontline-1372-1373.md`
 
 ### 📌 สรุปสถานะล่าสุด
+- รอบ 1564 · Vocab Force เปิดสาธารณะทั้งปุ่มรางซ้าย Classic/Home V2; รางวัลจบคำตามคนในลาน: 1–5 = 1,000, 6–10 = 3,000, 11–14 = 10,000 เหรียญ
+- BGM เริ่มใน user gesture โดยตรง, retry เมื่อแตะ/คลิก, เล่นวน `loop=true`; production ใช้ GLB runtime pack 33 ไฟล์ 101.5 MiB ป้องกันโมเดลหายหลัง deploy
+- เปลี่ยนภาพ runtime เป็น WebP/AVIF จริง (คง alpha/dimensions, portrait/loading จาก 8.6 MiB เหลือ 0.96 MiB; texture AVIF PSNR 43–45 dB) และไม่ส่ง PNG/JPG/reference/raw model
+- QA รวมรอบ 1563–1564: unit 572 + Home V2 + source/dist mobile + 2-tab host/peer + BGM 60.024 วิวนลูป + build 10,158 ไฟล์/1,436.0 MiB + validator ผ่าน · เตรียม deploy รวมครั้งเดียว
+- รอบ 1563 · Vocab Force เพิ่มรถบรรทุกน้ำมัน GLB ขนาด 13.6 ม. ชนไม่ได้; หมัด/เตะระยะใกล้ทำให้พุ่งตีลังกา ระเบิดครั้งเดียว + shockwave/fire ring ขยายทั้งแผนที่
+- host รับ melee request แล้วประกาศ event ID เดียว; ผู้เล่นแต่ละคนใช้ token เดิมหัก 500 HP ครั้งเดียว และตายแล้วล็อกทุก control เข้า spectator swipe/←→ จนจบรอบ
+- คำรอบใหม่คืน HP/alive/control/effect, วางผู้เล่นตาม UID บน spawn ring ระยะเท่ากัน และ reset รถตำแหน่ง/หมุน/ฟิสิกส์/ดาเมจโดยไม่สร้าง GLB ซ้ำ
+- QA: unit 572 + browser 812×375 (พุ่ง 56 ม./หมุน 18.7 rad/UI ไม่ล้น/วงไฟขยาย/reset ผ่าน) + 2-tab host/peer event เดียว/ตาย/spectator/reset/spawn 68 ม. ผ่าน + build 10,158 ไฟล์/1,445.1 MiB + validator ผ่าน · ไม่ deploy
+
 - รอบ 1562 · Vocab Force: ซอมบี้เหลือคนละ 5 ตัว (`HUNTER_OPEN` 2 แล้วค่อยเติม) แก้เกมอืดจากคลื่น 20
 - ตายแล้วยังไม่เกิดใหม่จนกว่ารอบคำศัพท์ใหม่ · cache `?v=z5`
 - QA: `node tools/test_vocab_force.js` 545 ผ่าน · ในเกม live hunters = 5 · ไม่ deploy

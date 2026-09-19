@@ -43,6 +43,34 @@
     }catch(_){}
     return 'ผู้เล่น';
   }
+  function packTankerRequest(req){
+    if(!req) return '-';
+    return [
+      Number(req.round) || 0,
+      Number(req.seq) || 0,
+      String(req.kind || 'punch').charAt(0).toUpperCase(),
+      Number(req.dx || 0).toFixed(3),
+      Number(req.dz || 0).toFixed(3)
+    ].join('~');
+  }
+  function parseTankerRequest(raw){
+    const p = String(raw || '').split('~');
+    if(p.length < 5 || !isFinite(Number(p[0]))) return null;
+    return {round: Number(p[0]) || 0, seq: Number(p[1]) || 0, kind: p[2] === 'K' ? 'kick' : 'punch', dx: Number(p[3]) || 0, dz: Number(p[4]) || 0};
+  }
+  function packTankerEvent(ev){
+    if(!ev || !ev.id) return '-';
+    return [
+      String(ev.id), Number(ev.round) || 0, Number(ev.startAt) || Date.now(),
+      Number(ev.x || 0).toFixed(2), Number(ev.z || 0).toFixed(2),
+      Number(ev.dx || 0).toFixed(4), Number(ev.dz || 0).toFixed(4)
+    ].join('~');
+  }
+  function parseTankerEvent(raw){
+    const p = String(raw || '').split('~');
+    if(p.length < 7 || !p[0] || p[0] === '-') return null;
+    return {id: p[0], round: Number(p[1]) || 0, startAt: Number(p[2]) || 0, x: Number(p[3]) || 0, z: Number(p[4]) || 0, dx: Number(p[5]) || 0, dz: Number(p[6]) || 0};
+  }
 
   function VocabForceNet(){
     this.room = null;
@@ -56,6 +84,12 @@
     this._seenJump = {};
     this._seenOverdrive = {};
     this._seenStrike = {};
+    this._roundSeed = 0;
+    this._tankerSeq = 0;
+    this._tankerReq = '-';
+    this._tankerEvent = '-';
+    this._seenTankerReq = {};
+    this._seenTankerEvent = {};
   }
 
   VocabForceNet.prototype.humanCount = function(){
@@ -67,6 +101,81 @@
     if(!this.room || !this.room.online) return true;
     const ids = [this.myUid].concat(Object.keys(this.room.peers || {})).filter(Boolean).sort();
     return ids[0] === this.myUid;
+  };
+
+  VocabForceNet.prototype.participantIds = function(){
+    const ids = [this.myUid || 'local'];
+    for(const uid in this._rec) if(uid && ids.indexOf(uid) < 0) ids.push(uid);
+    return ids.sort();
+  };
+
+  VocabForceNet.prototype.spectatorTargets = function(){
+    const rows = [];
+    for(const uid in this._rec){
+      if(uid === this.myUid) continue;
+      const rec = this._rec[uid] || {};
+      if(rec.m === 1 || parseHp(rec.hp) <= 0) continue;
+      const vis = this.peers[uid];
+      rows.push({
+        id: uid,
+        name: String(rec.n || 'Player').slice(0, 40),
+        x: vis ? vis.x : (Number(rec.x) || 0),
+        y: vis ? vis.y : (Number(rec.y) || 0),
+        z: vis ? vis.z : (Number(rec.z) || 0),
+        pivot: vis && vis.pivot || null,
+        alive: true
+      });
+    }
+    return rows;
+  };
+
+  VocabForceNet.prototype.resetRound = function(seed){
+    this._roundSeed = Number(seed) || 0;
+    this._tankerReq = '-';
+    this._seenTankerReq = {};
+    this._seenTankerEvent = {};
+    if(this.isHost()) this._tankerEvent = '-';
+  };
+
+  VocabForceNet.prototype.requestTankerHit = function(req, roundSeed){
+    req = Object.assign({}, req || {}, {round: Number(roundSeed) || this._roundSeed || 0, seq: ++this._tankerSeq});
+    this._tankerReq = packTankerRequest(req);
+    if(this.player) this.player._vfDashForce = true;
+    return req;
+  };
+
+  VocabForceNet.prototype.consumeTankerRequests = function(){
+    if(!this.isHost()) return [];
+    const out = [];
+    const self = this;
+    function take(uid, raw, rec){
+      const req = parseTankerRequest(raw);
+      if(!req || req.round !== self._roundSeed) return;
+      const id = uid + '#' + req.round + '#' + req.seq;
+      if(self._seenTankerReq[id]) return;
+      self._seenTankerReq[id] = true;
+      req.id = id;
+      req.uid = uid;
+      req.x = rec && Number(rec.x) || 0;
+      req.z = rec && Number(rec.z) || 0;
+      out.push(req);
+    }
+    take(this.myUid || 'local', this._tankerReq, this.player);
+    for(const uid in this._rec) take(uid, this._rec[uid] && this._rec[uid].tr, this._rec[uid]);
+    return out;
+  };
+
+  VocabForceNet.prototype.publishTankerEvent = function(ev){
+    this._tankerEvent = packTankerEvent(ev);
+    if(this.player) this.player._vfDashForce = true;
+  };
+
+  VocabForceNet.prototype.consumeTankerEvents = function(){
+    const raw = this.isHost() ? this._tankerEvent : ((this._hostRecord() || {}).te || '-');
+    const ev = parseTankerEvent(raw);
+    if(!ev || ev.round !== this._roundSeed || this._seenTankerEvent[ev.id]) return [];
+    this._seenTankerEvent[ev.id] = true;
+    return [ev];
   };
 
   VocabForceNet.prototype.statusText = function(){
@@ -330,6 +439,8 @@
       c: String(word || '-').slice(0, 60),
       ct: (round && round.seed) || 0,
       cw: String((round && round.progress && round.progress.thai) || '').slice(0, 60)
+      ,tr: this._tankerReq || '-'
+      ,te: this.isHost() ? (this._tankerEvent || '-') : '-'
     }, force);
   };
 
@@ -389,6 +500,10 @@
     this._seenJump = {};
     this._seenOverdrive = {};
     this._seenStrike = {};
+    this._seenTankerReq = {};
+    this._seenTankerEvent = {};
+    this._tankerReq = '-';
+    this._tankerEvent = '-';
     if(this.room && this.room.leave) this.room.leave();
     this.room = null;
   };
@@ -397,4 +512,8 @@
   VF._t.packHp = packHp;
   VF._t.parseHp = parseHp;
   VF._t.parseDrop = parseDrop;
+  VF._t.packTankerRequest = packTankerRequest;
+  VF._t.parseTankerRequest = parseTankerRequest;
+  VF._t.packTankerEvent = packTankerEvent;
+  VF._t.parseTankerEvent = parseTankerEvent;
 })(typeof window !== 'undefined' ? window : globalThis);
