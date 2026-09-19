@@ -369,7 +369,7 @@
         av: av || ''
       });
     });
-    if(hud && hud.setNet) hud.setNet(net.statusText());
+    if(hud && hud.setNet) hud.setNet(net.roomHud ? net.roomHud() : net.statusText());
     if(info && info.collusion) syncHunters();
     if(letters && letters.applyPeerDrop && net.consumeDrops){
       net.consumeDrops().forEach(function(drop){
@@ -480,10 +480,10 @@
         if(ackOpen){ pendingWord = pair; return; }
         beginRound(pair);
       }, function(){
-        if(hud && hud.setNet && net) hud.setNet(net.statusText());
+        if(hud && hud.setNet && net) hud.setNet(net.roomHud ? net.roomHud() : net.statusText());
         syncHunters();
       });
-      if(hud.setNet) hud.setNet(net.statusText());
+      if(hud.setNet) hud.setNet(net.roomHud ? net.roomHud() : net.statusText());
       ensureZombies();
       hud.setLoad(1, 'พร้อม');
       hud.root.classList.remove('is-booting');

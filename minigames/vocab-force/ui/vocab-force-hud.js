@@ -26,9 +26,9 @@
           <span class="vf-thai"></span>
         </div>
         <div class="vf-glass vf-stats">
+          <small class="vf-net" aria-live="polite">ลานฝึก · 1 คน</small>
           <span>คำสำเร็จ <b class="vf-done">0</b></span>
           <span>เหรียญรอบนี้ <b class="vf-coins">0</b></span>
-          <small class="vf-net">โหมดฝึกเดี่ยว</small>
         </div>
         <div class="vf-hp" aria-live="polite">
           <b class="vf-hp-ico" aria-hidden="true">+</b>

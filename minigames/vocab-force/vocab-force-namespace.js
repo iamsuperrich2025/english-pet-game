@@ -189,6 +189,16 @@
       reset: function(){ dwell = 0; cool = 0; }
     };
   };
+  VF._t.roomHud = function(info){
+    info = info || {};
+    const cap = info.cap != null ? info.cap : (VF.ROOM_MAX || 14);
+    const here = Math.max(1, info.here || 1);
+    if(info.full) return 'ลานเต็ม · เล่นคนเดียว';
+    if(info.searching) return 'กำลังหาลาน…';
+    const lot = parseInt(info.lot, 10);
+    if(info.legacy || !isFinite(lot) || lot < 1) return 'ลานฝึก · ' + here + ' คน';
+    return 'ลาน ' + lot + ' · ' + here + '/' + cap + ' คน';
+  };
   VF._t.nextOpenRoom = function(filled, per, cap){
     const max = per != null ? per : (VF.ROOM_MAX || 14);
     const n = cap != null ? cap : (VF.ROOMS_MAX || 36);

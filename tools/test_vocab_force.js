@@ -371,6 +371,9 @@ assert(VF.ARENA_HALF===280&&VF.MAP_SCALE===10,'map is 10x the original 28-unit h
 assert(VF.NET_MAP==='vforce'&&VF.ROOM_MAX===14&&VF.ROOMS_MAX===36&&VF.HUNTER_PER_PLAYER===20,'online cap 14 + overflow rooms');
 assert(VF._t.nextOpenRoom([14],14,36)===1&&VF._t.nextOpenRoom([14,14,3],14,36)===2,'a full room opens the next lane');
 assert(VF._t.nextOpenRoom(Array(36).fill(14),14,36)===-1,'all 36 lanes full stays closed');
+assert(VF._t.roomHud({offline:true})==='ลานฝึก · 1 คน'&&VF._t.roomHud({searching:true})==='กำลังหาลาน…'&&VF._t.roomHud({full:true})==='ลานเต็ม · เล่นคนเดียว','lot HUD covers offline/search/full');
+assert(VF._t.roomHud({lot:2,here:5,cap:14})==='ลาน 2 · 5/14 คน'&&VF._t.roomHud({legacy:true,here:3})==='ลานฝึก · 3 คน','lot HUD shows lane and occupancy');
+assert(read('minigames/vocab-force/ui/vocab-force-hud.js').includes('ลานฝึก · 1 คน')&&css.includes('letter-spacing:.02em')&&runtime.includes('net.roomHud'),'HUD chip is the lot occupancy line');
 assert(read('minigames/vocab-force/runtime/vocab-force-net.js').includes('roomsCap')&&read('minigames/vocab-force/runtime/vocab-force-net.js').includes('openNewRoom'),'Vocab Force asks NetRoom to open a new lot');
 assert(VF.PLAYER_HP===1000&&VF.ZOMBIE_BITE===80&&VF.BLOCK_PVE===0.22&&VF.BLOCK_PVP===0.38,'player HP 1000 + bite/block tune');
 assert(ns.includes("'vocabulary/letter-field.js'")&&htmlPreview.includes('vocabulary/letter-field.js')&&build.includes('vocabulary/letter-field.js'),'letter field is loaded');

@@ -75,6 +75,22 @@
     return this.room.online ? ('👥 ' + this.humanCount() + ' คน') : '📡 กำลังหาห้อง…';
   };
 
+  VocabForceNet.prototype.roomHud = function(){
+    if(VF._t.roomHud){
+      if(!this.room) return VF._t.roomHud({offline: true, here: 1});
+      if(this.room.full) return VF._t.roomHud({full: true});
+      if(!this.room.joined) return VF._t.roomHud({searching: true});
+      const lot = parseInt(this.room.roomLabel, 10);
+      return VF._t.roomHud({
+        lot: lot,
+        here: this.humanCount(),
+        cap: VF.ROOM_MAX || 14,
+        legacy: !!this.room.legacy
+      });
+    }
+    return this.statusText();
+  };
+
   VocabForceNet.prototype._clonePeer = function(scene, player){
     const THREE = root.THREE;
     if(!player || !player.model || !VF._t.cloneSkinned) return null;

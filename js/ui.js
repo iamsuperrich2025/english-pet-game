@@ -7404,6 +7404,61 @@ function bindSkirmishRail(){
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bindSkirmishRail);
 else bindSkirmishRail();
+/* ==== ⚡ VOCAB FORCE — isolated admin/dev combat vocab (do not show to public) ==== */
+const VOCABFORCE_LOCK_MSG='🔒 Vocab Force กำลังทดสอบ — เปิดให้ผู้ดูแลระบบเท่านั้น';
+function vocabForceAdminAllowed(){
+  try{
+    if(typeof isAdmin==='function' && isAdmin()===true) return true;
+    if(typeof state!=='undefined' && state.adminAccess===true) return true;
+  }catch(_){}
+  return false;
+}
+function refreshVocabForceLock(){
+  const b=document.getElementById('btn-rail-vocabforce');
+  if(!b) return;
+  const ok=vocabForceAdminAllowed();
+  b.hidden=!ok;
+  b.setAttribute('aria-hidden', ok?'false':'true');
+  b.setAttribute('aria-disabled', ok?'false':'true');
+  b.title=ok?'เล่น Vocab Force (กำลังทดสอบ · แอดมิน)':VOCABFORCE_LOCK_MSG;
+  if(ok) b.removeAttribute('tabindex'); else b.tabIndex=-1;
+}
+async function loadVocabForceModules(){
+  const base='minigames/vocab-force/';
+  await loadStylesheetOnce('vocab-force-css', base+'css/vocab-force.css?v=lot');
+  await loadScriptOnce(base+'vocab-force-namespace.js');
+  const scripts=(window.VocabForce && VocabForce.SCRIPTS ? VocabForce.SCRIPTS : []).slice(1);
+  for(let i=0;i<scripts.length;i++) await loadScriptOnce(base+scripts[i]);
+}
+async function openVocabForce(){
+  if(typeof closePanel==='function') closePanel();
+  if(!vocabForceAdminAllowed()){
+    if(typeof toast==='function') toast(VOCABFORCE_LOCK_MSG);
+    return;
+  }
+  try{
+    if(typeof toast==='function' && (typeof VocabForce==='undefined' || !VocabForce.open)) toast('⚡ กำลังเปิด Vocab Force...');
+    await loadVocabForceModules();
+    if(window.VocabForce){
+      VocabForce.basePath='minigames/vocab-force/';
+      VocabForce.vendorPath='js/vendor/';
+      VocabForce.devPreview=false;
+    }
+    return VocabForce.open();
+  }catch(e){
+    console.error('VocabForce load fail', e);
+    if(typeof toast==='function') toast('⚠️ เปิด Vocab Force ไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
+  }
+}
+function bindVocabForceRail(){
+  const b=document.getElementById('btn-rail-vocabforce');
+  if(!b || b.dataset.vfBound) return;
+  b.dataset.vfBound='1';
+  b.addEventListener('click', ()=>{ openVocabForce(); });
+  refreshVocabForceLock();
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bindVocabForceRail);
+else bindVocabForceRail();
 /* 🚑 รอบ 859: guard ทางเข้าโลก 3D ห้ามเงียบ — ถ้ากดแล้วไม่เกิดอะไรเพราะ advLoading ค้าง ให้บอกผู้เล่นบนจอ
    (เงื่อนไขอื่น เช่น ไม่มีตั๋ว/บาดเจ็บ มีข้อความจากทางเข้าปกติอยู่แล้ว — เงียบเหมือนเดิม) */
 function advBusyMsg(retry){
