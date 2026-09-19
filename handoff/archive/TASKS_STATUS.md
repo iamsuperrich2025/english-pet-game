@@ -6695,3 +6695,12 @@ efreshMechaLock
 - QA: `node tools/test_vocab_force.js` 516 ผ่าน · ยืนในแท่นตัวละครยังเห็น · มองไกลเห็นเสา+หัวใจ · ไม่ deploy
 - ไฟล์: heal-pad.js, heal-pad-tune.js, vocab-force-runtime.js, index.html, test_vocab_force.js, docs/PROJECT_MAP.md
 
+
+
+## ⏬ ย้ายเมื่อ 2026-09-19 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- รอบ 1555 · Vocab Force: NEX กระโดดใช้ nex_Jump_with_Arms_Open.glb (คลิป Jump_with_Arms_Open) เหมือน Lyravyn
+- cache `?v=arms` · ไฟล์ hop เดิมยังอยู่ ไม่โหลด
+- QA: `node tools/test_vocab_force.js` 517 ผ่าน · ในเกมคลิป Jump_with_Arms_Open ตอนอยู่ในอากาศ · ไม่ deploy
+- ไฟล์: nex-animation-manifest.js, index.html, test_vocab_force.js, nex_Jump_with_Arms_Open.glb, docs/PROJECT_MAP.md
+
