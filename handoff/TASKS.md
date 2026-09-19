@@ -11,6 +11,11 @@
 > ประวัติ Frontline 1372–1373: `handoff/archive/frontline-1372-1373.md`
 
 ### 📌 สรุปสถานะล่าสุด
+- รอบ 1562 · Vocab Force: ซอมบี้เหลือคนละ 5 ตัว (`HUNTER_OPEN` 2 แล้วค่อยเติม) แก้เกมอืดจากคลื่น 20
+- ตายแล้วยังไม่เกิดใหม่จนกว่ารอบคำศัพท์ใหม่ · cache `?v=z5`
+- QA: `node tools/test_vocab_force.js` 545 ผ่าน · ในเกม live hunters = 5 · ไม่ deploy
+- ไฟล์: namespace, enemy-manager, index.html, test_vocab_force.js, PROJECT_MAP
+
 - รอบ 1561 · Vocab Force HUD: ชิปมุมซ้ายบนโชว์ลาน + คนในลาน (`ลาน 2 · 5/14 คน` / เดี่ยว `ลานฝึก · 1 คน`)
 - `VF._t.roomHud` + `net.roomHud` แทนข้อความ NetRoom สั้นที่เคยมีปุ่มไปหาเพื่อน
 - QA: `node tools/test_vocab_force.js` 545 ผ่าน · ในเกมชิปอ่านได้ desktop + 812×375 · ไม่ deploy

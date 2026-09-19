@@ -59,7 +59,7 @@
   };
 
   EnemyManager.prototype.waveCap = function(){
-    return VF.HUNTER_PER_PLAYER || 20;
+    return VF.HUNTER_PER_PLAYER || 5;
   };
 
   EnemyManager.prototype.waveCount = function(id){

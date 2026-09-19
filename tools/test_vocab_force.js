@@ -291,8 +291,8 @@ waveEM.waveOn=false;
 waveEM.resetHunterWave();
 assert(waveEM.list.length===1&&waveEM.list[0].letter==='A'&&waveEM.waveCount('p1')===0&&waveEM.waveOn,'wave reset keeps letters and forgets dead hunters');
 assert(waveEM.pickHuntTarget([{id:'p1',alive:true},{id:'p2',alive:true}]).id==='p1','lowest wave count is spawned first');
-for(let i=0;i<20;i++) waveEM.noteWaveSpawn('p1');
-assert(!waveEM.waveOpen('p1')&&waveEM.pickHuntTarget([{id:'p1',alive:true},{id:'p2',alive:true}]).id==='p2','dead or spawned hunters still count toward the 20 cap');
+for(let i=0;i<VF.HUNTER_PER_PLAYER;i++) waveEM.noteWaveSpawn('p1');
+assert(!waveEM.waveOpen('p1')&&waveEM.pickHuntTarget([{id:'p1',alive:true},{id:'p2',alive:true}]).id==='p2','dead or spawned hunters still count toward the per-player cap');
 waveEM.makeHunter=function(opts){
   return {hunter:true,alive:true,collusion:false,preyId:opts.preyId,x:opts.x,z:opts.z,letter:'',mesh:{parent:null,position:{set:function(){}}},bar:null};
 };
@@ -301,13 +301,13 @@ const solo={id:'hero',x:0,z:0,alive:true};
 waveEM.resetHunterWave();
 waveEM.list=[];
 waveEM.tickHuntSpawn(1,[solo],null);
-assert(waveEM.waveCount('hero')===4&&waveEM.list.length===4,'each player opens with a 4-zombie ring');
+assert(waveEM.waveCount('hero')===VF.HUNTER_OPEN&&waveEM.list.length===VF.HUNTER_OPEN,'each player opens with a small surround ring');
 waveEM.list.slice().forEach(function(en){ en.alive=false; waveEM.remove(en); });
 waveEM._spawnWait=0;
 waveEM.tickHuntSpawn(1,[solo],null);
-assert(waveEM.waveCount('hero')===5&&waveEM.list.length===1,'kills do not refill the quota, only unused slots trickle in');
+assert(waveEM.waveCount('hero')===VF.HUNTER_OPEN+1&&waveEM.list.length===1,'kills do not refill the quota, only unused slots trickle in');
 for(let i=0;i<30;i++){ waveEM._spawnWait=0; waveEM.tickHuntSpawn(1,[solo],null); }
-assert(waveEM.waveCount('hero')===20,'a player never gets more than 20 hunters in one word');
+assert(waveEM.waveCount('hero')===VF.HUNTER_PER_PLAYER,'a player never gets more than 5 hunters in one word');
 const letters=VF.WordList.encounterLetters('APPLE',3);
 assert(letters.filter(ch=>ch==='P').length>=2&&letters.length===8,'needed letters plus optional distractors');
 assert(VF.WordList.encounterLetters('THREE').length===5,'exact word letters by default');
@@ -368,7 +368,7 @@ sandbox.photoOf=function(uid){ return uid==='hero'?'data:image/png;base64,QQ':''
 assert(VF._t.winnerPhoto({uid:'hero',av:'nex'})==='data:image/png;base64,QQ','cached profile photo wins over character art');
 assert(VF._t.winnerPhoto({uid:'other',av:'lyravyn'}).indexOf('lyravyn.png')>=0,'unknown uid falls back to roster');
 assert(VF.ARENA_HALF===280&&VF.MAP_SCALE===10,'map is 10x the original 28-unit half');
-assert(VF.NET_MAP==='vforce'&&VF.ROOM_MAX===14&&VF.ROOMS_MAX===36&&VF.HUNTER_PER_PLAYER===20,'online cap 14 + overflow rooms');
+assert(VF.NET_MAP==='vforce'&&VF.ROOM_MAX===14&&VF.ROOMS_MAX===36&&VF.HUNTER_PER_PLAYER===5,'online cap 14 + 5 hunters each');
 assert(VF._t.nextOpenRoom([14],14,36)===1&&VF._t.nextOpenRoom([14,14,3],14,36)===2,'a full room opens the next lane');
 assert(VF._t.nextOpenRoom(Array(36).fill(14),14,36)===-1,'all 36 lanes full stays closed');
 assert(VF._t.roomHud({offline:true})==='ลานฝึก · 1 คน'&&VF._t.roomHud({searching:true})==='กำลังหาลาน…'&&VF._t.roomHud({full:true})==='ลานเต็ม · เล่นคนเดียว','lot HUD covers offline/search/full');
@@ -425,7 +425,7 @@ assert(read('minigames/vocab-force/enemies/enemy-manager.js').includes('spawnHun
 assert(read('minigames/vocab-force/enemies/enemy-manager.js').includes('spawnCollusionHunters')&&read('minigames/vocab-force/enemies/enemy-manager.js').includes('!en.collusion'),'collusion hunters are extra and not trimmed by fill');
 assert(runtime.includes('resetHunterWave')&&runtime.includes('tickHuntSpawn'),'new vocab round resets hunters then trickles them in');
 assert(!/enemies\.remove\(en\);\s*syncHunters\(\);/.test(runtime),'dead hunters do not refill until the next word');
-assert(VF.HUNTER_OPEN===4&&VF.HUNTER_SPAWN_SEC<=0.8&&VF.HUNTER_DETECT>=30,'opening ring then slow walk-in');
+assert(VF.HUNTER_OPEN===2&&VF.HUNTER_SPAWN_SEC<=0.8&&VF.HUNTER_DETECT>=30,'opening ring then slow walk-in');
 assert(runtime.includes('tickCollusion')&&runtime.includes('อย่าเปิดทางให้คนเดียวเก็บ')&&read('minigames/vocab-force/runtime/vocab-force-net.js').includes('prototype.bodies'),'collusion watch uses live peer positions');
 assert(read('minigames/vocab-force/map/prototype-arena.js').includes('InstancedMesh')&&css.includes('.vf-hp.is-red'),'10x map reuses instances + HUD HP');
 assert(runtime.includes('VocabForceNet')&&runtime.includes('ensureZombies'),'online + lazy zombie download');
