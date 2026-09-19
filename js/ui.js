@@ -7404,15 +7404,21 @@ function bindSkirmishRail(){
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bindSkirmishRail);
 else bindSkirmishRail();
-/* ==== ⚡ VOCAB FORCE — public combat vocabulary game ==== */
+/* ==== ⚡ VOCAB FORCE — temporarily admin-only internal test ==== */
+const VOCABFORCE_LOCK_MSG='⚡ Vocab Force — COMING SOON';
+function vocabForceAdminAllowed(){
+  try{ return typeof isAdmin==='function' && isAdmin()===true; }catch(_){ return false; }
+}
 function refreshVocabForceLock(){
   const b=document.getElementById('btn-rail-vocabforce');
   if(!b) return;
+  const ok=vocabForceAdminAllowed();
   b.hidden=false;
   b.setAttribute('aria-hidden','false');
-  b.setAttribute('aria-disabled','false');
-  b.title='เล่น Vocab Force';
-  b.removeAttribute('tabindex');
+  b.disabled=!ok;
+  b.setAttribute('aria-disabled',ok?'false':'true');
+  b.title=ok?'Vocab Force — COMING SOON · internal testing':VOCABFORCE_LOCK_MSG;
+  if(ok) b.removeAttribute('tabindex'); else b.tabIndex=-1;
 }
 async function loadVocabForceModules(){
   const base='minigames/vocab-force/';
@@ -7422,6 +7428,10 @@ async function loadVocabForceModules(){
   for(let i=0;i<scripts.length;i++) await loadScriptOnce(base+scripts[i]);
 }
 async function openVocabForce(){
+  if(!vocabForceAdminAllowed()){
+    if(typeof toast==='function') toast(VOCABFORCE_LOCK_MSG);
+    return;
+  }
   if(typeof closePanel==='function') closePanel();
   try{
     if(typeof toast==='function' && (typeof VocabForce==='undefined' || !VocabForce.open)) toast('⚡ กำลังเปิด Vocab Force...');

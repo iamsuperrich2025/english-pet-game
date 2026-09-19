@@ -1171,7 +1171,7 @@
       ['shoot','target','ยิงเป้าคำ','#btn-rail-shootword'],
       ['wordship','ship','กองเรือคำศัพท์','#btn-rail-wordship'],
       ['skirmish','gun','ยิงรบคำ','#btn-rail-skirmish'],
-      ['vocabforce','sparkle','Vocab Force','#btn-rail-vocabforce'],
+      ['vocabforce','sparkle','Vocab Force · COMING SOON','#btn-rail-vocabforce'],
       ['cannon','dragon','Dragon Sky Siege','#btn-rail-lettercannon'],
       ['examstd','exam','ข้อสอบจริง','#btn-rail-examstd'],
       ['onet','flag','O-NET','#btn-rail-onet'],

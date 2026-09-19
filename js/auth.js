@@ -18,6 +18,8 @@ const Auth = {
   sdkReady:false,     // authStart ถูกเรียกแล้ว (SDK มาครบ)
   gated:false,        // ติดหน้าประตู offline อยู่ (ไม่ต้องรอ watchdog ซ้ำ)
   lastPushedAt:0,     // savedAt ล่าสุดที่ push ขึ้น cloud สำเร็จ (กันเขียนซ้ำโดยไม่จำเป็น)
+  loginInFlight:false,// กันแตะปุ่ม Google ซ้ำระหว่างกำลังเปิด popup/redirect
+  loginUid:null,      // กัน onAuthStateChanged ซ้ำจนโหลด cloud save ซ้อนกัน
 };
 
 const AUTH_PUSH_MS        = 60*1000;   // push เซฟขึ้น cloud ทุก 1 นาที
@@ -174,7 +176,7 @@ function authLocalSaveSafe(uid){
   return !!(uid && state && state.student && state.ownerUid === uid);
 }
 function authShowLogin(){
-  authSetStatus('ready', 'เข้าสู่ระบบเพื่อเริ่มผจญภัยเลย! 👇');
+  authSetStatus('ready', arguments[0] || 'เข้าสู่ระบบเพื่อเริ่มผจญภัยเลย! 👇');
   showScreen('screen-login');
 }
 function authGateOffline(msg){
@@ -305,12 +307,15 @@ function authEditProfileName(){
 
 /* ---------- เริ่มระบบหลัง SDK โหลดครบ (เรียกจาก online.js) ---------- */
 function authStart(){
+  if(Auth.sdkReady) return;                         // SDK/observer ต้องเริ่มเพียงครั้งเดียว
   Auth.sdkReady = true;
+  AuthDebug.add('authStart', 'initializing Firebase Auth');
   firebase.initializeApp(FIREBASE_CONFIG);
   firebase.auth().getRedirectResult()
-    .then(result=>{ if(typeof accountDeletionHandleRedirectResult==='function') accountDeletionHandleRedirectResult(result, null); })
-    .catch(error=>{ if(typeof accountDeletionHandleRedirectResult==='function') accountDeletionHandleRedirectResult(null, error); });
+    .then(result=>{ AuthDebug.add('getRedirectResult', 'resolved'); if(typeof accountDeletionHandleRedirectResult==='function') accountDeletionHandleRedirectResult(result, null); })
+    .catch(error=>{ AuthDebug.authError('getRedirectResult rejected', error); if(typeof accountDeletionHandleRedirectResult==='function') accountDeletionHandleRedirectResult(null, error); });
   firebase.auth().onAuthStateChanged(user=>{
+    AuthDebug.add('onAuthStateChanged result', user ? 'signed-in user received' : 'no signed-in user');
     if(Auth.booted){                                   // เข้าเกมไปแล้ว (รวมโหมดออฟไลน์)
       if(user) authLateSync(user);                     // SDK เพิ่งมาหลังเล่นออฟไลน์ → sync ย้อนหลัง
       return;
@@ -385,30 +390,138 @@ function authIsAppMode(){
     return window.matchMedia('(display-mode: standalone)').matches;
   }catch(e){ return false; }
 }
-/* error code ที่แปลว่า "popup ใช้ไม่ได้ในสภาพแวดล้อมนี้" → ต้อง redirect แทน */
+/* preview บนเครื่อง/LAN ไม่มี Firebase auth handler ของ origin ตัวเอง:
+   ใช้ popup เท่านั้น เพื่อไม่ redirect ไป vocabworld.web.app/__/auth/handler */
+function authIsLocalLanPreviewHost(hostname){
+  const host = String(hostname == null ? location.hostname : hostname).trim().toLowerCase();
+  if(host === 'localhost' || host === '127.0.0.1') return true;
+  const match = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(host);
+  if(!match) return false;
+  const octets = match.slice(1).map(Number);
+  if(octets.some(n=>n > 255)) return false;
+  return octets[0] === 10 || octets[0] === 127 ||
+    (octets[0] === 192 && octets[1] === 168) ||
+    (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31);
+}
+
+/* TEMP local/LAN only: mobile auth diagnostics. Remove after the blank-page investigation. */
+const AuthDebug = (()=>{
+  const enabled = authIsLocalLanPreviewHost();
+  const lines = [];
+  let panel = null;
+  let output = null;
+  const safe = value=>String(value == null ? '' : value)
+    .replace(/([?&#](?:access_?token|id_?token|token|password|secret|api_?key|code)=)[^&#\s]*/gi, '$1[redacted]')
+    .replace(/\bBearer\s+[A-Za-z0-9._-]+/gi, 'Bearer [redacted]')
+    .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, '[email-redacted]');
+  const context = ()=>[
+    'href: ' + safe(location.href),
+    'host: ' + safe(location.hostname) + ' · origin: ' + safe(location.origin),
+    'local/LAN detected: ' + enabled,
+  ].join('\n');
+  const render = ()=>{
+    if(!output) return;
+    output.textContent = context() + '\n--- latest ' + lines.length + ' event(s) ---\n' + lines.join('\n');
+  };
+  const add = (event, detail)=>{
+    if(!enabled) return;
+    const now = new Date().toLocaleTimeString();
+    lines.push('[' + now + '] ' + safe(event) + (detail ? ' — ' + safe(detail) : ''));
+    if(lines.length > 20) lines.splice(0, lines.length - 20);
+    render();
+  };
+  const authError = (event, error)=>{
+    const code = error && error.code ? error.code : 'no-code';
+    const message = error && error.message ? error.message : String(error || 'unknown error');
+    add(event, 'code=' + code + ' · message=' + message);
+  };
+  const mount = ()=>{
+    if(!enabled || panel || !document.body) return;
+    panel = document.createElement('section');
+    panel.id = 'auth-local-debug-overlay';
+    panel.setAttribute('aria-label', 'Local auth diagnostic log');
+    panel.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483647;max-height:46vh;padding:6px 8px;background:#101820;color:#d8f6ff;border-bottom:2px solid #24b7d9;font:11px/1.35 ui-monospace,SFMono-Regular,Consolas,monospace;box-shadow:0 2px 9px #000b;pointer-events:auto';
+    const bar = document.createElement('div');
+    bar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;color:#7ee8ff;font-weight:700';
+    bar.textContent = 'LOCAL/LAN AUTH DEBUG · temporary';
+    const copy = document.createElement('button');
+    copy.type = 'button';
+    copy.textContent = 'COPY LOG';
+    copy.style.cssText = 'border:1px solid #7ee8ff;border-radius:4px;background:#173340;color:#fff;padding:3px 7px;font:inherit;font-weight:700';
+    copy.addEventListener('click', ()=>{
+      const text = context() + '\n' + lines.join('\n');
+      const done = ()=>add('copy log', 'copied sanitized log');
+      if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, ()=>add('copy log', 'clipboard unavailable'));
+      else add('copy log', 'clipboard unavailable');
+    });
+    bar.appendChild(copy);
+    output = document.createElement('pre');
+    output.style.cssText = 'margin:0;max-height:34vh;overflow:auto;white-space:pre-wrap;word-break:break-word;color:inherit';
+    panel.append(bar, output);
+    document.body.appendChild(panel);
+    render();
+  };
+  if(enabled){
+    const previousOnError = window.onerror;
+    window.onerror = function(message, source, line, column, error){
+      authError('window.onerror', error || {message:String(message) + ' @' + safe(source) + ':' + line + ':' + column});
+      if(typeof previousOnError === 'function') return previousOnError.apply(this, arguments);
+      return false;
+    };
+    window.addEventListener('unhandledrejection', event=>authError('unhandledrejection', event.reason));
+    window.addEventListener('error', event=>{
+      if(event.target && event.target !== window) add('resource error', event.target.src || event.target.href || event.target.tagName || 'unknown resource');
+    }, true);
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount, {once:true});
+    else mount();
+    add('debug overlay ready', 'diagnostics active for local/LAN only');
+  }
+  return {enabled, add, authError};
+})();
+/* error code ที่แปลว่า "popup ใช้ไม่ได้ในสภาพแวดล้อมนี้" → production redirect แทน */
 const AUTH_REDIRECT_CODES = ['auth/popup-blocked', 'auth/operation-not-supported-in-this-environment',
                              'auth/web-storage-unsupported', 'auth/cancelled-popup-request'];
+const AUTH_POPUP_CANCEL_CODES = ['auth/popup-closed-by-user', 'auth/cancelled-popup-request'];
 function authLoginClick(){
+  AuthDebug.add('before login', 'login button pressed');
+  if(Auth.loginInFlight) return;
+  Auth.loginInFlight = true;
   const provider = new firebase.auth.GoogleAuthProvider();
   authSetStatus('connecting', 'กำลังเปิดหน้าต่างเข้าสู่ระบบ... ⏳');
-  if(authIsAppMode()){ firebase.auth().signInWithRedirect(provider); return; }
-  firebase.auth().signInWithPopup(provider).catch(err=>{
-    if(err && AUTH_REDIRECT_CODES.indexOf(err.code) >= 0){
+  const localLanPreview = authIsLocalLanPreviewHost();
+  const appMode = !localLanPreview && authIsAppMode();
+  AuthDebug.add('auth flow chosen', (!localLanPreview && appMode) ? 'redirect' : 'popup');
+  if(!localLanPreview && appMode){ firebase.auth().signInWithRedirect(provider); return; }
+  AuthDebug.add('popup opened', 'signInWithPopup requested');
+  firebase.auth().signInWithPopup(provider).then(()=>{
+    Auth.loginInFlight = false;
+    AuthDebug.add('popup resolved', 'Firebase popup promise resolved');
+  }).catch(err=>{
+    Auth.loginInFlight = false;
+    AuthDebug.authError('popup rejected', err);
+    if(!localLanPreview && err && AUTH_REDIRECT_CODES.indexOf(err.code) >= 0){
       firebase.auth().signInWithRedirect(provider);    // เบราว์เซอร์กัน popup → ใช้ redirect แทน
       return;
     }
-    authShowLogin();
-    if(err && err.code === 'auth/popup-closed-by-user'){
+    const code = err && err.code;
+    if(localLanPreview && code === 'auth/popup-blocked'){
+      authShowLogin('เบราว์เซอร์บล็อกหน้าต่าง Google — อนุญาต pop-up แล้วกดเข้าสู่ระบบอีกครั้ง');
+      toast('อนุญาต pop-up สำหรับหน้านี้ แล้วลองเข้าสู่ระบบอีกครั้งนะ');
+    }else if(AUTH_POPUP_CANCEL_CODES.indexOf(code) >= 0){
+      authShowLogin('ยกเลิกการเข้าสู่ระบบแล้ว — กดเข้าสู่ระบบอีกครั้งได้เลย');
       toast('ยังไม่ได้เข้าสู่ระบบนะ ลองใหม่อีกครั้ง 😊');
     }else{
+      authShowLogin();
       toast('เข้าสู่ระบบไม่สำเร็จ ลองใหม่อีกครั้งนะ (' + (err && err.code || 'error') + ')', 2600);
     }
   });
   // สำเร็จแล้ว onAuthStateChanged จะพาเข้าเกมเอง
 }
-
 /* ---------- login สำเร็จ → โหลดเซฟ cloud มาเทียบกับเซฟในเครื่อง ---------- */
 function authOnLogin(user){
+  if(Auth.booted || Auth.loginUid === user.uid) return;
+  Auth.loginUid = user.uid;
+  Auth.loginInFlight = false;
   Auth.user = user;
   authSetStatus('connecting', 'กำลังโหลดเซฟจากบัญชีของหนู... ☁️');
   showScreen('screen-login');
@@ -423,6 +536,7 @@ function authOnLogin(user){
       authSyncOnLogin(cloud, user.uid);
     })
     .catch(err=>{
+      Auth.loginUid = null;                           // ให้ผู้ใช้ retry ได้เมื่อ cloud load ไม่สำเร็จ
       cloudSettled = true; clearTimeout(slowTimer);
       const code = String(err && (err.code || err.message) || 'unknown');
       console.warn('[auth-cloud] load failed:', code);
@@ -524,11 +638,18 @@ function authAskLink(uid){
 /* ---------- เข้าเกมจริง (จุดเดียว) + เริ่มวงจร push เซฟ ---------- */
 function authEnterGame(){
   if(Auth.booted) return;
+  AuthDebug.add('lobby navigation attempt', 'authEnterGame -> bootGame');
   Auth.booted = true;
   onlineStart();                                   // เพื่อนออนไลน์ + leaderboard (ใน online.js)
   bootGame();                                      // careTick + เข้าหน้า ลงทะเบียน/dashboard (ใน main.js)
-  syncAdminAccess();                               // admin allowlist เดิม: ป้ายล็อก Letter Cannon ใน Classic/เมือง 3D
-  testerBoost();                                   // บัญชีผู้ทดสอบ → เติมเหรียญให้พอทดสอบโลก 3D
+syncAdminAccess();                               // admin allowlist เดิม: ป้ายล็อก Letter Cannon ใน Classic/เมือง 3D
+  if(new URLSearchParams(location.search).get('vocab-force')==='1'){
+    const direct=new URL(location.href);
+    direct.searchParams.delete('vocab-force');
+    history.replaceState(null,'',direct.pathname+direct.search+direct.hash);
+    if(isAdmin() && typeof openVocabForce==='function') openVocabForce();
+    else if(typeof toast==='function') toast('⚡ Vocab Force — COMING SOON');
+  }  testerBoost();                                   // บัญชีผู้ทดสอบ → เติมเหรียญให้พอทดสอบโลก 3D
   authPushProfile();                               // sync ชื่อในเกมขึ้น profile ทุก login (กันโหนดหาย/เซฟย้ายเครื่อง)
   setInterval(()=>authPushSave(false), AUTH_PUSH_MS);
   window.addEventListener('beforeunload', ()=>authPushSave(false));
