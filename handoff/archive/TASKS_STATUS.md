@@ -6722,3 +6722,12 @@ efreshMechaLock
 - QA: `node tools/test_vocab_force.js` 519 ผ่าน · ไม่ deploy
 - ไฟล์: heal-pad-tune.js, heal-pad.js, index.html, test_vocab_force.js, docs/PROJECT_MAP.md
 
+
+
+## ⏬ ย้ายเมื่อ 2026-09-19 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- รอบ 1558 · Vocab Force: ซอมบี้ล้อมผู้เล่นละ 20 ตัว (เปิดวง 4 แล้วค่อยๆเติม) HP ยัง 36
+- ตายแล้วไม่เกิดใหม่จนกว่ารอบคำศัพท์ใหม่ (`resetHunterWave`) · cache `?v=wave`
+- QA: `node tools/test_vocab_force.js` 529 ผ่าน · ในเกม 20 ตัว/ผู้เล่น ฆ่าแล้วโควต้าไม่เติม · ไม่ deploy
+- ไฟล์: namespace, enemy-manager, zombie-enemy, runtime, net, index.html, test_vocab_force.js, docs/PROJECT_MAP.md
+

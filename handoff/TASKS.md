@@ -26,11 +26,6 @@
 - QA: `node tools/test_vocab_force.js` 539 ผ่าน · HUD `1000 / 1000` · ไม่ deploy
 - ไฟล์: namespace, gun-tune.js, combat/energy/heal/net/runtime, character, hud, css, test, PROJECT_MAP
 
-- รอบ 1558 · Vocab Force: ซอมบี้ล้อมผู้เล่นละ 20 ตัว (เปิดวง 4 แล้วค่อยๆเติม) HP ยัง 36
-- ตายแล้วไม่เกิดใหม่จนกว่ารอบคำศัพท์ใหม่ (`resetHunterWave`) · cache `?v=wave`
-- QA: `node tools/test_vocab_force.js` 529 ผ่าน · ในเกม 20 ตัว/ผู้เล่น ฆ่าแล้วโควต้าไม่เติม · ไม่ deploy
-- ไฟล์: namespace, enemy-manager, zombie-enemy, runtime, net, index.html, test_vocab_force.js, docs/PROJECT_MAP.md
-
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
