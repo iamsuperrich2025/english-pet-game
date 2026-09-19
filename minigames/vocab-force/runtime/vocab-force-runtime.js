@@ -274,9 +274,9 @@
     if(secondary && !paused) secondary.tickClock(dt);
     const scale = paused ? 0 : (secondary ? secondary.simScale(combat.hitStop) : 1);
     const step = paused ? 0 : dt * scale;
-    combat.tick(dt, now, player, enemies, fx, camRig, VF.audio, secondary);
+    combat.tick(dt, now, player, enemies, fx, camRig, VF.audio, secondary, peopleSnap());
     if(!paused && poll.dash) player.tryManualDash(poll, camRig, arena, fx, camRig, now);
-    if(!paused && poll.punch) combat.handleAttackPress('punch', player, now, enemies, camRig, arena, fx, energy, VF.audio, {hold: !!poll.punchHeld});
+    if(!paused && poll.punch) combat.handleAttackPress('punch', player, now, enemies, camRig, arena, fx, energy, VF.audio, {hold: !!poll.punchHeld, people: peopleSnap()});
     if(!paused && poll.kick) combat.tryAttackOrApproach(player.anim.has('kick') ? 'kick' : 'punch', player, now, enemies, camRig, arena, fx);
     const freezeMove = energy && energy.hold && energy.hold.active && Math.hypot(poll.moveX || 0, poll.moveZ || 0) > ((VF.EnergyAttackTune && VF.EnergyAttackTune.aimStickDeadzone) || 0.12);
     player.tick(step, freezeMove ? Object.assign({}, poll, {moveX: 0, moveZ: 0}) : poll, camRig, arena);
@@ -293,11 +293,11 @@
     (sim.dead || []).forEach(handleDefeat);
     (sim.bites || []).forEach(function(b){
       if(!player || !player.takeHit) return;
-      const dmg = player.takeHit(b.damage, !!player.blocking);
+      const dmg = player.takeHit(b.damage, !!player.blocking, {from: 'zombie'});
       if(dmg > 0){
         camRig.impulse(0.28, 2.4);
         if(hud && hud.setHp) hud.setHp(player.hp, player.maxHp);
-        if(hud && hud.hurtFlash) hud.hurtFlash(dmg / (player.maxHp || 100));
+        if(hud && hud.hurtFlash) hud.hurtFlash(dmg / (player.maxHp || 1000));
         if(player.consumeDeath && player.consumeDeath()) loseLifeLetters();
       }
     });
@@ -335,7 +335,7 @@
       }
     });
     if(healPad) healPad.tick(step, player, hud, VF.audio, camRig);
-    if(energy) energy.tick(step, now, player, enemies, arena, fx, camRig, combat, VF.audio, {held: !!poll.punchHeld, released: !!poll.punchReleased, moveX: poll.moveX || 0, moveZ: poll.moveZ || 0});
+    if(energy) energy.tick(step, now, player, enemies, arena, fx, camRig, combat, VF.audio, {held: !!poll.punchHeld, released: !!poll.punchReleased, moveX: poll.moveX || 0, moveZ: poll.moveZ || 0, people: peopleSnap()});
     if(secondary) secondary.trails(step, enemies, fx, player);
     fx.tick(dt);
     if(trails) trails.tick(step);
@@ -381,6 +381,17 @@
     }
     if(fireTrail && net.consumeOverdrive){
       net.consumeOverdrive().forEach(function(ev){ handleOverdriveEvent(ev, false); });
+    }
+    if(player && net.consumeStrikes){
+      const mine = VF._t.uidTail ? VF._t.uidTail(net.myUid || 'local') : '';
+      net.consumeStrikes().forEach(function(hit){
+        if(!hit || hit.target !== mine) return;
+        const from = hit.kind === 'G' ? 'gun' : 'player';
+        player.takeHit(hit.dmg, !!player.blocking, {from: from, zone: hit.zone, headshot: hit.zone === 'head'});
+        if(hud && hud.setHp) hud.setHp(player.hp, player.maxHp);
+        if(hud && hud.hurtFlash) hud.hurtFlash((hit.dmg || 0) / (player.maxHp || 1000));
+        if(player.consumeDeath && player.consumeDeath()) loseLifeLetters();
+      });
     }
   }
 

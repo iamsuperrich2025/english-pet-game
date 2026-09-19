@@ -13,9 +13,11 @@
   VF.now = function(){ return (root.performance && performance.now) ? performance.now() : Date.now(); };
   VF.LOCK_MSG = '🔒 Vocab Force กำลังทดสอบ — เปิดให้ผู้ดูแลระบบเท่านั้น';
   VF.LETTER_REWARD = 5000;
-  VF.PLAYER_HP = 100;
+  VF.PLAYER_HP = 1000;
   VF.ZOMBIE_HP = 36;
-  VF.ZOMBIE_BITE = 12;
+  VF.ZOMBIE_BITE = 80;
+  VF.BLOCK_PVE = 0.22;
+  VF.BLOCK_PVP = 0.38;
   VF.HUNTER_PER_PLAYER = 20;
   VF.HUNTER_OPEN = 4;
   VF.HUNTER_SPAWN_SEC = 0.65;
@@ -48,6 +50,7 @@
     'camera/third-person-camera.js',
     'controls/vocab-force-input.js',
     'combat/combat-tune.js',
+    'combat/gun-tune.js',
     'combat/rapid-finisher-tune.js',
     'combat/secondary-impact-tune.js',
     'combat/breakable-wall-tune.js',

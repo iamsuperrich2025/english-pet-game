@@ -7,7 +7,7 @@
     X: 0,
     Z: 22,
     RADIUS: 5.4,
-    HEAL_PER_SEC: 24,
+    HEAL_PER_SEC: 240,
     HEIGHT: 3.55,
     GLOW: 0x00cfcf,
     HUM_MS: 420,
@@ -29,7 +29,7 @@
     return Math.hypot((px || 0) - ox, (pz || 0) - oz) <= r;
   };
   VF._t.healPadAmount = function(dt){
-    const rate = (VF.HealPadTune && VF.HealPadTune.HEAL_PER_SEC) || 24;
+    const rate = (VF.HealPadTune && VF.HealPadTune.HEAL_PER_SEC) || 240;
     return Math.max(0, rate * Math.max(0, dt || 0));
   };
 })(typeof window !== 'undefined' ? window : globalThis);

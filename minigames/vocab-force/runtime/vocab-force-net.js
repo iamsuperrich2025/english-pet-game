@@ -12,18 +12,21 @@
       const bag = String(drop.letters || '').replace(/[^A-Z]/g, '').slice(0, 16);
       if(bag) s += '|' + ((drop.seq || 1) % 100) + '|' + bag;
     }else if(!dead){
+      const strike = VF._t.packStrike ? VF._t.packStrike(player) : '';
       const od = VF._t.packOverdrive ? VF._t.packOverdrive(player) : '';
       const jump = VF._t.packJump ? VF._t.packJump(player) : '';
-      if(od) s += '|' + od;
+      if(strike) s += '|' + strike;
+      else if(od) s += '|' + od;
       else if(jump) s += '|' + jump;
     }
     return s.slice(0, 28);
   }
   function parseHp(raw){
     const s = String(raw || '');
-    if(s.charAt(0) === 'H') return VF.clamp(parseInt(s.split('|')[1], 10) || 0, 0, 999);
+    const cap = VF.PLAYER_HP || 1000;
+    if(s.charAt(0) === 'H') return VF.clamp(parseInt(s.split('|')[1], 10) || 0, 0, cap);
     const n = parseInt(s, 10);
-    return isFinite(n) ? VF.clamp(n, 0, 999) : 100;
+    return isFinite(n) ? VF.clamp(n, 0, cap) : cap;
   }
   function parseDrop(raw){
     const s = String(raw || '');
@@ -52,6 +55,7 @@
     this._seenLoot = {};
     this._seenJump = {};
     this._seenOverdrive = {};
+    this._seenStrike = {};
   }
 
   VocabForceNet.prototype.humanCount = function(){
@@ -236,6 +240,29 @@
     return out;
   };
 
+  VocabForceNet.prototype.consumeStrikes = function(){
+    const out = [];
+    this._seenStrike = this._seenStrike || {};
+    for(const uid in this._rec){
+      if(uid === this.myUid) continue;
+      const rec = this._rec[uid] || {};
+      const hit = VF._t.parseStrike ? VF._t.parseStrike(rec.hp) : null;
+      if(!hit) continue;
+      const id = uid + '#' + hit.seq;
+      if(this._seenStrike[id]) continue;
+      this._seenStrike[id] = true;
+      out.push({
+        seq: hit.seq,
+        kind: hit.kind,
+        zone: hit.zone,
+        target: hit.target,
+        dmg: hit.dmg,
+        uid: uid
+      });
+    }
+    return out;
+  };
+
   VocabForceNet.prototype.bodies = function(player){
     const out = [];
     const me = this.myUid || 'local';
@@ -342,6 +369,7 @@
     this._seenLoot = {};
     this._seenJump = {};
     this._seenOverdrive = {};
+    this._seenStrike = {};
     if(this.room && this.room.leave) this.room.leave();
     this.room = null;
   };
