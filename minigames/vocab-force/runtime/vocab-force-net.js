@@ -132,8 +132,11 @@
     this.room = NetRoom.create({
       map: VF.NET_MAP || 'vforce',
       roomMax: VF.ROOM_MAX || 14,
+      roomsCap: VF.ROOMS_MAX || 36,
+      openNewRoom: true,
       sendMs: 190,
       roomNoun: 'ลาน Vocab Force',
+      roomFmt: function(i){ return 'ลาน '+i; },
       roomIcon: '⚡',
       push: function(){ self.send(); },
       onPeer: function(uid, rec){

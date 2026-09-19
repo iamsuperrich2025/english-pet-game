@@ -11,6 +11,11 @@
 > ประวัติ Frontline 1372–1373: `handoff/archive/frontline-1372-1373.md`
 
 ### 📌 สรุปสถานะล่าสุด
+- รอบ 1560 · Vocab Force: ห้อง 14 คนเต็ม → เปิดลานใหม่ให้อัตโนมัติ (สูงสุด 36 ลาน)
+- NetRoom `roomsCap`/`openNewRoom` · ลานแรกยังอัดให้เต็มก่อน แล้วค่อยเปิดลานถัดไป
+- QA: `node tools/test_vocab_force.js` 542 ผ่าน · ไม่ deploy
+- ไฟล์: netroom.js, vocab-force-net.js, namespace, index.html, test_vocab_force.js, PROJECT_MAP
+
 - รอบ 1559 · Vocab Force: ผู้เล่น HP 1,000 · ยิงหัวตายทันที · ลำตัว/แข้งตามปืนใน gun-tune.js
 - ต่อย 12/90 เตะ 20/160 (ซอมบี้/ผู้เล่น) · บล็อก 0.22 กับกัด, 0.38 กับคน · กัด 80 · แท่นฮีล 240/วิ
 - QA: `node tools/test_vocab_force.js` 539 ผ่าน · HUD `1000 / 1000` · ไม่ deploy

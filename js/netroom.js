@@ -132,9 +132,9 @@ function aimClear(){ aim=null; }
    อ่าน node เย็น "โลกละ 1 ครั้ง" (rules ให้ `.read` ที่ระดับ $map อยู่แล้ว) = 9 อ่าน/ครั้ง
    ไม่ใช่ไล่ทีละสนาม (จะกลายเป็น 9×สนาม) · ความถี่คุมอีกชั้นที่ js/ui.js
    คืน {found:{uid:{map,room,n,t}}, denied:true ถ้าอ่านไม่ได้ (rules ยังไม่ publish)} */
-const MAPS3D = ['adv','sky','haunt','heli','drone','drive','soccer','moto','invasion','mecha','f1','kart','pickup','lettercannon','skirmish'];
+const MAPS3D = ['adv','sky','haunt','heli','drone','drive','soccer','moto','invasion','mecha','f1','kart','pickup','lettercannon','skirmish','vforce'];
 function skyMapAllowed(map){
-  if(map === 'skirmish') return typeof isAdmin === 'function' && isAdmin()===true;
+  if(map === 'skirmish' || map === 'vforce') return typeof isAdmin === 'function' && isAdmin()===true;
   return map !== 'sky' || (typeof canAccessSkyBeta === 'function' && canAccessSkyBeta());
 }
 function whereFriends(uids){
@@ -198,10 +198,13 @@ function create(opt){
   /* 🚦 รอบ 684 + Phase 3: เพดานคนต่อสนามเฉพาะโลกนั้น ๆ (โรงแรมส่งค่ากำหนดของตัวเอง)
      ไม่ใส่ = ใช้ค่ากลาง ROOM_MAX เหมือนเดิมทุกโลก · เกินเพดาน = ระบบพาไปสนามถัดไปให้เอง */
   const ROOM_MAX = Math.max(1, Math.min(CFG.ROOM_MAX, opt.roomMax || CFG.ROOM_MAX));
+  const ROOM_CAP = opt.roomsCap != null
+    ? Math.max(1, Math.min(CFG.ROOMS_MAX, opt.roomsCap | 0))
+    : roomsAllowed(ROOM_MAX);
   // Optional isolated arena room lanes; default worlds keep their existing allocation.
   const roomIndices=Array.isArray(opt.roomIndices)?opt.roomIndices.filter(i=>Number.isInteger(i)&&i>=0&&i<CFG.ROOMS_MAX):null;
   const allowedRoom=i=>!roomIndices||roomIndices.includes(i);
-  const searchRooms=()=>roomIndices||Array.from({length:roomsAllowed(ROOM_MAX)},(_,i)=>i);
+  const searchRooms=()=>roomIndices||Array.from({length:ROOM_CAP},(_,i)=>i);
   let joinGeneration=0;
 
   const peers = {};             // uid → {hot,cold,seen,legacy}
@@ -244,7 +247,7 @@ function create(opt){
      ปกติอ่านแค่ 1 สนาม (~1KB) · แย่สุดเท่าจำนวนสนามที่เปิด */
   function pickRoom(from){
     if(opt.roomPicker)return opt.roomPicker(countRoom,from);
-    const N=roomsAllowed(ROOM_MAX), start=Math.max(0, Math.min(N-1, from||0));
+    const N=ROOM_CAP, start=Math.max(0, Math.min(N-1, from||0));
     let k=0;
     function step(){
       if(k>=N) return Promise.resolve(null);            // ทุกสนามเต็ม
@@ -424,6 +427,8 @@ function create(opt){
       attach(r.idx, r.count);
       if(was) toast('✅ <b>มีที่ว่างแล้ว — พาเข้า'+ROOM_FMT(r.idx+1)+' ให้อัตโนมัติ</b>'+
         '<br><span class="ib-sub">เห็นเพื่อนคนอื่นได้ตามปกติแล้ว</span>', 2200);
+      else if(opt.openNewRoom && r.idx>0 && r.count===0) toast('⚡ <b>เปิด'+ROOM_FMT(r.idx+1)+' ใหม่ให้แล้ว</b>'+
+        '<br><span class="ib-sub">ห้องก่อนหน้าเต็ม — เข้าเล่นได้เลย</span>', 2400);
     }).catch(function(e){
       if(generation!==joinGeneration)return;
       busy=false;
@@ -644,7 +649,7 @@ function create(opt){
   function statusText(short, drawn){
     const n=Object.keys(peers).length+1;
     if(full) return short ? wrap('🧯 '+ROOM_NOUN+'เต็ม · เล่นสนามฝึกก่อน'+goBtn(short), short)
-      : ('🧯 ทุก'+ROOM_NOUN+'เต็มตอนนี้ ('+roomsAllowed(ROOM_MAX)+' '+ROOM_NOUN+')<br>เล่นสนามฝึกส่วนตัวไปก่อน · มีที่ว่างเมื่อไหร่พาเข้าให้เอง'+goBtn(short));
+      : ('🧯 ทุก'+ROOM_NOUN+'เต็มตอนนี้ ('+ROOM_CAP+' '+ROOM_NOUN+')<br>เล่นสนามฝึกส่วนตัวไปก่อน · มีที่ว่างเมื่อไหร่พาเข้าให้เอง'+goBtn(short));
     if(!joined) return short ? '📡 กำลังหา'+ROOM_NOUN+'…' : '📡 กำลังหา'+ROOM_NOUN+'ที่ว่างให้…';
     /* โหมดเดิมมีสนามเดียว ห้ามใช้คำว่า "ในสนาม N คน" — เด็กอ่านสับสนว่าเป็น "สนามที่ N" */
     if(legacy)  return short ? ('👥 '+n+' คน') : ('👥 มีผู้เล่น '+n+' คน');

@@ -31,6 +31,7 @@
   VF.SKY_RADIUS = 420;
   VF.NET_MAP = 'vforce';
   VF.ROOM_MAX = 14;
+  VF.ROOMS_MAX = 36;
   VF.WIN_ACK_SEC = 8;
   VF.COLLUSION_SEC = 6;
   VF.COLLUSION_CONTEST = 28;
@@ -187,5 +188,14 @@
       },
       reset: function(){ dwell = 0; cool = 0; }
     };
+  };
+  VF._t.nextOpenRoom = function(filled, per, cap){
+    const max = per != null ? per : (VF.ROOM_MAX || 14);
+    const n = cap != null ? cap : (VF.ROOMS_MAX || 36);
+    const rows = filled || [];
+    for(let i = 0; i < n; i++){
+      if((rows[i] || 0) < max) return i;
+    }
+    return -1;
   };
 })(typeof window !== 'undefined' ? window : globalThis);
