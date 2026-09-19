@@ -6731,3 +6731,12 @@ efreshMechaLock
 - QA: `node tools/test_vocab_force.js` 529 ผ่าน · ในเกม 20 ตัว/ผู้เล่น ฆ่าแล้วโควต้าไม่เติม · ไม่ deploy
 - ไฟล์: namespace, enemy-manager, zombie-enemy, runtime, net, index.html, test_vocab_force.js, docs/PROJECT_MAP.md
 
+
+
+## ⏬ ย้ายเมื่อ 2026-09-19 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- รอบ 1559 · Vocab Force: ผู้เล่น HP 1,000 · ยิงหัวตายทันที · ลำตัว/แข้งตามปืนใน gun-tune.js
+- ต่อย 12/90 เตะ 20/160 (ซอมบี้/ผู้เล่น) · บล็อก 0.22 กับกัด, 0.38 กับคน · กัด 80 · แท่นฮีล 240/วิ
+- QA: `node tools/test_vocab_force.js` 539 ผ่าน · HUD `1000 / 1000` · ไม่ deploy
+- ไฟล์: namespace, gun-tune.js, combat/energy/heal/net/runtime, character, hud, css, test, PROJECT_MAP
+

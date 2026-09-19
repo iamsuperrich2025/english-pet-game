@@ -26,11 +26,6 @@
 - QA: `node tools/test_vocab_force.js` 542 ผ่าน · ไม่ deploy
 - ไฟล์: netroom.js, vocab-force-net.js, namespace, index.html, test_vocab_force.js, PROJECT_MAP
 
-- รอบ 1559 · Vocab Force: ผู้เล่น HP 1,000 · ยิงหัวตายทันที · ลำตัว/แข้งตามปืนใน gun-tune.js
-- ต่อย 12/90 เตะ 20/160 (ซอมบี้/ผู้เล่น) · บล็อก 0.22 กับกัด, 0.38 กับคน · กัด 80 · แท่นฮีล 240/วิ
-- QA: `node tools/test_vocab_force.js` 539 ผ่าน · HUD `1000 / 1000` · ไม่ deploy
-- ไฟล์: namespace, gun-tune.js, combat/energy/heal/net/runtime, character, hud, css, test, PROJECT_MAP
-
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
