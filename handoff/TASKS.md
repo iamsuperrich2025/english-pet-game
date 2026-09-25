@@ -24,20 +24,6 @@
 - QA: unit 572 + browser 812×375 (พุ่ง 56 ม./หมุน 18.7 rad/UI ไม่ล้น/วงไฟขยาย/reset ผ่าน) + 2-tab host/peer event เดียว/ตาย/spectator/reset/spawn 68 ม. ผ่าน + build 10,158 ไฟล์/1,445.1 MiB + validator ผ่าน · ไม่ deploy
 
 - รอบ 1562 · Vocab Force: ซอมบี้เหลือคนละ 5 ตัว (`HUNTER_OPEN` 2 แล้วค่อยเติม) แก้เกมอืดจากคลื่น 20
-- ตายแล้วยังไม่เกิดใหม่จนกว่ารอบคำศัพท์ใหม่ · cache `?v=z5`
-- QA: `node tools/test_vocab_force.js` 545 ผ่าน · ในเกม live hunters = 5 · ไม่ deploy
-- ไฟล์: namespace, enemy-manager, index.html, test_vocab_force.js, PROJECT_MAP
-
-- รอบ 1561 · Vocab Force HUD: ชิปมุมซ้ายบนโชว์ลาน + คนในลาน (`ลาน 2 · 5/14 คน` / เดี่ยว `ลานฝึก · 1 คน`)
-- `VF._t.roomHud` + `net.roomHud` แทนข้อความ NetRoom สั้นที่เคยมีปุ่มไปหาเพื่อน
-- QA: `node tools/test_vocab_force.js` 545 ผ่าน · ในเกมชิปอ่านได้ desktop + 812×375 · ไม่ deploy
-- ไฟล์: namespace, vocab-force-net/runtime/hud/css, index.html, js/ui.js, test_vocab_force.js, PROJECT_MAP
-
-- รอบ 1560 · Vocab Force: ห้อง 14 คนเต็ม → เปิดลานใหม่ให้อัตโนมัติ (สูงสุด 36 ลาน)
-- NetRoom `roomsCap`/`openNewRoom` · ลานแรกยังอัดให้เต็มก่อน แล้วค่อยเปิดลานถัดไป
-- QA: `node tools/test_vocab_force.js` 542 ผ่าน · ไม่ deploy
-- ไฟล์: netroom.js, vocab-force-net.js, namespace, index.html, test_vocab_force.js, PROJECT_MAP
-
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน

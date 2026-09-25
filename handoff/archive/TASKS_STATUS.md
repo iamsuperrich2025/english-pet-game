@@ -6740,3 +6740,21 @@ efreshMechaLock
 - QA: `node tools/test_vocab_force.js` 539 ผ่าน · HUD `1000 / 1000` · ไม่ deploy
 - ไฟล์: namespace, gun-tune.js, combat/energy/heal/net/runtime, character, hud, css, test, PROJECT_MAP
 
+
+
+## ⏬ ย้ายเมื่อ 2026-09-25 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- ตายแล้วยังไม่เกิดใหม่จนกว่ารอบคำศัพท์ใหม่ · cache `?v=z5`
+- QA: `node tools/test_vocab_force.js` 545 ผ่าน · ในเกม live hunters = 5 · ไม่ deploy
+- ไฟล์: namespace, enemy-manager, index.html, test_vocab_force.js, PROJECT_MAP
+
+- รอบ 1561 · Vocab Force HUD: ชิปมุมซ้ายบนโชว์ลาน + คนในลาน (`ลาน 2 · 5/14 คน` / เดี่ยว `ลานฝึก · 1 คน`)
+- `VF._t.roomHud` + `net.roomHud` แทนข้อความ NetRoom สั้นที่เคยมีปุ่มไปหาเพื่อน
+- QA: `node tools/test_vocab_force.js` 545 ผ่าน · ในเกมชิปอ่านได้ desktop + 812×375 · ไม่ deploy
+- ไฟล์: namespace, vocab-force-net/runtime/hud/css, index.html, js/ui.js, test_vocab_force.js, PROJECT_MAP
+
+- รอบ 1560 · Vocab Force: ห้อง 14 คนเต็ม → เปิดลานใหม่ให้อัตโนมัติ (สูงสุด 36 ลาน)
+- NetRoom `roomsCap`/`openNewRoom` · ลานแรกยังอัดให้เต็มก่อน แล้วค่อยเปิดลานถัดไป
+- QA: `node tools/test_vocab_force.js` 542 ผ่าน · ไม่ deploy
+- ไฟล์: netroom.js, vocab-force-net.js, namespace, index.html, test_vocab_force.js, PROJECT_MAP
+

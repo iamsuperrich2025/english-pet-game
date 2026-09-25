@@ -2,7 +2,7 @@
 
 > วิธีใช้: หาชื่อฟังก์ชัน/ค่าคงที่/selector ในไฟล์นี้ (Grep หรือกวาดตา) → `Read` ไฟล์จริง `offset=<บรรทัด>` `limit=40`
 > 🗂️ ไฟล์อ้วนมี **สารบัญโซน** (`st-end ชื่อโซน`) — งานทั้งระบบ/โลก 3D: Grep ชื่อโซน → Read/Edit เฉพาะช่วงนั้น **ห้ามอ่านทั้งไฟล์** · เพิ่มระบบใหม่ในไฟล์อ้วนต้องครอบ banner `/* ==== */`+ชื่อโซน (สารบัญเจนเอง)
-> css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: 2026-09-19
+> css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: 2026-09-25
 
 ## js/account-deletion.js (235 บรรทัด · 0 รายการ)
 
@@ -229,16 +229,17 @@ api:5 · mergeCredit:6 · settle:7 · create:8 · error:9 · request:10
 
 ## js/assetaward.js (21 บรรทัด · 0 รายการ)
 
-## js/auth.js (577 บรรทัด · 54 รายการ)
-AUTH_PUSH_MS:23 · AUTH_SDK_TIMEOUT_MS:24 · AUTH_CLOUD_SLOW_MS:25 · AUTH_CLOUD_TIMEOUT_MS:26 · SKY_BETA_OPEN:31 · SKY_BETA_EMAILS:32
-skyBetaEmail:37 · canAccessSkyBeta:40 · ADMIN_NAME_EMAILS:46 · adminReservedNameKey:51 · isReservedAdminName:56 · canUseReservedAdminName:60
-canAccessKartBeta:66 · isAdmin:69 · checkProfileName:72 · TEACHER_EMAILS:81 · isTeacher:82 · syncAdminAccess:86
-TESTER_EMAILS:104 · TESTER_COINS:105 · TESTER_PET_GROWTH_FIX_VERSION:106 · isTester:107 · RANK_EXCLUDED_TESTER_NAMES:113 · rankUserExcluded:114
-testerBoost:120 · authSetStatus:156 · authLocalSaveSafe:173 · authShowLogin:176 · authGateOffline:180 · authSaveRef:187
-authFetchCloud:188 · authWriteCloud:210 · authDeleteCloud:223 · authWriteProfileName:224 · authPushProfile:231 · authApplyProfileName:239
-authEnsureProfileName:263 · authAskProfileName:281 · authEditProfileName:295 · authStart:307 · updateOfflinePill:339 · authEnterOffline:344
-authLateSync:361 · authIsAppMode:381 · AUTH_REDIRECT_CODES:389 · authLoginClick:391 · authOnLogin:411 · authSyncOnLogin:437
-authFreshStart:466 · authAskLink:475 · authEnterGame:525 · authPushSaveAwait:541 · authPushSave:549 · authLogout:554
+## js/auth.js (698 บรรทัด · 56 รายการ)
+AUTH_PUSH_MS:25 · AUTH_SDK_TIMEOUT_MS:26 · AUTH_CLOUD_SLOW_MS:27 · AUTH_CLOUD_TIMEOUT_MS:28 · SKY_BETA_OPEN:33 · SKY_BETA_EMAILS:34
+skyBetaEmail:39 · canAccessSkyBeta:42 · ADMIN_NAME_EMAILS:48 · adminReservedNameKey:53 · isReservedAdminName:58 · canUseReservedAdminName:62
+canAccessKartBeta:68 · isAdmin:71 · checkProfileName:74 · TEACHER_EMAILS:83 · isTeacher:84 · syncAdminAccess:88
+TESTER_EMAILS:106 · TESTER_COINS:107 · TESTER_PET_GROWTH_FIX_VERSION:108 · isTester:109 · RANK_EXCLUDED_TESTER_NAMES:115 · rankUserExcluded:116
+testerBoost:122 · authSetStatus:158 · authLocalSaveSafe:175 · authShowLogin:178 · authGateOffline:182 · authSaveRef:189
+authFetchCloud:190 · authWriteCloud:212 · authDeleteCloud:225 · authWriteProfileName:226 · authPushProfile:233 · authApplyProfileName:241
+authEnsureProfileName:265 · authAskProfileName:283 · authEditProfileName:297 · authStart:309 · updateOfflinePill:344 · authEnterOffline:349
+authLateSync:366 · authIsAppMode:386 · authIsLocalLanPreviewHost:395 · AUTH_REDIRECT_CODES:482 · AUTH_POPUP_CANCEL_CODES:484 · authLoginClick:485
+authOnLogin:521 · authSyncOnLogin:551 · authFreshStart:580 · authAskLink:589 · authEnterGame:639 · authPushSaveAwait:662
+authPushSave:670 · authLogout:675
 
 ## js/award.js (279 บรรทัด · 0 รายการ)
 
@@ -908,7 +909,7 @@ thLocaleOpt:46
 
 ## js/typing.js (370 บรรทัด · 0 รายการ)
 
-## js/ui.js (10,688 บรรทัด · 476 รายการ)
+## js/ui.js (10,685 บรรทัด · 476 รายการ)
 ### 🗂️ สารบัญโซน js/ui.js (Read/Edit เฉพาะช่วง)
 - 2-77 UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
 - 78-144 🎬 เวทีน้องน่ารัก (Cute Pet Show) — รอบ 604 (ผู้ใช้สั่ง 26 ก.ค. 2026)
@@ -946,24 +947,24 @@ thLocaleOpt:46
 - 6932-7014 การ์ดมือถือ (ข้อ 7): ซื้อ 10,000 ขายคืน 6,000
 - 7015-7025 การ์ดคอมพิวเตอร์ (ข้อ 11): ซื้อ 50,000 ขายคืน 30,000
 - 7026-7070 item 8: โบนัสออนไลน์ +0.01 เหรียญ/วิ ฟรีทุกคนที่เปิดเกมออนไลน์อยู่
-- 7071-7494 💻 รอบ 706 (ผู้ใช้สั่ง 29 ก.ค. 2026): ช่องรายได้คอมพิวเตอร์บนแถบบนล็อบบี้
-- 7495-7512 🌀🔤 รอบ 1045 — Vocab Arena (โลกผจญภัยฉบับใหม่)
-- 7513-7934 ☁️📚 รอบ 1229 — Vocab Sky Playground
-- 7935-8025 🏝️ รอบ 1377 — KART (public entry; separate persistent keys)
-- 8026-8047 🌍 ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย (ผู้ใช้สั่ง 9 ก.ค. 2026)
-- 8048-8113 🔒 รอบ 1070/1132: โลกที่ยังไม่เปิดสาธารณะ — เปิดให้บัญชีทดสอบ 2 ชื่อเท่านั้น
-- 8114-8243 ↩️🪙 Legacy recovery — คืนค่าเข้าที่เวอร์ชันเก่าอาจหักค้างไว้ก่อนเปลี่ยนเป็นเข้าฟรี
-- 8244-8432 🧭 ป้ายบอกทางของรางเมนูซ้าย (รอบ 601 · ผู้ใช้สั่ง 26 ก.ค. 2026)
-- 8433-8602 การ์ดสวนผลไม้ (ข้อ 12): ซื้อต้นไม้ปลูกได้ไม่จำกัด แต่ละต้นออกผล
-- 8603-8617 โรงงานผลิตสินค้า 🏭 + ตลาดขายต่อ (แนวคิดใหม่ 5 ก.ค. 2026)
-- 8618-8641 โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
-- 8642-8916 ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
-- 8917-10043 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
-- 10044-10106 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
-- 10107-10143 เลเวลอัพ (รายตัว)
-- 10144-10249 สถิติผลการเรียนรู้
-- 10250-10287 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
-- 10288-10688 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
+- 7071-7491 💻 รอบ 706 (ผู้ใช้สั่ง 29 ก.ค. 2026): ช่องรายได้คอมพิวเตอร์บนแถบบนล็อบบี้
+- 7492-7509 🌀🔤 รอบ 1045 — Vocab Arena (โลกผจญภัยฉบับใหม่)
+- 7510-7931 ☁️📚 รอบ 1229 — Vocab Sky Playground
+- 7932-8022 🏝️ รอบ 1377 — KART (public entry; separate persistent keys)
+- 8023-8044 🌍 ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย (ผู้ใช้สั่ง 9 ก.ค. 2026)
+- 8045-8110 🔒 รอบ 1070/1132: โลกที่ยังไม่เปิดสาธารณะ — เปิดให้บัญชีทดสอบ 2 ชื่อเท่านั้น
+- 8111-8240 ↩️🪙 Legacy recovery — คืนค่าเข้าที่เวอร์ชันเก่าอาจหักค้างไว้ก่อนเปลี่ยนเป็นเข้าฟรี
+- 8241-8429 🧭 ป้ายบอกทางของรางเมนูซ้าย (รอบ 601 · ผู้ใช้สั่ง 26 ก.ค. 2026)
+- 8430-8599 การ์ดสวนผลไม้ (ข้อ 12): ซื้อต้นไม้ปลูกได้ไม่จำกัด แต่ละต้นออกผล
+- 8600-8614 โรงงานผลิตสินค้า 🏭 + ตลาดขายต่อ (แนวคิดใหม่ 5 ก.ค. 2026)
+- 8615-8638 โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
+- 8639-8913 ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
+- 8914-10040 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
+- 10041-10103 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
+- 10104-10140 เลเวลอัพ (รายตัว)
+- 10141-10246 สถิติผลการเรียนรู้
+- 10247-10284 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
+- 10285-10685 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
 ### รายการ js/ui.js
 startHTML:10 · PET_ANIM:30 · petAnimHTML:35 · petVisualHTML:50 · PET_SHOW:91 · PET_SHOW_STAGE:96
 PET_SHOW_H:99 · petShowBgHTML:102 · petBondLine:153 · PET_HEALTH_TIPS:177 · nextPetHealthTip:215 · petBondActionLine:223
@@ -1022,29 +1023,29 @@ buyPhone:6976 · sellPhone:6998 · compLiveTotal:7019 · onlineLiveTotal:7030 ·
 renderOnlineEarnPill:7051 · renderCompEarnPill:7076 · openPillInfo:7109 · renderComputerCard:7192 · buyComputer:7227 · sellComputer:7250
 soldCount:7271 · soldBadge:7272 · loadScriptOnce:7278 · WORDSHIP_LOCK_MSG:7302 · wordShipAdminAllowed:7303 · refreshWordShipLock:7310
 loadStylesheetOnce:7320 · openWordShip:7330 · bindWordShipRail:7349 · SKIRMISH_LOCK_MSG:7359 · skirmishAdminAllowed:7360 · refreshSkirmishLock:7367
-openWordSkirmish:7377 · bindSkirmishRail:7398 · VOCABFORCE_LOCK_MSG:7408 · vocabForceAdminAllowed:7409 · refreshVocabForceLock:7416 · loadVocabForceModules:7426
-openVocabForce:7433 · bindVocabForceRail:7453 · advBusyMsg:7464 · advResetLoad:7476 · loadAdv3d:7482 · loadVocabArena3d:7500
-loadSkyPlayground3d:7517 · SKY_BETA_DENIED_MSG:7520 · ensureSkyBetaAccess:7521 · enterSkyPlayground3D:7529 · enterAdventure3D:7545 · pickAdvMap:7578
-enterHaunted3D:7613 · enterHeli3D:7636 · pickHeliMap:7663 · enterDrone3D:7699 · confirmPetShoppingEntry:7720 · enterPetShopping3D:7746
-enterDrive3D:7798 · pickDriveMap:7837 · enterMotoMapAsCar:7873 · enterSoccer3D:7892 · enterMoto3D:7912 · kartLobbyIconHTML:7938
-mechaLobbyIconHTML:7942 · enterKart3D:7947 · enterPickup3D:7962 · enterF1_3D:7977 · enterInvasion3D:8005 · WORLD3D:8033
-WORLD3D_COMING_SOON:8052 · world3DComingSoon:8053 · gotoRobotShop:8056 · openHealDialog:8062 · world3DFail:8083 · WORLD_PLAY_TICKETS:8118
-grantWorldPlayAccess:8120 · worldEntryStarted:8124 · worldEntryStopped:8125 · GAME_ENTRY_STABLE_MS:8126 · gameEntryCommit:8128 · gameEntryRefund:8136
-recoverInterruptedGameEntry:8153 · showGameEntryRefundNotice:8161 · startWorldEntry:8188 · railWorldClick:8214 · openWorldEntryDialog:8238 · railScrollHint:8249
-railScrollTop:8257 · initRailScroll:8262 · renderRailWorlds:8282 · tinvOnlineFriends:8370 · refreshTinvOnlineUI:8374 · tinvNoticeHTML:8385
-openTinvPicker:8394 · fruitCountdown:8438 · renderFarmCard:8450 · renderFarmClock:8525 · buyFruit:8541 · sellFruit:8561
-sellAllFruit:8582 · collectImg:8611 · renderFactoryCard:8622 · renderMarketCard:8646 · updateWishBadge:8704 · openWishlistDialog:8715
-bindStripArrows:8762 · renderMarketBrowse:8776 · openMarketBuyDialog:8803 · carImg:8923 · renderVehicleShop:8924 · CS_CYCLE_MS:8976
-carInteriorImg:8977 · carStatHtml:8979 · renderCarShowroom:8986 · csShowBig:9013 · csInit:9040 · RS_CYCLE_MS:9063
-robotImg:9064 · robotShopImg:9066 · renderRobotShop:9069 · renderPetMarketShop:9089 · rsShowBig:9107 · rsInit:9127
-buyRobot:9146 · mechaAdminAllowed:9172 · refreshMechaLock:9173 · enterMecha3D:9182 · pickMechaRobot:9210 · pickDriveCar:9242
-openCarBuyDialog:9285 · buyCarInsurance:9346 · payCarLoanMonthly:9365 · payCarLoanFull:9377 · carDriveBlock:9396 · gotoVehicleShop:9401
-gotoMyStock:9406 · showNeedCarDialog:9412 · craftDiscount:9424 · renderFactory:9427 · renderOrdersUI:9496 · startProduce:9515
-buyCollectible:9543 · cancelProduce:9573 · deliverOrder:9587 · renderOrderClock:9604 · renderCollectMine:9614 · openListDialog:9663
-cancelListing:9720 · listingMarketStatus:9744 · maybeOfferStaleMarketBuy:9748 · openStaleMarketOffer:9759 · acceptStaleMarketBuy:9797 · buyMarketItem:9833
-showCollectReveal:9898 · buyAC:9936 · openHomeShop:9974 · openPetPurchase:10048 · renderPetShop:10085 · showLevelUp:10110
-renderStats:10147 · showTeacherCard:10254 · CALL_REACT_EMOS:10298 · CALL_TALK_MIN:10301 · CALL_TALK_HOLD:10302 · CALL_ORDER_GAP:10304
-CALL_TONES:10310 · startCall:10684
+openWordSkirmish:7377 · bindSkirmishRail:7398 · VOCABFORCE_LOCK_MSG:7408 · vocabForceAdminAllowed:7409 · refreshVocabForceLock:7412 · loadVocabForceModules:7423
+openVocabForce:7430 · bindVocabForceRail:7450 · advBusyMsg:7461 · advResetLoad:7473 · loadAdv3d:7479 · loadVocabArena3d:7497
+loadSkyPlayground3d:7514 · SKY_BETA_DENIED_MSG:7517 · ensureSkyBetaAccess:7518 · enterSkyPlayground3D:7526 · enterAdventure3D:7542 · pickAdvMap:7575
+enterHaunted3D:7610 · enterHeli3D:7633 · pickHeliMap:7660 · enterDrone3D:7696 · confirmPetShoppingEntry:7717 · enterPetShopping3D:7743
+enterDrive3D:7795 · pickDriveMap:7834 · enterMotoMapAsCar:7870 · enterSoccer3D:7889 · enterMoto3D:7909 · kartLobbyIconHTML:7935
+mechaLobbyIconHTML:7939 · enterKart3D:7944 · enterPickup3D:7959 · enterF1_3D:7974 · enterInvasion3D:8002 · WORLD3D:8030
+WORLD3D_COMING_SOON:8049 · world3DComingSoon:8050 · gotoRobotShop:8053 · openHealDialog:8059 · world3DFail:8080 · WORLD_PLAY_TICKETS:8115
+grantWorldPlayAccess:8117 · worldEntryStarted:8121 · worldEntryStopped:8122 · GAME_ENTRY_STABLE_MS:8123 · gameEntryCommit:8125 · gameEntryRefund:8133
+recoverInterruptedGameEntry:8150 · showGameEntryRefundNotice:8158 · startWorldEntry:8185 · railWorldClick:8211 · openWorldEntryDialog:8235 · railScrollHint:8246
+railScrollTop:8254 · initRailScroll:8259 · renderRailWorlds:8279 · tinvOnlineFriends:8367 · refreshTinvOnlineUI:8371 · tinvNoticeHTML:8382
+openTinvPicker:8391 · fruitCountdown:8435 · renderFarmCard:8447 · renderFarmClock:8522 · buyFruit:8538 · sellFruit:8558
+sellAllFruit:8579 · collectImg:8608 · renderFactoryCard:8619 · renderMarketCard:8643 · updateWishBadge:8701 · openWishlistDialog:8712
+bindStripArrows:8759 · renderMarketBrowse:8773 · openMarketBuyDialog:8800 · carImg:8920 · renderVehicleShop:8921 · CS_CYCLE_MS:8973
+carInteriorImg:8974 · carStatHtml:8976 · renderCarShowroom:8983 · csShowBig:9010 · csInit:9037 · RS_CYCLE_MS:9060
+robotImg:9061 · robotShopImg:9063 · renderRobotShop:9066 · renderPetMarketShop:9086 · rsShowBig:9104 · rsInit:9124
+buyRobot:9143 · mechaAdminAllowed:9169 · refreshMechaLock:9170 · enterMecha3D:9179 · pickMechaRobot:9207 · pickDriveCar:9239
+openCarBuyDialog:9282 · buyCarInsurance:9343 · payCarLoanMonthly:9362 · payCarLoanFull:9374 · carDriveBlock:9393 · gotoVehicleShop:9398
+gotoMyStock:9403 · showNeedCarDialog:9409 · craftDiscount:9421 · renderFactory:9424 · renderOrdersUI:9493 · startProduce:9512
+buyCollectible:9540 · cancelProduce:9570 · deliverOrder:9584 · renderOrderClock:9601 · renderCollectMine:9611 · openListDialog:9660
+cancelListing:9717 · listingMarketStatus:9741 · maybeOfferStaleMarketBuy:9745 · openStaleMarketOffer:9756 · acceptStaleMarketBuy:9794 · buyMarketItem:9830
+showCollectReveal:9895 · buyAC:9933 · openHomeShop:9971 · openPetPurchase:10045 · renderPetShop:10082 · showLevelUp:10107
+renderStats:10144 · showTeacherCard:10251 · CALL_REACT_EMOS:10295 · CALL_TALK_MIN:10298 · CALL_TALK_HOLD:10299 · CALL_ORDER_GAP:10301
+CALL_TONES:10307 · startCall:10681
 
 ## js/util.js (1,644 บรรทัด · 60 รายการ)
 ### 🗂️ สารบัญโซน js/util.js (Read/Edit เฉพาะช่วง)
