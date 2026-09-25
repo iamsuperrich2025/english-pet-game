@@ -277,7 +277,7 @@ const PUBLIC_ROOT_FILES = new Set([
 
 
 
-const PUBLIC_DIRS = new Set(['.well-known', 'clip', 'css', 'img', 'js', 'sound']);
+const PUBLIC_DIRS = new Set(['.well-known', 'clip', 'css', 'img', 'js', 'minigames', 'sound']);
 
 const REQUIRED_STATIC_FILES = new Set(['.well-known/assetlinks.json']);
 

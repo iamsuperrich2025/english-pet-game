@@ -11,6 +11,9 @@
 > ประวัติ Frontline 1372–1373: `handoff/archive/frontline-1372-1373.md`
 
 ### 📌 สรุปสถานะล่าสุด
+- รอบ 1566 · แก้ไฟล์ Vocab Force ทั้งหมด 404 บน live หลัง deploy รอบ 1565 (มือถือขึ้น "เปิด Vocab Force ไม่สำเร็จ — เช็กอินเทอร์เน็ต" ทั้งที่เน็ตปกติ)
+- ต้นตอ: deploy build จาก git archive ไม่มี .git → build_web.mjs fallback walk ใช้ PUBLIC_DIRS ที่ไม่มี `minigames` → ทั้งโฟลเดอร์ vocab-force (90 ไฟล์ js/glb/avif) หลุดจาก dist (local build ใช้ git ls-files จึงไม่เจอปัญหา)
+- แก้ `build_web.mjs` เพิ่ม 'minigames' ใน PUBLIC_DIRS · ยืนยันผ่าน asset-manifest บน live (vf ครบ + runtime มีแพตช์รอบ 1565)
 - รอบ 1565 · แก้บั๊ก Vocab Force เข้าใหม่หลังกด "ออก" มองไม่เห็นตัวละคร+สนามทั้งหมด (จอมืดมีแต่ HUD)
 - ต้นตอ: `hud.mount()` ล้าง DOM ด้วย `root.innerHTML` แบบ subtree — `canvas.parentNode` ยังชี้ `.vf-stage` เก่าที่ถูกตัดออก → เช็ก `!parentNode` ใน open() จึงข้ามการแนบ canvas กลับ (ผู้ใช้รายงานเจอเมื่อเข้าใหม่เร็ว 1-2 นาที)
 - แก้ `vocab-force-runtime.js`: เทียบ `parentNode !== hud.els.stage` แทน + เช็ก context lost สร้าง renderer ใหม่ · ยืนยัน puppeteer 812×375 เข้า→ออก→เข้าใหม่ canvas/scene/ตัวละครกลับมา + unit 575 ผ่าน · deploy
