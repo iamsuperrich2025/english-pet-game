@@ -6758,3 +6758,11 @@ efreshMechaLock
 - QA: `node tools/test_vocab_force.js` 542 ผ่าน · ไม่ deploy
 - ไฟล์: netroom.js, vocab-force-net.js, namespace, index.html, test_vocab_force.js, PROJECT_MAP
 
+
+
+## ⏬ ย้ายเมื่อ 2026-09-25 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- คำรอบใหม่คืน HP/alive/control/effect, วางผู้เล่นตาม UID บน spawn ring ระยะเท่ากัน และ reset รถตำแหน่ง/หมุน/ฟิสิกส์/ดาเมจโดยไม่สร้าง GLB ซ้ำ
+- QA: unit 572 + browser 812×375 (พุ่ง 56 ม./หมุน 18.7 rad/UI ไม่ล้น/วงไฟขยาย/reset ผ่าน) + 2-tab host/peer event เดียว/ตาย/spectator/reset/spawn 68 ม. ผ่าน + build 10,158 ไฟล์/1,445.1 MiB + validator ผ่าน · ไม่ deploy
+
+- รอบ 1562 · Vocab Force: ซอมบี้เหลือคนละ 5 ตัว (`HUNTER_OPEN` 2 แล้วค่อยเติม) แก้เกมอืดจากคลื่น 20

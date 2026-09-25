@@ -23,10 +23,6 @@
 - QA รวมรอบ 1563–1564: unit 572 + Home V2 + source/dist mobile + 2-tab host/peer + BGM 60.024 วิวนลูป + build 10,158 ไฟล์/1,436.0 MiB + validator ผ่าน · เตรียม deploy รวมครั้งเดียว
 - รอบ 1563 · Vocab Force เพิ่มรถบรรทุกน้ำมัน GLB ขนาด 13.6 ม. ชนไม่ได้; หมัด/เตะระยะใกล้ทำให้พุ่งตีลังกา ระเบิดครั้งเดียว + shockwave/fire ring ขยายทั้งแผนที่
 - host รับ melee request แล้วประกาศ event ID เดียว; ผู้เล่นแต่ละคนใช้ token เดิมหัก 500 HP ครั้งเดียว และตายแล้วล็อกทุก control เข้า spectator swipe/←→ จนจบรอบ
-- คำรอบใหม่คืน HP/alive/control/effect, วางผู้เล่นตาม UID บน spawn ring ระยะเท่ากัน และ reset รถตำแหน่ง/หมุน/ฟิสิกส์/ดาเมจโดยไม่สร้าง GLB ซ้ำ
-- QA: unit 572 + browser 812×375 (พุ่ง 56 ม./หมุน 18.7 rad/UI ไม่ล้น/วงไฟขยาย/reset ผ่าน) + 2-tab host/peer event เดียว/ตาย/spectator/reset/spawn 68 ม. ผ่าน + build 10,158 ไฟล์/1,445.1 MiB + validator ผ่าน · ไม่ deploy
-
-- รอบ 1562 · Vocab Force: ซอมบี้เหลือคนละ 5 ตัว (`HUNTER_OPEN` 2 แล้วค่อยเติม) แก้เกมอืดจากคลื่น 20
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
