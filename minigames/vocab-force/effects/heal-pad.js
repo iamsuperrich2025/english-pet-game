@@ -184,6 +184,64 @@
     ctx.fill();
   }
 
+  /* รอบ 1567: วงรูนโบราณเรืองแสง — แหวนอักขระ + ดาวหกแฉกหมุนช้าใต้แท่น */
+  function paintRunes(ctx, size){
+    const cx = size * 0.5, cy = size * 0.5;
+    ctx.clearRect(0, 0, size, size);
+    ctx.strokeStyle = 'rgba(0,245,255,0.9)';
+    ctx.lineWidth = size * 0.008;
+    ctx.beginPath();
+    ctx.arc(cx, cy, size * 0.46, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(cx, cy, size * 0.34, 0, Math.PI * 2);
+    ctx.stroke();
+    for(let i = 0; i < 6; i++){
+      const a = (i / 6) * Math.PI * 2 - Math.PI / 2;
+      const x1 = cx + Math.cos(a) * size * 0.34, y1 = cy + Math.sin(a) * size * 0.34;
+      const a2 = a + Math.PI * 2 / 6;
+      const x2 = cx + Math.cos(a2) * size * 0.34, y2 = cy + Math.sin(a2) * size * 0.34;
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    }
+    ctx.fillStyle = 'rgba(0,255,213,0.95)';
+    for(let i = 0; i < 24; i++){
+      const a = (i / 24) * Math.PI * 2;
+      const r = size * 0.40;
+      const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
+      const s = size * (i % 3 === 0 ? 0.020 : 0.012);
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(a + Math.PI / 2);
+      if(i % 4 === 0){
+        ctx.beginPath();
+        ctx.moveTo(0, -s); ctx.lineTo(s, s); ctx.lineTo(-s, s);
+        ctx.closePath();
+        ctx.fill();
+      }else if(i % 4 === 1){
+        ctx.fillRect(-s * 0.5, -s, s, s * 2);
+        ctx.fillRect(-s, -s * 0.5, s * 2, s);
+      }else if(i % 4 === 2){
+        ctx.beginPath();
+        ctx.arc(0, 0, s * 0.7, 0, Math.PI * 2);
+        ctx.fill();
+      }else{
+        ctx.fillRect(-s * 0.6, -s * 0.6, s * 1.2, s * 1.2);
+      }
+      ctx.restore();
+    }
+  }
+
+  /* รอบ 1567: ลำแสงเทียนลอยขึ้นสู่หัวใจ */
+  function paintRay(ctx, size){
+    ctx.clearRect(0, 0, size, size);
+    const g = ctx.createLinearGradient(0, size, 0, 0);
+    g.addColorStop(0, 'rgba(0,245,255,0.55)');
+    g.addColorStop(0.35, 'rgba(0,207,207,0.22)');
+    g.addColorStop(1, 'rgba(0,255,213,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, size, size);
+  }
+
   function mat(THREE, opt){
     const m = new THREE.MeshBasicMaterial(opt);
     if(m.fog != null) m.fog = false;
@@ -210,6 +268,12 @@
     this.base = null;
     this.aura = null;
     this.light = null;
+    this.heartCross = null;
+    this.heartLight = null;
+    this.runes = null;
+    this.pulseRing = null;
+    this.rays = [];
+    this.helixes = [];
     this.t = 0;
     this.heartY = T.HEART_Y || 3.35;
     this.heartS = T.HEART_SIZE || 2.45;
@@ -249,6 +313,8 @@
     const sqTex = this._keep(canvasTex(paintSquare, 32));
     const colTex = this._keep(canvasTex(paintColumn, 128));
     const glowTex = this._keep(canvasTex(paintGlow, 256));
+    const runeTex = this._keep(canvasTex(paintRunes, 512));
+    const rayTex = this._keep(canvasTex(paintRay, 64));
 
     this.base = new THREE.Mesh(
       this._keep(new THREE.CylinderGeometry(pr * 0.98, pr * 1.05, 0.14, 28)),
@@ -370,6 +436,81 @@
     this.heart.renderOrder = 8;
     g.add(this.heart);
 
+    /* รอบ 1567 — ชุดอลังการ: หัวใจสองชั้นไขว้ + แสงไฟ + วงรูน + คลื่นชีพจร + เทียนลำแสง + เกลียวพลัง */
+    this.heartCross = new THREE.Mesh(
+      this._keep(new THREE.PlaneGeometry(heartS, heartS)),
+      mat(THREE, {
+        map: heartTex || null, color: TURQ, transparent: true, opacity: 0.30 * b,
+        blending: add, depthWrite: false, depthTest: false, side: THREE.DoubleSide
+      })
+    );
+    this.heartCross.position.y = heartY;
+    this.heartCross.rotation.y = Math.PI / 2;
+    this.heartCross.frustumCulled = false;
+    this.heartCross.renderOrder = 7;
+    g.add(this.heartCross);
+    this.heartLight = new THREE.PointLight(CYAN, 0.85 * b, 14, 2);
+    this.heartLight.position.y = heartY;
+    g.add(this.heartLight);
+
+    this.runes = new THREE.Mesh(
+      this._keep(new THREE.PlaneGeometry(pr * 3.2, pr * 3.2)),
+      mat(THREE, {
+        map: runeTex || null, color: runeTex ? CYAN : TEAL,
+        transparent: true, opacity: 0.5 * b, blending: add, depthWrite: false, side: THREE.DoubleSide
+      })
+    );
+    this.runes.rotation.x = -Math.PI / 2;
+    this.runes.position.y = 0.16;
+    this.runes.renderOrder = 3;
+    g.add(this.runes);
+
+    this.pulseRing = new THREE.Mesh(
+      this._keep(new THREE.RingGeometry(0.86, 1, 48)),
+      mat(THREE, {
+        color: TURQ, transparent: true, opacity: 0,
+        blending: add, depthWrite: false, side: THREE.DoubleSide
+      })
+    );
+    this.pulseRing.rotation.x = -Math.PI / 2;
+    this.pulseRing.position.y = 0.14;
+    this.pulseRing.renderOrder = 3;
+    g.add(this.pulseRing);
+
+    const rayGeo = this._keep(new THREE.PlaneGeometry(0.34, h * 1.05));
+    const rayMat = mat(THREE, {
+      map: rayTex || null, color: rayTex ? TURQ : CYAN,
+      transparent: true, opacity: 0.16 * b, blending: add, depthWrite: false, side: THREE.DoubleSide
+    });
+    for(let i = 0; i < 6; i++){
+      const a = (i / 6) * Math.PI * 2;
+      const ray = new THREE.Mesh(rayGeo, rayMat);
+      ray.position.set(Math.cos(a) * pr * 0.72, h * 0.52, Math.sin(a) * pr * 0.72);
+      ray.rotation.y = -a + Math.PI / 2;
+      ray.rotation.z = Math.cos(0.42) * 0.42;
+      ray.userData.k = i;
+      ray.frustumCulled = false;
+      g.add(ray);
+      this.rays.push(ray);
+    }
+
+    const helixMat = new THREE.PointsMaterial({
+      color: CYAN, size: 0.14, transparent: true, opacity: 0.75,
+      blending: add, depthWrite: false, sizeAttenuation: true,
+      map: dotTex || null
+    });
+    for(let hx = 0; hx < 2; hx++){
+      const count = 42;
+      const pos = new Float32Array(count * 3);
+      const geo = this._keep(new THREE.BufferGeometry());
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      const pts = new THREE.Points(geo, helixMat);
+      pts.frustumCulled = false;
+      pts.userData.k = hx;
+      g.add(pts);
+      this.helixes.push(pts);
+    }
+
     const plusMat = mat(THREE, {
       map: plusTex || null, color: plusTex ? CYAN : TURQ,
       transparent: true, opacity: 0.7, blending: add, depthWrite: false, side: THREE.DoubleSide
@@ -460,6 +601,46 @@
       this.heartGlow.scale.set(gp, gp, 1);
       if(this.heartGlow.material) this.heartGlow.material.opacity = (0.16 + heat * 0.12) * b;
       this._face(this.heartGlow, camera);
+    }
+    if(this.heartCross){
+      const cp = pulse * 0.98;
+      this.heartCross.scale.set(cp, cp, 1);
+      if(this.heartCross.material) this.heartCross.material.opacity = (0.20 + Math.sin(this.t * 1.6) * 0.06 + heat * 0.1) * b;
+    }
+    if(this.heartLight){
+      this.heartLight.intensity = (0.7 + Math.sin(this.t * 2.2) * 0.18 + heat * 0.5) * b;
+    }
+    if(this.runes){
+      this.runes.rotation.z += dt * (0.22 + heat * 0.25);
+      if(this.runes.material) this.runes.material.opacity = (0.4 + Math.sin(this.t * 1.4) * 0.08 + heat * 0.2) * b;
+    }
+    if(this.pulseRing){
+      const cyc = (this.t % 2.4) / 2.4;
+      const ps = 0.7 + cyc * (2.6 + heat * 0.8);
+      this.pulseRing.scale.set(ps, ps, 1);
+      if(this.pulseRing.material) this.pulseRing.material.opacity = (1 - cyc) * (0.34 + heat * 0.2) * b;
+    }
+    for(let i = 0; i < this.rays.length; i++){
+      const ray = this.rays[i];
+      if(!ray) continue;
+      const ph = this.t * 1.3 + (ray.userData && ray.userData.k || 0) * 1.05;
+      ray.rotation.z = 0.42 + Math.sin(ph) * 0.10;
+      ray.scale.y = 0.92 + Math.sin(ph * 0.8) * 0.10 + heat * 0.08;
+    }
+    for(let i = 0; i < this.helixes.length; i++){
+      const pts = this.helixes[i];
+      if(!pts || !pts.geometry) continue;
+      const attr = pts.geometry.attributes.position;
+      const k = pts.userData && pts.userData.k || 0;
+      const n = attr.count;
+      for(let j = 0; j < n; j++){
+        const f = j / n;
+        const a = f * Math.PI * 4.5 + this.t * (1.6 + heat * 1.2) + k * Math.PI;
+        const r = 0.5 + f * 0.55;
+        attr.setXYZ(j, Math.cos(a) * r, 0.3 + f * (this.heartY + 0.4), Math.sin(a) * r);
+      }
+      attr.needsUpdate = true;
+      if(pts.material) pts.material.opacity = (0.5 + heat * 0.3) * Math.max(0.6, b);
     }
     if(this.beam && this.beam.material){
       this.beam.material.opacity = (0.07 + Math.sin(this.t * 2.6) * 0.02 + heat * 0.05) * b;
@@ -571,6 +752,12 @@
     this.group = null;
     this.heart = null;
     this.heartGlow = null;
+    this.heartCross = null;
+    this.heartLight = null;
+    this.runes = null;
+    this.pulseRing = null;
+    this.rays = [];
+    this.helixes = [];
     this.halos = [];
     this.pluses = [];
     this.particles = [];

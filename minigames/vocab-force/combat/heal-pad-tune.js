@@ -14,9 +14,9 @@
     PLATFORM_R: 1.55,
     HEART_Y: 3.35,
     HEART_SIZE: 2.45,
-    /* Dim pass. Restore previous look with BRIGHTNESS=PREV.BRIGHTNESS and GLOW_SCALE=PREV.GLOW_SCALE */
-    BRIGHTNESS: 0.48,
-    GLOW_SCALE: 1.05,
+    /* รอบ 1567: โหมดอลังการ — สว่างเต็มแผ่น */
+    BRIGHTNESS: 0.8,
+    GLOW_SCALE: 1.28,
     PREV: { BRIGHTNESS: 1, GLOW_SCALE: 1.22 }
   };
 

@@ -4,7 +4,7 @@
   const VF = root.VocabForce = root.VocabForce || {};
   let opening = false, running = false, raf = 0, last = 0;
   let renderer = null, scene = null, camera = null, THREE = null;
-  let player, camRig, input, combat, enemies, arena, fx, hud, round, flyers, trails, fireTrail, secondary, energy, letters, net, healPad, oilTanker, spectator;
+  let player, camRig, input, combat, enemies, arena, fx, hud, round, flyers, trails, fireTrail, secondary, energy, letters, net, healPad, oilTanker, sedan, grab, spectator;
   let winLock = false, ackOpen = false, pendingWord = null;
   let collusionWatch = null, collusionPending = null;
   let tankerEventSeq = 0;
@@ -61,6 +61,8 @@
     if(energy && energy.cancel) energy.cancel();
     if(fireTrail && fireTrail.clear) fireTrail.clear();
     if(oilTanker && oilTanker.reset) oilTanker.reset(round.seed);
+    if(sedan && sedan.reset) sedan.reset(round.seed);
+    if(player) player.carrying = null;
     if(letters) letters.spawn(THREE, round.progress.word, arena, round.seed);
     if(hud){
       if(hud.hideWin) hud.hideWin();
@@ -358,11 +360,17 @@
     const scale = paused ? 0 : (secondary ? secondary.simScale(combat.hitStop) : 1);
     const step = paused ? 0 : dt * scale;
     if(active) combat.tick(dt, now, player, enemies, fx, camRig, VF.audio, secondary, peopleSnap(), oilTanker);
-    if(active && !paused && poll.dash) player.tryManualDash(poll, camRig, arena, fx, camRig, now);
-    if(active && !paused && poll.punch) combat.handleAttackPress('punch', player, now, enemies, camRig, arena, fx, energy, VF.audio, {hold: !!poll.punchHeld, people: peopleSnap(), world: oilTanker});
-    if(active && !paused && poll.kick) combat.tryAttackOrApproach(player.anim.has('kick') ? 'kick' : 'punch', player, now, enemies, camRig, arena, fx);
+    if(active && !paused && poll.dash && !player.carrying) player.tryManualDash(poll, camRig, arena, fx, camRig, now);
+    if(active && !paused && poll.punch && !player.carrying) combat.handleAttackPress('punch', player, now, enemies, camRig, arena, fx, energy, VF.audio, {hold: !!poll.punchHeld, people: peopleSnap(), world: oilTanker});
+    if(active && !paused && poll.kick){
+      /* รอบ 1567: KICK ใกล้ยานพาหนะ = ยก/ทุ่ม · ไม่ใกล้ = เตะต่อยปกติ */
+      const grabbed = grab && grab.onKick(player, camRig, fx, VF.audio, hud, requestTankerHit, !!(net && net.requestTankerHit));
+      if(!grabbed) combat.tryAttackOrApproach(player.anim.has('kick') ? 'kick' : 'punch', player, now, enemies, camRig, arena, fx);
+    }
     const freezeMove = active && energy && energy.hold && energy.hold.active && Math.hypot(poll.moveX || 0, poll.moveZ || 0) > ((VF.EnergyAttackTune && VF.EnergyAttackTune.aimStickDeadzone) || 0.12);
-    const playerInput = active ? (freezeMove ? Object.assign({}, poll, {moveX: 0, moveZ: 0}) : poll) : {moveX: 0, moveZ: 0};
+    const carryingSlow = active && !!player.carrying;
+    let playerInput = active ? (freezeMove ? Object.assign({}, poll, {moveX: 0, moveZ: 0}) : poll) : {moveX: 0, moveZ: 0};
+    if(carryingSlow) playerInput = Object.assign({}, playerInput, {moveX: (poll.moveX || 0) * 0.55, moveZ: (poll.moveZ || 0) * 0.55, sprint: false});
     player.tick(step, playerInput, camRig, arena);
     if(player.consumePowerJumpEvents){
       player.consumePowerJumpEvents().forEach(function(ev){ handlePowerJumpEvent(ev, true); });
@@ -437,6 +445,8 @@
     }
     if(net) tickNet(dt);
     tickTanker(dt);
+    if(grab) grab.tick(dt, player, {hud: hud});
+    if(sedan && sedan.ready) sedan.tick(step, {player: player, people: peopleSnap(), enemies: enemies, fx: fx, audio: VF.audio, cam: camRig});
     if(player && player.alive === false){
       enterSpectator();
       const watched = spectator && spectator.tick ? spectator.tick(poll, net, hud, arena) : null;
@@ -553,6 +563,12 @@
         console.warn('[VocabForce] oil tanker load skip', err);
         return null;
       });
+      sedan = VF.SedanController ? new VF.SedanController() : null;
+      const sedanLoad = sedan ? sedan.attach(scene, arena).catch(function(err){
+        console.warn('[VocabForce] sedan load skip', err);
+        return null;
+      }) : Promise.resolve(null);
+      grab = VF.VehicleGrabController ? new VF.VehicleGrabController({sedan: sedan, tanker: oilTanker, arena: arena}) : null;
       healPad = VF.HealPad ? new VF.HealPad().attach(scene) : null;
       fx = new VF.ImpactFXManager().attach(scene);
       trails = new VF.MotionTrailManager().attach(scene);
@@ -572,6 +588,8 @@
       await loadClips(picked);
       hud.setLoad(0.58, 'กำลังเตรียมรถบรรทุกน้ำมัน', picked);
       await tankerLoad;
+      hud.setLoad(0.60, 'กำลังเตรียมรถยนต์', picked);
+      await sedanLoad;
       hud.setLoad(0.62, 'กำลังเข้าสนาม', picked);
       round = new VF.VocabularyRoundController();
       combat = new VF.CombatController();
@@ -637,6 +655,10 @@
     if(enemies) enemies.clear();
     if(oilTanker && oilTanker.dispose) oilTanker.dispose();
     oilTanker = null;
+    if(sedan && sedan.dispose) sedan.dispose();
+    sedan = null;
+    grab = null;
+    if(player) player.carrying = null;
     spectator = null;
     if(healPad && healPad.dispose) healPad.dispose();
     healPad = null;
@@ -650,5 +672,5 @@
 
   VF.open = open;
   VF.close = close;
-  VF._t.live = function(){ return {player: player, enemies: enemies, round: round, combat: combat, cam: camRig, secondary: secondary, fx: fx, tanker: oilTanker, spectator: spectator, arena: arena, scene: scene, net: net, hud: hud, input: input, resetRound: beginRound, character: player && player.def}; };
+  VF._t.live = function(){ return {player: player, enemies: enemies, round: round, combat: combat, cam: camRig, secondary: secondary, fx: fx, tanker: oilTanker, sedan: sedan, grab: grab, spectator: spectator, arena: arena, scene: scene, net: net, hud: hud, input: input, resetRound: beginRound, character: player && player.def}; };
 })(typeof window !== 'undefined' ? window : globalThis);

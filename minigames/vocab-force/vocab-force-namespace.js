@@ -42,6 +42,8 @@
   VF.DPR_CAP = 1.5;
   VF.TANKER_DAMAGE = 500;
   VF.TANKER_SPAWN = {x: 84, z: -18, yaw: Math.PI * 0.5};
+  VF.SEDAN_DAMAGE = 100;
+  VF.SEDAN_SPAWN = {x: -62, z: 58, yaw: 2.2};
   VF.SCRIPTS = [
     'vocab-force-namespace.js',
     'animation/nex-animation-manifest.js',
@@ -86,6 +88,8 @@
     'ui/vocab-force-hud.js',
     'map/prototype-arena.js',
     'map/oil-tanker-controller.js',
+    'map/sedan-controller.js',
+    'map/vehicle-grab.js',
     'runtime/vocab-force-audio.js',
     'runtime/vocab-force-net.js',
     'runtime/vocab-force-spectator.js',

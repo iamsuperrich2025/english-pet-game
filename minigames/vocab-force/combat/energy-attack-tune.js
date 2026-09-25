@@ -126,6 +126,8 @@
     const fire = kept.length >= 2;
     return {taps: fire ? [] : kept, fire: fire, bounce: false};
   };
+  /* รอบ 1567: ลูกพลังต้องอยู่ระดับเดียวกับศัตรู ไม่ลอยขึ้นฟ้า — ถ้า aim assist เจอเป้า ยิงเอียงลงสู่ความสูงลำตัวศัตรู (chest ~+0.95)
+     ถ้าไม่มีเป้า ยิงราบ (y=0) ไม่มีส่วนชักขึ้นแม้กล้องจะมองต่ำ */
   VF._t.energyAim = function(player, camera, enemies){
     const yaw = camera && camera.yaw != null ? camera.yaw : (player && player.yaw || 0);
     let x = Math.sin(yaw), z = Math.cos(yaw);
@@ -149,10 +151,16 @@
       const inv = Math.hypot(dx, dz) || 1;
       x = x * (1 - k) + dx / inv * k;
       z = z * (1 - k) + dz / inv * k;
+      const oy = (player && player.y || 0) + (T.muzzleHeight || 1.22);
+      const ty = (best.y || 0) + 0.95;
+      const hx = x, hz = z;
+      const dl = Math.hypot(hx, hz) || 1;
+      const dy = (ty - oy) / Math.max(6, dl * 6);
+      const len = Math.hypot(hx / dl, dy, hz / dl) || 1;
+      return {x: hx / dl / len, y: dy / len, z: hz / dl / len, assisted: true};
     }
-    const lift = VF._t.aimPitchLift ? VF._t.aimPitchLift(camera && camera.pitch) : 0;
-    const len = Math.hypot(x, lift, z) || 1;
-    return {x: x / len, y: lift / len, z: z / len, assisted: !!best};
+    const len = Math.hypot(x, z) || 1;
+    return {x: x / len, y: 0, z: z / len, assisted: false};
   };
   VF._t.energyWish = function(yaw, moveX, moveZ){
     if(VF.cameraWish) return VF.cameraWish(yaw || 0, moveX || 0, moveZ || 0);
@@ -193,7 +201,7 @@
         dx = dx / dist * max; dz = dz / dist * max;
         hold.x = px + dx; hold.z = pz + dz;
       }
-      const lift = VF._t.aimPitchLift ? VF._t.aimPitchLift(camera && camera.pitch) : 0;
+      const lift = 0; /* รอบ 1567: ป้ายเล็งอยู่ระดับเดียวกับตัว — ไม่ชักขึ้นตาม pitch อีกต่อไป */
       hold.y = (player && player.y || 0) + (T.muzzleHeight || 1.22) + lift * 4.2;
     }
     return hold;

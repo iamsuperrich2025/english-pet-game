@@ -759,6 +759,12 @@
   NexCharacterController.prototype._chooseLoco = function(input){
     if(this.anim.isBusy()) return;
     if(this._dash && this._dash.active) return;
+    /* รอบ 1567: กำลังแบกรถ — แช่ท่ายกไว้ ห้ามเล่น locomotion ทับ */
+    if(this.carrying){
+      this.mode = 'carry';
+      this.anim.play('lift', {timeScale: 0.0001, loop: true}) || this.anim.play('block');
+      return;
+    }
     if(this._jump && this._jump.landRecover > 0){
       this.mode = 'powerJumpLand';
       return;

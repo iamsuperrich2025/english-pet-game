@@ -50,13 +50,16 @@
       Number(req.seq) || 0,
       String(req.kind || 'punch').charAt(0).toUpperCase(),
       Number(req.dx || 0).toFixed(3),
-      Number(req.dz || 0).toFixed(3)
+      Number(req.dz || 0).toFixed(3),
+      Number(req.x || 0).toFixed(1),
+      Number(req.z || 0).toFixed(1),
+      req.grab ? 'G' : '-'
     ].join('~');
   }
   function parseTankerRequest(raw){
     const p = String(raw || '').split('~');
     if(p.length < 5 || !isFinite(Number(p[0]))) return null;
-    return {round: Number(p[0]) || 0, seq: Number(p[1]) || 0, kind: p[2] === 'K' ? 'kick' : 'punch', dx: Number(p[3]) || 0, dz: Number(p[4]) || 0};
+    return {round: Number(p[0]) || 0, seq: Number(p[1]) || 0, kind: p[2] === 'K' ? 'kick' : 'punch', dx: Number(p[3]) || 0, dz: Number(p[4]) || 0, x: Number(p[5]) || 0, z: Number(p[6]) || 0, grab: p[7] === 'G'};
   }
   function packTankerEvent(ev){
     if(!ev || !ev.id) return '-';

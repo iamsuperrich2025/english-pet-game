@@ -99,8 +99,9 @@
       dmg: zone === 'H' ? (VF.PLAYER_HP || 1000) : (dmg || 0)
     };
   };
+  /* รอบ 1567: ห้ามยิงชักขึ้นฟ้า — lift ติดลบเท่านั้น (เล็งตามคนดูลงต่ำ) */
   VF._t.aimPitchLift = function(pitch){
     const p = pitch != null ? pitch : 0.38;
-    return VF.clamp((0.38 - p) * 0.42, -0.22, 0.28);
+    return VF.clamp((0.38 - p) * 0.42, -0.22, 0);
   };
 })(typeof window !== 'undefined' ? window : globalThis);

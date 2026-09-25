@@ -57,6 +57,7 @@
     this.damageEventId = '';
     this._pendingHit = false;
     this._pendingAt = 0;
+    this.carrier = null;
     this.onHitRequest = null;
     this.onExplosion = null;
     this.fx = null;
@@ -164,6 +165,7 @@
     this._pendingAt = 0;
     this.vx = this.vy = this.vz = 0;
     this.avx = this.avy = this.avz = 0;
+    this.carrier = null;
     if(this.root){
       this.root.visible = true;
       this.root.position.set(this.spawn.x, 0, this.spawn.z);
@@ -186,6 +188,52 @@
     return pointBoxDistance(player.x || 0, player.z || 0, this.collider) <= (reach || 2.4);
   };
 
+  OilTankerController.prototype.canGrab = function(player){
+    if(!this.ready || this.state !== 'idle' || !player || player.alive === false) return false;
+    return pointBoxDistance(player.x || 0, player.z || 0, this.collider) <= 4.4;
+  };
+
+  OilTankerController.prototype.grab = function(player){
+    if(!this.canGrab(player)) return false;
+    this.state = 'carried';
+    this.carrier = player;
+    this._updateCollider();
+    return true;
+  };
+
+  OilTankerController.prototype.carryTick = function(dt, player){
+    if(this.state !== 'carried' || !this.root || !player) return;
+    const fwd = player.forward ? player.forward() : {x: 0, z: 1};
+    const t = (VF.now ? VF.now() : 0) / 1000;
+    const bob = Math.sin(t * 5) * 0.08;
+    this.root.position.set(
+      (player.x || 0) + fwd.x * (this.halfLong + 2.4),
+      (player.y || 0) + 2.5 + bob,
+      (player.z || 0) + fwd.z * (this.halfLong + 2.4)
+    );
+    this.root.rotation.set(0.05 + bob * 0.2, Math.atan2(fwd.x, fwd.z), 0);
+    this._updateCollider();
+  };
+
+  /* รอบ 1567: ทุ่มด้วยมือ — โยนต่อไปทิศที่หันหน้า ปะทะสิ่งใดระเบิดทันที (ดาเมจ 500 ทุกตัวผ่าน onExplosion เดิม) */
+  OilTankerController.prototype.throwBy = function(player, dirX, dirZ){
+    if(this.state !== 'carried' && this.state !== 'idle') return false;
+    const n = Math.hypot(dirX, dirZ) || 1;
+    const ev = {
+      id: 'grab:' + String(Date.now()) + ':' + ((Math.random() * 1e6) | 0),
+      round: 0,
+      startAt: Date.now(),
+      x: this.root ? this.root.position.x : this.spawn.x,
+      z: this.root ? this.root.position.z : this.spawn.z,
+      dx: +((dirX / n).toFixed(4)),
+      dz: +((dirZ / n).toFixed(4)),
+      grab: 1
+    };
+    this.carrier = null;
+    this.state = 'idle';
+    return this.applyEvent(ev);
+  };
+
   OilTankerController.prototype.meleeHit = function(origin, reach, info){
     if(!this.ready || this.state !== 'idle') return false;
     if(this._pendingHit && Date.now() - this._pendingAt <= 1200) return false;
@@ -204,25 +252,39 @@
 
   OilTankerController.prototype.acceptRequest = function(req, eventId, roundSeed){
     if(!this.ready || this.state !== 'idle' || !req) return null;
-    if(pointBoxDistance(req.x || 0, req.z || 0, this.collider) > 4.4) return null;
-    let dx = this.spawn.x - (req.x || 0), dz = this.spawn.z - (req.z || 0);
-    const len = Math.hypot(dx, dz);
-    if(len > 0.1){ dx /= len; dz /= len; }
-    else{
+    /* รอบ 1567: คำขอทุ่มจากการแบก ผ่อนเช็กระยะ — ฝั่ง host อาจยังเห็นรถอยู่คนละตำแหน่งกับผู้ทุ่ม */
+    if(!req.grab && pointBoxDistance(req.x || 0, req.z || 0, this.collider) > 4.4) return null;
+    let dx, dz, sx, sz;
+    if(req.grab){
+      /* รอบ 1567: ทุ่มจากการแบก — เริ่มจากตำแหน่งปัจจุบัน ไปตามทิศที่ผู้เล่นหันหน้า */
+      sx = this.root ? this.root.position.x : this.spawn.x;
+      sz = this.root ? this.root.position.z : this.spawn.z;
       dx = Number(req.dx) || 0; dz = Number(req.dz) || 1;
       const n = Math.hypot(dx, dz) || 1; dx /= n; dz /= n;
+    }else{
+      sx = this.spawn.x; sz = this.spawn.z;
+      dx = this.spawn.x - (req.x || 0), dz = this.spawn.z - (req.z || 0);
+      const len = Math.hypot(dx, dz);
+      if(len > 0.1){ dx /= len; dz /= len; }
+      else{
+        dx = Number(req.dx) || 0; dz = Number(req.dz) || 1;
+        const n = Math.hypot(dx, dz) || 1; dx /= n; dz /= n;
+      }
     }
     return {
       id: String(eventId || (roundSeed + ':1')),
       round: Number(roundSeed) || 0,
       startAt: Date.now(),
-      x: this.spawn.x, z: this.spawn.z,
-      dx: +dx.toFixed(4), dz: +dz.toFixed(4)
+      x: sx, z: sz,
+      dx: +dx.toFixed(4), dz: +dz.toFixed(4),
+      grab: req.grab ? 1 : 0
     };
   };
 
   OilTankerController.prototype.applyEvent = function(ev){
-    if(!ev || !ev.id || ev.id === this.eventId || this.state !== 'idle') return false;
+    if(!ev || !ev.id || ev.id === this.eventId) return false;
+    if(this.state !== 'idle' && this.state !== 'carried') return false;
+    this.carrier = null;
     this.event = ev;
     this.eventId = String(ev.id);
     this.state = 'launched';
@@ -256,14 +318,18 @@
     this.root.rotation.y += this.avy * dt;
     this.root.rotation.z += this.avz * dt;
     const half = this.arena ? this.arena.half - 8 : 270;
-    if(Math.abs(this.root.position.x) > half){ this.root.position.x = VF.clamp(this.root.position.x, -half, half); this.vx *= -0.38; }
-    if(Math.abs(this.root.position.z) > half){ this.root.position.z = VF.clamp(this.root.position.z, -half, half); this.vz *= -0.38; }
+    if(Math.abs(this.root.position.x) > half || Math.abs(this.root.position.z) > half){
+      /* รอบ 1567: ปะทะขอบสนาม = ระเบิดทันที */
+      this.root.position.x = VF.clamp(this.root.position.x, -half, half);
+      this.root.position.z = VF.clamp(this.root.position.z, -half, half);
+      this._explode();
+      return;
+    }
     const floor = this.arena && this.arena.surfaceY ? this.arena.surfaceY(this.root.position.x, this.root.position.z) : 0;
     if(this.root.position.y < floor + 1.25 && this.vy < 0){
+      /* รอบ 1567: ปะทะพื้น/สิ่งใดก็ตาม = ระเบิดทันที (ดาเมจ 500 ทุกตัวผ่าน onExplosion เดิม) */
       this.root.position.y = floor + 1.25;
-      this.vy *= -0.48;
-      this.vx *= 0.86; this.vz *= 0.86;
-      this.avx *= 0.92; this.avy *= 0.92; this.avz *= 0.92;
+      this._explode();
     }
   };
 
@@ -339,9 +405,11 @@
   };
 
   OilTankerController.prototype.tick = function(dt){
-    if(this.state === 'launched'){
+    if(this.state === 'carried'){
+      this.carryTick(dt, this.carrier);
+    }else if(this.state === 'launched'){
       this._stepLaunch(dt);
-      if(this.elapsed >= 2.75) this._explode();
+      if(this.state === 'launched' && this.elapsed >= 4.5) this._explode();
     }else if(this.state === 'exploding'){
       this._tickExplosion(dt);
     }
