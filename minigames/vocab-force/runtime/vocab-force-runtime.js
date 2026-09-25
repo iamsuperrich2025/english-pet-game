@@ -522,6 +522,11 @@
       hud.setLoad(0.04, 'กำลังเตรียมโลก', picked);
       await loadThree();
       THREE = root.THREE;
+      if(renderer && renderer.getContext && renderer.getContext().isContextLost && renderer.getContext().isContextLost()){
+        /* 🐛 รอบ 1565: canvas ถูกถอดจาก DOM ตอนออก — มือถือบางเครื่องทิ้ง WebGL context → สร้าง renderer ใหม่ */
+        try{ renderer.dispose(); }catch(_){}
+        renderer = null;
+      }
       if(!renderer){
         renderer = new THREE.WebGLRenderer({antialias: false, alpha: false, powerPreference: 'high-performance'});
         renderer.setPixelRatio(Math.min(VF.DPR_CAP, root.devicePixelRatio || 1));
@@ -531,8 +536,10 @@
           renderer.toneMapping = THREE.ACESFilmicToneMapping;
           renderer.toneMappingExposure = 1.12;
         }
-        hud.els.stage.appendChild(renderer.domElement);
-      }else if(!renderer.domElement.parentNode){
+      }
+      /* 🐛 รอบ 1565: mount() ใช้ root.innerHTML ล้าง stage เก่าแบบ subtree — canvas.parentNode ยังชี้ stage เก่าที่ถูกตัดออกจากเอกสาร
+         เช็ก parentNode อย่างเดียวจึงข้ามการแนบใหม่ (ตัวละคร+สนามมองไม่เห็นทั้งหมด) → เทียบกับ stage ปัจจุบันแทน */
+      if(renderer.domElement.parentNode !== hud.els.stage){
         hud.els.stage.appendChild(renderer.domElement);
       }
       hud.setLoad(0.10, 'กำลังสร้างสนาม', picked);
