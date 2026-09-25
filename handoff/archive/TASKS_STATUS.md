@@ -6766,3 +6766,10 @@ efreshMechaLock
 - QA: unit 572 + browser 812×375 (พุ่ง 56 ม./หมุน 18.7 rad/UI ไม่ล้น/วงไฟขยาย/reset ผ่าน) + 2-tab host/peer event เดียว/ตาย/spectator/reset/spawn 68 ม. ผ่าน + build 10,158 ไฟล์/1,445.1 MiB + validator ผ่าน · ไม่ deploy
 
 - รอบ 1562 · Vocab Force: ซอมบี้เหลือคนละ 5 ตัว (`HUNTER_OPEN` 2 แล้วค่อยเติม) แก้เกมอืดจากคลื่น 20
+
+
+## ⏬ ย้ายเมื่อ 2026-09-26 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- QA รวมรอบ 1563–1564: unit 572 + Home V2 + source/dist mobile + 2-tab host/peer + BGM 60.024 วิวนลูป + build 10,158 ไฟล์/1,436.0 MiB + validator ผ่าน · เตรียม deploy รวมครั้งเดียว
+- รอบ 1563 · Vocab Force เพิ่มรถบรรทุกน้ำมัน GLB ขนาด 13.6 ม. ชนไม่ได้; หมัด/เตะระยะใกล้ทำให้พุ่งตีลังกา ระเบิดครั้งเดียว + shockwave/fire ring ขยายทั้งแผนที่
+- host รับ melee request แล้วประกาศ event ID เดียว; ผู้เล่นแต่ละคนใช้ token เดิมหัก 500 HP ครั้งเดียว และตายแล้วล็อกทุก control เข้า spectator swipe/←→ จนจบรอบ
