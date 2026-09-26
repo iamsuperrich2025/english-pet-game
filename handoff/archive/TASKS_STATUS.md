@@ -6824,3 +6824,9 @@ efreshMechaLock
 - รอบ 1570 · ท่ายกค้าง cast จริง + ปุ่ม THROW + ปุ่มสองภาษา: lift ของ NEX เปลี่ยนเป็น `nex_mage_soell_cast.glb` (clip mage_soell_cast, holdAt 0.45) · Lyra เพิ่ม lift (ly_mage_soell_cast.glb) + throw (ly_Power_Spin_Jump/360_Power_Spin_Jump) เดิมไม่มีเลย — GLB คัดลอกเข้า runtime-models/nex+lyravyn (source อยู่ characters/*/animations) และเพิ่มใน build_web asset list
 - animation controller รองรับ holdAt (แช่เฟรมตามส่วนเศษของคลิป) + ซิงก์ timeScale เมื่อ play สถานะเดิมซ้ำ (carry เรียกซ้ำทุกเฟรม) · runtime loadClips concat [lift,throw] เข้า core เสมอ (เดิมไม่เคยถูก ingest!) · vehicle-grab แยกเมธอด throw() ออกจาก onKick
 - ปุ่ม THROW (data-vf-act=throw, โชว์เฉพาะตอนแบก — HUD.setCarrying ผูกกับ grab.carrying() ทุกเฟรม) + คีย์ G · ปุ่มทุกปุ่ม EN+แปลไทย (vf-act-sub): ATTACK/KICK/JUMP/BLOCK/DASH/THROW/EXIT/OK รับทราบ/Sound
+
+
+## ⏬ ย้ายเมื่อ 2026-09-26 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- เสริมความทนทาน THROW: vehicle-grab สั่ง hud.setCarrying โดยตรงที่จุดยกสำเร็จ/ทุ่ม/ตายระหว่างแบก · runtime เฟรมบรรทัดเช็กทั้ง grab.carrying() และ player.carrying (เผื่อเส้นทางใดค้าง)
+- ทดสอบ wiring ด้วย VM+DOM stub ก่อนแก้: shown=true หลังยก / hidden หลังทุ่ม ผ่าน · unit 599 + regression ครบ · deploy ตามรอบ 1571

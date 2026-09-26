@@ -23,8 +23,6 @@
 - รถยนต์ทุ่มตรง (throwBy ไม่ผ่าน net) ใช้ได้ปกติ — ยืนยันด้วย VM flow test ทั้ง tanker online (accepted→applyEvent→launched) และ sedan (thrown) · เสริม cache-bust โมดูลทั้งหมดใน ui.js loadVocabForceModules (?v=1572) กันไฟล์เก่าจาก HTTP cache ทำปุ่มกดแล้วเงียบ — ระวัง: เปลี่ยน token ทุกครั้งที่แก้โมดูล vf
 - ป้าย EN/TH ของแถวบน (THROW/BLOCK/JUMP) ย้ายไป "เหนือ"ปุ่ม (flex-direction:column-reverse) แก้ทับปุ่มแถวล่าง · unit 600 + regression ครบ · deploy ตามรอบ 1572
 - รอบ 1571 · สวิตช์เสียงทับปุ่ม EXIT (top-right) — ต้นตอ: รอบ 1570 ทำ EXIT กว้าง "EXIT · ออก" ~110px บานทับสวิตช์ที่ right:76px → แก้: EXIT สองบรรทัด (EXIT เหนือ ออก, .vf-exit-sub) กว้าง ~62px ไม่ทับ · ปุ่ม THROW "ไม่ขึ้น" = by design โผล่เฉพาะตอนแบก (ผู้ใช้ยืนยันเองว่าเข้าใจแล้ว)
-- เสริมความทนทาน THROW: vehicle-grab สั่ง hud.setCarrying โดยตรงที่จุดยกสำเร็จ/ทุ่ม/ตายระหว่างแบก · runtime เฟรมบรรทัดเช็กทั้ง grab.carrying() และ player.carrying (เผื่อเส้นทางใดค้าง)
-- ทดสอบ wiring ด้วย VM+DOM stub ก่อนแก้: shown=true หลังยก / hidden หลังทุ่ม ผ่าน · unit 599 + regression ครบ · deploy ตามรอบ 1571
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
