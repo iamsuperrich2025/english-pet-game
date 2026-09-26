@@ -7424,7 +7424,7 @@ function refreshVocabForceLock(){
 async function loadVocabForceModules(){
   const base='minigames/vocab-force/';
   /* รอบ 1572: cache-bust ทุกโมดูล — เคยเจอ input/grab เก่าจาก HTTP cache หลัง deploy ทำปุ่ม THROW กดแล้วเงียบ */
-  const v='?v=1586';
+  const v='?v=1587';
   await loadStylesheetOnce('vocab-force-css', base+'css/vocab-force.css'+v);
   await loadScriptOnce(base+'vocab-force-namespace.js'+v);
   const scripts=(window.VocabForce && VocabForce.SCRIPTS ? VocabForce.SCRIPTS : []).slice(1);

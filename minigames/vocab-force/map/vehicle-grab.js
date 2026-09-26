@@ -5,6 +5,15 @@
 (function(root){
   const VF = root.VocabForce = root.VocabForce || {};
 
+  /* รอบ 1587: คอมโบเตะระเบิด — กด THROW 2 ครั้งต่อเนื่องขณะแบก แล้วตามด้วย KICK
+     → เตะรถลอยออก ตัวละครว้าบไปเตะรถกลางอากาศจนระเบิดแตกละเอียดพร้อมประกายไฟ
+     (ใช้ได้ทุกตัวละคร — ไม่ผูกกับ manifest ใดตัวหนึ่ง) */
+  const COMBO_PRESS_MS = 1100;  /* หน้าต่างกด THROW ครั้งที่ 2 */
+  const COMBO_KICK_MS = 1400;   /* หน้าต่างกด KICK หลัง THROW ครั้งที่ 2 */
+  const COMBO_SPEC_TANKER = {h: 40, up: 26, grav: 19};
+  const COMBO_SPEC_SEDAN = {h: 30, up: 17, grav: 22};
+  const DEBRIS_COUNT = 16, SPARK_COUNT = 42, DEBRIS_DUR = 1.35;
+
   function VehicleGrabController(opts){
     opts = opts || {};
     this.sedan = opts.sedan || null;
@@ -14,7 +23,228 @@
     this._marker = null;
     this._toastAt = 0;
     this._promptShown = false;
+    this._combo = null;    /* {stage, at, player, cam, fx, audio, hud, requestTankerHit, hasNet} */
+    this._flight = null;   /* {veh, t, dur, x, z, dx, dz, player, fx, audio, cam, hud} */
+    this._debris = null;
   }
+
+  VehicleGrabController.prototype.reset = function(){
+    this._combo = null;
+    this._flight = null;
+    this._hideMarker();
+    this._promptShown = false;
+    if(this.sedan) this.sedan._comboHold = false;
+    if(this.tanker) this.tanker._comboHold = false;
+  };
+
+  /* รับกด THROW ขณะแบก — คืน true ถื่อกลืนเป็นคอมโบ (ยังไม่ทุ่ม) คืน false ถ้าไม่เข้าเงื่อนไข */
+  VehicleGrabController.prototype.comboThrow = function(player, cam, fx, audio, hud, requestTankerHit, hasNet){
+    if(!player || player.alive === false || !this.carrying()) return false;
+    const now = VF.now();
+    const c = this._combo;
+    if(!c || c.stage !== 1 || now - c.at > COMBO_PRESS_MS){
+      /* ครั้งแรก — อมคำสั่งไว้ก่อน ถ้าไม่กดต่อจะทุ่มจริงอัตโนมัติตอนหมดเวลา (คงพฤติกรรมทุ่มปกติ) */
+      this._combo = {stage: 1, at: now, player: player, cam: cam, fx: fx, audio: audio, hud: hud, requestTankerHit: requestTankerHit, hasNet: hasNet};
+      if(player.playAction) player.playAction('throw');
+      if(audio && audio.punchWhoosh) audio.punchWhoosh();
+      if(hud && hud.toast) hud.toast('⚡ กด THROW อีกครั้ง แล้วตามด้วย KICK!');
+      return true;
+    }
+    /* ครั้งที่ 2 ภายในหน้าต่าง — อมท่าไว้รอเตะ */
+    c.stage = 2;
+    c.at = now;
+    if(player.playAction) player.playAction('throw');
+    if(audio && audio.punchWhoosh) audio.punchWhoosh();
+    if(hud && hud.toast) hud.toast('🔥 พร้อมเตะ! กด KICK');
+    return true;
+  };
+
+  /* รับกด KICK ขณะแบก — ถ้าคอมโบ armed ให้ปล่อยเตะคอมโบเตะระเบิด */
+  VehicleGrabController.prototype.tryComboKick = function(player, cam, fx, audio, hud, arena){
+    const c = this._combo;
+    if(!c || c.stage !== 2 || VF.now() - c.at > COMBO_KICK_MS) return false;
+    const held = this.carrying();
+    if(!held || !player || player.alive === false || !held.root) return false;
+    const fwd = player.forward ? player.forward() : {x: 0, z: 1};
+    const dx = fwd.x, dz = fwd.z;
+    const kickAnim = player.anim && player.anim.has && player.anim.has('kick') ? 'kick' : 'punch';
+    if(player.playAction) player.playAction(kickAnim);
+    if(audio && audio.kickWhoosh) audio.kickWhoosh();
+    player.carrying = null;
+    held.carrier = null;
+    this._combo = null;
+    this._hideMarker();
+    if(hud && hud.setCarrying) hud.setCarrying(false);
+    /* เตะ #1: ปล่อยรถลอยเป็นวิถีโค้งสูงไปข้างหน้า */
+    const spec = held === this.tanker ? COMBO_SPEC_TANKER : COMBO_SPEC_SEDAN;
+    if(held.comboKickLaunch) held.comboKickLaunch(dx, dz, spec);
+    /* คำนวณจุด/เวลาตกลงพื้นจากสเปกเดียวกับวิถีจริง */
+    const p = held.root.position;
+    const half = (arena ? arena.half : 280) - 8;
+    const floorY = arena && arena.groundY ? arena.groundY(p.x, p.z) : 0;
+    const y0 = Math.max(0.2, (p.y || 0) - floorY);
+    const tHit = (spec.up + Math.sqrt(spec.up * spec.up + 2 * spec.grav * y0)) / spec.grav;
+    const lx = VF.clamp(p.x + dx * spec.h * tHit, -half, half);
+    const lz = VF.clamp(p.z + dz * spec.h * tHit, -half, half);
+    /* ตัวละครว้าบไปรอจุดตก — dash ควบคุมระยะ/เวลาเอง ไม่ผูกกับตัวละครใดตัวหนึ่ง */
+    const distP = Math.hypot(lx - (player.x || 0), lz - (player.z || 0));
+    if(player.beginDash && distP > 1.4){
+      player.beginDash({
+        kind: 'combo', dirX: lx - (player.x || 0), dirZ: lz - (player.z || 0),
+        distance: Math.max(1.2, distP - 1.3), duration: Math.max(0.12, tHit * 0.9),
+        cooldown: 0.4, maxDistance: 80, fx: fx, camera: cam, arena: arena, now: VF.now()
+      });
+    }
+    this._flight = {veh: held, t: 0, dur: Math.max(0.18, tHit), x: lx, z: lz, dx: dx, dz: dz, player: player, fx: fx, audio: audio, cam: cam, hud: hud};
+    if(hud && hud.toast) hud.toast('🌀 ว้าบไปเตะรถกลางอากาศ!');
+    return true;
+  };
+
+  VehicleGrabController.prototype._finishComboFlight = function(f){
+    const v = f.veh, pl = f.player;
+    /* วางตัวละครหน้ารถจุดตก หันหน้าเข้าหารถ แล้วเตะ #2 */
+    if(pl && pl.alive !== false){
+      pl.x = f.x - f.dx * 1.4;
+      pl.z = f.z - f.dz * 1.4;
+      if(pl.yaw != null) pl.yaw = Math.atan2(f.dx, f.dz);
+      if(pl.vx != null){ pl.vx = 0; pl.vz = 0; }
+      if(pl._sync) pl._sync();
+      const kickAnim = pl.anim && pl.anim.has && pl.anim.has('kick') ? 'kick' : 'punch';
+      if(pl.playAction) pl.playAction(kickAnim);
+    }
+    /* รถระเบิดแตกละเอียด (tanker ใช้ _explode เดิม = ดาเมจ 500 ทุกตัว + ซอมบี้เหลือ 30%) */
+    if(v && v.comboShatter) v.comboShatter({fx: f.fx, audio: f.audio, cam: f.cam});
+    /* ชิ้นส่วนแตกละเอียด + ประกายไฟ */
+    const p = v && v.root ? v.root.position : {x: f.x, y: 1, z: f.z};
+    this._burstDebris(Math.max(0.8, p.y || 1), {x: p.x, z: p.z});
+    if(f.fx){
+      if(f.fx.impact) f.fx.impact(p.x, (p.y || 0) + 0.8, p.z, {kind: 'heavyKick', level: 'HEAVY', dir: {x: f.dx, z: f.dz}, force: 34});
+      if(f.fx.powerJumpImpact) f.fx.powerJumpImpact({x: p.x, y: 0, z: p.z, nx: -f.dx * 0.3, ny: 1, nz: -f.dz * 0.3}, 1.6, {local: true, dirX: f.dx, dirZ: f.dz, player: pl});
+    }
+    if(f.audio){
+      if(f.audio.heavyImpact) f.audio.heavyImpact();
+      if(f.audio.shockwaveImpact) f.audio.shockwaveImpact();
+      if(f.audio.zombieGroundImpactHeavy) f.audio.zombieGroundImpactHeavy();
+    }
+    if(f.cam && f.cam.impulse) f.cam.impulse(2.8, 13, {low: true});
+    if(f.hud && f.hud.toast) f.hud.toast('💥 เตะระเบิดคอมโบ!');
+  };
+
+  VehicleGrabController.prototype._tickCombo = function(dt){
+    const c = this._combo;
+    if(c && !this.carrying()){
+      /* รถหลุดมือก่อนจบคอมโบ (โดนดาเมจ/ตาย) — เคลียร์คอมโบ */
+      this._combo = null;
+    }else if(c && ((c.stage === 1 && VF.now() - c.at > COMBO_PRESS_MS) || (c.stage === 2 && VF.now() - c.at > COMBO_KICK_MS))){
+      /* หมดเวลา — ทุ่มตามปกติ 1 ครั้ง (เก็บพฤติกรรมเดิมของปุ่ม THROW ครั้งเดียว) */
+      this._combo = null;
+      this.throw(c.player, c.cam, c.fx, c.audio, c.hud, c.requestTankerHit, c.hasNet);
+    }
+    const f = this._flight;
+    if(f){
+      f.t += dt;
+      if(!f.veh || f.veh.state === 'destroyed' || !f.veh.root){
+        this._flight = null;
+      }else if(f.t >= Math.max(0.05, f.dur - 0.06)){
+        this._flight = null;
+        this._finishComboFlight(f);
+      }
+    }
+    this._tickDebris(dt);
+  };
+
+  /* ชิ้นส่วนรถแตกละเอียด — สร้างครั้งเดียว ใช้ซ้ำ (ไม่ alloc ต่อครั้งที่เตะ) */
+  VehicleGrabController.prototype._ensureDebris = function(){
+    if(this._debris || !this._markerScene || !root.THREE) return;
+    const THREE = root.THREE;
+    const group = new THREE.Group();
+    group.name = 'VFComboDebris';
+    group.visible = false;
+    const matMetal = new THREE.MeshBasicMaterial({color: 0x3a3f46});
+    const matHot = new THREE.MeshBasicMaterial({color: 0xff7a26});
+    const chunks = [];
+    for(let i = 0; i < DEBRIS_COUNT; i++){
+      const s = 0.14 + (i % 5) * 0.07;
+      const m = new THREE.Mesh(new THREE.BoxGeometry(s, s * 0.7, s * 1.4), i % 3 === 0 ? matHot : matMetal);
+      m.visible = false;
+      group.add(m);
+      chunks.push({m: m, vx: 0, vy: 0, vz: 0, spin: 4 + (i % 7) * 1.6});
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(SPARK_COUNT * 3), 3));
+    const sparks = new THREE.Points(geo, new THREE.PointsMaterial({
+      color: 0xffc23b, size: 0.55, transparent: true, opacity: 0,
+      depthWrite: false, blending: THREE.AdditiveBlending
+    }));
+    sparks.visible = false;
+    group.add(sparks);
+    this._markerScene.add(group);
+    this._debris = {group: group, chunks: chunks, sparks: sparks, svel: [], age: 999, dur: DEBRIS_DUR};
+  };
+
+  VehicleGrabController.prototype._burstDebris = function(y, at){
+    this._ensureDebris();
+    const d = this._debris;
+    if(!d) return;
+    d.age = 0;
+    d.group.visible = true;
+    const x = at && at.x || 0, z = at && at.z || 0;
+    d.chunks.forEach(function(c, i){
+      const a = (i / DEBRIS_COUNT) * Math.PI * 2 + (i % 3) * 0.4;
+      const spd = 7 + (i % 6) * 2.4;
+      c.m.position.set(x, y + (i % 4) * 0.22, z);
+      c.vx = Math.cos(a) * spd;
+      c.vz = Math.sin(a) * spd;
+      c.vy = 6.5 + (i % 5) * 1.8;
+      c.m.rotation.set((i % 3) * 0.7, a, (i % 4) * 0.5);
+      c.m.scale.setScalar(1);
+      c.m.visible = true;
+    });
+    const attr = d.sparks.geometry.attributes.position;
+    d.svel.length = 0;
+    for(let i = 0; i < SPARK_COUNT; i++){
+      const a = Math.random() * Math.PI * 2;
+      const el = (Math.random() - 0.35) * Math.PI * 0.5;
+      const spd = 9 + Math.random() * 14;
+      d.svel.push({x: Math.cos(a) * Math.cos(el) * spd, y: Math.abs(Math.sin(el)) * spd + 4, z: Math.sin(a) * Math.cos(el) * spd});
+      attr.setXYZ(i, x, y, z);
+    }
+    attr.needsUpdate = true;
+    d.sparks.material.opacity = 0.95;
+    d.sparks.visible = true;
+  };
+
+  VehicleGrabController.prototype._tickDebris = function(dt){
+    const d = this._debris;
+    if(!d || d.age > d.dur) return;
+    d.age += dt;
+    const t = d.age, k = VF.clamp(t / d.dur, 0, 1);
+    d.chunks.forEach(function(c){
+      if(!c.m.visible) return;
+      c.vy -= 22 * dt;
+      c.m.position.x += c.vx * dt;
+      c.m.position.y += c.vy * dt;
+      c.m.position.z += c.vz * dt;
+      c.m.rotation.x += c.spin * dt;
+      c.m.rotation.y += c.spin * 0.7 * dt;
+      c.m.scale.setScalar(Math.max(0.01, 1 - k));
+      if(t >= d.dur) c.m.visible = false;
+    });
+    const attr = d.sparks.geometry.attributes.position;
+    for(let i = 0; i < attr.count; i++){
+      const v = d.svel[i] || {x: 0, y: 0, z: 0};
+      attr.setXYZ(i, attr.getX(i) + v.x * dt, attr.getY(i) + v.y * dt, attr.getZ(i) + v.z * dt);
+      v.y -= 26 * dt;
+      d.svel[i] = v;
+    }
+    attr.needsUpdate = true;
+    d.sparks.material.opacity = t < 0.9 ? (1 - t / 0.9) * 0.95 : 0;
+    if(t >= d.dur){
+      d.sparks.visible = false;
+      d.group.visible = false;
+    }
+  };
+
 
   /* รอบ 1584: เครื่องหมาย + บนพื้น (สร้างครั้งเดียวตอนแรกที่ใช้ — ไม่ alloc ต่อเฟรม) */
   VehicleGrabController.prototype._ensureMarker = function(){
@@ -139,10 +369,12 @@
 
   VehicleGrabController.prototype.tick = function(dt, player, ctx){
     ctx = ctx || {};
+    this._tickCombo(dt);
     const held = this.carrying();
     if(held){
       if(!player || player.alive === false){
-        /* ตายระหว่างแบก — วางของลง */
+        /* ตายระหว่างแบก — วางของลง + เคลียร์คอมโบ */
+        this._combo = null;
         if(player) player.carrying = null;
         if(ctx.hud && ctx.hud.setCarrying) ctx.hud.setCarrying(false);
         this._hideMarker();

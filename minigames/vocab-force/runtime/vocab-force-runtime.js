@@ -63,6 +63,7 @@
     if(fireTrail && fireTrail.clear) fireTrail.clear();
     if(oilTanker && oilTanker.reset) oilTanker.reset(round.seed);
     if(sedan && sedan.reset) sedan.reset(round.seed);
+    if(grab && grab.reset) grab.reset();
     if(player) player.carrying = null;
     if(letters) letters.spawn(THREE, round.progress.word, arena, round.seed);
     if(hud){
@@ -205,8 +206,36 @@
     net.requestTankerHit(req, round.seed);
   }
 
+  /* รอบ 1587: รถบรรทุกน้ำมันระเบิด — ซอมบี้ "รอด" แต่พลังชีวิตเหลือแค่ 30% ของ MAX
+     (ไม่มีตายจากแรงระเบิด — ล้มกระเด็นจากจุดระเบิดให้เห็นผลชัด ทุกตัวในแมพ) */
+  function scorchZombiesFromBlast(pos){
+    if(!enemies || !enemies.list) return;
+    const px = (pos && pos.x) || 0, pz = (pos && pos.z) || 0;
+    const ratio = VF.TANKER_SCORCH_RATIO != null ? VF.TANKER_SCORCH_RATIO : 0.3;
+    enemies.list.forEach(function(en){
+      if(!en || !en.alive || !en.maxHp || en.state === 'gone' || en.burstFinisherTriggered) return;
+      if(typeof en.applyHit !== 'function') return;
+      const target = Math.max(1, Math.round(en.maxHp * ratio));
+      if((en.hp || 0) <= target) return;
+      const dx = (en.x || 0) - px, dz = (en.z || 0) - pz;
+      const n = Math.hypot(dx, dz) || 1;
+      en.applyHit({
+        damage: en.hp - target,
+        force: 22,
+        lift: 4.5,
+        dir: {x: dx / n, z: dz / n},
+        origin: {x: px, y: 1, z: pz},
+        kind: 'kick',
+        reaction: 'launch',
+        level: 'HEAVY'
+      });
+    });
+  }
+
   function tankerExplosion(eventId, pos){
-    if(!player || player.alive === false || !eventId) return;
+    if(!eventId) return;
+    scorchZombiesFromBlast(pos);
+    if(!player || player.alive === false) return;
     const dmg = player.takeHit(VF.TANKER_DAMAGE || 500, false, {from: 'tanker', bypassInvuln: true});
     if(dmg > 0){
       if(hud && hud.setHp) hud.setHp(player.hp, player.maxHp);
@@ -367,15 +396,24 @@
     if(active) combat.tick(dt, now, player, enemies, fx, camRig, VF.audio, secondary, peopleSnap(), worldMelee || oilTanker);
     if(active && !paused && poll.dash && !player.carrying) player.tryManualDash(poll, camRig, arena, fx, camRig, now);
     if(active && !paused && poll.punch && !player.carrying) combat.handleAttackPress('punch', player, now, enemies, camRig, arena, fx, energy, VF.audio, {hold: !!poll.punchHeld, people: peopleSnap(), world: worldMelee || oilTanker});
-    if(active && !paused && poll.kick && !player.carrying){
-      /* รอบ 1575: KICK เตะอย่างเดียว — การยก/ทุ่มย้ายไปอยู่ปุ่ม LIFT/THROW (หรือคีย์ G) หมดแล้ว
-         รอบ 1579: ห้ามเตะตอนแบกรถ — ท่าเตะ/การเข้าใกล้เป้าจะดันตำแหน่งตัวละครทั้งที่ยืนแบกอยู่ */
-      combat.tryAttackOrApproach(player.anim.has('kick') ? 'kick' : 'punch', player, now, enemies, camRig, arena, fx);
+    if(active && !paused && poll.kick){
+      if(player.carrying){
+        /* รอบ 1587: KICK ตอนแบก = จบคอมโบเตะระเบิด (THROW×2 แล้ว KICK) ใช้ได้ทุกตัวละคร */
+        grab && grab.tryComboKick(player, camRig, fx, VF.audio, hud, arena);
+      }else{
+        /* รอบ 1575: KICK เตะอย่างเดียว — การยก/ทุ่มย้ายไปอยู่ปุ่ม LIFT/THROW (หรือคีย์ G) หมดแล้ว
+           รอบ 1579: ห้ามเตะตอนแบกรถ — ท่าเตะ/การเข้าใกล้เป้าจะดันตำแหน่งตัวละครทั้งที่ยืนแบกอยู่ */
+        combat.tryAttackOrApproach(player.anim.has('kick') ? 'kick' : 'punch', player, now, enemies, camRig, arena, fx);
+      }
     }
-    /* รอบ 1575: ปุ่ม LIFT/THROW (หรือคีย์ G) สองสถานะ — ยังไม่ได้ยก: กดเพื่อยก · ยกแล้ว: กดเพื่อทุ่ม */
+    /* รอบ 1575: ปุ่ม LIFT/THROW (หรือคีย์ G) สองสถานะ — ยังไม่ได้ยก: กดเพื่อยก · ยกแล้ว: กดเพื่อทุ่ม
+       รอบ 1587: ตอนแบก ปุ่ม THROW กลายเป็นคีย์คอมโบ — กด 2 ครั้งต่อเนื่องแล้ว KICK = เตะระเบิด
+       (กดครั้งเดียวแล้วหยุด = ทุ่มตามปกติ หมดเวลาคอมโบจะทุ่มให้อัตโนมัติ) */
     if(active && !paused && poll.throw && grab){
       if(player.carrying){
-        grab.throw(player, camRig, fx, VF.audio, hud, requestTankerHit, !!(net && net.requestTankerHit));
+        if(!grab.comboThrow(player, camRig, fx, VF.audio, hud, requestTankerHit, !!(net && net.requestTankerHit))){
+          grab.throw(player, camRig, fx, VF.audio, hud, requestTankerHit, !!(net && net.requestTankerHit));
+        }
       }else{
         grab.onLift(player, camRig, fx, VF.audio, hud);
       }

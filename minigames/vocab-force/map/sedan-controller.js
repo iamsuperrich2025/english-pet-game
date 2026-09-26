@@ -209,6 +209,7 @@
     if(!this.ready) return false;
     if(this.carrier && this.carrier.carrying === this) this.carrier.carrying = null;
     this.carrier = null;
+    this._comboHold = false;
     this.vx = this.vy = this.vz = 0;
     this._flipSpeed = 0;
     this._yawSpin = 0;
@@ -228,6 +229,46 @@
     }
     if(audio && audio.arenaFire) audio.arenaFire();
     if(cam && cam.impulse) cam.impulse(0.42, 3.2);
+    return true;
+  };
+
+  /* รอบ 1587: คอมโบเตะระเบิด — เตะ #1 ปล่อยรถยนต์ลอยวิถีโค้งสูง (_comboHold กันการตั้งล้อ/เด้งพื้น
+     รอเตะ #2 กลางอากาศ · comboShatter สลับชุดแตก + จอดซาก + ไฟลุก) */
+  SedanController.prototype.comboKickLaunch = function(dirX, dirZ, spec){
+    if(!this.ready) return false;
+    if(this.state !== 'carried' && this.state !== 'idle') return false;
+    this._comboHold = true;
+    this.state = 'thrown';
+    this.carrier = null;
+    this.elapsed = 0;
+    this.bounces = 0;
+    this._hitIds = {};
+    const sp = spec || {h: 30, up: 17};
+    this._beginTumble(dirX, dirZ, sp.h, sp.up, 7.5, (Math.random() - 0.5) * 1.4);
+    this._updateCollider();
+    return true;
+  };
+
+  SedanController.prototype.comboShatter = function(ctx){
+    if(!this.ready) return false;
+    this._comboHold = false;
+    this.vx = this.vy = this.vz = 0;
+    this._flipSpeed = 0;
+    this._yawSpin = 0;
+    if(this.root){
+      if(this.root.quaternion) this.root.quaternion.identity();
+      if(this.root.rotation) this.root.rotation.set((Math.random() - 0.5) * 0.3, this.root.rotation.y || 0, (Math.random() - 0.5) * 0.24);
+      const floor = this.arena && this.arena.groundY ? this.arena.groundY(this.root.position.x, this.root.position.z) : 0;
+      this.root.position.y = floor;
+    }
+    this.state = 'idle';
+    this.swapShattered();
+    this._updateCollider();
+    if(ctx && ctx.fx && ctx.fx.arenaFire && this.root){
+      const p = this.root.position;
+      ctx.fx.arenaFire(p.x, (p.y || 0) + 0.6, p.z, {r: 3.2});
+    }
+    if(ctx && ctx.audio && ctx.audio.arenaFire) ctx.audio.arenaFire();
     return true;
   };
 
@@ -261,6 +302,7 @@
     this.avx = this.avy = this.avz = 0;
     this._flipSpeed = 0;
     this._yawSpin = 0;
+    this._comboHold = false;
     this._hitIds = {};
     this.carrier = null;
     /* รอบ 1573: รอบใหม่ = รถกลับเป็นสภาพปกติ (ถอดโมเดลชุดแตก) */
@@ -379,11 +421,18 @@
     if(p.y <= floor + 0.02 && this.vy < 0){
       p.y = floor;
       groundHit = true;
-      this.vy *= -0.38;
-      this.vx *= 0.72; this.vz *= 0.72;
-      this._flipSpeed *= 0.62; this._yawSpin *= 0.6;
-      this.bounces++;
-      this._impact(ctx.fx, ctx.audio, ctx.cam, player, p.x, p.y + 0.6, p.z);
+      if(this._comboHold){
+        /* รอบ 1587: ช่วงคอมโบ — จอดนิ่งรอเตะ #2 กลางอากาศสั่งแตก ไม่เด้ง/ไม่ตั้งล้อ */
+        this.vy = 0;
+        this.vx = 0;
+        this.vz = 0;
+      }else{
+        this.vy *= -0.38;
+        this.vx *= 0.72; this.vz *= 0.72;
+        this._flipSpeed *= 0.62; this._yawSpin *= 0.6;
+        this.bounces++;
+        this._impact(ctx.fx, ctx.audio, ctx.cam, player, p.x, p.y + 0.6, p.z);
+      }
     }
 
     /* โดนคนปุ๊บหักพลัง -100 แล้วเด้งออก (เฉพาะสถานะ thrown — การเด้งจากการถูกเตะเป็นแค่เอฟเฟกต์) */
@@ -435,7 +484,7 @@
     }
 
     const spd = Math.hypot(this.vx, this.vz);
-    if((groundHit && spd < 2.2 && Math.abs(this.vy) < 2.5) || this.bounces >= 3 || this.elapsed > 6){
+    if(!this._comboHold && ((groundHit && spd < 2.2 && Math.abs(this.vy) < 2.5) || this.bounces >= 3 || this.elapsed > 6)){
       this.state = 'idle';
       this.vx = this.vy = this.vz = 0;
       this._flipSpeed = 0;

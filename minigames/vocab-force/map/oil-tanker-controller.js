@@ -60,6 +60,7 @@
     this.damageEventId = '';
     this._pendingHit = false;
     this._pendingAt = 0;
+    this._comboHold = false;
     this.carrier = null;
     this.onHitRequest = null;
     this.onExplosion = null;
@@ -166,6 +167,7 @@
     this.damageEventId = '';
     this._pendingHit = false;
     this._pendingAt = 0;
+    this._comboHold = false;
     this.vx = this.vy = this.vz = 0;
     this.avx = this.avy = this.avz = 0;
     this.carrier = null;
@@ -348,6 +350,49 @@
     return true;
   };
 
+  /* รอบ 1587: คอมโบเตะระเบิด — เตะ #1 ปล่อยรถลอยวิถีโค้งสูง (กด THROW×2 แล้ว KICK ขณะแบก)
+     ใช้เส้นทาง 'launched' เดิม แต่ _comboHold กันการระเบิดเองตอนถึงพื้น รอเตะ #2 กลางอากาศ
+     (comboShatter) เป็นคนสั่งระเบิดแตกละเอียด · fail-safe: tick() elapsed>=4.5 ระเบิดเองเหมือนเดิม */
+  OilTankerController.prototype.comboKickLaunch = function(dirX, dirZ, spec){
+    if(!this.ready || !this.root) return false;
+    if(this.state !== 'carried' && this.state !== 'idle') return false;
+    const n = Math.hypot(dirX, dirZ) || 1;
+    const dxn = dirX / n, dzn = dirZ / n;
+    this._comboHold = true;
+    this.eventId = 'combo:' + String(Date.now()) + ':' + ((Math.random() * 1e6) | 0);
+    this.event = {id: this.eventId, round: 0, grab: 2};
+    this.state = 'launched';
+    this.elapsed = 0;
+    this.carrier = null;
+    this._pendingHit = false;
+    this._pendingAt = 0;
+    const sp = spec || {h: 40, up: 26};
+    this.vx = dxn * sp.h;
+    this.vz = dzn * sp.h;
+    this.vy = sp.up;
+    const THREE = root.THREE;
+    if(THREE){
+      if(!this._tAxis){
+        this._tAxis = new THREE.Vector3();
+        this._tQ = new THREE.Quaternion();
+        this._tQY = new THREE.Quaternion();
+        this._tUp = new THREE.Vector3(0, 1, 0);
+      }
+      this._tAxis.set(dzn + dxn * 0.24, 0.06, -dxn + dzn * 0.24).normalize();
+      this._flipSpeed = 6.4;
+      this._yawSpin = 1.4;
+    }
+    this._updateCollider();
+    return true;
+  };
+
+  /* รอบ 1587: เตะ #2 โดนรถกลางอากาศ → ระเบิดแตกละเอียด (เส้นทาง _explode เดิม = ดาเมจ 500 ทุกตัว) */
+  OilTankerController.prototype.comboShatter = function(){
+    this._comboHold = false;
+    if(this.state === 'launched') this._explode();
+    return this.state === 'exploding' || this.state === 'destroyed';
+  };
+
   OilTankerController.prototype._stepLaunch = function(dt){
     if(!this.root) return;
     this.elapsed += dt;
@@ -369,17 +414,26 @@
     }
     const half = this.arena ? this.arena.half - 8 : 270;
     if(Math.abs(this.root.position.x) > half || Math.abs(this.root.position.z) > half){
-      /* รอบ 1567: ปะทะขอบสนาม = ระเบิดทันที */
+      /* รอบ 1567: ปะทะขอบสนาม = ระเบิดทันที · รอบ 1587: ช่วงคอมโบกันไว้ รอเตะ #2 สั่งระเบิด */
       this.root.position.x = VF.clamp(this.root.position.x, -half, half);
       this.root.position.z = VF.clamp(this.root.position.z, -half, half);
-      this._explode();
+      if(this._comboHold){
+        this.vx = this.vy = this.vz = 0;
+      }else{
+        this._explode();
+      }
       return;
     }
     const floor = this.arena && this.arena.surfaceY ? this.arena.surfaceY(this.root.position.x, this.root.position.z) : 0;
     if(this.root.position.y < floor + 1.25 && this.vy < 0){
-      /* รอบ 1567: ปะทะพื้น/สิ่งใดก็ตาม = ระเบิดทันที (ดาเมจ 500 ทุกตัวผ่าน onExplosion เดิม) */
+      /* รอบ 1567: ปะทะพื้น/สิ่งใดก็ตาม = ระเบิดทันที (ดาเมจ 500 ทุกตัวผ่าน onExplosion เดิม)
+         รอบ 1587: ช่วงคอมโบให้ลอยค้างระดับเตะ รอเตะ #2 กลางอากาศเป็นคนสั่งระเบิด */
       this.root.position.y = floor + 1.25;
-      this._explode();
+      if(this._comboHold){
+        this.vx = this.vy = this.vz = 0;
+      }else{
+        this._explode();
+      }
     }
   };
 

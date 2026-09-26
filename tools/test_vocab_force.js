@@ -1048,7 +1048,7 @@ assert(read('minigames/vocab-force/combat/energy-attack-tune.js').includes('show
 /* รอบ 1579: lock ตำแหน่ง + หมุนกายตอนแบกรถ */
 const charSrc=read('minigames/vocab-force/character/nex-character-controller.js');
 assert(charSrc.includes('if(this.carrying){')&&charSrc.includes('this.vx = 0; this.vz = 0;'),'carrying hard-locks horizontal velocity at any stick level (turn-in-place only)');
-assert(runtime.includes("poll.kick && !player.carrying"),'kick cannot lunge the player while carrying');
+assert(runtime.includes("poll.kick")&&runtime.includes('tryComboKick'),'kick while carrying routes to the combo finisher instead of lunging');
 
 
 /* รอบ 1580: ต่อย/เตะรถพังทันที — ไม่รอ 1-2 วิ */
@@ -1089,6 +1089,65 @@ assert(runtime.includes('setVehicles(sedan, oilTanker)'),'runtime wires vehicles
 assert(charSrc.includes('if(this.carrying){')&&!charSrc.includes('len < 0.5'),'old partial stick lock removed, full carry lock in place');
 assert(runtime.includes('const playerInput = active')&&!runtime.includes('carryingSlow'),'runtime drops the 0.55 carry slow multiplier');
 assert(charSrc.indexOf('this.yaw = Math.atan2(wishX, wishZ)')<charSrc.indexOf('if(this.carrying){'),'stick still steers yaw before the carry lock');
+
+/* รอบ 1587: Vocab Force — ระเบิดรถน้ำมัน=ซอมบี้เหลือ 30% + คอมโบ THROW×2 แล้ว KICK=เตะระเบิด */
+assert(runtime.includes('scorchZombiesFromBlast')&&runtime.includes('TANKER_SCORCH_RATIO')&&runtime.includes('Math.round(en.maxHp * ratio)'),'tanker explosion scorches every zombie down to 30% of max HP');
+assert(runtime.indexOf('scorchZombiesFromBlast(pos)')<runtime.indexOf("if(!player || player.alive === false) return;"),'zombie scorch runs even if the player is already down');
+assert(grabSrc.includes('comboThrow')&&grabSrc.includes('tryComboKick')&&grabSrc.includes('COMBO_PRESS_MS')&&grabSrc.includes('COMBO_KICK_MS'),'grab controller owns the THROW×2+KICK combo state machine');
+assert(grabSrc.includes('comboKickLaunch')&&grabSrc.includes('comboShatter')&&grabSrc.includes('_burstDebris')&&grabSrc.includes('_flight'),'combo launches the car, flies the player in, then shatters with debris+sparks');
+assert(grabSrc.includes('playAction(kickAnim)')&&grabSrc.includes("anim.has('kick')"),'combo finisher falls back punch→kick per character (all playable characters work)');
+assert(grabSrc.includes('beginDash')&&grabSrc.includes("kind: 'combo'"),'combo dash-blink reuses the shared dash (character agnostic)');
+assert(grabSrc.includes('this.throw(c.player, c.cam, c.fx, c.audio, c.hud'),'single THROW press still throws normally when the combo window expires');
+assert(tankerSrc2.includes('comboKickLaunch')&&tankerSrc2.includes('comboShatter')&&tankerSrc2.includes('_comboHold'),'tanker combo launch holds the explosion for the mid-air finisher kick');
+assert(tankerSrc2.indexOf('comboKickLaunch')<tankerSrc2.indexOf('if(this._comboHold)'),'tanker ground/wall impact reads the combo hold flag');
+assert(sedanSrc.includes('comboKickLaunch')&&sedanSrc.includes('comboShatter')&&sedanSrc.includes('_comboHold'),'sedan combo launch holds the wreck for the mid-air finisher kick');
+assert(sedanSrc.includes('!this._comboHold &&')&&sedanSrc.includes('swapShattered'),'sedan skips settle while held and shatters into the wreck model');
+assert(runtime.includes('grab.comboThrow')&&runtime.includes('grab.tryComboKick')&&runtime.includes('grab.reset()'),'runtime wires combo inputs and resets the combo each round');
+assert(ui.includes('?v=1587'),'ui.js cache-bust bumped so browsers fetch the new vf modules');
+
+/* รอบ 1587 จำลองพฤติกรรม: คอมโบ THROW×2+KICK ต้องยก-อม-เตะ-ว้าบ-แตกครบ ตามลำดับ */
+{
+  const cbs={};
+  const fakeTanker={
+    ready:true, state:'carried', carrier:null,
+    root:{position:{x:0,y:2.5,z:0}, visible:true},
+    collider:{minx:-2,maxx:2,minz:-2,maxz:2},
+    comboKickLaunch:function(dx,dz,sp){ this.state='launched'; this.launched=[dx,dz,sp]; },
+    comboShatter:function(){ this.state='exploding'; this.shattered=true; },
+    canGrab:function(){ return false; },
+    throwBy:function(){ this.state='thrown'; this.thrown=true; return true; }
+  };
+  const events=[];
+  const player={
+    x:0, y:0, z:0, yaw:0, alive:true, carrying:fakeTanker,
+    forward:function(){ return {x:0,z:1}; },
+    playAction:function(k){ events.push('anim:'+k); return true; },
+    anim:{has:function(k){ return k==='kick'; }},
+    beginDash:function(o){ events.push('dash:'+o.kind); return true; },
+    _sync:function(){}
+  };
+  const hud={toast:function(m){ events.push('toast'); }, setCarrying:function(){}};
+  let comboNow=1e7;
+  const comboSandbox={VocabForce:{now:function(){return comboNow;},clamp:function(v,a,b){return Math.max(a,Math.min(b,v));}},performance:{now:function(){return comboNow;}},console,Math,Date,JSON};
+  vm.createContext(comboSandbox);
+  vm.runInContext(read('minigames/vocab-force/map/vehicle-grab.js'),comboSandbox);
+  const g=new comboSandbox.VocabForce.VehicleGrabController({tanker:fakeTanker,arena:{half:280,groundY:function(){return 0;},surfaceY:function(){return 0;}},scene:null});
+  assert(g.comboThrow(player,null,null,null,hud)===true,'first THROW press while carrying is swallowed into the combo');
+  assert(fakeTanker.state==='carried'&&player.carrying===fakeTanker,'car is still held after the first combo press (no premature throw)');
+  assert(g.comboThrow(player,null,null,null,hud)===true,'second THROW press arms the combo');
+  assert(g.tryComboKick(player,null,null,null,hud,{half:280,groundY:function(){return 0;}})===true,'KICK after THROW×2 fires the combo');
+  assert(fakeTanker.launched&&player.carrying===null,'combo kick launches the car and releases the player');
+  assert(events.indexOf('dash:combo')>=0,'player dash-blinks toward the landing point');
+  for(let i=0;i<70;i++){ comboNow+=50; g.tick(0.05,player,{hud:hud}); }
+  assert(fakeTanker.shattered===true,'mid-air finisher shatters the car after the flight time');
+  /* ทางเดินหมดเวลา: กด THROW ครั้งเดียวแล้วปล่อย → ทุ่มตามปกติ */
+  fakeTanker.state='carried'; player.carrying=fakeTanker;
+  g.reset();
+  assert(g.comboThrow(player,null,null,null,hud)===true,'post-reset first press re-arms combo stage 1');
+  comboNow+=2000;
+  g.tick(2,player,{hud:hud});
+  assert(fakeTanker.thrown===true,'an uncompleted combo falls back to a normal throw after the window expires');
+}
 if(process.exitCode){
   console.error('vocab-force tests failed after',n,'passes');
 }else{
