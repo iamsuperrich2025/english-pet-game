@@ -164,22 +164,6 @@
     }
   };
 
-  /* จบการพลิก: ดึงรถกลับลงล้อ (yaw เดิม เอียงระนาบกลับเป็นศูนย์) แทนการค้างเฉียงแบบเดิม */
-  SedanController.prototype._upright = function(){
-    if(!this.root) return;
-    const THREE = root.THREE;
-    if(THREE && this.root.quaternion){
-      if(!this._tE) this._tE = new THREE.Euler();
-      this._tE.setFromQuaternion(this.root.quaternion, 'YXZ');
-      this.root.rotation.set(0, this._tE.y, 0);
-    }else{
-      this.root.rotation.x = 0;
-      this.root.rotation.z = 0;
-    }
-    this._flipSpeed = 0;
-    this._yawSpin = 0;
-  };
-
   /* รอบ 1573: ต่อย/เตะโดนรถยนต์ได้เหมือนรถน้ำมัน (combat เรียกผ่าน world proxy) */
   SedanController.prototype.canMelee = function(player, reach){
     if(!this.ready || this.state !== 'idle' || !player || player.alive === false) return false;
@@ -420,8 +404,16 @@
     if((groundHit && spd < 2.2 && Math.abs(this.vy) < 2.5) || this.bounces >= 3 || this.elapsed > 6){
       this.state = 'idle';
       this.vx = this.vy = this.vz = 0;
-      this._upright();
+      this._flipSpeed = 0;
+      this._yawSpin = 0;
+      /* รอบ 1582: ค้างท่าที่ตกจริง — ไม่สั่งคว่ำกลับล้ออัตโนมัติ (เดิม snap upright ทำรถที่พลิกค้างจมพื้น
+         เด้งกลับตั้งตรงผิดธรรมชาติ) แล้วยกตัวถังให้พ้นพื้นตามทิศที่ค้าง เผื่อทับซ้อนพื้นครึ่งคัน */
       p.y = floor;
+      const THREE = root.THREE;
+      if(THREE && this.root){
+        const box = new THREE.Box3().setFromObject(this.root);
+        if(isFinite(box.min.y) && box.min.y < floor) p.y += floor - box.min.y;
+      }
       this._updateCollider();
     }
   };

@@ -1030,7 +1030,7 @@ assert(sedanSrc.includes('jolt')&&sedanSrc.includes('0.012'),'sedan jolt scales 
 
 
 /* รอบ 1577: พลิกหมุนรถยนต์+รถน้ำมันสมจริงด้วย quaternion ตามทิศกระเด็น */
-assert(sedanSrc.includes('_beginTumble')&&sedanSrc.includes('_tumbleStep')&&sedanSrc.includes('_upright'),'sedan tumble physics helpers ship');
+assert(sedanSrc.includes('_beginTumble')&&sedanSrc.includes('_tumbleStep')&&!sedanSrc.includes('_upright'),'sedan tumble physics helpers ship without forced upright snap');
 assert(sedanSrc.includes("'tumbling'")&&sedanSrc.includes('isThrow'),'kicked sedan tumbles as cosmetic state without damage');
 assert(!sedanSrc.includes('this.avx = 2.2')&&!sedanSrc.includes('this.avz = -3.4'),'fixed euler spin rates removed from sedan');
 assert(tankerSrc2.includes('setFromAxisAngle')&&tankerSrc2.includes('_flipSpeed')&&!tankerSrc2.includes('this.avx = 10.8'),'tanker tumbles around single travel-perpendicular axis');
@@ -1058,6 +1058,11 @@ assert(tankerSrc2.includes("id: 'melee:'")&&tankerSrc2.includes('this.applyEvent
 
 /* รอบ 1581 เพิ่มเติม: heal pad ต้องมีสถานะ inside ให้กล้องใช้ */
 assert(read('minigames/vocab-force/effects/heal-pad.js').includes('this.inside = inside'),'heal pad exposes inside state for showcase cam');
+
+
+/* รอบ 1582: รถค้างท่าที่ตกจริง + ยกพ้นพื้น · ผลเตะ/ต่อยเท่ากันทั้ง 2 ตัวละคร */
+assert(sedanSrc.includes('setFromObject')&&sedanSrc.includes('ค้างท่าที่ตกจริง'),'settled sedan keeps its flipped pose and lifts out of the floor');
+assert(VF.NexManifest.spec('kick')&&VF.NexManifest.spec('punch')&&VF.LyraManifest.spec('kick')&&VF.LyraManifest.spec('punch'),'both NEX and Lyravyn have kick+punch so vehicle melee applies equally');
 
 if(process.exitCode){
   console.error('vocab-force tests failed after',n,'passes');
