@@ -451,8 +451,8 @@
     if(net) tickNet(dt);
     tickTanker(dt);
     if(grab) grab.tick(dt, player, {hud: hud});
-    /* รอบ 1570: สถานะปุ่ม THROW ตามของที่แบกจริง (ยก=โชว์ ทุ่ม/วาง=ซ่อน) */
-    if(hud && hud.setCarrying && grab) hud.setCarrying(!!grab.carrying());
+    /* รอบ 1570/1571: สถานะปุ่ม THROW — เช็กทั้ง grab.carrying() และ player.carrying เผื่อเส้นทางใดเส้นทางหนึ่งค้าง */
+    if(hud && hud.setCarrying) hud.setCarrying(!!((grab && grab.carrying()) || (player && player.carrying)));
     if(sedan && sedan.ready) sedan.tick(step, {player: player, people: peopleSnap(), enemies: enemies, fx: fx, audio: VF.audio, cam: camRig});
     if(player && player.alive === false){
       enterSpectator();

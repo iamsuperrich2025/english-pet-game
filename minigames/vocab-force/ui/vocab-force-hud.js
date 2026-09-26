@@ -40,7 +40,7 @@
           <strong class="vf-spectator-name"></strong>
           <span class="vf-spectator-help">Swipe ← → to change player</span>
         </div>
-        <button class="vf-exit" type="button" data-vf-act="exit">EXIT · ออก</button>
+        <button class="vf-exit" type="button" data-vf-act="exit">EXIT<small class="vf-exit-sub">ออก</small></button>
         <div class="vf-energy-charge" hidden>
           <small>ENERGY CHARGE</small>
           <div class="vf-energy-charge-track"><i class="vf-energy-charge-fill"></i></div>

@@ -60,6 +60,8 @@
       held.throwBy(player, fwd.x, fwd.z);
     }
     if(hud && hud.toast) hud.toast('🚀 THROW! ทุ่มแล้ว!');
+    /* รอบ 1571: ซ่อนปุ่มทันทีที่ทุ่ม — ไม่พึ่งบรรทัดประจำเฟรมอย่างเดียว */
+    if(hud && hud.setCarrying) hud.setCarrying(false);
     return true;
   };
 
@@ -74,6 +76,8 @@
       if(player.playAction) player.playAction('lift');
       if(audio && audio.punchWhoosh) audio.punchWhoosh();
       if(hud && hud.toast) hud.toast('🖐 ยกแล้ว! กด THROW เพื่อขว้าง');
+      /* รอบ 1571: โชว์ปุ่ม THROW ทันทีที่ยกสำเร็จ — ไม่พึ่งบรรทัดประจำเฟรมอย่างเดียว */
+      if(hud && hud.setCarrying) hud.setCarrying(true);
       return true;
     }
     return false;
@@ -86,6 +90,7 @@
       if(!player || player.alive === false){
         /* ตายระหว่างแบก — วางของลง */
         if(player) player.carrying = null;
+        if(ctx.hud && ctx.hud.setCarrying) ctx.hud.setCarrying(false);
         if(held.drop) held.drop();
         else{
           held.state = 'idle';

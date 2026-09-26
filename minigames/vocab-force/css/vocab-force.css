@@ -41,7 +41,9 @@
 .vf-hp.is-heal{box-shadow:0 0 16px #66fff488,0 8px 18px rgba(0,0,0,.4)}
 .vf-hp.is-heal .vf-hp-fill{background:linear-gradient(90deg,#d8ffff,#3ee8d8);box-shadow:0 0 10px #66fff4aa}
 .vf-hp-num{flex:none;min-width:6.4em;text-align:right;color:#d8fff8;font-weight:800;font-size:clamp(11px,1.8vw,14px);letter-spacing:.04em}
-.vf-exit{position:absolute;right:calc(8px + env(safe-area-inset-right));top:calc(8px + env(safe-area-inset-top));pointer-events:auto;height:36px;padding:0 14px;border:0;border-radius:14px;font-weight:800;color:#fff;background:linear-gradient(#e24b72,#b01e48);box-shadow:0 6px 14px rgba(0,0,0,.35);cursor:pointer}
+/* รอบ 1571: EXIT ทำเป็นสองบรรทัด (EXIT เหนือ ออก) กะทัดรัด — ป้องกันบานทับสวิตช์เสียงที่ right:76px */
+.vf-exit{position:absolute;right:calc(8px + env(safe-area-inset-right));top:calc(8px + env(safe-area-inset-top));pointer-events:auto;height:38px;min-width:54px;padding:0 12px;border:0;border-radius:14px;font-weight:800;color:#fff;background:linear-gradient(#e24b72,#b01e48);box-shadow:0 6px 14px rgba(0,0,0,.35);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05;letter-spacing:.08em}
+.vf-exit-sub{display:block;font-size:9px;font-weight:600;letter-spacing:.02em;opacity:.92;margin-top:1px}
 .vf-sound{position:absolute;z-index:22;right:calc(76px + env(safe-area-inset-right));top:calc(8px + env(safe-area-inset-top));width:54px;height:32px;padding:0;border:1px solid rgba(124,255,207,.4);border-radius:999px;background:linear-gradient(#3ee0b4,#1d9a7e);pointer-events:auto;cursor:pointer;touch-action:manipulation;box-shadow:0 4px 12px rgba(0,0,0,.28)}
 .vf-sound.is-off{background:linear-gradient(#4a5560,#232b33);border-color:rgba(255,255,255,.22)}
 .vf-sound-track{display:block;position:relative;width:100%;height:100%}
