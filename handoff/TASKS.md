@@ -23,10 +23,6 @@
 - ยืนยัน: unit 587 + Home V2 R41 PASS + mecha admin lock + mecha 1480 regression ครบ · deploy ตามรอบ 1568
 - รอบ 1567 · Vocab Force 4 ข้อ: จุดเติมพลังอลังการ (วงรูน+เกลียวพลัง+เทียนแสง+หัวใจไขว้+ไฟ PointLight, BRIGHTNESS 0.8) / แก้ลูกพลังลอยฟ้า (aim assist ยิงเอียงสู่อกศัตรู y+0.95, ไม่มีเป้า=ราบ y=0, aimPitchLift ติดลบเท่านั้น)
 - ยก-ทุ่มยานพาหนะ: KICK ใกล้รถ=ยก (แช่ท่า lift=Climb_Stairs ช้า, ห้ามซัด/ดช./ยิงพลัง, เดินช้า 0.55×) KICK ซ้ำ=ทุ่ม · รถยนต์ sedan GLB โดนทุ่มใส่ใคร -100 (SedanController ใหม่) · รถน้ำมันแบกได้+ทุ่มได้ (sync ผ่าน net grab flag) และปะทะพื้น/ขอบ=ระเบิดทันที 500 ทุกตัว (เดิมไถล 2.75 วิ)
-- ต้นตอ/ไฟล์: `map/sedan-controller.js`+`map/vehicle-grab.js` ใหม่, แก้ oil-tanker/net(แพ็ก x/z/grab)/runtime/manifest(lift,throw=คลิปเดิม ไม่มี GLB ใหม่)/heal-pad+tune/energy-attack-tune/gun-tune/nex-character(_chooseLoco carry)/index/namespace/build_web
-- ยืนยัน: unit 587 ผ่าน + VM behavior 16 เช็ก (grab→carry→throw→โดนซอมบี้ 100→จบ, tanker แบก→ทุ่ม→ระเบิด 1 ครั้ง) · ค้าง: ท่ายก/ทุ่มจริงยังไม่มีคลิป (ใช้ climb+หมัดแทน รอผู้ใช้โหลด Meshy) · sedan sync หลายคนเฉพาะดาเมจ ตัวรถไม่ sync (prototype)
-- ตามด้วย fixup commit: sedan GLB หลุดจาก git (untracked) → live 404 เหมือนรอบ 1566 — track + bump 1324 + deploy ใหม่ ยืนยัน 200 ครบ
-- ต้นตอ: deploy build จาก git archive ไม่มี .git → build_web.mjs fallback walk ใช้ PUBLIC_DIRS ที่ไม่มี `minigames` → ทั้งโฟลเดอร์ vocab-force (90 ไฟล์ js/glb/avif) หลุดจาก dist (local build ใช้ git ls-files จึงไม่เจอปัญหา)
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
