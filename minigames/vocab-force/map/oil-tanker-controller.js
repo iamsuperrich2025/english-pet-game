@@ -243,12 +243,28 @@
     if(pointBoxDistance(origin.x || 0, origin.z || 0, this.collider) > (reach || 2.8) + 1.1) return false;
     this._pendingHit = true;
     this._pendingAt = Date.now();
+    /* รอบ 1580: เตะ/ต่อย = พังทันที — สั่ง launch โลคัลเลยตอนนี้ ไม่รอ host ตอบกลับ
+       (ออฟไลน์เคยไม่ตอบสนองเลย ออนไลน์รอไป 1-2 วิตาม latency) · คำขอไปยัง host ยังส่งต่อ
+       เพื่อให้คนอื่นเห็นด้วย — host จะปฏิเสธอีเวนต์ซ้ำเองเพราะ state เปลี่ยนเป็น launched แล้ว */
+    const dx = (info && info.dir && info.dir.x) || 0;
+    const dz = (info && info.dir && info.dir.z) || 1;
+    const n = Math.hypot(dx, dz) || 1;
+    this.applyEvent({
+      id: 'melee:' + String(Date.now()) + ':' + ((Math.random() * 1e6) | 0),
+      round: 0,
+      startAt: Date.now(),
+      x: this.root ? this.root.position.x : this.spawn.x,
+      z: this.root ? this.root.position.z : this.spawn.z,
+      dx: +((dx / n).toFixed(4)),
+      dz: +((dz / n).toFixed(4)),
+      grab: 0
+    });
     if(this.onHitRequest) this.onHitRequest({
       kind: (info && info.kind) || 'punch',
       x: (info && info.player && info.player.x) || origin.x || 0,
       z: (info && info.player && info.player.z) || origin.z || 0,
-      dx: (info && info.dir && info.dir.x) || 0,
-      dz: (info && info.dir && info.dir.z) || 1
+      dx: dx / n,
+      dz: dz / n
     });
     return true;
   };

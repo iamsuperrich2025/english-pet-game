@@ -82,6 +82,11 @@
     this._normalModel = model;
     this.ready = true;
     this.reset();
+    /* รอบ 1580: โหลดโมเดลชุดแตกล่วงหน้าแบบเงียบๆ — เตะ/ต่อยครั้งแรกจะได้สลับชุดแตกทันที
+       แทนที่จะรอโหลดไฟล์ 16MB ค้างไป 1-2 วินาทีตอนถูกตี */
+    shatteredAsset().catch(function(err){
+      console.warn('[VocabForce] sedan shattered preload skip', err);
+    });
     return this;
   };
 

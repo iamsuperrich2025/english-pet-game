@@ -1048,6 +1048,11 @@ const charSrc=read('minigames/vocab-force/character/nex-character-controller.js'
 assert(charSrc.includes('this.carrying && this.grounded && len < 0.5')&&charSrc.includes('lock'),'light stick turns in place while carrying, idle hard-locks position');
 assert(runtime.includes("poll.kick && !player.carrying"),'kick cannot lunge the player while carrying');
 
+
+/* รอบ 1580: ต่อย/เตะรถพังทันที — ไม่รอ 1-2 วิ */
+assert(sedanSrc.includes('shattered preload')||sedanSrc.includes('preload skip'),'sedan preloads shattered model so first strike swaps instantly');
+assert(tankerSrc2.includes("id: 'melee:'")&&tankerSrc2.includes('this.applyEvent({'),'tanker launches locally on melee instead of waiting for host');
+
 if(process.exitCode){
   console.error('vocab-force tests failed after',n,'passes');
 }else{
