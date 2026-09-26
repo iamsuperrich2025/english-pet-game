@@ -23,9 +23,6 @@
 - ยืนยัน: unit 587 ผ่าน + VM behavior 16 เช็ก (grab→carry→throw→โดนซอมบี้ 100→จบ, tanker แบก→ทุ่ม→ระเบิด 1 ครั้ง) · ค้าง: ท่ายก/ทุ่มจริงยังไม่มีคลิป (ใช้ climb+หมัดแทน รอผู้ใช้โหลด Meshy) · sedan sync หลายคนเฉพาะดาเมจ ตัวรถไม่ sync (prototype)
 - ตามด้วย fixup commit: sedan GLB หลุดจาก git (untracked) → live 404 เหมือนรอบ 1566 — track + bump 1324 + deploy ใหม่ ยืนยัน 200 ครบ
 - ต้นตอ: deploy build จาก git archive ไม่มี .git → build_web.mjs fallback walk ใช้ PUBLIC_DIRS ที่ไม่มี `minigames` → ทั้งโฟลเดอร์ vocab-force (90 ไฟล์ js/glb/avif) หลุดจาก dist (local build ใช้ git ls-files จึงไม่เจอปัญหา)
-- แก้ `build_web.mjs` เพิ่ม 'minigames' ใน PUBLIC_DIRS · ยืนยันผ่าน asset-manifest บน live (vf ครบ + runtime มีแพตช์รอบ 1565)
-- รอบ 1565 · แก้บั๊ก Vocab Force เข้าใหม่หลังกด "ออก" มองไม่เห็นตัวละคร+สนามทั้งหมด (จอมืดมีแต่ HUD)
-- ต้นตอ: `hud.mount()` ล้าง DOM ด้วย `root.innerHTML` แบบ subtree — `canvas.parentNode` ยังชี้ `.vf-stage` เก่าที่ถูกตัดออก → เช็ก `!parentNode` ใน open() จึงข้ามการแนบ canvas กลับ (ผู้ใช้รายงานเจอเมื่อเข้าใหม่เร็ว 1-2 นาที)
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
