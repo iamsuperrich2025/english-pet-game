@@ -6851,3 +6851,9 @@ efreshMechaLock
 
 - ไฟล์: vehicle-grab.js (comboThrow/tryComboKick/_flight/_burstDebris), oil-tanker/sedan-controller (comboKickLaunch/comboShatter/_comboHold), runtime (wire poll.throw/poll.kick + scorch + grab.reset ตอน beginRound) · cache-bump ?v=1587
 - ยืนยัน: unit 665 ผ่าน (รวม VM flow test จำลองกดจริง: อม-อม-เตะ-ว้าบ-แตกครบ + fallback ทุ่มเมื่อหมดเวลา) + check_undefined_calls 0 + regression ui.js ผ่าน · deploy ตามรอบ 1587
+
+
+## ⏬ ย้ายเมื่อ 2026-09-26 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- ยืนยัน: unit 669 ผ่าน (assert คณิตศาสตร์วิถีเทียบระยะกระเด็น + สปินลดในอากาศ) · deploy ตามรอบ 1588
+- รอบ 1587 · Vocab Force "คอมโบเตะระเบิด": ① รถน้ำมันระเบิด=ซอมบี้ทุกตัวเหลือ 30% MAX (scorchZombiesFromBlast ผ่าน applyHit เดิม ล้มกระเด็นจากจุดระเบิด ไม่มีตายจากแรงระเบิด) ② คอมโบ THROW×2 ขณะแบก (ห่าง ≤1.1 วิ) แล้ว KICK (≤1.4 วิ) = เตะรถลอยวิถีโค้งสูง (_comboHold กันระเบิดเองตอนถึงพื้น) → ตัวละคร dash ว้าบไปรอจุดตก → เตะกลางอากาศระเบิดแตกละเอียด: ชิ้นส่วนโลหะ 16 ชิ้น + ประกายไฟ 42 จุด (pool สร้างครั้งเดียว) + เอฟเฟกต์/เสียง/ช้างวงศ์หนัก · กด THROW ครั้งเดียวแล้วหยุด = ทุ่มตามปกติ (หมดเวลาคอมโบทุ่มอัตโนมัติ) · ใช้ได้ทั้งรถน้ำมัน (ระเบิดจริง ดาเมจ 500) และรถยนต์ (สลับชุดแตก+ไฟลุก) + ทุกตัวละคร (playAction kick→fallback punch, beginDash กลาง ไม่ผูก manifest)
