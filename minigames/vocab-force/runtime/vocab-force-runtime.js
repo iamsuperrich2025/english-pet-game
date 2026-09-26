@@ -4,7 +4,7 @@
   const VF = root.VocabForce = root.VocabForce || {};
   let opening = false, running = false, raf = 0, last = 0;
   let renderer = null, scene = null, camera = null, THREE = null;
-  let player, camRig, input, combat, enemies, arena, fx, hud, round, flyers, trails, fireTrail, secondary, energy, letters, net, healPad, oilTanker, sedan, grab, spectator, worldMelee, slam, slamFx, aimMarkers, orbs, deflect, spitTimer = 1.6;
+  let player, camRig, input, combat, enemies, arena, fx, hud, round, flyers, trails, fireTrail, secondary, energy, letters, net, healPad, oilTanker, sedan, grab, spectator, worldMelee, slam, slamFx, aimMarkers, orbs, deflect, spitTimer = 1.6, bots = null;
   let winLock = false, ackOpen = false, pendingWord = null;
   let collusionWatch = null, collusionPending = null;
   let tankerEventSeq = 0;
@@ -82,9 +82,14 @@
     if(input && input.setSpectating) input.setSpectating(false);
     if(player){
       const ids = net && net.participantIds ? net.participantIds() : ['local'];
+      /* รอบ 1596: ผสานไอดีบอทเข้าวงแจกจุดเกิด เพื่อกระจายครบทั้ง 10 ตำแหน่ง */
+      if(bots && bots.count()) bots.ids().forEach(function(bid){ if(ids.indexOf(bid) < 0) ids.push(bid); });
       const mine = net && net.myUid || 'local';
       const avoid = oilTanker && oilTanker.spawnAvoidance ? oilTanker.spawnAvoidance() : {x: (VF.TANKER_SPAWN || {}).x || 84, z: (VF.TANKER_SPAWN || {}).z || -18, radius: 18};
-      const pos = VF._t.fairSpawn ? VF._t.fairSpawn(ids, mine, round.seed, arena, avoid) : {x: 0, y: arena.surfaceY(0, 0), z: 0, yaw: 0};
+      const spawnFor = function(id){
+        return VF._t.fairSpawn ? VF._t.fairSpawn(ids, id, round.seed, arena, avoid) : null;
+      };
+      const pos = spawnFor(mine) || {x: 0, y: arena.surfaceY(0, 0), z: 0, yaw: 0};
       if(player.resetForRound) player.resetForRound(pos);
       else{
         player.hp = player.maxHp || VF.PLAYER_HP || 1000;
@@ -92,6 +97,16 @@
         player.setPose(pos.x, pos.y, pos.z, pos.yaw);
       }
       if(hud && hud.setHp) hud.setHp(player.hp, player.maxHp);
+    }
+    /* รอบ 1596: รีเซ็ตบอททุกตัวตามคำใหม่ + จุดเกิดรอบเดียวกับคนจริง */
+    if(bots && bots.count()){
+      bots.beginRound(round.progress.word, round.progress.thai, function(bid){
+        return VF._t.fairSpawn ? VF._t.fairSpawn(
+          (net && net.participantIds ? net.participantIds() : ['local']).concat(bots.ids()),
+          bid, round.seed, arena,
+          oilTanker && oilTanker.spawnAvoidance ? oilTanker.spawnAvoidance() : null
+        ) : null;
+      });
     }
     if(collusionWatch && collusionWatch.reset) collusionWatch.reset();
     if(enemies && enemies.resetHunterWave) enemies.resetHunterWave();
@@ -374,7 +389,7 @@
   }
 
   function peopleSnap(){
-    if(net && net.bodies) return net.bodies(player);
+    if(net && net.bodies) return net.bodies(player).concat(bots ? bots.people() : []);
     if(!player) return [];
     return [{
       id: (net && net.myUid) || 'local',
@@ -382,7 +397,7 @@
       z: player.z || 0,
       alive: player.alive !== false,
       local: true
-    }];
+    }].concat(bots ? bots.people() : []);
   }
 
   function tickCollusion(dt){
@@ -447,6 +462,8 @@
       if(hud && hud.quest) hud.quest.hide();
       tickNet(dt);
       tickTanker(dt);
+      /* รอบ 1596: ตอนเปิดการ์ดประกาศผู้ชนะ บอทยืนนิ่งรอ (frozen) แต่อนิเมชันยังเดิน */
+      if(bots) bots.tick(dt, now, {frozen: true, player: player});
       const winnerView = spectator && spectator.active ? spectator.tick(poll, net, hud, arena) : player;
       if(camRig) camRig.tick(dt, winnerView || player);
       renderer.render(scene, camera);
@@ -498,6 +515,8 @@
        ขณะ carrying เอง (ตัดตัวคูณ 0.55 รอบ 1579 ออก — แรงเดินไม่มีผลอีกต่อไป ตำแหน่งนิ่งสนิท) */
     const playerInput = active ? (freezeMove ? Object.assign({}, poll, {moveX: 0, moveZ: 0}) : poll) : {moveX: 0, moveZ: 0};
     player.tick(step, playerInput, camRig, arena);
+    /* รอบ 1596: สมองบอท → controller จริงของทุกตัว (วิ่งหาตัวอักษร/สู้ซอมบี้/หาฮีล) */
+    if(bots) bots.tick(step, now, {letters: letters, enemies: enemies, fx: fx, audio: VF.audio, player: player, frozen: false});
     if(player.consumePowerJumpEvents){
       player.consumePowerJumpEvents().forEach(function(ev){ handlePowerJumpEvent(ev, true); });
     }
@@ -506,7 +525,8 @@
     if(chained) combat.tryAttack(chained, player, now);
     if(hud && hud.setDashCooldown) hud.setDashCooldown(player.dashCooldownFrac(now));
     if(enemies && enemies.setPrey) enemies.setPrey(peopleSnap());
-    if(zomReady && huntersAllowed() && enemies && enemies.tickHuntSpawn && !ackOpen && !winLock) enemies.tickHuntSpawn(step, peopleSnap(), arena);
+    /* รอบ 1596: เกณฑ์ spawn hunter ยังนับเฉพาะ "คน" (บอทไม่กดดันจำนวนซอมบี้) */
+    if(zomReady && huntersAllowed() && enemies && enemies.tickHuntSpawn && !ackOpen && !winLock) enemies.tickHuntSpawn(step, net && net.bodies ? net.bodies(player) : peopleSnap(), arena);
     const sim = enemies.tick(step, player, arena);
     (sim.dead || []).forEach(handleDefeat);
     (sim.bites || []).forEach(function(b){
@@ -813,6 +833,32 @@
         if(hud && hud.setNet && net) hud.setNet(net.roomHud ? net.roomHud() : net.statusText());
         syncHunters();
       });
+      /* รอบ 1596: บอทผู้เล่น — อุดให้ครบ 10 คนบนหน้ารอโหลด + ลงเล่นจริงในลาน */
+      const humanHere = net && net.humanCount ? net.humanCount() : 1;
+      const botCount = VF._t.botFill ? VF._t.botFill(humanHere) : 0;
+      bots = new VF.BotManager({scene: scene, arena: arena});
+      bots.onWin = function(bot){
+        if(!running || !round || !round.progress) return;
+        if(bot.ctl && bot.ctl.playAction) bot.ctl.playAction('victory');
+        announceWin({
+          name: bot.name,
+          word: round.progress.word,
+          thai: round.progress.thai,
+          reward: VF._t.wordReward ? VF._t.wordReward(humanHere) : VF.LETTER_REWARD,
+          local: false,
+          uid: '',
+          av: bot.def && bot.def.id,
+          def: bot.def
+        });
+      };
+      if(hud.setBootPlayers && VF._t.lobbySlots) hud.setBootPlayers(VF._t.lobbySlots({net: net, picked: picked, bots: [], selfName: playerName()}));
+      if(botCount > 0){
+        hud.setLoad(0.64, 'กำลังรวมผู้เล่น ' + Math.min(10, humanHere + botCount) + ' คน', picked);
+        await bots.start(botCount, function(frac){
+          if(hud.setLoad) hud.setLoad(0.64 + frac * 0.2, 'กำลังโหลดผู้เล่น ' + Math.round(frac * botCount) + '/' + botCount, picked);
+        });
+      }
+      if(hud.setBootPlayers && VF._t.lobbySlots) hud.setBootPlayers(VF._t.lobbySlots({net: net, picked: picked, bots: bots.bots, selfName: playerName()}));
       beginRound();
       if(hud.setNet) hud.setNet(net.roomHud ? net.roomHud() : net.statusText());
       ensureZombies();
@@ -828,6 +874,7 @@
     }catch(err){
       console.error('VocabForce open fail', err);
       if(net){ try{ net.stop(); }catch(_){} net = null; }
+      if(bots){ try{ bots.dispose(); }catch(_){} bots = null; }
       if(VF.audio && VF.audio.stopBgm) VF.audio.stopBgm(400);
       if(typeof Music !== 'undefined' && Music.resumeBg) Music.resumeBg();
       if(hud) hud.toast('เปิด Vocab Force ไม่สำเร็จ');
@@ -857,6 +904,7 @@
       hud.root.classList.remove('is-selecting', 'is-booting', 'is-playing', 'is-winning');
     }
     if(net){ net.stop(); net = null; }
+    if(bots){ bots.dispose(); bots = null; }
     if(letters) letters.clear();
     if(hud) hud.hide();
     if(enemies) enemies.clear();
@@ -888,5 +936,5 @@
 
   VF.open = open;
   VF.close = close;
-  VF._t.live = function(){ return {player: player, enemies: enemies, round: round, combat: combat, cam: camRig, secondary: secondary, fx: fx, tanker: oilTanker, sedan: sedan, grab: grab, spectator: spectator, arena: arena, scene: scene, net: net, hud: hud, input: input, slam: slam, slamFx: slamFx, aimMarkers: aimMarkers, orbs: orbs, deflect: deflect, resetRound: beginRound, character: player && player.def}; };
+  VF._t.live = function(){ return {player: player, enemies: enemies, round: round, combat: combat, cam: camRig, secondary: secondary, fx: fx, tanker: oilTanker, sedan: sedan, grab: grab, spectator: spectator, arena: arena, scene: scene, net: net, hud: hud, input: input, slam: slam, slamFx: slamFx, aimMarkers: aimMarkers, orbs: orbs, deflect: deflect, bots: bots, resetRound: beginRound, character: player && player.def}; };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -81,6 +81,17 @@ assert(nccSrc.indexOf("this.playAction('knockDown')")>nccSrc.indexOf('this._deat
 /* รอบ 1595: ระเบิดรถน้ำมันต้องรอให้รัศมีขยายถึงตัวก่อนค่อยล้ม (ห้ามหงายพร้อมจุดศูนย์กลาง) */
 assert(runtime.includes('BLAST_WAVE_SPEED')&&runtime.includes('blastQueue.push')&&runtime.includes('tickBlastQueue(now)')&&runtime.includes('d / BLAST_WAVE_SPEED'),'tanker blast damage/knock-down is queued by distance so the falling wave reaches each player first');
 assert(read('minigames/vocab-force/combat/ground-slam-controller.js').includes("kind: 'M'")&&read('minigames/vocab-force/combat/gun-tune.js').includes("'PGKM'"),'slam strikes ride as kind M so victims read them as slam');
+/* รอบ 1596: บอทผู้เล่น — หน้ารอโหลดอุดให้ครบ 10 คน + บอทลงเล่นจริงด้วย controller/GLB จริง */
+const botsSrc=read('minigames/vocab-force/runtime/vocab-force-bots.js');
+assert(build.includes('runtime/vocab-force-bots.js')&&htmlPreview.includes('runtime/vocab-force-bots.js')&&ns.includes("'runtime/vocab-force-bots.js'"),'bot module is loaded everywhere');
+assert(botsSrc.includes('VF.BotNames')&&botsSrc.includes('VF.BotManager')&&botsSrc.includes('VF._t.botFill')&&botsSrc.includes('VF._t.lobbySlots'),'bot module defines names + manager + lobby helpers');
+assert(botsSrc.includes('new VF.NexCharacterController()'),'bots drive the real character controller');
+assert(botsSrc.includes('genderFor')&&botsSrc.includes('GENDER_BY_CHAR'),'bot names follow character gender');
+assert(read('minigames/vocab-force/ui/vocab-force-hud.js').includes('vf-boot-players')&&read('minigames/vocab-force/ui/vocab-force-hud.js').includes('setBootPlayers'),'loading screen has the 10-player row');
+assert(css.includes('.vf-boot-players')&&css.includes('.vf-bp-chip'),'loading player chips styled');
+assert(runtime.includes('new VF.BotManager')&&runtime.includes('bots.tick')&&runtime.includes('VF._t.botFill')&&runtime.includes('bots.beginRound'),'runtime wires bots (load/tick/round reset)');
+assert(runtime.includes('bots.people()')&&runtime.includes("net.bodies(player) : peopleSnap()"),'bots join prey/collusion; hunter spawn still counts humans only');
+assert(runtime.includes('bots.dispose()'),'bots disposed on close');
 /* รอบ 1593: ปุ่ม DEFLECT ปัดพลัง (A ซอมบี้ + B เพื่อนออนไลน์) — GLB ท่า Shield_Push_Left ทั้งคู่ */
 assert(build.includes('combat/deflect-tune.js')&&htmlPreview.includes('combat/deflect-tune.js')&&ns.includes("'combat/deflect-tune.js'"),'deflect tune is loaded');
 assert(build.includes('combat/deflect-controller.js')&&htmlPreview.includes('combat/deflect-controller.js')&&ns.includes("'combat/deflect-controller.js'"),'deflect controller is loaded');
@@ -270,6 +281,7 @@ vm.runInContext(read('minigames/vocab-force/ui/health-bar.js'), sandbox);
 vm.runInContext(read('minigames/vocab-force/vocabulary/letter-field.js'), sandbox);
 vm.runInContext(read('minigames/vocab-force/runtime/vocab-force-net.js'), sandbox);
 vm.runInContext(read('minigames/vocab-force/runtime/vocab-force-spectator.js'), sandbox);
+vm.runInContext(read('minigames/vocab-force/runtime/vocab-force-bots.js'), sandbox);
 vm.runInContext(read('minigames/vocab-force/controls/vocab-force-input.js'), sandbox);
 vm.runInContext(read('minigames/vocab-force/enemies/enemy-manager.js'), sandbox);
 const VF=sandbox.window.VocabForce;
@@ -1235,14 +1247,14 @@ assert(sedanSrc.includes('comboSkyPunt')&&sedanSrc.includes('_vanishSky')&&sedan
 assert(runtime.includes('grab.comboThrow')&&runtime.includes('grab.tryComboKick')&&runtime.includes('grab.reset()'),'runtime wires combo inputs and resets the combo each round');
 assert(runtime.includes('}else if(!(grab && grab.tryComboKick('),'KICK press while NOT carrying still offers the combo finisher first (round 1594 flow throws at press 1)');
 assert(runtime.includes('}else if(!grab.comboThrow(player, camRig, fx, VF.audio, hud, requestTankerHit')&&runtime.indexOf('}else if(!grab.comboThrow')<runtime.indexOf('grab.onLift(player'),'THROW press while NOT carrying tries the combo double-press before falling back to lift');
-assert(ui.includes('?v=1597'),'ui.js cache-bust bumped so browsers fetch the new vf modules');
+assert(ui.includes('?v=1598'),'ui.js cache-bust bumped so browsers fetch the new vf modules');
 
 /* รอบ 1588: เตะรถยนต์ = กระเด็นไกลเท่ารถน้ำมันโดนเตะ (h54/up39 grav22 ≈ วิถี h54/up34 grav19) + หมุนธรรมชาติ */
 assert(sedanSrc.includes("info.kind) === 'kick'")&&sedanSrc.indexOf('54, 39')>sedanSrc.indexOf('kickish'),'sedan kick launches as far as the kicked tanker trajectory');
 assert(sedanSrc.includes('this._flipSpeed *= (1 - 0.1 * dt)')&&sedanSrc.includes('หมุนช้าลงตามแรงเสียดอากาศ'),'sedan tumble spins decay in air like the tanker (natural spin)');
 const kickRangeTanker=54*(2*34/19), kickRangeSedan=54*(2*39/22);
 assert(Math.abs(kickRangeTanker-kickRangeSedan)/kickRangeTanker<0.02,'kicked sedan flies the same distance as the kicked tanker (same arc, grav-adjusted up)');
-assert(ui.includes('?v=1597'),'ui.js cache-bust bumped for the kick trajectory tune');
+assert(ui.includes('?v=1598'),'ui.js cache-bust bumped for the kick trajectory tune');
 /* รอบ 1590: มาร์กเกอร์ + บนพื้นบอกทิศพลัง (ฟ้า=SLAM · ส้ม=ATTACK) */
 assert(build.includes('effects/aim-markers.js')&&htmlPreview.includes('effects/aim-markers.js')&&ns.includes("'effects/aim-markers.js'"),'aim markers module is loaded');
 assert(read('minigames/vocab-force/effects/aim-markers.js').includes('0x4ec4ff')&&read('minigames/vocab-force/effects/aim-markers.js').includes('0xff9040'),'markers use slam blue + attack orange');
@@ -1378,6 +1390,113 @@ assert(VF.GroundSlamTune.LINE_LENGTH===23 && VF.GroundSlamTune.COOLDOWN===6,'sla
   const dead={alive:false,carrying:null,isDashing:function(){return false;},anim:{isBusy:function(){return false;}},playAction:function(){return true;}};
   assert(new VF.GroundSlamController().trySlam(dead,30000,null,null)===null,'dead players cannot slam');
 }
+/* รอบ 1596: บอทผู้เล่น — ชื่อไม่ซ้ำ/ตรงเพศ · ล็อบบี้ครบ 10 · สมองวิ่งหาตัวอักษร/สู้/เก็บครบแล้วชนะ */
+(function(){
+  assert(typeof VF.BotManager==='function','bot manager class in sandbox');
+  const taken=[];
+  for(let i=0;i<20;i++) taken.push(VF.BotNames.pick('male',taken));
+  assert(new Set(taken).size===taken.length&&taken.every(function(nm){return VF.BotNames.male.indexOf(nm)>=0;}),'male picks are unique and from the male pool');
+  const allM=[];
+  for(let i=0;i<50;i++){const nm=VF.BotNames.pick('male',allM);if(nm)allM.push(nm);}
+  assert(allM.length===VF.BotNames.male.length&&VF.BotNames.pick('male',allM)===null,'the pool exhausts to null — names can never repeat');
+  assert(VF.BotNames.genderFor('nex')==='male'&&VF.BotNames.genderFor('lyravyn')==='female','gender map matches the two characters');
+  assert(VF._t.botFill(1)===9&&VF._t.botFill(5)===5&&VF._t.botFill(10)===0&&VF._t.botFill(14)===0&&VF._t.botFill(0)===9,'bot fill completes exactly ten players');
+  const fakeBots=[];
+  const used=[];
+  for(let i=0;i<9;i++){
+    const g=i%2?'female':'male';
+    const nm=VF.BotNames.pick(g,used);used.push(nm);
+    fakeBots.push({name:nm,def:VF.PlayableRoster.get(i%2?'lyravyn':'nex')});
+  }
+  const slots=VF._t.lobbySlots({picked:VF.PlayableRoster.get('nex'),bots:fakeBots,selfName:'Tester',net:null});
+  assert(slots.length===10&&slots[0].self===true&&slots[0].name==='Tester'&&slots.slice(1).every(function(s){return s.bot===true;}),'solo lobby = self first, then bots to ten');
+  const lower=slots.map(function(s){return String(s.name).toLowerCase();});
+  assert(new Set(lower).size===lower.length,'lobby names never duplicate');
+  const slots3=VF._t.lobbySlots({picked:VF.PlayableRoster.get('nex'),bots:fakeBots,selfName:'A',net:{humanCount:function(){return 3;},_rec:{},bodies:function(){return [{id:'a'},{id:'b'},{id:'c'}];}}});
+  assert(slots3.length===10&&slots3.slice(1,3).every(function(s){return !s.bot;}),'humans keep the first slots; bots fill the rest');
+  /* สมองบอทกับ stub controller */
+  function mkBotCtl(x,z){
+    return {
+      x:x,y:0,z:z,yaw:0,ready:true,alive:true,grounded:true,blocking:false,
+      hp:1000,maxHp:1000,walkSpeed:5.4,runSpeed:8.6,sprintSpeed:12.4,
+      pivot:{visible:true},ticks:[],
+      tick:function(dt,input){
+        this.ticks.push(input);
+        this.blocking=!!(input&&input.block);
+        if(input&&this.alive!==false){
+          const wx=-(input.moveX||0),wz=(input.moveZ||0);
+          const m=Math.hypot(wx,wz);
+          if(m>0.08){this.x+=wx*this.runSpeed*dt;this.z+=wz*this.runSpeed*dt;}
+        }
+      },
+      tickVitals:function(){},heal:function(a){this.hp=Math.min(this.maxHp,this.hp+a);return a;},
+      takeHit:function(d){this.hp-=d;if(this.hp<=0){this.hp=0;this.alive=false;}return d;},
+      playAction:function(){return true;},
+      forward:function(){return {x:Math.sin(this.yaw),z:Math.cos(this.yaw)};},
+      resetForRound:function(pos){this.x=pos.x;this.z=pos.z;this.y=pos.y||0;this.hp=this.maxHp;this.alive=true;},
+      consumePowerJumpEvents:function(){return [];},
+      consumeDashAttack:function(){return '';},
+      consumeOverdriveEvents:function(){return [];}
+    };
+  }
+  const mgr=new VF.BotManager({scene:null,arena:{half:280}});
+  const ctl=mkBotCtl(0,0);
+  mgr.bots.push({id:'vfbT',name:'Tester',def:VF.PlayableRoster.get('nex'),ctl:ctl,prog:null,think:0,startDelay:0,pauseT:0,target:null,kind:'idle',strikeAt:0,strikeKind:'',biteCd:0,walky:false,aggressive:true,wanderX:0,wanderZ:0,wanderT:0,_deadPlayed:false,_strikeIn:0,_strikeTarget:null,_threat:null});
+  let spawnCalls=0;
+  mgr.beginRound('CAT','แมว',function(){spawnCalls++;return {x:0,y:0,z:0,yaw:0};});
+  assert(spawnCalls===1&&mgr.bots[0].prog&&mgr.bots[0].prog.word==='CAT','beginRound resets bot progress + asks for a spawn point');
+  mgr.bots[0].startDelay=0;
+  mgr.bots[0].think=0;
+  const noEnemies={list:[]};
+  let collectCalls=0;
+  const fakeLetters={
+    nearest:function(ch){return ch==='C'?{x:10,z:0,letter:'C'}:(ch==='A'?{x:0,z:8,letter:'A'}:{x:-8,z:0,letter:'T'});},
+    tryCollect:function(){collectCalls++;return null;}
+  };
+  for(let i=0;i<90;i++) mgr.tick(0.016,100+i*16,{letters:fakeLetters,enemies:noEnemies,player:null,frozen:false});
+  assert(ctl.x>3,'hunting bot actually walks toward its needed letter');
+  assert(ctl.ticks.some(function(inp){return inp&&Math.abs(inp.moveX)>0.05;}),'bot feeds movement input to the real controller');
+  /* frozen = การ์ดผู้ชนะเปิดอยู่: ห้ามเก็บตัวอักษร */
+  const beforeFrozen=collectCalls;
+  mgr.tick(0.016,5000,{letters:fakeLetters,enemies:noEnemies,player:null,frozen:true});
+  assert(collectCalls===beforeFrozen,'frozen bots never collect during the winner card');
+  /* เก็บครบ C-A-T → ชนะ */
+  let wins=0;
+  mgr.onWin=function(){wins++;};
+  const seq=['C','A','T'];
+  const winLetters={nearest:fakeLetters.nearest,tryCollect:function(){const ch=seq.shift();return ch?{letter:ch,x:ctl.x,z:ctl.z}:null;}};
+  mgr.bots[0].startDelay=0;
+  for(let i=0;i<30&&wins===0;i++) mgr.tick(0.016,6000+i*16,{letters:winLetters,enemies:noEnemies,player:null,frozen:false});
+  assert(wins===1,'bot completing the word triggers the win callback exactly once');
+  /* ซอมบี้ใกล้ = สู้ + โดนกัด */
+  let hurts=0;
+  const zombie={alive:true,x:ctl.x+1.2,z:ctl.z,y:0,state:'chase',burstFinisherTriggered:false};
+  const fightEnemies={list:[zombie],hurtInSphere:function(){hurts++;return [zombie];}};
+  mgr.bots[0].prog=new VF.LetterProgressController('CAT','แมว');
+  mgr.bots[0].think=0;mgr.bots[0]._threat=null;mgr.bots[0].strikeAt=0;
+  const hpBefore=ctl.hp;
+  let now=20000;
+  for(let i=0;i<40;i++){now+=16;mgr.tick(0.016,now,{letters:fakeLetters,enemies:fightEnemies,player:null,frozen:false});}
+  assert(hurts>0,'a close zombie gets punched through hurtInSphere');
+  assert(ctl.hp<hpBefore,'zombies bite bots for real damage');
+  /* ตาย = หยุดนิ่ง */
+  ctl.hp=1;
+  for(let i=0;i<80;i++){now+=16;mgr.tick(0.016,now,{letters:fakeLetters,enemies:fightEnemies,player:null,frozen:false});}
+  assert(ctl.alive===false,'a bitten-down bot dies');
+  const t0=ctl.ticks.length;
+  mgr.tick(0.016,now+16,{letters:fakeLetters,enemies:fightEnemies,player:null,frozen:false});
+  const lastInput=ctl.ticks[ctl.ticks.length-1];
+  assert(ctl.ticks.length===t0+1&&(!lastInput||lastInput.moveX===0),'dead bots stand still (zero input)');
+  /* people() เข้าร่วม prey/collusion */
+  const ppl=mgr.people();
+  assert(ppl.length===1&&ppl[0].id==='vfbT'&&ppl[0].bot===true&&ppl[0].alive===false,'bots expose people entries for prey/collusion');
+  /* dispose เก็บกวาด */
+  let removed=false;
+  mgr.bots[0].ctl.pivot={visible:true,parent:{remove:function(){removed=true;}}};
+  mgr.bots[0].ctl.anim={dispose:function(){}};
+  mgr.dispose();
+  assert(removed&&mgr.bots.length===0,'dispose removes bot pivots and clears the roster');
+})();
 if(process.exitCode){
   console.error('vocab-force tests failed after',n,'passes');
 }else{

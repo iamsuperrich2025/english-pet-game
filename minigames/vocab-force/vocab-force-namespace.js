@@ -126,6 +126,7 @@
     'runtime/vocab-force-audio.js',
     'runtime/vocab-force-net.js',
     'runtime/vocab-force-spectator.js',
+    'runtime/vocab-force-bots.js',
     'runtime/vocab-force-runtime.js'
   ];
   VF._t = VF._t || {};

@@ -54,6 +54,10 @@
         <div class="vf-boot-fx" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
         <div class="vf-boot-shine" aria-hidden="true"></div>
         <div class="vf-boot-cover" aria-hidden="true"></div>
+        <div class="vf-boot-players" hidden>
+          <span class="vf-bp-title">ผู้เล่นในลาน</span>
+          <div class="vf-bp-row"></div>
+        </div>
         <div class="vf-boot-meter">
           <span class="vf-boot-label">Loading...</span>
           <div class="vf-boot-row">
@@ -176,6 +180,8 @@
       loadPct: root.querySelector('.vf-load-pct'),
       boot: root.querySelector('.vf-boot'),
       bootArt: root.querySelector('.vf-boot-art'),
+      bootPlayers: root.querySelector('.vf-boot-players'),
+      bootPlayerRow: root.querySelector('.vf-bp-row'),
       bootFill: root.querySelector('.vf-boot-fill'),
       bootPct: root.querySelector('.vf-boot-pct'),
       bootMsg: root.querySelector('.vf-boot-msg'),
@@ -239,6 +245,33 @@
       this.els.load.hidden = true;
       if(this.els.loadPct) this.els.loadPct.textContent = pct + '%';
     }
+  };
+
+  /* รอบ 1596: แถวผู้เล่น 10 คนบนหน้ารอโหลด — ตัวจริงก่อน แล้วเติมบอทให้ครบ */
+  VocabForceHUD.prototype.setBootPlayers = function(slots){
+    const wrap = this.els.bootPlayers;
+    const row = this.els.bootPlayerRow;
+    if(!wrap || !row) return;
+    slots = slots || [];
+    if(!slots.length){ wrap.hidden = true; return; }
+    wrap.hidden = false;
+    row.innerHTML = '';
+    const R = VF.PlayableRoster;
+    slots.slice(0, 14).forEach(function(s, i){
+      const chip = document.createElement('div');
+      chip.className = 'vf-bp-chip' + (s.bot ? ' is-bot' : '') + (s.self ? ' is-self' : '');
+      const img = document.createElement('img');
+      img.alt = '';
+      const def = s.def || (R && R.all ? R.all()[i % 2] : null);
+      img.src = R && R.previewUrl ? R.previewUrl(def) : '';
+      img.style.animationDelay = (i * 90) + 'ms';
+      const nm = document.createElement('span');
+      nm.className = 'vf-bp-name';
+      nm.textContent = s.name || 'ผู้เล่น';
+      chip.appendChild(img);
+      chip.appendChild(nm);
+      row.appendChild(chip);
+    });
   };
 
   VocabForceHUD.prototype.paintRound = function(round){

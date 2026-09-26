@@ -997,6 +997,7 @@ async function sourceFiles() {
       'minigames/vocab-force/runtime/vocab-force-audio.js',
       'minigames/vocab-force/runtime/vocab-force-net.js',
       'minigames/vocab-force/runtime/vocab-force-spectator.js',
+      'minigames/vocab-force/runtime/vocab-force-bots.js',
       'minigames/vocab-force/runtime/vocab-force-runtime.js',
       'minigames/vocab-force/assets/oiltank.glb',
       'minigames/vocab-force/assets/Golden_Vanguard_Sedan.glb',
