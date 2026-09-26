@@ -628,6 +628,23 @@ const acks=[];
 dfl.tick(0.016,1260,dflP,{orbs:fakeOrbs,onPeerDeflect:function(o){ acks.push(o); }});
 assert(orbA.team==='player'&&Math.abs(orbA.vz-VF.DeflectTune.REDIRECT_SPEED)<1e-6,'an enemy orb in front redirects straight along facing');
 assert(orbB.team==='player'&&acks.length===1&&acks[0]===orbB,'a peer orb redirects too and fires the ack back to its owner');
+/* รอบ 1596: peer guard — กดปัดตอนลูกเพื่อนใกล้ตัว ดาเมจ 'G' ครั้งนั้นถูกกลืน (ไม่เสีย HP) */
+assert(read('minigames/vocab-force/combat/deflect-tune.js').includes('PEER_GUARD_MS')&&read('minigames/vocab-force/combat/deflect-tune.js').includes('PEER_NEAR'),'deflect tune carries the peer-guard window + near-pass radius');
+const dflSrc=read('minigames/vocab-force/combat/deflect-controller.js');
+assert(dflSrc.includes('peerGuardActive')&&dflSrc.includes('_peerCatchAt')&&dflSrc.includes('_lastDeflectAt'),'deflect controller tracks the swing press + peer catch for the damage guard');
+const orbSrc2=read('minigames/vocab-force/effects/hostile-orb-manager.js');
+assert(orbSrc2.includes('_peerNearAt')&&orbSrc2.includes('PEER_NEAR'),'peer orbs stamp a near-pass timestamp used by the guard');
+assert(runtime.includes("hit.kind === 'G' && deflect && deflect.peerGuardActive"),'incoming energy strikes are swallowed while the deflect guard window is active');
+assert(dfl.peerGuardActive(1300,fakeOrbs)===true,'guard is active right after a peer orb is caught mid-swing');
+assert(dfl.peerGuardActive(2000,fakeOrbs)===false,'guard ends when the deflect swing is over');
+const dfl2=new VF.DeflectController();
+dfl2.tryDeflect(dflP,5000,null,null);
+assert(dfl2.peerGuardActive(5260,fakeOrbs)===false,'pressing deflect with no peer orb near does not open the guard');
+const dfl3=new VF.DeflectController();
+dfl3.tryDeflect(dflP,6000,null,null);
+assert(dfl3.peerGuardActive(6250,{_peerNearAt:6240})===true,'a peer orb passing within reach during the swing opens the guard even before the hitAt catch');
+dfl3.reset();
+assert(dfl3.peerGuardActive(6250,{_peerNearAt:6240})===false,'reset closes the guard');
 const packedShots=VF._t.packShots({_vfShots:{seq:9,count:3,charged:true}});
 assert(packedShots==='W0931'&&VF._t.parseShots('H|820|'+packedShots).count===3&&VF._t.parseShots('H|820|'+packedShots).charged===true,'peer shot bursts ride the hp string');
 const packedAck=VF._t.packDeflectAck({_vfDefl:{seq:7,index:2,target:'uidXYZab'}});
@@ -1218,14 +1235,14 @@ assert(sedanSrc.includes('comboSkyPunt')&&sedanSrc.includes('_vanishSky')&&sedan
 assert(runtime.includes('grab.comboThrow')&&runtime.includes('grab.tryComboKick')&&runtime.includes('grab.reset()'),'runtime wires combo inputs and resets the combo each round');
 assert(runtime.includes('}else if(!(grab && grab.tryComboKick('),'KICK press while NOT carrying still offers the combo finisher first (round 1594 flow throws at press 1)');
 assert(runtime.includes('}else if(!grab.comboThrow(player, camRig, fx, VF.audio, hud, requestTankerHit')&&runtime.indexOf('}else if(!grab.comboThrow')<runtime.indexOf('grab.onLift(player'),'THROW press while NOT carrying tries the combo double-press before falling back to lift');
-assert(ui.includes('?v=1596'),'ui.js cache-bust bumped so browsers fetch the new vf modules');
+assert(ui.includes('?v=1597'),'ui.js cache-bust bumped so browsers fetch the new vf modules');
 
 /* รอบ 1588: เตะรถยนต์ = กระเด็นไกลเท่ารถน้ำมันโดนเตะ (h54/up39 grav22 ≈ วิถี h54/up34 grav19) + หมุนธรรมชาติ */
 assert(sedanSrc.includes("info.kind) === 'kick'")&&sedanSrc.indexOf('54, 39')>sedanSrc.indexOf('kickish'),'sedan kick launches as far as the kicked tanker trajectory');
 assert(sedanSrc.includes('this._flipSpeed *= (1 - 0.1 * dt)')&&sedanSrc.includes('หมุนช้าลงตามแรงเสียดอากาศ'),'sedan tumble spins decay in air like the tanker (natural spin)');
 const kickRangeTanker=54*(2*34/19), kickRangeSedan=54*(2*39/22);
 assert(Math.abs(kickRangeTanker-kickRangeSedan)/kickRangeTanker<0.02,'kicked sedan flies the same distance as the kicked tanker (same arc, grav-adjusted up)');
-assert(ui.includes('?v=1596'),'ui.js cache-bust bumped for the kick trajectory tune');
+assert(ui.includes('?v=1597'),'ui.js cache-bust bumped for the kick trajectory tune');
 /* รอบ 1590: มาร์กเกอร์ + บนพื้นบอกทิศพลัง (ฟ้า=SLAM · ส้ม=ATTACK) */
 assert(build.includes('effects/aim-markers.js')&&htmlPreview.includes('effects/aim-markers.js')&&ns.includes("'effects/aim-markers.js'"),'aim markers module is loaded');
 assert(read('minigames/vocab-force/effects/aim-markers.js').includes('0x4ec4ff')&&read('minigames/vocab-force/effects/aim-markers.js').includes('0xff9040'),'markers use slam blue + attack orange');

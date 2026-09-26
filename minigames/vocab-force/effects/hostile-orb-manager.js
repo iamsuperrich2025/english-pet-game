@@ -11,6 +11,9 @@
     this.pool = [];
     this.live = [];
     this._vehicles = null;
+    /* รอบ 1596: เวลาที่ลูกพลัง "เพื่อน" ล่าสุดเคลื่อนผ่านใกล้ตัวผู้เล่น (ใช้เปิดหน้าต่างกันดาเมจ
+       ตอนกดปัด — ลูกเพื่อนวิ่ง ~420 หน่วย/วิ ผ่านรัศมีปัดในเสี้ยววินาที จับที่ hitAt อย่างเดียวไม่ทัน) */
+    this._peerNearAt = 0;
   }
 
   HostileOrbManager.prototype.attach = function(scene){
@@ -251,6 +254,12 @@
             }
           }
         }
+      }
+      /* รอบ 1596: ลูกพลัง "เพื่อน" เคลื่อนผ่านใกล้ตัว — ตราเวลาไว้ให้หน้าต่างกันดาเมจตอนกดปัด
+         (ลูกเพื่อนวิ่ง ~420 หน่วย/วิ ผ่านรัศมีปัดในเสี้ยววินาที รอจับที่ hitAt อย่างเดียวไม่ทัน) */
+      if(!dead && orb.team === 'peer' && player && player.alive !== false){
+        const dnp = Math.hypot((player.x || 0) - orb.x, (player.z || 0) - orb.z);
+        if(dnp <= (T.PEER_NEAR || 2.4)) this._peerNearAt = VF.now();
       }
       if(dead){ this.killQuiet(orb); continue; }
       if(orb.dist >= (orb.maxLife || 3) * speed || (orb.life -= Math.min(dt, 0.05)) <= 0){

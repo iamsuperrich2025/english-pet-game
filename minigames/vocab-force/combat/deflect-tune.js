@@ -14,12 +14,16 @@
     DEFLECTED_LIFE: 2.4,    // อายุลูกพลังที่ถูกปัด (วินาที)
     DEFLECTED_ZOMBIE_DMG: 120,
     DEFLECTED_PVP_DMG: 300,
+    PEER_NEAR: 2.4,          // รัศมี "ลูกพลังเพื่อนใกล้ตัว" ที่นับว่าเคลื่อนผ่านตัวเรา (เปิด guard ตอนกดปัด)
     /* ซอมบี้พ่นลูกพลัง (เคส A) */
     ZOMBIE_SPIT_INTERVAL: 3.2,
     ZOMBIE_SPIT_MIN: 6,
     ZOMBIE_SPIT_MAX: 30,
     ZOMBIE_SPIT_SPEED: 16,
     ZOMBIE_SPIT_DAMAGE: 120,
+    /* รอบ 1596: หน้าต่างกันดาเมจลูกพลังเพื่อน — ปัดโดนภายในเวลานี้ ดาเมจ 'G' ที่แพ็กมาถึง
+       ภายหลัง (หรือมาก่อนแค่จังหวะเดียว) จะถูกกลืน ผู้เล่นไม่เสีย HP จากการโจมตีครั้งนั้น */
+    PEER_GUARD_MS: 1000,
     POOL: 12
   };
 })(typeof window !== 'undefined' ? window : globalThis);

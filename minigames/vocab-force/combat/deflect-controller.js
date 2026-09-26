@@ -9,10 +9,13 @@
   function DeflectController(){
     this.pending = [];
     this._coolUntil = 0;
+    this._peerCatchAt = 0;
   }
 
   DeflectController.prototype.reset = function(){
     this.pending.length = 0;
+    this._peerCatchAt = 0;
+    this._lastDeflectAt = 0;
   };
 
   DeflectController.prototype.tryDeflect = function(player, now, camera, audio){
@@ -24,6 +27,7 @@
     if(now < (this._coolUntil || 0)) return false;
     if(!player.playAction('deflect')) return false;
     const t = now != null ? now : VF.now();
+    this._lastDeflectAt = t;
     this._coolUntil = t + (T.COOLDOWN || 2.5) * 1000;
     this.pending.push({at: t + (T.HIT_AT || 0.26) * 1000});
     if(audio && audio.energyFire) audio.energyFire();
@@ -45,6 +49,9 @@
         const orb = caught[c];
         const wasPeer = orb.team === 'peer';
         orbs.redirect(orb, f.x, f.z, T.REDIRECT_SPEED || 34);
+        /* รอบ 1596: จับจังหวะที่ปัดโดนลูก "เพื่อน" — เปิดหน้าต่างกันดาเมจ strike 'G'
+           ที่เจ้าของลูกอาจแพ็กมาให้ก่อน/หลังเล็กน้อย (ดู peerGuardActive) */
+        if(wasPeer) this._peerCatchAt = now != null ? now : VF.now();
         /* ประกายไฟตอนปัดโดน */
         if(deps.fx){
           if(deps.fx.arenaFire) deps.fx.arenaFire(orb.x, orb.y, orb.z, {r: 1.4});
@@ -60,6 +67,22 @@
         if(deps.camera && deps.camera.impulse) deps.camera.impulse(0.4, 3, {low: true});
       }
     }
+  };
+
+  /* รอบ 1596: หน้าต่างกันดาเมจลูกพลังเพื่อน — คืน true ถ้า (1) อยู่ในจังหวะปัดที่กดไว้
+     (ตั้งแต่กดถึง hitAt + สละ 0.4 วิ) และ (2) มีลูกเพื่อนเคลื่อนผ่านใกล้ตัว/ถูกปัดโดน
+     ไม่เกิน PEER_GUARD_MS ก่อนหน้า — strike 'G' ที่เจ้าของลูกแพ็กมาถึงในช่วงนี้จะถูกกลืน
+     ผู้เล่นไม่เสีย HP จากการโจมตีครั้งนั้น (ต้อง orbs เพื่ออ่าน _peerNearAt ส่งจาก runtime) */
+  DeflectController.prototype.peerGuardActive = function(now, orbs){
+    const T = VF.DeflectTune || {};
+    const t = now != null ? now : VF.now();
+    const swingUntil = (this._lastDeflectAt || 0) + (T.HIT_AT || 0.26) * 1000 + 400;
+    if(t > swingUntil) return false;
+    const nearAt = Math.max(this._peerCatchAt || 0, (orbs && orbs._peerNearAt) || 0);
+    if(!nearAt) return false;
+    if(t < nearAt - 300) return false;
+    if(t > nearAt + (T.PEER_GUARD_MS || 1000)) return false;
+    return true;
   };
 
   DeflectController.prototype.cooldownFrac = function(now){

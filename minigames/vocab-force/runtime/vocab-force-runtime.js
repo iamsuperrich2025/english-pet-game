@@ -665,6 +665,13 @@
       const mine = VF._t.uidTail ? VF._t.uidTail(net.myUid || 'local') : '';
       net.consumeStrikes().forEach(function(hit){
         if(!hit || hit.target !== mine) return;
+        /* รอบ 1596: กดปัดพลังตอนลูกเพื่อนใกล้ตัว → strike ลูกพลัง ('G') ครั้งนั้นถูกกลืน
+           ผู้เล่นไม่เสีย HP (เจ้าของลูกตรวจ hit ฝั่งเขา อาจแพ็กมาก่อน/หลังจังหวะปัดของเราเล็กน้อย —
+           peerGuardActive เช็กทั้งจังหวะท่าปัดและเวลาลูกเพื่อนผ่านใกล้ตัว) */
+        if(hit.kind === 'G' && deflect && deflect.peerGuardActive && deflect.peerGuardActive(VF.now(), orbs)){
+          if(hud && hud.toast) hud.toast('✋ ปัดสวน! ไม่เจ็บ');
+          return;
+        }
         const from = hit.kind === 'M' ? 'slam' : (hit.kind === 'G' ? 'gun' : 'player');
         player.takeHit(hit.dmg, !!player.blocking, {from: from, zone: hit.zone, headshot: hit.zone === 'head'});
         if(hud && hud.setHp) hud.setHp(player.hp, player.maxHp);
