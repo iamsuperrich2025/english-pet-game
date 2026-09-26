@@ -6863,3 +6863,9 @@ efreshMechaLock
 
 - ยืนยัน: unit 702 ผ่าน (สแตติก+พฤติกรรมครบ: ท่า/ความยาวเส้น/300 ต่อครั้ง/กันซ้ำ/คูลดาวน์/ระเบิด) + check_undefined_calls 0 + syntax ครบ · cache-bump ?v=1590
 - รอบ 1588 · เตะรถยนต์ (kick/heavyKick) = กระเด็นไกลเท่ารถน้ำมันโดนเตะเป๊า — รถน้ำมัน h54/up34/grav19 (แขวน 3.58 วิ ไกล ~193 หน่วย) → รถยนต์ grav 22 ใช้ h54/up39 (แขวน 3.55 วิ ไกล ~191 หน่วย คลาด <2%) · ต่อยยังเด้งเบาเหมือนเดิม · หมุนพลิกธรรมชาติ: _tumbleStep ลด flipSpeed ตามแรงเสียดอากาศ 10%/วิ เหมือนรถน้ำมันรอบ 1577 (เดิมคงความเร็วหมุนแล้วหยุดพรุบตอนถึงพื้น) · cache-bump ?v=1588
+
+
+## ⏬ ย้ายเมื่อ 2026-09-26 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- จุดชนมีระเบิดไฟสนั่น: ผู้เล่นโดน = arenaFire + powerJumpImpact (คลื่นกระแทก+ซากเศษ+รอยแยกพื้น) + เสียง · ซอมบี้โดน = arenaFire รอบแรกของแต่ละ cast (กันเสียงถาโถม) · ออนไลน์: packSlam 'M+seq' บน hp string → เพื่อนเพนท์เส้นไฟฝั่งผู้ชมตำแหน่ง/ทิศจาก rec
+- ไฟล์: ground-slam-tune/controller/fx (ใหม่ 3), manifests (groundSlam), hud/input/css (ปุ่ม SLAM คีย์ R), runtime+net (wire+consumeSlams), packer + build_web (GLB ใหม่) · แถม: แพ็ก mage_soell_cast เป็น animation-only เหมือนคลิปอื่น ลด bundle 171MB→107MB

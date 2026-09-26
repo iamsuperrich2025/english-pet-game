@@ -23,8 +23,6 @@
 - wire: สร้าง/อัปเดต/dispose ใน runtime ครบ · โหลดผ่าน namespace SCRIPTS + dev index.html + build_web · cache-bump ?v=1591
 - ยืนยัน: unit 705 ผ่าน (assert โมดูล/สี/wire ครบ) + check_undefined_calls 0 + syntax ครบ
 - รอบ 1589 · Vocab Force ปุ่ม SLAM กระแทกพื้น: กดแล้วเล่นท่า GLB จริงตามตัวละคร (nex_Charged_Ground_Slam / ly_Charged_Ground_Slam) → ตอน hitAt ปล่อยเส้นเปลวเพลิงสีฟ้าเป็นแนวตรงยาว 23 หน่วยบนพื้นตามทิศหน้า (เท่าวิถี overdrive dash, คูลดาวน์ 6 วิ, วงแหวน cooldown บนปุ่ม) · ผู้เล่นอื่นในแนวเส้นเสีย 300 HP ต่อครั้งที่โดน (กันซ้ำรอบเดียวกันด้วย castId ผ่าน notePvpHit) · ซอมบี้ในแนวไหม้เป็นจังหวะ 20/ครั้ง · รถในแนวโดนแรง heavy kick ครั้งเดียว
-- จุดชนมีระเบิดไฟสนั่น: ผู้เล่นโดน = arenaFire + powerJumpImpact (คลื่นกระแทก+ซากเศษ+รอยแยกพื้น) + เสียง · ซอมบี้โดน = arenaFire รอบแรกของแต่ละ cast (กันเสียงถาโถม) · ออนไลน์: packSlam 'M+seq' บน hp string → เพื่อนเพนท์เส้นไฟฝั่งผู้ชมตำแหน่ง/ทิศจาก rec
-- ไฟล์: ground-slam-tune/controller/fx (ใหม่ 3), manifests (groundSlam), hud/input/css (ปุ่ม SLAM คีย์ R), runtime+net (wire+consumeSlams), packer + build_web (GLB ใหม่) · แถม: แพ็ก mage_soell_cast เป็น animation-only เหมือนคลิปอื่น ลด bundle 171MB→107MB
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
