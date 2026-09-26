@@ -49,6 +49,9 @@
     this.halfShort = 0.95;
     this.vx = 0; this.vy = 0; this.vz = 0;
     this.avx = 0; this.avy = 0; this.avz = 0;
+    /* รอบ 1577: แคชอ็อบเจกต์สำหรับพลิกหมุนด้วย quaternion (ไม่ alloc ต่อเฟรม) */
+    this._tAxis = null; this._tQ = null; this._tQY = null; this._tUp = null; this._tE = null;
+    this._flipSpeed = 0; this._yawSpin = 0;
     this.elapsed = 0;
     this.bounces = 0;
     this._hitIds = {};
@@ -121,6 +124,57 @@
     return true;
   };
 
+  /* รอบ 1577: เริ่มพลิกตามฟิสิกส์ — แกนหมุนหลักตั้งฉากกับทิศทำให้คว่ำหน้าไปข้างหน้า (เหมือนรถถูกเตะจริง)
+     ผสมการม้วนตามแนวยาวเล็กน้อย + หมุนควงสวิงตามแนวดิ่งจางๆ แทนการหมุน euler 3 แกนคงที่เดิม */
+  SedanController.prototype._beginTumble = function(dirX, dirZ, hSpeed, upSpeed, flipSpeed, yawSpin){
+    const THREE = root.THREE;
+    if(!this.root || !THREE) return false;
+    const n = Math.hypot(dirX, dirZ) || 1;
+    const dx = dirX / n, dz = dirZ / n;
+    this.vx = dx * hSpeed;
+    this.vz = dz * hSpeed;
+    this.vy = upSpeed;
+    if(!this._tAxis){
+      this._tAxis = new THREE.Vector3();
+      this._tQ = new THREE.Quaternion();
+      this._tQY = new THREE.Quaternion();
+      this._tUp = new THREE.Vector3(0, 1, 0);
+      this._tE = new THREE.Euler();
+    }
+    this._tAxis.set(dz + dx * 0.22, 0.05, -dx + dz * 0.22).normalize();
+    this._flipSpeed = flipSpeed;
+    this._yawSpin = yawSpin || 0;
+    return true;
+  };
+
+  SedanController.prototype._tumbleStep = function(dt){
+    if(!this.root || !this._tQ) return;
+    if(this._flipSpeed){
+      this._tQ.setFromAxisAngle(this._tAxis, this._flipSpeed * dt);
+      this.root.quaternion.premultiply(this._tQ);
+    }
+    if(this._yawSpin){
+      this._tQY.setFromAxisAngle(this._tUp, this._yawSpin * dt);
+      this.root.quaternion.premultiply(this._tQY);
+    }
+  };
+
+  /* จบการพลิก: ดึงรถกลับลงล้อ (yaw เดิม เอียงระนาบกลับเป็นศูนย์) แทนการค้างเฉียงแบบเดิม */
+  SedanController.prototype._upright = function(){
+    if(!this.root) return;
+    const THREE = root.THREE;
+    if(THREE && this.root.quaternion){
+      if(!this._tE) this._tE = new THREE.Euler();
+      this._tE.setFromQuaternion(this.root.quaternion, 'YXZ');
+      this.root.rotation.set(0, this._tE.y, 0);
+    }else{
+      this.root.rotation.x = 0;
+      this.root.rotation.z = 0;
+    }
+    this._flipSpeed = 0;
+    this._yawSpin = 0;
+  };
+
   /* รอบ 1573: ต่อย/เตะโดนรถยนต์ได้เหมือนรถน้ำมัน (combat เรียกผ่าน world proxy) */
   SedanController.prototype.canMelee = function(player, reach){
     if(!this.ready || this.state !== 'idle' || !player || player.alive === false) return false;
@@ -140,6 +194,23 @@
     }
     this._updateCollider();
     this.swapShattered();
+    /* รอบ 1577: ถูกเตะ/ต่อย = กระโดดเด้งพลิกตามแรงแล้วคว่ำกลับลงล้อ (cosmetic อย่างเดียว ไม่ทำดาเมจใคร) */
+    if(this.state === 'idle'){
+      const f = (info && info.force) || 18;
+      this.state = 'tumbling';
+      this.elapsed = 0;
+      this.bounces = 0;
+      this._hitIds = {};
+      this._beginTumble(
+        (info && info.dir && info.dir.x) || 0,
+        (info && info.dir && info.dir.z) || 1,
+        2.0 + f * 0.055,
+        4.0 + f * 0.05,
+        3.4 + f * 0.02,
+        (Math.random() - 0.5) * 0.8
+      );
+      this._updateCollider();
+    }
     return true;
   };
 
@@ -171,6 +242,8 @@
     this.bounces = 0;
     this.vx = this.vy = this.vz = 0;
     this.avx = this.avy = this.avz = 0;
+    this._flipSpeed = 0;
+    this._yawSpin = 0;
     this._hitIds = {};
     this.carrier = null;
     /* รอบ 1573: รอบใหม่ = รถกลับเป็นสภาพปกติ (ถอดโมเดลชุดแตก) */
@@ -237,12 +310,8 @@
     this.bounces = 0;
     this._hitIds = {};
     const power = 26;
-    this.vx = dirX / n * power;
-    this.vz = dirZ / n * power;
-    this.vy = 9.5;
-    this.avx = 2.2;
-    this.avy = (Math.random() - 0.5) * 3;
-    this.avz = -3.4;
+    /* รอบ 1577: พลิกตามทิศทุ่มด้วยแกนสมจริง แทน euler คงที่ (2.2/-3.4) เดิม */
+    this._beginTumble(dirX, dirZ, power, 9.5, 6.5, (Math.random() - 0.5) * 1.2);
     if(this.root){
       this.root.position.set(
         (player.x || 0) + dirX / n * 1.6,
@@ -265,18 +334,17 @@
       this.carryTick(dt, ctx && ctx.player);
       return;
     }
-    if(this.state !== 'thrown' || !this.root) return;
+    if(this.state !== 'thrown' && this.state !== 'tumbling' || !this.root) return;
     this.elapsed += dt;
     ctx = ctx || {};
     const player = ctx.player;
+    const isThrow = this.state === 'thrown';
     const grav = 22;
     this.vy -= grav * dt;
     this.root.position.x += this.vx * dt;
     this.root.position.y += this.vy * dt;
     this.root.position.z += this.vz * dt;
-    this.root.rotation.x += this.avx * dt;
-    this.root.rotation.y += this.avy * dt;
-    this.root.rotation.z += this.avz * dt;
+    this._tumbleStep(dt);
 
     const half = this.arena ? this.arena.half - 3 : 270;
     const p = this.root.position;
@@ -290,15 +358,15 @@
       groundHit = true;
       this.vy *= -0.38;
       this.vx *= 0.72; this.vz *= 0.72;
-      this.avx *= 0.6; this.avy *= 0.6; this.avz *= 0.6;
+      this._flipSpeed *= 0.62; this._yawSpin *= 0.6;
       this.bounces++;
       this._impact(ctx.fx, ctx.audio, ctx.cam, player, p.x, p.y + 0.6, p.z);
     }
 
-    /* โดนคนปุ๊บหักพลัง -100 แล้วเด้งออก */
+    /* โดนคนปุ๊บหักพลัง -100 แล้วเด้งออก (เฉพาะสถานะ thrown — การเด้งจากการถูกเตะเป็นแค่เอฟเฟกต์) */
     const dmg = VF.SEDAN_DAMAGE || 100;
     const speed = Math.hypot(this.vx, this.vz) + Math.abs(this.vy);
-    if(speed > 4){
+    if(isThrow && speed > 4){
       const list = ctx.enemies && ctx.enemies.list ? ctx.enemies.list : [];
       for(let i = 0; i < list.length; i++){
         const en = list[i];
@@ -347,10 +415,8 @@
     if((groundHit && spd < 2.2 && Math.abs(this.vy) < 2.5) || this.bounces >= 3 || this.elapsed > 6){
       this.state = 'idle';
       this.vx = this.vy = this.vz = 0;
-      this.avx = this.avy = this.avz = 0;
+      this._upright();
       p.y = floor;
-      this.root.rotation.x *= 0.5;
-      this.root.rotation.z *= 0.5;
       this._updateCollider();
     }
   };

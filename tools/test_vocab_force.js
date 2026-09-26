@@ -1028,6 +1028,13 @@ assert(combat.includes('powerJumpImpact')&&combat.includes('worldStruck')&&comba
 assert(combat.includes('kickish')&&combat.includes('zombieGroundImpactHeavy'),'kick on vehicle layers heavy audio');
 assert(sedanSrc.includes('jolt')&&sedanSrc.includes('0.012'),'sedan jolt scales with strike force');
 
+
+/* รอบ 1577: พลิกหมุนรถยนต์+รถน้ำมันสมจริงด้วย quaternion ตามทิศกระเด็น */
+assert(sedanSrc.includes('_beginTumble')&&sedanSrc.includes('_tumbleStep')&&sedanSrc.includes('_upright'),'sedan tumble physics helpers ship');
+assert(sedanSrc.includes("'tumbling'")&&sedanSrc.includes('isThrow'),'kicked sedan tumbles as cosmetic state without damage');
+assert(!sedanSrc.includes('this.avx = 2.2')&&!sedanSrc.includes('this.avz = -3.4'),'fixed euler spin rates removed from sedan');
+assert(tankerSrc2.includes('setFromAxisAngle')&&tankerSrc2.includes('_flipSpeed')&&!tankerSrc2.includes('this.avx = 10.8'),'tanker tumbles around single travel-perpendicular axis');
+
 if(process.exitCode){
   console.error('vocab-force tests failed after',n,'passes');
 }else{

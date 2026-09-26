@@ -50,6 +50,9 @@
     this.longAxis = 'z';
     this.vx = 0; this.vy = 0; this.vz = 0;
     this.avx = 0; this.avy = 0; this.avz = 0;
+    /* รอบ 1577: แคชอ็อบเจกต์สำหรับพลิกหมุนด้วย quaternion (ไม่ alloc ต่อเฟรม) */
+    this._tAxis = null; this._tQ = null; this._tQY = null; this._tUp = null; this._tE = null;
+    this._flipSpeed = 0; this._yawSpin = 0;
     this.elapsed = 0;
     this.fxAge = 0;
     this.event = null;
@@ -297,12 +300,26 @@
       this.root.position.set(Number(ev.x) || this.spawn.x, 0.35, Number(ev.z) || this.spawn.z);
       this.root.rotation.set(0, this.spawn.yaw, 0);
     }
-    this.vx = (Number(ev.dx) || 0) * 54;
-    this.vz = (Number(ev.dz) || 1) * 54;
+    const ndx = Number(ev.dx) || 0, ndz = Number(ev.dz) || 1;
+    const nn = Math.hypot(ndx, ndz) || 1;
+    const dxn = ndx / nn, dzn = ndz / nn;
+    this.vx = dxn * 54;
+    this.vz = dzn * 54;
     this.vy = 34;
-    this.avx = 10.8;
-    this.avy = 5.8;
-    this.avz = 8.9;
+    /* รอบ 1577: พลิกตามทิศกระเด็น — คว่ำหน้าไปข้างหน้ารอบแกนตั้งฉากกับทิศ ผสมม้วนตามแนวยาวเล็กน้อย
+       แทนการหมุน 3 แกนคงที่เดิม (ดูสุ่มไม่เป็นธรรมชาติ) + ลดแรงหมุนช้าๆ เหมือนแรงเสียดอากาศ */
+    const THREE = root.THREE;
+    if(THREE){
+      if(!this._tAxis){
+        this._tAxis = new THREE.Vector3();
+        this._tQ = new THREE.Quaternion();
+        this._tQY = new THREE.Quaternion();
+        this._tUp = new THREE.Vector3(0, 1, 0);
+      }
+      this._tAxis.set(dzn + dxn * 0.24, 0.06, -dxn + dzn * 0.24).normalize();
+      this._flipSpeed = 5.2;
+      this._yawSpin = 1.1;
+    }
     this._updateCollider();
     const lag = VF.clamp((Date.now() - (Number(ev.startAt) || Date.now())) / 1000, 0, 0.8);
     for(let t = 0; t < lag; t += 1 / 60) this._stepLaunch(Math.min(1 / 60, lag - t));
@@ -316,9 +333,18 @@
     this.root.position.x += this.vx * dt;
     this.root.position.y += this.vy * dt;
     this.root.position.z += this.vz * dt;
-    this.root.rotation.x += this.avx * dt;
-    this.root.rotation.y += this.avy * dt;
-    this.root.rotation.z += this.avz * dt;
+    /* รอบ 1577: หมุนด้วย quaternion รอบแกนเดียวที่สมจริง แทน euler 3 แกนคงที่ */
+    if(this._tQ && this.root.quaternion){
+      if(this._flipSpeed){
+        this._tQ.setFromAxisAngle(this._tAxis, this._flipSpeed * dt);
+        this.root.quaternion.premultiply(this._tQ);
+        this._flipSpeed *= (1 - 0.1 * dt);
+      }
+      if(this._yawSpin){
+        this._tQY.setFromAxisAngle(this._tUp, this._yawSpin * dt);
+        this.root.quaternion.premultiply(this._tQY);
+      }
+    }
     const half = this.arena ? this.arena.half - 8 : 270;
     if(Math.abs(this.root.position.x) > half || Math.abs(this.root.position.z) > half){
       /* รอบ 1567: ปะทะขอบสนาม = ระเบิดทันที */
