@@ -12,12 +12,12 @@
 
   function cachedAsset(){
     if(VF._sedanAsset) return VF._sedanAsset;
-    VF._sedanAsset = new Promise(function(resolve, reject){
-      const THREE = root.THREE;
-      if(!THREE || !THREE.GLTFLoader){ reject(new Error('GLTFLoader missing')); return; }
-      new THREE.GLTFLoader().load(VF.asset('assets/Golden_Vanguard_Sedan.glb'), function(gltf){
-        resolve(gltf.scene);
-      }, undefined, reject);
+    VF._sedanAsset = VF.ensureGLTFLoader().then(function(THREE){
+      return new Promise(function(resolve, reject){
+        new THREE.GLTFLoader().load(VF.asset('assets/Golden_Vanguard_Sedan.glb'), function(gltf){
+          resolve(gltf.scene);
+        }, undefined, reject);
+      });
     });
     return VF._sedanAsset;
   }

@@ -12,12 +12,12 @@
 
   function cachedAsset(){
     if(VF._oilTankerAsset) return VF._oilTankerAsset;
-    VF._oilTankerAsset = new Promise(function(resolve, reject){
-      const THREE = root.THREE;
-      if(!THREE || !THREE.GLTFLoader){ reject(new Error('GLTFLoader missing')); return; }
-      new THREE.GLTFLoader().load(VF.asset('assets/oiltank.glb'), function(gltf){
-        resolve(gltf.scene);
-      }, undefined, reject);
+    VF._oilTankerAsset = VF.ensureGLTFLoader().then(function(THREE){
+      return new Promise(function(resolve, reject){
+        new THREE.GLTFLoader().load(VF.asset('assets/oiltank.glb'), function(gltf){
+          resolve(gltf.scene);
+        }, undefined, reject);
+      });
     });
     return VF._oilTankerAsset;
   }

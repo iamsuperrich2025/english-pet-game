@@ -7,6 +7,32 @@
     const base = VF.basePath.endsWith('/') ? VF.basePath : VF.basePath + '/';
     return base + String(rel || '').replace(/^\.\//, '').replace(/^\//, '');
   };
+  /* รอบ 1569: GLTFLoader ไม่ได้อยู่ใน three.min.js — helper กลาง lazy-load js/vendor/GLTFLoader.js
+     (รถยนต์/รถน้ำมันเคย reject เงียบ 'GLTFLoader missing' ทั้งคู่จนมองไม่เห็นโมเดลบนจริง) */
+  VF.ensureGLTFLoader = function(){
+    const T0 = root.THREE;
+    if(T0 && T0.GLTFLoader) return Promise.resolve(T0);
+    if(VF._gltfLoaderPromise) return VF._gltfLoaderPromise;
+    const src = (VF.vendorPath || 'js/vendor/') + 'GLTFLoader.js';
+    VF._gltfLoaderPromise = new Promise(function(resolve, reject){
+      const done = function(){
+        const T = root.THREE;
+        if(T && T.GLTFLoader){ resolve(T); return; }
+        VF._gltfLoaderPromise = null;
+        reject(new Error('GLTFLoader missing'));
+      };
+      const fail = function(err){ VF._gltfLoaderPromise = null; reject(err || new Error('GLTFLoader failed: ' + src)); };
+      if(typeof loadScriptOnce === 'function') loadScriptOnce(src).then(done).catch(fail);
+      else{
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = done;
+        s.onerror = fail;
+        document.head.appendChild(s);
+      }
+    });
+    return VF._gltfLoaderPromise;
+  };
   VF.clamp = function(v, a, b){ return Math.max(a, Math.min(b, v)); };
   VF.lerp = function(a, b, t){ return a + (b - a) * t; };
   VF.rand = function(a, b){ return a + Math.random() * (b - a); };
