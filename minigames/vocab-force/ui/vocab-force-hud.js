@@ -109,6 +109,12 @@
           </span>
           <span class="vf-act-lab">DASH<small class="vf-act-sub">พุ่ง</small></span>
         </button>
+        <button type="button" class="vf-act vf-slam" data-vf-act="slam" aria-label="SLAM กระแทกพื้น">
+          <span class="vf-act-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 2.5 V11"/><path d="M7.5 6.5 L12 11 l4.5-4.5"/><path d="M4 15 h16"/><path d="M7.5 18.5 l-1.8 3 M12 18.5 v3 M16.5 18.5 l1.8 3"/></svg>
+          </span>
+          <span class="vf-act-lab">SLAM<small class="vf-act-sub">กระแทกพื้น</small></span>
+        </button>
       </div>
       <button type="button" class="vf-sound" role="switch" aria-checked="true" aria-label="Sound เสียง">
         <span class="vf-sound-track"><i class="vf-sound-knob"></i></span>
@@ -171,6 +177,7 @@
       joy: root.querySelector('.vf-joy'),
       joyKnob: root.querySelector('.vf-joy-knob'),
       dash: root.querySelector('.vf-dash'),
+      slam: root.querySelector('.vf-slam'),
       throw: root.querySelector('.vf-throw'),
       throwLab: root.querySelector('.vf-throw .vf-act-lab'),
       throwIco: root.querySelector('.vf-throw .vf-act-ico'),
@@ -460,6 +467,16 @@
 
   VocabForceHUD.prototype.setDashCooldown = function(frac){
     const btn = this.els.dash;
+    if(!btn) return;
+    const ready = frac >= 0.995;
+    btn.classList.toggle('is-cool', !ready);
+    btn.style.setProperty('--vf-cd', String(VF.clamp(1 - frac, 0, 1)));
+    btn.setAttribute('aria-disabled', ready ? 'false' : 'true');
+  };
+
+  /* รอบ 1589: วงคูลดาวน์ปุ่ม SLAM กระแทกพื้น (คูลดาวน์ 6 วิ ตาม GroundSlamTune.COOLDOWN) */
+  VocabForceHUD.prototype.setSlamCooldown = function(frac){
+    const btn = this.els.slam;
     if(!btn) return;
     const ready = frac >= 0.995;
     btn.classList.toggle('is-cool', !ready);

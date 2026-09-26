@@ -153,6 +153,11 @@
 .vf-punch{right:calc(12px + env(safe-area-inset-right));bottom:calc(14px + env(safe-area-inset-bottom));color:#ffb48a}
 .vf-kick{right:calc(94px + env(safe-area-inset-right));bottom:calc(14px + env(safe-area-inset-bottom));color:#ffd080}
 .vf-dash{right:calc(176px + env(safe-area-inset-right));bottom:calc(14px + env(safe-area-inset-bottom));color:#7cffcf;--vf-cd:0}
+/* รอบ 1589: ปุ่ม SLAM กระแทกพื้น — แถวล่างช่อง 3 (ถัดจาก DASH) โทนฟ้า */
+.vf-slam{right:calc(258px + env(safe-area-inset-right));bottom:calc(14px + env(safe-area-inset-bottom));color:#7cc8ff;--vf-cd:0}
+.vf-slam .vf-act-ico{background:radial-gradient(circle at 38% 30%,#5ab8ff,#0a2a6a 72%);border-color:#5ac4ff;box-shadow:0 0 16px #2a7ae8aa,inset 0 0 14px #9ed4ff44}
+.vf-slam.is-cool{opacity:.72;filter:saturate(.7)}
+.vf-slam .vf-act-ico::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:conic-gradient(rgba(8,16,24,.55) calc(var(--vf-cd) * 360deg), transparent 0);opacity:.9}
 .vf-jump{right:calc(12px + env(safe-area-inset-right));bottom:calc(130px + env(safe-area-inset-bottom));color:#8ec8ff}
 .vf-block{right:calc(94px + env(safe-area-inset-right));bottom:calc(130px + env(safe-area-inset-bottom));color:#d8b0ff}
 /* รอบ 1575: ปุ่ม LIFT/THROW สองสถานะ — โชว์ตลอด · ยังไม่ได้ยก = LIFT/ยก (เขียว) · ยกแล้ว = THROW/ขว้าง (ส้ม) */
@@ -193,6 +198,7 @@
   .vf-jump,.vf-block{bottom:calc(110px + env(safe-area-inset-bottom))}
   .vf-kick{right:calc(78px + env(safe-area-inset-right))}
   .vf-dash{right:calc(144px + env(safe-area-inset-right))}
+  .vf-slam{right:calc(210px + env(safe-area-inset-right))}
   .vf-block{right:calc(78px + env(safe-area-inset-right))}
   .vf-throw{right:calc(144px + env(safe-area-inset-right));bottom:calc(110px + env(safe-area-inset-bottom))}
   .vf-joy{width:88px;height:88px}

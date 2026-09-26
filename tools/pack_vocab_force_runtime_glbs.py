@@ -135,11 +135,12 @@ def main() -> None:
         "nex_Climb_Right_with_Both.glb", "nex_climbing_down_wall.glb", "nex_Wall_Flip.glb",
         "nex_victory.glb", "nex_Stand_Up5.glb", "nex_Step_to_Sit_Transitio.glb",
         "nex_Boxing_Guard_Right_St.glb", "nex_Tightrope_Walk_inplac.glb", "nex_Unsteady_Walk.glb",
+        "nex_mage_soell_cast.glb", "nex_Charged_Ground_Slam.glb",
     ]
     lyra = [
         "ly_Run.glb", "ly_Elbow_Strike.glb", "ly_Roundhouse_Kick.glb", "ly_Jump_with_Arms_Open.glb",
         "ly_Dive_Down_and_Land_2.glb", "ly_Backflip_and_Hooks.glb", "ly_Fall2.glb",
-        "ly_Confident_Strut.glb", "ly_Power_Spin_Jump.glb",
+        "ly_Confident_Strut.glb", "ly_Power_Spin_Jump.glb", "ly_mage_soell_cast.glb", "ly_Charged_Ground_Slam.glb",
     ]
     zom = ["zom_Elderly_Shaky_Walk_in.glb", "zom_Scream.glb", "zom_Fall3.glb"]
     pack_group(base / "characters" / "next" / "animations", out / "nex", "nex_walk.glb", nex)

@@ -4,7 +4,7 @@
   const VF = root.VocabForce = root.VocabForce || {};
   let opening = false, running = false, raf = 0, last = 0;
   let renderer = null, scene = null, camera = null, THREE = null;
-  let player, camRig, input, combat, enemies, arena, fx, hud, round, flyers, trails, fireTrail, secondary, energy, letters, net, healPad, oilTanker, sedan, grab, spectator, worldMelee;
+  let player, camRig, input, combat, enemies, arena, fx, hud, round, flyers, trails, fireTrail, secondary, energy, letters, net, healPad, oilTanker, sedan, grab, spectator, worldMelee, slam, slamFx;
   let winLock = false, ackOpen = false, pendingWord = null;
   let collusionWatch = null, collusionPending = null;
   let tankerEventSeq = 0;
@@ -30,8 +30,9 @@
   }
 
   async function loadClips(def){
-    /* รอบ 1570: lift/throw ต้องถูก ingest เสมอ (ท่ายกค้าง+ขว้างของระบบแบกยานพาหนะ) — เดิมอยู่นอก core จึงไม่เคยถูกโหลด */
-    const states = ((def && def.core) || CORE).concat(['lift', 'throw']);
+    /* รอบ 1570: lift/throw ต้องถูก ingest เสมอ (ท่ายกค้าง+ขว้างของระบบแบกยานพาหนะ) — เดิมอยู่นอก core จึงไม่เคยถูกโหลด
+       รอบ 1589: groundSlam (ปุ่ม SLAM) ingest เสมอเหมือนกัน — GLB ท่ากระแทกพื้นของ NEX/Lyravyn */
+    const states = ((def && def.core) || CORE).concat(['lift', 'throw', 'groundSlam']);
     const extra = (def && def.optional) || ['victory', 'heavyKick'];
     const total = states.length;
     const label = (def && def.displayName) || 'NEX';
@@ -61,6 +62,8 @@
     if(combat && combat.reset) combat.reset();
     if(energy && energy.cancel) energy.cancel();
     if(fireTrail && fireTrail.clear) fireTrail.clear();
+    if(slam && slam.reset) slam.reset();
+    if(slamFx && slamFx.clear) slamFx.clear();
     if(oilTanker && oilTanker.reset) oilTanker.reset(round.seed);
     if(sedan && sedan.reset) sedan.reset(round.seed);
     if(grab && grab.reset) grab.reset();
@@ -189,6 +192,8 @@
     if(combat && combat.reset) combat.reset();
     if(energy && energy.cancel) energy.cancel();
     if(fireTrail && fireTrail.clear) fireTrail.clear();
+    if(slam && slam.reset) slam.reset();
+    if(slamFx && slamFx.clear) slamFx.clear();
     if(spectator && !spectator.active) spectator.enter();
     if(input && input.setSpectating) input.setSpectating(true);
     if(hud && hud.quest) hud.quest.hide();
@@ -395,6 +400,9 @@
     const step = paused ? 0 : dt * scale;
     if(active) combat.tick(dt, now, player, enemies, fx, camRig, VF.audio, secondary, peopleSnap(), worldMelee || oilTanker);
     if(active && !paused && poll.dash && !player.carrying) player.tryManualDash(poll, camRig, arena, fx, camRig, now);
+    /* รอบ 1589: ปุ่ม SLAM กระแทกพื้น — เล่นท่า groundSlam แล้วปล่อยเส้นเปลวเพลิงสีฟ้า
+       เป็นแนวยาวบนพื้นตามทิศหน้าตัวละคร (คูลดาวน์ 6 วิ · ผู้เล่นในแนวเส้นเสีย 300 HP ต่อครั้งที่โดน) */
+    if(active && !paused && poll.slam && slam) slam.trySlam(player, now, camRig, VF.audio);
     if(active && !paused && poll.punch && !player.carrying) combat.handleAttackPress('punch', player, now, enemies, camRig, arena, fx, energy, VF.audio, {hold: !!poll.punchHeld, people: peopleSnap(), world: worldMelee || oilTanker});
     if(active && !paused && poll.kick){
       if(player.carrying){
@@ -489,6 +497,9 @@
     fx.tick(dt);
     if(trails) trails.tick(step);
     if(fireTrail) fireTrail.tick(dt, enemies, player);
+    if(slam) slam.tick(step, now, player, {fx: slamFx, fxm: fx, enemies: enemies, people: peopleSnap(), camera: camRig, audio: VF.audio, world: worldMelee || oilTanker, fxImpact: fx && fx.impact});
+    if(slamFx) slamFx.tick(step);
+    if(hud && hud.setSlamCooldown) hud.setSlamCooldown(slam ? slam.cooldownFrac(now) : 1);
     const needed = round && round.progress && !round.progress.complete ? round.progress.required() : null;
     if(player && player.alive !== false && hud && hud.quest){
       try{
@@ -542,6 +553,13 @@
     }
     if(fireTrail && net.consumeOverdrive){
       net.consumeOverdrive().forEach(function(ev){ handleOverdriveEvent(ev, false); });
+    }
+    if(slamFx && net.consumeSlams){
+      net.consumeSlams().forEach(function(ev){
+        const len = VF._t.slamLineLength ? VF._t.slamLineLength() : 23;
+        const dx = Math.sin(ev.yaw || 0), dz = Math.cos(ev.yaw || 0);
+        slamFx.paintLine(ev.x, ev.z, ev.x + dx * len, ev.z + dz * len);
+      });
     }
     if(player && net.consumeStrikes){
       const mine = VF._t.uidTail ? VF._t.uidTail(net.myUid || 'local') : '';
@@ -645,6 +663,8 @@
       fx = new VF.ImpactFXManager().attach(scene);
       trails = new VF.MotionTrailManager().attach(scene);
       fireTrail = VF.OverdriveFireTrail ? new VF.OverdriveFireTrail().attach(scene) : null;
+      slamFx = VF.GroundSlamFX ? new VF.GroundSlamFX().attach(scene) : null;
+      slam = VF.GroundSlamController ? new VF.GroundSlamController() : null;
       secondary = new VF.SecondaryImpactController();
       energy = new VF.EnergyAttackController().attach(scene);
       /* รอบ 1585: ผูกยานพาหนะเข้ากับลูกพลัง — โดนรถน้ำมัน/รถยนต์ = ระเบิดแตกสลายทันที */
@@ -740,11 +760,14 @@
     if(trails) trails.dispose();
     if(fireTrail && fireTrail.dispose) fireTrail.dispose();
     fireTrail = null;
+    if(slamFx && slamFx.dispose) slamFx.dispose();
+    slamFx = null;
+    slam = null;
     secondary = null;
     if(player && player.anim) player.anim.dispose();
   }
 
   VF.open = open;
   VF.close = close;
-  VF._t.live = function(){ return {player: player, enemies: enemies, round: round, combat: combat, cam: camRig, secondary: secondary, fx: fx, tanker: oilTanker, sedan: sedan, grab: grab, spectator: spectator, arena: arena, scene: scene, net: net, hud: hud, input: input, resetRound: beginRound, character: player && player.def}; };
+  VF._t.live = function(){ return {player: player, enemies: enemies, round: round, combat: combat, cam: camRig, secondary: secondary, fx: fx, tanker: oilTanker, sedan: sedan, grab: grab, spectator: spectator, arena: arena, scene: scene, net: net, hud: hud, input: input, slam: slam, slamFx: slamFx, resetRound: beginRound, character: player && player.def}; };
 })(typeof window !== 'undefined' ? window : globalThis);

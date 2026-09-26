@@ -51,7 +51,9 @@
     lift: { file: 'nex_mage_soell_cast.glb', clip: 'mage_soell_cast', loop: true, fade: 0.14, holdAt: 0.45, note: 'User-supplied cast GLB (characters/next/animations/nex_mage_soell_cast.glb); mid-clip frame held as the carry pose.' },
     throw: { file: 'nex_Right_Jab_from_Guard.glb', clip: 'Right_Jab_from_Guard', loop: false, fade: 0.06, busy: 0.5, hitAt: 0.24 },
     tightrope: { file: 'nex_Tightrope_Walk_inplac.glb', clip: 'Tightrope_Walk_inplace', loop: true, fade: 0.15 },
-    unsteady: { file: 'nex_Unsteady_Walk.glb', clip: 'Unsteady_Walk', loop: true, fade: 0.12 }
+    unsteady: { file: 'nex_Unsteady_Walk.glb', clip: 'Unsteady_Walk', loop: true, fade: 0.12 },
+    /* รอบ 1589: ท่ากระแทกพื้น (ปุ่ม SLAM) — GLB จริงที่ผู้ใช้ส่งมา คลิป Charged_Ground_Slam */
+    groundSlam: { file: 'nex_Charged_Ground_Slam.glb', clip: 'Charged_Ground_Slam', loop: false, fade: 0.1, busy: 1.3, hitAt: 0.55 }
   };
   Object.keys(STATES).forEach(function(key){
     STATES[key].url = DIR + STATES[key].file;

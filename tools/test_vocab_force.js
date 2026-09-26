@@ -53,6 +53,21 @@ assert(auth.includes("new URLSearchParams(location.search).get('vocab-force')===
 assert(build.includes("'minigames/vocab-force/runtime/vocab-force-runtime.js'"),'production copies JS');
 assert(build.includes('combat/dash-tune.js')&&htmlPreview.includes('combat/dash-tune.js')&&ns.includes("'combat/dash-tune.js'"),'dash tune is loaded');
 assert(build.includes('combat/overdrive-dash-tune.js')&&htmlPreview.includes('combat/overdrive-dash-tune.js')&&ns.includes("'combat/overdrive-dash-tune.js'"),'overdrive dash tune is loaded');
+/* รอบ 1589: ระบบ Ground Slam (ปุ่ม SLAM กระแทกพื้น) */
+assert(build.includes('combat/ground-slam-tune.js')&&htmlPreview.includes('combat/ground-slam-tune.js')&&ns.includes("'combat/ground-slam-tune.js'"),'ground slam tune is loaded');
+assert(build.includes('combat/ground-slam-controller.js')&&htmlPreview.includes('combat/ground-slam-controller.js')&&ns.includes("'combat/ground-slam-controller.js'"),'ground slam controller is loaded');
+assert(build.includes('effects/ground-slam-fx.js')&&htmlPreview.includes('effects/ground-slam-fx.js')&&ns.includes("'effects/ground-slam-fx.js'"),'ground slam fx is loaded');
+assert(read('minigames/vocab-force/ui/vocab-force-hud.js').includes('data-vf-act="slam"'),'touch SLAM button');
+assert(css.includes('.vf-slam')&&css.includes('safe-area-inset-right'),'SLAM button uses safe area');
+assert(read('minigames/vocab-force/ui/vocab-force-hud.js').includes('setSlamCooldown'),'HUD paints SLAM cooldown');
+assert(read('minigames/vocab-force/controls/vocab-force-input.js').includes("e.code === 'KeyR'")&&read('minigames/vocab-force/controls/vocab-force-input.js').includes('slamQueued'),'R triggers ground slam');
+assert(read('minigames/vocab-force/runtime/vocab-force-runtime.js').includes("poll.slam")&&read('minigames/vocab-force/runtime/vocab-force-runtime.js').includes("'groundSlam'"),'runtime ingests groundSlam clip and polls slam');
+assert(read('minigames/vocab-force/runtime/vocab-force-net.js').includes('consumeSlams')&&read('minigames/vocab-force/runtime/vocab-force-runtime.js').includes('consumeSlams'),'slam line syncs online');
+assert(read('minigames/vocab-force/animation/nex-animation-manifest.js').includes("'nex_Charged_Ground_Slam.glb'"),'NEX ground slam GLB mapped');
+assert(read('minigames/vocab-force/animation/lyravyn-animation-manifest.js').includes("'ly_Charged_Ground_Slam.glb'"),'Lyravyn ground slam GLB mapped');
+assert(exists('minigames/vocab-force/runtime-models/nex/nex_Charged_Ground_Slam.glb')&&exists('minigames/vocab-force/runtime-models/lyravyn/ly_Charged_Ground_Slam.glb'),'packed ground slam GLBs on disk');
+assert(build.includes('runtime-models/nex/nex_Charged_Ground_Slam.glb')&&build.includes('runtime-models/lyravyn/ly_Charged_Ground_Slam.glb'),'production copies packed ground slam GLBs');
+assert(read('tools/pack_vocab_force_runtime_glbs.py').includes('nex_Charged_Ground_Slam.glb')&&read('tools/pack_vocab_force_runtime_glbs.py').includes('ly_Charged_Ground_Slam.glb'),'packer includes ground slam GLBs');
 assert(build.includes('effects/overdrive-fire-trail.js')&&htmlPreview.includes('effects/overdrive-fire-trail.js')&&ns.includes("'effects/overdrive-fire-trail.js'"),'overdrive fire trail is loaded');
 assert(build.includes('combat/power-jump-tune.js')&&htmlPreview.includes('combat/power-jump-tune.js')&&ns.includes("'combat/power-jump-tune.js'"),'power jump tune is loaded');
 assert(read('minigames/vocab-force/ui/vocab-force-hud.js').includes('data-vf-act="dash"'),'touch DASH');
@@ -202,6 +217,8 @@ vm.runInContext(secondaryTune, sandbox);
 vm.runInContext(read('minigames/vocab-force/combat/breakable-wall-tune.js'), sandbox);
 vm.runInContext(dashTune, sandbox);
 vm.runInContext(read('minigames/vocab-force/combat/overdrive-dash-tune.js'), sandbox);
+vm.runInContext(read('minigames/vocab-force/combat/ground-slam-tune.js'), sandbox);
+vm.runInContext(read('minigames/vocab-force/combat/ground-slam-controller.js'), sandbox);
 vm.runInContext(powerJumpTune, sandbox);
 vm.runInContext(read('minigames/vocab-force/combat/heal-pad-tune.js'), sandbox);
 vm.runInContext(read('minigames/vocab-force/effects/heal-pad.js'), sandbox);
@@ -416,7 +433,7 @@ const animCtrlSrc=read('minigames/vocab-force/animation/nex-animation-controller
 assert(hudSrc.includes('data-vf-act="throw"')&&hudSrc.includes('vf-act-sub')&&hudSrc.includes('THROW')&&hudSrc.includes('ขว้าง')&&hudSrc.includes('setCarrying'),'THROW button with Thai sub-label and carrying toggle ships');
 assert(hudSrc.includes('ATTACK<small class="vf-act-sub">โจมตี</small>')&&hudSrc.includes('KICK<small class="vf-act-sub">เตะ</small>')&&hudSrc.includes('JUMP<small class="vf-act-sub">กระโดด</small>')&&hudSrc.includes('BLOCK<small class="vf-act-sub">บล็อก</small>')&&hudSrc.includes('DASH<small class="vf-act-sub">พุ่ง</small>')&&hudSrc.includes('EXIT<small class="vf-exit-sub">ออก</small>'),'every game button carries EN label + Thai translation');
 assert(inputSrc.includes('throwQueued')&&inputSrc.includes("e.code === 'KeyG'")&&inputSrc.includes("act === 'throw'"),'input maps THROW button and G key');
-assert(runtime.includes("concat(['lift', 'throw'])")&&runtime.includes('poll.throw')&&runtime.includes('setCarrying'),'runtime ingests lift/throw and dispatches THROW');
+assert(runtime.includes("concat(['lift', 'throw', 'groundSlam'])")&&runtime.includes('poll.throw')&&runtime.includes('setCarrying'),'runtime ingests lift/throw/groundSlam and dispatches THROW');
 assert(animCtrlSrc.includes('holdAt'),'animation controller supports holdAt freeze frame');
 assert(build.includes('runtime-models/nex/nex_mage_soell_cast.glb')&&build.includes('runtime-models/lyravyn/ly_mage_soell_cast.glb'),'cast GLBs ship in production build');
 /* รอบ 1571: ปุ่ม THROW ไม่ขึ้นบนจริง — เสริมสั่งโชว์/ซ่อนโดยตรงที่จุดยก/ทุ่ม + EXIT สองบรรทัดกันทับสวิตช์เสียง */
@@ -1103,14 +1120,14 @@ assert(tankerSrc2.indexOf('comboKickLaunch')<tankerSrc2.indexOf('if(this._comboH
 assert(sedanSrc.includes('comboKickLaunch')&&sedanSrc.includes('comboShatter')&&sedanSrc.includes('_comboHold'),'sedan combo launch holds the wreck for the mid-air finisher kick');
 assert(sedanSrc.includes('!this._comboHold &&')&&sedanSrc.includes('swapShattered'),'sedan skips settle while held and shatters into the wreck model');
 assert(runtime.includes('grab.comboThrow')&&runtime.includes('grab.tryComboKick')&&runtime.includes('grab.reset()'),'runtime wires combo inputs and resets the combo each round');
-assert(ui.includes('?v=1588'),'ui.js cache-bust bumped so browsers fetch the new vf modules');
+assert(ui.includes('?v=1590'),'ui.js cache-bust bumped so browsers fetch the new vf modules');
 
 /* รอบ 1588: เตะรถยนต์ = กระเด็นไกลเท่ารถน้ำมันโดนเตะ (h54/up39 grav22 ≈ วิถี h54/up34 grav19) + หมุนธรรมชาติ */
 assert(sedanSrc.includes("info.kind) === 'kick'")&&sedanSrc.indexOf('54, 39')>sedanSrc.indexOf('kickish'),'sedan kick launches as far as the kicked tanker trajectory');
 assert(sedanSrc.includes('this._flipSpeed *= (1 - 0.1 * dt)')&&sedanSrc.includes('หมุนช้าลงตามแรงเสียดอากาศ'),'sedan tumble spins decay in air like the tanker (natural spin)');
 const kickRangeTanker=54*(2*34/19), kickRangeSedan=54*(2*39/22);
 assert(Math.abs(kickRangeTanker-kickRangeSedan)/kickRangeTanker<0.02,'kicked sedan flies the same distance as the kicked tanker (same arc, grav-adjusted up)');
-assert(ui.includes('?v=1588'),'ui.js cache-bust bumped for the kick trajectory tune');
+assert(ui.includes('?v=1590'),'ui.js cache-bust bumped for the kick trajectory tune');
 
 /* รอบ 1587 จำลองพฤติกรรม: คอมโบ THROW×2+KICK ต้องยก-อม-เตะ-ว้าบ-แตกครบ ตามลำดับ */
 {
@@ -1154,6 +1171,66 @@ assert(ui.includes('?v=1588'),'ui.js cache-bust bumped for the kick trajectory t
   comboNow+=2000;
   g.tick(2,player,{hud:hud});
   assert(fakeTanker.thrown===true,'an uncompleted combo falls back to a normal throw after the window expires');
+}
+/* รอบ 1589: Ground Slam — ปุ่ม SLAM ท่ากระแทกพื้น + เส้นเปลวเพลิงสีฟ้า (300 HP/ครั้งที่โดนแนวเส้น) */
+assert(VF.GroundSlamTune && VF.GroundSlamTune.PVP_DAMAGE===300,'slam PvP damage is 300 per hit');
+assert(VF.GroundSlamTune.LINE_LENGTH===23 && VF.GroundSlamTune.COOLDOWN===6,'slam line is as long as the overdrive dash with a 6s cooldown');
+{
+  const slamMan=new VF.GroundSlamController();
+  const played=[];
+  const mkPlayer=function(){
+    return {alive:true,carrying:null,x:0,y:0,z:0,yaw:0,forward:function(){return {x:Math.sin(this.yaw),z:Math.cos(this.yaw)};},
+      isDashing:function(){return false;},anim:{isBusy:function(){return false;}},
+      playAction:function(s){played.push(s);return true;}};
+  };
+  const p1=mkPlayer();
+  const r1=slamMan.trySlam(p1,1000,null,null);
+  assert(r1&&r1.castId===1&&played[0]==='groundSlam','slam plays the groundSlam action');
+  assert(VF._t.packSlam(p1)==='M01','slam packs into the hp string for peers');
+  assert(VF._t.parseSlam('H|1000|M01')&&VF._t.parseSlam('H|1000|M01').seq===1,'peer parses the slam signal');
+  assert(VF._t.parseSlam('H|1000|S01PBab300')===null,'strike codes are not read as slams');
+  assert(slamMan.trySlam(p1,2000,null,null)===null,'slam is on cooldown (6s)');
+  assert(slamMan.cooldownFrac(4000)>0&&slamMan.cooldownFrac(4000)<1,'cooldown fraction animates the HUD ring');
+  assert(slamMan.cooldownFrac(8000)===1,'cooldown refills after 6s');
+  const fxCast=[];
+  const fakeFx={
+    castLine:function(ax,az,bx,bz,castId){fxCast.push({ax:ax,az:az,bx:bx,bz:bz,castId:castId});return castId;},
+    hit:function(x,z,r){return (Math.abs(x-0.5)<=r&&Math.abs(z-10)<=r)?{x:0.5,z:10}:null;}
+  };
+  const strikes=[];
+  const realNote=VF._t.notePvpHit;
+  VF._t.notePvpHit=function(pl,info){strikes.push(info);return realNote(pl,info);};
+  const p2=mkPlayer();
+  slamMan.reset();
+  slamMan.trySlam(p2,10000,null,null);
+  slamMan.tick(0.016,10000,p2,{fx:fakeFx,people:[],enemies:{list:[]}});
+  assert(fxCast.length===0,'the fire line waits for the hitAt beat');
+  slamMan.tick(0.016,10600,p2,{fx:fakeFx,people:[{id:'ab12',x:0.5,z:10,y:0,alive:true,local:false}],enemies:{list:[]}});
+  assert(fxCast.length===1&&fxCast[0].bx===0&&Math.abs(fxCast[0].bz-23)<1e-6,'blue line runs 23 units straight along facing');
+  assert(strikes.length===1&&strikes[0].dmg===300&&strikes[0].targetId==='ab12','a peer on the line takes exactly 300');
+  slamMan.tick(0.016,11000,p2,{fx:fakeFx,people:[{id:'ab12',x:0.5,z:10,y:0,alive:true,local:false}],enemies:{list:[]}});
+  assert(strikes.length===1,'the same cast cannot hit the same peer twice');
+  /* ระเบิดไฟจุดชน: ผู้เล่นโดน = arenaFire + powerJumpImpact · ซอมบี้โดน = arenaFire รอบแรกของ cast */
+  const booms=[],pji=[];
+  const fakeFxm={arenaFire:function(x,y,z,o){booms.push(o&&o.r);},powerJumpImpact:function(){pji.push(1);}};
+  const zHits=[];
+  const fakeFx2={
+    castLine:function(){return 1;},
+    hit:function(x,z,r){return (Math.abs(x-0.3)<=r&&Math.abs(z-5)<=r)?{x:0.3,z:5}:null;}
+  };
+  const p3=mkPlayer();
+  const slamMan2=new VF.GroundSlamController();
+  slamMan2.trySlam(p3,20000,null,null);
+  slamMan2.tick(0.016,20600,p3,{fx:fakeFx2,fxm:fakeFxm,people:[{id:'cd34',x:0.3,z:5,y:0,alive:true,local:false}],enemies:{list:[{alive:true,x:0.3,z:5,y:0,applyHit:function(h){zHits.push(h);}}]}});
+  assert(booms.length===2,'both the peer and the zombie erupt in fire on contact');
+  assert(booms[0]===VF.GroundSlamTune.EXPLOSION_R&&booms[1]===VF.GroundSlamTune.ZOMBIE_EXPLOSION_R,'peer and zombie explosion radii follow the tune');
+  assert(pji.length===1,'peer contact adds the heavy shockwave + debris burst');
+  assert(zHits.length===1&&zHits[0].damage===VF.GroundSlamTune.ZOMBIE_DAMAGE,'zombie on the line burns');
+  slamMan2.tick(0.016,22000,p3,{fx:fakeFx2,fxm:fakeFxm,people:[],enemies:{list:[{alive:true,x:0.3,z:5,y:0,applyHit:function(h){zHits.push(h);}}]}});
+  assert(zHits.length===2&&booms.length===2,'later burns keep damaging without re-exploding every tick');
+  VF._t.notePvpHit=realNote;
+  const dead={alive:false,carrying:null,isDashing:function(){return false;},anim:{isBusy:function(){return false;}},playAction:function(){return true;}};
+  assert(new VF.GroundSlamController().trySlam(dead,30000,null,null)===null,'dead players cannot slam');
 }
 if(process.exitCode){
   console.error('vocab-force tests failed after',n,'passes');

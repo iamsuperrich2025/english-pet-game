@@ -13,9 +13,11 @@
       if(bag) s += '|' + ((drop.seq || 1) % 100) + '|' + bag;
     }else if(!dead){
       const strike = VF._t.packStrike ? VF._t.packStrike(player) : '';
+      const slam = VF._t.packSlam ? VF._t.packSlam(player) : '';
       const od = VF._t.packOverdrive ? VF._t.packOverdrive(player) : '';
       const jump = VF._t.packJump ? VF._t.packJump(player) : '';
       if(strike) s += '|' + strike;
+      else if(slam) s += '|' + slam;
       else if(od) s += '|' + od;
       else if(jump) s += '|' + jump;
     }
@@ -86,6 +88,7 @@
     this._seenLoot = {};
     this._seenJump = {};
     this._seenOverdrive = {};
+    this._seenSlam = {};
     this._seenStrike = {};
     this._roundSeed = 0;
     this._tankerSeq = 0;
@@ -371,6 +374,29 @@
     return out;
   };
 
+  /* รอบ 1589: เพื่อนกด SLAM — เอาตำแหน่ง/ทิศหน้าของเพื่อนไปเพนท์เส้นไฟสีฟ้าฝั่งเรา */
+  VocabForceNet.prototype.consumeSlams = function(){
+    const out = [];
+    this._seenSlam = this._seenSlam || {};
+    for(const uid in this._rec){
+      if(uid === this.myUid) continue;
+      const rec = this._rec[uid] || {};
+      const slam = VF._t.parseSlam ? VF._t.parseSlam(rec.hp) : null;
+      if(!slam) continue;
+      const id = uid + '#' + slam.seq;
+      if(this._seenSlam[id]) continue;
+      this._seenSlam[id] = true;
+      out.push({
+        seq: slam.seq,
+        uid: uid,
+        x: Number(rec.x) || 0,
+        z: Number(rec.z) || 0,
+        yaw: Number(rec.yaw) || 0
+      });
+    }
+    return out;
+  };
+
   VocabForceNet.prototype.consumeStrikes = function(){
     const out = [];
     this._seenStrike = this._seenStrike || {};
@@ -502,6 +528,7 @@
     this._seenLoot = {};
     this._seenJump = {};
     this._seenOverdrive = {};
+    this._seenSlam = {};
     this._seenStrike = {};
     this._seenTankerReq = {};
     this._seenTankerEvent = {};

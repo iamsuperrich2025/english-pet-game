@@ -42,7 +42,9 @@
     /* รอบ 1570: ท่ายกค้าง+ขว้างสำหรับ Lyravyn (เดิมไม่มี lift/throw เลย ตอนแบกจะไม่มีท่า)
        ท่ายกค้างใช้ GLB cast จริงที่ผู้ใช้ส่งมา แช่เฟรมกลางคลิปจนกว่าจะกด THROW */
     lift: { file: 'ly_mage_soell_cast.glb', clip: 'mage_soell_cast', loop: true, fade: 0.14, holdAt: 0.45 },
-    throw: { file: 'ly_Power_Spin_Jump.glb', clip: '360_Power_Spin_Jump', loop: false, fade: 0.06, busy: 0.6, hitAt: 0.3 }
+    throw: { file: 'ly_Power_Spin_Jump.glb', clip: '360_Power_Spin_Jump', loop: false, fade: 0.06, busy: 0.6, hitAt: 0.3 },
+    /* รอบ 1589: ท่ากระแทกพื้น (ปุ่ม SLAM) — GLB จริงที่ผู้ใช้ส่งมา คลิป Charged_Ground_Slam */
+    groundSlam: { file: 'ly_Charged_Ground_Slam.glb', clip: 'Charged_Ground_Slam', loop: false, fade: 0.1, busy: 1.3, hitAt: 0.55 }
   };
   Object.keys(STATES).forEach(function(key){
     STATES[key].url = DIR + STATES[key].file;
