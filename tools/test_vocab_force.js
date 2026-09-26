@@ -78,6 +78,8 @@ assert(read('minigames/vocab-force/runtime/vocab-force-runtime.js').includes("co
 const nccSrc=read('minigames/vocab-force/character/nex-character-controller.js');
 assert(nccSrc.includes("info.from === 'tanker' || info.from === 'gun' || info.from === 'slam'")&&nccSrc.includes("this.playAction('knockDown')"),'takeHit plays knock-down exactly on tanker/SLAM/ATTACK hits');
 assert(nccSrc.indexOf("this.playAction('knockDown')")>nccSrc.indexOf('this._deathEvent = true;'),'knock-down never overrides the death path');
+/* รอบ 1595: ระเบิดรถน้ำมันต้องรอให้รัศมีขยายถึงตัวก่อนค่อยล้ม (ห้ามหงายพร้อมจุดศูนย์กลาง) */
+assert(runtime.includes('BLAST_WAVE_SPEED')&&runtime.includes('blastQueue.push')&&runtime.includes('tickBlastQueue(now)')&&runtime.includes('d / BLAST_WAVE_SPEED'),'tanker blast damage/knock-down is queued by distance so the falling wave reaches each player first');
 assert(read('minigames/vocab-force/combat/ground-slam-controller.js').includes("kind: 'M'")&&read('minigames/vocab-force/combat/gun-tune.js').includes("'PGKM'"),'slam strikes ride as kind M so victims read them as slam');
 /* รอบ 1593: ปุ่ม DEFLECT ปัดพลัง (A ซอมบี้ + B เพื่อนออนไลน์) — GLB ท่า Shield_Push_Left ทั้งคู่ */
 assert(build.includes('combat/deflect-tune.js')&&htmlPreview.includes('combat/deflect-tune.js')&&ns.includes("'combat/deflect-tune.js'"),'deflect tune is loaded');
@@ -1214,14 +1216,16 @@ assert(tankerSrc2.includes('comboSkyPunt')&&tankerSrc2.includes('_vanishSky')&&t
 assert(tankerSrc2.includes("this._skyPunt ? SKY_SPEC.grav : 19")&&tankerSrc2.indexOf('comboSkyPunt')<tankerSrc2.indexOf('prototype._stepLaunch'),'tanker launch step uses low gravity while sky-punting and guards wall/floor hits');
 assert(sedanSrc.includes('comboSkyPunt')&&sedanSrc.includes('_vanishSky')&&sedanSrc.includes('_skyPunt')&&sedanSrc.includes("state = 'gone'"),'sedan has the sky-punt + vanish path (gone state stops its physics)');
 assert(runtime.includes('grab.comboThrow')&&runtime.includes('grab.tryComboKick')&&runtime.includes('grab.reset()'),'runtime wires combo inputs and resets the combo each round');
-assert(ui.includes('?v=1595'),'ui.js cache-bust bumped so browsers fetch the new vf modules');
+assert(runtime.includes('}else if(!(grab && grab.tryComboKick('),'KICK press while NOT carrying still offers the combo finisher first (round 1594 flow throws at press 1)');
+assert(runtime.includes('}else if(!grab.comboThrow(player, camRig, fx, VF.audio, hud, requestTankerHit')&&runtime.indexOf('}else if(!grab.comboThrow')<runtime.indexOf('grab.onLift(player'),'THROW press while NOT carrying tries the combo double-press before falling back to lift');
+assert(ui.includes('?v=1596'),'ui.js cache-bust bumped so browsers fetch the new vf modules');
 
 /* รอบ 1588: เตะรถยนต์ = กระเด็นไกลเท่ารถน้ำมันโดนเตะ (h54/up39 grav22 ≈ วิถี h54/up34 grav19) + หมุนธรรมชาติ */
 assert(sedanSrc.includes("info.kind) === 'kick'")&&sedanSrc.indexOf('54, 39')>sedanSrc.indexOf('kickish'),'sedan kick launches as far as the kicked tanker trajectory');
 assert(sedanSrc.includes('this._flipSpeed *= (1 - 0.1 * dt)')&&sedanSrc.includes('หมุนช้าลงตามแรงเสียดอากาศ'),'sedan tumble spins decay in air like the tanker (natural spin)');
 const kickRangeTanker=54*(2*34/19), kickRangeSedan=54*(2*39/22);
 assert(Math.abs(kickRangeTanker-kickRangeSedan)/kickRangeTanker<0.02,'kicked sedan flies the same distance as the kicked tanker (same arc, grav-adjusted up)');
-assert(ui.includes('?v=1595'),'ui.js cache-bust bumped for the kick trajectory tune');
+assert(ui.includes('?v=1596'),'ui.js cache-bust bumped for the kick trajectory tune');
 /* รอบ 1590: มาร์กเกอร์ + บนพื้นบอกทิศพลัง (ฟ้า=SLAM · ส้ม=ATTACK) */
 assert(build.includes('effects/aim-markers.js')&&htmlPreview.includes('effects/aim-markers.js')&&ns.includes("'effects/aim-markers.js'"),'aim markers module is loaded');
 assert(read('minigames/vocab-force/effects/aim-markers.js').includes('0x4ec4ff')&&read('minigames/vocab-force/effects/aim-markers.js').includes('0xff9040'),'markers use slam blue + attack orange');

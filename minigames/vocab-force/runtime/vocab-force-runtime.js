@@ -70,6 +70,7 @@
     if(oilTanker && oilTanker.reset) oilTanker.reset(round.seed);
     if(sedan && sedan.reset) sedan.reset(round.seed);
     if(grab && grab.reset) grab.reset();
+    blastQueue = [];
     if(player) player.carrying = null;
     if(letters) letters.spawn(THREE, round.progress.word, arena, round.seed);
     if(hud){
@@ -274,17 +275,39 @@
     if(VF.audio && VF.audio.energyWallImpact) VF.audio.energyWallImpact();
   }
 
-  function tankerExplosion(eventId, pos){
-    if(!eventId) return;
-    scorchZombiesFromBlast(pos);
+  /* รอบ 1595: คิวระเบิดรถน้ำมันแบบตีระยะห่าง — ดาเมจ/ท่าล้มตกถึงตัวผู้เล่น "พอดีจังหวะที่
+     รัศมีระเบิดขยายมาถึง" (ผู้ใช้สั่ง: ห้ามหงายท้องพร้อมจุดศูนย์กลางตั้งแต่ระเบิดเริ่ม)
+     ความเร็วคลื่น 20 หน่วย/วิ — ไกลสุดในสนาม (~40 หน่วย) จึงช้ากว่าจุดศูนย์กลาง ~2 วิ */
+  const BLAST_WAVE_SPEED = 20;
+  let blastQueue = [];
+  function tickBlastQueue(now){
+    if(!blastQueue.length) return;
+    for(let i = blastQueue.length - 1; i >= 0; i--){
+      if(now >= blastQueue[i].at){
+        const b = blastQueue.splice(i, 1)[0];
+        applyTankerBlast(b);
+      }
+    }
+  }
+  function applyTankerBlast(b){
     if(!player || player.alive === false) return;
-    const dmg = player.takeHit(VF.TANKER_DAMAGE || 500, false, {from: 'tanker', bypassInvuln: true});
+    /* takeHit เล่นท่าล้ม knockDown เองพอดีจังหวะที่นี่ (รอบ 1592 — ห้ามเล่นก่อน/หลัง) */
+    const dmg = player.takeHit(b.dmg, false, {from: 'tanker', bypassInvuln: true});
     if(dmg > 0){
       if(hud && hud.setHp) hud.setHp(player.hp, player.maxHp);
       if(hud && hud.hurtFlash) hud.hurtFlash(dmg / (player.maxHp || 1000));
       if(camRig && camRig.impulse) camRig.impulse(1.6, 8, {low: true});
       consumePlayerDeath();
     }
+  }
+  function tankerExplosion(eventId, pos){
+    if(!eventId) return;
+    scorchZombiesFromBlast(pos);
+    if(!player || player.alive === false) return;
+    /* ไม่ตีดาเมจทันที — ผลักเข้าคิวตามระยะห่างจากจุดระเบิด ÷ ความเร็วคลื่นระเบิด */
+    const px = pos ? (pos.x || 0) : 0, pz = pos ? (pos.z || 0) : 0;
+    const d = Math.hypot((player.x || 0) - px, (player.z || 0) - pz);
+    blastQueue.push({at: VF.now() + d / BLAST_WAVE_SPEED, dmg: VF.TANKER_DAMAGE || 500});
   }
 
   function tickTanker(dt){
@@ -446,23 +469,27 @@
     if(active && !paused && poll.punch && !player.carrying) combat.handleAttackPress('punch', player, now, enemies, camRig, arena, fx, energy, VF.audio, {hold: !!poll.punchHeld, people: peopleSnap(), world: worldMelee || oilTanker});
     if(active && !paused && poll.kick){
       if(player.carrying){
-        /* รอบ 1587: KICK ตอนแบก = จบคอมโบเตะระเบิด (THROW×2 แล้ว KICK) ใช้ได้ทุกตัวละคร */
+        /* รอบ 1587/1594: KICK ตอนแบก = ลองจบคอมโบเตะ (THROW×2 แล้ว KICK) ใช้ได้ทุกตัวละคร */
         grab && grab.tryComboKick(player, camRig, fx, VF.audio, hud, arena);
-      }else{
-        /* รอบ 1575: KICK เตะอย่างเดียว — การยก/ทุ่มย้ายไปอยู่ปุ่ม LIFT/THROW (หรือคีย์ G) หมดแล้ว
+      }else if(!(grab && grab.tryComboKick(player, camRig, fx, VF.audio, hud, arena))){
+        /* รอบ 1594: โฟลคอมโบใหม่ทุ่มตั้งแต่ THROW ครั้งแรก — ตอนกด KICK ตัวละครมักไม่ได้แบกแล้ว
+           จึงลอง tryComboKick เสมอ (คืน false ถ้าไม่ได้ armed ไว้) ค่อยตกไปเตะปกติ
+           รอบ 1575: KICK เตะอย่างเดียว — การยก/ทุ่มย้ายไปอยู่ปุ่ม LIFT/THROW (หรือคีย์ G) หมดแล้ว
            รอบ 1579: ห้ามเตะตอนแบกรถ — ท่าเตะ/การเข้าใกล้เป้าจะดันตำแหน่งตัวละครทั้งที่ยืนแบกอยู่ */
         combat.tryAttackOrApproach(player.anim.has('kick') ? 'kick' : 'punch', player, now, enemies, camRig, arena, fx);
       }
     }
     /* รอบ 1575: ปุ่ม LIFT/THROW (หรือคีย์ G) สองสถานะ — ยังไม่ได้ยก: กดเพื่อยก · ยกแล้ว: กดเพื่อทุ่ม
-       รอบ 1587: ตอนแบก ปุ่ม THROW กลายเป็นคีย์คอมโบ — กด 2 ครั้งต่อเนื่องแล้ว KICK = เตะระเบิด
-       (กดครั้งเดียวแล้วหยุด = ทุ่มตามปกติ หมดเวลาคอมโบจะทุ่มให้อัตโนมัติ) */
+       รอบ 1587/1594: ตอนแบก ปุ่ม THROW เป็นคีย์คอมโบ — กด 2 ครั้งต่อเนื่องแล้ว KICK = เตะรถปลิวขึ้นฟ้า
+       รอบ 1594: กด THROW ครั้งแรกทุ่มทันที — กดครั้งที่ 2 ตอน "ไม่ได้แบก" (รถลอยอยู่) จึงลอง comboThrow
+       ก่อนเสมอ (มันจัดการ stage 2 เอง คืน false ถ้าไม่มีคอมโบค้าง) ค่อยตกไปยกรถตามปกติ
+       (กดครั้งเดียวแล้วหยุด = ทุ่มตามปกติทันที ไม่มีอะไรตามมา) */
     if(active && !paused && poll.throw && grab){
       if(player.carrying){
         if(!grab.comboThrow(player, camRig, fx, VF.audio, hud, requestTankerHit, !!(net && net.requestTankerHit))){
           grab.throw(player, camRig, fx, VF.audio, hud, requestTankerHit, !!(net && net.requestTankerHit));
         }
-      }else{
+      }else if(!grab.comboThrow(player, camRig, fx, VF.audio, hud, requestTankerHit, !!(net && net.requestTankerHit))){
         grab.onLift(player, camRig, fx, VF.audio, hud);
       }
     }
@@ -564,6 +591,7 @@
     }
     if(net) tickNet(dt);
     tickTanker(dt);
+    tickBlastQueue(now);
     if(grab) grab.tick(dt, player, {hud: hud});
     /* รอบ 1570/1571: สถานะปุ่ม THROW — เช็กทั้ง grab.carrying() และ player.carrying เผื่อเส้นทางใดเส้นทางหนึ่งค้าง */
     if(hud && hud.setCarrying) hud.setCarrying(!!((grab && grab.carrying()) || (player && player.carrying)));
