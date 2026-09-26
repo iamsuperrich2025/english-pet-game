@@ -162,10 +162,37 @@
             secondary.slowScale = T.slowScale || 0.32;
           }
         }else if(struck.length || worldStruck){
-          const stop = VF.clamp(tune.hitStop || 0.06, 0.04, VF.CombatTune.HIT_STOP_MAX);
+          const kickish = atk.kind === 'kick' || atk.kind === 'heavyKick';
+          const stop = VF.clamp(worldStruck && kickish ? 0.1 : (tune.hitStop || 0.06), 0.04, VF.CombatTune.HIT_STOP_MAX);
           this.hitStop = stop;
-          if(camera && camera.impulse) camera.impulse(worldStruck ? Math.max(1.25, tune.cameraShake || 0) : tune.cameraShake, worldStruck ? 8 : tune.fovPunch, {low: worldStruck});
-          if(worldStruck && audio && audio.heavyImpact) audio.heavyImpact();
+          if(camera && camera.impulse) camera.impulse(worldStruck ? (kickish ? 2.3 : 1.6) : tune.cameraShake, worldStruck ? (kickish ? 11 : 9) : tune.fovPunch, {low: worldStruck});
+          if(worldStruck){
+            /* รอบ 1576: ต่อย/เตะโดนรถ (ยานพาหนะ) — เอฟเฟกต์หนักหน่วง: ประกายโลหะ + คลื่นกระแทกพื้น + ช้างวงศ์เดียวกับ power jump */
+            const hx = origin.x, hy = origin.y, hz = origin.z;
+            if(fx){
+              if(fx.impact) fx.impact(hx, hy, hz, {kind: atk.kind, level: tune.level, dir: fwd, force: (atk.force || 18) * 2.4});
+              if(kickish && fx.powerJumpImpact){
+                fx.powerJumpImpact({x: hx, y: 0, z: hz, nx: -fwd.x * 0.35, ny: 1, nz: -fwd.z * 0.35}, 1.45, {local: true, dirX: fwd.x, dirZ: fwd.z, player: player});
+              }else if(!kickish && fx.groundImpact){
+                fx.groundImpact({x: hx, y: 0, z: hz}, {flash: 1.6, grow: 1.7, rings: 3, dust: 16, plume: 4, debris: 10, streaks: 10, decal: false}, player);
+              }
+            }
+            /* เตะรถช้าไวแวบเดียวให้รู้สึกถึงน้ำหนัก */
+            if(kickish && secondary){
+              secondary.slowT = Math.max(secondary.slowT || 0, 0.13);
+              secondary.slowScale = 0.4;
+            }
+            if(audio){
+              if(audio.heavyImpact) audio.heavyImpact();
+              if(kickish){
+                if(audio.zombieGroundImpactHeavy) audio.zombieGroundImpactHeavy();
+                if(audio.shockwaveImpact) audio.shockwaveImpact();
+              }else{
+                if(audio.kickImpact) audio.kickImpact();
+                if(audio.debrisImpact) audio.debrisImpact();
+              }
+            }
+          }
         }
         const folks = people || [];
         const pr = (VF.GunTune && VF.GunTune.PLAYER_R) || 0.62;

@@ -1022,6 +1022,12 @@ assert(runtime.includes('grab.onLift')&&runtime.includes('grab.throw'),'runtime 
 assert(hudSrc.includes('aria-label="LIFT ยก"')&&hudSrc.includes('is-carrying')&&hudSrc.includes('throwLab'),'HUD ships two-state LIFT/THROW button');
 assert(!hudSrc.includes('data-vf-act="throw" aria-label="THROW ขว้าง" hidden'),'THROW button no longer pre-hidden');
 
+
+/* รอบ 1576: เอฟเฟกต์ต่อย/เตะโดนรถหนักหน่วง */
+assert(combat.includes('powerJumpImpact')&&combat.includes('worldStruck')&&combat.includes('slowScale'),'vehicle melee strike fires heavy shockwave FX + slow-mo');
+assert(combat.includes('kickish')&&combat.includes('zombieGroundImpactHeavy'),'kick on vehicle layers heavy audio');
+assert(sedanSrc.includes('jolt')&&sedanSrc.includes('0.012'),'sedan jolt scales with strike force');
+
 if(process.exitCode){
   console.error('vocab-force tests failed after',n,'passes');
 }else{

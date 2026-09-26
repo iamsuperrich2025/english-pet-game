@@ -132,10 +132,11 @@
     if(this._meleeAt && VF.now() - this._meleeAt < 900) return false;
     if(pointBoxDistance(origin.x || 0, origin.z || 0, this.collider) > (reach || 2.8) + 1.1) return false;
     this._meleeAt = VF.now();
-    /* กระตุกตัวถังเล็กน้อยให้รู้สึกถึงแรงกระแทก แล้วสลับชุดแตก */
+    /* รอบ 1576: กระตุกตัวถังแรงตามแรงกระแทก (เดิมคงที่ 0.22) ให้สมกับเอฟเฟกต์หนักหน่วง */
+    const jolt = 0.3 + Math.min(((info && info.force) || 18) * 0.012, 0.55);
     if(this.root){
-      this.root.position.x += ((info && info.dir && info.dir.x) || 0) * 0.22;
-      this.root.position.z += ((info && info.dir && info.dir.z) || 0) * 0.22;
+      this.root.position.x += ((info && info.dir && info.dir.x) || 0) * jolt;
+      this.root.position.z += ((info && info.dir && info.dir.z) || 0) * jolt;
     }
     this._updateCollider();
     this.swapShattered();
