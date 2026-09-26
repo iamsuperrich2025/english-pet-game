@@ -11,6 +11,9 @@
 > ประวัติ Frontline 1372–1373: `handoff/archive/frontline-1372-1373.md`
 
 ### 📌 สรุปสถานะล่าสุด
+- รอบ 1590 · Vocab Force มาร์กเกอร์ + บนพื้นบอกทิศพลัง (aim-markers.js ใหม่): + สีฟ้า = ปลายแนวเส้น SLAM (ยาวตาม slamLineLength 23 หน่วย) · + สีส้ม = ทิศพลังปุ่ม ATTACK (ระยะหมัด ~2.8 หน่วย) — วางราบบนพื้น หายใจสลับกันไฟล์/จาง ซ่อนอัตโนมัติตอนตาย/dash/ชมเพื่อน · ล็อกในขอบสนามด้วย ARENA_HALF
+- wire: สร้าง/อัปเดต/dispose ใน runtime ครบ · โหลดผ่าน namespace SCRIPTS + dev index.html + build_web · cache-bump ?v=1591
+- ยืนยัน: unit 705 ผ่าน (assert โมดูล/สี/wire ครบ) + check_undefined_calls 0 + syntax ครบ
 - รอบ 1589 · Vocab Force ปุ่ม SLAM กระแทกพื้น: กดแล้วเล่นท่า GLB จริงตามตัวละคร (nex_Charged_Ground_Slam / ly_Charged_Ground_Slam) → ตอน hitAt ปล่อยเส้นเปลวเพลิงสีฟ้าเป็นแนวตรงยาว 23 หน่วยบนพื้นตามทิศหน้า (เท่าวิถี overdrive dash, คูลดาวน์ 6 วิ, วงแหวน cooldown บนปุ่ม) · ผู้เล่นอื่นในแนวเส้นเสีย 300 HP ต่อครั้งที่โดน (กันซ้ำรอบเดียวกันด้วย castId ผ่าน notePvpHit) · ซอมบี้ในแนวไหม้เป็นจังหวะ 20/ครั้ง · รถในแนวโดนแรง heavy kick ครั้งเดียว
 - จุดชนมีระเบิดไฟสนั่น: ผู้เล่นโดน = arenaFire + powerJumpImpact (คลื่นกระแทก+ซากเศษ+รอยแยกพื้น) + เสียง · ซอมบี้โดน = arenaFire รอบแรกของแต่ละ cast (กันเสียงถาโถม) · ออนไลน์: packSlam 'M+seq' บน hp string → เพื่อนเพนท์เส้นไฟฝั่งผู้ชมตำแหน่ง/ทิศจาก rec
 - ไฟล์: ground-slam-tune/controller/fx (ใหม่ 3), manifests (groundSlam), hud/input/css (ปุ่ม SLAM คีย์ R), runtime+net (wire+consumeSlams), packer + build_web (GLB ใหม่) · แถม: แพ็ก mage_soell_cast เป็น animation-only เหมือนคลิปอื่น ลด bundle 171MB→107MB
@@ -20,9 +23,6 @@
 - รอบ 1587 · Vocab Force "คอมโบเตะระเบิด": ① รถน้ำมันระเบิด=ซอมบี้ทุกตัวเหลือ 30% MAX (scorchZombiesFromBlast ผ่าน applyHit เดิม ล้มกระเด็นจากจุดระเบิด ไม่มีตายจากแรงระเบิด) ② คอมโบ THROW×2 ขณะแบก (ห่าง ≤1.1 วิ) แล้ว KICK (≤1.4 วิ) = เตะรถลอยวิถีโค้งสูง (_comboHold กันระเบิดเองตอนถึงพื้น) → ตัวละคร dash ว้าบไปรอจุดตก → เตะกลางอากาศระเบิดแตกละเอียด: ชิ้นส่วนโลหะ 16 ชิ้น + ประกายไฟ 42 จุด (pool สร้างครั้งเดียว) + เอฟเฟกต์/เสียง/ช้างวงศ์หนัก · กด THROW ครั้งเดียวแล้วหยุด = ทุ่มตามปกติ (หมดเวลาคอมโบทุ่มอัตโนมัติ) · ใช้ได้ทั้งรถน้ำมัน (ระเบิดจริง ดาเมจ 500) และรถยนต์ (สลับชุดแตก+ไฟลุก) + ทุกตัวละคร (playAction kick→fallback punch, beginDash กลาง ไม่ผูก manifest)
 - ไฟล์: vehicle-grab.js (comboThrow/tryComboKick/_flight/_burstDebris), oil-tanker/sedan-controller (comboKickLaunch/comboShatter/_comboHold), runtime (wire poll.throw/poll.kick + scorch + grab.reset ตอน beginRound) · cache-bump ?v=1587
 - ยืนยัน: unit 665 ผ่าน (รวม VM flow test จำลองกดจริง: อม-อม-เตะ-ว้าบ-แตกครบ + fallback ทุ่มเมื่อหมดเวลา) + check_undefined_calls 0 + regression ui.js ผ่าน · deploy ตามรอบ 1587
-- รอบ 1573 · รถยนต์ถูกต่อย/เตะ=โมเดลชุดแตก (Golden_Vanguard_Sedan_Shattered.glb 16MB, lazy-load ตอนถูกตีครั้งแรก เก็บโมเดลไว้สลับกลับตอน reset) — เพิ่ม canMelee/meleeHit ให้ sedan · combat เคยคุย world=oilTanker อย่างเดียว → สร้าง worldMelee proxy ใน runtime (sedan ก่อน tanker) ส่งเข้า combat.tick+handleAttackPress
-- รถลอยเหนือมือ: sedan carryTick y 1.05→1.95 (ท่า cast ยกมือเหนือศีรษะ ใช้ร่วม NEX/Lyra — carryTick ไม่ผูกตัวละคร) · เสริม grab.tick ยืนยัน state carried ใหม่+เรียก carryTick ตรง (กันเคสรถจมพื้นทั้งที่ปุ่ม THROW โชว์ที่เคยเจอ) · tanker carry y=2.5 ลอยอยู่แล้ว
-- cache-bust bump ?v=1573 · GLB ชุดแตก track เข้า git + build_web asset list (บทเรียนรถหาย 1566/1567) · unit 605 + regression ครบ · deploy ตามรอบ 1573
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน

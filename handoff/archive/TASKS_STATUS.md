@@ -6838,3 +6838,10 @@ efreshMechaLock
 - รถยนต์ทุ่มตรง (throwBy ไม่ผ่าน net) ใช้ได้ปกติ — ยืนยันด้วย VM flow test ทั้ง tanker online (accepted→applyEvent→launched) และ sedan (thrown) · เสริม cache-bust โมดูลทั้งหมดใน ui.js loadVocabForceModules (?v=1572) กันไฟล์เก่าจาก HTTP cache ทำปุ่มกดแล้วเงียบ — ระวัง: เปลี่ยน token ทุกครั้งที่แก้โมดูล vf
 - ป้าย EN/TH ของแถวบน (THROW/BLOCK/JUMP) ย้ายไป "เหนือ"ปุ่ม (flex-direction:column-reverse) แก้ทับปุ่มแถวล่าง · unit 600 + regression ครบ · deploy ตามรอบ 1572
 - รอบ 1571 · สวิตช์เสียงทับปุ่ม EXIT (top-right) — ต้นตอ: รอบ 1570 ทำ EXIT กว้าง "EXIT · ออก" ~110px บานทับสวิตช์ที่ right:76px → แก้: EXIT สองบรรทัด (EXIT เหนือ ออก, .vf-exit-sub) กว้าง ~62px ไม่ทับ · ปุ่ม THROW "ไม่ขึ้น" = by design โผล่เฉพาะตอนแบก (ผู้ใช้ยืนยันเองว่าเข้าใจแล้ว)
+
+
+## ⏬ ย้ายเมื่อ 2026-09-26 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- รอบ 1573 · รถยนต์ถูกต่อย/เตะ=โมเดลชุดแตก (Golden_Vanguard_Sedan_Shattered.glb 16MB, lazy-load ตอนถูกตีครั้งแรก เก็บโมเดลไว้สลับกลับตอน reset) — เพิ่ม canMelee/meleeHit ให้ sedan · combat เคยคุย world=oilTanker อย่างเดียว → สร้าง worldMelee proxy ใน runtime (sedan ก่อน tanker) ส่งเข้า combat.tick+handleAttackPress
+- รถลอยเหนือมือ: sedan carryTick y 1.05→1.95 (ท่า cast ยกมือเหนือศีรษะ ใช้ร่วม NEX/Lyra — carryTick ไม่ผูกตัวละคร) · เสริม grab.tick ยืนยัน state carried ใหม่+เรียก carryTick ตรง (กันเคสรถจมพื้นทั้งที่ปุ่ม THROW โชว์ที่เคยเจอ) · tanker carry y=2.5 ลอยอยู่แล้ว
+- cache-bust bump ?v=1573 · GLB ชุดแตก track เข้า git + build_web asset list (บทเรียนรถหาย 1566/1567) · unit 605 + regression ครบ · deploy ตามรอบ 1573
