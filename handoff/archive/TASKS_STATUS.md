@@ -6845,3 +6845,9 @@ efreshMechaLock
 - รอบ 1573 · รถยนต์ถูกต่อย/เตะ=โมเดลชุดแตก (Golden_Vanguard_Sedan_Shattered.glb 16MB, lazy-load ตอนถูกตีครั้งแรก เก็บโมเดลไว้สลับกลับตอน reset) — เพิ่ม canMelee/meleeHit ให้ sedan · combat เคยคุย world=oilTanker อย่างเดียว → สร้าง worldMelee proxy ใน runtime (sedan ก่อน tanker) ส่งเข้า combat.tick+handleAttackPress
 - รถลอยเหนือมือ: sedan carryTick y 1.05→1.95 (ท่า cast ยกมือเหนือศีรษะ ใช้ร่วม NEX/Lyra — carryTick ไม่ผูกตัวละคร) · เสริม grab.tick ยืนยัน state carried ใหม่+เรียก carryTick ตรง (กันเคสรถจมพื้นทั้งที่ปุ่ม THROW โชว์ที่เคยเจอ) · tanker carry y=2.5 ลอยอยู่แล้ว
 - cache-bust bump ?v=1573 · GLB ชุดแตก track เข้า git + build_web asset list (บทเรียนรถหาย 1566/1567) · unit 605 + regression ครบ · deploy ตามรอบ 1573
+
+
+## ⏬ ย้ายเมื่อ 2026-09-26 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- ไฟล์: vehicle-grab.js (comboThrow/tryComboKick/_flight/_burstDebris), oil-tanker/sedan-controller (comboKickLaunch/comboShatter/_comboHold), runtime (wire poll.throw/poll.kick + scorch + grab.reset ตอน beginRound) · cache-bump ?v=1587
+- ยืนยัน: unit 665 ผ่าน (รวม VM flow test จำลองกดจริง: อม-อม-เตะ-ว้าบ-แตกครบ + fallback ทุ่มเมื่อหมดเวลา) + check_undefined_calls 0 + regression ui.js ผ่าน · deploy ตามรอบ 1587
