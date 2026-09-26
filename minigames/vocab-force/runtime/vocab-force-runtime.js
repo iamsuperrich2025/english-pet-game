@@ -588,7 +588,7 @@
         console.warn('[VocabForce] sedan load skip', err);
         return null;
       }) : Promise.resolve(null);
-      grab = VF.VehicleGrabController ? new VF.VehicleGrabController({sedan: sedan, tanker: oilTanker, arena: arena}) : null;
+      grab = VF.VehicleGrabController ? new VF.VehicleGrabController({sedan: sedan, tanker: oilTanker, arena: arena, scene: scene}) : null;
       /* รอบ 1573: combat เคยคุยกับแค่รถน้ำมัน (world=oilTanker) → ต่อย/เตะรถยนต์ไม่มีผล
          proxy นี้ส่งต่อไปยังคันที่อยู่ในระยะ (รถยนต์ก่อน แล้วรถน้ำมัน) */
       worldMelee = {

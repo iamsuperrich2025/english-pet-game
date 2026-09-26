@@ -302,6 +302,10 @@
     };
   };
 
+  /* รอบ 1584: ค่าปล่อยตัวมาตรฐาน — ใช้ทั้งตอน launch จริงและคำนวณพิกัดตก (เครื่องหมาย + ตอนยก)
+     grav ต้องตรงกับค่าใน _stepLaunch (19) เสมอ */
+  OilTankerController.prototype.THROW_SPEC = {h: 54, up: 34, grav: 19, y0: 0.35, wallInset: 8};
+
   OilTankerController.prototype.applyEvent = function(ev){
     if(!ev || !ev.id || ev.id === this.eventId) return false;
     if(this.state !== 'idle' && this.state !== 'carried') return false;
@@ -319,9 +323,11 @@
     const ndx = Number(ev.dx) || 0, ndz = Number(ev.dz) || 1;
     const nn = Math.hypot(ndx, ndz) || 1;
     const dxn = ndx / nn, dzn = ndz / nn;
-    this.vx = dxn * 54;
-    this.vz = dzn * 54;
-    this.vy = 34;
+    /* รอบ 1584: อ่านค่าจากสเปกร่วม ให้ตรงกับตัวชี้พิกัดตกเสมอ */
+    const spec = this.THROW_SPEC || {h: 54, up: 34};
+    this.vx = dxn * spec.h;
+    this.vz = dzn * spec.h;
+    this.vy = spec.up;
     /* รอบ 1577: พลิกตามทิศกระเด็น — คว่ำหน้าไปข้างหน้ารอบแกนตั้งฉากกับทิศ ผสมม้วนตามแนวยาวเล็กน้อย
        แทนการหมุน 3 แกนคงที่เดิม (ดูสุ่มไม่เป็นธรรมชาติ) + ลดแรงหมุนช้าๆ เหมือนแรงเสียดอากาศ */
     const THREE = root.THREE;

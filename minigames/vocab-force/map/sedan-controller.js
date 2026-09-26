@@ -290,6 +290,10 @@
     this.root.rotation.x = 0.06 + bob * 0.4;
   };
 
+  /* รอบ 1584: ค่าทุ่มมาตรฐาน — ใช้ทั้งตอนทุ่มจริงและคำนวณพิกัดตก (เครื่องหมาย + ตอนยก)
+     grav ต้องตรงกับค่าใน tick/_stepLaunch เสมอ */
+  SedanController.prototype.THROW_SPEC = {h: 26, up: 9.5, grav: 22, y0: 1.5, wallInset: 3};
+
   SedanController.prototype.throwBy = function(player, dirX, dirZ){
     if(this.state !== 'carried') return false;
     const n = Math.hypot(dirX, dirZ) || 1;
@@ -298,13 +302,13 @@
     this.elapsed = 0;
     this.bounces = 0;
     this._hitIds = {};
-    const power = 26;
-    /* รอบ 1577: พลิกตามทิศทุ่มด้วยแกนสมจริง แทน euler คงที่ (2.2/-3.4) เดิม */
-    this._beginTumble(dirX, dirZ, power, 9.5, 6.5, (Math.random() - 0.5) * 1.2);
+    /* รอบ 1577/1584: พลิกตามทิศทุ่มด้วยแกนสมจริง + ใช้ค่าสเปกร่วมกับตัวชี้พิกัดตก */
+    const spec = this.THROW_SPEC;
+    this._beginTumble(dirX, dirZ, spec.h, spec.up, 6.5, (Math.random() - 0.5) * 1.2);
     if(this.root){
       this.root.position.set(
         (player.x || 0) + dirX / n * 1.6,
-        (player.y || 0) + 1.5,
+        (player.y || 0) + spec.y0,
         (player.z || 0) + dirZ / n * 1.6
       );
     }
@@ -328,7 +332,7 @@
     ctx = ctx || {};
     const player = ctx.player;
     const isThrow = this.state === 'thrown';
-    const grav = 22;
+    const grav = (this.THROW_SPEC && this.THROW_SPEC.grav) || 22;
     this.vy -= grav * dt;
     this.root.position.x += this.vx * dt;
     this.root.position.y += this.vy * dt;

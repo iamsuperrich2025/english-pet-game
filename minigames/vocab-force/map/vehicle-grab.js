@@ -10,9 +10,61 @@
     this.sedan = opts.sedan || null;
     this.tanker = opts.tanker || null;
     this.arena = opts.arena || null;
+    this._markerScene = opts.scene || null;
+    this._marker = null;
     this._toastAt = 0;
     this._promptShown = false;
   }
+
+  /* รอบ 1584: เครื่องหมาย + บนพื้น (สร้างครั้งเดียวตอนแรกที่ใช้ — ไม่ alloc ต่อเฟรม) */
+  VehicleGrabController.prototype._ensureMarker = function(){
+    if(this._marker || !this._markerScene || !root.THREE) return this._marker;
+    const THREE = root.THREE;
+    const mat = new THREE.MeshBasicMaterial({
+      color: 0xffa040, transparent: true, opacity: 0.9,
+      blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide
+    });
+    const barA = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 0.24), mat);
+    barA.rotation.x = -Math.PI / 2;
+    const barB = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 1.7), mat);
+    barB.rotation.x = -Math.PI / 2;
+    barB.position.y = 0.02;
+    const grp = new THREE.Group();
+    grp.add(barA); grp.add(barB);
+    grp.visible = false;
+    grp.renderOrder = 5;
+    this._markerScene.add(grp);
+    this._marker = grp;
+    return grp;
+  };
+
+  /* รอบ 1584: คำนวณพิกัดตกจากวิถีโปรเจกไทล์จริง (ค่าสเปกเดียวกับตอนทุ่ม) แล้ววางเครื่องหมาย + ไว้ตรงนั้น */
+  VehicleGrabController.prototype._updateMarker = function(held, player){
+    const marker = this._ensureMarker();
+    if(!marker) return;
+    const spec = held && held.THROW_SPEC;
+    if(!held || !player || !spec){
+      marker.visible = false;
+      return;
+    }
+    const fwd = player.forward ? player.forward() : {x: 0, z: 1};
+    const sx = held.root ? held.root.position.x : (player.x || 0);
+    const sz = held.root ? held.root.position.z : (player.z || 0);
+    const y0 = Math.max(0.2, spec.y0 || 1.5);
+    const tHit = (spec.up + Math.sqrt(spec.up * spec.up + 2 * spec.grav * y0)) / spec.grav;
+    const half = (this.arena ? this.arena.half : 280) - (spec.wallInset != null ? spec.wallInset : 3);
+    const lx = VF.clamp(sx + fwd.x * spec.h * tHit, -half, half);
+    const lz = VF.clamp(sz + fwd.z * spec.h * tHit, -half, half);
+    const gy = this.arena && this.arena.groundY ? this.arena.groundY(lx, lz) : 0;
+    const pulse = 1 + Math.sin(((VF.now ? VF.now() : 0) / 1000) * 6) * 0.14;
+    marker.scale.setScalar(pulse);
+    marker.position.set(lx, gy + 0.07, lz);
+    marker.visible = true;
+  };
+
+  VehicleGrabController.prototype._hideMarker = function(){
+    if(this._marker) this._marker.visible = false;
+  };
 
   VehicleGrabController.prototype.vehicles = function(){
     const out = [];
@@ -50,6 +102,7 @@
     if(player.playAction) player.playAction('throw');
     if(audio && audio.punchWhoosh) audio.punchWhoosh();
     player.carrying = null;
+    this._hideMarker();
     if(held === this.tanker){
       if(hasNet && requestTankerHit){
         /* ส่งให้ host ตัดสินแล้วประกาศ event — applyEvent เคลียร์สถานะ carried ให้เอง */
@@ -92,6 +145,7 @@
         /* ตายระหว่างแบก — วางของลง */
         if(player) player.carrying = null;
         if(ctx.hud && ctx.hud.setCarrying) ctx.hud.setCarrying(false);
+        this._hideMarker();
         if(held.drop) held.drop();
         else{
           held.state = 'idle';
@@ -107,8 +161,11 @@
         held.carrier = player;
       }
       if(held.carryTick) held.carryTick(dt, player);
+      /* รอบ 1584: โชว์เครื่องหมาย + พิกัดตกตลอดที่ยกค้าง */
+      this._updateMarker(held, player);
       return;
     }
+    this._hideMarker();
     /* ป้ายเตือนเมื่อเดินเข้าใกล้ยานพาหนะ */
     if(player && player.alive !== false && ctx.hud && ctx.hud.toast){
       const near = this.nearest(player);

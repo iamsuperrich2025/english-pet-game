@@ -1070,6 +1070,12 @@ assert(read('minigames/vocab-force/map/prototype-arena.js').includes('groundY'),
 assert(sedanSrc.includes('arena.groundY')&&sedanSrc.includes('ห้ามขึ้นไปค้างบนยอดแพลตฟอร์ม'),'thrown/tumbling sedan lands on base ground, never on prop tops');
 assert(tankerSrc2.includes('fail-safe')&&tankerSrc2.includes("'destroyed'"),'tanker without fx still detonates instead of hovering');
 
+
+/* รอบ 1584: เครื่องหมาย + บอกพิกัดตกขณะยกรถ */
+assert(grabSrc.includes('_updateMarker')&&grabSrc.includes('_ensureMarker')&&grabSrc.includes('เครื่องหมาย +'),'grab controller owns the throw landing marker');
+assert(sedanSrc.includes('THROW_SPEC')&&tankerSrc2.includes('THROW_SPEC'),'both vehicles publish throw specs for landing prediction');
+assert(runtime.includes('arena: arena, scene: scene'),'runtime passes scene so grab can mount the marker');
+
 if(process.exitCode){
   console.error('vocab-force tests failed after',n,'passes');
 }else{
