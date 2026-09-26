@@ -7413,11 +7413,12 @@ function refreshVocabForceLock(){
   const b=document.getElementById('btn-rail-vocabforce');
   if(!b) return;
   const ok=vocabForceAdminAllowed();
-  b.hidden=false;
-  b.setAttribute('aria-hidden','false');
+  /* รอบ 1568: ผู้เล่นทั่วไป "มองไม่เห็น" ปุ่มเลย — เฉพาะแอดมินเห็นและกดได้ (เหมือนสถานะ hidden admin rail เดิม) */
+  b.hidden=!ok;
+  b.setAttribute('aria-hidden',ok?'false':'true');
   b.disabled=!ok;
   b.setAttribute('aria-disabled',ok?'false':'true');
-  b.title=ok?'Vocab Force — COMING SOON · internal testing':VOCABFORCE_LOCK_MSG;
+  b.title=ok?'Vocab Force — internal testing':VOCABFORCE_LOCK_MSG;
   if(ok) b.removeAttribute('tabindex'); else b.tabIndex=-1;
 }
 async function loadVocabForceModules(){

@@ -11,6 +11,9 @@
 > ประวัติ Frontline 1372–1373: `handoff/archive/frontline-1372-1373.md`
 
 ### 📌 สรุปสถานะล่าสุด
+- รอบ 1568 · Vocab Force เห็นเฉพาะแอดมิน: `js/ui.js` refreshVocabForceLock เปลี่ยนเป็น `b.hidden=!ok` (ผู้เล่นทั่วไปมองไม่เห็นปุ่มราง Classic แอดมินเห็น+กดได้) + `js/home-v2.js` เพิ่ม 'vocabforce' ใน ADMIN_ONLY_WORLD_ACTIONS (navButton ซ่อน/disable อัตโนมัติ บล็อก action() อยู่แล้ว)
+- การล็อกการเล่นแอดมินอยู่ก่อนแล้วทั้ง openVocabForce() และ URL ?vocab-force=1 (auth.js) ไม่ต้องแตะ · อัปเดตเทสต์ test_vocab_force (hidden assert) + test_home_v2_mobile_preview (adminOnlyWorlds เพิ่ม vocabforce, ตัดออกจาก publicWorlds; จำนวน railItems ยัง 32 เพราะปุ่มแค่ซ่อน)
+- ยืนยัน: unit 587 + Home V2 R41 PASS + mecha admin lock + mecha 1480 regression ครบ · deploy ตามรอบ 1568
 - รอบ 1567 · Vocab Force 4 ข้อ: จุดเติมพลังอลังการ (วงรูน+เกลียวพลัง+เทียนแสง+หัวใจไขว้+ไฟ PointLight, BRIGHTNESS 0.8) / แก้ลูกพลังลอยฟ้า (aim assist ยิงเอียงสู่อกศัตรู y+0.95, ไม่มีเป้า=ราบ y=0, aimPitchLift ติดลบเท่านั้น)
 - ยก-ทุ่มยานพาหนะ: KICK ใกล้รถ=ยก (แช่ท่า lift=Climb_Stairs ช้า, ห้ามซัด/ดช./ยิงพลัง, เดินช้า 0.55×) KICK ซ้ำ=ทุ่ม · รถยนต์ sedan GLB โดนทุ่มใส่ใคร -100 (SedanController ใหม่) · รถน้ำมันแบกได้+ทุ่มได้ (sync ผ่าน net grab flag) และปะทะพื้น/ขอบ=ระเบิดทันที 500 ทุกตัว (เดิมไถล 2.75 วิ)
 - ต้นตอ/ไฟล์: `map/sedan-controller.js`+`map/vehicle-grab.js` ใหม่, แก้ oil-tanker/net(แพ็ก x/z/grab)/runtime/manifest(lift,throw=คลิปเดิม ไม่มี GLB ใหม่)/heal-pad+tune/energy-attack-tune/gun-tune/nex-character(_chooseLoco carry)/index/namespace/build_web

@@ -38,13 +38,13 @@ assert(!/<script[^>]+minigames\/vocab-force/.test(classic),'game scripts are not
 assert(/\bid="btn-rail-vocabforce"/.test(classic),'classic rail has a Vocab Force entry');
 assert(classic.includes('Vocab Force · COMING SOON'),'classic rail shows Coming Soon');
 assert(/function vocabForceAdminAllowed\(\)[\s\S]*isAdmin/.test(ui),'Vocab Force reuses the existing authenticated admin check');
-assert(ui.includes('function refreshVocabForceLock')&&ui.includes('b.hidden=false')&&ui.includes('b.disabled=!ok'),'rail remains visible but is disabled for normal users');
+assert(ui.includes('function refreshVocabForceLock')&&ui.includes('b.hidden=!ok')&&ui.includes('b.disabled=!ok'),'rail is hidden from normal users, visible+enabled for admins (round 1568)');
 assert(ui.includes("loadScriptOnce(base+'vocab-force-namespace.js')"),'lazy load from minigames folder');
 assert(ui.includes('async function openVocabForce'),'lobby binder');
 assert(ui.includes('if(!vocabForceAdminAllowed())'),'lobby entry blocks normal users');
 assert(main.includes("vocabforce:'#btn-rail-vocabforce'"),'go route');
 assert(auth.includes('refreshVocabForceLock'),'auth refreshes lock');
-assert(home.includes("'vocabforce'")&&!/'vocabforce'/.test((home.match(/const ADMIN_ONLY_WORLD_ACTIONS = new Set\(\[([\s\S]*?)\]\)/)||[])[1]||''),'Home V2 shows card to non-admins');
+assert(home.includes("'vocabforce'")&&/'vocabforce'/.test((home.match(/const ADMIN_ONLY_WORLD_ACTIONS = new Set\(\[([\s\S]*?)\]\)/)||[])[1]||''),'Home V2 hides the card from non-admins (round 1568)');
 assert(home.includes("['vocabforce','sparkle','Vocab Force · COMING SOON','#btn-rail-vocabforce']"),'Home V2 Coming Soon card');
 assert(lobby.includes('#btn-rail-vocabforce[hidden]'),'lobby hides locked rail');
 assert(htmlPreview.includes("location.replace('../../?vocab-force=1')")&&htmlPreview.includes('if(!window.VocabForceDirectRedirect) VocabForce.open()'),'direct Vocab Force URL hands off to the authenticated Lobby gate');
