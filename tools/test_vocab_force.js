@@ -1047,7 +1047,7 @@ assert(read('minigames/vocab-force/combat/energy-attack-tune.js').includes('show
 
 /* รอบ 1579: lock ตำแหน่ง + หมุนกายตอนแบกรถ */
 const charSrc=read('minigames/vocab-force/character/nex-character-controller.js');
-assert(charSrc.includes('this.carrying && this.grounded && len < 0.5')&&charSrc.includes('lock'),'light stick turns in place while carrying, idle hard-locks position');
+assert(charSrc.includes('if(this.carrying){')&&charSrc.includes('this.vx = 0; this.vz = 0;'),'carrying hard-locks horizontal velocity at any stick level (turn-in-place only)');
 assert(runtime.includes("poll.kick && !player.carrying"),'kick cannot lunge the player while carrying');
 
 
@@ -1084,6 +1084,11 @@ assert(projSrc.indexOf('_hitVehicle(shot, rad')>=0&&projSrc.indexOf('_hitVehicle
 assert(tankerSrc2.includes('prototype.detonate'),'tanker exposes detonate reusing _explode');
 assert(sedanSrc.includes('prototype.detonate')&&sedanSrc.includes('swapShattered'),'sedan detonate swaps to shattered wreck');
 assert(runtime.includes('setVehicles(sedan, oilTanker)'),'runtime wires vehicles into energy guns');
+
+/* รอบ 1586: แบกรถ = ล็อกตำแหน่งเด็ดขาด กดเดินแรงแค่ไหนก็ห้ามเลื่อน — หมุนหันทิศได้ */
+assert(charSrc.includes('if(this.carrying){')&&!charSrc.includes('len < 0.5'),'old partial stick lock removed, full carry lock in place');
+assert(runtime.includes('const playerInput = active')&&!runtime.includes('carryingSlow'),'runtime drops the 0.55 carry slow multiplier');
+assert(charSrc.indexOf('this.yaw = Math.atan2(wishX, wishZ)')<charSrc.indexOf('if(this.carrying){'),'stick still steers yaw before the carry lock');
 if(process.exitCode){
   console.error('vocab-force tests failed after',n,'passes');
 }else{

@@ -381,9 +381,9 @@
       }
     }
     const freezeMove = active && energy && energy.hold && energy.hold.active && Math.hypot(poll.moveX || 0, poll.moveZ || 0) > ((VF.EnergyAttackTune && VF.EnergyAttackTune.aimStickDeadzone) || 0.12);
-    const carryingSlow = active && !!player.carrying;
-    let playerInput = active ? (freezeMove ? Object.assign({}, poll, {moveX: 0, moveZ: 0}) : poll) : {moveX: 0, moveZ: 0};
-    if(carryingSlow) playerInput = Object.assign({}, playerInput, {moveX: (poll.moveX || 0) * 0.55, moveZ: (poll.moveZ || 0) * 0.55, sprint: false});
+    /* รอบ 1586: ตอนแบกรถ ส่ง stick ผ่านตามปกติเพื่อให้หมุนหันทิศได้ แต่ controller ล็อก velocity = 0
+       ขณะ carrying เอง (ตัดตัวคูณ 0.55 รอบ 1579 ออก — แรงเดินไม่มีผลอีกต่อไป ตำแหน่งนิ่งสนิท) */
+    const playerInput = active ? (freezeMove ? Object.assign({}, poll, {moveX: 0, moveZ: 0}) : poll) : {moveX: 0, moveZ: 0};
     player.tick(step, playerInput, camRig, arena);
     if(player.consumePowerJumpEvents){
       player.consumePowerJumpEvents().forEach(function(ev){ handlePowerJumpEvent(ev, true); });

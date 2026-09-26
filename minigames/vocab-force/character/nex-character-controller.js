@@ -266,8 +266,9 @@
       const accel = moving ? 38 : 22;
       if(this._driveT > 0) this._driveT = Math.max(0, this._driveT - dt);
       /* รอบ 1579: แบกยานพาหนะ — stick เบาๆ (เอียงหาทิศ) = หมุนกายอยู่กับที่โดยไม่เดินเลื่อนตำแหน่ง
-         และตอนนิ่งสนิทให้ lock ตำแหน่งขาด (velocity = 0) จะได้ไม่ไถลไปทั่วแผนที่ */
-      if(this.carrying && this.grounded && len < 0.5){
+         รอบ 1586: ล็อกตำแหน่งเด็ดขาดทุกระดับ stick — กดเดินแรงแค่ไหนก็ห้ามเลื่อน
+         (หมุนหันทิศได้อยู่ เพราะ yaw ถูกตั้งจาก wish ด้านบนก่อนเข้าเงื่อนไขนี้เสมอ) */
+      if(this.carrying){
         this.vx = 0; this.vz = 0;
       }else if(moving){
         this.vx = VF.lerp(this.vx, wishX * target, VF.clamp(dt * accel, 0, 1));
