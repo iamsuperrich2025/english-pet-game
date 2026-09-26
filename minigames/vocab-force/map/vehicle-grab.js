@@ -1,5 +1,6 @@
 "use strict";
-/* รอบ 1567: ผู้ประสานงานจับยก-ทุ่มยานพาหนะ — เดินเข้าใกล้แล้วกด KICK เพื่อยก กด KICK อีกครั้งเพื่อทุ่ม
+/* รอบ 1567/1575: ผู้ประสานงานจับยก-ทุ่มยานพาหนะ — ปุ่ม LIFT/THROW (หรือคีย์ G): กดเพื่อยกเมื่อยังไม่ได้ยก กดเพื่อทุ่มเมื่อยกแล้ว
+   ปุ่ม KICK เตะอย่างเดียวตั้งแต่รอบ 1575 ไม่เกี่ยวข้องกับการยกแล้ว
    รถยนต์: โดนทุ่มใส่ใคร คนนั้นพลัง -100 (VF.SEDAN_DAMAGE) · รถน้ำมัน: ปะทะสิ่งใดระเบิด ทุกตัว -500 (VF.TANKER_DAMAGE) */
 (function(root){
   const VF = root.VocabForce = root.VocabForce || {};
@@ -41,7 +42,7 @@
     return best;
   };
 
-  /* รอบ 1570: ทุ่มของที่แบกอยู่ — เรียกได้ทั้งจากปุ่ม THROW (ใหม่), KICK ซ้ำ (เดิม), หรือคีย์ G */
+  /* รอบ 1570: ทุ่มของที่แบกอยู่ — เรียกจากปุ่ม THROW (ตอนแบกอยู่) หรือคีย์ G */
   VehicleGrabController.prototype.throw = function(player, cam, fx, audio, hud, requestTankerHit, hasNet){
     const held = this.carrying();
     if(!held || !player || player.alive === false) return false;
@@ -65,10 +66,10 @@
     return true;
   };
 
-  /* กด KICK — คืน true ถื่อระบบยก/ทุ่มกลืนปุ่มนี้ (จะได้ไม่เตะต่อยซ้ำ) */
-  VehicleGrabController.prototype.onKick = function(player, cam, fx, audio, hud, requestTankerHit, hasNet){
+  /* รอบ 1575: กด LIFT (ปุ่ม throw ตอนยังไม่ได้แบก หรือคีย์ G) — ยกเท่านั้น คืน true ถ้ายกสำเร็จ */
+  VehicleGrabController.prototype.onLift = function(player, cam, fx, audio, hud){
     if(!player || player.alive === false) return false;
-    if(this.carrying()) return this.throw(player, cam, fx, audio, hud, requestTankerHit, hasNet);
+    if(this.carrying()) return false;
     const near = this.nearest(player);
     if(!near) return false;
     if(near.veh.grab && near.veh.grab(player)){
@@ -76,7 +77,7 @@
       if(player.playAction) player.playAction('lift');
       if(audio && audio.punchWhoosh) audio.punchWhoosh();
       if(hud && hud.toast) hud.toast('🖐 ยกแล้ว! กด THROW เพื่อขว้าง');
-      /* รอบ 1571: โชว์ปุ่ม THROW ทันทีที่ยกสำเร็จ — ไม่พึ่งบรรทัดประจำเฟรมอย่างเดียว */
+      /* โชว์ปุ่ม THROW ทันทีที่ยกสำเร็จ — ไม่พึ่งบรรทัดประจำเฟรมอย่างเดียว */
       if(hud && hud.setCarrying) hud.setCarrying(true);
       return true;
     }
@@ -113,7 +114,7 @@
       const near = this.nearest(player);
       if(near && !this._promptShown){
         this._promptShown = true;
-        ctx.hud.toast('🖐 กด KICK เพื่อยก ' + (near.veh === this.tanker ? 'รถน้ำมัน' : 'รถยนต์'));
+        ctx.hud.toast('🖐 กด LIFT เพื่อยก ' + (near.veh === this.tanker ? 'รถน้ำมัน' : 'รถยนต์'));
       }else if(!near){
         this._promptShown = false;
       }

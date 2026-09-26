@@ -368,13 +368,16 @@
     if(active && !paused && poll.dash && !player.carrying) player.tryManualDash(poll, camRig, arena, fx, camRig, now);
     if(active && !paused && poll.punch && !player.carrying) combat.handleAttackPress('punch', player, now, enemies, camRig, arena, fx, energy, VF.audio, {hold: !!poll.punchHeld, people: peopleSnap(), world: worldMelee || oilTanker});
     if(active && !paused && poll.kick){
-      /* รอบ 1567: KICK ใกล้ยานพาหนะ = ยก/ทุ่ม · ไม่ใกล้ = เตะต่อยปกติ */
-      const grabbed = grab && grab.onKick(player, camRig, fx, VF.audio, hud, requestTankerHit, !!(net && net.requestTankerHit));
-      if(!grabbed) combat.tryAttackOrApproach(player.anim.has('kick') ? 'kick' : 'punch', player, now, enemies, camRig, arena, fx);
+      /* รอบ 1575: KICK เตะอย่างเดียว — การยก/ทุ่มย้ายไปอยู่ปุ่ม LIFT/THROW (หรือคีย์ G) หมดแล้ว */
+      combat.tryAttackOrApproach(player.anim.has('kick') ? 'kick' : 'punch', player, now, enemies, camRig, arena, fx);
     }
-    /* รอบ 1570: ปุ่ม THROW (หรือคีย์ G) ทุ่มของที่แบกอยู่โดยเฉพาะ */
-    if(active && !paused && poll.throw && player.carrying && grab){
-      grab.throw(player, camRig, fx, VF.audio, hud, requestTankerHit, !!(net && net.requestTankerHit));
+    /* รอบ 1575: ปุ่ม LIFT/THROW (หรือคีย์ G) สองสถานะ — ยังไม่ได้ยก: กดเพื่อยก · ยกแล้ว: กดเพื่อทุ่ม */
+    if(active && !paused && poll.throw && grab){
+      if(player.carrying){
+        grab.throw(player, camRig, fx, VF.audio, hud, requestTankerHit, !!(net && net.requestTankerHit));
+      }else{
+        grab.onLift(player, camRig, fx, VF.audio, hud);
+      }
     }
     const freezeMove = active && energy && energy.hold && energy.hold.active && Math.hypot(poll.moveX || 0, poll.moveZ || 0) > ((VF.EnergyAttackTune && VF.EnergyAttackTune.aimStickDeadzone) || 0.12);
     const carryingSlow = active && !!player.carrying;

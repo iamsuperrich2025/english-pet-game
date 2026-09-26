@@ -155,10 +155,12 @@
 .vf-dash{right:calc(176px + env(safe-area-inset-right));bottom:calc(14px + env(safe-area-inset-bottom));color:#7cffcf;--vf-cd:0}
 .vf-jump{right:calc(12px + env(safe-area-inset-right));bottom:calc(130px + env(safe-area-inset-bottom));color:#8ec8ff}
 .vf-block{right:calc(94px + env(safe-area-inset-right));bottom:calc(130px + env(safe-area-inset-bottom));color:#d8b0ff}
-/* รอบ 1570: ปุ่ม THROW — โชว์เฉพาะตอนแบกยานพาหนะ (hidden ถูกควบคุมจาก HUD.setCarrying) */
+/* รอบ 1575: ปุ่ม LIFT/THROW สองสถานะ — โชว์ตลอด · ยังไม่ได้ยก = LIFT/ยก (เขียว) · ยกแล้ว = THROW/ขว้าง (ส้ม) */
 .vf-throw{right:calc(176px + env(safe-area-inset-right));bottom:calc(130px + env(safe-area-inset-bottom));color:#ff9a5c}
-.vf-throw[hidden]{display:none}
 .vf-throw .vf-act-ico{background:radial-gradient(circle at 38% 30%,#ff8a3c,#7a2408 72%);border-color:#ff7a2a;box-shadow:0 0 18px #ff5a18cc,inset 0 0 14px #ffc44a55}
+/* สถานะ LIFT (ยังไม่ได้ยก) — โทนเขียวให้ต่างจาก THROW */
+.vf-throw:not(.is-carrying){color:#7cffb0}
+.vf-throw:not(.is-carrying) .vf-act-ico{background:radial-gradient(circle at 38% 30%,#4af0a8,#0a5a38 72%);border-color:#3ee89a;box-shadow:0 0 16px #2ad48baa,inset 0 0 14px #9bffc044}
 /* รอบ 1572: ป้าย EN/TH ของแถวบน (THROW/BLOCK/JUMP) ต้องอยู่ "เหนือ"ปุ่ม —
    เดิมอยู่ใต้ปุ่มแล้วบานลงทับไอคอนแถวล่าง (DASH/KICK/ATTACK) */
 .vf-jump,.vf-block,.vf-throw{flex-direction:column-reverse}

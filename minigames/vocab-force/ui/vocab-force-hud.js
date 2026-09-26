@@ -85,11 +85,11 @@
           </span>
           <span class="vf-act-lab">KICK<small class="vf-act-sub">เตะ</small></span>
         </button>
-        <button type="button" class="vf-act vf-throw" data-vf-act="throw" aria-label="THROW ขว้าง" hidden>
+        <button type="button" class="vf-act vf-throw" data-vf-act="throw" aria-label="LIFT ยก">
           <span class="vf-act-ico" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M4 19 Q9 5 20 7"/><path d="M15 3.5 L20.5 7 14.5 9.5"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 20 V7 M6.5 12.5 L12 7 l5.5 5.5"/><path d="M5 21.5 h14"/></svg>
           </span>
-          <span class="vf-act-lab">THROW<small class="vf-act-sub">ขว้าง</small></span>
+          <span class="vf-act-lab">LIFT<small class="vf-act-sub">ยก</small></span>
         </button>
         <button type="button" class="vf-act vf-jump" data-vf-act="jump" aria-label="JUMP กระโดด">
           <span class="vf-act-ico" aria-hidden="true">
@@ -172,6 +172,8 @@
       joyKnob: root.querySelector('.vf-joy-knob'),
       dash: root.querySelector('.vf-dash'),
       throw: root.querySelector('.vf-throw'),
+      throwLab: root.querySelector('.vf-throw .vf-act-lab'),
+      throwIco: root.querySelector('.vf-throw .vf-act-ico'),
       sound: root.querySelector('.vf-sound'),
       energyCharge: root.querySelector('.vf-energy-charge'),
       energyChargeFill: root.querySelector('.vf-energy-charge-fill')
@@ -465,11 +467,23 @@
     btn.setAttribute('aria-disabled', ready ? 'false' : 'true');
   };
 
-  /* รอบ 1570: ปุ่ม THROW โผล่เฉพาะตอนแบกยานพาหนะอยู่ */
+  /* รอบ 1575: ปุ่ม LIFT/THROW สองสถานะ — ยังไม่ได้ยก: LIFT/ยก · ยกแล้ว: THROW/ขว้าง (สลับเฉพาะตอนสถานะเปลี่ยน) */
   VocabForceHUD.prototype.setCarrying = function(on){
     const btn = this.els.throw;
     if(!btn) return;
-    btn.hidden = !on;
+    on = !!on;
+    if(this._carryingState === on) return;
+    this._carryingState = on;
+    btn.classList.toggle('is-carrying', on);
+    if(on){
+      btn.setAttribute('aria-label', 'THROW ขว้าง');
+      if(this.els.throwLab) this.els.throwLab.innerHTML = 'THROW<small class="vf-act-sub">ขว้าง</small>';
+      if(this.els.throwIco) this.els.throwIco.innerHTML = '<svg viewBox="0 0 24 24"><path d="M4 19 Q9 5 20 7"/><path d="M15 3.5 L20.5 7 14.5 9.5"/></svg>';
+    }else{
+      btn.setAttribute('aria-label', 'LIFT ยก');
+      if(this.els.throwLab) this.els.throwLab.innerHTML = 'LIFT<small class="vf-act-sub">ยก</small>';
+      if(this.els.throwIco) this.els.throwIco.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 20 V7 M6.5 12.5 L12 7 l5.5 5.5"/><path d="M5 21.5 h14"/></svg>';
+    }
   };
 
   VocabForceHUD.prototype.setEnergyCharge = function(frac){
