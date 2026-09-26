@@ -87,7 +87,7 @@
           <canvas class="pd-zoom-canvas" id="pd-zoom-canvas"></canvas>
           <div class="pd-zoom-label"><b id="pd-zoom-en"></b><span id="pd-zoom-th"></span></div>
           <div class="pd-zoom-listen" id="pd-zoom-listen"><span class="pd-zoom-speaker">🔊</span><span id="pd-zoom-listen-text"></span></div>
-          <div class="pd-zoom-reward" id="pd-zoom-reward" hidden><b>+1 🪙</b><span>ฟังจบแล้ว เงินเข้าแล้ว!</span></div>
+          <div class="pd-zoom-reward" id="pd-zoom-reward" hidden><b>+100 🪙</b><span>ฟังจบแล้ว เงินเข้าแล้ว!</span></div>
         </div>
       </div>`;
     const host = $('screen-game') ? $('screen-game').parentNode : document.body;
@@ -292,6 +292,7 @@
   }
 
   let zoomListening=false, zoomSeq=0, rewardT=0;
+  const ZOOM_REWARD=100;
   const zoomOpen=()=>{ const z=$('pd-zoom'); return !!z&&!z.hidden; };
   function openZoom(cell,en,th){
     const source=cell.querySelector('canvas'), out=$('pd-zoom-canvas'), ctx=out.getContext('2d');
@@ -302,7 +303,7 @@
   function zoomUI(mode){
     zoomListening=mode==='listening'; $('pd-zoom').classList.toggle('listening',zoomListening);
     $('pd-zoom-close').disabled=zoomListening;
-    $('pd-zoom-listen-text').textContent=mode==='listening'?'กำลังฟัง… ปิดได้เมื่ออ่านจบ':mode==='done'?'✅ ฟังจบแล้ว · ได้รับ 1 เหรียญ':mode==='failed'?'⚠️ เสียงไม่สำเร็จ':'🔇 เปิดเสียงก่อน จึงจะรับเหรียญได้';
+    $('pd-zoom-listen-text').textContent=mode==='listening'?'กำลังฟัง… ปิดได้เมื่ออ่านจบ':mode==='done'?`✅ ฟังจบแล้ว · ได้รับ ${ZOOM_REWARD} เหรียญ`:mode==='failed'?'⚠️ เสียงไม่สำเร็จ':'🔇 เปิดเสียงก่อน จึงจะรับเหรียญได้';
     if(mode!=='done'){ clearTimeout(rewardT); $('pd-zoom-reward').hidden=true; }
   }
   function startZoomListen(en){
@@ -311,9 +312,9 @@
     speakWord(en,ok=>{
       if(seq!==zoomSeq||!zoomOpen()) return;
       if(!ok){ zoomUI('failed'); return; }
-      zoomUI('done'); if(has('addCoins')) addCoins(1); if(has('saveState')) saveState();
+      zoomUI('done'); if(has('addCoins')) addCoins(ZOOM_REWARD); if(has('saveState')) saveState();
       const reward=$('pd-zoom-reward'); reward.hidden=false; reward.classList.add('show');
-      if(has('coinFlyFx')) coinFlyFx($('pd-zoom-card'),1);
+      if(has('coinFlyFx')) coinFlyFx($('pd-zoom-card'),ZOOM_REWARD);
       clearTimeout(rewardT); rewardT=setTimeout(()=>{ reward.classList.remove('show'); reward.hidden=true; },1650);
     });
   }
