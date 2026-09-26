@@ -101,6 +101,11 @@
     const aim = (mark && mark.x != null && VF._t.energyDirToPoint)
       ? VF._t.energyDirToPoint(origin, mark)
       : VF._t.energyAim(player, camera, enemies);
+    /* รอบ 1593: ตั้งธง net ให้ packShots หยิบไปส่งเพื่อน (เพื่อนปล่อย visual ลูกพลังฝั่งผู้ชม)
+       burst id ประทับลงทุก job เพื่อให้ deflect-ack กลับมาลบลูกถูกตัว */
+    player._vfShotSeq = (player._vfShotSeq || 0) + 1;
+    player._vfShots = {seq: player._vfShotSeq, count: T.projectileCount, charged: charged};
+    player._vfDashForce = true;
     this.queue = [];
     for(let i = 0; i < T.projectileCount; i++){
       this.queue.push({
@@ -110,6 +115,7 @@
         pal: pal,
         last: i === T.projectileCount - 1,
         index: i,
+        burst: player._vfShotSeq,
         scale: scale,
         charged: charged,
         chargeFrac: frac
@@ -224,7 +230,7 @@
       if(now < job.at) continue;
       this.queue.splice(i, 1);
       this.guns.fire(job.origin, job.dir, job.pal, {
-        last: job.last, index: job.index, scale: job.scale, charged: job.charged, chargeFrac: job.chargeFrac
+        last: job.last, index: job.index, burst: job.burst, scale: job.scale, charged: job.charged, chargeFrac: job.chargeFrac
       });
       if(audio && audio.energyProjectileTravel) audio.energyProjectileTravel();
     }

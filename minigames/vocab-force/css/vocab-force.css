@@ -158,6 +158,11 @@
 .vf-slam .vf-act-ico{background:radial-gradient(circle at 38% 30%,#5ab8ff,#0a2a6a 72%);border-color:#5ac4ff;box-shadow:0 0 16px #2a7ae8aa,inset 0 0 14px #9ed4ff44}
 .vf-slam.is-cool{opacity:.72;filter:saturate(.7)}
 .vf-slam .vf-act-ico::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:conic-gradient(rgba(8,16,24,.55) calc(var(--vf-cd) * 360deg), transparent 0);opacity:.9}
+/* รอบ 1593: ปุ่ม DEFLECT ปัดพลัง — แถวบนช่อง 4 (เหนือ SLAM) โทนน้ำแข็ง */
+.vf-deflect{right:calc(258px + env(safe-area-inset-right));bottom:calc(130px + env(safe-area-inset-bottom));color:#9fe8ff;--vf-cd:0}
+.vf-deflect .vf-act-ico{background:radial-gradient(circle at 38% 30%,#8adfff,#0a3a5a 72%);border-color:#7ad8ff;box-shadow:0 0 16px #2a9ad8aa,inset 0 0 14px #9ee4ff44}
+.vf-deflect.is-cool{opacity:.72;filter:saturate(.7)}
+.vf-deflect .vf-act-ico::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:conic-gradient(rgba(8,16,24,.55) calc(var(--vf-cd) * 360deg), transparent 0);opacity:.9}
 .vf-jump{right:calc(12px + env(safe-area-inset-right));bottom:calc(130px + env(safe-area-inset-bottom));color:#8ec8ff}
 .vf-block{right:calc(94px + env(safe-area-inset-right));bottom:calc(130px + env(safe-area-inset-bottom));color:#d8b0ff}
 /* รอบ 1575: ปุ่ม LIFT/THROW สองสถานะ — โชว์ตลอด · ยังไม่ได้ยก = LIFT/ยก (เขียว) · ยกแล้ว = THROW/ขว้าง (ส้ม) */
@@ -168,7 +173,7 @@
 .vf-throw:not(.is-carrying) .vf-act-ico{background:radial-gradient(circle at 38% 30%,#4af0a8,#0a5a38 72%);border-color:#3ee89a;box-shadow:0 0 16px #2ad48baa,inset 0 0 14px #9bffc044}
 /* รอบ 1572: ป้าย EN/TH ของแถวบน (THROW/BLOCK/JUMP) ต้องอยู่ "เหนือ"ปุ่ม —
    เดิมอยู่ใต้ปุ่มแล้วบานลงทับไอคอนแถวล่าง (DASH/KICK/ATTACK) */
-.vf-jump,.vf-block,.vf-throw{flex-direction:column-reverse}
+.vf-jump,.vf-block,.vf-throw,.vf-deflect{flex-direction:column-reverse}
 .vf-punch .vf-act-ico{background:radial-gradient(circle at 38% 30%,#ff7040,#6a1008 72%);border-color:#ff4a22;box-shadow:0 0 16px #ff3a18aa,inset 0 0 14px #ffb00044}
 .vf-kick .vf-act-ico{background:radial-gradient(circle at 38% 30%,#ffc44a,#7a4a08 72%);border-color:#ffb020;box-shadow:0 0 16px #ff9a18aa,inset 0 0 14px #ffe08a44}
 .vf-dash .vf-act-ico{background:radial-gradient(circle at 38% 30%,#4af0d8,#0a5a58 72%);border-color:#3ee8d8;box-shadow:0 0 16px #2ad4c8aa,inset 0 0 14px #9bfff044}
@@ -199,6 +204,7 @@
   .vf-kick{right:calc(78px + env(safe-area-inset-right))}
   .vf-dash{right:calc(144px + env(safe-area-inset-right))}
   .vf-slam{right:calc(210px + env(safe-area-inset-right))}
+  .vf-deflect{right:calc(210px + env(safe-area-inset-right));bottom:calc(110px + env(safe-area-inset-bottom))}
   .vf-block{right:calc(78px + env(safe-area-inset-right))}
   .vf-throw{right:calc(144px + env(safe-area-inset-right));bottom:calc(110px + env(safe-area-inset-bottom))}
   .vf-joy{width:88px;height:88px}

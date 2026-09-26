@@ -115,6 +115,12 @@
           </span>
           <span class="vf-act-lab">SLAM<small class="vf-act-sub">กระแทกพื้น</small></span>
         </button>
+        <button type="button" class="vf-act vf-deflect" data-vf-act="deflect" aria-label="DEFLECT ปัดพลัง">
+          <span class="vf-act-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M3 6 L9 12 L3 18"/><path d="M11 12 h10"/><path d="M17.5 7.5 L21.5 12 L17.5 16.5"/></svg>
+          </span>
+          <span class="vf-act-lab">DEFLECT<small class="vf-act-sub">ปัดพลัง</small></span>
+        </button>
       </div>
       <button type="button" class="vf-sound" role="switch" aria-checked="true" aria-label="Sound เสียง">
         <span class="vf-sound-track"><i class="vf-sound-knob"></i></span>
@@ -178,6 +184,7 @@
       joyKnob: root.querySelector('.vf-joy-knob'),
       dash: root.querySelector('.vf-dash'),
       slam: root.querySelector('.vf-slam'),
+      deflect: root.querySelector('.vf-deflect'),
       throw: root.querySelector('.vf-throw'),
       throwLab: root.querySelector('.vf-throw .vf-act-lab'),
       throwIco: root.querySelector('.vf-throw .vf-act-ico'),
@@ -477,6 +484,16 @@
   /* รอบ 1589: วงคูลดาวน์ปุ่ม SLAM กระแทกพื้น (คูลดาวน์ 6 วิ ตาม GroundSlamTune.COOLDOWN) */
   VocabForceHUD.prototype.setSlamCooldown = function(frac){
     const btn = this.els.slam;
+    if(!btn) return;
+    const ready = frac >= 0.995;
+    btn.classList.toggle('is-cool', !ready);
+    btn.style.setProperty('--vf-cd', String(VF.clamp(1 - frac, 0, 1)));
+    btn.setAttribute('aria-disabled', ready ? 'false' : 'true');
+  };
+
+  /* รอบ 1593: วงคูลดาวน์ปุ่ม DEFLECT ปัดพลัง (คูลดาวน์ตาม DeflectTune.COOLDOWN) */
+  VocabForceHUD.prototype.setDeflectCooldown = function(frac){
+    const btn = this.els.deflect;
     if(!btn) return;
     const ready = frac >= 0.995;
     btn.classList.toggle('is-cool', !ready);

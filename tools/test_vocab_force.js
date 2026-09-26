@@ -74,11 +74,30 @@ assert(read('minigames/vocab-force/animation/lyravyn-animation-manifest.js').inc
 assert(exists('minigames/vocab-force/runtime-models/nex/nex_Knock_Down.glb')&&exists('minigames/vocab-force/runtime-models/lyravyn/ly_Knock_Down.glb'),'packed knock-down GLBs on disk');
 assert(build.includes('runtime-models/nex/nex_Knock_Down.glb')&&build.includes('runtime-models/lyravyn/ly_Knock_Down.glb'),'production copies packed knock-down GLBs');
 assert(read('tools/pack_vocab_force_runtime_glbs.py').includes('nex_Knock_Down.glb')&&read('tools/pack_vocab_force_runtime_glbs.py').includes('ly_Knock_Down.glb'),'packer includes knock-down GLBs');
-assert(read('minigames/vocab-force/runtime/vocab-force-runtime.js').includes("concat(['lift', 'throw', 'groundSlam', 'knockDown'])"),'runtime ingests the knockDown clip');
+assert(read('minigames/vocab-force/runtime/vocab-force-runtime.js').includes("concat(['lift', 'throw', 'groundSlam', 'knockDown', 'deflect'])"),'runtime ingests the knockDown + deflect clips');
 const nccSrc=read('minigames/vocab-force/character/nex-character-controller.js');
 assert(nccSrc.includes("info.from === 'tanker' || info.from === 'gun' || info.from === 'slam'")&&nccSrc.includes("this.playAction('knockDown')"),'takeHit plays knock-down exactly on tanker/SLAM/ATTACK hits');
 assert(nccSrc.indexOf("this.playAction('knockDown')")>nccSrc.indexOf('this._deathEvent = true;'),'knock-down never overrides the death path');
 assert(read('minigames/vocab-force/combat/ground-slam-controller.js').includes("kind: 'M'")&&read('minigames/vocab-force/combat/gun-tune.js').includes("'PGKM'"),'slam strikes ride as kind M so victims read them as slam');
+/* รอบ 1593: ปุ่ม DEFLECT ปัดพลัง (A ซอมบี้ + B เพื่อนออนไลน์) — GLB ท่า Shield_Push_Left ทั้งคู่ */
+assert(build.includes('combat/deflect-tune.js')&&htmlPreview.includes('combat/deflect-tune.js')&&ns.includes("'combat/deflect-tune.js'"),'deflect tune is loaded');
+assert(build.includes('combat/deflect-controller.js')&&htmlPreview.includes('combat/deflect-controller.js')&&ns.includes("'combat/deflect-controller.js'"),'deflect controller is loaded');
+assert(build.includes('effects/hostile-orb-manager.js')&&htmlPreview.includes('effects/hostile-orb-manager.js')&&ns.includes("'effects/hostile-orb-manager.js'"),'hostile orb manager is loaded');
+assert(read('minigames/vocab-force/animation/nex-animation-manifest.js').includes("deflect: { file: 'nex_Shield_Push_Left.glb', clip: 'Shield_Push_Left'"),'NEX deflect GLB mapped');
+assert(read('minigames/vocab-force/animation/lyravyn-animation-manifest.js').includes("deflect: { file: 'ly_Shield_Push_Left.glb', clip: 'Shield_Push_Left'"),'Lyravyn deflect GLB mapped');
+assert(exists('minigames/vocab-force/runtime-models/nex/nex_Shield_Push_Left.glb')&&exists('minigames/vocab-force/runtime-models/lyravyn/ly_Shield_Push_Left.glb'),'packed deflect GLBs on disk');
+assert(build.includes('runtime-models/nex/nex_Shield_Push_Left.glb')&&build.includes('runtime-models/lyravyn/ly_Shield_Push_Left.glb'),'production copies packed deflect GLBs');
+assert(read('tools/pack_vocab_force_runtime_glbs.py').includes('nex_Shield_Push_Left.glb')&&read('tools/pack_vocab_force_runtime_glbs.py').includes('ly_Shield_Push_Left.glb'),'packer includes deflect GLBs');
+assert(read('minigames/vocab-force/controls/vocab-force-input.js').includes("e.code === 'KeyC'")&&read('minigames/vocab-force/controls/vocab-force-input.js').includes('deflectQueued'),'C triggers deflect');
+assert(read('minigames/vocab-force/ui/vocab-force-hud.js').includes('data-vf-act="deflect"')&&read('minigames/vocab-force/ui/vocab-force-hud.js').includes('setDeflectCooldown'),'HUD paints DEFLECT button + cooldown');
+assert(css.includes('.vf-deflect'),'DEFLECT button styled');
+const orbSrc=read('minigames/vocab-force/effects/hostile-orb-manager.js');
+assert(orbSrc.includes("team = 'player'")&&orbSrc.includes('killQuietByBurst')===false&&orbSrc.includes('detonate'),'deflected orbs become ours and detonate vehicles');
+const netSrc2=read('minigames/vocab-force/runtime/vocab-force-net.js');
+assert(netSrc2.includes('packShots')&&netSrc2.includes('parseShots')&&netSrc2.includes('consumeShots'),'net syncs peer shot bursts');
+assert(netSrc2.includes('packDeflectAck')&&netSrc2.includes('parseDeflectAck')&&netSrc2.includes('consumeDeflectAcks')&&netSrc2.includes('publishDeflectAck'),'net deflect-ack path exists');
+assert(read('minigames/vocab-force/effects/energy-projectile-manager.js').includes('killQuietByBurst'),'energy manager can kill a deflected burst orb quietly');
+assert(read('minigames/vocab-force/combat/energy-attack-controller.js').includes('_vfShots')&&read('minigames/vocab-force/combat/energy-attack-controller.js').includes('burst: player._vfShotSeq'),'burst fires stamp the net shots signal');
 assert(build.includes('effects/overdrive-fire-trail.js')&&htmlPreview.includes('effects/overdrive-fire-trail.js')&&ns.includes("'effects/overdrive-fire-trail.js'"),'overdrive fire trail is loaded');
 assert(build.includes('combat/power-jump-tune.js')&&htmlPreview.includes('combat/power-jump-tune.js')&&ns.includes("'combat/power-jump-tune.js'"),'power jump tune is loaded');
 assert(read('minigames/vocab-force/ui/vocab-force-hud.js').includes('data-vf-act="dash"'),'touch DASH');
@@ -224,6 +243,9 @@ vm.runInContext(round, sandbox);
 vm.runInContext(tune, sandbox);
 vm.runInContext(read('minigames/vocab-force/combat/energy-attack-tune.js'), sandbox);
 vm.runInContext(read('minigames/vocab-force/combat/gun-tune.js'), sandbox);
+vm.runInContext(read('minigames/vocab-force/combat/deflect-tune.js'), sandbox);
+vm.runInContext(read('minigames/vocab-force/combat/deflect-controller.js'), sandbox);
+vm.runInContext(read('minigames/vocab-force/runtime/vocab-force-net.js'), sandbox);
 vm.runInContext(secondaryTune, sandbox);
 vm.runInContext(read('minigames/vocab-force/combat/breakable-wall-tune.js'), sandbox);
 vm.runInContext(dashTune, sandbox);
@@ -444,7 +466,7 @@ const animCtrlSrc=read('minigames/vocab-force/animation/nex-animation-controller
 assert(hudSrc.includes('data-vf-act="throw"')&&hudSrc.includes('vf-act-sub')&&hudSrc.includes('THROW')&&hudSrc.includes('ขว้าง')&&hudSrc.includes('setCarrying'),'THROW button with Thai sub-label and carrying toggle ships');
 assert(hudSrc.includes('ATTACK<small class="vf-act-sub">โจมตี</small>')&&hudSrc.includes('KICK<small class="vf-act-sub">เตะ</small>')&&hudSrc.includes('JUMP<small class="vf-act-sub">กระโดด</small>')&&hudSrc.includes('BLOCK<small class="vf-act-sub">บล็อก</small>')&&hudSrc.includes('DASH<small class="vf-act-sub">พุ่ง</small>')&&hudSrc.includes('EXIT<small class="vf-exit-sub">ออก</small>'),'every game button carries EN label + Thai translation');
 assert(inputSrc.includes('throwQueued')&&inputSrc.includes("e.code === 'KeyG'")&&inputSrc.includes("act === 'throw'"),'input maps THROW button and G key');
-assert(runtime.includes("concat(['lift', 'throw', 'groundSlam', 'knockDown'])")&&runtime.includes('poll.throw')&&runtime.includes('setCarrying'),'runtime ingests lift/throw/groundSlam/knockDown and dispatches THROW');
+assert(runtime.includes("concat(['lift', 'throw', 'groundSlam', 'knockDown', 'deflect'])")&&runtime.includes('poll.throw')&&runtime.includes('setCarrying'),'runtime ingests lift/throw/groundSlam/knockDown/deflect and dispatches THROW');
 assert(animCtrlSrc.includes('holdAt'),'animation controller supports holdAt freeze frame');
 assert(build.includes('runtime-models/nex/nex_mage_soell_cast.glb')&&build.includes('runtime-models/lyravyn/ly_mage_soell_cast.glb'),'cast GLBs ship in production build');
 /* รอบ 1571: ปุ่ม THROW ไม่ขึ้นบนจริง — เสริมสั่งโชว์/ซ่อนโดยตรงที่จุดยก/ทุ่ม + EXIT สองบรรทัดกันทับสวิตช์เสียง */
@@ -582,6 +604,33 @@ kdInv.anim={play:function(s){kdInvPlayed.push(s);return true;}};
 assert(kdInv.takeHit(100,false,{from:'gun'})===0&&kdInvPlayed.length===0,'invulnerability frames swallow the hit: no clip before the power truly lands');
 const packedSlam=VF._t.packStrike({_vfStrike:{seq:7,kind:'M',zone:'body',targetId:'hero',dmg:300}});
 assert(packedSlam.indexOf('S07M')===0&&VF._t.parseStrike('H|820|'+packedSlam).kind==='M'&&VF._t.parseStrike('H|820|'+packedSlam).dmg===300,'slam hit rides as kind M in the hp string');
+/* รอบ 1593: ปุ่มปัดพลัง behavioral — เล่นท่า deflect แล้วตอน hitAt ลูกพลังในแนวหน้าหักเหตามทิศหน้า */
+const dfl=new VF.DeflectController();
+const dflPlayed=[];
+const dflP={alive:true,carrying:null,x:0,y:0,z:0,yaw:0,forward:function(){return {x:Math.sin(this.yaw),z:Math.cos(this.yaw)};},
+  isDashing:function(){return false;},anim:{isBusy:function(){return false;}},
+  playAction:function(s){dflPlayed.push(s);return true;}};
+assert(dfl.tryDeflect(dflP,1000,null,null)===true&&dflPlayed[0]==='deflect','deflect plays the Shield_Push action');
+assert(dfl.tryDeflect(dflP,1500,null,null)===false,'deflect is on cooldown (2.5s)');
+const caught=[];
+const fakeOrbs={
+  scan:function(){ return caught; },
+  redirect:function(orb,dx,dz,sp){ orb.vx=dx*sp; orb.vz=dz*sp; orb.team='player'; return true; }
+};
+dfl.tick(0.016,1000,dflP,{orbs:fakeOrbs});
+assert(caught.length===0,'nothing deflects before the hitAt beat');
+const orbA={team:'enemy',x:0,z:2,burst:0,index:0,peerTail:''};
+const orbB={team:'peer',x:0,z:1.5,burst:7,index:1,peerTail:'ab'};
+caught.push(orbA,orbB);
+const acks=[];
+dfl.tick(0.016,1260,dflP,{orbs:fakeOrbs,onPeerDeflect:function(o){ acks.push(o); }});
+assert(orbA.team==='player'&&Math.abs(orbA.vz-VF.DeflectTune.REDIRECT_SPEED)<1e-6,'an enemy orb in front redirects straight along facing');
+assert(orbB.team==='player'&&acks.length===1&&acks[0]===orbB,'a peer orb redirects too and fires the ack back to its owner');
+const packedShots=VF._t.packShots({_vfShots:{seq:9,count:3,charged:true}});
+assert(packedShots==='W0931'&&VF._t.parseShots('H|820|'+packedShots).count===3&&VF._t.parseShots('H|820|'+packedShots).charged===true,'peer shot bursts ride the hp string');
+const packedAck=VF._t.packDeflectAck({_vfDefl:{seq:7,index:2,target:'uidXYZab'}});
+assert(packedAck==='D072ab'&&VF._t.parseDeflectAck('H|820|'+packedAck).index===2&&VF._t.parseDeflectAck('H|820|'+packedAck).target==='ab','deflect ack reaches the owner by uid tail');
+assert(VF._t.packHp({alive:true,hp:820,_vfShots:{seq:9,count:3,charged:true}}).indexOf('W0931')>0,'packHp picks the shots slot when strike/slam are absent');
 assert(punchTune.hitStop>=0.06 && punchTune.hitStop<=0.09,'punch hit-stop 60-90ms');
 assert(kickTune.hitStop>=0.10 && kickTune.hitStop<=0.15,'kick hit-stop 100-150ms');
 assert(kickTune.hitStop>punchTune.hitStop,'kick freezes longer than punch');
@@ -1160,14 +1209,14 @@ assert(tankerSrc2.indexOf('comboKickLaunch')<tankerSrc2.indexOf('if(this._comboH
 assert(sedanSrc.includes('comboKickLaunch')&&sedanSrc.includes('comboShatter')&&sedanSrc.includes('_comboHold'),'sedan combo launch holds the wreck for the mid-air finisher kick');
 assert(sedanSrc.includes('!this._comboHold &&')&&sedanSrc.includes('swapShattered'),'sedan skips settle while held and shatters into the wreck model');
 assert(runtime.includes('grab.comboThrow')&&runtime.includes('grab.tryComboKick')&&runtime.includes('grab.reset()'),'runtime wires combo inputs and resets the combo each round');
-assert(ui.includes('?v=1593'),'ui.js cache-bust bumped so browsers fetch the new vf modules');
+assert(ui.includes('?v=1594'),'ui.js cache-bust bumped so browsers fetch the new vf modules');
 
 /* รอบ 1588: เตะรถยนต์ = กระเด็นไกลเท่ารถน้ำมันโดนเตะ (h54/up39 grav22 ≈ วิถี h54/up34 grav19) + หมุนธรรมชาติ */
 assert(sedanSrc.includes("info.kind) === 'kick'")&&sedanSrc.indexOf('54, 39')>sedanSrc.indexOf('kickish'),'sedan kick launches as far as the kicked tanker trajectory');
 assert(sedanSrc.includes('this._flipSpeed *= (1 - 0.1 * dt)')&&sedanSrc.includes('หมุนช้าลงตามแรงเสียดอากาศ'),'sedan tumble spins decay in air like the tanker (natural spin)');
 const kickRangeTanker=54*(2*34/19), kickRangeSedan=54*(2*39/22);
 assert(Math.abs(kickRangeTanker-kickRangeSedan)/kickRangeTanker<0.02,'kicked sedan flies the same distance as the kicked tanker (same arc, grav-adjusted up)');
-assert(ui.includes('?v=1593'),'ui.js cache-bust bumped for the kick trajectory tune');
+assert(ui.includes('?v=1594'),'ui.js cache-bust bumped for the kick trajectory tune');
 /* รอบ 1590: มาร์กเกอร์ + บนพื้นบอกทิศพลัง (ฟ้า=SLAM · ส้ม=ATTACK) */
 assert(build.includes('effects/aim-markers.js')&&htmlPreview.includes('effects/aim-markers.js')&&ns.includes("'effects/aim-markers.js'"),'aim markers module is loaded');
 assert(read('minigames/vocab-force/effects/aim-markers.js').includes('0x4ec4ff')&&read('minigames/vocab-force/effects/aim-markers.js').includes('0xff9040'),'markers use slam blue + attack orange');

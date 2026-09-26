@@ -14,10 +14,14 @@
     }else if(!dead){
       const strike = VF._t.packStrike ? VF._t.packStrike(player) : '';
       const slam = VF._t.packSlam ? VF._t.packSlam(player) : '';
+      const ack = VF._t.packDeflectAck ? VF._t.packDeflectAck(player) : '';
+      const shots = VF._t.packShots ? VF._t.packShots(player) : '';
       const od = VF._t.packOverdrive ? VF._t.packOverdrive(player) : '';
       const jump = VF._t.packJump ? VF._t.packJump(player) : '';
       if(strike) s += '|' + strike;
       else if(slam) s += '|' + slam;
+      else if(ack) s += '|' + ack;
+      else if(shots) s += '|' + shots;
       else if(od) s += '|' + od;
       else if(jump) s += '|' + jump;
     }
@@ -38,6 +42,52 @@
     const letters = String(parts[3] || '').replace(/[^A-Z]/g, '');
     if(!letters) return null;
     return {seq: parseInt(parts[2], 10) || 0, letters: letters};
+  }
+
+  /* รอบ 1593: ลูกพลัง ATTACK ที่ยิง (burst) — 'W' + seq 2 หลัก + count 1 หลัก + charged 1 หลัก
+     เพื่อนฝั่งผู้ชมเอาไปปล่อย visual ลูกพลังตามตำแหน่ง/ทิศหน้าของเรา */
+  function packShots(player){
+    const sh = player && player._vfShots;
+    if(!sh || !sh.seq) return '';
+    const seq = ('0' + (sh.seq % 100)).slice(-2);
+    const count = Math.max(1, Math.min(5, sh.count || 1));
+    return 'W' + seq + count + (sh.charged ? '1' : '0');
+  }
+  function parseShots(raw){
+    const s = String(raw || '');
+    if(s.charAt(0) !== 'H') return null;
+    const parts = s.split('|');
+    if(parts.length < 3) return null;
+    const code = String(parts[2] || '');
+    if(code.charAt(0) !== 'W' || code.length < 5) return null;
+    const seq = parseInt(code.slice(1, 3), 10);
+    if(!seq) return null;
+    return {
+      seq: seq,
+      count: Math.max(1, Math.min(5, parseInt(code.charAt(3), 10) || 1)),
+      charged: code.charAt(4) === '1'
+    };
+  }
+  /* รอบ 1593: สัญญาณ "ลูกพลังของคุณถูกปัด" — 'D' + burst 2 หลัก + index 1 หลัก + target 2 หลัก
+     เฉพาะเจ้าของ (target = ท้าย uid ตัวเอง) ที่จะลบลูกจริงของตัวเอง (กันดาเมจซ้ำหลังถูกปัด) */
+  function packDeflectAck(player){
+    const d = player && player._vfDefl;
+    if(!d || !d.seq) return '';
+    const seq = ('0' + (d.seq % 100)).slice(-2);
+    const index = Math.max(0, Math.min(5, d.index || 0));
+    const tgt = VF._t.uidTail ? VF._t.uidTail(d.target) : String(d.target || '').slice(-2);
+    return 'D' + seq + index + tgt;
+  }
+  function parseDeflectAck(raw){
+    const s = String(raw || '');
+    if(s.charAt(0) !== 'H') return null;
+    const parts = s.split('|');
+    if(parts.length < 3) return null;
+    const code = String(parts[2] || '');
+    if(code.charAt(0) !== 'D' || code.length < 6) return null;
+    const seq = parseInt(code.slice(1, 3), 10);
+    if(!seq) return null;
+    return {seq: seq, index: parseInt(code.charAt(3), 10) || 0, target: code.slice(4, 6)};
   }
   function displayName(){
     try{
@@ -397,6 +447,59 @@
     return out;
   };
 
+  /* รอบ 1593: เพื่อนยิงลูกพลัง ATTACK (burst) — เอาตำแหน่ง/ทิศหน้าไปปล่อย visual ลูกพลังฝั่งเรา */
+  VocabForceNet.prototype.consumeShots = function(){
+    const out = [];
+    this._seenShots = this._seenShots || {};
+    for(const uid in this._rec){
+      if(uid === this.myUid) continue;
+      const rec = this._rec[uid] || {};
+      const shots = VF._t.parseShots ? VF._t.parseShots(rec.hp) : null;
+      if(!shots) continue;
+      const id = uid + '#' + shots.seq;
+      if(this._seenShots[id]) continue;
+      this._seenShots[id] = true;
+      out.push({
+        seq: shots.seq,
+        uid: uid,
+        count: shots.count,
+        charged: shots.charged,
+        x: Number(rec.x) || 0,
+        z: Number(rec.z) || 0,
+        y: Number(rec.y) || 0,
+        yaw: Number(rec.yaw) || 0
+      });
+    }
+    return out;
+  };
+
+  /* รอบ 1593: ลูกพลังของฉันถูกคนอื่นปัด — รับเฉพาะ ack ที่ต้องหาเรา (target = ท้าย uid ตัวเอง)
+     แล้วไปลบลูกจริงใน EnergyProjectileManager (killQuietByBurst) กันดาเมจซ้ำ */
+  VocabForceNet.prototype.consumeDeflectAcks = function(){
+    const out = [];
+    this._seenDefl = this._seenDefl || {};
+    const myTail = VF._t.uidTail ? VF._t.uidTail(this.myUid || 'local') : '';
+    for(const uid in this._rec){
+      if(uid === this.myUid) continue;
+      const rec = this._rec[uid] || {};
+      const ack = VF._t.parseDeflectAck ? VF._t.parseDeflectAck(rec.hp) : null;
+      if(!ack) continue;
+      if(ack.target !== myTail) continue;
+      const id = uid + '#' + ack.seq + '#' + ack.index;
+      if(this._seenDefl[id]) continue;
+      this._seenDefl[id] = true;
+      out.push({seq: ack.seq, index: ack.index, uid: uid});
+    }
+    return out;
+  };
+
+  /* รอบ 1593: ปุ่มปัดโดนลูกพลังเพื่อน — ตั้งธงให้ packHp ส่ง ack กลับเจ้าของลูก */
+  VocabForceNet.prototype.publishDeflectAck = function(orb){
+    if(!this.player || !orb) return;
+    this.player._vfDefl = {seq: orb.burst || 0, index: orb.index || 0, target: orb.peerTail || ''};
+    this.player._vfDashForce = true;
+  };
+
   VocabForceNet.prototype.consumeStrikes = function(){
     const out = [];
     this._seenStrike = this._seenStrike || {};
@@ -532,6 +635,8 @@
     this._seenStrike = {};
     this._seenTankerReq = {};
     this._seenTankerEvent = {};
+    this._seenShots = {};
+    this._seenDefl = {};
     this._tankerReq = '-';
     this._tankerEvent = '-';
     if(this.room && this.room.leave) this.room.leave();
@@ -546,4 +651,8 @@
   VF._t.parseTankerRequest = parseTankerRequest;
   VF._t.packTankerEvent = packTankerEvent;
   VF._t.parseTankerEvent = parseTankerEvent;
+  VF._t.packShots = packShots;
+  VF._t.parseShots = parseShots;
+  VF._t.packDeflectAck = packDeflectAck;
+  VF._t.parseDeflectAck = parseDeflectAck;
 })(typeof window !== 'undefined' ? window : globalThis);

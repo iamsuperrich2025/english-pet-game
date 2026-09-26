@@ -1,0 +1,25 @@
+"use strict";
+/* รอบ 1593: ปุ่มปัดพลัง (DEFLECT) — ปัดลูกพลังที่ศัตรู/เพื่อนยิงมาให้หักเหไปตามทิศหน้าผู้เล่น
+   + ค่าซอมบี้พ่นลูกพลัง (เคส A) และลูกพลังที่ปัดกลับไป (ดาเมจ/อายุ/ความเร็ว) */
+(function(root){
+  const VF = root.VocabForce = root.VocabForce || {};
+
+  VF.DeflectTune = {
+    COOLDOWN: 2.5,          // วินาทีระหว่างการปัด
+    HIT_AT: 0.26,           // จังหวะที่ฝ่ามือปัดถึง (วินาทีหลังกด)
+    BUSY: 0.75,             // ท่า Shield_Push_Left ล็อกสั้น ๆ
+    RANGE: 3.8,             // รัศมีรับลูกพลังรอบตัว
+    ARC_DOT: 0.1,           // ต้องอยู่ในแนวหน้าตัว (dot ของทิศลูกพลังกับทิศหน้า)
+    REDIRECT_SPEED: 34,     // ความเร็วลูกพลังหลังถูกปัด
+    DEFLECTED_LIFE: 2.4,    // อายุลูกพลังที่ถูกปัด (วินาที)
+    DEFLECTED_ZOMBIE_DMG: 120,
+    DEFLECTED_PVP_DMG: 300,
+    /* ซอมบี้พ่นลูกพลัง (เคส A) */
+    ZOMBIE_SPIT_INTERVAL: 3.2,
+    ZOMBIE_SPIT_MIN: 6,
+    ZOMBIE_SPIT_MAX: 30,
+    ZOMBIE_SPIT_SPEED: 16,
+    ZOMBIE_SPIT_DAMAGE: 120,
+    POOL: 12
+  };
+})(typeof window !== 'undefined' ? window : globalThis);

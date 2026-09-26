@@ -4,7 +4,7 @@
   const VF = root.VocabForce = root.VocabForce || {};
   let opening = false, running = false, raf = 0, last = 0;
   let renderer = null, scene = null, camera = null, THREE = null;
-  let player, camRig, input, combat, enemies, arena, fx, hud, round, flyers, trails, fireTrail, secondary, energy, letters, net, healPad, oilTanker, sedan, grab, spectator, worldMelee, slam, slamFx, aimMarkers;
+  let player, camRig, input, combat, enemies, arena, fx, hud, round, flyers, trails, fireTrail, secondary, energy, letters, net, healPad, oilTanker, sedan, grab, spectator, worldMelee, slam, slamFx, aimMarkers, orbs, deflect, spitTimer = 1.6;
   let winLock = false, ackOpen = false, pendingWord = null;
   let collusionWatch = null, collusionPending = null;
   let tankerEventSeq = 0;
@@ -32,7 +32,7 @@
   async function loadClips(def){
     /* รอบ 1570: lift/throw ต้องถูก ingest เสมอ (ท่ายกค้าง+ขว้างของระบบแบกยานพาหนะ) — เดิมอยู่นอก core จึงไม่เคยถูกโหลด
        รอบ 1589: groundSlam (ปุ่ม SLAM) ingest เสมอเหมือนกัน — GLB ท่ากระแทกพื้นของ NEX/Lyravyn */
-    const states = ((def && def.core) || CORE).concat(['lift', 'throw', 'groundSlam', 'knockDown']);
+    const states = ((def && def.core) || CORE).concat(['lift', 'throw', 'groundSlam', 'knockDown', 'deflect']);
     const extra = (def && def.optional) || ['victory', 'heavyKick'];
     const total = states.length;
     const label = (def && def.displayName) || 'NEX';
@@ -64,6 +64,9 @@
     if(fireTrail && fireTrail.clear) fireTrail.clear();
     if(slam && slam.reset) slam.reset();
     if(slamFx && slamFx.clear) slamFx.clear();
+    if(deflect && deflect.reset) deflect.reset();
+    if(orbs && orbs.dispose) orbs.dispose();
+    spitTimer = 1.6;
     if(oilTanker && oilTanker.reset) oilTanker.reset(round.seed);
     if(sedan && sedan.reset) sedan.reset(round.seed);
     if(grab && grab.reset) grab.reset();
@@ -194,6 +197,9 @@
     if(fireTrail && fireTrail.clear) fireTrail.clear();
     if(slam && slam.reset) slam.reset();
     if(slamFx && slamFx.clear) slamFx.clear();
+    if(deflect && deflect.reset) deflect.reset();
+    if(orbs && orbs.dispose) orbs.dispose();
+    spitTimer = 1.6;
     if(spectator && !spectator.active) spectator.enter();
     if(input && input.setSpectating) input.setSpectating(true);
     if(hud && hud.quest) hud.quest.hide();
@@ -235,6 +241,37 @@
         level: 'HEAVY'
       });
     });
+  }
+
+  /* รอบ 1593: ลูกพลังซอมบี้โดนตัวเรา — แฟลช HUD/กล้องเหมือนถูกซอมบี้กัด (ดาเมจมาจาก orbs.tick) */
+  function handleOrbPlayerHit(dmg){
+    if(!player) return;
+    if(hud && hud.setHp) hud.setHp(player.hp, player.maxHp);
+    if(hud && hud.hurtFlash) hud.hurtFlash(dmg / (player.maxHp || 1000));
+    if(camRig && camRig.impulse) camRig.impulse(0.34, 2.6);
+    consumePlayerDeath();
+  }
+
+  /* รอบ 1593: ซอมบี้พ่นลูกพลัง (เคส A ของปุ่มปัด) — ตัวใกล้สุดในระยะ [MIN,MAX] ยิงมาที่ตัวเรา
+     ช้าพอให้เห็นและปัดสวนได้ (16 หน่วย/วิ) · ถ้าล็อคเป้าผิดพลาดเล็กน้อยให้ดูเป็นธรรมชาติ */
+  function zombieSpit(){
+    if(!orbs || !player || player.alive === false || !enemies || !enemies.list) return;
+    const T = VF.DeflectTune || {};
+    let best = null, bestD = Infinity;
+    const list = enemies.list;
+    for(let i = 0; i < list.length; i++){
+      const en = list[i];
+      if(!en || !en.alive || en.state === 'gone' || en.burstFinisherTriggered) continue;
+      const d = Math.hypot((en.x || 0) - player.x, (en.z || 0) - player.z);
+      if(d < (T.ZOMBIE_SPIT_MIN || 6) || d > (T.ZOMBIE_SPIT_MAX || 30)) continue;
+      if(d < bestD){ bestD = d; best = en; }
+    }
+    if(!best) return;
+    const sx = best.x || 0, sy = (best.y || 0) + 1.35, sz = best.z || 0;
+    const dx = player.x - sx, dy = (player.y || 0) + 1.0 - sy, dz = player.z - sz;
+    orbs.spawnEnemy(sx, sy, sz, dx, dy, dz, T.ZOMBIE_SPIT_SPEED || 16, T.ZOMBIE_SPIT_DAMAGE || 120);
+    if(fx && fx.arenaFire) fx.arenaFire(sx, sy, sz, {r: 0.9});
+    if(VF.audio && VF.audio.energyWallImpact) VF.audio.energyWallImpact();
   }
 
   function tankerExplosion(eventId, pos){
@@ -403,6 +440,9 @@
     /* รอบ 1589: ปุ่ม SLAM กระแทกพื้น — เล่นท่า groundSlam แล้วปล่อยเส้นเปลวเพลิงสีฟ้า
        เป็นแนวยาวบนพื้นตามทิศหน้าตัวละคร (คูลดาวน์ 6 วิ · ผู้เล่นในแนวเส้นเสีย 300 HP ต่อครั้งที่โดน) */
     if(active && !paused && poll.slam && slam) slam.trySlam(player, now, camRig, VF.audio);
+    /* รอบ 1593: ปุ่ม DEFLECT ปัดพลัง — เล่นท่า Shield_Push_Left แล้วตอน hitAt ลูกพลังในแนวหน้า
+       (ของซอมบี้หรือของเพื่อน) จะถูกปัดให้พุ่งไปตามทิศหน้าตัวเรา */
+    if(active && !paused && poll.deflect && deflect && !player.carrying) deflect.tryDeflect(player, now, camRig, VF.audio);
     if(active && !paused && poll.punch && !player.carrying) combat.handleAttackPress('punch', player, now, enemies, camRig, arena, fx, energy, VF.audio, {hold: !!poll.punchHeld, people: peopleSnap(), world: worldMelee || oilTanker});
     if(active && !paused && poll.kick){
       if(player.carrying){
@@ -493,6 +533,17 @@
       camRig.setShowcaseCam(!!(healPad && healPad.inside && player && player.alive !== false && player.hp < player.maxHp && !player.carrying));
     }
     if(active && energy) energy.tick(step, now, player, enemies, arena, fx, camRig, combat, VF.audio, {held: !!poll.punchHeld, released: !!poll.punchReleased, moveX: poll.moveX || 0, moveZ: poll.moveZ || 0, people: peopleSnap()});
+    /* รอบ 1593: สนามลูกพลัง + ปัดพลัง + ซอมบี้พ่นลูกพลัง (เคส A) */
+    if(active && orbs){
+      spitTimer -= step;
+      if(spitTimer <= 0){
+        spitTimer = (VF.DeflectTune && VF.DeflectTune.ZOMBIE_SPIT_INTERVAL) || 3.2;
+        zombieSpit();
+      }
+      orbs.tick(step, {player: player, enemies: enemies, people: peopleSnap(), arena: arena, fx: fx, audio: VF.audio, cam: camRig, vehicles: {sedan: sedan, tanker: oilTanker}, onPlayerHurt: handleOrbPlayerHit});
+    }
+    if(deflect) deflect.tick(step, now, player, {orbs: orbs, fx: fx, audio: VF.audio, camera: camRig, onPeerDeflect: function(orb){ if(net && net.publishDeflectAck) net.publishDeflectAck(orb); }});
+    if(hud && hud.setDeflectCooldown) hud.setDeflectCooldown(deflect ? deflect.cooldownFrac(now) : 1);
     if(secondary) secondary.trails(step, enemies, fx, player);
     fx.tick(dt);
     if(trails) trails.tick(step);
@@ -560,6 +611,26 @@
         const len = VF._t.slamLineLength ? VF._t.slamLineLength() : 23;
         const dx = Math.sin(ev.yaw || 0), dz = Math.cos(ev.yaw || 0);
         slamFx.paintLine(ev.x, ev.z, ev.x + dx * len, ev.z + dz * len);
+      });
+    }
+    /* รอบ 1593: เพื่อนยิงลูกพลัง ATTACK — ปล่อย visual ลูกพลังฝั่งเราจากตำแหน่ง/ทิศหน้าของเพื่อน
+       (เดินตรงตาม projectileSpeed/maxRange ของ tune — พอดีพอให้มองเห็นและปัดสวนได้) */
+    if(orbs && net.consumeShots){
+      const ET = VF.EnergyAttackTune || {};
+      const speed = ET.projectileSpeed || 420;
+      const gap = ET.projectileIntervalMs || 85;
+      net.consumeShots().forEach(function(ev){
+        const dx = Math.sin(ev.yaw || 0), dz = Math.cos(ev.yaw || 0);
+        const tail = VF._t.uidTail ? VF._t.uidTail(ev.uid) : '';
+        for(let i = 0; i < (ev.count || 1); i++){
+          orbs.spawnPeer(tail, ev.seq, i, ev.x + dx * 0.7, (ev.y || 0) + 1.25, ev.z + dz * 0.7, dx, 0, dz, speed, i * gap, ev.charged ? 1 : 0);
+        }
+      });
+    }
+    /* รอบ 1593: ลูกพลังของเราถูกเพื่อนปัด — ลบลูกจริงเงียบ ๆ (กันดาเมจซ้ำหลังถูกปัด) */
+    if(energy && energy.guns && energy.guns.killQuietByBurst && net.consumeDeflectAcks){
+      net.consumeDeflectAcks().forEach(function(ack){
+        energy.guns.killQuietByBurst(ack.seq, ack.index);
       });
     }
     if(player && net.consumeStrikes){
@@ -668,6 +739,10 @@
       slam = VF.GroundSlamController ? new VF.GroundSlamController() : null;
       /* รอบ 1590: มาร์กเกอร์ + บนพื้นบอกทิศพลัง — ฟ้า=SLAM · ส้ม=ATTACK */
       aimMarkers = VF.AimMarkers ? new VF.AimMarkers().attach(scene) : null;
+      /* รอบ 1593: สนามลูกพลังศัตรู/เพื่อน + ปุ่มปัดพลัง (DEFLECT) */
+      orbs = VF.HostileOrbManager ? new VF.HostileOrbManager().attach(scene) : null;
+      if(orbs && orbs.setVehicles) orbs.setVehicles(sedan, oilTanker);
+      deflect = VF.DeflectController ? new VF.DeflectController() : null;
       secondary = new VF.SecondaryImpactController();
       energy = new VF.EnergyAttackController().attach(scene);
       /* รอบ 1585: ผูกยานพาหนะเข้ากับลูกพลัง — โดนรถน้ำมัน/รถยนต์ = ระเบิดแตกสลายทันที */
@@ -762,6 +837,10 @@
     if(fx) fx.dispose();
     if(trails) trails.dispose();
     if(fireTrail && fireTrail.dispose) fireTrail.dispose();
+    if(orbs && orbs.dispose) orbs.dispose();
+    orbs = null;
+    if(deflect && deflect.reset) deflect.reset();
+    deflect = null;
     fireTrail = null;
     if(slamFx && slamFx.dispose) slamFx.dispose();
     slamFx = null;
@@ -774,5 +853,5 @@
 
   VF.open = open;
   VF.close = close;
-  VF._t.live = function(){ return {player: player, enemies: enemies, round: round, combat: combat, cam: camRig, secondary: secondary, fx: fx, tanker: oilTanker, sedan: sedan, grab: grab, spectator: spectator, arena: arena, scene: scene, net: net, hud: hud, input: input, slam: slam, slamFx: slamFx, aimMarkers: aimMarkers, resetRound: beginRound, character: player && player.def}; };
+  VF._t.live = function(){ return {player: player, enemies: enemies, round: round, combat: combat, cam: camRig, secondary: secondary, fx: fx, tanker: oilTanker, sedan: sedan, grab: grab, spectator: spectator, arena: arena, scene: scene, net: net, hud: hud, input: input, slam: slam, slamFx: slamFx, aimMarkers: aimMarkers, orbs: orbs, deflect: deflect, resetRound: beginRound, character: player && player.def}; };
 })(typeof window !== 'undefined' ? window : globalThis);

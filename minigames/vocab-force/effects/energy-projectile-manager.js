@@ -121,6 +121,7 @@
     shot.vz = nz / nlen * speed;
     shot.last = extras.last ? 1 : 0;
     shot.index = extras.index || 0;
+    shot.burst = extras.burst || 0;
     shot.pal = pal;
     shot.charged = extras.charged ? 1 : 0;
     shot.chargeFrac = extras.chargeFrac != null ? extras.chargeFrac : (shot.charged ? 1 : 0);
@@ -315,6 +316,18 @@
       shot.streak.rotation.y = yaw;
       shot.shell.rotation.y += dt * 8;
     }
+  };
+
+  /* รอบ 1593: ลูกพลังถูกปัด (deflect-ack จากเพื่อนที่เป็นคนปัด) — ลบลูกจริงเงียบ ๆ กันดาเมจซ้ำ */
+  EnergyProjectileManager.prototype.killQuietByBurst = function(burst, index){
+    for(let i = this.live.length - 1; i >= 0; i--){
+      const shot = this.live[i];
+      if((shot.burst || 0) === (burst || 0) && (shot.index || 0) === (index || 0)){
+        this._kill(shot, true);
+        return true;
+      }
+    }
+    return false;
   };
 
   EnergyProjectileManager.prototype.dispose = function(){
