@@ -6902,3 +6902,9 @@ efreshMechaLock
 ## ⏬ ย้ายเมื่อ 2026-09-26 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
 
 - ไฟล์: deflect-tune/controller + hostile-orb-manager (ใหม่ 3), manifests (deflect), packer+build_web+runtime-models (GLB ใหม่ 2), runtime (wire ครบ ingest/input/tick/spit/dispose), net (packShots/parseShots/packDeflectAck/consume×2), energy-attack-controller (_vfShots/burst), input/hud/css (ปุ่ม+วงคูลดาวน์), ui.js (?v=1594), test (static+sandbox behavioral deflect + roundtrip W/D) · unit 749 ผ่าน + check_undefined_calls 0
+
+
+## ⏬ ย้ายเมื่อ 2026-09-26 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- ไฟล์: vehicle-grab.js (comboThrow/tryComboKick/_tickCombo โฟลใหม่ + finisher), oil-tanker/sedan-controller (SKY_SPEC + comboSkyPunt/_vanishSky + gate state ลอย), ui.js (?v=1595), test (static+sandbox behavioral โฟลใหม่ 5 กรณี) · unit 754 ผ่าน + check_undefined_calls 0
+- รอบ 1593 · Vocab Force ปุ่ม DEFLECT ปัดพลัง (คีย์ C / แถวบนช่อง 4 เหนือ SLAM): ท่า GLB จริง Shield_Push_Left ทั้งคู่ · hostile-orb-manager สนามลูกพลัง 3 ทีม (enemy=ซอมบี้พ่นทุก 3.2 วิ ระยะ 6-30 ดาเมจ 120 · peer=visual ลูกเพื่อนซิงก์ผ่าน hp string 'W' · player=ลูกที่ถูกปัด โดนซอมบี้ 300 PvP และระเบิดรถ) · ปัดที่ hitAt 0.26 ลูกในแนวหน้า RANGE 3.8 หักเหตามทิศหน้า · ลูกเพื่อนถูกปัด → ack 'D' กลับเจ้าของ killQuietByBurst กันดาเมจซ้ำ (energy-projectile-manager ประทับ burst ลง shot)
