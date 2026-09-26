@@ -6773,3 +6773,11 @@ efreshMechaLock
 - QA รวมรอบ 1563–1564: unit 572 + Home V2 + source/dist mobile + 2-tab host/peer + BGM 60.024 วิวนลูป + build 10,158 ไฟล์/1,436.0 MiB + validator ผ่าน · เตรียม deploy รวมครั้งเดียว
 - รอบ 1563 · Vocab Force เพิ่มรถบรรทุกน้ำมัน GLB ขนาด 13.6 ม. ชนไม่ได้; หมัด/เตะระยะใกล้ทำให้พุ่งตีลังกา ระเบิดครั้งเดียว + shockwave/fire ring ขยายทั้งแผนที่
 - host รับ melee request แล้วประกาศ event ID เดียว; ผู้เล่นแต่ละคนใช้ token เดิมหัก 500 HP ครั้งเดียว และตายแล้วล็อกทุก control เข้า spectator swipe/←→ จนจบรอบ
+
+
+## ⏬ ย้ายเมื่อ 2026-09-26 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- แก้ `vocab-force-runtime.js`: เทียบ `parentNode !== hud.els.stage` แทน + เช็ก context lost สร้าง renderer ใหม่ · ยืนยัน puppeteer 812×375 เข้า→ออก→เข้าใหม่ canvas/scene/ตัวละครกลับมา + unit 575 ผ่าน · deploy
+- รอบ 1564 · Vocab Force เปิดสาธารณะทั้งปุ่มรางซ้าย Classic/Home V2; รางวัลจบคำตามคนในลาน: 1–5 = 1,000, 6–10 = 3,000, 11–14 = 10,000 เหรียญ
+- BGM เริ่มใน user gesture โดยตรง, retry เมื่อแตะ/คลิก, เล่นวน `loop=true`; production ใช้ GLB runtime pack 33 ไฟล์ 101.5 MiB ป้องกันโมเดลหายหลัง deploy
+- เปลี่ยนภาพ runtime เป็น WebP/AVIF จริง (คง alpha/dimensions, portrait/loading จาก 8.6 MiB เหลือ 0.96 MiB; texture AVIF PSNR 43–45 dB) และไม่ส่ง PNG/JPG/reference/raw model

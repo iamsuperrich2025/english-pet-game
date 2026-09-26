@@ -23,10 +23,6 @@
 - แก้ `build_web.mjs` เพิ่ม 'minigames' ใน PUBLIC_DIRS · ยืนยันผ่าน asset-manifest บน live (vf ครบ + runtime มีแพตช์รอบ 1565)
 - รอบ 1565 · แก้บั๊ก Vocab Force เข้าใหม่หลังกด "ออก" มองไม่เห็นตัวละคร+สนามทั้งหมด (จอมืดมีแต่ HUD)
 - ต้นตอ: `hud.mount()` ล้าง DOM ด้วย `root.innerHTML` แบบ subtree — `canvas.parentNode` ยังชี้ `.vf-stage` เก่าที่ถูกตัดออก → เช็ก `!parentNode` ใน open() จึงข้ามการแนบ canvas กลับ (ผู้ใช้รายงานเจอเมื่อเข้าใหม่เร็ว 1-2 นาที)
-- แก้ `vocab-force-runtime.js`: เทียบ `parentNode !== hud.els.stage` แทน + เช็ก context lost สร้าง renderer ใหม่ · ยืนยัน puppeteer 812×375 เข้า→ออก→เข้าใหม่ canvas/scene/ตัวละครกลับมา + unit 575 ผ่าน · deploy
-- รอบ 1564 · Vocab Force เปิดสาธารณะทั้งปุ่มรางซ้าย Classic/Home V2; รางวัลจบคำตามคนในลาน: 1–5 = 1,000, 6–10 = 3,000, 11–14 = 10,000 เหรียญ
-- BGM เริ่มใน user gesture โดยตรง, retry เมื่อแตะ/คลิก, เล่นวน `loop=true`; production ใช้ GLB runtime pack 33 ไฟล์ 101.5 MiB ป้องกันโมเดลหายหลัง deploy
-- เปลี่ยนภาพ runtime เป็น WebP/AVIF จริง (คง alpha/dimensions, portrait/loading จาก 8.6 MiB เหลือ 0.96 MiB; texture AVIF PSNR 43–45 dB) และไม่ส่ง PNG/JPG/reference/raw model
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
