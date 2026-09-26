@@ -220,7 +220,11 @@
     if(!oilTanker || !oilTanker.ready) return;
     if(net && net.isHost && net.isHost() && net.consumeTankerRequests){
       const requests = net.consumeTankerRequests();
-      for(let i = 0; i < requests.length && oilTanker.state === 'idle'; i++){
+      for(let i = 0; i < requests.length; i++){
+        /* รอบ 1572: คำขอทุ่มจากการแบก (grab) ต้องผ่านได้แม้ state='carried' —
+           เดิมเช็ก idle อย่างเดียว → กด THROW ตอนแบกออนไลน์แล้วรถไม่ยอมทุ่ม (คำขอค้างถาวร) */
+        const carryThrow = requests[i].grab && oilTanker.state === 'carried';
+        if(oilTanker.state !== 'idle' && !carryThrow) break;
         const tag = String(round && round.seed || 0) + ':' + (++tankerEventSeq) + ':' + (VF._t.stableHash ? VF._t.stableHash(requests[i].id) : tankerEventSeq);
         const ev = oilTanker.acceptRequest(requests[i], tag, round && round.seed);
         if(ev && net.publishTankerEvent) net.publishTankerEvent(ev);

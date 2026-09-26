@@ -159,6 +159,9 @@
 .vf-throw{right:calc(176px + env(safe-area-inset-right));bottom:calc(100px + env(safe-area-inset-bottom));color:#ff9a5c}
 .vf-throw[hidden]{display:none}
 .vf-throw .vf-act-ico{background:radial-gradient(circle at 38% 30%,#ff8a3c,#7a2408 72%);border-color:#ff7a2a;box-shadow:0 0 18px #ff5a18cc,inset 0 0 14px #ffc44a55}
+/* รอบ 1572: ป้าย EN/TH ของแถวบน (THROW/BLOCK/JUMP) ต้องอยู่ "เหนือ"ปุ่ม —
+   เดิมอยู่ใต้ปุ่มแล้วบานลงทับไอคอนแถวล่าง (DASH/KICK/ATTACK) */
+.vf-jump,.vf-block,.vf-throw{flex-direction:column-reverse}
 .vf-punch .vf-act-ico{background:radial-gradient(circle at 38% 30%,#ff7040,#6a1008 72%);border-color:#ff4a22;box-shadow:0 0 16px #ff3a18aa,inset 0 0 14px #ffb00044}
 .vf-kick .vf-act-ico{background:radial-gradient(circle at 38% 30%,#ffc44a,#7a4a08 72%);border-color:#ffb020;box-shadow:0 0 16px #ff9a18aa,inset 0 0 14px #ffe08a44}
 .vf-dash .vf-act-ico{background:radial-gradient(circle at 38% 30%,#4af0d8,#0a5a58 72%);border-color:#3ee8d8;box-shadow:0 0 16px #2ad4c8aa,inset 0 0 14px #9bfff044}

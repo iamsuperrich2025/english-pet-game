@@ -39,7 +39,8 @@ assert(/\bid="btn-rail-vocabforce"/.test(classic),'classic rail has a Vocab Forc
 assert(classic.includes('Vocab Force · COMING SOON'),'classic rail shows Coming Soon');
 assert(/function vocabForceAdminAllowed\(\)[\s\S]*isAdmin/.test(ui),'Vocab Force reuses the existing authenticated admin check');
 assert(ui.includes('function refreshVocabForceLock')&&ui.includes('b.hidden=!ok')&&ui.includes('b.disabled=!ok'),'rail is hidden from normal users, visible+enabled for admins (round 1568)');
-assert(ui.includes("loadScriptOnce(base+'vocab-force-namespace.js')"),'lazy load from minigames folder');
+assert(ui.includes("loadScriptOnce(base+'vocab-force-namespace.js'+v)"),'lazy load from minigames folder');
+assert(ui.includes("const v='?v="),'vocab force modules carry a cache-bust token (round 1572)');
 assert(ui.includes('async function openVocabForce'),'lobby binder');
 assert(ui.includes('if(!vocabForceAdminAllowed())'),'lobby entry blocks normal users');
 assert(main.includes("vocabforce:'#btn-rail-vocabforce'"),'go route');

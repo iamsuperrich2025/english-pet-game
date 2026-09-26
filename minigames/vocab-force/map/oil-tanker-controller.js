@@ -251,7 +251,9 @@
   };
 
   OilTankerController.prototype.acceptRequest = function(req, eventId, roundSeed){
-    if(!this.ready || this.state !== 'idle' || !req) return null;
+    if(!this.ready || !req) return null;
+    /* รอบ 1572: ทุ่มจากการแบกอนุญาตตอน state='carried' (เดิม idle เท่านั้น ทำ THROW ออนไลน์ไม่ทำงาน) */
+    if(this.state !== 'idle' && !(req.grab && this.state === 'carried')) return null;
     /* รอบ 1567: คำขอทุ่มจากการแบก ผ่อนเช็กระยะ — ฝั่ง host อาจยังเห็นรถอยู่คนละตำแหน่งกับผู้ทุ่ม */
     if(!req.grab && pointBoxDistance(req.x || 0, req.z || 0, this.collider) > 4.4) return null;
     let dx, dz, sx, sz;

@@ -11,6 +11,9 @@
 > ประวัติ Frontline 1372–1373: `handoff/archive/frontline-1372-1373.md`
 
 ### 📌 สรุปสถานะล่าสุด
+- รอบ 1572 · กด THROW ไม่ทุ่ม (ออนไลน์) — ต้นตอจริง: tickTanker ฝั่ง host ประมวลผลคำขอเฉพาะตอน oilTanker.state==='idle' + acceptRequest เช็ก idle เท่านั้น → ตอนแบก (carried) คำขอ grab-throw ถูกเมินถาวร รถค้างติดตัว · แก้ทั้งสองจุด: ลูป host อนุญาต req.grab&&state==='carried' · acceptRequest ผ่อนเงื่อนไขเดียวกัน (applyEvent รับ carried อยู่แล้ว)
+- รถยนต์ทุ่มตรง (throwBy ไม่ผ่าน net) ใช้ได้ปกติ — ยืนยันด้วย VM flow test ทั้ง tanker online (accepted→applyEvent→launched) และ sedan (thrown) · เสริม cache-bust โมดูลทั้งหมดใน ui.js loadVocabForceModules (?v=1572) กันไฟล์เก่าจาก HTTP cache ทำปุ่มกดแล้วเงียบ — ระวัง: เปลี่ยน token ทุกครั้งที่แก้โมดูล vf
+- ป้าย EN/TH ของแถวบน (THROW/BLOCK/JUMP) ย้ายไป "เหนือ"ปุ่ม (flex-direction:column-reverse) แก้ทับปุ่มแถวล่าง · unit 600 + regression ครบ · deploy ตามรอบ 1572
 - รอบ 1571 · สวิตช์เสียงทับปุ่ม EXIT (top-right) — ต้นตอ: รอบ 1570 ทำ EXIT กว้าง "EXIT · ออก" ~110px บานทับสวิตช์ที่ right:76px → แก้: EXIT สองบรรทัด (EXIT เหนือ ออก, .vf-exit-sub) กว้าง ~62px ไม่ทับ · ปุ่ม THROW "ไม่ขึ้น" = by design โผล่เฉพาะตอนแบก (ผู้ใช้ยืนยันเองว่าเข้าใจแล้ว)
 - เสริมความทนทาน THROW: vehicle-grab สั่ง hud.setCarrying โดยตรงที่จุดยกสำเร็จ/ทุ่ม/ตายระหว่างแบก · runtime เฟรมบรรทัดเช็กทั้ง grab.carrying() และ player.carrying (เผื่อเส้นทางใดค้าง)
 - ทดสอบ wiring ด้วย VM+DOM stub ก่อนแก้: shown=true หลังยก / hidden หลังทุ่ม ผ่าน · unit 599 + regression ครบ · deploy ตามรอบ 1571

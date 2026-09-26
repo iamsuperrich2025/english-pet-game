@@ -7423,10 +7423,12 @@ function refreshVocabForceLock(){
 }
 async function loadVocabForceModules(){
   const base='minigames/vocab-force/';
-  await loadStylesheetOnce('vocab-force-css', base+'css/vocab-force.css?v=lot');
-  await loadScriptOnce(base+'vocab-force-namespace.js');
+  /* รอบ 1572: cache-bust ทุกโมดูล — เคยเจอ input/grab เก่าจาก HTTP cache หลัง deploy ทำปุ่ม THROW กดแล้วเงียบ */
+  const v='?v=1572';
+  await loadStylesheetOnce('vocab-force-css', base+'css/vocab-force.css'+v);
+  await loadScriptOnce(base+'vocab-force-namespace.js'+v);
   const scripts=(window.VocabForce && VocabForce.SCRIPTS ? VocabForce.SCRIPTS : []).slice(1);
-  for(let i=0;i<scripts.length;i++) await loadScriptOnce(base+scripts[i]);
+  for(let i=0;i<scripts.length;i++) await loadScriptOnce(base+scripts[i]+v);
 }
 async function openVocabForce(){
   if(!vocabForceAdminAllowed()){
