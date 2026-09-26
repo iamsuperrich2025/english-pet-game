@@ -68,6 +68,17 @@ assert(read('minigames/vocab-force/animation/lyravyn-animation-manifest.js').inc
 assert(exists('minigames/vocab-force/runtime-models/nex/nex_Charged_Ground_Slam.glb')&&exists('minigames/vocab-force/runtime-models/lyravyn/ly_Charged_Ground_Slam.glb'),'packed ground slam GLBs on disk');
 assert(build.includes('runtime-models/nex/nex_Charged_Ground_Slam.glb')&&build.includes('runtime-models/lyravyn/ly_Charged_Ground_Slam.glb'),'production copies packed ground slam GLBs');
 assert(read('tools/pack_vocab_force_runtime_glbs.py').includes('nex_Charged_Ground_Slam.glb')&&read('tools/pack_vocab_force_runtime_glbs.py').includes('ly_Charged_Ground_Slam.glb'),'packer includes ground slam GLBs');
+/* รอบ 1592: ท่าล้ม (Knock_Down) เมื่อโดนระเบิดรถน้ำมัน / แนว SLAM / ลูกพลัง ATTACK */
+assert(read('minigames/vocab-force/animation/nex-animation-manifest.js').includes("knockDown: { file: 'nex_Knock_Down.glb', clip: 'Knock_Down'"),'NEX knock-down GLB mapped');
+assert(read('minigames/vocab-force/animation/lyravyn-animation-manifest.js').includes("knockDown: { file: 'ly_Knock_Down.glb', clip: 'Knock_Down'"),'Lyravyn knock-down GLB mapped');
+assert(exists('minigames/vocab-force/runtime-models/nex/nex_Knock_Down.glb')&&exists('minigames/vocab-force/runtime-models/lyravyn/ly_Knock_Down.glb'),'packed knock-down GLBs on disk');
+assert(build.includes('runtime-models/nex/nex_Knock_Down.glb')&&build.includes('runtime-models/lyravyn/ly_Knock_Down.glb'),'production copies packed knock-down GLBs');
+assert(read('tools/pack_vocab_force_runtime_glbs.py').includes('nex_Knock_Down.glb')&&read('tools/pack_vocab_force_runtime_glbs.py').includes('ly_Knock_Down.glb'),'packer includes knock-down GLBs');
+assert(read('minigames/vocab-force/runtime/vocab-force-runtime.js').includes("concat(['lift', 'throw', 'groundSlam', 'knockDown'])"),'runtime ingests the knockDown clip');
+const nccSrc=read('minigames/vocab-force/character/nex-character-controller.js');
+assert(nccSrc.includes("info.from === 'tanker' || info.from === 'gun' || info.from === 'slam'")&&nccSrc.includes("this.playAction('knockDown')"),'takeHit plays knock-down exactly on tanker/SLAM/ATTACK hits');
+assert(nccSrc.indexOf("this.playAction('knockDown')")>nccSrc.indexOf('this._deathEvent = true;'),'knock-down never overrides the death path');
+assert(read('minigames/vocab-force/combat/ground-slam-controller.js').includes("kind: 'M'")&&read('minigames/vocab-force/combat/gun-tune.js').includes("'PGKM'"),'slam strikes ride as kind M so victims read them as slam');
 assert(build.includes('effects/overdrive-fire-trail.js')&&htmlPreview.includes('effects/overdrive-fire-trail.js')&&ns.includes("'effects/overdrive-fire-trail.js'"),'overdrive fire trail is loaded');
 assert(build.includes('combat/power-jump-tune.js')&&htmlPreview.includes('combat/power-jump-tune.js')&&ns.includes("'combat/power-jump-tune.js'"),'power jump tune is loaded');
 assert(read('minigames/vocab-force/ui/vocab-force-hud.js').includes('data-vf-act="dash"'),'touch DASH');
@@ -433,7 +444,7 @@ const animCtrlSrc=read('minigames/vocab-force/animation/nex-animation-controller
 assert(hudSrc.includes('data-vf-act="throw"')&&hudSrc.includes('vf-act-sub')&&hudSrc.includes('THROW')&&hudSrc.includes('ขว้าง')&&hudSrc.includes('setCarrying'),'THROW button with Thai sub-label and carrying toggle ships');
 assert(hudSrc.includes('ATTACK<small class="vf-act-sub">โจมตี</small>')&&hudSrc.includes('KICK<small class="vf-act-sub">เตะ</small>')&&hudSrc.includes('JUMP<small class="vf-act-sub">กระโดด</small>')&&hudSrc.includes('BLOCK<small class="vf-act-sub">บล็อก</small>')&&hudSrc.includes('DASH<small class="vf-act-sub">พุ่ง</small>')&&hudSrc.includes('EXIT<small class="vf-exit-sub">ออก</small>'),'every game button carries EN label + Thai translation');
 assert(inputSrc.includes('throwQueued')&&inputSrc.includes("e.code === 'KeyG'")&&inputSrc.includes("act === 'throw'"),'input maps THROW button and G key');
-assert(runtime.includes("concat(['lift', 'throw', 'groundSlam'])")&&runtime.includes('poll.throw')&&runtime.includes('setCarrying'),'runtime ingests lift/throw/groundSlam and dispatches THROW');
+assert(runtime.includes("concat(['lift', 'throw', 'groundSlam', 'knockDown'])")&&runtime.includes('poll.throw')&&runtime.includes('setCarrying'),'runtime ingests lift/throw/groundSlam/knockDown and dispatches THROW');
 assert(animCtrlSrc.includes('holdAt'),'animation controller supports holdAt freeze frame');
 assert(build.includes('runtime-models/nex/nex_mage_soell_cast.glb')&&build.includes('runtime-models/lyravyn/ly_mage_soell_cast.glb'),'cast GLBs ship in production build');
 /* รอบ 1571: ปุ่ม THROW ไม่ขึ้นบนจริง — เสริมสั่งโชว์/ซ่อนโดยตรงที่จุดยก/ทุ่ม + EXIT สองบรรทัดกันทับสวิตช์เสียง */
@@ -542,6 +553,35 @@ pvp.invuln=0; pvp.blocking=true; pvp.hp=1000;
 assert(pvp.takeHit(140,true,{from:'gun',zone:'head',headshot:true})===1000&&pvp.alive===false,'gun headshot kills through block');
 const packedStrike=VF._t.packStrike({_vfStrike:{seq:3,kind:'G',zone:'head',targetId:'hero',dmg:1000}});
 assert(packedStrike.indexOf('S03')===0&&VF._t.parseStrike('H|820|'+packedStrike).zone==='head'&&VF._t.parseStrike('H|820|'+packedStrike).dmg===1000,'pvp gun hit rides in the hp string');
+/* รอบ 1592: ท่าล้ม behavioral — เล่น "พอดีจังหวะ" ที่ takeHit ผ่านจาก tanker/slam/gun เท่านั้น */
+const kd=new VF.NexCharacterController();
+kd.invuln=0;
+const kdPlayed=[];
+kd.anim={play:function(s){kdPlayed.push(s);return true;}};
+kd.takeHit(100,false,{from:'tanker',bypassInvuln:true});
+assert(kdPlayed.length===1&&kdPlayed[0]==='knockDown','tanker blast knocks the character down the moment it lands');
+kd.invuln=0;
+kd.takeHit(90,false,{from:'zombie'});
+assert(kdPlayed.length===1,'zombie bites never trigger the knock-down clip');
+kd.invuln=0;
+kd.takeHit(300,false,{from:'slam'});
+assert(kdPlayed.length===2&&kdPlayed[1]==='knockDown','a SLAM line hit knocks the character down');
+kd.invuln=0;
+kd.takeHit(50,false,{from:'gun',zone:'body'});
+assert(kdPlayed.length===3&&kdPlayed[2]==='knockDown','an ATTACK energy orb knocks the character down');
+const kdDead=new VF.NexCharacterController();
+kdDead.invuln=0; kdDead.hp=10;
+const kdDeadPlayed=[];
+kdDead.anim={play:function(s){kdDeadPlayed.push(s);return true;}};
+kdDead.takeHit(1000,false,{from:'tanker',bypassInvuln:true});
+assert(kdDead.alive===false&&kdDeadPlayed.length===0,'a killing blow goes to the death path, never the knock-down clip');
+const kdInv=new VF.NexCharacterController();
+kdInv.invuln=5;
+const kdInvPlayed=[];
+kdInv.anim={play:function(s){kdInvPlayed.push(s);return true;}};
+assert(kdInv.takeHit(100,false,{from:'gun'})===0&&kdInvPlayed.length===0,'invulnerability frames swallow the hit: no clip before the power truly lands');
+const packedSlam=VF._t.packStrike({_vfStrike:{seq:7,kind:'M',zone:'body',targetId:'hero',dmg:300}});
+assert(packedSlam.indexOf('S07M')===0&&VF._t.parseStrike('H|820|'+packedSlam).kind==='M'&&VF._t.parseStrike('H|820|'+packedSlam).dmg===300,'slam hit rides as kind M in the hp string');
 assert(punchTune.hitStop>=0.06 && punchTune.hitStop<=0.09,'punch hit-stop 60-90ms');
 assert(kickTune.hitStop>=0.10 && kickTune.hitStop<=0.15,'kick hit-stop 100-150ms');
 assert(kickTune.hitStop>punchTune.hitStop,'kick freezes longer than punch');
@@ -1120,14 +1160,14 @@ assert(tankerSrc2.indexOf('comboKickLaunch')<tankerSrc2.indexOf('if(this._comboH
 assert(sedanSrc.includes('comboKickLaunch')&&sedanSrc.includes('comboShatter')&&sedanSrc.includes('_comboHold'),'sedan combo launch holds the wreck for the mid-air finisher kick');
 assert(sedanSrc.includes('!this._comboHold &&')&&sedanSrc.includes('swapShattered'),'sedan skips settle while held and shatters into the wreck model');
 assert(runtime.includes('grab.comboThrow')&&runtime.includes('grab.tryComboKick')&&runtime.includes('grab.reset()'),'runtime wires combo inputs and resets the combo each round');
-assert(ui.includes('?v=1592'),'ui.js cache-bust bumped so browsers fetch the new vf modules');
+assert(ui.includes('?v=1593'),'ui.js cache-bust bumped so browsers fetch the new vf modules');
 
 /* รอบ 1588: เตะรถยนต์ = กระเด็นไกลเท่ารถน้ำมันโดนเตะ (h54/up39 grav22 ≈ วิถี h54/up34 grav19) + หมุนธรรมชาติ */
 assert(sedanSrc.includes("info.kind) === 'kick'")&&sedanSrc.indexOf('54, 39')>sedanSrc.indexOf('kickish'),'sedan kick launches as far as the kicked tanker trajectory');
 assert(sedanSrc.includes('this._flipSpeed *= (1 - 0.1 * dt)')&&sedanSrc.includes('หมุนช้าลงตามแรงเสียดอากาศ'),'sedan tumble spins decay in air like the tanker (natural spin)');
 const kickRangeTanker=54*(2*34/19), kickRangeSedan=54*(2*39/22);
 assert(Math.abs(kickRangeTanker-kickRangeSedan)/kickRangeTanker<0.02,'kicked sedan flies the same distance as the kicked tanker (same arc, grav-adjusted up)');
-assert(ui.includes('?v=1592'),'ui.js cache-bust bumped for the kick trajectory tune');
+assert(ui.includes('?v=1593'),'ui.js cache-bust bumped for the kick trajectory tune');
 /* รอบ 1590: มาร์กเกอร์ + บนพื้นบอกทิศพลัง (ฟ้า=SLAM · ส้ม=ATTACK) */
 assert(build.includes('effects/aim-markers.js')&&htmlPreview.includes('effects/aim-markers.js')&&ns.includes("'effects/aim-markers.js'"),'aim markers module is loaded');
 assert(read('minigames/vocab-force/effects/aim-markers.js').includes('0x4ec4ff')&&read('minigames/vocab-force/effects/aim-markers.js').includes('0xff9040'),'markers use slam blue + attack orange');

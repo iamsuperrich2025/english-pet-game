@@ -53,7 +53,9 @@
     tightrope: { file: 'nex_Tightrope_Walk_inplac.glb', clip: 'Tightrope_Walk_inplace', loop: true, fade: 0.15 },
     unsteady: { file: 'nex_Unsteady_Walk.glb', clip: 'Unsteady_Walk', loop: true, fade: 0.12 },
     /* รอบ 1589: ท่ากระแทกพื้น (ปุ่ม SLAM) — GLB จริงที่ผู้ใช้ส่งมา คลิป Charged_Ground_Slam */
-    groundSlam: { file: 'nex_Charged_Ground_Slam.glb', clip: 'Charged_Ground_Slam', loop: false, fade: 0.1, busy: 1.3, hitAt: 0.55 }
+    groundSlam: { file: 'nex_Charged_Ground_Slam.glb', clip: 'Charged_Ground_Slam', loop: false, fade: 0.1, busy: 1.3, hitAt: 0.55 },
+    /* รอบ 1592: ท่าล้มเมื่อโดนระเบิดรถน้ำมัน / แนว SLAM / ลูกพลัง ATTACK — GLB จริงที่ผู้ใช้ส่งมา คลิป Knock_Down */
+    knockDown: { file: 'nex_Knock_Down.glb', clip: 'Knock_Down', loop: false, fade: 0.08, busy: 1.25 }
   };
   Object.keys(STATES).forEach(function(key){
     STATES[key].url = DIR + STATES[key].file;

@@ -32,7 +32,7 @@
   async function loadClips(def){
     /* รอบ 1570: lift/throw ต้องถูก ingest เสมอ (ท่ายกค้าง+ขว้างของระบบแบกยานพาหนะ) — เดิมอยู่นอก core จึงไม่เคยถูกโหลด
        รอบ 1589: groundSlam (ปุ่ม SLAM) ingest เสมอเหมือนกัน — GLB ท่ากระแทกพื้นของ NEX/Lyravyn */
-    const states = ((def && def.core) || CORE).concat(['lift', 'throw', 'groundSlam']);
+    const states = ((def && def.core) || CORE).concat(['lift', 'throw', 'groundSlam', 'knockDown']);
     const extra = (def && def.optional) || ['victory', 'heavyKick'];
     const total = states.length;
     const label = (def && def.displayName) || 'NEX';
@@ -566,7 +566,7 @@
       const mine = VF._t.uidTail ? VF._t.uidTail(net.myUid || 'local') : '';
       net.consumeStrikes().forEach(function(hit){
         if(!hit || hit.target !== mine) return;
-        const from = hit.kind === 'G' ? 'gun' : 'player';
+        const from = hit.kind === 'M' ? 'slam' : (hit.kind === 'G' ? 'gun' : 'player');
         player.takeHit(hit.dmg, !!player.blocking, {from: from, zone: hit.zone, headshot: hit.zone === 'head'});
         if(hud && hud.setHp) hud.setHp(player.hp, player.maxHp);
         if(hud && hud.hurtFlash) hud.hurtFlash((hit.dmg || 0) / (player.maxHp || 1000));

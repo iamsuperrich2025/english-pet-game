@@ -44,7 +44,9 @@
     lift: { file: 'ly_mage_soell_cast.glb', clip: 'mage_soell_cast', loop: true, fade: 0.14, holdAt: 0.45 },
     throw: { file: 'ly_Power_Spin_Jump.glb', clip: '360_Power_Spin_Jump', loop: false, fade: 0.06, busy: 0.6, hitAt: 0.3 },
     /* รอบ 1589: ท่ากระแทกพื้น (ปุ่ม SLAM) — GLB จริงที่ผู้ใช้ส่งมา คลิป Charged_Ground_Slam */
-    groundSlam: { file: 'ly_Charged_Ground_Slam.glb', clip: 'Charged_Ground_Slam', loop: false, fade: 0.1, busy: 1.3, hitAt: 0.55 }
+    groundSlam: { file: 'ly_Charged_Ground_Slam.glb', clip: 'Charged_Ground_Slam', loop: false, fade: 0.1, busy: 1.3, hitAt: 0.55 },
+    /* รอบ 1592: ท่าล้มเมื่อโดนระเบิดรถน้ำมัน / แนว SLAM / ลูกพลัง ATTACK — GLB จริงที่ผู้ใช้ส่งมา คลิป Knock_Down */
+    knockDown: { file: 'ly_Knock_Down.glb', clip: 'Knock_Down', loop: false, fade: 0.08, busy: 1.25 }
   };
   Object.keys(STATES).forEach(function(key){
     STATES[key].url = DIR + STATES[key].file;

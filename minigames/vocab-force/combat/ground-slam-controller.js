@@ -87,7 +87,8 @@
         if(this._hits[key]) continue;
         if(!fx.hit(peer.x, peer.z, halfW + pr)) continue;
         this._hits[key] = true;
-        if(VF._t.notePvpHit) VF._t.notePvpHit(player, {kind: 'P', zone: 'body', targetId: peer.id, dmg: pvpDmg});
+        /* รอบ 1592: kind 'M' แยกจากหมัด ('P') — ฝั่งคนโดนจะได้รู้ว่าโดนแนว SLAM จึงเล่นท่าล้มถูกจังหวะ */
+        if(VF._t.notePvpHit) VF._t.notePvpHit(player, {kind: 'M', zone: 'body', targetId: peer.id, dmg: pvpDmg});
         /* ระเบิดไฟสนั่นจุดชน — เปลวไฟลุกท่วม + คลื่นกระแทก + ซากเศษพื้นแยกร้าว (ชุดเดียวกับ power jump/tanker) */
         const px = peer.x, py = peer.y || 0, pz = peer.z;
         if(deps.fxm && deps.fxm.arenaFire) deps.fxm.arenaFire(px, py, pz, {r: T.EXPLOSION_R || 3});

@@ -72,7 +72,7 @@
     const s = player && player._vfStrike;
     if(!s || !s.seq) return '';
     const seq = ('0' + (s.seq % 100)).slice(-2);
-    const kind = (s.kind === 'kick' || s.kind === 'K') ? 'K' : ((s.kind === 'G' || s.kind === 'gun' || s.kind === 'energy') ? 'G' : 'P');
+    const kind = (s.kind === 'kick' || s.kind === 'K') ? 'K' : ((s.kind === 'G' || s.kind === 'gun' || s.kind === 'energy') ? 'G' : ((s.kind === 'M' || s.kind === 'slam') ? 'M' : 'P'));
     const zone = (s.zone === 'head' || s.zone === 'H') ? 'H' : ((s.zone === 'limb' || s.zone === 'L') ? 'L' : 'B');
     const tgt = VF._t.uidTail(s.targetId);
     const dmg = Math.min(999, Math.max(1, s.dmg | 0));
@@ -90,7 +90,7 @@
     const zone = code.charAt(4);
     const target = code.slice(5, 7);
     const dmg = parseInt(code.slice(7, 10), 10);
-    if(!seq || 'PGK'.indexOf(kind) < 0 || 'HBL'.indexOf(zone) < 0) return null;
+    if(!seq || 'PGKM'.indexOf(kind) < 0 || 'HBL'.indexOf(zone) < 0) return null;
     return {
       seq: seq,
       kind: kind,
