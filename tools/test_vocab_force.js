@@ -1042,6 +1042,12 @@ assert(camSrc.includes('setChargeCam')&&camSrc.includes('chargeCamOrbit')&&camSr
 assert(runtime.includes('setChargeCam')&&runtime.includes('hold.aimed'),'runtime drives charge cam only while holding before aim');
 assert(read('minigames/vocab-force/combat/energy-attack-tune.js').includes('chargeCamDist')&&read('minigames/vocab-force/combat/energy-attack-tune.js').includes('chargeCamFovDrop'),'charge cam tune ships');
 
+
+/* รอบ 1579: lock ตำแหน่ง + หมุนกายตอนแบกรถ */
+const charSrc=read('minigames/vocab-force/character/nex-character-controller.js');
+assert(charSrc.includes('this.carrying && this.grounded && len < 0.5')&&charSrc.includes('lock'),'light stick turns in place while carrying, idle hard-locks position');
+assert(runtime.includes("poll.kick && !player.carrying"),'kick cannot lunge the player while carrying');
+
 if(process.exitCode){
   console.error('vocab-force tests failed after',n,'passes');
 }else{

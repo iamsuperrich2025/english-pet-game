@@ -367,8 +367,9 @@
     if(active) combat.tick(dt, now, player, enemies, fx, camRig, VF.audio, secondary, peopleSnap(), worldMelee || oilTanker);
     if(active && !paused && poll.dash && !player.carrying) player.tryManualDash(poll, camRig, arena, fx, camRig, now);
     if(active && !paused && poll.punch && !player.carrying) combat.handleAttackPress('punch', player, now, enemies, camRig, arena, fx, energy, VF.audio, {hold: !!poll.punchHeld, people: peopleSnap(), world: worldMelee || oilTanker});
-    if(active && !paused && poll.kick){
-      /* รอบ 1575: KICK เตะอย่างเดียว — การยก/ทุ่มย้ายไปอยู่ปุ่ม LIFT/THROW (หรือคีย์ G) หมดแล้ว */
+    if(active && !paused && poll.kick && !player.carrying){
+      /* รอบ 1575: KICK เตะอย่างเดียว — การยก/ทุ่มย้ายไปอยู่ปุ่ม LIFT/THROW (หรือคีย์ G) หมดแล้ว
+         รอบ 1579: ห้ามเตะตอนแบกรถ — ท่าเตะ/การเข้าใกล้เป้าจะดันตำแหน่งตัวละครทั้งที่ยืนแบกอยู่ */
       combat.tryAttackOrApproach(player.anim.has('kick') ? 'kick' : 'punch', player, now, enemies, camRig, arena, fx);
     }
     /* รอบ 1575: ปุ่ม LIFT/THROW (หรือคีย์ G) สองสถานะ — ยังไม่ได้ยก: กดเพื่อยก · ยกแล้ว: กดเพื่อทุ่ม */

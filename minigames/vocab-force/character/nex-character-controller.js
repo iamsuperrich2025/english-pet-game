@@ -265,7 +265,11 @@
       const busy = this.anim && this.anim.isBusy();
       const accel = moving ? 38 : 22;
       if(this._driveT > 0) this._driveT = Math.max(0, this._driveT - dt);
-      if(moving){
+      /* รอบ 1579: แบกยานพาหนะ — stick เบาๆ (เอียงหาทิศ) = หมุนกายอยู่กับที่โดยไม่เดินเลื่อนตำแหน่ง
+         และตอนนิ่งสนิทให้ lock ตำแหน่งขาด (velocity = 0) จะได้ไม่ไถลไปทั่วแผนที่ */
+      if(this.carrying && this.grounded && len < 0.5){
+        this.vx = 0; this.vz = 0;
+      }else if(moving){
         this.vx = VF.lerp(this.vx, wishX * target, VF.clamp(dt * accel, 0, 1));
         this.vz = VF.lerp(this.vz, wishZ * target, VF.clamp(dt * accel, 0, 1));
       }else if(this._driveT > 0 || busy){
@@ -276,6 +280,8 @@
         this.vx *= damp; this.vz *= damp;
         if(Math.abs(this.vx) < 0.05) this.vx = 0;
         if(Math.abs(this.vz) < 0.05) this.vz = 0;
+        /* รอบ 1579: แบกอยู่ = lock ตำแหน่งที่ยืนแน่นขึ้น ไม่ค้างแรงไถล */
+        if(this.carrying){ this.vx = 0; this.vz = 0; }
       }
       const cap = (VF.CombatTune && VF.CombatTune.PLAYER_DRIVE_CAP) || 16;
       const spd = Math.hypot(this.vx, this.vz);
