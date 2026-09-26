@@ -1120,14 +1120,14 @@ assert(tankerSrc2.indexOf('comboKickLaunch')<tankerSrc2.indexOf('if(this._comboH
 assert(sedanSrc.includes('comboKickLaunch')&&sedanSrc.includes('comboShatter')&&sedanSrc.includes('_comboHold'),'sedan combo launch holds the wreck for the mid-air finisher kick');
 assert(sedanSrc.includes('!this._comboHold &&')&&sedanSrc.includes('swapShattered'),'sedan skips settle while held and shatters into the wreck model');
 assert(runtime.includes('grab.comboThrow')&&runtime.includes('grab.tryComboKick')&&runtime.includes('grab.reset()'),'runtime wires combo inputs and resets the combo each round');
-assert(ui.includes('?v=1591'),'ui.js cache-bust bumped so browsers fetch the new vf modules');
+assert(ui.includes('?v=1592'),'ui.js cache-bust bumped so browsers fetch the new vf modules');
 
 /* รอบ 1588: เตะรถยนต์ = กระเด็นไกลเท่ารถน้ำมันโดนเตะ (h54/up39 grav22 ≈ วิถี h54/up34 grav19) + หมุนธรรมชาติ */
 assert(sedanSrc.includes("info.kind) === 'kick'")&&sedanSrc.indexOf('54, 39')>sedanSrc.indexOf('kickish'),'sedan kick launches as far as the kicked tanker trajectory');
 assert(sedanSrc.includes('this._flipSpeed *= (1 - 0.1 * dt)')&&sedanSrc.includes('หมุนช้าลงตามแรงเสียดอากาศ'),'sedan tumble spins decay in air like the tanker (natural spin)');
 const kickRangeTanker=54*(2*34/19), kickRangeSedan=54*(2*39/22);
 assert(Math.abs(kickRangeTanker-kickRangeSedan)/kickRangeTanker<0.02,'kicked sedan flies the same distance as the kicked tanker (same arc, grav-adjusted up)');
-assert(ui.includes('?v=1591'),'ui.js cache-bust bumped for the kick trajectory tune');
+assert(ui.includes('?v=1592'),'ui.js cache-bust bumped for the kick trajectory tune');
 /* รอบ 1590: มาร์กเกอร์ + บนพื้นบอกทิศพลัง (ฟ้า=SLAM · ส้ม=ATTACK) */
 assert(build.includes('effects/aim-markers.js')&&htmlPreview.includes('effects/aim-markers.js')&&ns.includes("'effects/aim-markers.js'"),'aim markers module is loaded');
 assert(read('minigames/vocab-force/effects/aim-markers.js').includes('0x4ec4ff')&&read('minigames/vocab-force/effects/aim-markers.js').includes('0xff9040'),'markers use slam blue + attack orange');
@@ -1232,6 +1232,26 @@ assert(VF.GroundSlamTune.LINE_LENGTH===23 && VF.GroundSlamTune.COOLDOWN===6,'sla
   assert(zHits.length===1&&zHits[0].damage===VF.GroundSlamTune.ZOMBIE_DAMAGE,'zombie on the line burns');
   slamMan2.tick(0.016,22000,p3,{fx:fakeFx2,fxm:fakeFxm,people:[],enemies:{list:[{alive:true,x:0.3,z:5,y:0,applyHit:function(h){zHits.push(h);}}]}});
   assert(zHits.length===2&&booms.length===2,'later burns keep damaging without re-exploding every tick');
+  /* รอบ 1591: รถยนต์/รถน้ำมันที่วางอยู่บนแนวเส้น → ระเบิดแตกทันที (เส้นทางเดียวกับพลังปุ่ม ATTACK) */
+  const detSedan=[],detTank=[];
+  const slamVeh=new VF.GroundSlamController();
+  const pv=mkPlayer();
+  const fakeVehicles={
+    sedan:{ready:true,collider:{minx:-1,maxx:1,minz:10,maxz:12},detonate:function(f,a,c){detSedan.push([f,a,c]);this.collider.broken=true;}},
+    tanker:{ready:true,collider:{minx:19,maxx:22,minz:-1,maxz:1},detonate:function(){detTank.push(1);this.collider.broken=true;}}
+  };
+  slamVeh.trySlam(pv,40000,null,null);
+  slamVeh.tick(0.016,40600,pv,{fx:{castLine:function(){},hit:function(){return null;}},fxm:fakeFxm,people:[],enemies:{list:[]},vehicles:fakeVehicles,audio:{arenaFire:function(){}},camera:{impulse:function(){}}});
+  assert(detSedan.length===1&&detTank.length===0,'a sedan sitting on the blue line detonates; a tanker far off the line is untouched');
+  assert(fakeVehicles.sedan.collider.broken===true,'the slam detonation goes through the vehicle explode path like the ATTACK projectile');
+  /* รถที่พังไปแล้ว ไม่ถูกเรียกซ้ำ */
+  slamVeh.reset();
+  slamVeh._coolUntil=0;
+  slamVeh.trySlam(pv,50000,null,null);
+  const beforeBooms=booms.length;
+  slamVeh.tick(0.016,50600,pv,{fx:{castLine:function(){},hit:function(){return null;}},fxm:fakeFxm,people:[],enemies:{list:[]},vehicles:fakeVehicles,audio:{arenaFire:function(){}},camera:{impulse:function(){}}});
+  assert(detSedan.length===1&&booms.length===beforeBooms,'broken vehicles are skipped (no double detonation)');
+  assert(!read('minigames/vocab-force/combat/ground-slam-controller.js').includes('meleeHit'),'the slam line no longer kick-punts vehicles');
   VF._t.notePvpHit=realNote;
   const dead={alive:false,carrying:null,isDashing:function(){return false;},anim:{isBusy:function(){return false;}},playAction:function(){return true;}};
   assert(new VF.GroundSlamController().trySlam(dead,30000,null,null)===null,'dead players cannot slam');

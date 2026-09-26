@@ -497,7 +497,7 @@
     fx.tick(dt);
     if(trails) trails.tick(step);
     if(fireTrail) fireTrail.tick(dt, enemies, player);
-    if(slam) slam.tick(step, now, player, {fx: slamFx, fxm: fx, enemies: enemies, people: peopleSnap(), camera: camRig, audio: VF.audio, world: worldMelee || oilTanker, fxImpact: fx && fx.impact});
+    if(slam) slam.tick(step, now, player, {fx: slamFx, fxm: fx, enemies: enemies, people: peopleSnap(), camera: camRig, audio: VF.audio, vehicles: {sedan: sedan, tanker: oilTanker}, fxImpact: fx && fx.impact});
     if(slamFx) slamFx.tick(step);
     if(hud && hud.setSlamCooldown) hud.setSlamCooldown(slam ? slam.cooldownFrac(now) : 1);
     if(aimMarkers){ aimMarkers.tick(dt); aimMarkers.update(player, arena); }

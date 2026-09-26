@@ -2,7 +2,8 @@
 /* รอบ 1589: Ground Slam controller — กดปุ่ม SLAM → เล่นท่า groundSlam (GLB จริงของแต่ละตัวละคร)
    ตอน hitAt เส้นเปลวเพลิงสีฟ้าพุ่งยาวเป็นเส้นตรงบนพื้นตามทิศหน้าตัวละคร (ยาวเท่าวิถี overdrive dash)
    · ผู้เล่นคนอื่นที่อยู่ในแนวเส้นเสีย 300 HP ต่อครั้งที่โดน (กันโดนซ้ำรอบเดียวกันด้วย castId)
-   · ซอมบี้ในแนวเส้นไหม้เป็นจังหวะ · รถยนต์/รถน้ำมันในแนวเส้นโดนแรงเตะระดับ heavy kick ครั้งเดียว */
+   · ซอมบี้ในแนวเส้นไหม้เป็นจังหวะ
+   · รอบ 1591: รถยนต์/รถน้ำมันที่วางอยู่บนแนวเส้นระเบิดแตกทันที (เส้นทางเดียวกับพลังปุ่ม ATTACK) */
 (function(root){
   const VF = root.VocabForce = root.VocabForce || {};
 
@@ -65,15 +66,8 @@
         if(deps.audio.fireTrailBurn) deps.audio.fireTrailBurn();
         if(deps.audio.shockwaveImpact) deps.audio.shockwaveImpact();
       }
-      /* ยานพาหนะที่อยู่ในแนวเส้น: จุดกึ่งกลางเส้น + reach ครึ่งเส้น = คันที่วางอยู่บนเส้นโดนพอดี */
-      const world = deps.world;
-      if(world && world.canMelee && world.meleeHit && world.canMelee(player, len)){
-        world.meleeHit(
-          {x: (player.x + bx) / 2, y: (player.y || 0) + 1.0, z: (player.z + bz) / 2},
-          len / 2 + 1.2,
-          {kind: 'heavyKick', force: 46, dir: f, player: player}
-        );
-      }
+      /* รอบ 1591: รถยนต์/รถน้ำมันที่วางอยู่บนแนวเส้น → ระเบิดแตกทันที เส้นทางเดียวกับลูกพลังปุ่ม ATTACK */
+      this._detonateVehiclesOnLine(player.x, player.z, bx, bz, T.LINE_HALF_WIDTH || 1.3, deps);
     }
     /* ดาเมจระหว่างที่ไฟลุก */
     const halfW = T.LINE_HALF_WIDTH || 1.3;
@@ -135,6 +129,37 @@
             });
           }
         }
+      }
+    }
+  };
+
+  /* รอบ 1591: ยานพาหนะ (รถยนต์/รถน้ำมัน) ที่วางอยู่บนแนวเส้น SLAM → ระเบิดแตกทันที
+     เส้นทางเดียวกับลูกพลังปุ่ม ATTACK (sedan.detonate / tanker.detonate) — detonate มี broken guard กันซ้ำอยู่แล้ว */
+  GroundSlamController.prototype._detonateVehiclesOnLine = function(x0, z0, x1, z1, halfW, deps){
+    const vehs = deps.vehicles;
+    if(!vehs) return;
+    const pad = (halfW || 1.3) + 0.4;
+    const names = ['sedan', 'tanker'];
+    for(let n = 0; n < names.length; n++){
+      const veh = vehs[names[n]];
+      if(!veh || !veh.ready || !veh.collider || veh.collider.broken) continue;
+      if(typeof veh.detonate !== 'function') continue;
+      const c = veh.collider;
+      const dx = x1 - x0, dz = z1 - z0;
+      const dist = Math.sqrt(dx * dx + dz * dz) || 1;
+      const steps = Math.max(1, Math.ceil(dist / 1.0));
+      for(let s = 0; s <= steps; s++){
+        const t = s / steps;
+        const px = x0 + dx * t, pz = z0 + dz * t;
+        if(px < c.minx - pad || px > c.maxx + pad || pz < c.minz - pad || pz > c.maxz + pad) continue;
+        /* จุดชน = จุดบนเส้นที่ใกล้กล่องรถที่สุด — ระเบิดใหญ่พร้อมเสียงและแรงสั่นหน้าจอ */
+        const hx = Math.max(c.minx, Math.min(c.maxx, px));
+        const hz = Math.max(c.minz, Math.min(c.maxz, pz));
+        veh.detonate(deps.fxm, deps.audio, deps.camera);
+        if(deps.fxm && deps.fxm.arenaFire) deps.fxm.arenaFire(hx, 0.4, hz, {r: (VF.GroundSlamTune && VF.GroundSlamTune.EXPLOSION_R || 3) * 1.2});
+        if(deps.audio && deps.audio.arenaFire) deps.audio.arenaFire();
+        if(deps.camera && deps.camera.impulse) deps.camera.impulse(1.4, 7, {low: true});
+        break;
       }
     }
   };

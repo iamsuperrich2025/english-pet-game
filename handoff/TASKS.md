@@ -11,6 +11,8 @@
 > ประวัติ Frontline 1372–1373: `handoff/archive/frontline-1372-1373.md`
 
 ### 📌 สรุปสถานะล่าสุด
+- รอบ 1591 · Vocab Force แนวเส้น SLAM vs ยานพาหนะ = ระเบิดแตกทันที (แทนที่ heavy kick เดิม): ground-slam-controller เดินจุดทดสอบทุก 1 หน่วยตลอดเส้นยาว 23 เทียบ AABB ขยาย halfW+0.4 → โดนแล้วเรียก sedan/tanker.detonate เส้นทางเดียวกับลูกพลังปุ่ม ATTACK + arenaFire ใหญ่ 1.2 เท่า + เสียง + แรงสั่นหน้าจอ · runtime ส่ง deps vehicles {sedan,tanker} แทน world
+- ไฟล์: ground-slam-controller.js, runtime/vocab-force-runtime.js, js/ui.js (cache-bump ?v=1592), tools/test_vocab_force.js (sandbox: รถบนเส้นระเบิด/นอกเส้นไม่โดน/พังแล้วข้าม/ไม่มี meleeHit เหลือ) · unit 709 ผ่าน + check_undefined_calls 0
 - รอบ 1590 · Vocab Force มาร์กเกอร์ + บนพื้นบอกทิศพลัง (aim-markers.js ใหม่): + สีฟ้า = ปลายแนวเส้น SLAM (ยาวตาม slamLineLength 23 หน่วย) · + สีส้ม = ทิศพลังปุ่ม ATTACK (ระยะหมัด ~2.8 หน่วย) — วางราบบนพื้น หายใจสลับกันไฟล์/จาง ซ่อนอัตโนมัติตอนตาย/dash/ชมเพื่อน · ล็อกในขอบสนามด้วย ARENA_HALF
 - wire: สร้าง/อัปเดต/dispose ใน runtime ครบ · โหลดผ่าน namespace SCRIPTS + dev index.html + build_web · cache-bump ?v=1591
 - ยืนยัน: unit 705 ผ่าน (assert โมดูล/สี/wire ครบ) + check_undefined_calls 0 + syntax ครบ
