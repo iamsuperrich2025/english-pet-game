@@ -219,6 +219,12 @@
     return y;
   };
 
+  /* รอบ 1583: พื้นฐานดิบของสนาม (ไม่รวมยอดแพลตฟอร์ม/prop) — ใช้ให้ซากรถที่กระเด็นตกลงพื้นจริง
+     แทนขึ้นไปค้างบนยอดกล่องซึ่งดูเหมือนลอยในอากาศ */
+  PrototypeArena.prototype.groundY = function(){
+    return 0;
+  };
+
   PrototypeArena.prototype.collide = function(x, y, z, r){
     r = r || 0.5;
     const h = this.half - 1.2;

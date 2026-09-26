@@ -1064,6 +1064,12 @@ assert(read('minigames/vocab-force/effects/heal-pad.js').includes('this.inside =
 assert(sedanSrc.includes('setFromObject')&&sedanSrc.includes('ค้างท่าที่ตกจริง'),'settled sedan keeps its flipped pose and lifts out of the floor');
 assert(VF.NexManifest.spec('kick')&&VF.NexManifest.spec('punch')&&VF.LyraManifest.spec('kick')&&VF.LyraManifest.spec('punch'),'both NEX and Lyravyn have kick+punch so vehicle melee applies equally');
 
+
+/* รอบ 1583: ซากรถที่ขว้างต้องตกลงพื้นเสมอ ห้ามลอยค้าง */
+assert(read('minigames/vocab-force/map/prototype-arena.js').includes('groundY'),'arena exposes raw ground level');
+assert(sedanSrc.includes('arena.groundY')&&sedanSrc.includes('ห้ามขึ้นไปค้างบนยอดแพลตฟอร์ม'),'thrown/tumbling sedan lands on base ground, never on prop tops');
+assert(tankerSrc2.includes('fail-safe')&&tankerSrc2.includes("'destroyed'"),'tanker without fx still detonates instead of hovering');
+
 if(process.exitCode){
   console.error('vocab-force tests failed after',n,'passes');
 }else{

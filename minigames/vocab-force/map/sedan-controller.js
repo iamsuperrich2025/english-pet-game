@@ -340,7 +340,9 @@
     let wallHit = false;
     if(p.x < -half || p.x > half){ p.x = VF.clamp(p.x, -half, half); this.vx *= -0.42; wallHit = true; }
     if(p.z < -half || p.z > half){ p.z = VF.clamp(p.z, -half, half); this.vz *= -0.42; wallHit = true; }
-    const floor = this.arena && this.arena.surfaceY ? this.arena.surfaceY(p.x, p.z) : 0;
+    /* รอบ 1583: ซากรถที่กระเด็น (thrown/tumbling) ต้องตกลงพื้นฐานสนามเสมอ —
+       ห้ามขึ้นไปค้างบนยอดแพลตฟอร์ม/prop (surfaceY) ซึ่งดูเหมือนลอยในอากาศ */
+    const floor = this.arena && this.arena.groundY ? this.arena.groundY(p.x, p.z) : (this.arena && this.arena.surfaceY ? this.arena.surfaceY(p.x, p.z) : 0);
     let groundHit = false;
     if(p.y <= floor + 0.02 && this.vy < 0){
       p.y = floor;

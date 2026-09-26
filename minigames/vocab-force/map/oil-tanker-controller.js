@@ -392,7 +392,14 @@
   };
 
   OilTankerController.prototype._explode = function(){
-    if(this.state !== 'launched' || !this.root || !this.fx) return;
+    if(this.state !== 'launched' || !this.root) return;
+    /* รอบ 1583: fail-safe — ถ้า fx ใช้ไม่ได้ ก็ต้องทำลายทิ้งเหมือนกัน ห้ามลอยค้างในอากาศ */
+    if(!this.fx){
+      this.state = 'destroyed';
+      this.root.visible = false;
+      if(this.collider) this.collider.broken = true;
+      return;
+    }
     this.state = 'exploding';
     this.fxAge = 0;
     const p = this.root.position;
