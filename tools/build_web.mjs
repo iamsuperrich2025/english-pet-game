@@ -993,6 +993,7 @@ async function sourceFiles() {
       'minigames/vocab-force/runtime/vocab-force-runtime.js',
       'minigames/vocab-force/assets/oiltank.glb',
       'minigames/vocab-force/assets/Golden_Vanguard_Sedan.glb',
+      'minigames/vocab-force/assets/Golden_Vanguard_Sedan_Shattered.glb',
       'minigames/vocab-force/runtime-models/lyravyn/ly_Backflip_and_Hooks.glb',
       'minigames/vocab-force/runtime-models/lyravyn/ly_Confident_Strut.glb',
       'minigames/vocab-force/runtime-models/lyravyn/ly_Dive_Down_and_Land_2.glb',

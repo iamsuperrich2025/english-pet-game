@@ -423,7 +423,13 @@ assert(build.includes('runtime-models/nex/nex_mage_soell_cast.glb')&&build.inclu
 assert(grabSrc.includes('setCarrying'),'grab controller drives THROW button visibility directly');
 assert(runtime.includes('player.carrying'),'runtime THROW visibility falls back to player.carrying');
 const cssSrc=read('minigames/vocab-force/css/vocab-force.css');
-assert(cssSrc.includes('.vf-exit-sub')&&cssSrc.includes('.vf-throw[hidden]'),'EXIT two-line label and THROW hidden rule ship in css');const healSrc=read('minigames/vocab-force/effects/heal-pad.js');assert(healSrc.includes('paintRunes')&&healSrc.includes('heartCross')&&healSrc.includes('helixes')&&healSrc.includes('PointLight'),'heal pad has the round-1567 spectacle set');assert(runtime.includes('player.carrying')&&runtime.includes('grab.onKick'),'runtime wires carrying slow + kick dispatch');
+assert(cssSrc.includes('.vf-exit-sub')&&cssSrc.includes('.vf-throw[hidden]'),'EXIT two-line label and THROW hidden rule ship in css');
+/* รอบ 1573: โมเดลชุดแตกเมื่อถูกต่อย/เตะ + รถลอยเหนือมือตอนแบก */
+assert(sedanSrc.includes('swapShattered')&&sedanSrc.includes('Golden_Vanguard_Sedan_Shattered.glb')&&sedanSrc.includes('canMelee')&&sedanSrc.includes('meleeHit'),'sedan swaps to shattered model on melee hits');
+assert(sedanSrc.includes('1.95')&&sedanSrc.includes('carryTick'),'sedan carry floats above hands');
+assert(grabSrc.includes('held.carryTick(dt, player)')&&grabSrc.includes("held.state !== 'carried'"),'grab tick re-asserts carried state and drives carry float directly');
+assert(runtime.includes('worldMelee')&&runtime.includes('sedan.canMelee'),'combat world proxy covers both sedan and tanker melee');
+assert(build.includes('assets/Golden_Vanguard_Sedan_Shattered.glb'),'shattered sedan GLB ships in production build');const healSrc=read('minigames/vocab-force/effects/heal-pad.js');assert(healSrc.includes('paintRunes')&&healSrc.includes('heartCross')&&healSrc.includes('helixes')&&healSrc.includes('PointLight'),'heal pad has the round-1567 spectacle set');assert(runtime.includes('player.carrying')&&runtime.includes('grab.onKick'),'runtime wires carrying slow + kick dispatch');
 const tankEvent={id:'77:1:9',round:77,startAt:123456,x:84,z:-18,dx:1,dz:0};
 const packedTank=VF._t.packTankerEvent(tankEvent);
 assert(VF._t.parseTankerEvent(packedTank).id===tankEvent.id&&VF._t.parseTankerEvent(packedTank).round===77,'tanker event survives compact network packing');

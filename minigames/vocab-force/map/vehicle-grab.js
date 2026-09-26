@@ -99,6 +99,13 @@
         }
         return;
       }
+      /* รอบ 1573: กันสถานะค้าง — ถ้าผู้เล่นถืออยู่แต่รถหลุดจาก carried (เคยเจอรถจมพื้นทั้งที่ปุ่ม THROW โชว์)
+         ให้ยืนยันสถานะใหม่แล้วเรียก carryTick ที่นี่โดยตรง รับประกันรถลอยเหนือมือทั้งสองคัน */
+      if(player.carrying === held && held.state !== 'carried'){
+        held.state = 'carried';
+        held.carrier = player;
+      }
+      if(held.carryTick) held.carryTick(dt, player);
       return;
     }
     /* ป้ายเตือนเมื่อเดินเข้าใกล้ยานพาหนะ */

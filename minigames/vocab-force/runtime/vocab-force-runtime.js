@@ -4,7 +4,7 @@
   const VF = root.VocabForce = root.VocabForce || {};
   let opening = false, running = false, raf = 0, last = 0;
   let renderer = null, scene = null, camera = null, THREE = null;
-  let player, camRig, input, combat, enemies, arena, fx, hud, round, flyers, trails, fireTrail, secondary, energy, letters, net, healPad, oilTanker, sedan, grab, spectator;
+  let player, camRig, input, combat, enemies, arena, fx, hud, round, flyers, trails, fireTrail, secondary, energy, letters, net, healPad, oilTanker, sedan, grab, spectator, worldMelee;
   let winLock = false, ackOpen = false, pendingWord = null;
   let collusionWatch = null, collusionPending = null;
   let tankerEventSeq = 0;
@@ -364,9 +364,9 @@
     if(secondary && !paused) secondary.tickClock(dt);
     const scale = paused ? 0 : (secondary ? secondary.simScale(combat.hitStop) : 1);
     const step = paused ? 0 : dt * scale;
-    if(active) combat.tick(dt, now, player, enemies, fx, camRig, VF.audio, secondary, peopleSnap(), oilTanker);
+    if(active) combat.tick(dt, now, player, enemies, fx, camRig, VF.audio, secondary, peopleSnap(), worldMelee || oilTanker);
     if(active && !paused && poll.dash && !player.carrying) player.tryManualDash(poll, camRig, arena, fx, camRig, now);
-    if(active && !paused && poll.punch && !player.carrying) combat.handleAttackPress('punch', player, now, enemies, camRig, arena, fx, energy, VF.audio, {hold: !!poll.punchHeld, people: peopleSnap(), world: oilTanker});
+    if(active && !paused && poll.punch && !player.carrying) combat.handleAttackPress('punch', player, now, enemies, camRig, arena, fx, energy, VF.audio, {hold: !!poll.punchHeld, people: peopleSnap(), world: worldMelee || oilTanker});
     if(active && !paused && poll.kick){
       /* รอบ 1567: KICK ใกล้ยานพาหนะ = ยก/ทุ่ม · ไม่ใกล้ = เตะต่อยปกติ */
       const grabbed = grab && grab.onKick(player, camRig, fx, VF.audio, hud, requestTankerHit, !!(net && net.requestTankerHit));
@@ -580,6 +580,20 @@
         return null;
       }) : Promise.resolve(null);
       grab = VF.VehicleGrabController ? new VF.VehicleGrabController({sedan: sedan, tanker: oilTanker, arena: arena}) : null;
+      /* รอบ 1573: combat เคยคุยกับแค่รถน้ำมัน (world=oilTanker) → ต่อย/เตะรถยนต์ไม่มีผล
+         proxy นี้ส่งต่อไปยังคันที่อยู่ในระยะ (รถยนต์ก่อน แล้วรถน้ำมัน) */
+      worldMelee = {
+        canMelee: function(player, reach){
+          return !!((sedan && sedan.canMelee && sedan.canMelee(player, reach)) ||
+                    (oilTanker && oilTanker.canMelee && oilTanker.canMelee(player, reach)));
+        },
+        meleeHit: function(origin, reach, info){
+          const p = (info && info.player) || {x: origin.x, z: origin.z, alive: true};
+          if(sedan && sedan.canMelee && sedan.canMelee(p, reach) && sedan.meleeHit) return sedan.meleeHit(origin, reach, info);
+          if(oilTanker && oilTanker.meleeHit) return oilTanker.meleeHit(origin, reach, info);
+          return false;
+        }
+      };
       healPad = VF.HealPad ? new VF.HealPad().attach(scene) : null;
       fx = new VF.ImpactFXManager().attach(scene);
       trails = new VF.MotionTrailManager().attach(scene);

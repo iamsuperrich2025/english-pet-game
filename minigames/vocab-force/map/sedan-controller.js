@@ -22,6 +22,19 @@
     return VF._sedanAsset;
   }
 
+  /* รอบ 1573: โมเดลชุดแตก — โหลดขึ้นมาเมื่อรถถูกเตะ/ต่อยครั้งแรก (lazy, ไม่หน่วยโหลดตอนเข้าเกม) */
+  function shatteredAsset(){
+    if(VF._sedanShatteredAsset) return VF._sedanShatteredAsset;
+    VF._sedanShatteredAsset = VF.ensureGLTFLoader().then(function(THREE){
+      return new Promise(function(resolve, reject){
+        new THREE.GLTFLoader().load(VF.asset('assets/Golden_Vanguard_Sedan_Shattered.glb'), function(gltf){
+          resolve(gltf.scene);
+        }, undefined, reject);
+      });
+    });
+    return VF._sedanShatteredAsset;
+  }
+
   function SedanController(){
     const spawn = VF.SEDAN_SPAWN || {x: -60, z: 55, yaw: 2.2};
     this.spawn = {x: spawn.x, z: spawn.z, yaw: spawn.yaw || 0};
@@ -59,8 +72,25 @@
     const byLength = 4.5 / longest;
     const byHeight = size.y > 0.001 ? 1.5 / size.y : byLength;
     const scale = Math.min(byLength, byHeight * 1.15);
+    this._modelScale = scale;
+    this.root = holder;
+    this.model = null;
+    this._applyModel(model);
+    this._normalModel = model;
+    this.ready = true;
+    this.reset();
+    return this;
+  };
+
+  /* รอบ 1573: ใส่โมเดลเข้า holder ชุดปัจจุบัน (ปกติ/ชุดแตก) — คำนวณสเกล ความสูงพื้น และขนาดครึ่งใหม่ทุกครั้ง */
+  SedanController.prototype._applyModel = function(model){
+    if(!this.root || !model) return false;
+    const THREE = root.THREE;
+    if(this.model && this.model.parent) this.root.remove(this.model);
+    const scale = this._modelScale || 1;
     model.scale.setScalar(scale);
-    box = new THREE.Box3().setFromObject(model);
+    let box = new THREE.Box3().setFromObject(model);
+    const size = new THREE.Vector3();
     box.getSize(size);
     model.position.y -= box.min.y;
     this.halfLong = Math.max(size.x, size.z) * 0.5;
@@ -71,11 +101,45 @@
       obj.receiveShadow = false;
       obj.frustumCulled = true;
     });
-    this.root = holder;
+    this.root.add(model);
     this.model = model;
-    this.ready = true;
-    this.reset();
-    return this;
+    this._updateCollider();
+    return true;
+  };
+
+  /* รอบ 1573: รถถูกเตะ/ต่อย → สลับเป็นโมเดลชุดแตก (โหลด lazy ครั้งแรก แล้วเก็บไว้ใช้ซ้ำ) */
+  SedanController.prototype.swapShattered = function(){
+    if(!this.ready || this._shatteredOn) return false;
+    this._shatteredOn = true;
+    const self = this;
+    shatteredAsset().then(function(source){
+      if(!self._shatteredModel) self._shatteredModel = source.clone(true);
+      self._applyModel(self._shatteredModel);
+    }).catch(function(err){
+      console.warn('[VocabForce] sedan shattered load skip', err);
+    });
+    return true;
+  };
+
+  /* รอบ 1573: ต่อย/เตะโดนรถยนต์ได้เหมือนรถน้ำมัน (combat เรียกผ่าน world proxy) */
+  SedanController.prototype.canMelee = function(player, reach){
+    if(!this.ready || this.state !== 'idle' || !player || player.alive === false) return false;
+    return pointBoxDistance(player.x || 0, player.z || 0, this.collider) <= (reach || 2.4);
+  };
+
+  SedanController.prototype.meleeHit = function(origin, reach, info){
+    if(!this.ready || this.state !== 'idle') return false;
+    if(this._meleeAt && VF.now() - this._meleeAt < 900) return false;
+    if(pointBoxDistance(origin.x || 0, origin.z || 0, this.collider) > (reach || 2.8) + 1.1) return false;
+    this._meleeAt = VF.now();
+    /* กระตุกตัวถังเล็กน้อยให้รู้สึกถึงแรงกระแทก แล้วสลับชุดแตก */
+    if(this.root){
+      this.root.position.x += ((info && info.dir && info.dir.x) || 0) * 0.22;
+      this.root.position.z += ((info && info.dir && info.dir.z) || 0) * 0.22;
+    }
+    this._updateCollider();
+    this.swapShattered();
+    return true;
   };
 
   SedanController.prototype._updateCollider = function(){
@@ -108,6 +172,11 @@
     this.avx = this.avy = this.avz = 0;
     this._hitIds = {};
     this.carrier = null;
+    /* รอบ 1573: รอบใหม่ = รถกลับเป็นสภาพปกติ (ถอดโมเดลชุดแตก) */
+    if(this._shatteredOn){
+      this._shatteredOn = false;
+      if(this._normalModel) this._applyModel(this._normalModel);
+    }
     if(this.root){
       this.root.visible = true;
       this.root.position.set(this.spawn.x, 0, this.spawn.z);
@@ -147,9 +216,11 @@
     const fwd = player.forward ? player.forward() : {x: 0, z: 1};
     const t = (VF.now ? VF.now() : 0) / 1000;
     const bob = Math.sin(t * 5) * 0.05;
+    /* รอบ 1573: ยกขึ้นลอย "เหนือมือ" (ท่า cast ยกมือเหนือศีรษะ) — เดิม 1.05 ต่ำเกินเหมือนลากพื้น
+       ใช้กับทั้ง NEX และ Lyravyn (carryTick ไม่ผูกกับตัวละคร) */
     this.root.position.set(
       (player.x || 0) + fwd.x * (this.halfLong + 0.9),
-      (player.y || 0) + 1.05 + bob,
+      (player.y || 0) + 1.95 + bob,
       (player.z || 0) + fwd.z * (this.halfLong + 0.9)
     );
     this.root.rotation.y = Math.atan2(fwd.x, fwd.z);

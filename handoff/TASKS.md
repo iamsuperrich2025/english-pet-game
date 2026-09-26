@@ -11,6 +11,9 @@
 > ประวัติ Frontline 1372–1373: `handoff/archive/frontline-1372-1373.md`
 
 ### 📌 สรุปสถานะล่าสุด
+- รอบ 1573 · รถยนต์ถูกต่อย/เตะ=โมเดลชุดแตก (Golden_Vanguard_Sedan_Shattered.glb 16MB, lazy-load ตอนถูกตีครั้งแรก เก็บโมเดลไว้สลับกลับตอน reset) — เพิ่ม canMelee/meleeHit ให้ sedan · combat เคยคุย world=oilTanker อย่างเดียว → สร้าง worldMelee proxy ใน runtime (sedan ก่อน tanker) ส่งเข้า combat.tick+handleAttackPress
+- รถลอยเหนือมือ: sedan carryTick y 1.05→1.95 (ท่า cast ยกมือเหนือศีรษะ ใช้ร่วม NEX/Lyra — carryTick ไม่ผูกตัวละคร) · เสริม grab.tick ยืนยัน state carried ใหม่+เรียก carryTick ตรง (กันเคสรถจมพื้นทั้งที่ปุ่ม THROW โชว์ที่เคยเจอ) · tanker carry y=2.5 ลอยอยู่แล้ว
+- cache-bust bump ?v=1573 · GLB ชุดแตก track เข้า git + build_web asset list (บทเรียนรถหาย 1566/1567) · unit 605 + regression ครบ · deploy ตามรอบ 1573
 - รอบ 1572 · กด THROW ไม่ทุ่ม (ออนไลน์) — ต้นตอจริง: tickTanker ฝั่ง host ประมวลผลคำขอเฉพาะตอน oilTanker.state==='idle' + acceptRequest เช็ก idle เท่านั้น → ตอนแบก (carried) คำขอ grab-throw ถูกเมินถาวร รถค้างติดตัว · แก้ทั้งสองจุด: ลูป host อนุญาต req.grab&&state==='carried' · acceptRequest ผ่อนเงื่อนไขเดียวกัน (applyEvent รับ carried อยู่แล้ว)
 - รถยนต์ทุ่มตรง (throwBy ไม่ผ่าน net) ใช้ได้ปกติ — ยืนยันด้วย VM flow test ทั้ง tanker online (accepted→applyEvent→launched) และ sedan (thrown) · เสริม cache-bust โมดูลทั้งหมดใน ui.js loadVocabForceModules (?v=1572) กันไฟล์เก่าจาก HTTP cache ทำปุ่มกดแล้วเงียบ — ระวัง: เปลี่ยน token ทุกครั้งที่แก้โมดูล vf
 - ป้าย EN/TH ของแถวบน (THROW/BLOCK/JUMP) ย้ายไป "เหนือ"ปุ่ม (flex-direction:column-reverse) แก้ทับปุ่มแถวล่าง · unit 600 + regression ครบ · deploy ตามรอบ 1572
