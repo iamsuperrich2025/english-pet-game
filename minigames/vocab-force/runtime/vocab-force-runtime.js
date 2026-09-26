@@ -609,6 +609,8 @@
       fireTrail = VF.OverdriveFireTrail ? new VF.OverdriveFireTrail().attach(scene) : null;
       secondary = new VF.SecondaryImpactController();
       energy = new VF.EnergyAttackController().attach(scene);
+      /* รอบ 1585: ผูกยานพาหนะเข้ากับลูกพลัง — โดนรถน้ำมัน/รถยนต์ = ระเบิดแตกสลายทันที */
+      if(energy.guns && energy.guns.setVehicles) energy.guns.setVehicles(sedan, oilTanker);
       enemies = new VF.EnemyManager().attach(scene);
       letters = new VF.LetterField().attach(scene);
       spectator = new VF.SpectatorController();

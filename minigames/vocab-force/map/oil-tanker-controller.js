@@ -383,6 +383,22 @@
     }
   };
 
+  /* รอบ 1585: ลูกพลังชาร์จโดนรถน้ำมัน = ระเบิดแตกสลายทันที — ใช้เส้นทาง _explode เดิมทั้งหมด
+     (เอฟเฟกต์ระเบิด + ดาเมจ 500 ทุกตัวผ่าน onExplosion) · ถ้ามีคนกำลังแบกอยู่ ให้ปล่อยมือก่อน
+     ปุ่ม LIFT/THROW บน HUD รีเซ็ตสถานะเองจากเฟรม runtime ไม่ต้องแตะ */
+  OilTankerController.prototype.detonate = function(){
+    if(!this.ready) return false;
+    if(this.state !== 'idle' && this.state !== 'carried' && this.state !== 'launched') return false;
+    if(this.carrier && this.carrier.carrying === this) this.carrier.carrying = null;
+    this.carrier = null;
+    /* eventId ใหม่ทุกครั้ง = damageEventId ต่างจากเดิม → onExplosion ยิงดาเมจเสมอ */
+    this.eventId = 'proj:' + String(Date.now()) + ':' + ((Math.random() * 1e6) | 0);
+    this.state = 'launched';
+    this.elapsed = 0;
+    this._explode();
+    return this.state === 'exploding' || this.state === 'destroyed';
+  };
+
   OilTankerController.prototype._seedParticles = function(mesh, smoke){
     const vel = mesh.userData.velocity;
     vel.length = 0;

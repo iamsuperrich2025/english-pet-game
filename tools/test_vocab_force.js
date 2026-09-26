@@ -1076,6 +1076,14 @@ assert(grabSrc.includes('_updateMarker')&&grabSrc.includes('_ensureMarker')&&gra
 assert(sedanSrc.includes('THROW_SPEC')&&tankerSrc2.includes('THROW_SPEC'),'both vehicles publish throw specs for landing prediction');
 assert(runtime.includes('arena: arena, scene: scene'),'runtime passes scene so grab can mount the marker');
 
+
+/* รอบ 1585: ลูกพลఱงชาร์จโดนรถ = ระเบิดแตกสลายทันที */
+const projSrc=read('minigames/vocab-force/effects/energy-projectile-manager.js');
+assert(projSrc.includes('setVehicles')&&projSrc.includes('_hitVehicle'),'energy projectiles check vehicles');
+assert(projSrc.indexOf('_hitVehicle(shot, rad')>=0&&projSrc.indexOf('_hitVehicle(shot, rad')<projSrc.indexOf('if(arena && arena.collide)'),'vehicle check runs before generic arena collide');
+assert(tankerSrc2.includes('prototype.detonate'),'tanker exposes detonate reusing _explode');
+assert(sedanSrc.includes('prototype.detonate')&&sedanSrc.includes('swapShattered'),'sedan detonate swaps to shattered wreck');
+assert(runtime.includes('setVehicles(sedan, oilTanker)'),'runtime wires vehicles into energy guns');
 if(process.exitCode){
   console.error('vocab-force tests failed after',n,'passes');
 }else{

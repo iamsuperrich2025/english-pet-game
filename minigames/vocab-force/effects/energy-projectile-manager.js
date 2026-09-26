@@ -164,6 +164,42 @@
     }
   };
 
+  /* รอบ 1585: ลูกพลังชาร์จโดนรถ = ระเบิดแตกสลายทันที — รถน้ำมันใช้เส้นทาง _explode เดิม (500 ทุกตัว)
+     รถยนต์สลับซากชุดแตก + ไฟลุก + แรงสั่นกล้อง */
+  EnergyProjectileManager.prototype.setVehicles = function(sedan, tanker){
+    this._vehicles = {sedan: sedan || null, tanker: tanker || null};
+  };
+
+  EnergyProjectileManager.prototype._hitVehicle = function(shot, rad, fx, audio, cam){
+    const v = this._vehicles;
+    if(!v) return false;
+    const tanker = v.tanker;
+    if(tanker && tanker.ready && tanker.collider && !tanker.collider.broken){
+      const c = tanker.collider;
+      if(shot.x >= c.minx - rad && shot.x <= c.maxx + rad &&
+         shot.z >= c.minz - rad && shot.z <= c.maxz + rad &&
+         shot.y <= (c.maxy || 4.8) + rad && shot.y >= -rad){
+        tanker.detonate();
+        this._impactFx(fx, shot.x, shot.y, shot.z, shot.vx, 0, shot.vz, shot.pal, !!shot.last, shot.scale, shot.chargeFrac);
+        if(audio && audio.arenaFire) audio.arenaFire();
+        if(cam && cam.impulse) cam.impulse(0.5, 3.4);
+        return true;
+      }
+    }
+    const sedan = v.sedan;
+    if(sedan && sedan.ready && sedan.collider && !sedan.collider.broken){
+      const c = sedan.collider;
+      if(shot.x >= c.minx - rad && shot.x <= c.maxx + rad &&
+         shot.z >= c.minz - rad && shot.z <= c.maxz + rad &&
+         shot.y <= (c.maxy || 1.7) + rad && shot.y >= -rad){
+        sedan.detonate(fx, audio, cam);
+        this._impactFx(fx, shot.x, shot.y, shot.z, shot.vx, 0, shot.vz, shot.pal, !!shot.last, shot.scale, shot.chargeFrac);
+        return true;
+      }
+    }
+    return false;
+  };
+
   EnergyProjectileManager.prototype.tick = function(dt, enemies, arena, fx, cam, player, combat, audio, people){
     const T = VF.EnergyAttackTune || {};
     const baseRad = T.projectileRadius || 0.28;
@@ -184,6 +220,12 @@
       for(let s = 0; s < slices && !hit; s++){
         shot.x += sx; shot.y += sy; shot.z += sz;
         shot.dist += Math.hypot(sx, sy, sz);
+        /* รอบ 1585: เช็กยานพาหนะก่อน arena.collide เสมอ — collider รถตอน idle ถูก arena ถือเป็นกล่อง
+           สิ่งกีดขวางปกติ ถ้าปล่อยให้เช็กก่อน ลูกพลังจะกลายเป็นแค่การกระแทกกำแพงทั่วไป */
+        if(this._hitVehicle(shot, rad, fx, audio, cam)){
+          hit = true;
+          break;
+        }
         if(arena && arena.collide){
           const c = arena.collide(shot.x, shot.y, shot.z, rad);
           const corr = Math.hypot(c.x - shot.x, c.z - shot.z);

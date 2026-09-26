@@ -203,6 +203,34 @@
     return true;
   };
 
+  /* รอบ 1585: ลูกพลังชาร์จโดนรถยนต์ = ระเบิดแตกสลายทันที ค้างเป็นซากชุดแตก (สอดคล้องผลการเตะ/ต่อย รอบ 1582)
+     หยุดความเร็ว/การพลิกทั้งหมด วางลงพื้นฐานสนาม แล้วสลับโมเดลชุดแตกที่โหลดล่วงหน้าไว้แล้ว */
+  SedanController.prototype.detonate = function(fx, audio, cam){
+    if(!this.ready) return false;
+    if(this.carrier && this.carrier.carrying === this) this.carrier.carrying = null;
+    this.carrier = null;
+    this.vx = this.vy = this.vz = 0;
+    this._flipSpeed = 0;
+    this._yawSpin = 0;
+    if(this.root){
+      if(this.root.quaternion) this.root.quaternion.identity();
+      if(this.root.rotation) this.root.rotation.set(0, this.root.rotation.y || 0, 0);
+      this.root.visible = true;
+      const floor = this.arena && this.arena.groundY ? this.arena.groundY(this.root.position.x, this.root.position.z) : (this.arena && this.arena.surfaceY ? this.arena.surfaceY(this.root.position.x, this.root.position.z) : 0);
+      this.root.position.y = floor;
+    }
+    if(this.state === 'thrown' || this.state === 'tumbling' || this.state === 'carried') this.state = 'idle';
+    this.swapShattered();
+    this._updateCollider();
+    if(fx && fx.arenaFire){
+      const p = this.root ? this.root.position : {x: this.spawn.x, y: 0, z: this.spawn.z};
+      fx.arenaFire(p.x, (p.y || 0) + 0.6, p.z, {r: 3.2});
+    }
+    if(audio && audio.arenaFire) audio.arenaFire();
+    if(cam && cam.impulse) cam.impulse(0.42, 3.2);
+    return true;
+  };
+
   SedanController.prototype._updateCollider = function(){
     if(!this.arena) return;
     if(!this.collider){
