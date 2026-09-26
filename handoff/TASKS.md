@@ -23,9 +23,6 @@
 - ค้าง/ระวัง: holdAt 0.45 เป็นการเดาจุดแช่กลางคลิป cast — อาจต้องจูน 0–1 หลังดูจริง (เครื่อง dev ไม่มี puppeteer) · เทสต์ unit 596 + regression ครบ · deploy ตามรอบ 1570
 - รอบ 1569 · แก้โมเดลรถยนต์+รถน้ำมันมองไม่เห็นบนจริง — ต้นตอ: GLTFLoader ไม่ได้อยู่ใน three.min.js (ตัวละครรอดเพราะ nex-asset-loader lazy-load เอง) ส่วน map/oil-tanker+sedan reject เงียบ 'GLTFLoader missing' → console.warn แล้ว spawn ไม่สำเร็จทั้งคู่
 - แก้: เพิ่ม `VF.ensureGLTFLoader()` helper กลางใน vocab-force-namespace.js (lazy-load js/vendor/GLTFLoader.js ผ่าน loadScriptOnce/fallback script tag โหลดครั้งเดียว) → cachedAsset ทั้งสองคอนโทรลเลอร์เปลี่ยนเป็นเรียก helper แทนเช็ค root.THREE ตรง ๆ
-- ยืนยัน: unit 588 + Home V2 R41 + mecha admin lock + mecha 1480 ครบ · GLB บน live 200 ทั้งคู่ (เช็กก่อนแก้) · deploy ตามรอบ 1569
-- รอบ 1568 · Vocab Force เห็นเฉพาะแอดมิน: `js/ui.js` refreshVocabForceLock เปลี่ยนเป็น `b.hidden=!ok` (ผู้เล่นทั่วไปมองไม่เห็นปุ่มราง Classic แอดมินเห็น+กดได้) + `js/home-v2.js` เพิ่ม 'vocabforce' ใน ADMIN_ONLY_WORLD_ACTIONS (navButton ซ่อน/disable อัตโนมัติ บล็อก action() อยู่แล้ว)
-- การล็อกการเล่นแอดมินอยู่ก่อนแล้วทั้ง openVocabForce() และ URL ?vocab-force=1 (auth.js) ไม่ต้องแตะ · อัปเดตเทสต์ test_vocab_force (hidden assert) + test_home_v2_mobile_preview (adminOnlyWorlds เพิ่ม vocabforce, ตัดออกจาก publicWorlds; จำนวน railItems ยัง 32 เพราะปุ่มแค่ซ่อน)
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
