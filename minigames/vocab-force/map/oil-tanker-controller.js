@@ -35,6 +35,9 @@
     return mesh;
   }
 
+  /* รอบ 1594: เตะ #2 ปลิวขึ้นฟ้า (จุดจบคอมโบใหม่ — แทนที่การระเบิดเดิม) */
+  const SKY_SPEC = {h: 14, up: 46, grav: 7, vanishY: 70};
+
   function OilTankerController(){
     const spawn = VF.TANKER_SPAWN || {x: 84, z: -18, yaw: Math.PI * 0.5};
     this.spawn = {x: spawn.x, z: spawn.z, yaw: spawn.yaw || 0};
@@ -61,6 +64,7 @@
     this._pendingHit = false;
     this._pendingAt = 0;
     this._comboHold = false;
+    this._skyPunt = false;
     this.carrier = null;
     this.onHitRequest = null;
     this.onExplosion = null;
@@ -168,6 +172,7 @@
     this._pendingHit = false;
     this._pendingAt = 0;
     this._comboHold = false;
+    this._skyPunt = false;
     this.vx = this.vy = this.vz = 0;
     this.avx = this.avy = this.avz = 0;
     this.carrier = null;
@@ -350,12 +355,14 @@
     return true;
   };
 
-  /* รอบ 1587: คอมโบเตะระเบิด — เตะ #1 ปล่อยรถลอยวิถีโค้งสูง (กด THROW×2 แล้ว KICK ขณะแบก)
-     ใช้เส้นทาง 'launched' เดิม แต่ _comboHold กันการระเบิดเองตอนถึงพื้น รอเตะ #2 กลางอากาศ
-     (comboShatter) เป็นคนสั่งระเบิดแตกละเอียด · fail-safe: tick() elapsed>=4.5 ระเบิดเองเหมือนเดิม */
+  /* รอบ 1587/1594: คอมโบเตะ — เตะ #1 ปล่อยรถลอยวิถีโค้งสูง ใช้เส้นทาง 'launched' เดิม
+     แต่ _comboHold กันการระเบิดเองตอนถึงพื้น รอเตะ #2 กลางอากาศ (comboSkyPunt รอบ 1594)
+     รอบ 1594: รับ state 'launched' เพิ่ม — กด THROW ครั้งแรกทุ่มทันทีแล้วกดซ้ำตอนรถลอย
+     จึงเรียกตัวนี้แปลงวิถีจากทุ่มปกติเป็นวิถีคอมโบได้เลย · fail-safe: tick() elapsed>=4.5
+     (และไม่ใช่ช่วง _skyPunt) ระเบิดเองเหมือนเดิม */
   OilTankerController.prototype.comboKickLaunch = function(dirX, dirZ, spec){
     if(!this.ready || !this.root) return false;
-    if(this.state !== 'carried' && this.state !== 'idle') return false;
+    if(this.state !== 'carried' && this.state !== 'idle' && this.state !== 'launched') return false;
     const n = Math.hypot(dirX, dirZ) || 1;
     const dxn = dirX / n, dzn = dirZ / n;
     this._comboHold = true;
@@ -393,10 +400,50 @@
     return this.state === 'exploding' || this.state === 'destroyed';
   };
 
+  /* รอบ 1594: เตะ #2 (จุดจบคอมโบใหม่) — ไม่ระเบิดอีกต่อไป รถถูกเตะพุ่งขึ้นฟ้าสูงแล้วหายวับไป
+     (ผู้ใช้สั่ง: ทั้งรถน้ำมันและรถเก๋ง กระเด็นปลิวลอยหายไปบนอากาศสูง ๆ) */
+  OilTankerController.prototype.comboSkyPunt = function(dirX, dirZ){
+    if(!this.ready || !this.root) return false;
+    if(this.state !== 'launched' && this.state !== 'idle' && this.state !== 'carried') return false;
+    const n = Math.hypot(dirX, dirZ) || 1;
+    this._comboHold = false;
+    this._skyPunt = true;
+    this.state = 'launched';
+    /* สร้างแกนหมุน lazy (รถนิ่ง ๆ ที่ยังไม่เคยถูกปล่อยก็พลิกตามได้) */
+    if(!this._tAxis){
+      const THREE = root.THREE;
+      this._tAxis = new THREE.Vector3();
+      this._tQ = new THREE.Quaternion();
+      this._tQY = new THREE.Quaternion();
+      this._tUp = new THREE.Vector3(0, 1, 0);
+    }
+    const dxn = dirX / n, dzn = dirZ / n;
+    this._tAxis.set(dzn + dxn * 0.24, 0.06, -dxn + dzn * 0.24).normalize();
+    this.vx = dxn * SKY_SPEC.h;
+    this.vy = SKY_SPEC.up;
+    this.vz = dzn * SKY_SPEC.h;
+    this._flipSpeed = Math.max(this._flipSpeed || 0, 9);
+    this._yawSpin = Math.max(this._yawSpin || 0, 2.2);
+    this._updateCollider();
+    return true;
+  };
+
+  /* รถปลิวพ้นขอบฟ้า — หายวับไปเลย (ไม่มีระเบิด/ดาเมจ ตามดีไซน์คอมโบใหม่) */
+  OilTankerController.prototype._vanishSky = function(){
+    this._skyPunt = false;
+    this.vx = this.vy = this.vz = 0;
+    this._flipSpeed = 0;
+    this._yawSpin = 0;
+    if(this.root) this.root.visible = false;
+    this.state = 'destroyed';
+    this._updateCollider();
+  };
+
   OilTankerController.prototype._stepLaunch = function(dt){
     if(!this.root) return;
     this.elapsed += dt;
-    this.vy -= 19 * dt;
+    /* รอบ 1594: ช่วงปลิวขึ้นฟ้าแรงโน้มถ่วงจางลง บินช้า/ลอยนานจนหายวับ */
+    this.vy -= (this._skyPunt ? SKY_SPEC.grav : 19) * dt;
     this.root.position.x += this.vx * dt;
     this.root.position.y += this.vy * dt;
     this.root.position.z += this.vz * dt;
@@ -413,7 +460,8 @@
       }
     }
     const half = this.arena ? this.arena.half - 8 : 270;
-    if(Math.abs(this.root.position.x) > half || Math.abs(this.root.position.z) > half){
+    /* รอบ 1594: ช่วง _skyPunt บินทะลุขอบสนามได้ (กัน clamp/ระเบิด ให้ปลิวพ้นขอบฟ้า) */
+    if(!this._skyPunt && (Math.abs(this.root.position.x) > half || Math.abs(this.root.position.z) > half)){
       /* รอบ 1567: ปะทะขอบสนาม = ระเบิดทันที · รอบ 1587: ช่วงคอมโบกันไว้ รอเตะ #2 สั่งระเบิด */
       this.root.position.x = VF.clamp(this.root.position.x, -half, half);
       this.root.position.z = VF.clamp(this.root.position.z, -half, half);
@@ -425,7 +473,7 @@
       return;
     }
     const floor = this.arena && this.arena.surfaceY ? this.arena.surfaceY(this.root.position.x, this.root.position.z) : 0;
-    if(this.root.position.y < floor + 1.25 && this.vy < 0){
+    if(!this._skyPunt && this.root.position.y < floor + 1.25 && this.vy < 0){
       /* รอบ 1567: ปะทะพื้น/สิ่งใดก็ตาม = ระเบิดทันที (ดาเมจ 500 ทุกตัวผ่าน onExplosion เดิม)
          รอบ 1587: ช่วงคอมโบให้ลอยค้างระดับเตะ รอเตะ #2 กลางอากาศเป็นคนสั่งระเบิด */
       this.root.position.y = floor + 1.25;
@@ -435,6 +483,8 @@
         this._explode();
       }
     }
+    /* รอบ 1594: รถปลิวพ้นขอบฟ้า → หายวับไป (ไม่มีระเบิด/ดาเมจ) */
+    if(this._skyPunt && (this.root.position.y >= SKY_SPEC.vanishY || this.elapsed > 8)) this._vanishSky();
   };
 
   /* รอบ 1585: ลูกพลังชาร์จโดนรถน้ำมัน = ระเบิดแตกสลายทันที — ใช้เส้นทาง _explode เดิมทั้งหมด
@@ -536,7 +586,7 @@
       this.carryTick(dt, this.carrier);
     }else if(this.state === 'launched'){
       this._stepLaunch(dt);
-      if(this.state === 'launched' && this.elapsed >= 4.5) this._explode();
+      if(this.state === 'launched' && this.elapsed >= 4.5 && !this._skyPunt) this._explode();
     }else if(this.state === 'exploding'){
       this._tickExplosion(dt);
     }

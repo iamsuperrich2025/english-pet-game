@@ -35,6 +35,9 @@
     return VF._sedanShatteredAsset;
   }
 
+  /* รอบ 1594: สเปกวิถีปลิวขึ้นฟ้าหลังโดนเตะ #2 (จุดจบคอมโบใหม่ — ไม่ระเบิด หายวับไปบนฟ้า) */
+  const SKY_SPEC = {h: 14, up: 46, grav: 7, vanishY: 70};
+
   function SedanController(){
     const spawn = VF.SEDAN_SPAWN || {x: -60, z: 55, yaw: 2.2};
     this.spawn = {x: spawn.x, z: spawn.z, yaw: spawn.yaw || 0};
@@ -56,6 +59,7 @@
     this.bounces = 0;
     this._hitIds = {};
     this.carrier = null;
+    this._skyPunt = false;
   }
 
   SedanController.prototype.attach = async function(scene, arena){
@@ -249,11 +253,13 @@
     return true;
   };
 
-  /* รอบ 1587: คอมโบเตะระเบิด — เตะ #1 ปล่อยรถยนต์ลอยวิถีโค้งสูง (_comboHold กันการตั้งล้อ/เด้งพื้น
-     รอเตะ #2 กลางอากาศ · comboShatter สลับชุดแตก + จอดซาก + ไฟลุก) */
+  /* รอบ 1587/1594: คอมโบเตะ — เตะ #1 ปล่อยรถยนต์ลอยวิถีโค้งสูง (_comboHold กันการตั้งล้อ/เด้งพื้น
+     รอเตะ #2 กลางอากาศ · comboSkyPunt รอบ 1594 เป็นคนสั่งปลิวขึ้นฟ้า)
+     รอบ 1594: รับ state 'thrown'/'tumbling' เพิ่ม — กด THROW ครั้งแรกทุ่มทันทีแล้วกดซ้ำตอนรถลอย
+     จึงเรียกตัวนี้แปลงวิถีจากทุ่มปกติเป็นวิถีคอมโบได้เลย */
   SedanController.prototype.comboKickLaunch = function(dirX, dirZ, spec){
     if(!this.ready) return false;
-    if(this.state !== 'carried' && this.state !== 'idle') return false;
+    if(this.state !== 'carried' && this.state !== 'idle' && this.state !== 'thrown' && this.state !== 'tumbling') return false;
     this._comboHold = true;
     this.state = 'thrown';
     this.carrier = null;
@@ -289,6 +295,34 @@
     return true;
   };
 
+  /* รอบ 1594: เตะ #2 (จุดจบคอมโบใหม่) — ไม่ระเบิดอีกต่อไป รถถูกเตะพุ่งขึ้นฟ้าสูงแล้วหายวับไป
+     (ผู้ใช้สั่ง: ทั้งรถน้ำมันและรถเก๋ง กระเด็นปลิวลอยหายไปบนอากาศสูง ๆ — ไม่บังคับ state เตะได้ทุกสภาพ) */
+  SedanController.prototype.comboSkyPunt = function(dirX, dirZ){
+    if(!this.ready || !this.root) return false;
+    this._comboHold = false;
+    this._skyPunt = true;
+    this.state = 'thrown';
+    this.carrier = null;
+    this.elapsed = 0;
+    /* _beginTumble ตั้งความเร็ว + สร้างแกนหมุน lazy ให้เอง (รถนิ่ง ๆ ที่ยังไม่เคยถูกเตะก็หมุนได้) */
+    this._beginTumble(dirX, dirZ, SKY_SPEC.h, SKY_SPEC.up, 9, 2.4);
+    this._flipSpeed = Math.max(this._flipSpeed || 0, 9);
+    this._yawSpin = Math.max(this._yawSpin || 0, 2.4);
+    this._updateCollider();
+    return true;
+  };
+
+  /* รถปลิวพ้นขอบฟ้า — หายวับไปเลย (state 'gone' ทำให้ guard ใน tick หยุดฟิสิกส์เอง ไม่มีระเบิด/ดาเมจ) */
+  SedanController.prototype._vanishSky = function(){
+    this._skyPunt = false;
+    this.vx = this.vy = this.vz = 0;
+    this._flipSpeed = 0;
+    this._yawSpin = 0;
+    if(this.root) this.root.visible = false;
+    this.state = 'gone';
+    this._updateCollider();
+  };
+
   SedanController.prototype._updateCollider = function(){
     if(!this.arena) return;
     if(!this.collider){
@@ -320,6 +354,7 @@
     this._flipSpeed = 0;
     this._yawSpin = 0;
     this._comboHold = false;
+    this._skyPunt = false;
     this._hitIds = {};
     this.carrier = null;
     /* รอบ 1573: รอบใหม่ = รถกลับเป็นสภาพปกติ (ถอดโมเดลชุดแตก) */
@@ -416,6 +451,16 @@
     }
     if(this.state !== 'thrown' && this.state !== 'tumbling' || !this.root) return;
     this.elapsed += dt;
+    if(this._skyPunt){
+      /* รอบ 1594: วิถีปลิวขึ้นฟ้า — แรงโน้มถ่วงจาง ไม่เด้ง/ไม่ชนขอบ พ้นขอบฟ้าค่อยหายวับ */
+      this.vy -= SKY_SPEC.grav * dt;
+      this.root.position.x += this.vx * dt;
+      this.root.position.y += this.vy * dt;
+      this.root.position.z += this.vz * dt;
+      this._tumbleStep(dt);
+      if(this.root.position.y >= SKY_SPEC.vanishY || this.elapsed > 8) this._vanishSky();
+      return;
+    }
     ctx = ctx || {};
     const player = ctx.player;
     const isThrow = this.state === 'thrown';

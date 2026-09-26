@@ -5,9 +5,10 @@
 (function(root){
   const VF = root.VocabForce = root.VocabForce || {};
 
-  /* รอบ 1587: คอมโบเตะระเบิด — กด THROW 2 ครั้งต่อเนื่องขณะแบก แล้วตามด้วย KICK
-     → เตะรถลอยออก ตัวละครว้าบไปเตะรถกลางอากาศจนระเบิดแตกละเอียดพร้อมประกายไฟ
-     (ใช้ได้ทุกตัวละคร — ไม่ผูกกับ manifest ใดตัวหนึ่ง) */
+  /* รอบ 1587/1594: คอมโบเตะพาเที่ยว — กด THROW 2 ครั้งต่อเนื่องแล้วตามด้วย KICK
+     รอบ 1594: กด THROW ครั้งแรก = ทุ่มทันทีตามปกติ (ไม่อมคำสั่งรอ) · กด THROW ครั้งที่ 2
+     ตอนรถยังลอย = แปลงวิถีคอมโบสูง · ตามด้วย KICK = ตัวละครว้าบไปเตะ #2 กลางอากาศ
+     จนจบด้วยรถพุ่งขึ้นฟ้าสูงแล้วหายวับ (ไม่ระเบิด) — ใช้ได้ทุกตัวละคร ไม่ผูกกับ manifest ใดตัวหนึ่ง */
   const COMBO_PRESS_MS = 1100;  /* หน้าต่างกด THROW ครั้งที่ 2 */
   const COMBO_KICK_MS = 1400;   /* หน้าต่างกด KICK หลัง THROW ครั้งที่ 2 */
   const COMBO_SPEC_TANKER = {h: 40, up: 26, grav: 19};
@@ -37,48 +38,59 @@
     if(this.tanker) this.tanker._comboHold = false;
   };
 
-  /* รับกด THROW ขณะแบก — คืน true ถื่อกลืนเป็นคอมโบ (ยังไม่ทุ่ม) คืน false ถ้าไม่เข้าเงื่อนไข */
+  /* รับกด THROW — รอบ 1594: ครั้งแรกทุ่มทันทีตามปกติ (ไม่อมคำสั่งรอหน้าต่างอีกต่อไป)
+     ถ้ากด THROW ซ้ำภายใน COMBO_PRESS_MS ตอนรถยังลอยอยู่ → แปลงวิถีเป็นคอมโบสูง (stage 2 รอ KICK)
+     คืน true ถ้ากลืนเป็นคอมโบ/ทุ่มแล้ว คืน false ถ้าไม่เข้าเงื่อนไข */
   VehicleGrabController.prototype.comboThrow = function(player, cam, fx, audio, hud, requestTankerHit, hasNet){
-    if(!player || player.alive === false || !this.carrying()) return false;
+    if(!player || player.alive === false) return false;
     const now = VF.now();
     const c = this._combo;
-    if(!c || c.stage !== 1 || now - c.at > COMBO_PRESS_MS){
-      /* ครั้งแรก — อมคำสั่งไว้ก่อน ถ้าไม่กดต่อจะทุ่มจริงอัตโนมัติตอนหมดเวลา (คงพฤติกรรมทุ่มปกติ) */
-      this._combo = {stage: 1, at: now, player: player, cam: cam, fx: fx, audio: audio, hud: hud, requestTankerHit: requestTankerHit, hasNet: hasNet};
+    if(c && c.stage === 1 && now - c.at <= COMBO_PRESS_MS){
+      /* THROW ครั้งที่ 2 ภายในหน้าต่าง — รถต้องยังลอย/นิ่งอยู่ในสนามจึงจะแปลงวิถีคอมโบได้ */
+      const held = c.veh;
+      const ok = held && held.root &&
+        (held.state === 'thrown' || held.state === 'launched' || held.state === 'tumbling' || held.state === 'carried');
+      if(!ok){
+        this._combo = null;
+        return false;
+      }
+      const fwd = player.forward ? player.forward() : {x: 0, z: 1};
+      const spec = held === this.tanker ? COMBO_SPEC_TANKER : COMBO_SPEC_SEDAN;
+      if(!held.comboKickLaunch || !held.comboKickLaunch(fwd.x, fwd.z, spec)){
+        this._combo = null;
+        return false;
+      }
+      c.stage = 2;
+      c.at = now;
       if(player.playAction) player.playAction('throw');
       if(audio && audio.punchWhoosh) audio.punchWhoosh();
-      if(hud && hud.toast) hud.toast('⚡ กด THROW อีกครั้ง แล้วตามด้วย KICK!');
+      if(hud && hud.toast) hud.toast('🔥 พร้อมเตะ! กด KICK');
       return true;
     }
-    /* ครั้งที่ 2 ภายในหน้าต่าง — อมท่าไว้รอเตะ */
-    c.stage = 2;
-    c.at = now;
-    if(player.playAction) player.playAction('throw');
-    if(audio && audio.punchWhoosh) audio.punchWhoosh();
-    if(hud && hud.toast) hud.toast('🔥 พร้อมเตะ! กด KICK');
+    /* ครั้งแรก (หรือไม่มีคอมโบค้าง) — ทุ่มทันทีเหมือนกดปุ่ม THROW ปกติ แล้วจำรถไว้เผื่อกดซ้ำเป็นคอมโบ */
+    const held = this.carrying();
+    if(!held) return false;
+    if(!this.throw(player, cam, fx, audio, hud, requestTankerHit, hasNet)) return false;
+    this._combo = {stage: 1, at: now, veh: held, player: player, cam: cam, fx: fx, audio: audio, hud: hud};
     return true;
   };
 
-  /* รับกด KICK ขณะแบก — ถ้าคอมโบ armed ให้ปล่อยเตะคอมโบเตะระเบิด */
+  /* รับกด KICK — ถ้าคอมโบ armed (THROW×2 แล้ว) ให้ว้าบไปเตะ #2 กลางอากาศจนจบคอมโบ */
   VehicleGrabController.prototype.tryComboKick = function(player, cam, fx, audio, hud, arena){
     const c = this._combo;
     if(!c || c.stage !== 2 || VF.now() - c.at > COMBO_KICK_MS) return false;
-    const held = this.carrying();
-    if(!held || !player || player.alive === false || !held.root) return false;
+    const held = c.veh;
+    if(!held || !held.root || !player || player.alive === false) return false;
     const fwd = player.forward ? player.forward() : {x: 0, z: 1};
     const dx = fwd.x, dz = fwd.z;
     const kickAnim = player.anim && player.anim.has && player.anim.has('kick') ? 'kick' : 'punch';
     if(player.playAction) player.playAction(kickAnim);
     if(audio && audio.kickWhoosh) audio.kickWhoosh();
-    player.carrying = null;
-    held.carrier = null;
     this._combo = null;
     this._hideMarker();
-    if(hud && hud.setCarrying) hud.setCarrying(false);
-    /* เตะ #1: ปล่อยรถลอยเป็นวิถีโค้งสูงไปข้างหน้า */
+    /* เตะ #1 แปลงวิถีไปแล้วตอนกด THROW ครั้งที่ 2 — คำนวณจุด/เวลาจากตำแหน่งรถตอนนี้
+       (สเปกเดียวกับวิถีคอมโบ) แล้วว้าบตามไปเตะ #2 ที่จุดนั้น */
     const spec = held === this.tanker ? COMBO_SPEC_TANKER : COMBO_SPEC_SEDAN;
-    if(held.comboKickLaunch) held.comboKickLaunch(dx, dz, spec);
-    /* คำนวณจุด/เวลาตกลงพื้นจากสเปกเดียวกับวิถีจริง */
     const p = held.root.position;
     const half = (arena ? arena.half : 280) - 8;
     const floorY = arena && arena.groundY ? arena.groundY(p.x, p.z) : 0;
@@ -112,33 +124,37 @@
       const kickAnim = pl.anim && pl.anim.has && pl.anim.has('kick') ? 'kick' : 'punch';
       if(pl.playAction) pl.playAction(kickAnim);
     }
-    /* รถระเบิดแตกละเอียด (tanker ใช้ _explode เดิม = ดาเมจ 500 ทุกตัว + ซอมบี้เหลือ 30%) */
-    if(v && v.comboShatter) v.comboShatter({fx: f.fx, audio: f.audio, cam: f.cam});
-    /* ชิ้นส่วนแตกละเอียด + ประกายไฟ */
+    /* รอบ 1594: เตะ #2 (จุดจบคอมโบใหม่) — รถถูกเตะพุ่งขึ้นฟ้าสูงแล้วหายวับไป ไม่ระเบิด/ไม่มีดาเมจ */
+    if(v && v.comboSkyPunt) v.comboSkyPunt(f.dx, f.dz);
     const p = v && v.root ? v.root.position : {x: f.x, y: 1, z: f.z};
-    this._burstDebris(Math.max(0.8, p.y || 1), {x: p.x, z: p.z});
     if(f.fx){
-      if(f.fx.impact) f.fx.impact(p.x, (p.y || 0) + 0.8, p.z, {kind: 'heavyKick', level: 'HEAVY', dir: {x: f.dx, z: f.dz}, force: 34});
-      if(f.fx.powerJumpImpact) f.fx.powerJumpImpact({x: p.x, y: 0, z: p.z, nx: -f.dx * 0.3, ny: 1, nz: -f.dz * 0.3}, 1.6, {local: true, dirX: f.dx, dirZ: f.dz, player: pl});
+      if(f.fx.arenaFire) f.fx.arenaFire(p.x, (p.y || 0) + 0.6, p.z, {r: 2.6});
+      if(f.fx._spawn) f.fx._spawn('ring', p.x, 0.1, p.z, 0.4, {role: 'shock', rotX: -Math.PI / 2, startR: 0.5, endR: 3.4, color: 0x9bfff0, opacity: 0.9, add: true});
     }
     if(f.audio){
-      if(f.audio.heavyImpact) f.audio.heavyImpact();
+      if(f.audio.energyFire) f.audio.energyFire();
       if(f.audio.shockwaveImpact) f.audio.shockwaveImpact();
-      if(f.audio.zombieGroundImpactHeavy) f.audio.zombieGroundImpactHeavy();
     }
-    if(f.cam && f.cam.impulse) f.cam.impulse(2.8, 13, {low: true});
-    if(f.hud && f.hud.toast) f.hud.toast('💥 เตะระเบิดคอมโบ!');
+    if(f.cam && f.cam.impulse) f.cam.impulse(1.6, 9, {low: true});
+    if(f.hud && f.hud.toast) f.hud.toast('🚀 เตะรถปลิวขึ้นฟ้า!');
   };
 
   VehicleGrabController.prototype._tickCombo = function(dt){
     const c = this._combo;
-    if(c && !this.carrying()){
-      /* รถหลุดมือก่อนจบคอมโบ (โดนดาเมจ/ตาย) — เคลียร์คอมโบ */
-      this._combo = null;
-    }else if(c && ((c.stage === 1 && VF.now() - c.at > COMBO_PRESS_MS) || (c.stage === 2 && VF.now() - c.at > COMBO_KICK_MS))){
-      /* หมดเวลา — ทุ่มตามปกติ 1 ครั้ง (เก็บพฤติกรรมเดิมของปุ่ม THROW ครั้งเดียว) */
-      this._combo = null;
-      this.throw(c.player, c.cam, c.fx, c.audio, c.hud, c.requestTankerHit, c.hasNet);
+    if(c){
+      const v = c.veh;
+      const airborne = v && (v.state === 'thrown' || v.state === 'launched' || v.state === 'tumbling' || v.state === 'carried');
+      if(!airborne){
+        /* รถตกพื้น/ระเบิด/หายไปแล้ว — คอมโบจบ (รถถูกทุ่มไปตั้งแต่กดครั้งแรกอยู่แล้ว) */
+        this._combo = null;
+      }else if(c.stage === 1 && VF.now() - c.at > COMBO_PRESS_MS){
+        /* ไม่กด THROW ซ้ำ — เป็นทุ่มครั้งเดียวตามปกติ ไม่ต้องทำอะไรเพิ่ม */
+        this._combo = null;
+      }else if(c.stage === 2 && VF.now() - c.at > COMBO_KICK_MS){
+        /* กด THROW×2 แล้วแต่ไม่ตามด้วย KICK — ปล่อย _comboHold ให้รถตก/ระเบิดตามฟิสิกส์ปกติ */
+        this._combo = null;
+        if(v) v._comboHold = false;
+      }
     }
     const f = this._flight;
     if(f){
