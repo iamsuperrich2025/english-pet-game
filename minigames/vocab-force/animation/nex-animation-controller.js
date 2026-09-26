@@ -51,12 +51,22 @@
     const action = this.actions[state];
     if(!action) return false;
     const now = VF.now();
-    if(!opts.force && this.current === state && action.isRunning()) return true;
+    if(!opts.force && this.current === state && action.isRunning()){
+      /* รอบ 1570: โหมดแบกเรียก play('lift') ซ้ำทุกเฟรม — ซิงก์ timeScale ให้ท่ายกค้างแช่เฟรมต่อเนื่อง */
+      if(opts.timeScale != null) action.timeScale = opts.timeScale;
+      return true;
+    }
     if(!opts.force && this.isBusy(now) && spec.loop) return false;
     const fade = opts.fade != null ? opts.fade : (spec.fade || 0.12);
     const loop = opts.loop != null ? opts.loop : !!spec.loop;
     const THREE = root.THREE;
     action.reset();
+    /* รอบ 1570: holdAt = ส่วนเศษของคลิป (0–1) ที่จะแช่ค้าง (ใช้กับท่ายก cast) */
+    const holdAt = opts.holdAt != null ? opts.holdAt : spec.holdAt;
+    if(holdAt != null){
+      const dur = (action.getClip() && action.getClip().duration) || 0;
+      if(dur > 0) action.time = VF.clamp(holdAt, 0, 0.99) * dur;
+    }
     action.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce, Infinity);
     action.clampWhenFinished = !loop;
     action.timeScale = opts.timeScale != null ? opts.timeScale : (spec.timeScale || 1);

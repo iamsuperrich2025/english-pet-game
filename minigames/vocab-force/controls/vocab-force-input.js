@@ -9,6 +9,7 @@
     this.sprint = false; this.jump = false; this.jumpQueued = false;
     this.punch = false; this.kick = false; this.block = false;
     this.punchQueued = false; this.kickQueued = false;
+    this.throwQueued = false;
     this.dashQueued = false;
     this.punchHeld = false;
     this.punchReleased = false;
@@ -77,6 +78,7 @@
     this._ptrBlock = false; this._ptrSprint = false;
     this.punch = false; this.kick = false;
     this.punchQueued = false; this.kickQueued = false;
+    this.throwQueued = false;
     this.dashQueued = false;
     this.punchHeld = false;
     this.punchReleased = false;
@@ -98,10 +100,11 @@
       if(e.code === 'Escape') this.exit = true;
       return;
     }
-    if(e.repeat && (e.code === 'Space' || e.code === 'KeyF' || e.code === 'KeyE')) return;
+    if(e.repeat && (e.code === 'Space' || e.code === 'KeyF' || e.code === 'KeyE' || e.code === 'KeyG')) return;
     this._keys[e.code] = true;
     if(e.code === 'Space'){ this.jumpQueued = true; e.preventDefault(); }
     if(e.code === 'KeyF' || e.code === 'ControlLeft'){ this.kickQueued = true; e.preventDefault(); }
+    if(e.code === 'KeyG'){ this.throwQueued = true; e.preventDefault(); }
     if(e.code === 'KeyE'){ this.dashQueued = true; e.preventDefault(); }
     if(e.code === 'Escape') this.exit = true;
     if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].indexOf(e.code) >= 0) e.preventDefault();
@@ -131,6 +134,7 @@
       return;
     }
     if(act === 'kick'){ this.kickQueued = true; this._pointers.set(e.pointerId, {act: act}); return; }
+    if(act === 'throw'){ this.throwQueued = true; this._pointers.set(e.pointerId, {act: act}); return; }
     if(act === 'jump'){ this.jumpQueued = true; this._pointers.set(e.pointerId, {act: act}); return; }
     if(act === 'block'){ this._ptrBlock = true; this._pointers.set(e.pointerId, {act: act}); return; }
     if(act === 'sprint'){ this._ptrSprint = true; this._pointers.set(e.pointerId, {act: act}); return; }
@@ -225,7 +229,7 @@
     if(this.spectating){
       const exit = this.exit; this.exit = false;
       const spectateStep = this.spectateQueued; this.spectateQueued = 0;
-      return {moveX: 0, moveZ: 0, lookX: 0, lookY: 0, sprint: false, jump: false, punch: false, kick: false, dash: false, block: false, punchHeld: false, punchReleased: false, spectateStep: spectateStep, exit: exit};
+      return {moveX: 0, moveZ: 0, lookX: 0, lookY: 0, sprint: false, jump: false, punch: false, kick: false, throw: false, dash: false, block: false, punchHeld: false, punchReleased: false, spectateStep: spectateStep, exit: exit};
     }
     let x = 0, z = 0;
     if(k.KeyA || k.ArrowLeft) x -= 1;
@@ -240,6 +244,7 @@
     this.jump = this.jumpQueued; this.jumpQueued = false;
     this.punch = this.punchQueued; this.punchQueued = false;
     this.kick = this.kickQueued; this.kickQueued = false;
+    this.throw = this.throwQueued; this.throwQueued = false;
     this.dash = this.dashQueued; this.dashQueued = false;
     this.block = this._ptrBlock || !!(k.KeyQ);
     const punchHeld = this.punchHeld;
@@ -247,7 +252,7 @@
     const exit = this.exit; this.exit = false;
     const lx = this.lookX, ly = this.lookY;
     this.lookX = 0; this.lookY = 0;
-    return {moveX: x, moveZ: z, lookX: lx, lookY: ly, sprint: this.sprint, jump: this.jump, punch: this.punch, kick: this.kick, dash: this.dash, block: this.block, punchHeld: punchHeld, punchReleased: punchReleased, spectateStep: 0, exit: exit};
+    return {moveX: x, moveZ: z, lookX: lx, lookY: ly, sprint: this.sprint, jump: this.jump, punch: this.punch, kick: this.kick, throw: this.throw, dash: this.dash, block: this.block, punchHeld: punchHeld, punchReleased: punchReleased, spectateStep: 0, exit: exit};
   };
 
   VF.VocabForceInput = VocabForceInput;

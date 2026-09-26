@@ -30,7 +30,8 @@
   }
 
   async function loadClips(def){
-    const states = (def && def.core) || CORE;
+    /* รอบ 1570: lift/throw ต้องถูก ingest เสมอ (ท่ายกค้าง+ขว้างของระบบแบกยานพาหนะ) — เดิมอยู่นอก core จึงไม่เคยถูกโหลด */
+    const states = ((def && def.core) || CORE).concat(['lift', 'throw']);
     const extra = (def && def.optional) || ['victory', 'heavyKick'];
     const total = states.length;
     const label = (def && def.displayName) || 'NEX';
@@ -367,6 +368,10 @@
       const grabbed = grab && grab.onKick(player, camRig, fx, VF.audio, hud, requestTankerHit, !!(net && net.requestTankerHit));
       if(!grabbed) combat.tryAttackOrApproach(player.anim.has('kick') ? 'kick' : 'punch', player, now, enemies, camRig, arena, fx);
     }
+    /* รอบ 1570: ปุ่ม THROW (หรือคีย์ G) ทุ่มของที่แบกอยู่โดยเฉพาะ */
+    if(active && !paused && poll.throw && player.carrying && grab){
+      grab.throw(player, camRig, fx, VF.audio, hud, requestTankerHit, !!(net && net.requestTankerHit));
+    }
     const freezeMove = active && energy && energy.hold && energy.hold.active && Math.hypot(poll.moveX || 0, poll.moveZ || 0) > ((VF.EnergyAttackTune && VF.EnergyAttackTune.aimStickDeadzone) || 0.12);
     const carryingSlow = active && !!player.carrying;
     let playerInput = active ? (freezeMove ? Object.assign({}, poll, {moveX: 0, moveZ: 0}) : poll) : {moveX: 0, moveZ: 0};
@@ -446,6 +451,8 @@
     if(net) tickNet(dt);
     tickTanker(dt);
     if(grab) grab.tick(dt, player, {hud: hud});
+    /* รอบ 1570: สถานะปุ่ม THROW ตามของที่แบกจริง (ยก=โชว์ ทุ่ม/วาง=ซ่อน) */
+    if(hud && hud.setCarrying && grab) hud.setCarrying(!!grab.carrying());
     if(sedan && sedan.ready) sedan.tick(step, {player: player, people: peopleSnap(), enemies: enemies, fx: fx, audio: VF.audio, cam: camRig});
     if(player && player.alive === false){
       enterSpectator();

@@ -46,8 +46,9 @@
     getUp: { file: 'nex_Stand_Up5.glb', clip: 'Stand_Up5', loop: false, fade: 0.1 },
     sit: { file: 'nex_Step_to_Sit_Transitio.glb', clip: 'Step_to_Sit_Transition', loop: false, fade: 0.12 },
     guardKick: { file: 'nex_Boxing_Guard_Right_St.glb', clip: 'Boxing_Guard_Right_Straight_Kick', loop: false, fade: 0.08, busy: 0.55, hitAt: 0.3 },
-    /* รอบ 1567: ยก-ทุ่มวัตถุ — ไม่มีคลิปเฉพาะในแพ็ก ใช้ climb แช่เฟรมเป็นท่าถือหนัก + หมัดเป็นท่าปล่อยทุ่ม */
-    lift: { file: 'nex_Climb_Stairs.glb', clip: 'Climb_Stairs', loop: true, fade: 0.14, timeScale: 0.55, note: 'No dedicated lift GLB; slowed climb freeze-reads as hoisting a heavy object.' },
+    /* รอบ 1567: ยก-ทุ่มวัตถุ — ไม่มีคลิปเฉพาะในแพ็ก ใช้ climb แช่เฟรมเป็นท่าถือหนัก + หมัดเป็นท่าปล่อยทุ่ม
+       รอบ 1570: ผู้ใช้ส่ง GLB ท่า cast จริงมา — แช่เฟรมกลางคลิป (holdAt) ค้างจนกว่าจะกด THROW */
+    lift: { file: 'nex_mage_soell_cast.glb', clip: 'mage_soell_cast', loop: true, fade: 0.14, holdAt: 0.45, note: 'User-supplied cast GLB (characters/next/animations/nex_mage_soell_cast.glb); mid-clip frame held as the carry pose.' },
     throw: { file: 'nex_Right_Jab_from_Guard.glb', clip: 'Right_Jab_from_Guard', loop: false, fade: 0.06, busy: 0.5, hitAt: 0.24 },
     tightrope: { file: 'nex_Tightrope_Walk_inplac.glb', clip: 'Tightrope_Walk_inplace', loop: true, fade: 0.15 },
     unsteady: { file: 'nex_Unsteady_Walk.glb', clip: 'Unsteady_Walk', loop: true, fade: 0.12 }

@@ -40,7 +40,7 @@
           <strong class="vf-spectator-name"></strong>
           <span class="vf-spectator-help">Swipe ← → to change player</span>
         </div>
-        <button class="vf-exit" type="button" data-vf-act="exit">ออก</button>
+        <button class="vf-exit" type="button" data-vf-act="exit">EXIT · ออก</button>
         <div class="vf-energy-charge" hidden>
           <small>ENERGY CHARGE</small>
           <div class="vf-energy-charge-track"><i class="vf-energy-charge-fill"></i></div>
@@ -73,38 +73,44 @@
           <span class="vf-joy-chev vf-joy-w" aria-hidden="true"></span>
           <i class="vf-joy-knob"></i>
         </div>
-        <button type="button" class="vf-act vf-punch" data-vf-act="punch" aria-label="ATTACK">
+        <button type="button" class="vf-act vf-punch" data-vf-act="punch" aria-label="ATTACK โจมตี">
           <span class="vf-act-ico" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="M8 20 L16 4 M10 4 H16 V10"/></svg>
           </span>
-          <span class="vf-act-lab">ATTACK</span>
+          <span class="vf-act-lab">ATTACK<small class="vf-act-sub">โจมตี</small></span>
         </button>
-        <button type="button" class="vf-act vf-kick" data-vf-act="kick" aria-label="KICK">
+        <button type="button" class="vf-act vf-kick" data-vf-act="kick" aria-label="KICK เตะ">
           <span class="vf-act-ico" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="M7 8 v7 h7 l3-1.2 2.5 3.2 H9 L6 15.2 V8 z"/><path d="M10 8 V5"/></svg>
           </span>
-          <span class="vf-act-lab">KICK</span>
+          <span class="vf-act-lab">KICK<small class="vf-act-sub">เตะ</small></span>
         </button>
-        <button type="button" class="vf-act vf-jump" data-vf-act="jump" aria-label="JUMP">
+        <button type="button" class="vf-act vf-throw" data-vf-act="throw" aria-label="THROW ขว้าง" hidden>
+          <span class="vf-act-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M4 19 Q9 5 20 7"/><path d="M15 3.5 L20.5 7 14.5 9.5"/></svg>
+          </span>
+          <span class="vf-act-lab">THROW<small class="vf-act-sub">ขว้าง</small></span>
+        </button>
+        <button type="button" class="vf-act vf-jump" data-vf-act="jump" aria-label="JUMP กระโดด">
           <span class="vf-act-ico" aria-hidden="true">
             <svg viewBox="0 0 24 24"><circle cx="13" cy="5" r="2"/><path d="M13 8 l-2 4-4 1 M11 12 l3 3 4 4 M15 11 l5-2 M8 4 l2 3 M5 7 l3 2"/></svg>
           </span>
-          <span class="vf-act-lab">JUMP</span>
+          <span class="vf-act-lab">JUMP<small class="vf-act-sub">กระโดด</small></span>
         </button>
-        <button type="button" class="vf-act vf-block" data-vf-act="block" aria-label="BLOCK">
+        <button type="button" class="vf-act vf-block" data-vf-act="block" aria-label="BLOCK บล็อก">
           <span class="vf-act-ico" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="M12 3 l8 4 v6 c0 5-3.4 8.2-8 10 C7.4 21.2 4 18 4 13 V7 z"/></svg>
           </span>
-          <span class="vf-act-lab">BLOCK</span>
+          <span class="vf-act-lab">BLOCK<small class="vf-act-sub">บล็อก</small></span>
         </button>
-        <button type="button" class="vf-act vf-dash" data-vf-act="dash" aria-label="DASH">
+        <button type="button" class="vf-act vf-dash" data-vf-act="dash" aria-label="DASH พุ่ง">
           <span class="vf-act-ico" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="M3 8 h8 M3 12 h10 M3 16 h8 M13 6 l8 6-8 6"/></svg>
           </span>
-          <span class="vf-act-lab">DASH</span>
+          <span class="vf-act-lab">DASH<small class="vf-act-sub">พุ่ง</small></span>
         </button>
       </div>
-      <button type="button" class="vf-sound" role="switch" aria-checked="true" aria-label="เสียง">
+      <button type="button" class="vf-sound" role="switch" aria-checked="true" aria-label="Sound เสียง">
         <span class="vf-sound-track"><i class="vf-sound-knob"></i></span>
       </button>
       <div class="vf-win" hidden>
@@ -121,7 +127,7 @@
             <img class="vf-win-coin-ic" alt="">
             <span class="vf-win-reward">+1,000</span>
           </div>
-          <button type="button" class="vf-win-ok">รับทราบ <span class="vf-win-count">8</span></button>
+          <button type="button" class="vf-win-ok">OK รับทราบ <span class="vf-win-count">8</span></button>
         </div>
       </div>
     `;
@@ -165,6 +171,7 @@
       joy: root.querySelector('.vf-joy'),
       joyKnob: root.querySelector('.vf-joy-knob'),
       dash: root.querySelector('.vf-dash'),
+      throw: root.querySelector('.vf-throw'),
       sound: root.querySelector('.vf-sound'),
       energyCharge: root.querySelector('.vf-energy-charge'),
       energyChargeFill: root.querySelector('.vf-energy-charge-fill')
@@ -354,7 +361,7 @@
     let left = Math.max(1, Math.round(sec || 8));
     const paint = function(){
       if(self.els.winCount) self.els.winCount.textContent = String(left);
-      if(self.els.winOk) self.els.winOk.setAttribute('aria-label', 'รับทราบ เหลือ ' + left + ' วินาที');
+      if(self.els.winOk) self.els.winOk.setAttribute('aria-label', 'OK รับทราบ เหลือ ' + left + ' วินาที');
     };
     paint();
     this._winCountT = setInterval(function(){
@@ -446,7 +453,7 @@
     const on = !(VF.audio && VF.audio.isMuted && VF.audio.isMuted());
     btn.classList.toggle('is-off', !on);
     btn.setAttribute('aria-checked', on ? 'true' : 'false');
-    btn.setAttribute('aria-label', on ? 'ปิดเสียง' : 'เปิดเสียง');
+    btn.setAttribute('aria-label', on ? 'Sound on · เปิดเสียง' : 'Sound off · ปิดเสียง');
   };
 
   VocabForceHUD.prototype.setDashCooldown = function(frac){
@@ -456,6 +463,13 @@
     btn.classList.toggle('is-cool', !ready);
     btn.style.setProperty('--vf-cd', String(VF.clamp(1 - frac, 0, 1)));
     btn.setAttribute('aria-disabled', ready ? 'false' : 'true');
+  };
+
+  /* รอบ 1570: ปุ่ม THROW โผล่เฉพาะตอนแบกยานพาหนะอยู่ */
+  VocabForceHUD.prototype.setCarrying = function(on){
+    const btn = this.els.throw;
+    if(!btn) return;
+    btn.hidden = !on;
   };
 
   VocabForceHUD.prototype.setEnergyCharge = function(frac){

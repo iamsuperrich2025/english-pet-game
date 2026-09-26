@@ -11,6 +11,10 @@
 > ประวัติ Frontline 1372–1373: `handoff/archive/frontline-1372-1373.md`
 
 ### 📌 สรุปสถานะล่าสุด
+- รอบ 1570 · ท่ายกค้าง cast จริง + ปุ่ม THROW + ปุ่มสองภาษา: lift ของ NEX เปลี่ยนเป็น `nex_mage_soell_cast.glb` (clip mage_soell_cast, holdAt 0.45) · Lyra เพิ่ม lift (ly_mage_soell_cast.glb) + throw (ly_Power_Spin_Jump/360_Power_Spin_Jump) เดิมไม่มีเลย — GLB คัดลอกเข้า runtime-models/nex+lyravyn (source อยู่ characters/*/animations) และเพิ่มใน build_web asset list
+- animation controller รองรับ holdAt (แช่เฟรมตามส่วนเศษของคลิป) + ซิงก์ timeScale เมื่อ play สถานะเดิมซ้ำ (carry เรียกซ้ำทุกเฟรม) · runtime loadClips concat [lift,throw] เข้า core เสมอ (เดิมไม่เคยถูก ingest!) · vehicle-grab แยกเมธอด throw() ออกจาก onKick
+- ปุ่ม THROW (data-vf-act=throw, โชว์เฉพาะตอนแบก — HUD.setCarrying ผูกกับ grab.carrying() ทุกเฟรม) + คีย์ G · ปุ่มทุกปุ่ม EN+แปลไทย (vf-act-sub): ATTACK/KICK/JUMP/BLOCK/DASH/THROW/EXIT/OK รับทราบ/Sound
+- ค้าง/ระวัง: holdAt 0.45 เป็นการเดาจุดแช่กลางคลิป cast — อาจต้องจูน 0–1 หลังดูจริง (เครื่อง dev ไม่มี puppeteer) · เทสต์ unit 596 + regression ครบ · deploy ตามรอบ 1570
 - รอบ 1569 · แก้โมเดลรถยนต์+รถน้ำมันมองไม่เห็นบนจริง — ต้นตอ: GLTFLoader ไม่ได้อยู่ใน three.min.js (ตัวละครรอดเพราะ nex-asset-loader lazy-load เอง) ส่วน map/oil-tanker+sedan reject เงียบ 'GLTFLoader missing' → console.warn แล้ว spawn ไม่สำเร็จทั้งคู่
 - แก้: เพิ่ม `VF.ensureGLTFLoader()` helper กลางใน vocab-force-namespace.js (lazy-load js/vendor/GLTFLoader.js ผ่าน loadScriptOnce/fallback script tag โหลดครั้งเดียว) → cachedAsset ทั้งสองคอนโทรลเลอร์เปลี่ยนเป็นเรียก helper แทนเช็ค root.THREE ตรง ๆ
 - ยืนยัน: unit 588 + Home V2 R41 + mecha admin lock + mecha 1480 ครบ · GLB บน live 200 ทั้งคู่ (เช็กก่อนแก้) · deploy ตามรอบ 1569

@@ -41,35 +41,39 @@
     return best;
   };
 
-  /* กด KICK — คืน true ถื่อระบบยก/ทุ่มกลืนปุ่มนี้ (จะได้ไม่เตะต่อยซ้ำ) */
-  VehicleGrabController.prototype.onKick = function(player, cam, fx, audio, hud, requestTankerHit, hasNet){
-    if(!player || player.alive === false) return false;
+  /* รอบ 1570: ทุ่มของที่แบกอยู่ — เรียกได้ทั้งจากปุ่ม THROW (ใหม่), KICK ซ้ำ (เดิม), หรือคีย์ G */
+  VehicleGrabController.prototype.throw = function(player, cam, fx, audio, hud, requestTankerHit, hasNet){
     const held = this.carrying();
+    if(!held || !player || player.alive === false) return false;
     const fwd = player.forward ? player.forward() : {x: 0, z: 1};
-    if(held){
-      if(player.playAction) player.playAction('throw');
-      if(audio && audio.punchWhoosh) audio.punchWhoosh();
-      player.carrying = null;
-      if(held === this.tanker){
-        if(hasNet && requestTankerHit){
-          /* ส่งให้ host ตัดสินแล้วประกาศ event — applyEvent เคลียร์สถานะ carried ให้เอง */
-          requestTankerHit({kind: 'throw', x: player.x || 0, z: player.z || 0, dx: fwd.x, dz: fwd.z, grab: 1});
-        }else if(held.throwBy){
-          held.throwBy(player, fwd.x, fwd.z);
-        }
+    if(player.playAction) player.playAction('throw');
+    if(audio && audio.punchWhoosh) audio.punchWhoosh();
+    player.carrying = null;
+    if(held === this.tanker){
+      if(hasNet && requestTankerHit){
+        /* ส่งให้ host ตัดสินแล้วประกาศ event — applyEvent เคลียร์สถานะ carried ให้เอง */
+        requestTankerHit({kind: 'throw', x: player.x || 0, z: player.z || 0, dx: fwd.x, dz: fwd.z, grab: 1});
       }else if(held.throwBy){
         held.throwBy(player, fwd.x, fwd.z);
       }
-      if(hud && hud.toast) hud.toast('🚀 ทุ่ม!');
-      return true;
+    }else if(held.throwBy){
+      held.throwBy(player, fwd.x, fwd.z);
     }
+    if(hud && hud.toast) hud.toast('🚀 THROW! ทุ่มแล้ว!');
+    return true;
+  };
+
+  /* กด KICK — คืน true ถื่อระบบยก/ทุ่มกลืนปุ่มนี้ (จะได้ไม่เตะต่อยซ้ำ) */
+  VehicleGrabController.prototype.onKick = function(player, cam, fx, audio, hud, requestTankerHit, hasNet){
+    if(!player || player.alive === false) return false;
+    if(this.carrying()) return this.throw(player, cam, fx, audio, hud, requestTankerHit, hasNet);
     const near = this.nearest(player);
     if(!near) return false;
     if(near.veh.grab && near.veh.grab(player)){
       player.carrying = near.veh;
       if(player.playAction) player.playAction('lift');
       if(audio && audio.punchWhoosh) audio.punchWhoosh();
-      if(hud && hud.toast) hud.toast('🖐 ยกแล้ว! กด KICK อีกครั้งเพื่อทุ่ม');
+      if(hud && hud.toast) hud.toast('🖐 ยกแล้ว! กด THROW เพื่อขว้าง');
       return true;
     }
     return false;

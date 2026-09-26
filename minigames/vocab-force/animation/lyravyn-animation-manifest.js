@@ -38,7 +38,11 @@
     land: { file: 'ly_Dive_Down_and_Land_2.glb', clip: 'Dive_Down_and_Land_2', loop: false, fade: 0.1 },
     vault: { file: 'ly_Dive_Down_and_Land_2.glb', clip: 'Dive_Down_and_Land_2', loop: false, fade: 0.08 },
     victory: { file: 'ly_Backflip_and_Hooks.glb', clip: 'Backflip_and_Hooks', loop: false, fade: 0.12 },
-    fall: { file: 'ly_Fall2.glb', clip: 'Fall2', loop: false, fade: 0.06 }
+    fall: { file: 'ly_Fall2.glb', clip: 'Fall2', loop: false, fade: 0.06 },
+    /* รอบ 1570: ท่ายกค้าง+ขว้างสำหรับ Lyravyn (เดิมไม่มี lift/throw เลย ตอนแบกจะไม่มีท่า)
+       ท่ายกค้างใช้ GLB cast จริงที่ผู้ใช้ส่งมา แช่เฟรมกลางคลิปจนกว่าจะกด THROW */
+    lift: { file: 'ly_mage_soell_cast.glb', clip: 'mage_soell_cast', loop: true, fade: 0.14, holdAt: 0.45 },
+    throw: { file: 'ly_Power_Spin_Jump.glb', clip: '360_Power_Spin_Jump', loop: false, fade: 0.06, busy: 0.6, hitAt: 0.3 }
   };
   Object.keys(STATES).forEach(function(key){
     STATES[key].url = DIR + STATES[key].file;
@@ -56,13 +60,13 @@
       'ly_Elbow_Strike.glb',
       'ly_Fall2.glb',
       'ly_Jump_with_Arms_Open.glb',
+      'ly_mage_soell_cast.glb',
       'ly_Power_Spin_Jump.glb',
       'ly_Roundhouse_Kick.glb',
       'ly_Run.glb'
     ],
     unusedV1: {
-      confidentStrut: 'ly_Confident_Strut.glb exists (style walk) but is not loaded in V1 to avoid an extra 33MB body.',
-      powerSpinJump: 'ly_Power_Spin_Jump.glb stays on disk; V1 jump uses Jump_with_Arms_Open.'
+      confidentStrut: 'ly_Confident_Strut.glb exists (style walk) but is not loaded in V1 to avoid an extra 33MB body.'
     },
     missing: {
       idle: 'No idle GLB; held Running.001 pose from ly_Run.glb.',
