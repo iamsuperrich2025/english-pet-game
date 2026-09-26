@@ -61,7 +61,10 @@
     this.pivot.name = (this.def && this.def.id === 'lyravyn') ? 'LyraPlayer' : 'NexPlayer';
     scene.add(this.pivot);
     const body = await VF.NexAssets.loadBody(this.manifest);
-    this.model = body.scene;
+    /* รอบ 1601: cache คืน scene ชุดเดิมทุกครั้ง — ต้อง clone ก่อน add ลง pivot
+       (แบบซอมบี้) ไม่งั้นผู้เล่น/บอทตัวหลังแย่งโมเดลกันทีละตัว: Object3D.add ตัด
+       scene จาก parent เดิม → ตัวละครที่ถูกแย่งมองไม่เห็น (รอบ 1599 regression) */
+    this.model = VF._t.cloneSkinned ? VF._t.cloneSkinned(body.scene) : body.scene;
     this.height = VF.NexAssets.groundAlign(this.model) || 1.8;
     this.model.traverse(function(n){
       if(n.isMesh){

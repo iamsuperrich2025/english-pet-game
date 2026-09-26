@@ -78,6 +78,8 @@ assert(read('minigames/vocab-force/runtime/vocab-force-runtime.js').includes("co
 const nccSrc=read('minigames/vocab-force/character/nex-character-controller.js');
 assert(nccSrc.includes("info.from === 'tanker' || info.from === 'gun' || info.from === 'slam'")&&nccSrc.includes("this.playAction('knockDown')"),'takeHit plays knock-down exactly on tanker/SLAM/ATTACK hits');
 assert(nccSrc.indexOf("this.playAction('knockDown')")>nccSrc.indexOf('this._deathEvent = true;'),'knock-down never overrides the death path');
+/* รอบ 1601: แก้ตัวละครผู้เล่นหาย — controller ต้อง clone scene จาก cache ก่อน add ลง pivot กันบอทแย่งโมเดล */
+assert(nccSrc.includes('VF._t.cloneSkinned ? VF._t.cloneSkinned(body.scene) : body.scene'),'character controller clones the cached GLB scene so bots cannot steal the player model');
 /* รอบ 1595: ระเบิดรถน้ำมันต้องรอให้รัศมีขยายถึงตัวก่อนค่อยล้ม (ห้ามหงายพร้อมจุดศูนย์กลาง) */
 assert(runtime.includes('BLAST_WAVE_SPEED')&&runtime.includes('blastQueue.push')&&runtime.includes('tickBlastQueue(now)')&&runtime.includes('d / BLAST_WAVE_SPEED'),'tanker blast damage/knock-down is queued by distance so the falling wave reaches each player first');
 assert(read('minigames/vocab-force/combat/ground-slam-controller.js').includes("kind: 'M'")&&read('minigames/vocab-force/combat/gun-tune.js').includes("'PGKM'"),'slam strikes ride as kind M so victims read them as slam');
