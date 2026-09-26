@@ -108,7 +108,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/petpantry.js** (235 บรรทัด) — 🗄️ PET PANTRY — รอบ 1158 · ศูนย์กลาง mutation ของชั้น/stock/การซื้อหน้าร้าน 3D
 - **js/petshopping3d.js** (570 บรรทัด) — 🚗🐾 PET SHOPPING 3D — รอบ 1169 · โลกสั้น first-person แยกจาก Adventure3D: ร้านใกล้, GPS ชัด, · ร้านสร้างเป็นองค์ประกอบสถาปัตย์จริง ไม่ใช่กล่องแปะภาพ
 - **js/photo.js** (363 บรรทัด) — 📷 photo.js — รูปโปรไฟล์ของผู้เล่นเอง (อัปโหลดรูปแบบ Facebook) — รอบ 709 · เก็บที่ไหน: localStorage แยกก้อน (`petVocabAdventure_photo`) + RTDB `/pphoto/<uid>` · ตั้งใจ **ไม่ยัดลง state** เพราะ state ถูกเซฟขึ้น cloud ทั้งก้อนทุกครั้ง (รูป ~20KB จะทำให้เซฟบวมทุกครั้ง)
-- **js/picdict.js** (412 บรรทัด) — 🖼️ Picture Dictionary — single-page card gallery (รอบ 1123) · ยกเลิกหนังสือกาง 2 หน้า/การพลิกกระดาษ แล้วแสดงการ์ด 18 คำต่อหน้า · (6 คอลัมน์ × 3 แถว) เพื่อให้ภาพและคำอ่านใหญ่ชัดบนจอเล็ก
+- **js/picdict.js** (413 บรรทัด) — 🖼️ Picture Dictionary — single-page card gallery (รอบ 1123) · ยกเลิกหนังสือกาง 2 หน้า/การพลิกกระดาษ แล้วแสดงการ์ด 18 คำต่อหน้า · (6 คอลัมน์ × 3 แถว) เพื่อให้ภาพและคำอ่านใหญ่ชัดบนจอเล็ก
 - **js/pickup3d.js** (362 บรรทัด) — 🛻 Vocab World Pick-Up Truck: Kart clone with a cuboid pickup, mid speed (170 km/h). · Same island track, walls, vocabulary and rewards. No extra raster downloads.
 - **js/picmatch.js** (692 บรรทัด) — 🖼️ picmatch.js — เกม "จับคู่ภาพ" (รอบ 977 · เชื่อม Picture Dictionary รอบ 1053) · 2 โหมด สลับด้วยปุ่มบนกระดาน: · "pic"  = ภาพจาก Picture Dictionary ↔ ภาพเดียวกัน
 - **js/picquiz_online.js** (608 บรรทัด) — 🌐🎧 PICQUIZ ONLINE — แข่งครูถามศัพท์จากหนังสือ · ห้องส่วนตัวด้วยรหัส 6 ตัว · สูงสุด 50 คน · เจ้าของกดเริ่ม · 10 คำ/รอบ · ฟังเสียงแล้วแตะการ์ด · คะแนนตามความเร็ว
@@ -155,6 +155,8 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/wordskirmish.css** (117 บรรทัด) — 🔫 ยิงรบคำ — HUD น่ารักจอเตี้ย 812×375 รอบ 1480
 - **sw.js** (281 บรรทัด) — Vocab World service worker · Delivery contract: · - HTML navigations are network-first with the last valid shell as fallback.
 <!-- AUTO-FILES:END -->
+
+
 
 
 

@@ -835,7 +835,7 @@ photoFetch:44 · photoAfterChange:61 · photoPush:65 · photoVerify:83 · photoS
 photoPullMine:106 · photoBlkSrc:122 · photoMiniHTML:129 · openPhotoMenu:137 · photoLoadImgEl:203 · photoLoadFile:211
 openPhotoCrop:224
 
-## js/picdict.js (412 บรรทัด · 0 รายการ)
+## js/picdict.js (413 บรรทัด · 0 รายการ)
 
 ## js/pickup3d.js (362 บรรทัด · 22 รายการ)
 softBox:10 · merge:20 · box:33 · starGeo:34 · makeKit:37 · paintMat:82
