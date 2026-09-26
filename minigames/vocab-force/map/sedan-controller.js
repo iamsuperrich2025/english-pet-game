@@ -157,6 +157,9 @@
     if(this._flipSpeed){
       this._tQ.setFromAxisAngle(this._tAxis, this._flipSpeed * dt);
       this.root.quaternion.premultiply(this._tQ);
+      /* รอบ 1588: หมุนช้าลงตามแรงเสียดอากาศในอากาศ (เหมือนรถน้ำมันรอบ 1577) — หมุนธรรมชาติ
+         แทนการคงความเร็วหมุนคงที่แล้วหยุดพรุบเมื่อถึงพื้น */
+      this._flipSpeed *= (1 - 0.1 * dt);
     }
     if(this._yawSpin){
       this._tQY.setFromAxisAngle(this._tUp, this._yawSpin * dt);
@@ -183,21 +186,35 @@
     }
     this._updateCollider();
     this.swapShattered();
-    /* รอบ 1577: ถูกเตะ/ต่อย = กระโดดเด้งพลิกตามแรงแล้วคว่ำกลับลงล้อ (cosmetic อย่างเดียว ไม่ทำดาเมจใคร) */
+    /* รอบ 1577: ถูกเตะ/ต่อย = กระโดดเด้งพลิกตามแรงแล้วคว่ำกลับลงล้อ (cosmetic อย่างเดียว ไม่ทำดาเมจใคร)
+       รอบ 1588: เตะ (kick/heavyKick) = กระเด็นไกลเท่ารถน้ำมันโดนเตะพอดี — รถน้ำมันใช้วิถี h54/up34/grav19
+       (แขวน 3.58 วิ ไกล ~193 หน่วย) → รถยนต์ grav 22 ต้องใช้ up 39 จึงจะแขวนนานเท่ากัน (3.55 วิ ไกล ~191 หน่วย)
+       ส่วนต่อยยังเด้งเบาเหมือนเดิม */
     if(this.state === 'idle'){
       const f = (info && info.force) || 18;
+      const kickish = (info && info.kind) === 'kick' || (info && info.kind) === 'heavyKick';
       this.state = 'tumbling';
       this.elapsed = 0;
       this.bounces = 0;
       this._hitIds = {};
-      this._beginTumble(
-        (info && info.dir && info.dir.x) || 0,
-        (info && info.dir && info.dir.z) || 1,
-        2.0 + f * 0.055,
-        4.0 + f * 0.05,
-        3.4 + f * 0.02,
-        (Math.random() - 0.5) * 0.8
-      );
+      if(kickish){
+        this._beginTumble(
+          (info && info.dir && info.dir.x) || 0,
+          (info && info.dir && info.dir.z) || 1,
+          54, 39,
+          6.4 + Math.min(f * 0.02, 1.2),
+          1.1 + (Math.random() - 0.5) * 0.4
+        );
+      }else{
+        this._beginTumble(
+          (info && info.dir && info.dir.x) || 0,
+          (info && info.dir && info.dir.z) || 1,
+          2.0 + f * 0.055,
+          4.0 + f * 0.05,
+          3.4 + f * 0.02,
+          (Math.random() - 0.5) * 0.8
+        );
+      }
       this._updateCollider();
     }
     return true;
