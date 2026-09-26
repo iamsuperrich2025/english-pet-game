@@ -4,7 +4,7 @@
   const VF = root.VocabForce = root.VocabForce || {};
   let opening = false, running = false, raf = 0, last = 0;
   let renderer = null, scene = null, camera = null, THREE = null;
-  let player, camRig, input, combat, enemies, arena, fx, hud, round, flyers, trails, fireTrail, secondary, energy, letters, net, healPad, oilTanker, sedan, grab, spectator, worldMelee, slam, slamFx;
+  let player, camRig, input, combat, enemies, arena, fx, hud, round, flyers, trails, fireTrail, secondary, energy, letters, net, healPad, oilTanker, sedan, grab, spectator, worldMelee, slam, slamFx, aimMarkers;
   let winLock = false, ackOpen = false, pendingWord = null;
   let collusionWatch = null, collusionPending = null;
   let tankerEventSeq = 0;
@@ -500,6 +500,7 @@
     if(slam) slam.tick(step, now, player, {fx: slamFx, fxm: fx, enemies: enemies, people: peopleSnap(), camera: camRig, audio: VF.audio, world: worldMelee || oilTanker, fxImpact: fx && fx.impact});
     if(slamFx) slamFx.tick(step);
     if(hud && hud.setSlamCooldown) hud.setSlamCooldown(slam ? slam.cooldownFrac(now) : 1);
+    if(aimMarkers){ aimMarkers.tick(dt); aimMarkers.update(player, arena); }
     const needed = round && round.progress && !round.progress.complete ? round.progress.required() : null;
     if(player && player.alive !== false && hud && hud.quest){
       try{
@@ -665,6 +666,8 @@
       fireTrail = VF.OverdriveFireTrail ? new VF.OverdriveFireTrail().attach(scene) : null;
       slamFx = VF.GroundSlamFX ? new VF.GroundSlamFX().attach(scene) : null;
       slam = VF.GroundSlamController ? new VF.GroundSlamController() : null;
+      /* รอบ 1590: มาร์กเกอร์ + บนพื้นบอกทิศพลัง — ฟ้า=SLAM · ส้ม=ATTACK */
+      aimMarkers = VF.AimMarkers ? new VF.AimMarkers().attach(scene) : null;
       secondary = new VF.SecondaryImpactController();
       energy = new VF.EnergyAttackController().attach(scene);
       /* รอบ 1585: ผูกยานพาหนะเข้ากับลูกพลัง — โดนรถน้ำมัน/รถยนต์ = ระเบิดแตกสลายทันที */
@@ -763,11 +766,13 @@
     if(slamFx && slamFx.dispose) slamFx.dispose();
     slamFx = null;
     slam = null;
+    if(aimMarkers && aimMarkers.dispose) aimMarkers.dispose();
+    aimMarkers = null;
     secondary = null;
     if(player && player.anim) player.anim.dispose();
   }
 
   VF.open = open;
   VF.close = close;
-  VF._t.live = function(){ return {player: player, enemies: enemies, round: round, combat: combat, cam: camRig, secondary: secondary, fx: fx, tanker: oilTanker, sedan: sedan, grab: grab, spectator: spectator, arena: arena, scene: scene, net: net, hud: hud, input: input, slam: slam, slamFx: slamFx, resetRound: beginRound, character: player && player.def}; };
+  VF._t.live = function(){ return {player: player, enemies: enemies, round: round, combat: combat, cam: camRig, secondary: secondary, fx: fx, tanker: oilTanker, sedan: sedan, grab: grab, spectator: spectator, arena: arena, scene: scene, net: net, hud: hud, input: input, slam: slam, slamFx: slamFx, aimMarkers: aimMarkers, resetRound: beginRound, character: player && player.def}; };
 })(typeof window !== 'undefined' ? window : globalThis);

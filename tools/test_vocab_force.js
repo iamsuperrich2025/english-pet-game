@@ -1120,14 +1120,18 @@ assert(tankerSrc2.indexOf('comboKickLaunch')<tankerSrc2.indexOf('if(this._comboH
 assert(sedanSrc.includes('comboKickLaunch')&&sedanSrc.includes('comboShatter')&&sedanSrc.includes('_comboHold'),'sedan combo launch holds the wreck for the mid-air finisher kick');
 assert(sedanSrc.includes('!this._comboHold &&')&&sedanSrc.includes('swapShattered'),'sedan skips settle while held and shatters into the wreck model');
 assert(runtime.includes('grab.comboThrow')&&runtime.includes('grab.tryComboKick')&&runtime.includes('grab.reset()'),'runtime wires combo inputs and resets the combo each round');
-assert(ui.includes('?v=1590'),'ui.js cache-bust bumped so browsers fetch the new vf modules');
+assert(ui.includes('?v=1591'),'ui.js cache-bust bumped so browsers fetch the new vf modules');
 
 /* รอบ 1588: เตะรถยนต์ = กระเด็นไกลเท่ารถน้ำมันโดนเตะ (h54/up39 grav22 ≈ วิถี h54/up34 grav19) + หมุนธรรมชาติ */
 assert(sedanSrc.includes("info.kind) === 'kick'")&&sedanSrc.indexOf('54, 39')>sedanSrc.indexOf('kickish'),'sedan kick launches as far as the kicked tanker trajectory');
 assert(sedanSrc.includes('this._flipSpeed *= (1 - 0.1 * dt)')&&sedanSrc.includes('หมุนช้าลงตามแรงเสียดอากาศ'),'sedan tumble spins decay in air like the tanker (natural spin)');
 const kickRangeTanker=54*(2*34/19), kickRangeSedan=54*(2*39/22);
 assert(Math.abs(kickRangeTanker-kickRangeSedan)/kickRangeTanker<0.02,'kicked sedan flies the same distance as the kicked tanker (same arc, grav-adjusted up)');
-assert(ui.includes('?v=1590'),'ui.js cache-bust bumped for the kick trajectory tune');
+assert(ui.includes('?v=1591'),'ui.js cache-bust bumped for the kick trajectory tune');
+/* รอบ 1590: มาร์กเกอร์ + บนพื้นบอกทิศพลัง (ฟ้า=SLAM · ส้ม=ATTACK) */
+assert(build.includes('effects/aim-markers.js')&&htmlPreview.includes('effects/aim-markers.js')&&ns.includes("'effects/aim-markers.js'"),'aim markers module is loaded');
+assert(read('minigames/vocab-force/effects/aim-markers.js').includes('0x4ec4ff')&&read('minigames/vocab-force/effects/aim-markers.js').includes('0xff9040'),'markers use slam blue + attack orange');
+assert(read('minigames/vocab-force/runtime/vocab-force-runtime.js').includes('aimMarkers.update')&&read('minigames/vocab-force/runtime/vocab-force-runtime.js').includes('aimMarkers.dispose'),'runtime updates and disposes aim markers');
 
 /* รอบ 1587 จำลองพฤติกรรม: คอมโบ THROW×2+KICK ต้องยก-อม-เตะ-ว้าบ-แตกครบ ตามลำดับ */
 {

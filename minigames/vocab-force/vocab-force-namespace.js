@@ -106,6 +106,7 @@
     'effects/motion-trail-manager.js',
     'effects/overdrive-fire-trail.js',
     'effects/ground-slam-fx.js',
+    'effects/aim-markers.js',
     'effects/energy-projectile-manager.js',
     'effects/energy-vortex-manager.js',
     'combat/heal-pad-tune.js',
