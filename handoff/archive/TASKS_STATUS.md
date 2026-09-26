@@ -6796,3 +6796,10 @@ efreshMechaLock
 - ยืนยัน: unit 587 ผ่าน + VM behavior 16 เช็ก (grab→carry→throw→โดนซอมบี้ 100→จบ, tanker แบก→ทุ่ม→ระเบิด 1 ครั้ง) · ค้าง: ท่ายก/ทุ่มจริงยังไม่มีคลิป (ใช้ climb+หมัดแทน รอผู้ใช้โหลด Meshy) · sedan sync หลายคนเฉพาะดาเมจ ตัวรถไม่ sync (prototype)
 - ตามด้วย fixup commit: sedan GLB หลุดจาก git (untracked) → live 404 เหมือนรอบ 1566 — track + bump 1324 + deploy ใหม่ ยืนยัน 200 ครบ
 - ต้นตอ: deploy build จาก git archive ไม่มี .git → build_web.mjs fallback walk ใช้ PUBLIC_DIRS ที่ไม่มี `minigames` → ทั้งโฟลเดอร์ vocab-force (90 ไฟล์ js/glb/avif) หลุดจาก dist (local build ใช้ git ls-files จึงไม่เจอปัญหา)
+
+
+## ⏬ ย้ายเมื่อ 2026-09-26 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- ยืนยัน: unit 587 + Home V2 R41 PASS + mecha admin lock + mecha 1480 regression ครบ · deploy ตามรอบ 1568
+- รอบ 1567 · Vocab Force 4 ข้อ: จุดเติมพลังอลังการ (วงรูน+เกลียวพลัง+เทียนแสง+หัวใจไขว้+ไฟ PointLight, BRIGHTNESS 0.8) / แก้ลูกพลังลอยฟ้า (aim assist ยิงเอียงสู่อกศัตรู y+0.95, ไม่มีเป้า=ราบ y=0, aimPitchLift ติดลบเท่านั้น)
+- ยก-ทุ่มยานพาหนะ: KICK ใกล้รถ=ยก (แช่ท่า lift=Climb_Stairs ช้า, ห้ามซัด/ดช./ยิงพลัง, เดินช้า 0.55×) KICK ซ้ำ=ทุ่ม · รถยนต์ sedan GLB โดนทุ่มใส่ใคร -100 (SedanController ใหม่) · รถน้ำมันแบกได้+ทุ่มได้ (sync ผ่าน net grab flag) และปะทะพื้น/ขอบ=ระเบิดทันที 500 ทุกตัว (เดิมไถล 2.75 วิ)
