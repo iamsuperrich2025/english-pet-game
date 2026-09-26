@@ -6869,3 +6869,9 @@ efreshMechaLock
 
 - จุดชนมีระเบิดไฟสนั่น: ผู้เล่นโดน = arenaFire + powerJumpImpact (คลื่นกระแทก+ซากเศษ+รอยแยกพื้น) + เสียง · ซอมบี้โดน = arenaFire รอบแรกของแต่ละ cast (กันเสียงถาโถม) · ออนไลน์: packSlam 'M+seq' บน hp string → เพื่อนเพนท์เส้นไฟฝั่งผู้ชมตำแหน่ง/ทิศจาก rec
 - ไฟล์: ground-slam-tune/controller/fx (ใหม่ 3), manifests (groundSlam), hud/input/css (ปุ่ม SLAM คีย์ R), runtime+net (wire+consumeSlams), packer + build_web (GLB ใหม่) · แถม: แพ็ก mage_soell_cast เป็น animation-only เหมือนคลิปอื่น ลด bundle 171MB→107MB
+
+
+## ⏬ ย้ายเมื่อ 2026-09-26 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- ยืนยัน: unit 705 ผ่าน (assert โมดูล/สี/wire ครบ) + check_undefined_calls 0 + syntax ครบ
+- รอบ 1589 · Vocab Force ปุ่ม SLAM กระแทกพื้น: กดแล้วเล่นท่า GLB จริงตามตัวละคร (nex_Charged_Ground_Slam / ly_Charged_Ground_Slam) → ตอน hitAt ปล่อยเส้นเปลวเพลิงสีฟ้าเป็นแนวตรงยาว 23 หน่วยบนพื้นตามทิศหน้า (เท่าวิถี overdrive dash, คูลดาวน์ 6 วิ, วงแหวน cooldown บนปุ่ม) · ผู้เล่นอื่นในแนวเส้นเสีย 300 HP ต่อครั้งที่โดน (กันซ้ำรอบเดียวกันด้วย castId ผ่าน notePvpHit) · ซอมบี้ในแนวไหม้เป็นจังหวะ 20/ครั้ง · รถในแนวโดนแรง heavy kick ครั้งเดียว
