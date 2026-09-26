@@ -441,12 +441,12 @@
     });
     active = !!(player && player.alive !== false);
     if(active && healPad) healPad.tick(step, player, hud, VF.audio, camRig);
-    if(active && energy) energy.tick(step, now, player, enemies, arena, fx, camRig, combat, VF.audio, {held: !!poll.punchHeld, released: !!poll.punchReleased, moveX: poll.moveX || 0, moveZ: poll.moveZ || 0, people: peopleSnap()});
-    /* รอบ 1578: กล้องชาร์จพลัง — ซูมใกล้ + โคจรรอบตัวละครตอนชาร์จเท่านั้น (เลิกชาร์จ/เข้าโหมดเล็ง/แบกของ = กล้องกลับปกติ) */
-    if(camRig && camRig.setChargeCam){
-      const hold = energy && energy.hold;
-      camRig.setChargeCam(!!(hold && hold.active && !hold.aimed && player && player.alive !== false && !player.carrying));
+    /* รอบ 1581: กล้องโชว์ — ซูมใกล้ + โคจรรอบตัวละคร "เฉพาะตอนยืนในวงคืนพลัง"
+       (พลังค่อยๆ ฟื้นเต็ม 1000) · ชาร์จพลังจากปุ่ม kick/attack ไม่มีกล้องโชว์แล้ว */
+    if(camRig && camRig.setShowcaseCam){
+      camRig.setShowcaseCam(!!(healPad && healPad.inside && player && player.alive !== false && player.hp < player.maxHp && !player.carrying));
     }
+    if(active && energy) energy.tick(step, now, player, enemies, arena, fx, camRig, combat, VF.audio, {held: !!poll.punchHeld, released: !!poll.punchReleased, moveX: poll.moveX || 0, moveZ: poll.moveZ || 0, people: peopleSnap()});
     if(secondary) secondary.trails(step, enemies, fx, player);
     fx.tick(dt);
     if(trails) trails.tick(step);

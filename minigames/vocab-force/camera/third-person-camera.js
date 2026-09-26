@@ -17,9 +17,9 @@
     this.shakeDecay = 18;
     this.shakeAmp = 0.22;
     this.shakeAmpY = 0.14;
-    /* รอบ 1578: โหมดกล้องชาร์จพลัง — ซูมใกล้ + โคจรรอบตัวละคร (blend ไหลเข้า/ออกแบบนุ่ม) */
-    this.chargeTarget = 0;
-    this.chargeBlend = 0;
+    /* รอบ 1581: โหมดกล้องโชว์ — ซูมใกล้ + โคจรรอบตัวละครตอนยืนในวงคืนพลัง (blend ไหลเข้า/ออกแบบนุ่ม) */
+    this.showcaseTarget = 0;
+    this.showcaseBlend = 0;
     this.cam = null;
     this._tx = 0; this._ty = 2; this._tz = 6;
   }
@@ -39,8 +39,8 @@
     this.pitch = VF.clamp(this.pitch + dy * 0.0045, 0.08, 1.15);
   };
 
-  ThirdPersonCamera.prototype.setChargeCam = function(on){
-    this.chargeTarget = on ? 1 : 0;
+  ThirdPersonCamera.prototype.setShowcaseCam = function(on){
+    this.showcaseTarget = on ? 1 : 0;
   };
 
   ThirdPersonCamera.prototype.impulse = function(strength, fovPunch, opts){
@@ -58,17 +58,17 @@
     if(!this.cam || !player) return;
     const THREE = root.THREE;
     const T = VF.EnergyAttackTune || {};
-    /* รอบ 1578: ไหลเข้า/ออกโหมดกล้องชาร์จแบบนุ่ม แล้วหมุน yaw โคจรรอบตัวละครตามระดับ blend */
-    this.chargeBlend += (this.chargeTarget - this.chargeBlend) * (1 - Math.exp(-dt * (T.chargeCamBlendK || 4.5)));
-    if(this.chargeBlend < 0.002 && !this.chargeTarget) this.chargeBlend = 0;
-    const cb = VF.clamp(this.chargeBlend, 0, 1);
-    if(cb > 0 && !(player.isDashing && player.isDashing())) this.yaw += (T.chargeCamOrbit || 0.62) * dt * cb;
+    /* รอบ 1581: ไหลเข้า/ออกโหมดกล้องโชว์แบบนุ่ม แล้วหมุน yaw โคจรรอบตัวละครตามระดับ blend */
+    this.showcaseBlend += (this.showcaseTarget - this.showcaseBlend) * (1 - Math.exp(-dt * (T.showcaseCamBlendK || 4.5)));
+    if(this.showcaseBlend < 0.002 && !this.showcaseTarget) this.showcaseBlend = 0;
+    const cb = VF.clamp(this.showcaseBlend, 0, 1);
+    if(cb > 0 && !(player.isDashing && player.isDashing())) this.yaw += (T.showcaseCamOrbit || 0.62) * dt * cb;
     const pj = (player.isPowerJumping && player.isPowerJumping());
-    /* ซูมใกล้เฉพาะตอนชาร์จ (ไม่กระทบระยะกล้อง power jump) */
+    /* ซูมใกล้เฉพาะตอนโชว์ (ไม่กระทบระยะกล้อง power jump) */
     const dist = pj
       ? Math.max(this.dist, (VF.PowerJumpTune && VF.PowerJumpTune.CAMERA_DIST) || 11)
-      : this.dist + ((T.chargeCamDist || 2.7) - this.dist) * cb;
-    const lookY = this.lookY + ((T.chargeCamLookY || 1.05) - this.lookY) * cb;
+      : this.dist + ((T.showcaseCamDist || 2.7) - this.dist) * cb;
+    const lookY = this.lookY + ((T.showcaseCamLookY || 1.05) - this.lookY) * cb;
     const px = player.x, py = player.y + lookY, pz = player.z;
     const cp = Math.cos(this.pitch), sp = Math.sin(this.pitch);
     const sy = Math.sin(this.yaw), cy = Math.cos(this.yaw);
@@ -88,8 +88,8 @@
     const jy = (Math.random() * 2 - 1) * this.shake * (this.shakeAmpY || 0.14);
     this.cam.position.set(this._tx + jx, this._ty + jy, this._tz);
     this.cam.lookAt(px, py, pz);
-    /* ตอนชาร์จ: บีบ fov ลงเล็กน้อยให้ภาพซูมแบบภาพยนตร์ */
-    const baseFov = this.baseFov - (T.chargeCamFovDrop || 5) * cb;
+    /* ตอนโชว์: บีบ fov ลงเล็กน้อยให้ภาพซูมแบบภาพยนตร์ */
+    const baseFov = this.baseFov - (T.showcaseCamFovDrop || 5) * cb;
     this.fov += (baseFov - this.fov) * VF.clamp(dt * 9, 0, 1);
     if(Math.abs(this.fov - baseFov) > 0.05){
       this.cam.fov = this.fov;

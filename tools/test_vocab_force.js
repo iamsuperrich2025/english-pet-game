@@ -1036,11 +1036,13 @@ assert(!sedanSrc.includes('this.avx = 2.2')&&!sedanSrc.includes('this.avz = -3.4
 assert(tankerSrc2.includes('setFromAxisAngle')&&tankerSrc2.includes('_flipSpeed')&&!tankerSrc2.includes('this.avx = 10.8'),'tanker tumbles around single travel-perpendicular axis');
 
 
-/* รอบ 1578: กล้องชาร์จพลัง — ซูมใกล้ + โคจรรอบตัวละคร */
+/* รอบ 1581: กล้องโชว์ — ซูมใกล้ + โคจรรอบตัวละคร "เฉพาะในวงคืนพลัง" (ไม่ใช่ตอนชาร์จพลัง) */
 const camSrc=read('minigames/vocab-force/camera/third-person-camera.js');
-assert(camSrc.includes('setChargeCam')&&camSrc.includes('chargeCamOrbit')&&camSrc.includes('chargeBlend'),'charge cam orbits and blends in third-person camera');
-assert(runtime.includes('setChargeCam')&&runtime.includes('hold.aimed'),'runtime drives charge cam only while holding before aim');
-assert(read('minigames/vocab-force/combat/energy-attack-tune.js').includes('chargeCamDist')&&read('minigames/vocab-force/combat/energy-attack-tune.js').includes('chargeCamFovDrop'),'charge cam tune ships');
+assert(camSrc.includes('setShowcaseCam')&&camSrc.includes('showcaseCamOrbit')&&camSrc.includes('showcaseBlend'),'showcase cam orbits and blends in third-person camera');
+assert(!camSrc.includes('setChargeCam')&&!camSrc.includes('chargeBlend'),'charge cam naming fully removed');
+assert(runtime.includes('setShowcaseCam')&&runtime.includes('healPad.inside')&&runtime.includes('player.hp < player.maxHp'),'runtime drives showcase cam only while healing in the pad');
+assert(!runtime.includes('setChargeCam'),'energy hold no longer triggers showcase cam');
+assert(read('minigames/vocab-force/combat/energy-attack-tune.js').includes('showcaseCamDist')&&read('minigames/vocab-force/combat/energy-attack-tune.js').includes('showcaseCamFovDrop'),'showcase cam tune ships');
 
 
 /* รอบ 1579: lock ตำแหน่ง + หมุนกายตอนแบกรถ */
@@ -1052,6 +1054,10 @@ assert(runtime.includes("poll.kick && !player.carrying"),'kick cannot lunge the 
 /* รอบ 1580: ต่อย/เตะรถพังทันที — ไม่รอ 1-2 วิ */
 assert(sedanSrc.includes('shattered preload')||sedanSrc.includes('preload skip'),'sedan preloads shattered model so first strike swaps instantly');
 assert(tankerSrc2.includes("id: 'melee:'")&&tankerSrc2.includes('this.applyEvent({'),'tanker launches locally on melee instead of waiting for host');
+
+
+/* รอบ 1581 เพิ่มเติม: heal pad ต้องมีสถานะ inside ให้กล้องใช้ */
+assert(read('minigames/vocab-force/effects/heal-pad.js').includes('this.inside = inside'),'heal pad exposes inside state for showcase cam');
 
 if(process.exitCode){
   console.error('vocab-force tests failed after',n,'passes');
