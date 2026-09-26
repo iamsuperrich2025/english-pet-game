@@ -87,7 +87,7 @@
           <canvas class="pd-zoom-canvas" id="pd-zoom-canvas"></canvas>
           <div class="pd-zoom-label"><b id="pd-zoom-en"></b><span id="pd-zoom-th"></span></div>
           <div class="pd-zoom-listen" id="pd-zoom-listen"><span class="pd-zoom-speaker">🔊</span><span id="pd-zoom-listen-text"></span></div>
-          <div class="pd-zoom-reward" id="pd-zoom-reward" hidden><b>+100 🪙</b><span>ฟังจบแล้ว เงินเข้าแล้ว!</span></div>
+          <div class="pd-zoom-reward" id="pd-zoom-reward" hidden><b>+1 🪙</b><span>ฟังจบแล้ว เงินเข้าแล้ว!</span></div>
         </div>
       </div>`;
     const host = $('screen-game') ? $('screen-game').parentNode : document.body;
@@ -292,7 +292,7 @@
   }
 
   let zoomListening=false, zoomSeq=0, rewardT=0;
-  const ZOOM_REWARD=100;
+  const ZOOM_REWARD=1;
   const zoomOpen=()=>{ const z=$('pd-zoom'); return !!z&&!z.hidden; };
   function openZoom(cell,en,th){
     const source=cell.querySelector('canvas'), out=$('pd-zoom-canvas'), ctx=out.getContext('2d');
