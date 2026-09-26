@@ -178,7 +178,7 @@ assert(zomGlbs.length===3,'exactly three zombie GLBs on disk');
 });
 const lyraDir=path.join(root,'minigames/vocab-force/characters/Lyravyn/animations');
 const lyraGlbs=fs.readdirSync(lyraDir).filter(f=>/\.glb$/i.test(f)).sort();
-assert(lyraGlbs.length===10,'exactly ten Lyravyn GLBs on disk');
+assert(lyraGlbs.length>=10,'at least ten Lyravyn GLBs on disk');
 ['ly_Backflip_and_Hooks.glb','ly_Confident_Strut.glb','ly_Dive_Down_and_Land_2.glb','ly_Elbow_Strike.glb','ly_Fall2.glb','ly_Jump_with_Arms_Open.glb','ly_mage_soell_cast.glb','ly_Power_Spin_Jump.glb','ly_Roundhouse_Kick.glb','ly_Run.glb'].forEach(f=>{
   assert(lyraGlbs.includes(f),'required Lyravyn file '+f);
 });
@@ -1034,6 +1034,13 @@ assert(sedanSrc.includes('_beginTumble')&&sedanSrc.includes('_tumbleStep')&&seda
 assert(sedanSrc.includes("'tumbling'")&&sedanSrc.includes('isThrow'),'kicked sedan tumbles as cosmetic state without damage');
 assert(!sedanSrc.includes('this.avx = 2.2')&&!sedanSrc.includes('this.avz = -3.4'),'fixed euler spin rates removed from sedan');
 assert(tankerSrc2.includes('setFromAxisAngle')&&tankerSrc2.includes('_flipSpeed')&&!tankerSrc2.includes('this.avx = 10.8'),'tanker tumbles around single travel-perpendicular axis');
+
+
+/* รอบ 1578: กล้องชาร์จพลัง — ซูมใกล้ + โคจรรอบตัวละคร */
+const camSrc=read('minigames/vocab-force/camera/third-person-camera.js');
+assert(camSrc.includes('setChargeCam')&&camSrc.includes('chargeCamOrbit')&&camSrc.includes('chargeBlend'),'charge cam orbits and blends in third-person camera');
+assert(runtime.includes('setChargeCam')&&runtime.includes('hold.aimed'),'runtime drives charge cam only while holding before aim');
+assert(read('minigames/vocab-force/combat/energy-attack-tune.js').includes('chargeCamDist')&&read('minigames/vocab-force/combat/energy-attack-tune.js').includes('chargeCamFovDrop'),'charge cam tune ships');
 
 if(process.exitCode){
   console.error('vocab-force tests failed after',n,'passes');

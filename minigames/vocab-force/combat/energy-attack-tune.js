@@ -41,6 +41,12 @@
     holdChargeMs: 3000,
     tapReleaseMaxMs: 220,
     holdBarShowMs: 90,
+    /* รอบ 1578: กล้องโชว์ตอนชาร์จพลัง — ซูมใกล้ โคจรรอบตัวละคร ให้ตัวละครดูเด่น */
+    chargeCamDist: 2.7,
+    chargeCamLookY: 1.05,
+    chargeCamOrbit: 0.62,
+    chargeCamFovDrop: 5,
+    chargeCamBlendK: 4.5,
     chargedScale: 5,
     chargedDamageMul: 2,
     chargedKnockbackMul: 1.8,

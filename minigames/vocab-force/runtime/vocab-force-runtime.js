@@ -441,6 +441,11 @@
     active = !!(player && player.alive !== false);
     if(active && healPad) healPad.tick(step, player, hud, VF.audio, camRig);
     if(active && energy) energy.tick(step, now, player, enemies, arena, fx, camRig, combat, VF.audio, {held: !!poll.punchHeld, released: !!poll.punchReleased, moveX: poll.moveX || 0, moveZ: poll.moveZ || 0, people: peopleSnap()});
+    /* รอบ 1578: กล้องชาร์จพลัง — ซูมใกล้ + โคจรรอบตัวละครตอนชาร์จเท่านั้น (เลิกชาร์จ/เข้าโหมดเล็ง/แบกของ = กล้องกลับปกติ) */
+    if(camRig && camRig.setChargeCam){
+      const hold = energy && energy.hold;
+      camRig.setChargeCam(!!(hold && hold.active && !hold.aimed && player && player.alive !== false && !player.carrying));
+    }
     if(secondary) secondary.trails(step, enemies, fx, player);
     fx.tick(dt);
     if(trails) trails.tick(step);
