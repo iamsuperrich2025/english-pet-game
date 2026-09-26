@@ -6891,3 +6891,14 @@ efreshMechaLock
 ## ⏬ ย้ายเมื่อ 2026-09-26 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
 
 - รอบ 1591 · Vocab Force แนวเส้น SLAM vs ยานพาหนะ = ระเบิดแตกทันที (แทนที่ heavy kick เดิม): ground-slam-controller เดินจุดทดสอบทุก 1 หน่วยตลอดเส้นยาว 23 เทียบ AABB ขยาย halfW+0.4 → โดนแล้วเรียก sedan/tanker.detonate เส้นทางเดียวกับลูกพลังปุ่ม ATTACK + arenaFire ใหญ่ 1.2 เท่า + เสียง + แรงสั่นหน้าจอ · runtime ส่ง deps vehicles {sedan,tanker} แทน world
+
+
+## ⏬ ย้ายเมื่อ 2026-09-26 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- รอบ 1592 · Vocab Force ท่าล้ม Knock_Down (GLB จริง nex/ly_Knock_Down): takeHit ของ NexCharacterController (คุมทั้ง 2 ตัวละคร) เล่น 'knockDown' พอดีจังหวะที่พลังแตะตัว เฉพาะ from='tanker'|'gun'|'slam' และ dmg ผ่านจริง (dash/invuln กินไม่เล่น · ตายให้ death path) — หมัด/เตะ/ซอมบี้กัดไม่เข้าเงื่อนไข · slam เปลี่ยน strike kind 'P'→'M' (pack/parse รองรับ PGKM, runtime แมพ M→from 'slam')
+- ไฟล์: manifests (knockDown state), packer+build_web+runtime-models (GLB ใหม่ 2), runtime (ingest + แมพ M), nex-character-controller, ground-slam-controller, gun-tune, ui.js (?v=1593), test (static+sandbox behavioral ท่าล้ม/M roundtrip) · unit 725 ผ่าน + check_undefined_calls 0
+
+
+## ⏬ ย้ายเมื่อ 2026-09-26 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- ไฟล์: deflect-tune/controller + hostile-orb-manager (ใหม่ 3), manifests (deflect), packer+build_web+runtime-models (GLB ใหม่ 2), runtime (wire ครบ ingest/input/tick/spit/dispose), net (packShots/parseShots/packDeflectAck/consume×2), energy-attack-controller (_vfShots/burst), input/hud/css (ปุ่ม+วงคูลดาวน์), ui.js (?v=1594), test (static+sandbox behavioral deflect + roundtrip W/D) · unit 749 ผ่าน + check_undefined_calls 0
