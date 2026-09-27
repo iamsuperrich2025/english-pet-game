@@ -248,10 +248,12 @@
     return m;
   }
 
-  function HealPad(){
+  function HealPad(opts){
+    opts = opts || {};
     const T = VF.HealPadTune || {};
-    this.x = T.X || 0;
-    this.z = T.Z || 0;
+    /* รอบ 1606: รองรับหลายจุด — สร้างละตัวด้วยพิกัด opts.x/opts.z */
+    this.x = opts.x != null ? opts.x : (T.X || 0);
+    this.z = opts.z != null ? opts.z : (T.Z || 0);
     this.radius = T.RADIUS || 5.4;
     this.group = null;
     this.heart = null;

@@ -4,7 +4,7 @@
   const VF = root.VocabForce = root.VocabForce || {};
   let opening = false, running = false, raf = 0, last = 0;
   let renderer = null, scene = null, camera = null, THREE = null;
-  let player, camRig, input, combat, enemies, arena, fx, hud, round, flyers, trails, fireTrail, secondary, energy, letters, net, healPad, oilTanker, sedan, grab, spectator, worldMelee, slam, slamFx, aimMarkers, orbs, deflect, spitTimer = 1.6, bots = null;
+  let player, camRig, input, combat, enemies, arena, fx, hud, round, flyers, trails, fireTrail, secondary, energy, letters, net, healPad, healPads = [], oilTanker, sedan, grab, spectator, worldMelee, slam, slamFx, aimMarkers, orbs, deflect, spitTimer = 1.6, bots = null;
   let selfTag = null, selfBar = null;
   let winLock = false, ackOpen = false, pendingWord = null;
   let camTarget = null;
@@ -558,7 +558,7 @@
     player.tick(step, playerInput, camRig, arena);
     /* รอบ 1596: สมองบอท → controller จริงของทุกตัว (วิ่งหาตัวอักษร/สู้ซอมบี้/หาฮีล)
        รอบ 1603: ส่ง camera ให้บอท billboard แถบ HP เหนือหัว */
-    if(bots) bots.tick(step, now, {letters: letters, enemies: enemies, fx: fx, audio: VF.audio, player: player, frozen: false, people: peopleSnap(), onPlayerHurt: handlePlayerHurt, camera: camera});
+    if(bots) bots.tick(step, now, {letters: letters, enemies: enemies, fx: fx, audio: VF.audio, player: player, frozen: false, people: peopleSnap(), onPlayerHurt: handlePlayerHurt, camera: camera, playerBag: round && round.progress ? round.progress.bag : null});
     if(player.consumePowerJumpEvents){
       player.consumePowerJumpEvents().forEach(function(ev){ handlePowerJumpEvent(ev, true); });
     }
@@ -615,11 +615,16 @@
       }
     });
     active = !!(player && player.alive !== false);
-    if(active && healPad) healPad.tick(step, player, hud, VF.audio, camRig);
+    /* รอบ 1606: เติมเลือดครบทุกแท่น (4 จุด) */
+    if(active){
+      for(let hpI = 0; hpI < healPads.length; hpI++) healPads[hpI].tick(step, player, hud, VF.audio, camRig);
+    }
     /* รอบ 1581: กล้องโชว์ — ซูมใกล้ + โคจรรอบตัวละคร "เฉพาะตอนยืนในวงคืนพลัง"
        (พลังค่อยๆ ฟื้นเต็ม 1000) · ชาร์จพลังจากปุ่ม kick/attack ไม่มีกล้องโชว์แล้ว */
     if(camRig && camRig.setShowcaseCam){
-      camRig.setShowcaseCam(!!(healPad && healPad.inside && player && player.alive !== false && player.hp < player.maxHp && !player.carrying));
+      let padInside = false;
+      for(let hpI = 0; hpI < healPads.length; hpI++){ if(healPads[hpI].inside){ padInside = true; break; } }
+      camRig.setShowcaseCam(!!(padInside && player && player.alive !== false && player.hp < player.maxHp && !player.carrying));
     }
     if(active && energy) energy.tick(step, now, player, enemies, arena, fx, camRig, combat, VF.audio, {held: !!poll.punchHeld, released: !!poll.punchReleased, moveX: poll.moveX || 0, moveZ: poll.moveZ || 0, people: peopleSnap(), onBotHit: botHit});
     /* รอบ 1593: สนามลูกพลัง + ปัดพลัง + ซอมบี้พ่นลูกพลัง (เคส A) */
@@ -841,7 +846,18 @@
           return false;
         }
       };
-      healPad = VF.HealPad ? new VF.HealPad().attach(scene) : null;
+      /* รอบ 1606: แท่นฮีล 4 จุดตาม HealPadTune.SPOTS — จุดแรกเก็บใน healPad เดิมเพื่อความเข้ากันได้ */
+      healPads = [];
+      if(VF.HealPad){
+        const spots = VF._t.healPadSpots ? VF._t.healPadSpots() : [{x: 0, z: 22}];
+        for(let hpI = 0; hpI < spots.length; hpI++){
+          const pad = new VF.HealPad({x: spots[hpI].x, z: spots[hpI].z}).attach(scene);
+          healPads.push(pad);
+          if(hpI === 0) healPad = pad;
+        }
+      }else{
+        healPad = null;
+      }
       fx = new VF.ImpactFXManager().attach(scene);
       trails = new VF.MotionTrailManager().attach(scene);
       fireTrail = VF.OverdriveFireTrail ? new VF.OverdriveFireTrail().attach(scene) : null;
@@ -972,6 +988,8 @@
     grab = null;
     if(player) player.carrying = null;
     spectator = null;
+    for(let hpI = 0; hpI < healPads.length; hpI++){ if(healPads[hpI].dispose) healPads[hpI].dispose(); }
+    healPads = [];
     if(healPad && healPad.dispose) healPad.dispose();
     healPad = null;
     if(fx) fx.dispose();

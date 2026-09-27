@@ -5,7 +5,10 @@
    - ห้ามพฤติกรรมโง่ ๆ: มีช่วงคิด/ชะงักแบบคน, หลบการชนกันเอง, ไม่ล็อกสั่น, เดินสลับวิ่ง
    รอบ 1602: PvP เต็มรูปแบบ — โดนคนเตะ/ต่อย/ปล่อยพลังแล้วเจ็บจริง (applyHit) + แค้นโจมตีกลับ
    (brawl) + ตายแล้วตัวอักษรหลุดเป็นของรางวัลกลาง + เกิดใหม่เองในไม่กี่วิ + ลูกศรคำศัพท์
-   ไล่ชี้ตัวบอทที่ถือตัวอักษรที่เราต้องการอยู่ (findCarrier) */
+   ไล่ชี้ตัวบอทที่ถือตัวอักษรที่เราต้องการอยู่ (findCarrier)
+   รอบ 1606: บอทหลบอาคารอัตโนมัติ (เลี้ยงรอบมุมเมื่อเส้นทางชน) + ติดขัดแล้วเบี่ยง
+   + หลบซ่อนในอาคารเมื่อเลือดน้อย (2 ชั้นขึ้นชั้นบน ซอมบี้ตามไม่ถึง) + ไล่ "แย่ง"
+   ตัวอักษรจากผู้ถือ (ตีบอท/คนจนตัวอักษรหลุด) + ฮีลที่แท่นใกล้สุดจาก 4 จุด */
 (function(root){
   const VF = root.VocabForce = root.VocabForce || {};
 
@@ -71,6 +74,60 @@
   const BOT_CAM = {yaw: 0};
   const ZERO_INPUT = {moveX: 0, moveZ: 0};
   const HEAL_POS = {x: 0, z: 22};
+
+  /* ---------------- รอบ 1606: เส้นทางหลบอาคาร (VF._t.buildingSpecs จาก map/buildings.js) ---------------- */
+  /* เส้นตรง (x1,z1)→(x2,z2) ตัดกล่อง 2D หรือไม่ (slab method, t∈[0,1]) */
+  function _segHitsBox(x1, z1, x2, z2, minx, minz, maxx, maxz){
+    let tmin = 0, tmax = 1;
+    const dx = x2 - x1, dz = z2 - z1;
+    if(Math.abs(dx) < 1e-9){
+      if(x1 < minx || x1 > maxx) return false;
+    }else{
+      let a = (minx - x1) / dx, b = (maxx - x1) / dx;
+      if(a > b){ const t = a; a = b; b = t; }
+      if(a > tmin) tmin = a;
+      if(b < tmax) tmax = b;
+      if(tmin > tmax) return false;
+    }
+    if(Math.abs(dz) < 1e-9){
+      if(z1 < minz || z1 > maxz) return false;
+    }else{
+      let a = (minz - z1) / dz, b = (maxz - z1) / dz;
+      if(a > b){ const t = a; a = b; b = t; }
+      if(a > tmin) tmin = a;
+      if(b < tmax) tmax = b;
+      if(tmin > tmax) return false;
+    }
+    return true;
+  }
+
+  /* ประตูอาคาร — ด้านที่หันเข้าหากลางลาน (สูตรเดียวกับ doorSide ใน buildings.js) */
+  function _doorOf(s){
+    const dx = -s.x, dz = -s.z;
+    if(Math.abs(dx) > Math.abs(dz)) return dx > 0 ? {x: s.x + s.w / 2, z: s.z} : {x: s.x - s.w / 2, z: s.z};
+    return dz > 0 ? {x: s.x, z: s.z + s.d / 2} : {x: s.x, z: s.z - s.d / 2};
+  }
+
+  /* จุดกลางแผ่นพื้นชั้นสองของอาคาร 2 ชั้น (สูตรเดียวกับ buildings.js — บันไดอยู่ผนังฝั่งตรงข้ามประตู) */
+  function _upperSpot(s){
+    const TH = 0.3, SD = 3.2;
+    const dx = -s.x, dz = -s.z;
+    const door = Math.abs(dx) > Math.abs(dz) ? (dx > 0 ? 'e' : 'w') : (dz > 0 ? 's' : 'n');
+    const stair = {n: 's', s: 'n', e: 'w', w: 'e'}[door];
+    const iw = s.w - 2 * TH, id = s.d - 2 * TH;
+    const stairHoriz = stair === 'n' || stair === 's';
+    let sx0, sz0;
+    if(stairHoriz){
+      const sd2 = id - SD;
+      sx0 = s.x;
+      sz0 = stair === 'n' ? s.z - s.d / 2 + TH + SD + sd2 / 2 : s.z + s.d / 2 - TH - SD - sd2 / 2;
+    }else{
+      const sw = iw - SD;
+      sx0 = stair === 'w' ? s.x - s.w / 2 + TH + SD + sw / 2 : s.x + s.w / 2 - TH - SD - sw / 2;
+      sz0 = s.z;
+    }
+    return {x: sx0, z: sz0};
+  }
 
   /* tune ความยากปานกลาง */
   const BOT = {
@@ -180,6 +237,9 @@
       /* รอบ 1602: เคลียร์สถานะ PvP + จำจุดเกิดสำหรับ respawn */
       bot._revenge = null; bot._foe = null; bot._strikeFoe = null;
       bot._respawnAt = 0;
+      /* รอบ 1606: เคลียร์เส้นทางหลบอาคาร/จังหวะเบี่ยง */
+      bot._wps = null; bot._detour = null; bot._stuckT = 0;
+      bot._lx = null; bot._lz = null;
       const pos = spawnFor ? spawnFor(bot.id, i) : null;
       bot._spawnPos = pos || null;
       if(bot.ctl.resetForRound){
@@ -258,6 +318,8 @@
     for(let i = 0; i < list.length; i++){
       const en = list[i];
       if(!en || !en.alive || en.state === 'gone' || en.burstFinisherTriggered) continue;
+      /* รอบ 1606: คนละระดับสูง (เช่น หลบอยู่ชั้นสอง) ไม่นับเป็นภัยใกล้ตัว */
+      if(Math.abs((en.y || 0) - (bot.ctl.y || 0)) > 1.7) continue;
       const d = Math.hypot((en.x || 0) - bot.ctl.x, (en.z || 0) - bot.ctl.z);
       if(d < bestD){ bestD = d; best = en; }
     }
@@ -289,6 +351,72 @@
     return best;
   };
 
+  /* รอบ 1606: เส้นทางสู่เป้าชนอาคารหรือไม่ — ถ้าชน คืนจุดเลี้ยงรอบมุมที่ผ่านแล้วสั้นที่สุด
+     (อาคารมีประตูด้านเดียว จึงเลี้ยง "รอบ" ไม่เดินทะลุ — ยกเว้นโหมด hide ที่ตั้งใจเข้าประตู) */
+  BotManager.prototype._route = function(ctl, tx, tz){
+    const specs = VF._t.buildingSpecs;
+    if(!specs || !specs.length) return null;
+    const y = ctl.y || 0;
+    for(let i = 0; i < specs.length; i++){
+      const s = specs[i];
+      const m = 0.9;
+      const minx = s.x - s.w / 2 - m, maxx = s.x + s.w / 2 + m;
+      const minz = s.z - s.d / 2 - m, maxz = s.z + s.d / 2 + m;
+      const inX = ctl.x > minx && ctl.x < maxx, inZ = ctl.z > minz && ctl.z < maxz;
+      if(inX && inZ){
+        if(y > 1.2) return null;             /* อยู่ชั้นสอง — เดินบนแผ่นพื้นอิสระ */
+        if(tx > minx && tx < maxx && tz > minz && tz < maxz) return null; /* เป้าอยู่ในอาคารเดียวกัน */
+        return _doorOf(s);                   /* อยู่ในอาคารแต่เป้าอยู่นอก → ออกทางประตู */
+      }
+      if(y > 1.2) continue;                  /* ชั้นสองไม่ต้องหลบกล่องพื้นล่าง */
+      if(!_segHitsBox(ctl.x, ctl.z, tx, tz, minx, minz, maxx, maxz)) continue;
+      const corners = [
+        {x: minx, z: minz}, {x: maxx, z: minz},
+        {x: minx, z: maxz}, {x: maxx, z: maxz}
+      ];
+      let best = null, bestC = Infinity;
+      for(let c = 0; c < 4; c++){
+        const cn = corners[c];
+        const cost = Math.hypot(cn.x - ctl.x, cn.z - ctl.z) + Math.hypot(tx - cn.x, tz - cn.z);
+        if(cost < bestC){ bestC = cost; best = cn; }
+      }
+      return best;
+    }
+    return null;
+  };
+
+  /* รอบ 1606: จุดหลบซ่อนใกล้สุด — อาคาร 2 ชั้นขึ้นไปหลบชั้นบน (ซอมบี้ขึ้นบันไดไม่ได้)
+     คืนคิว waypoint: [ประตู] หรือ [ประตู, กลางแผ่นชั้นสอง] */
+  BotManager.prototype._hideSpot = function(ctl){
+    const specs = VF._t.buildingSpecs;
+    if(!specs || !specs.length) return null;
+    let best = null, bestD = 120;
+    for(let i = 0; i < specs.length; i++){
+      const s = specs[i];
+      const d = Math.hypot(s.x - ctl.x, s.z - ctl.z);
+      if(d < bestD){ bestD = d; best = s; }
+    }
+    if(!best) return null;
+    const wps = [_doorOf(best)];
+    if(best.two) wps.push(_upperSpot(best));
+    return {wps: wps};
+  };
+
+  /* รอบ 1606: ใครถือตัวอักษรที่เราต้องการอยู่ — บอทตัวอื่น หรือผู้เล่นคน (deps.playerBag) */
+  BotManager.prototype._carrierOf = function(need, bot, deps){
+    for(let i = 0; i < this.bots.length; i++){
+      const o = this.bots[i];
+      if(o === bot || !o.ctl || o.ctl.alive === false || !o.prog || o.prog.complete) continue;
+      if(o.prog.bag && o.prog.bag.indexOf(need) >= 0){
+        return {id: o.id, x: o.ctl.x, z: o.ctl.z, local: false, bot: true, ref: null};
+      }
+    }
+    if(deps.player && deps.player.alive !== false && deps.playerBag && deps.playerBag.indexOf(need) >= 0){
+      return {id: deps.player.uid || 'local', x: deps.player.x, z: deps.player.z, local: true, ref: null};
+    }
+    return null;
+  };
+
   /* ตัดสินใจแผนใหม่ — เรียกเฉพาะตอน think หมด */
   BotManager.prototype._plan = function(bot, deps, now){
     const ctl = bot.ctl;
@@ -298,11 +426,30 @@
     bot.target = null;
     bot.kind = 'idle';
     bot._foe = null;
+    bot._wps = null;
     const threat = this._nearestThreat(bot, deps.enemies);
     if(threat && threat.d < BOT.BITE_R * 2.2 && hpFrac < BOT.FLEE_FRAC){
+      /* รอบ 1606: เลือดจะหมด + ซอมบี้แนบตัว → วิ่งหลบเข้าอาคาร (2 ชั้นขึ้นชั้นบน) */
+      const hide = this._hideSpot(ctl);
+      if(hide){
+        bot.kind = 'hide';
+        bot._wps = hide.wps;
+        bot.target = {x: hide.wps[0].x, z: hide.wps[0].z};
+        return;
+      }
       bot.kind = 'flee';
       bot.target = {x: ctl.x * 2 - threat.en.x, z: ctl.z * 2 - threat.en.z};
       return;
+    }
+    if(threat && threat.d < BOT.FIGHT_R && hpFrac < BOT.HEAL_FRAC && !bot.aggressive && Math.random() < 0.45){
+      /* รอบ 1606: บอทใจเสาะเลือดน้อย + ซอมบี้ใกล้ → บางทีเลือกหลบซ่อนแทนสู้ */
+      const hide = this._hideSpot(ctl);
+      if(hide){
+        bot.kind = 'hide';
+        bot._wps = hide.wps;
+        bot.target = {x: hide.wps[0].x, z: hide.wps[0].z};
+        return;
+      }
     }
     if(threat && (threat.d < 3.2 || (threat.d < BOT.FIGHT_R && bot.aggressive))){
       bot.kind = 'fight';
@@ -320,8 +467,10 @@
       return;
     }
     if(hpFrac < BOT.HEAL_FRAC){
+      /* รอบ 1606: ไปแท่นฮีล "จุดที่ใกล้สุด" (มี 4 จุดรอบลาน) */
+      const sp = VF._t.healPadNearest ? VF._t.healPadNearest(ctl.x, ctl.z) : HEAL_POS;
       bot.kind = 'heal';
-      bot.target = {x: HEAL_POS.x, z: HEAL_POS.z};
+      bot.target = {x: sp.x, z: sp.z};
       return;
     }
     const need = bot.prog && !bot.prog.complete ? bot.prog.required() : null;
@@ -337,13 +486,21 @@
         };
         return;
       }
+      /* รอบ 1606: ตัวอักษรที่ต้องการถูก "ใคร" ถืออยู่ → ไล่ตามตีจนหลุด (แย่งคำศัพท์) */
+      const carrier = this._carrierOf(need, bot, deps);
+      if(carrier){
+        bot.kind = 'steal';
+        bot.target = {x: carrier.x, z: carrier.z};
+        bot._foe = carrier;
+        return;
+      }
     }
-    /* ไม่มีตัวอักษรที่ต้องการ (คนอื่นเก็บไปแล้ว) — เดินเล่นกลับโซนกลางแบบสบาย ๆ */
+    /* ไม่มีอะไรให้ทำจริง ๆ — เดินเล่นแถวกลางลาน (โซนที่ตัวอักษรเกิด) แทนสุ่มทั่วสนาม */
     bot.kind = 'wander';
     if(!bot.wanderT || Math.hypot(bot.wanderX - ctl.x, bot.wanderZ - ctl.z) < 3){
-      const half = (this.arena && this.arena.half || 280) - 8;
-      bot.wanderX = VF.rand(-half, half) * 0.7;
-      bot.wanderZ = VF.rand(-half, half) * 0.7;
+      const half = Math.min((this.arena && this.arena.half || 280) - 8, 70);
+      bot.wanderX = VF.rand(-half, half);
+      bot.wanderZ = VF.rand(-half, half);
       bot.wanderT = VF.rand(3, 6);
     }
     bot.target = {x: bot.wanderX, z: bot.wanderZ};
@@ -385,10 +542,27 @@
       bot.think = VF.rand(BOT.REACT_MIN, BOT.REACT_MAX);
     }
 
-    /* รอบ 1602: อัปเดตตำแหน่งคู่ต่อสู้สดทุกเฟรม (คน/เพื่อนเคลื่อนเร็วกว่าจังหวะคิดของบอท) */
-    if(bot.kind === 'brawl' && bot._foe){
+    /* รอบ 1602/1606: อัปเดตตำแหน่งคู่ต่อสู้สดทุกเฟรม (คน/เพื่อน/บอทผู้ถือตัวอักษร เคลื่อนเร็ว
+       กว่าจังหวะคิดของบอท) · steal ยกเลิกเองถ้าเป้าหมายไม่ได้ถือตัวอักษรที่ต้องการแล้ว */
+    if((bot.kind === 'brawl' || bot.kind === 'steal') && bot._foe){
       const foe = bot._foe;
-      if(foe.local){
+      if(bot.kind === 'steal'){
+        const need = bot.prog && !bot.prog.complete ? bot.prog.required() : null;
+        let ok = false;
+        if(need){
+          if(foe.bot){
+            const ob = this._byId(foe.id);
+            if(ob && ob.ctl && ob.ctl.alive !== false && ob.prog && ob.prog.bag && ob.prog.bag.indexOf(need) >= 0){
+              foe.x = ob.ctl.x; foe.z = ob.ctl.z; ok = true;
+            }
+          }else if(foe.local){
+            if(deps.player && deps.player.alive !== false && deps.playerBag && deps.playerBag.indexOf(need) >= 0){
+              foe.x = deps.player.x; foe.z = deps.player.z; ok = true;
+            }
+          }
+        }
+        if(!ok){ bot.kind = 'wander'; bot._foe = null; bot.target = null; }
+      }else if(foe.local){
         if(!deps.player || deps.player.alive === false){ bot.kind = 'wander'; bot._foe = null; }
         else{ foe.x = deps.player.x; foe.z = deps.player.z; }
       }else if(foe.ref){
@@ -401,10 +575,33 @@
     }
 
     let input = ZERO_INPUT;
-    if(!frozen && bot.startDelay <= 0 && bot.pauseT <= 0 && bot.target){
-      let dx = bot.target.x - ctl.x, dz = bot.target.z - ctl.z;
+    if(!frozen && bot.startDelay <= 0 && bot.pauseT <= 0 && (bot.target || (bot._wps && bot._wps.length))){
+      /* รอบ 1606: จุดหมาย = คิว waypoint หลบซ่อน (ถ้ามี) ไม่ก็ target ปกติที่ผ่านการเลี้ยงอาคาร */
+      let gx = bot.target ? bot.target.x : ctl.x, gz = bot.target ? bot.target.z : ctl.z;
+      if(bot._wps && bot._wps.length){
+        gx = bot._wps[0].x; gz = bot._wps[0].z;
+        if(Math.hypot(gx - ctl.x, gz - ctl.z) < 1.8){
+          bot._wps.shift();
+          if(!bot._wps.length && bot.kind === 'hide'){
+            /* ถึงจุดหลับซ่อนแล้ว (ชั้นสองของอาคาร 2 ชั้น = ซอมบี้ตามไม่ถึง) — หยุดพักหายใจ */
+            bot.kind = 'hideWait';
+            bot.target = null;
+            bot.pauseT = VF.rand(1.2, 2.6);
+          }
+        }
+      }else if(bot.target && bot.kind !== 'hide'){
+        const detour = this._route(ctl, gx, gz);
+        if(detour){ gx = detour.x; gz = detour.z; }
+      }
+      if(bot._detour){
+        /* จังหวะเบี่ยงตอนติดขัด — มีผลเหนือทุกอย่างชั่วคราว */
+        bot._detour.t -= dt;
+        if(bot._detour.t <= 0) bot._detour = null;
+        else{ gx = bot._detour.x; gz = bot._detour.z; }
+      }
+      let dx = gx - ctl.x, dz = gz - ctl.z;
       const dist = Math.hypot(dx, dz);
-      const arrive = (bot.kind === 'fight' || bot.kind === 'brawl') ? 1.4 : 1.0;
+      const arrive = (bot.kind === 'fight' || bot.kind === 'brawl' || bot.kind === 'steal') ? 1.4 : 1.0;
       if(dist > arrive){
         dx /= dist; dz /= dist;
         /* แยกตัวกันจากบอท/คนใกล้ตัว กันกลุ่มตัวแน่นโง่ ๆ */
@@ -427,11 +624,24 @@
         dx /= nl; dz /= nl;
         const mag = bot.walky && bot.kind === 'wander' ? 0.6 : (dist > 9 ? 1 : 0.85);
         input = {moveX: -dx * mag, moveZ: dz * mag, sprint: false, jump: false, block: false};
+        /* รอบ 1606: ตรวจ "ติดขัด" — อยากเดินแต่แทบไม่ไปไหน → เดินเบี่ยงตั้งฉากชั่วคราว */
+        if(bot._lx != null){
+          const spd = Math.hypot(ctl.x - bot._lx, ctl.z - bot._lz) / Math.max(dt, 1e-4);
+          if(spd < 0.5) bot._stuckT = (bot._stuckT || 0) + dt;
+          else bot._stuckT = Math.max(0, (bot._stuckT || 0) - dt * 2);
+          if(bot._stuckT > 1.1 && !bot._detour){
+            const side = Math.random() < 0.5 ? 1 : -1;
+            bot._detour = {x: ctl.x - dz * side * 5, z: ctl.z + dx * side * 5, t: 0.8};
+            bot._stuckT = 0;
+          }
+        }
+        bot._lx = ctl.x; bot._lz = ctl.z;
         /* กระโดดสลับเป็นจังหวะตอนวิ่งยาว (แบบคน) — นาน ๆ ครั้ง */
         if(bot.kind === 'hunt' && dist > 6 && ctl.grounded && Math.random() < dt * 0.25) input.jump = true;
-      }else if(bot.kind === 'fight' || bot.kind === 'brawl'){
+      }else if(bot.kind === 'fight' || bot.kind === 'brawl' || bot.kind === 'steal'){
         input = {moveX: 0, moveZ: 0, block: false};
       }
+      /* ซ่อนรออยู่ในอาคาร — ไม่ต้องทำอะไรจนกว่าจะคิดแผนใหม่ */
       /* สู้: หันหน้าหาซอมบี้ + ต่อย/เตะเป็นจังหวะ */
       if(bot.kind === 'fight' && bot._threat){
         const t = bot._threat;
@@ -453,8 +663,8 @@
           bot._threat = null;
         }
       }
-      /* รอบ 1602: ชกต่อยกับคน — หันหน้าหาคู่ต่อสู้แล้วออกหมัด/เตะเหมือนสู้ซอมบี้ */
-      if(bot.kind === 'brawl' && bot._foe){
+      /* รอบ 1602/1606: ชกต่อยกับคน/บอทผู้ถือตัวอักษร — หันหน้าหาคู่ต่อสู้แล้วออกหมัด/เตะ */
+      if((bot.kind === 'brawl' || bot.kind === 'steal') && bot._foe){
         const foe = bot._foe;
         ctl.yaw = Math.atan2((foe.x || 0) - ctl.x, (foe.z || 0) - ctl.z);
         const d = Math.hypot((foe.x || 0) - ctl.x, (foe.z || 0) - ctl.z);
@@ -499,7 +709,11 @@
         const dFoe = Math.hypot((foeHit.x || 0) - ctl.x, (foeHit.z || 0) - ctl.z);
         let hitSomeone = false;
         if(dFoe < (BOT.STRIKE_R || 2.3) + 0.6 && ctl.alive !== false){
-          if(foeHit.local){
+          if(foeHit.bot){
+            /* รอบ 1606: ต่อยบอทผู้ถือตัวอักษร — ดาเมจจริงผ่าน applyHit ตายแล้วตัวอักษรหลุด */
+            const dealt = this.applyHit(foeHit.id, pvpDmg, {kind: bot.strikeKind || 'punch', fromId: bot.id});
+            hitSomeone = dealt > 0;
+          }else if(foeHit.local){
             if(deps.player && deps.player.alive !== false && deps.player.takeHit){
               const dealt = deps.player.takeHit(pvpDmg, !!deps.player.blocking, {from: 'player'});
               if(dealt > 0 && deps.onPlayerHurt) deps.onPlayerHurt(dealt);
@@ -546,8 +760,8 @@
       }
     }
 
-    /* วงฮีลเติมเลือด */
-    if(ctl.heal && Math.hypot(ctl.x - HEAL_POS.x, ctl.z - HEAL_POS.z) < 5.4) ctl.heal(24 * dt);
+    /* วงฮีลเติมเลือด — รอบ 1606: ครบทุกแท่น (4 จุดรอบลาน) */
+    if(ctl.heal && VF._t.healPadContainsSpot && VF._t.healPadContainsSpot(ctl.x, ctl.z)) ctl.heal(24 * dt);
 
     /* เก็บตัวอักษร */
     if(deps.letters && deps.letters.tryCollect && bot.prog && !bot.prog.complete){

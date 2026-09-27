@@ -105,6 +105,16 @@ assert(read('minigames/vocab-force/combat/ground-slam-controller.js').includes("
 assert(read('minigames/vocab-force/effects/hostile-orb-manager.js').includes("deps.onBotHit(peer.id, T.DEFLECTED_PVP_DMG || 300, 'G')"),'deflected orbs damage bots');
 assert(read('minigames/vocab-force/effects/energy-projectile-manager.js').includes('onBotHit(peer.id, dmg,')&&read('minigames/vocab-force/combat/energy-attack-controller.js').includes('input && input.onBotHit'),'ATTACK projectiles damage bots through the controller pass-through');
 assert(read('minigames/vocab-force/map/sedan-controller.js').includes("ctx.onBotHit(peer.id, dmg, 'kick')"),'punted car damages bots');
+/* รอบ 1606: ฮีลแพด 4 จุด (สูง 5 เท่า) + บอทหลบอาคาร/หลบซ่อน/แย่งตัวอักษร */
+const healTune=read('minigames/vocab-force/combat/heal-pad-tune.js');
+assert(healTune.includes('SPOTS')&&(healTune.match(/\{x:\s*[-\d]+,\s*z:\s*[-\d]+\}/g)||[]).length>=4,'heal pad tune declares 4 spots');
+assert(healTune.includes('HEIGHT: 17.75')&&healTune.includes('healPadNearest')&&healTune.includes('healPadContainsSpot'),'heal pad structure is 5x taller with nearest/contains helpers');
+assert(read('minigames/vocab-force/effects/heal-pad.js').includes('opts.x != null'),'HealPad instances take per-spot coordinates');
+assert(runtime.includes('healPads')&&runtime.includes('new VF.HealPad({x:')&&runtime.includes('playerBag'),'runtime builds one pad per spot and passes the local player bag to bots');
+assert(botsSrc.includes("bot.kind = 'steal'")&&botsSrc.includes('_carrierOf')&&botsSrc.includes('applyHit(foeHit.id'),'bots chase letter carriers and punch letters loose');
+assert(botsSrc.includes("bot.kind = 'hide'")&&botsSrc.includes('_hideSpot')&&botsSrc.includes('_upperSpot')&&botsSrc.includes("'hideWait'"),'bots hide inside buildings (upstairs on two-story) when hurt');
+assert(botsSrc.includes('_route')&&botsSrc.includes('_segHitsBox')&&botsSrc.includes('_detour')&&botsSrc.includes('_stuckT'),'bots steer around buildings and sidestep when stuck');
+assert(botsSrc.includes('healPadNearest(ctl.x, ctl.z)')&&botsSrc.includes('healPadContainsSpot(ctl.x, ctl.z)'),'bots heal at the nearest of the 4 pads');
 {
   /* รอบ 1602 (behavioral): บอทโดนตี → เจ็บจริง · แค้นคนตี · ตายหลุดตัวอักษร + นัดเกิดใหม่ · findCarrier ชี้คนถือ */
   const sandbox={window:{},console:{warn:function(){},log:function(){}}};
@@ -196,7 +206,7 @@ assert(audio.includes('punchWhoosh')&&audio.includes('kickImpact')&&audio.includ
 assert(audio.includes('zombieWallImpactExtreme')&&audio.includes('zombieGroundImpactHeavy')&&audio.includes('shockwaveImpact')&&audio.includes('debrisImpact'),'secondary impact sound hooks');
 assert(audio.includes('rapidComboHit')&&audio.includes('zombieBurstFinisher')&&audio.includes('zombieBurstFragments'),'rapid burst audio hooks');
 assert(ns.includes("'combat/heal-pad-tune.js'")&&ns.includes("'effects/heal-pad.js'")&&htmlPreview.includes('combat/heal-pad-tune.js')&&htmlPreview.includes('effects/heal-pad.js')&&build.includes('combat/heal-pad-tune.js')&&build.includes('effects/heal-pad.js'),'heal pad scripts load in preview and production');
-assert(runtime.includes('new VF.HealPad')&&runtime.includes('healPad.tick'),'runtime attaches and ticks the heal pad');
+assert(runtime.includes('new VF.HealPad')&&runtime.includes('healPads[hpI].tick'),'runtime attaches and ticks every heal pad');
 assert(css.includes('.vf-hp.is-heal')&&audio.includes('healPad'),'HUD glows cyan while healing');
 assert(ns.includes("'combat/energy-attack-tune.js'")&&ns.includes("'combat/energy-attack-controller.js'")&&ns.includes("'effects/energy-projectile-manager.js'")&&ns.includes("'effects/energy-vortex-manager.js'"),'energy attack scripts in namespace');
 assert(htmlPreview.includes('combat/energy-attack-tune.js')&&htmlPreview.includes('effects/energy-projectile-manager.js')&&htmlPreview.includes('effects/energy-vortex-manager.js')&&htmlPreview.includes('combat/energy-attack-controller.js'),'preview loads energy attack');
@@ -1223,7 +1233,7 @@ assert(tankerSrc2.includes('setFromAxisAngle')&&tankerSrc2.includes('_flipSpeed'
 const camSrc=read('minigames/vocab-force/camera/third-person-camera.js');
 assert(camSrc.includes('setShowcaseCam')&&camSrc.includes('showcaseCamOrbit')&&camSrc.includes('showcaseBlend'),'showcase cam orbits and blends in third-person camera');
 assert(!camSrc.includes('setChargeCam')&&!camSrc.includes('chargeBlend'),'charge cam naming fully removed');
-assert(runtime.includes('setShowcaseCam')&&runtime.includes('healPad.inside')&&runtime.includes('player.hp < player.maxHp'),'runtime drives showcase cam only while healing in the pad');
+assert(runtime.includes('setShowcaseCam')&&runtime.includes('padInside')&&runtime.includes('player.hp < player.maxHp'),'runtime drives showcase cam only while healing in a pad');
 assert(!runtime.includes('setChargeCam'),'energy hold no longer triggers showcase cam');
 assert(read('minigames/vocab-force/combat/energy-attack-tune.js').includes('showcaseCamDist')&&read('minigames/vocab-force/combat/energy-attack-tune.js').includes('showcaseCamFovDrop'),'showcase cam tune ships');
 
@@ -1293,14 +1303,14 @@ assert(sedanSrc.includes('comboSkyPunt')&&sedanSrc.includes('_vanishSky')&&sedan
 assert(runtime.includes('grab.comboThrow')&&runtime.includes('grab.tryComboKick')&&runtime.includes('grab.reset()'),'runtime wires combo inputs and resets the combo each round');
 assert(runtime.includes('}else if(!(grab && grab.tryComboKick('),'KICK press while NOT carrying still offers the combo finisher first (round 1594 flow throws at press 1)');
 assert(runtime.includes('}else if(!grab.comboThrow(player, camRig, fx, VF.audio, hud, requestTankerHit')&&runtime.indexOf('}else if(!grab.comboThrow')<runtime.indexOf('grab.onLift(player'),'THROW press while NOT carrying tries the combo double-press before falling back to lift');
-assert(ui.includes('?v=1603'),'ui.js cache-bust bumped so browsers fetch the new vf modules');
+assert(ui.includes('?v=1606'),'ui.js cache-bust bumped so browsers fetch the new vf modules');
 
 /* รอบ 1588: เตะรถยนต์ = กระเด็นไกลเท่ารถน้ำมันโดนเตะ (h54/up39 grav22 ≈ วิถี h54/up34 grav19) + หมุนธรรมชาติ */
 assert(sedanSrc.includes("info.kind) === 'kick'")&&sedanSrc.indexOf('54, 39')>sedanSrc.indexOf('kickish'),'sedan kick launches as far as the kicked tanker trajectory');
 assert(sedanSrc.includes('this._flipSpeed *= (1 - 0.1 * dt)')&&sedanSrc.includes('หมุนช้าลงตามแรงเสียดอากาศ'),'sedan tumble spins decay in air like the tanker (natural spin)');
 const kickRangeTanker=54*(2*34/19), kickRangeSedan=54*(2*39/22);
 assert(Math.abs(kickRangeTanker-kickRangeSedan)/kickRangeTanker<0.02,'kicked sedan flies the same distance as the kicked tanker (same arc, grav-adjusted up)');
-assert(ui.includes('?v=1603'),'ui.js cache-bust bumped for the kick trajectory tune');
+assert(ui.includes('?v=1606'),'ui.js cache-bust bumped for the kick trajectory tune');
 /* รอบ 1590: มาร์กเกอร์ + บนพื้นบอกทิศพลัง (ฟ้า=SLAM · ส้ม=ATTACK) */
 assert(build.includes('effects/aim-markers.js')&&htmlPreview.includes('effects/aim-markers.js')&&ns.includes("'effects/aim-markers.js'"),'aim markers module is loaded');
 assert(read('minigames/vocab-force/effects/aim-markers.js').includes('0x4ec4ff')&&read('minigames/vocab-force/effects/aim-markers.js').includes('0xff9040'),'markers use slam blue + attack orange');
