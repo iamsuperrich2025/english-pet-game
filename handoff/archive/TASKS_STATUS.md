@@ -6932,3 +6932,9 @@ efreshMechaLock
 ## ⏬ ย้ายเมื่อ 2026-09-27 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
 
 - ไฟล์: runtime/vocab-force-bots.js (ใหม่), runtime/vocab-force-runtime.js (wiring open/loop/beginRound/close/live), ui/vocab-force-hud.js (setBootPlayers+vf-boot-players), css/vocab-force.css (.vf-bp-*), vocab-force-namespace.js+index.html+tools/build_web.mjs (โหลดโมดูล), tools/test_vocab_force.js (static 8 + sandbox behavioral 14) · unit 797 ผ่าน + check_undefined_calls 0
+
+
+## ⏬ ย้ายเมื่อ 2026-09-27 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- รอบ 1600 · ถอยรางวัล 1597/1598 กลับเหมือนเดิม (เตรียมทำระบบโฆษณาในอนาคต): picdict.js ZOOM_REWARD 100→1 (ป้าย "+1 🪙") · typing.js COIN_PER_WORD 100→10 · โครงค่าคงที่ ZOOM_REWARD/COIN_PER_WORD ยังอยู่ ปรับครั้งหน้าแตะจุดเดียว · syntax ทั้ง 2 ไฟล์ + test_picdict_single_page.js ผ่าน
+- รอบ 1599 · Vocab Force บอทผู้เล่นเติมครบ 10: (1) หน้ารอโหลด (vf-boot) มีแถวผู้เล่น 10 ชิป โปร์เทรต+ชื่อ — ตัวจริงก่อน (จาก net rec) แล้ว VF._t.lobbySlots เติมบอทให้ครบ (2) runtime/vocab-force-bots.js ใหม่: BotNames ชาย/หญิงสุ่มไม่ซ้ำตามเพศตัวละคร (NEX=ชาย/Lyravyn=หญิง) + BotManager บอทลงเล่นจริงด้วย NexCharacterController+GLB (วิ่งหาตัวอักษรคำปัจจุบัน/ต่อยเตะซอมบี้/หนีไปฮีล/แฮนดิแคปความเร็ว 0.78-0.92) เก็บครบคำ → announceWin ฝั่งผู้ชนะเหมือนเพื่อน (3) hunter spawn ยังนับเฉพาะคน แต่บอทอยู่ใน prey/collusion · ui.js ?v=1598
