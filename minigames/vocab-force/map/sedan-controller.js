@@ -528,12 +528,18 @@
       const pr = (VF.GunTune && VF.GunTune.PLAYER_R) || 0.62;
       for(let i = 0; i < folks.length; i++){
         const peer = folks[i];
-        if(!peer || peer.local || peer.alive === false) continue;
+        if(!peer || peer.alive === false) continue;
+        if(peer.local && !peer.bot) continue;
         if(this._hitIds['p' + peer.id]) continue;
         if(Math.hypot((peer.x || 0) - p.x, (peer.z || 0) - p.z) > this.halfShort + pr + 0.5) continue;
         if(Math.abs((peer.y || 0) + 1.0 - p.y) > 2.2) continue;
         this._hitIds['p' + peer.id] = true;
-        if(VF._t.notePvpHit) VF._t.notePvpHit(player, {kind: 'kick', zone: 'body', targetId: peer.id, dmg: dmg});
+        /* รอบ 1602: รถเตะปลิวชนบอท → ดาเมจตรงในเครื่อง · คนออนไลน์แพ็ก strike ตามสายเดิม */
+        if(peer.bot){
+          if(ctx.onBotHit) ctx.onBotHit(peer.id, dmg, 'kick');
+        }else if(VF._t.notePvpHit){
+          VF._t.notePvpHit(player, {kind: 'kick', zone: 'body', targetId: peer.id, dmg: dmg});
+        }
         if(ctx.fx && ctx.fx.impact) ctx.fx.impact(peer.x, (peer.y || 0) + 1.15, peer.z, {kind: 'heavyKick', level: 'HEAVY', dir: {x: this.vx, z: this.vz}, force: 30});
         if(ctx.audio && ctx.audio.heavyImpact) ctx.audio.heavyImpact();
         this.vx *= -0.22; this.vz *= -0.22; this.vy = Math.max(this.vy, 5);

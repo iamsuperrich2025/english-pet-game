@@ -2,7 +2,10 @@
 /* รอบ 1596: บอทผู้เล่น — อุดผู้เล่นจริงให้ครบ 10 ในหน้ารอโหลด + ลงเล่นจริงในลานด้วย
    character controller + GLB animations ของเกม (NEX / Lyravyn) ความยากปานกลาง
    - สมองบอท: วิ่งหาตัวอักษรตามคำปัจจุบัน / สู้ซอมบี้ใกล้ตัว / หนีไปเติมเลือดวงฮีล
-   - ห้ามพฤติกรรมโง่ ๆ: มีช่วงคิด/ชะงักแบบคน, หลบการชนกันเอง, ไม่ล็อกสั่น, เดินสลับวิ่ง */
+   - ห้ามพฤติกรรมโง่ ๆ: มีช่วงคิด/ชะงักแบบคน, หลบการชนกันเอง, ไม่ล็อกสั่น, เดินสลับวิ่ง
+   รอบ 1602: PvP เต็มรูปแบบ — โดนคนเตะ/ต่อย/ปล่อยพลังแล้วเจ็บจริง (applyHit) + แค้นโจมตีกลับ
+   (brawl) + ตายแล้วตัวอักษรหลุดเป็นของรางวัลกลาง + เกิดใหม่เองในไม่กี่วิ + ลูกศรคำศัพท์
+   ไล่ชี้ตัวบอทที่ถือตัวอักษรที่เราต้องการอยู่ (findCarrier) */
 (function(root){
   const VF = root.VocabForce = root.VocabForce || {};
 
@@ -78,7 +81,10 @@
     SEPAR_R: 2.3,
     AGGRESSIVE: 0.6,                     /* โอกาสจะสู้แทนหนีเมื่อซอมบี้ใกล้ */
     WALK_CHANCE: 0.22, PAUSE_CHANCE: 0.05,
-    RUN_SCALE_MIN: 0.78, RUN_SCALE_MAX: 0.92
+    RUN_SCALE_MIN: 0.78, RUN_SCALE_MAX: 0.92,
+    /* รอบ 1602: PvP — บอทตีคนกลับเมื่อโดนตี (แค้น) หรือคนเดินมาแนบตัวแล้วดุ */
+    BRAWL_R: 2.8, BRAWL_AGGRO_R: 7, REVENGE_MS: 8000,
+    RESPAWN_MIN: 6000, RESPAWN_MAX: 10000, DROP_LOCK_MS: 2500
   };
   VF.BotTune = BOT;
 
@@ -90,6 +96,7 @@
     this.onWin = null;
     this._word = '';
     this._thai = '';
+    this._deps = null;   /* deps ล่าสุดจาก tick — ใช้ตอนบอทตายหลุดตัวอักษร */
   }
 
   BotManager.prototype.count = function(){ return this.bots.length; };
@@ -123,7 +130,10 @@
       walky: Math.random() < BOT.WALK_CHANCE,
       aggressive: Math.random() < BOT.AGGRESSIVE,
       wanderX: 0, wanderZ: 0, wanderT: 0,
-      _deadPlayed: false
+      _deadPlayed: false,
+      /* รอบ 1602: PvP state */
+      _revenge: null, _foe: null, _strikeFoe: null,
+      _respawnAt: 0, _spawnPos: null
     };
   };
 
@@ -159,7 +169,11 @@
       bot.strikeAt = 0; bot.strikeKind = ''; bot.biteCd = 0;
       bot.wanderT = 0; bot._deadPlayed = false;
       bot._strikeIn = 0; bot._strikeTarget = null; bot._threat = null;
+      /* รอบ 1602: เคลียร์สถานะ PvP + จำจุดเกิดสำหรับ respawn */
+      bot._revenge = null; bot._foe = null; bot._strikeFoe = null;
+      bot._respawnAt = 0;
       const pos = spawnFor ? spawnFor(bot.id, i) : null;
+      bot._spawnPos = pos || null;
       if(bot.ctl.resetForRound){
         bot.ctl.resetForRound(pos || {x: 0, y: 0, z: 0, yaw: 0});
       }
@@ -171,6 +185,62 @@
     return this.bots.map(function(b){
       return {id: b.id, x: b.ctl.x, z: b.ctl.z, y: b.ctl.y, alive: b.ctl.alive !== false, local: true, bot: true};
     });
+  };
+
+  /* รอบ 1602: ลูกศรคำศัพท์ — ตัวอักษรที่ต้องการถูกบอทเก็บไปแล้ว → ชี้ตามตัวบอท */
+  BotManager.prototype.findCarrier = function(ch){
+    const want = String(ch || '').slice(0, 1).toUpperCase();
+    if(!/[A-Z]/.test(want)) return null;
+    for(let i = 0; i < this.bots.length; i++){
+      const bot = this.bots[i];
+      if(!bot || !bot.ctl || bot.ctl.alive === false) continue;
+      const prog = bot.prog;
+      if(!prog || prog.complete) continue;
+      if(prog.bag && prog.bag.indexOf(want) >= 0){
+        return {x: bot.ctl.x, y: bot.ctl.y || 0, z: bot.ctl.z, height: 1.8, bot: true, name: bot.name};
+      }
+    }
+    return null;
+  };
+
+  BotManager.prototype._byId = function(id){
+    for(let i = 0; i < this.bots.length; i++){
+      if(this.bots[i].id === id) return this.bots[i];
+    }
+    return null;
+  };
+
+  /* รอบ 1602: ผู้เล่นต่อย/เตะ/ปล่อยพลังโดนบอท — ดาเมจจริงผ่าน controller ของบอท
+     (ระบบ strike บน hp string ส่งถึงแค่คนออนไลน์ บอทอยู่ในเครื่องเดียวกันจึงยิงตรง)
+     โดนแล้วบอทจำหน้าแค้น (revenge) · ตายแล้วตัวอักษรหลุด + นัดเวลาเกิดใหม่ */
+  BotManager.prototype.applyHit = function(id, dmg, info){
+    const bot = this._byId(id);
+    if(!bot || !bot.ctl || bot.ctl.alive === false) return 0;
+    info = info || {};
+    const from = info.kind === 'M' ? 'slam' : (info.kind === 'G' ? 'gun' : 'player');
+    const dealt = bot.ctl.takeHit ? bot.ctl.takeHit(dmg, !!bot.ctl.blocking, {from: from}) : 0;
+    if(dealt > 0){
+      const now = VF.now();
+      if(info.fromId) bot._revenge = {id: info.fromId, until: now + (BOT.REVENGE_MS || 8000)};
+      if(bot.ctl.alive === false && !bot._respawnAt){
+        bot._respawnAt = now + VF.rand(BOT.RESPAWN_MIN || 6000, BOT.RESPAWN_MAX || 10000);
+        this._dropLetters(bot, now);
+      }
+    }
+    return dealt;
+  };
+
+  /* บอทตาย → ตัวอักษรในถุงหลุดเป็นของรางวัลกลางรอบตัว (เหมือนคนตาย) + เคลียร์ถุง */
+  BotManager.prototype._dropLetters = function(bot, now){
+    const bag = bot.prog && bot.prog.bag ? bot.prog.bag.slice() : [];
+    if(!bag.length) return;
+    if(bot.prog.dropLife) bot.prog.dropLife();
+    const deps = this._deps || {};
+    if(deps.letters && deps.letters.dropAround){
+      deps.letters.dropAround(root.THREE, bag, {x: bot.ctl.x, y: bot.ctl.y || 0, z: bot.ctl.z}, this.arena, {
+        ownerId: bot.id, ownerLockMs: BOT.DROP_LOCK_MS || 2500, now: now
+      });
+    }
   };
 
   BotManager.prototype._nearestThreat = function(bot, enemies){
@@ -186,6 +256,31 @@
     return best ? {en: best, d: bestD} : null;
   };
 
+  /* รอบ 1602: คู่ต่อสู้ที่ใกล้ที่สุดในหมู่ "คน" (ตัวเรา + เพื่อนออนไลน์ ไม่นับบอทด้วยกันเอง)
+     ถ้าโดนตีแล้วแค้นอยู่ จะไล่ตามคนนั้นแบบไม่จำกัดระยะจนหมดเวลาแค้น */
+  BotManager.prototype._nearestFoe = function(bot, deps, now){
+    const ctl = bot.ctl;
+    const cands = [];
+    if(deps.player && deps.player.alive !== false){
+      cands.push({id: deps.player.uid || 'local', x: deps.player.x, z: deps.player.z, local: true, ref: null});
+    }
+    const folks = deps.people || [];
+    for(let i = 0; i < folks.length; i++){
+      const p = folks[i];
+      if(!p || p.bot || p.local || p.alive === false) continue;
+      cands.push({id: p.id, x: p.x, z: p.z, local: false, ref: p});
+    }
+    const revengeOn = bot._revenge && bot._revenge.until > now;
+    let best = null, bestD = Infinity;
+    for(let i = 0; i < cands.length; i++){
+      const c = cands[i];
+      const d = Math.hypot((c.x || 0) - ctl.x, (c.z || 0) - ctl.z);
+      if(revengeOn && c.id === bot._revenge.id) return {id: c.id, x: c.x, z: c.z, d: d, local: c.local, ref: c.ref};
+      if(d < (BOT.BRAWL_AGGRO_R || 7) && d < bestD){ bestD = d; best = {id: c.id, x: c.x, z: c.z, d: d, local: c.local, ref: c.ref}; }
+    }
+    return best;
+  };
+
   /* ตัดสินใจแผนใหม่ — เรียกเฉพาะตอน think หมด */
   BotManager.prototype._plan = function(bot, deps, now){
     const ctl = bot.ctl;
@@ -194,6 +289,7 @@
     const hpFrac = (ctl.hp != null ? ctl.hp : maxHp) / maxHp;
     bot.target = null;
     bot.kind = 'idle';
+    bot._foe = null;
     const threat = this._nearestThreat(bot, deps.enemies);
     if(threat && threat.d < BOT.BITE_R * 2.2 && hpFrac < BOT.FLEE_FRAC){
       bot.kind = 'flee';
@@ -204,6 +300,15 @@
       bot.kind = 'fight';
       bot.target = {x: threat.en.x, z: threat.en.z};
       bot._threat = threat.en;
+      return;
+    }
+    /* รอบ 1602: PvP — โดนคนตีแล้วแค้นต้องสู้กลับเสมอ · คนเดินมาแนบตัวแล้วบอทดุ (สุ่มตามนิสัย) */
+    const foe = this._nearestFoe(bot, deps, now);
+    const revengeOn = bot._revenge && bot._revenge.until > now;
+    if(foe && ((revengeOn && foe.id === bot._revenge.id) || (foe.d < (BOT.BRAWL_R || 2.8) && bot.aggressive && Math.random() < 0.6))){
+      bot.kind = 'brawl';
+      bot.target = {x: foe.x, z: foe.z};
+      bot._foe = foe;
       return;
     }
     if(hpFrac < BOT.HEAL_FRAC){
@@ -243,7 +348,20 @@
     const ctl = bot.ctl;
     if(!ctl.ready) return;
     if(ctl.alive === false){
+      /* รอบ 1602: บอทเกิดใหม่เองหลังโดนจัดหนักสักพัก (คนไม่เกิดใหม่ในรอบ แต่ลานต้องไม่เงียว
+         ลูกศร/หน้ารอโหลดสัญญาครบ 10 ตลอดเกม) */
+      if(bot._respawnAt && now >= bot._respawnAt && !deps.frozen){
+        bot._respawnAt = 0;
+        bot._revenge = null;
+        if(ctl.resetForRound) ctl.resetForRound(bot._spawnPos || {x: 0, y: 0, z: 0, yaw: 0});
+        bot._deadPlayed = false;
+      }
       ctl.tick(dt, ZERO_INPUT, BOT_CAM, this.arena);
+      /* ตาย: เล่นท่าล้มครั้งเดียวแล้วนอนรอเกิดใหม่/รอบใหม่ */
+      if(ctl.alive === false && !bot._deadPlayed){
+        bot._deadPlayed = true;
+        if(!(ctl.playAction && ctl.playAction('knockDown')) && ctl.playAction) ctl.playAction('fall');
+      }
       return;
     }
     if(ctl.tickVitals) ctl.tickVitals(dt, this.arena, null);
@@ -259,11 +377,26 @@
       bot.think = VF.rand(BOT.REACT_MIN, BOT.REACT_MAX);
     }
 
+    /* รอบ 1602: อัปเดตตำแหน่งคู่ต่อสู้สดทุกเฟรม (คน/เพื่อนเคลื่อนเร็วกว่าจังหวะคิดของบอท) */
+    if(bot.kind === 'brawl' && bot._foe){
+      const foe = bot._foe;
+      if(foe.local){
+        if(!deps.player || deps.player.alive === false){ bot.kind = 'wander'; bot._foe = null; }
+        else{ foe.x = deps.player.x; foe.z = deps.player.z; }
+      }else if(foe.ref){
+        if(foe.ref.alive === false){ bot.kind = 'wander'; bot._foe = null; }
+        else{ foe.x = foe.ref.x; foe.z = foe.ref.z; }
+      }else{
+        bot.kind = 'wander'; bot._foe = null;
+      }
+      if(bot._foe && bot.target){ bot.target.x = bot._foe.x; bot.target.z = bot._foe.z; }
+    }
+
     let input = ZERO_INPUT;
     if(!frozen && bot.startDelay <= 0 && bot.pauseT <= 0 && bot.target){
       let dx = bot.target.x - ctl.x, dz = bot.target.z - ctl.z;
       const dist = Math.hypot(dx, dz);
-      const arrive = bot.kind === 'fight' ? 1.4 : 1.0;
+      const arrive = (bot.kind === 'fight' || bot.kind === 'brawl') ? 1.4 : 1.0;
       if(dist > arrive){
         dx /= dist; dz /= dist;
         /* แยกตัวกันจากบอท/คนใกล้ตัว กันกลุ่มตัวแน่นโง่ ๆ */
@@ -288,7 +421,7 @@
         input = {moveX: -dx * mag, moveZ: dz * mag, sprint: false, jump: false, block: false};
         /* กระโดดสลับเป็นจังหวะตอนวิ่งยาว (แบบคน) — นาน ๆ ครั้ง */
         if(bot.kind === 'hunt' && dist > 6 && ctl.grounded && Math.random() < dt * 0.25) input.jump = true;
-      }else if(bot.kind === 'fight'){
+      }else if(bot.kind === 'fight' || bot.kind === 'brawl'){
         input = {moveX: 0, moveZ: 0, block: false};
       }
       /* สู้: หันหน้าหาซอมบี้ + ต่อย/เตะเป็นจังหวะ */
@@ -312,6 +445,23 @@
           bot._threat = null;
         }
       }
+      /* รอบ 1602: ชกต่อยกับคน — หันหน้าหาคู่ต่อสู้แล้วออกหมัด/เตะเหมือนสู้ซอมบี้ */
+      if(bot.kind === 'brawl' && bot._foe){
+        const foe = bot._foe;
+        ctl.yaw = Math.atan2((foe.x || 0) - ctl.x, (foe.z || 0) - ctl.z);
+        const d = Math.hypot((foe.x || 0) - ctl.x, (foe.z || 0) - ctl.z);
+        if(d < BOT.STRIKE_R && now >= bot.strikeAt && !(ctl.anim && ctl.anim.isBusy(now))){
+          bot.strikeKind = ctl.anim && ctl.anim.has && ctl.anim.has('kick') && Math.random() < 0.4 ? 'kick' : 'punch';
+          if(ctl.playAction(bot.strikeKind) || ctl.playAction('punch')){
+            bot.strikeAt = now + VF.rand(850, 1400);
+            bot._strikeIn = now + 230;
+            bot._strikeFoe = foe;
+            bot._strikeTarget = null;
+          }
+        }else if(d < BOT.STRIKE_R && now < bot.strikeAt){
+          input = {moveX: 0, moveZ: 0, block: (ctl.hp || 0) < (ctl.maxHp || 1000) * 0.5};
+        }
+      }
     }
 
     if(bot.pauseT > 0) bot.pauseT = Math.max(0, bot.pauseT - dt);
@@ -326,18 +476,43 @@
     /* ผลต่อยลงจริง */
     if(bot._strikeIn && now >= bot._strikeIn){
       bot._strikeIn = 0;
-      const t = bot._strikeTarget; bot._strikeTarget = null;
-      if(t && t.alive !== false && deps.enemies && deps.enemies.hurtInSphere && ctl.alive !== false){
-        const fwd = ctl.forward ? ctl.forward() : {x: 0, z: 1};
-        const tune = VF.CombatTune && VF.CombatTune.attack ? VF.CombatTune.attack(bot.strikeKind || 'punch') : {damage: 90, force: 16, lift: 2.5, level: 'LIGHT'};
-        const origin = {x: ctl.x + fwd.x * 0.85, y: ctl.y + 1.0, z: ctl.z + fwd.z * 0.85};
-        deps.enemies.hurtInSphere(origin, 1.5, {
-          damage: tune.damage, force: tune.force, lift: tune.lift,
-          dir: fwd, kind: bot.strikeKind || 'punch', origin: origin,
-          reaction: tune.reaction, level: tune.level
-        });
-        if(deps.fx && deps.fx.impact) deps.fx.impact(t.x || origin.x, (t.y || 0) + 1.15, t.z || origin.z, {kind: bot.strikeKind || 'punch', level: tune.level, dir: fwd, force: tune.force});
-        if(deps.audio && deps.audio.punchImpact && deps.player && Math.hypot(ctl.x - deps.player.x, ctl.z - deps.player.z) < 42) deps.audio.punchImpact();
+      const foeHit = bot._strikeFoe; bot._strikeFoe = null;
+      if(foeHit){
+        /* รอบ 1602: ต่อย/เตะโดนคน — ตัวเรา takeHit ตรง ๆ · เพื่อนออนไลน์แพ็ก strike ส่งไปเครื่องเขา */
+        const pvpDmg = VF._t.meleePvpDamage ? VF._t.meleePvpDamage(bot.strikeKind) : 90;
+        const dFoe = Math.hypot((foeHit.x || 0) - ctl.x, (foeHit.z || 0) - ctl.z);
+        let hitSomeone = false;
+        if(dFoe < (BOT.STRIKE_R || 2.3) + 0.6 && ctl.alive !== false){
+          if(foeHit.local){
+            if(deps.player && deps.player.alive !== false && deps.player.takeHit){
+              const dealt = deps.player.takeHit(pvpDmg, !!deps.player.blocking, {from: 'player'});
+              if(dealt > 0 && deps.onPlayerHurt) deps.onPlayerHurt(dealt);
+              hitSomeone = dealt > 0;
+            }
+          }else if(foeHit.ref && foeHit.ref.alive !== false && deps.player && VF._t.notePvpHit){
+            VF._t.notePvpHit(deps.player, {kind: bot.strikeKind || 'punch', zone: 'body', targetId: foeHit.id, dmg: pvpDmg});
+            hitSomeone = true;
+          }
+        }
+        if(hitSomeone && deps.fx && deps.fx.impact){
+          const fwd2 = ctl.forward ? ctl.forward() : {x: 0, z: 1};
+          deps.fx.impact(foeHit.x || ctl.x, (ctl.y || 0) + 1.15, foeHit.z || ctl.z, {kind: bot.strikeKind || 'punch', level: 'MEDIUM', dir: fwd2, force: 16});
+        }
+        if(hitSomeone && deps.audio && deps.audio.punchImpact && deps.player && Math.hypot(ctl.x - deps.player.x, ctl.z - deps.player.z) < 42) deps.audio.punchImpact();
+      }else{
+        const t = bot._strikeTarget; bot._strikeTarget = null;
+        if(t && t.alive !== false && deps.enemies && deps.enemies.hurtInSphere && ctl.alive !== false){
+          const fwd = ctl.forward ? ctl.forward() : {x: 0, z: 1};
+          const tune = VF.CombatTune && VF.CombatTune.attack ? VF.CombatTune.attack(bot.strikeKind || 'punch') : {damage: 90, force: 16, lift: 2.5, level: 'LIGHT'};
+          const origin = {x: ctl.x + fwd.x * 0.85, y: ctl.y + 1.0, z: ctl.z + fwd.z * 0.85};
+          deps.enemies.hurtInSphere(origin, 1.5, {
+            damage: tune.damage, force: tune.force, lift: tune.lift,
+            dir: fwd, kind: bot.strikeKind || 'punch', origin: origin,
+            reaction: tune.reaction, level: tune.level
+          });
+          if(deps.fx && deps.fx.impact) deps.fx.impact(t.x || origin.x, (t.y || 0) + 1.15, t.z || origin.z, {kind: bot.strikeKind || 'punch', level: tune.level, dir: fwd, force: tune.force});
+          if(deps.audio && deps.audio.punchImpact && deps.player && Math.hypot(ctl.x - deps.player.x, ctl.z - deps.player.z) < 42) deps.audio.punchImpact();
+        }
       }
     }
 
@@ -369,16 +544,11 @@
         }
       }
     }
-
-    /* ตาย: เล่นท่าล้มครั้งเดียวแล้วนอนรอรอบใหม่ */
-    if(ctl.alive === false && !bot._deadPlayed){
-      bot._deadPlayed = true;
-      if(!(ctl.playAction && ctl.playAction('knockDown')) && ctl.playAction) ctl.playAction('fall');
-    }
   };
 
   BotManager.prototype.tick = function(dt, now, deps){
     deps = deps || {};
+    this._deps = deps;
     for(let i = 0; i < this.bots.length; i++){
       try{ this._tickBot(this.bots[i], dt, now, deps); }
       catch(err){ /* บอทตัวเดียวพังห้ามพาล้มทั้งเกม */ }

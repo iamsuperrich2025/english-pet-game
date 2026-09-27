@@ -400,6 +400,21 @@
     }].concat(bots ? bots.people() : []);
   }
 
+  /* รอบ 1602: สะพานดาเมจ PvP ลงบอท — จุดโจมตีทุกแบบ (หมัด/เตะ/SLAM/ลูกพลัง/รถเตะปลิว) เรียกตรงนี้
+     บอทอยู่ในเครื่องเดียวกัน (ระบบ strike บน hp string ส่งถึงแค่คนออนไลน์ บอทต้องยิงตรง) */
+  function botHit(id, dmg, kind){
+    if(!bots || !bots.applyHit) return;
+    bots.applyHit(id, dmg, {kind: kind, fromId: (net && net.myUid) || 'local'});
+  }
+  /* บอทต่อย/เตะโดนตัวเรา — อัปเดต HUD + เช็กตาย เหมือนโดนซอมบี้กัด */
+  function handlePlayerHurt(dmg){
+    if(!player) return;
+    if(hud && hud.setHp) hud.setHp(player.hp, player.maxHp);
+    if(hud && hud.hurtFlash) hud.hurtFlash((dmg || 0) / (player.maxHp || 1000));
+    if(camRig && camRig.impulse) camRig.impulse(0.28, 2.4);
+    consumePlayerDeath();
+  }
+
   function tickCollusion(dt){
     if(ackOpen || winLock || !player || !huntersAllowed()) return;
     if(!collusionWatch && VF._t.makeCollusionWatch) collusionWatch = VF._t.makeCollusionWatch();
@@ -475,7 +490,7 @@
     if(secondary && !paused) secondary.tickClock(dt);
     const scale = paused ? 0 : (secondary ? secondary.simScale(combat.hitStop) : 1);
     const step = paused ? 0 : dt * scale;
-    if(active) combat.tick(dt, now, player, enemies, fx, camRig, VF.audio, secondary, peopleSnap(), worldMelee || oilTanker);
+    if(active) combat.tick(dt, now, player, enemies, fx, camRig, VF.audio, secondary, peopleSnap(), worldMelee || oilTanker, botHit);
     if(active && !paused && poll.dash && !player.carrying) player.tryManualDash(poll, camRig, arena, fx, camRig, now);
     /* รอบ 1589: ปุ่ม SLAM กระแทกพื้น — เล่นท่า groundSlam แล้วปล่อยเส้นเปลวเพลิงสีฟ้า
        เป็นแนวยาวบนพื้นตามทิศหน้าตัวละคร (คูลดาวน์ 6 วิ · ผู้เล่นในแนวเส้นเสีย 300 HP ต่อครั้งที่โดน) */
@@ -516,7 +531,7 @@
     const playerInput = active ? (freezeMove ? Object.assign({}, poll, {moveX: 0, moveZ: 0}) : poll) : {moveX: 0, moveZ: 0};
     player.tick(step, playerInput, camRig, arena);
     /* รอบ 1596: สมองบอท → controller จริงของทุกตัว (วิ่งหาตัวอักษร/สู้ซอมบี้/หาฮีล) */
-    if(bots) bots.tick(step, now, {letters: letters, enemies: enemies, fx: fx, audio: VF.audio, player: player, frozen: false});
+    if(bots) bots.tick(step, now, {letters: letters, enemies: enemies, fx: fx, audio: VF.audio, player: player, frozen: false, people: peopleSnap(), onPlayerHurt: handlePlayerHurt});
     if(player.consumePowerJumpEvents){
       player.consumePowerJumpEvents().forEach(function(ev){ handlePowerJumpEvent(ev, true); });
     }
@@ -579,7 +594,7 @@
     if(camRig && camRig.setShowcaseCam){
       camRig.setShowcaseCam(!!(healPad && healPad.inside && player && player.alive !== false && player.hp < player.maxHp && !player.carrying));
     }
-    if(active && energy) energy.tick(step, now, player, enemies, arena, fx, camRig, combat, VF.audio, {held: !!poll.punchHeld, released: !!poll.punchReleased, moveX: poll.moveX || 0, moveZ: poll.moveZ || 0, people: peopleSnap()});
+    if(active && energy) energy.tick(step, now, player, enemies, arena, fx, camRig, combat, VF.audio, {held: !!poll.punchHeld, released: !!poll.punchReleased, moveX: poll.moveX || 0, moveZ: poll.moveZ || 0, people: peopleSnap(), onBotHit: botHit});
     /* รอบ 1593: สนามลูกพลัง + ปัดพลัง + ซอมบี้พ่นลูกพลัง (เคส A) */
     if(active && orbs){
       spitTimer -= step;
@@ -587,7 +602,7 @@
         spitTimer = (VF.DeflectTune && VF.DeflectTune.ZOMBIE_SPIT_INTERVAL) || 3.2;
         zombieSpit();
       }
-      orbs.tick(step, {player: player, enemies: enemies, people: peopleSnap(), arena: arena, fx: fx, audio: VF.audio, cam: camRig, vehicles: {sedan: sedan, tanker: oilTanker}, onPlayerHurt: handleOrbPlayerHit});
+      orbs.tick(step, {player: player, enemies: enemies, people: peopleSnap(), arena: arena, fx: fx, audio: VF.audio, cam: camRig, vehicles: {sedan: sedan, tanker: oilTanker}, onPlayerHurt: handleOrbPlayerHit, onBotHit: botHit});
     }
     if(deflect) deflect.tick(step, now, player, {orbs: orbs, fx: fx, audio: VF.audio, camera: camRig, onPeerDeflect: function(orb){ if(net && net.publishDeflectAck) net.publishDeflectAck(orb); }});
     if(hud && hud.setDeflectCooldown) hud.setDeflectCooldown(deflect ? deflect.cooldownFrac(now) : 1);
@@ -595,16 +610,24 @@
     fx.tick(dt);
     if(trails) trails.tick(step);
     if(fireTrail) fireTrail.tick(dt, enemies, player);
-    if(slam) slam.tick(step, now, player, {fx: slamFx, fxm: fx, enemies: enemies, people: peopleSnap(), camera: camRig, audio: VF.audio, vehicles: {sedan: sedan, tanker: oilTanker}, fxImpact: fx && fx.impact});
+    if(slam) slam.tick(step, now, player, {fx: slamFx, fxm: fx, enemies: enemies, people: peopleSnap(), camera: camRig, audio: VF.audio, vehicles: {sedan: sedan, tanker: oilTanker}, fxImpact: fx && fx.impact, onBotHit: botHit});
     if(slamFx) slamFx.tick(step);
     if(hud && hud.setSlamCooldown) hud.setSlamCooldown(slam ? slam.cooldownFrac(now) : 1);
     if(aimMarkers){ aimMarkers.tick(dt); aimMarkers.update(player, arena); }
     const needed = round && round.progress && !round.progress.complete ? round.progress.required() : null;
     if(player && player.alive !== false && hud && hud.quest){
       try{
-        const target = needed && letters && letters.nearest ? letters.nearest(needed, player.x, player.z) : null;
-        if(target && camera) hud.quest.update(camera, target, needed, THREE || root.THREE);
-        else hud.quest.hide();
+        let target = needed && letters && letters.nearest ? letters.nearest(needed, player.x, player.z) : null;
+        /* รอบ 1602: ตัวอักษรที่ต้องการถูกเก็บไปแล้ว → ลูกศรไล่ชี้ "คนที่ถืออยู่" (บอทในเครื่องเดียวกัน)
+           ป้ายสีส้ม is-carry บอกว่าเป้าอยู่บนตัวคน ไม่ใช่ที่พื้น */
+        let onCarrier = false;
+        if(!target && needed && bots && bots.findCarrier && (target = bots.findCarrier(needed))) onCarrier = true;
+        if(target && camera){
+          hud.quest.update(camera, target, needed, THREE || root.THREE);
+          if(hud.quest.el) hud.quest.el.classList.toggle('is-carry', onCarrier);
+        }else{
+          hud.quest.hide();
+        }
       }catch(_){
         hud.quest.hide();
       }
@@ -615,7 +638,7 @@
     if(grab) grab.tick(dt, player, {hud: hud});
     /* รอบ 1570/1571: สถานะปุ่ม THROW — เช็กทั้ง grab.carrying() และ player.carrying เผื่อเส้นทางใดเส้นทางหนึ่งค้าง */
     if(hud && hud.setCarrying) hud.setCarrying(!!((grab && grab.carrying()) || (player && player.carrying)));
-    if(sedan && sedan.ready) sedan.tick(step, {player: player, people: peopleSnap(), enemies: enemies, fx: fx, audio: VF.audio, cam: camRig});
+    if(sedan && sedan.ready) sedan.tick(step, {player: player, people: peopleSnap(), enemies: enemies, fx: fx, audio: VF.audio, cam: camRig, onBotHit: botHit});
     if(player && player.alive === false){
       enterSpectator();
       const watched = spectator && spectator.tick ? spectator.tick(poll, net, hud, arena) : null;

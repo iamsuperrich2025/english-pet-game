@@ -201,7 +201,7 @@
     return false;
   };
 
-  EnergyProjectileManager.prototype.tick = function(dt, enemies, arena, fx, cam, player, combat, audio, people){
+  EnergyProjectileManager.prototype.tick = function(dt, enemies, arena, fx, cam, player, combat, audio, people, onBotHit){
     const T = VF.EnergyAttackTune || {};
     const baseRad = T.projectileRadius || 0.28;
     if(this.aim && this.aim.visible){
@@ -253,13 +253,19 @@
         const folks = people || [];
         for(let p = 0; p < folks.length && !hit; p++){
           const peer = folks[p];
-          if(!peer || peer.local || peer.alive === false) continue;
+          if(!peer || peer.alive === false) continue;
+          if(peer.local && !peer.bot) continue;
           const pr = (VF.GunTune && VF.GunTune.PLAYER_R) || 0.62;
           const d = Math.hypot((peer.x || 0) - shot.x, (peer.z || 0) - shot.z);
           if(d > rad + pr) continue;
           const zone = VF._t.hitZone ? VF._t.hitZone(shot.y, peer) : 'body';
           const dmg = VF._t.gunDamage ? VF._t.gunDamage(VF._t.playerGunId(player), zone, shot.chargeFrac) : (VF.PLAYER_HP || 1000);
-          if(VF._t.notePvpHit) VF._t.notePvpHit(player, {kind: 'G', zone: zone, targetId: peer.id, dmg: dmg});
+          /* รอบ 1602: ลูกพลังปุ่ม ATTACK โดนบอท → ดาเมจตรง · คนออนไลน์แพ็ก strike ตามสายเดิม */
+          if(peer.bot){
+            if(onBotHit) onBotHit(peer.id, dmg, 'G');
+          }else if(VF._t.notePvpHit){
+            VF._t.notePvpHit(player, {kind: 'G', zone: zone, targetId: peer.id, dmg: dmg});
+          }
           this._impactFx(fx, shot.x, shot.y, shot.z, shot.vx, 0, shot.vz, shot.pal, !!shot.last, shot.scale, shot.chargeFrac);
           hit = true;
         }

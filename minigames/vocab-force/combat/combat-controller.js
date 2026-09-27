@@ -83,7 +83,7 @@
     return this.tryAttackOrApproach('punch', player, now, enemies, camera, arena, fx);
   };
 
-  CombatController.prototype.tick = function(dt, now, player, enemies, fx, camera, audio, secondary, people, world){
+  CombatController.prototype.tick = function(dt, now, player, enemies, fx, camera, audio, secondary, people, world, onBotHit){
     if(this.hitStop > 0){
       this.hitStop = Math.max(0, this.hitStop - dt);
       return {paused: this.hitStop > 0, hits: []};
@@ -199,10 +199,16 @@
         const reach = (atk.radius || 1.28) + (atk.range || 1.92) * 0.15;
         for(let p = 0; p < folks.length; p++){
           const peer = folks[p];
-          if(!peer || peer.local || peer.alive === false) continue;
+          if(!peer || peer.alive === false) continue;
+          if(peer.local && !peer.bot) continue;
           if(Math.hypot((peer.x || 0) - origin.x, (peer.z || 0) - origin.z) > reach + pr) continue;
           const dmg = VF._t.meleePvpDamage ? VF._t.meleePvpDamage(atk.kind) : (atk.damage || 90);
-          if(VF._t.notePvpHit) VF._t.notePvpHit(player, {kind: atk.kind, zone: 'body', targetId: peer.id, dmg: dmg});
+          /* รอบ 1602: หมัด/เตะโดนบอท → ดาเมจตรงผ่าน onBotHit · คนออนไลน์แพ็ก strike ตามสายเดิม */
+          if(peer.bot){
+            if(onBotHit) onBotHit(peer.id, dmg, atk.kind === 'kick' ? 'K' : 'P');
+          }else if(VF._t.notePvpHit){
+            VF._t.notePvpHit(player, {kind: atk.kind, zone: 'body', targetId: peer.id, dmg: dmg});
+          }
           if(fx && fx.impact) fx.impact(peer.x, (peer.y || 0) + 1.15, peer.z, {kind: atk.kind, level: tune.level, dir: fwd, force: atk.force});
         }
       }

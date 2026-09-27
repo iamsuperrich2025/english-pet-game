@@ -94,6 +94,43 @@ assert(css.includes('.vf-boot-players')&&css.includes('.vf-bp-chip'),'loading pl
 assert(runtime.includes('new VF.BotManager')&&runtime.includes('bots.tick')&&runtime.includes('VF._t.botFill')&&runtime.includes('bots.beginRound'),'runtime wires bots (load/tick/round reset)');
 assert(runtime.includes('bots.people()')&&runtime.includes("net.bodies(player) : peopleSnap()"),'bots join prey/collusion; hunter spawn still counts humans only');
 assert(runtime.includes('bots.dispose()'),'bots disposed on close');
+/* รอบ 1602: PvP คน↔บอทเต็มรูปแบบ (ต่อย/เตะ/ปล่อยพลังโจมตีกันได้) + ลูกศรไล่ชี้คนถือตัวอักษร */
+assert(botsSrc.includes('applyHit')&&botsSrc.includes('findCarrier')&&botsSrc.includes("'brawl'")&&botsSrc.includes('_respawnAt')&&botsSrc.includes('_dropLetters'),'bots take real damage, retaliate, drop letters on death, respawn, and expose letter carriers');
+assert(botsSrc.includes('_revenge')&&botsSrc.includes('onPlayerHurt')&&botsSrc.includes('notePvpHit(deps.player'),'bot strikes hurt the local player directly and reach online peers as packed strikes');
+assert(runtime.includes('function botHit')&&runtime.includes('handlePlayerHurt')&&(runtime.match(/onBotHit: botHit/g)||[]).length>=4,'runtime bridges melee/slam/orbs/energy channels to bot damage');
+assert(runtime.includes('bots.findCarrier')&&runtime.includes("classList.toggle('is-carry'"),'quest arrow follows the bot carrying the needed letter (orange is-carry badge)');
+assert(css.includes('.vf-quest.is-carry'),'carrier arrow styled differently from a ground letter');
+assert(combat.includes("onBotHit(peer.id, dmg, atk.kind === 'kick' ? 'K' : 'P')")&&combat.includes('peer.local && !peer.bot'),'melee hits bots directly instead of skipping them as local');
+assert(read('minigames/vocab-force/combat/ground-slam-controller.js').includes("deps.onBotHit(peer.id, pvpDmg, 'M')"),'slam fire line damages bots');
+assert(read('minigames/vocab-force/effects/hostile-orb-manager.js').includes("deps.onBotHit(peer.id, T.DEFLECTED_PVP_DMG || 300, 'G')"),'deflected orbs damage bots');
+assert(read('minigames/vocab-force/effects/energy-projectile-manager.js').includes('onBotHit(peer.id, dmg,')&&read('minigames/vocab-force/combat/energy-attack-controller.js').includes('input && input.onBotHit'),'ATTACK projectiles damage bots through the controller pass-through');
+assert(read('minigames/vocab-force/map/sedan-controller.js').includes("ctx.onBotHit(peer.id, dmg, 'kick')"),'punted car damages bots');
+{
+  /* รอบ 1602 (behavioral): บอทโดนตี → เจ็บจริง · แค้นคนตี · ตายหลุดตัวอักษร + นัดเกิดใหม่ · findCarrier ชี้คนถือ */
+  const sandbox={window:{},console:{warn:function(){},log:function(){}}};
+  vm.createContext(sandbox);
+  vm.runInContext(ns,sandbox);
+  vm.runInContext(progress,sandbox);
+  vm.runInContext(botsSrc,sandbox);
+  const VF2=sandbox.window.VocabForce;
+  const bm=new VF2.BotManager({});
+  const ctl={ready:true,alive:true,blocking:false,x:3,z:4,y:0,hp:100,maxHp:100,
+    takeHit:function(d,b,info){ if(!this.alive) return 0; this.hp=Math.max(0,this.hp-d); if(this.hp<=0)this.alive=false; return d; },
+    resetForRound:function(pos){ this.hp=this.maxHp; this.alive=true; }};
+  const prog=new VF2.LetterProgressController('APPLE','');
+  prog.collect('P'); prog.collect('P');
+  bm.bots.push({id:'b1',ctl:ctl,prog:prog,name:'T1'});
+  let dropped='',lockOwner='';
+  bm._deps={letters:{dropAround:function(THREE,bag,origin,arena,opts){ dropped=bag.join(''); lockOwner=opts.ownerId; }}};
+  const dealt=bm.applyHit('b1',30,{kind:'K',fromId:'me'});
+  assert(dealt===30&&ctl.hp===70,'applyHit deals real damage to a bot');
+  assert(bm.bots[0]._revenge&&bm.bots[0]._revenge.id==='me','bot remembers its attacker for retaliation');
+  assert(bm.findCarrier('P')&&bm.findCarrier('P').x===3,'quest arrow can target a bot carrying the needed letter');
+  assert(bm.findCarrier('Z')===null,'findCarrier ignores letters the bot does not hold');
+  bm.applyHit('b1',999,{kind:'M',fromId:'me'});
+  assert(ctl.alive===false&&dropped==='PP'&&lockOwner==='b1'&&bm.bots[0]._respawnAt>0,'bot death drops its letters as loot and schedules a respawn');
+  assert(prog.bag.length===0,'dead bot bag is cleared after dropping');
+}
 /* รอบ 1593: ปุ่ม DEFLECT ปัดพลัง (A ซอมบี้ + B เพื่อนออนไลน์) — GLB ท่า Shield_Push_Left ทั้งคู่ */
 assert(build.includes('combat/deflect-tune.js')&&htmlPreview.includes('combat/deflect-tune.js')&&ns.includes("'combat/deflect-tune.js'"),'deflect tune is loaded');
 assert(build.includes('combat/deflect-controller.js')&&htmlPreview.includes('combat/deflect-controller.js')&&ns.includes("'combat/deflect-controller.js'"),'deflect controller is loaded');

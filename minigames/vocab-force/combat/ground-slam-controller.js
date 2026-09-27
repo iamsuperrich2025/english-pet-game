@@ -82,13 +82,19 @@
       /* ผู้เล่นอื่น: ครั้งละ 300 ต่อครั้งที่โดนแนวเส้น (กันซ้ำรอบเดียวกันด้วย castId) */
       for(let p = 0; p < people.length; p++){
         const peer = people[p];
-        if(!peer || peer.local || peer.alive === false) continue;
+        if(!peer || peer.alive === false) continue;
+        if(peer.local && !peer.bot) continue;
         const key = cast.castId + '#' + peer.id;
         if(this._hits[key]) continue;
         if(!fx.hit(peer.x, peer.z, halfW + pr)) continue;
         this._hits[key] = true;
-        /* รอบ 1592: kind 'M' แยกจากหมัด ('P') — ฝั่งคนโดนจะได้รู้ว่าโดนแนว SLAM จึงเล่นท่าล้มถูกจังหวะ */
-        if(VF._t.notePvpHit) VF._t.notePvpHit(player, {kind: 'M', zone: 'body', targetId: peer.id, dmg: pvpDmg});
+        /* รอบ 1592: kind 'M' แยกจากหมัด ('P') — ฝั่งคนโดนจะได้รู้ว่าโดนแนว SLAM จึงเล่นท่าล้มถูกจังหวะ
+           รอบ 1602: แนวเส้นโดนบอท → ดาเมจตรงผ่าน onBotHit (บอทอยู่ในเครื่องเดียวกัน ไม่ต้องส่งตามสาย net) */
+        if(peer.bot){
+          if(deps.onBotHit) deps.onBotHit(peer.id, pvpDmg, 'M');
+        }else if(VF._t.notePvpHit){
+          VF._t.notePvpHit(player, {kind: 'M', zone: 'body', targetId: peer.id, dmg: pvpDmg});
+        }
         /* ระเบิดไฟสนั่นจุดชน — เปลวไฟลุกท่วม + คลื่นกระแทก + ซากเศษพื้นแยกร้าว (ชุดเดียวกับ power jump/tanker) */
         const px = peer.x, py = peer.y || 0, pz = peer.z;
         if(deps.fxm && deps.fxm.arenaFire) deps.fxm.arenaFire(px, py, pz, {r: T.EXPLOSION_R || 3});

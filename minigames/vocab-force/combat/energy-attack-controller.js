@@ -234,7 +234,7 @@
       });
       if(audio && audio.energyProjectileTravel) audio.energyProjectileTravel();
     }
-    if(this.guns) this.guns.tick(dt, enemies, arena, fx, cam, player, combat, audio, input && input.people);
+    if(this.guns) this.guns.tick(dt, enemies, arena, fx, cam, player, combat, audio, input && input.people, input && input.onBotHit);
   };
 
   VF.EnergyAttackController = EnergyAttackController;

@@ -223,10 +223,16 @@
           const folks = deps.people || [];
           for(let p = 0; p < folks.length && !dead; p++){
             const peer = folks[p];
-            if(!peer || peer.local || peer.alive === false) continue;
+            if(!peer || peer.alive === false) continue;
+            if(peer.local && !peer.bot) continue;
             const d = Math.hypot((peer.x || 0) - orb.x, (peer.z || 0) - orb.z);
             if(d > 0.35 + pr) continue;
-            if(VF._t.notePvpHit) VF._t.notePvpHit(player, {kind: 'G', zone: 'body', targetId: peer.id, dmg: T.DEFLECTED_PVP_DMG || 300});
+            /* รอบ 1602: ลูกพลัง (ที่เรายิง/ปัด) โดนบอท → ดาเมจตรงในเครื่อง · คนออนไลน์ส่ง strike ตามสายเดิม */
+            if(peer.bot){
+              if(deps.onBotHit) deps.onBotHit(peer.id, T.DEFLECTED_PVP_DMG || 300, 'G');
+            }else if(VF._t.notePvpHit){
+              VF._t.notePvpHit(player, {kind: 'G', zone: 'body', targetId: peer.id, dmg: T.DEFLECTED_PVP_DMG || 300});
+            }
             this._impact(deps, orb.x, orb.y, orb.z, true);
             if(deps.audio && deps.audio.energyHit) deps.audio.energyHit();
             dead = true;

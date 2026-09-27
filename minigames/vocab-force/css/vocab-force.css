@@ -21,6 +21,9 @@
 .vf-quest-arrow{display:block;width:0;height:0;border-left:11px solid transparent;border-right:11px solid transparent;border-top:18px solid #fff4b0;transform-origin:50% 30%}
 .vf-quest.is-on .vf-quest-arrow{animation:vfQuestBob .7s ease-in-out infinite}
 .vf-quest.is-off .vf-quest-letter{border-color:#7cffcf;color:#7cffcf}
+/* รอบ 1602: ตัวอักษรถูกเก็บไปแล้ว — ลูกศรไล่ชี้ "คนที่ถืออยู่" สีส้มแยกจากพื้นเขียว */
+.vf-quest.is-carry .vf-quest-letter{border-color:#ffb34c;color:#ffb34c;background:#231303}
+.vf-quest.is-carry .vf-quest-arrow{border-top-color:#ffb34c}
 @keyframes vfQuestBob{
   0%,100%{transform:translateY(0)}
   50%{transform:translateY(7px)}
