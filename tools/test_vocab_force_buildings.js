@@ -71,19 +71,19 @@ const stairTop = arena.surfaceY(-30, 216.4);  /* ขั้นบันไดข�
 assert(Math.abs(stairTop - 3.5) < 1e-9,'staircase top meets the upper slab height');
 assert(arena.surfaceY(-30, 218.8) > 0.8 && arena.surfaceY(-30, 218.8) < 0.95,'first stair step is a low platform');
 
-/* ซ่อน shell เมื่ออยู่ในอาคาร */
+/* รอบ 1605: ซ่อนเฉพาะหลังคาเมื่ออยู่ในอาคาร — ผนัง/บ้านคงอยู่เหมือนเดิม */
 const b1 = arena.buildings.list[0];
-b1.shell.visible = true;
+b1.roof.visible = true;
 arena.buildings.update({x: 175, y: 0, z: 140});
-assert(b1.shell.visible === false,'shell hides while the player is inside');
+assert(b1.roof.visible === false && b1.shell.visible === true,'roof hides while the player is inside');
 arena.buildings.update({x: 0, y: 0, z: 0});
-assert(b1.shell.visible === true,'shell returns once the player leaves');
+assert(b1.roof.visible === true && b1.shell.visible === true,'roof returns once the player leaves');
 const b5 = arena.buildings.list[4];
-b5.shell.visible = true;
+b5.roof.visible = true;
 arena.buildings.update({x: -30, y: 3.5, z: 213});
-assert(b5.shell.visible === false,'upstairs player also sees through the shell');
+assert(b5.roof.visible === false && b5.shell.visible === true,'upstairs player loses the roof only');
 arena.buildings.update({x: -30, y: 6.9, z: 215});
-assert(b5.shell.visible === true,'roof level keeps the shell visible');
+assert(b5.roof.visible === true,'above roof level keeps the roof visible');
 
 if(process.exitCode) { console.error('building tests failed after ' + n + ' passes'); process.exit(1); }
 console.log('PASS · ' + n + ' asserts · round 1604 buildings');

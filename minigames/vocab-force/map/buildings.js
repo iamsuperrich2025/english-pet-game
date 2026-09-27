@@ -133,6 +133,11 @@
       const bd = {x: s.x, z: s.z, w: s.w, d: s.d, door: doorSide(s)};
       const shell = new THREE.Group();
       shell.name = 'VFBuilding' + bi;
+      /* รอบ 1605: ซ่อนเฉพาะหลังคาเวลาอยู่ในอาคาร — ผนัง/หน้าต่าง/กรอบประตูคงอยู่เหมือนเดิม
+         (เดิมซ่อนทั้ง shell ทำให้บ้านกลายเป็นแผ่นแบน) */
+      const roofG = new THREE.Group();
+      roofG.name = 'VFBuildingRoof' + bi;
+      shell.add(roofG);
       const perm = new THREE.Group();
       group.add(shell); group.add(perm);
       const trim = bi % 2 ? mats.trimM : mats.trimC;
@@ -154,7 +159,7 @@
       let hideBelow = WALL_H + 0.01;
       if(!s.two){
         /* อาคาร 1 ชั้น: หลังคาแผ่นเรียบ — กันลูกพลัง/การเดินระดับกลาง แต่เดินใต้ได้ */
-        const roof = boxMesh(mats.roof, s.w, ROOF_T, s.d, s.x, WALL_H + ROOF_T / 2, s.z, shell);
+        const roof = boxMesh(mats.roof, s.w, ROOF_T, s.d, s.x, WALL_H + ROOF_T / 2, s.z, roofG);
         const rb = collideBox(s.x, WALL_H + ROOF_T / 2, s.z, s.w, ROOF_T, s.d, {ceiling: true, walk: false});
         rb.mesh = roof;
       }else{
@@ -212,7 +217,7 @@
         walls(bd, shell, slabTop, UPPER_H, false, mats.wall);
         /* หลังคา */
         const roofTop = slabTop + UPPER_H;
-        const roofMesh = boxMesh(mats.roof, s.w, ROOF_T, s.d, s.x, roofTop + ROOF_T / 2, s.z, shell);
+        const roofMesh = boxMesh(mats.roof, s.w, ROOF_T, s.d, s.x, roofTop + ROOF_T / 2, s.z, roofG);
         const roofB = collideBox(s.x, roofTop + ROOF_T / 2, s.z, s.w, ROOF_T, s.d, {ceiling: true, walk: false});
         roofB.mesh = roofMesh;
         hideBelow = roofTop + 0.01;
@@ -220,6 +225,7 @@
 
       this.list.push({
         shell: shell,
+        roof: roofG,
         minx: s.x - s.w / 2 + TH, maxx: s.x + s.w / 2 - TH,
         minz: s.z - s.d / 2 + TH, maxz: s.z + s.d / 2 - TH,
         hideBelow: hideBelow
@@ -229,7 +235,8 @@
     return this;
   };
 
-  /* ซ่อน shell อาคารที่ผู้เล่นอยู่ข้างใน (ต่ำกว่าหลังคา) เพื่อให้กล้องเห็นตัวละครในอาคาร */
+  /* ซ่อนเฉพาะ "หลังคา" ของอาคารที่ผู้เล่นอยู่ข้างใน (ต่ำกว่าระดับหลังคา) เพื่อให้กล้องเห็นตัวละคร
+     ผนัง หน้าต่าง กรอบประตู และพื้นชั้นสองยังคงมองเห็นครบเหมือนยืนอยู่ในบ้านจริง */
   Buildings.prototype.update = function(p){
     if(!p) return;
     const list = this.list;
@@ -238,7 +245,7 @@
       const inside = p.x > b.minx - 0.4 && p.x < b.maxx + 0.4 &&
                      p.z > b.minz - 0.4 && p.z < b.maxz + 0.4 &&
                      (p.y || 0) < b.hideBelow;
-      if(b.shell.visible === inside) b.shell.visible = !inside;
+      if(b.roof.visible === inside) b.roof.visible = !inside;
     }
   };
 
