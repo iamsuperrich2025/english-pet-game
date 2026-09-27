@@ -6908,3 +6908,9 @@ efreshMechaLock
 
 - ไฟล์: vehicle-grab.js (comboThrow/tryComboKick/_tickCombo โฟลใหม่ + finisher), oil-tanker/sedan-controller (SKY_SPEC + comboSkyPunt/_vanishSky + gate state ลอย), ui.js (?v=1595), test (static+sandbox behavioral โฟลใหม่ 5 กรณี) · unit 754 ผ่าน + check_undefined_calls 0
 - รอบ 1593 · Vocab Force ปุ่ม DEFLECT ปัดพลัง (คีย์ C / แถวบนช่อง 4 เหนือ SLAM): ท่า GLB จริง Shield_Push_Left ทั้งคู่ · hostile-orb-manager สนามลูกพลัง 3 ทีม (enemy=ซอมบี้พ่นทุก 3.2 วิ ระยะ 6-30 ดาเมจ 120 · peer=visual ลูกเพื่อนซิงก์ผ่าน hp string 'W' · player=ลูกที่ถูกปัด โดนซอมบี้ 300 PvP และระเบิดรถ) · ปัดที่ hitAt 0.26 ลูกในแนวหน้า RANGE 3.8 หักเหตามทิศหน้า · ลูกเพื่อนถูกปัด → ack 'D' กลับเจ้าของ killQuietByBurst กันดาเมจซ้ำ (energy-projectile-manager ประทับ burst ลง shot)
+
+
+## ⏬ ย้ายเมื่อ 2026-09-27 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- ไฟล์: runtime/vocab-force-runtime.js (wiring KICK/THROW ตอนไม่แบก + blastQueue/tickBlastQueue/applyTankerBlast), js/ui.js, test (assert wiring 2 + ระเบิดตีระยะห่าง) · unit 757 ผ่าน + check_undefined_calls 0
+- รอบ 1594 · Vocab Force จุดจบคอมโบ THROW×2+KICK ใหม่ + ทุ่มทันที: (1) เตะ #2 ไม่ระเบิดอีกต่อไป — รถทั้งน้ำมันและเก๋งถูกเตะพุ่งขึ้นฟ้าสูง (SKY_SPEC up 46 แรงโน้มถ่วงจาง 7 บินทะลุขอบสนาม) ถึง y≈70 จึงหายวับ (tanker state 'destroyed' / sedan 'gone') ไม่มีดาเมจระเบิด · comboSkyPunt+_vanishSky ทั้ง 2 คัน · fail-safe tick กันระเบิดช่วง _skyPunt (2) กด THROW ครั้งแรกทุ่มทันทีไม่อมคำสั่งรอหน้าต่าง — กดซ้ำตอนรถลอย (≤1.1 วิ) แปลงวิถีคอมโบ (_comboHold) แล้ว KICK (≤1.4 วิ) ว้าบไปเตะ #2 · ไม่เตะตาม = ปล่อย hold ให้รถตกตามฟิสิกส์ · comboKickLaunch รับ state thrown/launched เพิ่ม
