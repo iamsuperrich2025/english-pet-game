@@ -217,7 +217,8 @@
     if(p.act === 'spectate'){
       const dx = e.clientX - p.sx;
       const dy = e.clientY - p.sy;
-      if(Math.abs(dx) >= 36 && Math.abs(dx) > Math.abs(dy) * 1.15) this.spectateQueued = dx > 0 ? 1 : -1;
+      /* รอบ 1603: ปัดขวา→ซ้าย (dx<0) = ผู้เล่นถัดไป · ซ้าย→ขวา (dx>0) = ย้อนกลับ (วนรอบ) */
+      if(Math.abs(dx) >= 36 && Math.abs(dx) > Math.abs(dy) * 1.15) this.spectateQueued = dx > 0 ? -1 : 1;
       return;
     }
     if(p.act === 'joy' && this._joy.id === e.pointerId){

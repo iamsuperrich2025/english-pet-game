@@ -269,12 +269,23 @@
       if(clips[st]) anim.addClip(st, clips[st]);
     });
     scene.add(pivot);
-    return {pivot: pivot, model: model, anim: anim, bar: null, x: 0, z: 0, y: 0, yaw: 0};
+    /* รอบ 1603: ป้ายชื่อ + แถบ HP เหนือหัวเพื่อน (ชื่อแนบ pivot · แถบ HP อยู่ scene ตามตำแหน่งเวิลด์) */
+    const tag = VF.NameTag ? new VF.NameTag('ผู้เล่น', {y: 2.58}) : null;
+    if(tag) pivot.add(tag.sprite);
+    const bar = VF.HealthBar ? new VF.HealthBar({y: 2.2, max: VF.PLAYER_HP || 1000}) : null;
+    if(bar){
+      bar.attach(scene);
+      bar.group.visible = false;
+    }
+    return {pivot: pivot, model: model, anim: anim, bar: bar, tag: tag, tagName: '', x: 0, z: 0, y: 0, yaw: 0};
   };
 
   VocabForceNet.prototype._syncPeer = function(vis, rec, dt, camera){
     const x = Number(rec.x) || 0, z = Number(rec.z) || 0, y = Number(rec.y) || 0;
     const yaw = Number(rec.yaw) || 0;
+    /* รอบ 1603: ประกาศค่า smoothing ที่เคยหายไป — เดิม ReferenceError ทุกเฟรมพอมีเพื่อนออนไลน์
+       (loop ค้าง มองไม่เห็นกัน + คำศัพท์คนละคำ) */
+    const k = Math.min(1, Math.max(0.08, (dt || 0.016) * 9));
     if(vis._snap){
       vis.x += (x - vis.x) * k;
       vis.z += (z - vis.z) * k;
@@ -295,6 +306,18 @@
       else if(moving) vis.anim.play(vis.anim.has('run') ? 'run' : 'walk');
       else vis.anim.play('idle');
       vis.anim.tick(dt);
+    }
+    /* รอบ 1603: อัปเดตป้ายชื่อ + แถบ HP สีเขียว/เหลือง/แดงตามเลือดที่เหลือ */
+    const nm = String(rec.n || 'ผู้เล่น').slice(0, 18);
+    if(vis.tag && vis.tagName !== nm){
+      vis.tag.setText(nm);
+      vis.tagName = nm;
+    }
+    if(vis.bar){
+      vis.bar.set(hp, VF.PLAYER_HP || 1000);
+      if(camera) vis.bar.follow(vis.x, vis.y, vis.z, camera);
+      vis._lastHp = hp;
+      vis.bar.group.visible = hp > 0;
     }
   };
 
@@ -347,6 +370,7 @@
     const vis = this.peers[uid];
     if(!vis) return;
     if(vis.bar) vis.bar.dispose();
+    if(vis.tag) vis.tag.dispose();
     if(vis.pivot && vis.pivot.parent) vis.pivot.parent.remove(vis.pivot);
     delete this.peers[uid];
     delete this._lastW[uid];
@@ -610,8 +634,15 @@
         max: 8,
         dist: function(uid, vis){ return vis ? Math.hypot((player.x || 0) - vis.x, (player.z || 0) - vis.z) : 999; },
         isDrawn: function(vis){ return !!(vis && vis.pivot && vis.pivot.visible); },
-        show: function(uid, vis){ if(vis && vis.pivot) vis.pivot.visible = true; },
-        hide: function(uid, vis){ if(vis && vis.pivot) vis.pivot.visible = false; }
+        show: function(uid, vis){
+          if(vis && vis.pivot) vis.pivot.visible = true;
+          /* รอบ 1603: คืนแถบ HP ตามเลือดจริง (ซ่อนอยู่ตอนอยู่นอกงบการวาด/ตาย) */
+          if(vis && vis.bar && vis.bar.group) vis.bar.group.visible = vis._lastHp > 0;
+        },
+        hide: function(uid, vis){
+          if(vis && vis.pivot) vis.pivot.visible = false;
+          if(vis && vis.bar && vis.bar.group) vis.bar.group.visible = false;
+        }
       });
     }
     if(!this.isHost() && this.onWord){

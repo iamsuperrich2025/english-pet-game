@@ -21,16 +21,28 @@
     this.index = 0;
   };
 
-  SpectatorController.prototype._targets = function(net){
+  SpectatorController.prototype._targets = function(net, bots){
     const rows = net && net.spectatorTargets ? net.spectatorTargets() : [];
+    /* รอบ 1603: รวมบอทในเครื่องเข้าเป้าชมด้วย — ตอนตายรอผลรอบปัดดูได้ครบทั้ง 10 คนในสนาม */
+    if(bots && bots.bots){
+      for(let i = 0; i < bots.bots.length; i++){
+        const b = bots.bots[i];
+        if(!b || !b.ctl || b.ctl.alive === false) continue;
+        rows.push({
+          id: b.id, name: b.name,
+          x: b.ctl.x, y: b.ctl.y || 0, z: b.ctl.z,
+          pivot: b.ctl.pivot || null, alive: true
+        });
+      }
+    }
     return rows.filter(function(p){ return p && p.alive !== false; }).sort(function(a, b){
       return String(a.id || '').localeCompare(String(b.id || ''));
     });
   };
 
-  SpectatorController.prototype.tick = function(poll, net, hud, arena){
+  SpectatorController.prototype.tick = function(poll, net, hud, arena, bots){
     if(!this.active) return null;
-    const rows = this._targets(net);
+    const rows = this._targets(net, bots);
     if(!rows.length){
       this.targetId = '';
       if(hud && hud.setSpectator) hud.setSpectator(true, '', 0);

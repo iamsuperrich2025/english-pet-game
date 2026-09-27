@@ -198,6 +198,8 @@
     gift:`<path d="M10 28h44v28H10z" class="i-pink"/><path d="M7 20h50v12H7z" class="i-purple"/><path d="M28 20c-9 0-14-4-14-9 0-4 3-7 7-7 6 0 10 8 11 16M36 20c9 0 14-4 14-9 0-4-3-7-7-7-6 0-10 8-11 16" class="i-mint"/><path d="M28 20h8v36h-8z" class="i-white"/>`,
     globe:`<circle cx="32" cy="32" r="25" class="i-blue"/><path d="M8 30h48M12 42h40M32 7c-8 8-11 17-11 25s3 18 11 25c8-7 11-17 11-25S40 15 32 7z" class="i-white-line"/><path d="M16 17c4 4 9 5 14 2M44 45c-5-3-10-2-14 1" class="i-mint-line"/>`,
     sparkle:`<path d="M31 4l5 15 15 5-15 5-5 15-5-15-15-5 15-5z" class="i-star"/><path d="M49 38l3 8 8 3-8 3-3 8-3-8-8-3 8-3zM13 39l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" class="i-pink"/>`,
+    /* ⚡ รอบ 1603: ไอคอน Vocab Force — สายฟ้าทองคำกระแทกหนังสือเปิด (vocab + force) */
+    vforce:`<path d="M10 38c9-4 17-1 23 5v13c-7-6-15-8-23-5z" class="i-blue"/><path d="M54 38c-9-4-17-1-23 5v13c7-6 15-8 23-5z" class="i-purple"/><path d="M32 43v13" class="i-line"/><path d="M39 3L25 21h8l-7 16 16-22h-9l8-12z" class="i-coin"/><path d="M51 6l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" class="i-star"/>`,
     quest:`<path d="M32 5l7 14 16 2-12 11 3 16-14-8-14 8 3-16L9 21l16-2z" class="i-star"/><circle cx="32" cy="30" r="8" class="i-white"/><path d="M29 30l3 3 6-7" class="i-line"/>`,
     friends:`<circle cx="24" cy="24" r="11" class="i-peach"/><circle cx="43" cy="27" r="9" class="i-blue"/><path d="M5 54c2-12 9-18 19-18 11 0 18 6 20 18z" class="i-pink"/><path d="M36 54c1-8 5-13 12-13 6 0 10 4 11 13z" class="i-purple"/><path d="M21 25c2 2 5 2 7 0M40 28c2 1 4 1 6 0" class="i-line"/>`,
     controller:`<path d="M17 24c5-5 25-5 30 0 7 7 11 27 2 31-5 2-10-6-13-10h-8c-4 4-9 12-14 10-9-4-5-24 3-31z" class="i-purple"/><path d="M20 34h12M26 28v12" class="i-line"/><circle cx="42" cy="31" r="3" class="i-pink"/><circle cx="48" cy="37" r="3" class="i-mint"/>`,
@@ -309,12 +311,12 @@
     return ` data-vw2-source="${htmlEscape(sourceSelector)}"${mirrorVisibility ? ' data-vw2-mirror-visibility="1"' : ''}`;
   }
   const ADMIN_ONLY_WORLD_ACTIONS = new Set([
-    'worldSky','worldDrive','worldMoto','worldInvasion','wordship','skirmish','vocabforce'
-  ]);   // 🤖 รอบ 1521: worldMecha เปิดสาธารณะ · รอบ 1568: vocabforce กลับเป็นเฉพาะแอดมิน (ซ่อนปุ่ม+บล็อก action)
+    'worldSky','worldDrive','worldMoto','worldInvasion','wordship','skirmish'
+  ]);   // 🤖 รอบ 1521: worldMecha เปิดสาธารณะ · รอบ 1568: vocabforce เคยล็อกแอดมินชั่วคราว · ⚡ รอบ 1603: vocabforce เปิดสาธารณะ (แก้ sync คน↔คน + ป้ายชื่อ/HP แล้ว)
   const CLASSIC_RAIL_GLYPHS = Object.freeze({
     cure:'💊',city:'🏙️',worldAdv:'🌍',worldSky:'☁️',worldHaunt:'👻',worldHeli:'🚁',worldDrone:'🛸',
     worldDrive:'🚗',worldSoccer:'⚽',worldMoto:'🏍️',worldInvasion:'🛸',worldMecha:'🤖',worldFrontline:'🪖',home:'🏠',
-    invest:'📈',factory:'🏭',wordsearch:'🔎',typing:'⌨️',bubble:'🫧',shoot:'🎯',wordship:'⚓',skirmish:'🔫',vocabforce:'⚡',cannon:'🐉🔥',
+    invest:'📈',factory:'🏭',wordsearch:'🔎',typing:'⌨️',bubble:'🫧',shoot:'🎯',wordship:'⚓',skirmish:'🔫',vocabforce:'🥊',cannon:'🐉🔥',
     examstd:'📋',onet:'🇹🇭',rank:'🥇',market:'🏪',friends:'👥',gifts:'🎁',stats:'📊',trophy:'🏆',racing:'🏎️',worldPickup:'🛻'
   });
   function classicRailGlyph(actionName, sourceSelector){
@@ -1171,7 +1173,7 @@
       ['shoot','target','ยิงเป้าคำ','#btn-rail-shootword'],
       ['wordship','ship','กองเรือคำศัพท์','#btn-rail-wordship'],
       ['skirmish','gun','ยิงรบคำ','#btn-rail-skirmish'],
-      ['vocabforce','sparkle','Vocab Force · COMING SOON','#btn-rail-vocabforce'],
+      ['vocabforce','vforce','Vocab Force','#btn-rail-vocabforce'],
       ['cannon','dragon','Dragon Sky Siege','#btn-rail-lettercannon'],
       ['examstd','exam','ข้อสอบจริง','#btn-rail-examstd'],
       ['onet','flag','O-NET','#btn-rail-onet'],

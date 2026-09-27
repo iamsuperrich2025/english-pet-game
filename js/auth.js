@@ -647,8 +647,9 @@ syncAdminAccess();                               // admin allowlist เดิม
     const direct=new URL(location.href);
     direct.searchParams.delete('vocab-force');
     history.replaceState(null,'',direct.pathname+direct.search+direct.hash);
-    if(isAdmin() && typeof openVocabForce==='function') openVocabForce();
-    else if(typeof toast==='function') toast('⚡ Vocab Force — COMING SOON');
+    /* รอบ 1603: เปิดสาธารณะทุกบัญชี (แก้ sync คน↔คน + ป้ายชื่อ/HP ครบแล้ว) — เดิมล็อกเฉพาะแอดมิน */
+    if(typeof openVocabForce==='function') openVocabForce();
+    else if(typeof toast==='function') toast('⚡ กำลังเปิด Vocab Force...');
   }  testerBoost();                                   // บัญชีผู้ทดสอบ → เติมเหรียญให้พอทดสอบโลก 3D
   authPushProfile();                               // sync ชื่อในเกมขึ้น profile ทุก login (กันโหนดหาย/เซฟย้ายเครื่อง)
   setInterval(()=>authPushSave(false), AUTH_PUSH_MS);

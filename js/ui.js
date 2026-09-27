@@ -7404,10 +7404,12 @@ function bindSkirmishRail(){
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bindSkirmishRail);
 else bindSkirmishRail();
-/* ==== ⚡ VOCAB FORCE — temporarily admin-only internal test ==== */
-const VOCABFORCE_LOCK_MSG='⚡ Vocab Force — COMING SOON';
+/* ==== ⚡ VOCAB FORCE — เปิดสาธารณะ รอบ 1603 (แก้บั๊ก sync คน↔คน + ป้ายชื่อ/HP แล้ว) ==== */
+const VOCABFORCE_LOCK_MSG='⚡ Vocab Force — กำลังเปิดเกม';
 function vocabForceAdminAllowed(){
-  try{ return typeof isAdmin==='function' && isAdmin()===true; }catch(_){ return false; }
+  /* รอบ 1603: เคยล็อกเฉพาะแอดมินชั่วคราวเพราะผู้เล่นเห็นคำศัพท์คนละคำ/มองไม่เห็นกัน
+     (ต้นตอ = ตัวแปร k หายใน _syncPeer + rules ล็อก map vforce) — แก้ครบแล้วจึงเปิดทุกบัญชี */
+  return true;
 }
 function refreshVocabForceLock(){
   const b=document.getElementById('btn-rail-vocabforce');
@@ -7424,7 +7426,7 @@ function refreshVocabForceLock(){
 async function loadVocabForceModules(){
   const base='minigames/vocab-force/';
   /* รอบ 1572: cache-bust ทุกโมดูล — เคยเจอ input/grab เก่าจาก HTTP cache หลัง deploy ทำปุ่ม THROW กดแล้วเงียบ */
-  const v='?v=1598';
+  const v='?v=1603';
   await loadStylesheetOnce('vocab-force-css', base+'css/vocab-force.css'+v);
   await loadScriptOnce(base+'vocab-force-namespace.js'+v);
   const scripts=(window.VocabForce && VocabForce.SCRIPTS ? VocabForce.SCRIPTS : []).slice(1);

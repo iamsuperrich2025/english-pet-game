@@ -1,6 +1,6 @@
 # RULES.md — Firebase Security Rules
 
-> ⏳ **รอบ 1530 — รอผู้ใช้ Publish:** เพิ่ม map `vforce` (Vocab Force) ใน allowlist `/world`, `/wroom`, `/winfo` และล็อกให้อีเมลแอดมินชุดเดียวกับ Sky/skirmish (`freddommun@gmail.com`, `sumpajitshami@gmail.com`, `parkerhulk2020@gmail.com`) จนกว่าจะอนุมัติเปิดสาธารณะ
+> ✅ **รอบ 1603 — รอผู้ใช้ Publish:** ปลดล็อก map `vforce` (Vocab Force) ให้ผู้เล่นที่ล็อกอินทุกคนอ่าน/เขียนได้ที่ `/world`, `/wroom`, `/winfo` (คงล็อกเฉพาะ `sky`, `skirmish` ไว้เหมือนเดิม) — ควบคู่กับแก้บั๊ก sync คน↔คนในเกม (ตัวแปร `k` ใน `_syncPeer` ทำ loop ค้าง) จึงพร้อมเปิดสาธารณะ
 >
 > ⏳ **รอบ 1480 — รอผู้ใช้ Publish:** เพิ่ม map `skirmish` (ยิงรบคำ) ใน allowlist `/world`, `/wroom`, `/winfo` และล็อกให้อีเมลแอดมินชุดเดียวกับ Sky (`freddommun@gmail.com`, `sumpajitshami@gmail.com`, `parkerhulk2020@gmail.com`) จนกว่าจะอนุมัติเปิดสาธารณะ
 >
@@ -237,10 +237,10 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
     },
     "world": {
       "$map": {
-        ".read": "auth != null && (($map !== 'sky' && $map !== 'skirmish' && $map !== 'vforce') || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com') && $map !== 'kart' && $map !== 'pickup'",
+        ".read": "auth != null && (($map !== 'sky' && $map !== 'skirmish') || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com') && $map !== 'kart' && $map !== 'pickup'",
         ".validate": "$map === 'adv' || $map === 'sky' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive' || $map === 'moto' || $map === 'invasion' || $map === 'lettercannon' || $map === 'skirmish' || $map === 'vforce'",
         "$uid": {
-          ".write": "auth != null && auth.uid === $uid && (($map !== 'sky' && $map !== 'skirmish' && $map !== 'vforce') || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com') && $map !== 'kart' && $map !== 'pickup'",
+          ".write": "auth != null && auth.uid === $uid && (($map !== 'sky' && $map !== 'skirmish') || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com') && $map !== 'kart' && $map !== 'pickup'",
           ".validate": "newData.hasChildren(['n','x','z','yaw','ts'])",
           "n":   { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
           "av":  { ".validate": "newData.isString() && newData.val().length <= 8" },
@@ -262,12 +262,12 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
     },
     "wroom": {
       "$map": {
-        ".read": "auth != null && (($map !== 'sky' && $map !== 'skirmish' && $map !== 'vforce') || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com')",
+        ".read": "auth != null && (($map !== 'sky' && $map !== 'skirmish') || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com')",
         ".validate": "$map === 'adv' || $map === 'sky' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive' || $map === 'moto' || $map === 'invasion' || $map === 'soccer' || $map === 'mecha' || $map === 'f1' || $map === 'lettercannon' || $map === 'kart' || $map === 'pickup' || $map === 'skirmish' || $map === 'vforce'",
         "$room": {
           ".validate": "$room.matches(/^r([0-9]|[1-2][0-9]|3[0-5])$/)",
           "$uid": {
-            ".write": "auth != null && auth.uid === $uid && (($map !== 'sky' && $map !== 'skirmish' && $map !== 'vforce') || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com')",
+            ".write": "auth != null && auth.uid === $uid && (($map !== 'sky' && $map !== 'skirmish') || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com')",
             ".validate": "newData.hasChildren(['x','z'])",
             "x":  { ".validate": "newData.isNumber()" },
             "z":  { ".validate": "newData.isNumber()" },
@@ -284,12 +284,12 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
     },
     "winfo": {
       "$map": {
-        ".read": "auth != null && (($map !== 'sky' && $map !== 'skirmish' && $map !== 'vforce') || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com')",
+        ".read": "auth != null && (($map !== 'sky' && $map !== 'skirmish') || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com')",
         ".validate": "$map === 'adv' || $map === 'sky' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive' || $map === 'moto' || $map === 'invasion' || $map === 'soccer' || $map === 'mecha' || $map === 'f1' || $map === 'lettercannon' || $map === 'kart' || $map === 'pickup' || $map === 'skirmish' || $map === 'vforce'",
         "$room": {
           ".validate": "$room.matches(/^r([0-9]|[1-2][0-9]|3[0-5])$/)",
           "$uid": {
-            ".write": "auth != null && auth.uid === $uid && (($map !== 'sky' && $map !== 'skirmish' && $map !== 'vforce') || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com')",
+            ".write": "auth != null && auth.uid === $uid && (($map !== 'sky' && $map !== 'skirmish') || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com')",
             ".validate": "newData.hasChildren(['t'])",
             "n":  { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
             "w":  { ".validate": "newData.isNumber() && newData.val() >= 0" },

@@ -5,6 +5,7 @@
   let opening = false, running = false, raf = 0, last = 0;
   let renderer = null, scene = null, camera = null, THREE = null;
   let player, camRig, input, combat, enemies, arena, fx, hud, round, flyers, trails, fireTrail, secondary, energy, letters, net, healPad, oilTanker, sedan, grab, spectator, worldMelee, slam, slamFx, aimMarkers, orbs, deflect, spitTimer = 1.6, bots = null;
+  let selfTag = null, selfBar = null;
   let winLock = false, ackOpen = false, pendingWord = null;
   let collusionWatch = null, collusionPending = null;
   let tankerEventSeq = 0;
@@ -51,6 +52,27 @@
       if(typeof state !== 'undefined' && state && state.profileName) return String(state.profileName).slice(0, 40);
     }catch(_){}
     return 'ผู้เล่น';
+  }
+
+  /* รอบ 1603: ป้ายชื่อ + แถบ HP ของตัวเองเหนือหัว (ชื่อแนบ pivot · แถบ HP วางบน scene ตามตำแหน่ง) */
+  function attachSelfLabel(){
+    if(!player) return;
+    selfTag = VF.NameTag ? new VF.NameTag(playerName(), {y: 2.58}) : null;
+    if(selfTag && player.pivot) player.pivot.add(selfTag.sprite);
+    selfBar = VF.HealthBar ? new VF.HealthBar({y: 2.2, max: VF.PLAYER_HP || 1000}) : null;
+    if(selfBar && scene) selfBar.attach(scene);
+  }
+  function tickSelfLabel(){
+    if(!player) return;
+    if(selfBar){
+      selfBar.set(player.hp != null ? player.hp : (player.maxHp || VF.PLAYER_HP || 1000), player.maxHp || VF.PLAYER_HP || 1000);
+      selfBar.follow(player.x || 0, player.y || 0, player.z || 0, camera);
+      selfBar.group.visible = player.alive !== false && selfBar.value > 0;
+    }
+  }
+  function disposeSelfLabel(){
+    if(selfTag){ try{ selfTag.dispose(); }catch(_){} selfTag = null; }
+    if(selfBar){ try{ selfBar.dispose(); }catch(_){} selfBar = null; }
   }
 
   function beginRound(preferred){
@@ -479,8 +501,9 @@
       tickTanker(dt);
       /* รอบ 1596: ตอนเปิดการ์ดประกาศผู้ชนะ บอทยืนนิ่งรอ (frozen) แต่อนิเมชันยังเดิน */
       if(bots) bots.tick(dt, now, {frozen: true, player: player});
-      const winnerView = spectator && spectator.active ? spectator.tick(poll, net, hud, arena) : player;
+      const winnerView = spectator && spectator.active ? spectator.tick(poll, net, hud, arena, bots) : player;
       if(camRig) camRig.tick(dt, winnerView || player);
+      tickSelfLabel();
       renderer.render(scene, camera);
       return;
     }
@@ -530,8 +553,9 @@
        ขณะ carrying เอง (ตัดตัวคูณ 0.55 รอบ 1579 ออก — แรงเดินไม่มีผลอีกต่อไป ตำแหน่งนิ่งสนิท) */
     const playerInput = active ? (freezeMove ? Object.assign({}, poll, {moveX: 0, moveZ: 0}) : poll) : {moveX: 0, moveZ: 0};
     player.tick(step, playerInput, camRig, arena);
-    /* รอบ 1596: สมองบอท → controller จริงของทุกตัว (วิ่งหาตัวอักษร/สู้ซอมบี้/หาฮีล) */
-    if(bots) bots.tick(step, now, {letters: letters, enemies: enemies, fx: fx, audio: VF.audio, player: player, frozen: false, people: peopleSnap(), onPlayerHurt: handlePlayerHurt});
+    /* รอบ 1596: สมองบอท → controller จริงของทุกตัว (วิ่งหาตัวอักษร/สู้ซอมบี้/หาฮีล)
+       รอบ 1603: ส่ง camera ให้บอท billboard แถบ HP เหนือหัว */
+    if(bots) bots.tick(step, now, {letters: letters, enemies: enemies, fx: fx, audio: VF.audio, player: player, frozen: false, people: peopleSnap(), onPlayerHurt: handlePlayerHurt, camera: camera});
     if(player.consumePowerJumpEvents){
       player.consumePowerJumpEvents().forEach(function(ev){ handlePowerJumpEvent(ev, true); });
     }
@@ -641,13 +665,14 @@
     if(sedan && sedan.ready) sedan.tick(step, {player: player, people: peopleSnap(), enemies: enemies, fx: fx, audio: VF.audio, cam: camRig, onBotHit: botHit});
     if(player && player.alive === false){
       enterSpectator();
-      const watched = spectator && spectator.tick ? spectator.tick(poll, net, hud, arena) : null;
+      const watched = spectator && spectator.tick ? spectator.tick(poll, net, hud, arena, bots) : null;
       camRig.tick(dt, watched || player);
     }else{
       if(hud && hud.setSpectator) hud.setSpectator(false);
       camRig.tick(dt, player);
     }
     tickCollusion(dt);
+    tickSelfLabel();
     renderer.render(scene, camera);
   }
 
@@ -832,6 +857,8 @@
       player = new VF.NexCharacterController();
       hud.setLoad(0.18, 'กำลังโหลดตัวละคร ' + picked.displayName, picked);
       await player.attach(scene, picked);
+      /* รอบ 1603: ป้ายชื่อ + แถบ HP ของตัวเองเหนือหัว */
+      attachSelfLabel();
       if(trails) trails.bind(player);
       if(fireTrail && fireTrail.bind) fireTrail.bind(player);
       hud.setLoad(0.22, 'กำลังโหลดแอนิเมชัน', picked);
@@ -955,6 +982,7 @@
     aimMarkers = null;
     secondary = null;
     if(player && player.anim) player.anim.dispose();
+    disposeSelfLabel();
   }
 
   VF.open = open;

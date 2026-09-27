@@ -38,7 +38,7 @@
         <div class="vf-spectator" hidden aria-live="polite">
           <small>SPECTATING</small>
           <strong class="vf-spectator-name"></strong>
-          <span class="vf-spectator-help">Swipe ← → to change player</span>
+          <span class="vf-spectator-help">ปัดขวา→ซ้าย: คนถัดไป · ซ้าย→ขวา: ย้อนกลับ</span>
         </div>
         <button class="vf-exit" type="button" data-vf-act="exit">EXIT<small class="vf-exit-sub">ออก</small></button>
         <div class="vf-energy-charge" hidden>
@@ -107,17 +107,17 @@
           </span>
           <span class="vf-act-lab">BLOCK<small class="vf-act-sub">บล็อก</small></span>
         </button>
-        <button type="button" class="vf-act vf-dash" data-vf-act="dash" aria-label="DASH พุ่ง">
-          <span class="vf-act-ico" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M3 8 h8 M3 12 h10 M3 16 h8 M13 6 l8 6-8 6"/></svg>
-          </span>
-          <span class="vf-act-lab">DASH<small class="vf-act-sub">พุ่ง</small></span>
-        </button>
         <button type="button" class="vf-act vf-slam" data-vf-act="slam" aria-label="SLAM กระแทกพื้น">
           <span class="vf-act-ico" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="M12 2.5 V11"/><path d="M7.5 6.5 L12 11 l4.5-4.5"/><path d="M4 15 h16"/><path d="M7.5 18.5 l-1.8 3 M12 18.5 v3 M16.5 18.5 l1.8 3"/></svg>
           </span>
           <span class="vf-act-lab">SLAM<small class="vf-act-sub">กระแทกพื้น</small></span>
+        </button>
+        <button type="button" class="vf-act vf-dash" data-vf-act="dash" aria-label="DASH พุ่ง">
+          <span class="vf-act-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M3 8 h8 M3 12 h10 M3 16 h8 M13 6 l8 6-8 6"/></svg>
+          </span>
+          <span class="vf-act-lab">DASH<small class="vf-act-sub">พุ่ง</small></span>
         </button>
         <button type="button" class="vf-act vf-deflect" data-vf-act="deflect" aria-label="DEFLECT ปัดพลัง">
           <span class="vf-act-ico" aria-hidden="true">
@@ -315,7 +315,7 @@
     if(this.root) this.root.classList.toggle('is-spectating', active);
     if(!active) return;
     if(this.els.spectatorName) this.els.spectatorName.textContent = name || 'กำลังรอผลรอบ';
-    if(this.els.spectatorHelp) this.els.spectatorHelp.textContent = count > 1 ? 'Swipe ← → to change player' : (count === 1 ? 'ผู้เล่นที่ยังอยู่ในรอบ' : 'รอรอบถัดไป');
+    if(this.els.spectatorHelp) this.els.spectatorHelp.textContent = count > 1 ? 'ปัดขวา→ซ้าย: คนถัดไป · ซ้าย→ขวา: ย้อนกลับ' : (count === 1 ? 'ผู้เล่นที่ยังอยู่ในรอบ' : 'รอรอบถัดไป');
   };
 
   VocabForceHUD.prototype.hurtFlash = function(frac){

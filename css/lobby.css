@@ -1000,6 +1000,27 @@ html.no-anim .rail-nudge{animation:none !important;}
 .rail-btn#btn-rail-wordship[hidden]{display:none!important;}
 .rail-btn#btn-rail-skirmish[hidden]{display:none!important;}
 .rail-btn#btn-rail-vocabforce[hidden]{display:none!important;}
+/* ⚡ รอบ 1603: Vocab Force เปิดสาธารณะ — ปุ่มม่วงไฟฟ้าไล่เฉด + เรือง + ไอคอนเด้งเบา ๆ ให้เด่นในราง */
+.rail-btn#btn-rail-vocabforce{
+  background:linear-gradient(145deg,rgba(126,58,242,.96),rgba(46,16,116,.97));
+  border-color:rgba(216,180,254,.85);
+  color:#fdf4ff;
+  text-shadow:0 1px 3px rgba(30,10,80,.6);
+  box-shadow:0 0 0 1px rgba(255,255,255,.08) inset,0 2px 10px rgba(139,92,246,.45),0 0 14px rgba(168,85,247,.35);
+  animation:vforcePulse 2.6s ease-in-out infinite;
+}
+.rail-btn#btn-rail-vocabforce:hover{
+  background:linear-gradient(145deg,rgba(147,86,250,.99),rgba(59,20,140,.99));
+  box-shadow:0 0 0 1px rgba(255,255,255,.12) inset,0 3px 14px rgba(139,92,246,.6),0 0 22px rgba(192,132,252,.55);
+}
+.rail-btn#btn-rail-vocabforce .rail-ico{
+  filter:drop-shadow(0 0 5px rgba(255,214,90,.9));
+  animation:vforceIco 1.3s ease-in-out infinite;
+}
+@keyframes vforcePulse{0%,100%{box-shadow:0 0 0 1px rgba(255,255,255,.08) inset,0 2px 10px rgba(139,92,246,.45),0 0 14px rgba(168,85,247,.30);}50%{box-shadow:0 0 0 1px rgba(255,255,255,.12) inset,0 2px 12px rgba(139,92,246,.6),0 0 24px rgba(192,132,252,.55);}}
+@keyframes vforceIco{0%,100%{transform:scale(1) rotate(-4deg);}50%{transform:scale(1.18) rotate(6deg);}}
+html.no-anim .rail-btn#btn-rail-vocabforce{animation:none!important;}
+html.no-anim .rail-btn#btn-rail-vocabforce .rail-ico{animation:none!important;}
 /* จำนวนคำที่พิชิตในโลกนั้น (ปลดล็อกแล้ว) — เหรียญทอง = ความสำเร็จ ต่างจาก badge แดง(เตือน) */
 .rail-btn.rail-world .rail-count{
   position:absolute;top:2px;right:5px;min-width:17px;height:17px;padding:0 4px;

@@ -105,7 +105,78 @@
     if(this.group && this.group.parent) this.group.parent.remove(this.group);
   };
 
+  /* รอบ 1603: ป้ายชื่อผู้เล่นเหนือหัว — sprite ตัวหนังสือขาวพื้นหลังโปร่ง
+     (THREE.Sprite หันหน้าเข้ากล้องเองในเวิลด์สเปซ แนบใต้ pivot ที่หมุนตาม yaw ได้เลย) */
+  const TAG_H = 0.5;
+  const TAG_FONT = '700 34px Kanit, "Segoe UI", sans-serif';
+  function rr(ctx, x, y, w, h, r){
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h);
+    ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r);
+    ctx.arcTo(x, y, x + r, y, r);
+    ctx.closePath();
+  }
+  function NameTag(name, opts){
+    opts = opts || {};
+    const THREE = root.THREE;
+    this.offsetY = opts.y != null ? opts.y : 2.58;
+    this.sprite = new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true, depthWrite: false }));
+    this.sprite.name = 'VFNameTag';
+    this.sprite.position.y = this.offsetY;
+    this._text = null;
+    this.setText(name || 'ผู้เล่น');
+  }
+  NameTag.prototype.setText = function(name){
+    name = String(name == null ? '' : name).slice(0, 18) || 'ผู้เล่น';
+    if(name === this._text) return;
+    this._text = name;
+    const doc = root.document;
+    if(!doc) return;
+    const canvas = doc.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if(!ctx) return;
+    const ch = 56, padX = 26;
+    ctx.font = TAG_FONT;
+    const tw = Math.ceil(ctx.measureText(name).width);
+    canvas.width = Math.max(96, Math.min(460, tw + padX * 2));
+    canvas.height = ch;
+    ctx.font = TAG_FONT;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    rr(ctx, 1.5, 1.5, canvas.width - 3, ch - 3, 15);
+    ctx.fillStyle = 'rgba(8,12,26,0.66)';
+    ctx.fill();
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = 'rgba(255,255,255,0.30)';
+    ctx.stroke();
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = 'rgba(4,8,18,0.92)';
+    ctx.strokeText(name, canvas.width / 2, ch / 2 + 1);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(name, canvas.width / 2, ch / 2 + 1);
+    const THREE = root.THREE;
+    if(this.sprite.material.map) this.sprite.material.map.dispose();
+    const tex = new THREE.CanvasTexture(canvas);
+    if(THREE.sRGBEncoding != null) tex.encoding = THREE.sRGBEncoding;
+    this.sprite.material.map = tex;
+    this.sprite.material.needsUpdate = true;
+    this.sprite.scale.set((canvas.width / ch) * TAG_H, TAG_H, 1);
+  };
+  NameTag.prototype.dispose = function(){
+    if(this.sprite.material.map) this.sprite.material.map.dispose();
+    this.sprite.material.dispose();
+    if(this.sprite.parent) this.sprite.parent.remove(this.sprite);
+  };
+
   VF.HealthBar = HealthBar;
+  VF.NameTag = NameTag;
   VF._t.hpBand = band;
   VF._t.hpColor = bandColor;
 })(typeof window !== 'undefined' ? window : globalThis);

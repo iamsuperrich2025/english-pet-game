@@ -149,6 +149,14 @@
           try{ await bot.ctl.ingestClip(clips[c]); }catch(_){}
         }
         bot.ctl.pivot.visible = false;
+        /* รอบ 1603: ป้ายชื่อ + แถบ HP เหนือหัวบอท เหมือนผู้เล่นจริง */
+        bot.tag = VF.NameTag ? new VF.NameTag(bot.name, {y: 2.58}) : null;
+        if(bot.tag && bot.ctl.pivot) bot.ctl.pivot.add(bot.tag.sprite);
+        bot.bar = VF.HealthBar ? new VF.HealthBar({y: 2.2, max: VF.PLAYER_HP || 1000}) : null;
+        if(bot.bar){
+          bot.bar.attach(this.scene);
+          bot.bar.group.visible = false;
+        }
       }catch(err){
         console.warn('[VocabForce] bot load skip', bot.name, err);
       }
@@ -470,6 +478,14 @@
     if(ctl.consumePowerJumpEvents) ctl.consumePowerJumpEvents();
     if(ctl.consumeDashAttack) ctl.consumeDashAttack();
     if(ctl.consumeOverdriveEvents) ctl.consumeOverdriveEvents();
+    /* รอบ 1603: ป้ายชื่อ + แถบ HP เหนือหัวบอท — ซ่อนตาม pivot/เลือดหมด */
+    if(bot.bar){
+      const bMax = ctl.maxHp || VF.PLAYER_HP || 1000;
+      const bHp = VF.clamp(ctl.hp != null ? ctl.hp : bMax, 0, bMax);
+      bot.bar.set(bHp, bMax);
+      if(deps.camera) bot.bar.follow(ctl.x, ctl.y || 0, ctl.z, deps.camera);
+      bot.bar.group.visible = bot.ctl.pivot.visible !== false && bHp > 0;
+    }
 
     if(frozen) return;
 
@@ -557,6 +573,8 @@
 
   BotManager.prototype.dispose = function(){
     this.bots.forEach(function(bot){
+      if(bot.bar){ try{ bot.bar.dispose(); }catch(_){} bot.bar = null; }
+      if(bot.tag){ try{ bot.tag.dispose(); }catch(_){} bot.tag = null; }
       if(bot.ctl){
         if(bot.ctl.anim && bot.ctl.anim.dispose) bot.ctl.anim.dispose();
         if(bot.ctl.pivot && bot.ctl.pivot.parent) bot.ctl.pivot.parent.remove(bot.ctl.pivot);
