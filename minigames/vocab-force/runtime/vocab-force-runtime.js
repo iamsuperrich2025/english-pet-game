@@ -7,6 +7,7 @@
   let player, camRig, input, combat, enemies, arena, fx, hud, round, flyers, trails, fireTrail, secondary, energy, letters, net, healPad, oilTanker, sedan, grab, spectator, worldMelee, slam, slamFx, aimMarkers, orbs, deflect, spitTimer = 1.6, bots = null;
   let selfTag = null, selfBar = null;
   let winLock = false, ackOpen = false, pendingWord = null;
+  let camTarget = null;
   let collusionWatch = null, collusionPending = null;
   let tankerEventSeq = 0;
   const CORE = ['run', 'punch', 'kick', 'block', 'jump', 'vault'];
@@ -503,6 +504,8 @@
       if(bots) bots.tick(dt, now, {frozen: true, player: player});
       const winnerView = spectator && spectator.active ? spectator.tick(poll, net, hud, arena, bots) : player;
       if(camRig) camRig.tick(dt, winnerView || player);
+      /* รอบ 1604: ซ่อน shell อาคารที่เป้าหมายกล้องอยู่ข้างใน เห็นตัวละครในอาคารชัดเจน */
+      if(arena && arena.buildings) arena.buildings.update(winnerView || player);
       tickSelfLabel();
       renderer.render(scene, camera);
       return;
@@ -667,11 +670,15 @@
       enterSpectator();
       const watched = spectator && spectator.tick ? spectator.tick(poll, net, hud, arena, bots) : null;
       camRig.tick(dt, watched || player);
+      camTarget = watched || player;
     }else{
       if(hud && hud.setSpectator) hud.setSpectator(false);
       camRig.tick(dt, player);
+      camTarget = player;
     }
     tickCollusion(dt);
+    /* รอบ 1604: ซ่อน shell อาคารตามตัวที่กล้องกำลังมอง (ผู้เล่น หรือเป้าชมตอนตาย) */
+    if(arena && arena.buildings) arena.buildings.update(camTarget);
     tickSelfLabel();
     renderer.render(scene, camera);
   }

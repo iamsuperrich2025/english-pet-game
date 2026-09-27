@@ -988,6 +988,7 @@ async function sourceFiles() {
       'minigames/vocab-force/ui/loading/nex.avif',
       'minigames/vocab-force/ui/loading/lyravyn.avif',
       'minigames/vocab-force/map/prototype-arena.js',
+      'minigames/vocab-force/map/buildings.js',
       'minigames/vocab-force/map/oil-tanker-controller.js',
       'minigames/vocab-force/map/sedan-controller.js',
       'minigames/vocab-force/map/vehicle-grab.js',

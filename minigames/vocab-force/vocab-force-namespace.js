@@ -120,6 +120,7 @@
     'ui/character-select.js',
     'ui/vocab-force-hud.js',
     'map/prototype-arena.js',
+    'map/buildings.js',
     'map/oil-tanker-controller.js',
     'map/sedan-controller.js',
     'map/vehicle-grab.js',

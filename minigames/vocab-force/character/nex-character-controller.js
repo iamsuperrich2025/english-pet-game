@@ -305,7 +305,9 @@
     const prevVy = this.vy;
     this.vy -= this.gravity * dt;
     this.y += this.vy * dt;
-    const floor = (arena && arena.surfaceY) ? arena.surfaceY(this.x, this.z) : 0;
+    /* รอบ 1604: พื้น = ยอดแพลตฟอร์มปกติ + แผ่นพื้นชั้นสองอาคาร (เดินบนชั้นสองต่อเนื่อง) */
+    const baseFloor = (arena && arena.surfaceY) ? arena.surfaceY(this.x, this.z) : 0;
+    const floor = (arena && arena.floorY) ? Math.max(baseFloor, arena.floorY(this.x, this.z, this.y)) : baseFloor;
     if(this.y <= floor){
       if(!wasGrounded && this._jump.power) this._powerJumpLand(prevVy, floor, now);
       else if(!wasGrounded && prevVy < -2) this.anim.play('land') || this.anim.play('idle');
@@ -722,7 +724,9 @@
       this.x = hit.x; this.z = hit.z;
     }
     D.traveled = (D.traveled || 0) + Math.hypot(this.x - ox, this.z - oz);
-    const floor = world && world.surfaceY ? world.surfaceY(this.x, this.z) : this.y;
+    /* รอบ 1604: dash บนพื้นชั้นสองอาคารต้องคงระดับ ไม่ร่วงทะลายลงชั้นล่าง */
+    const dashBase = world && world.surfaceY ? world.surfaceY(this.x, this.z) : this.y;
+    const floor = world && world.floorY ? Math.max(dashBase, world.floorY(this.x, this.z, this.y)) : dashBase;
     this.y = floor;
     this.grounded = true;
     D.leftT -= step;

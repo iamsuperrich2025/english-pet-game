@@ -111,6 +111,8 @@
     const step = box(rustMat, 4, 0.45, 2.2, -11 * S, 0.22, 0, {platform: true});
     const step2 = box(crateMat, 4, 0.9, 2.2, -11 * S, 0.45, 2.1 * S, {platform: true});
     this.boxes.push(step, step2);
+    /* รอบ 1604: อาคารหลบในสนาม (1 ชั้น×4 + 2 ชั้น×2) — ผนัง/แผ่นพื้น/หลังคาลงกล่องชนมาตรฐานของ arena */
+    if(VF.Buildings) new VF.Buildings().build(this, g);
     const extras = [
       [80, -90], [120, 70], [-140, 40], [-60, 160], [200, -40], [-180, -120],
       [40, 210], [-220, 90]
@@ -225,6 +227,18 @@
     return 0;
   };
 
+  /* รอบ 1604: ระดับยืนของแผ่นพื้นชั้นสองอาคาร — นับเฉพาะแผ่นที่อยู่ในระดับก้าวถึงจาก refY
+     (คนอยู่ชั้นล่างใต้แผ่นไม่ถูกดูดขึ้นไป · คนชั้นบนเดินบนแผ่นต่อเนื่อง) */
+  PrototypeArena.prototype.floorY = function(x, z, refY){
+    let y = 0;
+    const list = this.walkSlabs || [];
+    for(let i = 0; i < list.length; i++){
+      const s = list[i];
+      if(x >= s.minx && x <= s.maxx && z >= s.minz && z <= s.maxz && s.top <= (refY || 0) + 0.75) y = Math.max(y, s.top);
+    }
+    return y;
+  };
+
   PrototypeArena.prototype.collide = function(x, y, z, r){
     r = r || 0.5;
     const h = this.half - 1.2;
@@ -240,6 +254,10 @@
     for(let i = 0; i < this.boxes.length; i++){
       const b = this.boxes[i];
       if(b.platform || b.broken || b.loose) continue;
+      /* รอบ 1604: แผ่นพื้นชั้นสอง/หลังคาอาคาร — คนชั้นล่างเดินใต้แผ่นได้ (หัวต่ำกว่าใต้แผ่น)
+         · คนที่อยู่เหนือแผ่นเดินต่อได้ · ระดับกลางแผ่นถึงจะถูกผลักเหมือนผนัง */
+      if(b.ceiling && y + 1.55 < b.miny) continue;
+      if(b.ceiling && y > b.maxy - 0.15) continue;
       const px = VF.clamp(x, b.minx, b.maxx);
       const pz = VF.clamp(z, b.minz, b.maxz);
       const dx = x - px, dz = z - pz;
