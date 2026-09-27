@@ -6914,3 +6914,9 @@ efreshMechaLock
 
 - ไฟล์: runtime/vocab-force-runtime.js (wiring KICK/THROW ตอนไม่แบก + blastQueue/tickBlastQueue/applyTankerBlast), js/ui.js, test (assert wiring 2 + ระเบิดตีระยะห่าง) · unit 757 ผ่าน + check_undefined_calls 0
 - รอบ 1594 · Vocab Force จุดจบคอมโบ THROW×2+KICK ใหม่ + ทุ่มทันที: (1) เตะ #2 ไม่ระเบิดอีกต่อไป — รถทั้งน้ำมันและเก๋งถูกเตะพุ่งขึ้นฟ้าสูง (SKY_SPEC up 46 แรงโน้มถ่วงจาง 7 บินทะลุขอบสนาม) ถึง y≈70 จึงหายวับ (tanker state 'destroyed' / sedan 'gone') ไม่มีดาเมจระเบิด · comboSkyPunt+_vanishSky ทั้ง 2 คัน · fail-safe tick กันระเบิดช่วง _skyPunt (2) กด THROW ครั้งแรกทุ่มทันทีไม่อมคำสั่งรอหน้าต่าง — กดซ้ำตอนรถลอย (≤1.1 วิ) แปลงวิถีคอมโบ (_comboHold) แล้ว KICK (≤1.4 วิ) ว้าบไปเตะ #2 · ไม่เตะตาม = ปล่อย hold ให้รถตกตามฟิสิกส์ · comboKickLaunch รับ state thrown/launched เพิ่ม
+
+
+## ⏬ ย้ายเมื่อ 2026-09-27 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- ไฟล์: combat/deflect-tune.js (PEER_GUARD_MS/PEER_NEAR), combat/deflect-controller.js (_lastDeflectAt/_peerCatchAt/peerGuardActive), effects/hostile-orb-manager.js (_peerNearAt), runtime/vocab-force-runtime.js (consumeStrikes guard), js/ui.js, test (static 4 + behavioral sandbox 5) · unit 766 ผ่าน + check_undefined_calls 0
+- รอบ 1595 · Vocab Force แก้คอมโบ THROW×2+KICK ไม่ทำงาน + ท่าล้มรอคลื่นระเบิด: (1) ต้นเหตุคอมโบเงียบ — wiring ใน runtime บังคับ player.carrying กด THROW ครั้งที่ 2 ตอนรถลอย (ไม่ได้แบก) โค้ดดันไป onLift ยกรถ ส่วน KICK ตอนไม่แบกไปเตะปกติ ไม่เคยถึง tryComboKick → แก้ทั้งสองปุ่มให้ "ลองคอมโบก่อนเสมอ" (คืน false ถ้าไม่ armed ค่อยตกไป lift/เตะปกติ) + regression assert (2) ระเบิดรถน้ำมัน — เดิม takeHit+ท่าล้มตกถึงตัวทันทีพร้อมจุดศูนย์กลางทั้งที่ผู้เล่นอยู่ไกล → ทำ blastQueue ตีระยะห่าง ÷ ความเร็วคลื่น BLAST_WAVE_SPEED 20 หน่วย/วิ จึงหงายท้องพอดีจังหวะที่รัศมีขยายมาถึง (ไกลสุด ~2 วิ) เคลียร์คิวตอน reset รอบ · ui.js ?v=1596
