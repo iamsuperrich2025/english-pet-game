@@ -123,6 +123,7 @@ assert(lockSrc.includes('p.local && !p.bot')&&lockSrc.includes("consider(en, 'zo
 assert(read('minigames/vocab-force/combat/energy-attack-tune.js').includes('energyAimOverride')&&read('minigames/vocab-force/combat/energy-attack-tune.js').includes('dir.locked = true'),'energy aim honors the locked-target override (attack fires at the lock)');
 const lockMk=read('minigames/vocab-force/effects/aim-markers.js');
 assert(lockMk.includes('lockView')&&lockMk.includes('lv.camYaw')&&!lockMk.includes('const slamLen'),'aim markers render the lock reticle above the target head instead of sliding ground arrows');
+assert(lockMk.includes('_makeLockReticle')&&lockMk.includes('depthTest: false')&&lockMk.includes('this.lock'),'lock reticle is a dedicated see-through marker (ring + cross + chevron)');
 assert(runtime.includes('new VF.TargetLock')&&runtime.includes('targetLock.update')&&runtime.includes('targetLock.current')&&runtime.includes('VF._t.energyAimOverride ='),'runtime wires target lock (per-frame update + face-on-idle + attack override + slam pre-face)');
 {
   /* รอบ 1608 (behavioral): ล็อกเลือกเป้าในกรวยทิศกล้อง · ไม่ล็อกตัวเอง · คงล็อกตามเฟรม · หลุดเมื่อหลุดกรวย */
@@ -1333,14 +1334,14 @@ assert(sedanSrc.includes('comboSkyPunt')&&sedanSrc.includes('_vanishSky')&&sedan
 assert(runtime.includes('grab.comboThrow')&&runtime.includes('grab.tryComboKick')&&runtime.includes('grab.reset()'),'runtime wires combo inputs and resets the combo each round');
 assert(runtime.includes('}else if(!(grab && grab.tryComboKick('),'KICK press while NOT carrying still offers the combo finisher first (round 1594 flow throws at press 1)');
 assert(runtime.includes('}else if(!grab.comboThrow(player, camRig, fx, VF.audio, hud, requestTankerHit')&&runtime.indexOf('}else if(!grab.comboThrow')<runtime.indexOf('grab.onLift(player'),'THROW press while NOT carrying tries the combo double-press before falling back to lift');
-assert(ui.includes('?v=1608'),'ui.js cache-bust bumped so browsers fetch the new vf modules');
+assert(ui.includes('?v=1609'),'ui.js cache-bust bumped so browsers fetch the new vf modules');
 
 /* รอบ 1588: เตะรถยนต์ = กระเด็นไกลเท่ารถน้ำมันโดนเตะ (h54/up39 grav22 ≈ วิถี h54/up34 grav19) + หมุนธรรมชาติ */
 assert(sedanSrc.includes("info.kind) === 'kick'")&&sedanSrc.indexOf('54, 39')>sedanSrc.indexOf('kickish'),'sedan kick launches as far as the kicked tanker trajectory');
 assert(sedanSrc.includes('this._flipSpeed *= (1 - 0.1 * dt)')&&sedanSrc.includes('หมุนช้าลงตามแรงเสียดอากาศ'),'sedan tumble spins decay in air like the tanker (natural spin)');
 const kickRangeTanker=54*(2*34/19), kickRangeSedan=54*(2*39/22);
 assert(Math.abs(kickRangeTanker-kickRangeSedan)/kickRangeTanker<0.02,'kicked sedan flies the same distance as the kicked tanker (same arc, grav-adjusted up)');
-assert(ui.includes('?v=1608'),'ui.js cache-bust bumped for the kick trajectory tune');
+assert(ui.includes('?v=1609'),'ui.js cache-bust bumped for the kick trajectory tune');
 /* รอบ 1590: มาร์กเกอร์ + บนพื้นบอกทิศพลัง (ฟ้า=SLAM · ส้ม=ATTACK) */
 assert(build.includes('effects/aim-markers.js')&&htmlPreview.includes('effects/aim-markers.js')&&ns.includes("'effects/aim-markers.js'"),'aim markers module is loaded');
 assert(read('minigames/vocab-force/effects/aim-markers.js').includes('0x4ec4ff')&&read('minigames/vocab-force/effects/aim-markers.js').includes('0xff9040'),'markers use slam blue + attack orange');
