@@ -135,6 +135,16 @@
   /* รอบ 1567: ลูกพลังต้องอยู่ระดับเดียวกับศัตรู ไม่ลอยขึ้นฟ้า — ถ้า aim assist เจอเป้า ยิงเอียงลงสู่ความสูงลำตัวศัตรู (chest ~+0.95)
      ถ้าไม่มีเป้า ยิงราบ (y=0) ไม่มีส่วนชักขึ้นแม้กล้องจะมองต่ำ */
   VF._t.energyAim = function(player, camera, enemies){
+    /* รอบ 1608: ล็อกเป้าหมายกลาง — ถ้ามีเป้าที่ล็อกไว้ (ซอมบี้/คน/บอท) ให้ยิงตรงใส่เป้า
+       ทับ assist เดิมที่มองเห็นเฉพาะซอมบี้ · override มีอายุสั้น (ตั้งตอนกดปุ่ม ATTACK) */
+    const ov = VF._t.energyAimOverride;
+    if(ov && ov.x != null && ov.until > VF.now() && player){
+      const oy = (player.y || 0) + (ENERGY_ATTACK.muzzleHeight || 1.22);
+      const dir = VF._t.energyDirToPoint({x: player.x || 0, y: oy, z: player.z || 0}, ov);
+      dir.assisted = true;
+      dir.locked = true;
+      return dir;
+    }
     const yaw = camera && camera.yaw != null ? camera.yaw : (player && player.yaw || 0);
     let x = Math.sin(yaw), z = Math.cos(yaw);
     const T = ENERGY_ATTACK;

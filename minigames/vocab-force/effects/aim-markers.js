@@ -1,6 +1,9 @@
 "use strict";
 /* รอบ 1590: เครื่องหมาย + บนพื้นบอกทิศทางพลัง — สีฟ้า = ทิศเส้นเปลวเพลิง SLAM (ยาวตาม slamLineLength)
-   สีส้ม = ทิศพลังปุ่ม ATTACK (ระยะหมัด) · วางราบบนพื้น หายใจเบา ๆ ซ่อนอัตโนมัติตอนตาย/ชมเพื่อน */
+   สีส้ม = ทิศพลังปุ่ม ATTACK (ระยะหมัด)
+   รอบ 1608: เปลี่ยนเป็น "reticle ล็อกเป้าหมาย" — แทนลูกศรเลื่อนบนพื้น ตอนนี้วางเครื่องหมาย
+   เหนือหัว "เป้าที่ล็อก" (VF._t.lockView จาก combat/target-lock.js ผ่าน runtime) หันหน้าเข้ากล้อง
+   หายใจเบา ๆ ซ่อนอัตโนมัติตอนตาย/ชมเพื่อน/ไม่มีเป้าล็อก */
 (function(root){
   const VF = root.VocabForce = root.VocabForce || {};
 
@@ -50,28 +53,29 @@
     if(marker.userData.mat) marker.userData.mat.opacity = 0.68 + 0.22 * pulse;
   };
 
-  /* วางมาร์กเกอร์ตามทิศหน้าตัวละคร — ฟ้า: ปลายแนวเส้น SLAM · ส้ม: ระยะหมัด ATTACK */
+  /* รอบ 1608: วาง reticle เหนือหัวเป้าที่ล็อก — หันหน้าเข้ากล้อง หายใจเบา ๆ
+     (ทิศยิงจริงคำนวณที่ combat/target-lock.js + runtime ไม่ใช่ตรงนี้) */
   AimMarkers.prototype.update = function(player, arena){
     if(!this.group) return;
-    if(!player || player.alive === false || player.isDashing && player.isDashing()){
+    const lv = VF._t.lockView;
+    if(!lv || !player || player.alive === false || player.isDashing && player.isDashing()){
       if(this.slam) this.slam.visible = false;
       if(this.attack) this.attack.visible = false;
       return;
     }
-    const half = (VF.ARENA_HALF || 280) - 3;
-    const clampV = function(v){ return VF.clamp(v, -half, half); };
-    const yAt = function(x, z){
-      return (arena && arena.surfaceY ? arena.surfaceY(x, z) : (player.y || 0)) + 0.07;
-    };
-    const f = player.forward();
-    const slamLen = VF._t.slamLineLength ? VF._t.slamLineLength() : 23;
-    const sx = clampV(player.x + f.x * slamLen), sz = clampV(player.z + f.z * slamLen);
-    const atkTune = VF.CombatTune && VF.CombatTune.attack ? VF.CombatTune.attack('punch') : {range: 1.92};
-    const atkLen = (atkTune.range || 1.92) + 0.9;
-    const ox = clampV(player.x + f.x * atkLen), oz = clampV(player.z + f.z * atkLen);
-    const pulse = 0.5 + 0.5 * Math.sin(this._t * 3.4);
-    this._place(this.slam, sx, yAt(sx, sz), sz, pulse);
-    this._place(this.attack, ox, yAt(ox, oz), oz, 1 - pulse);
+    const pulse = 0.5 + 0.5 * Math.sin(this._t * 4.2);
+    const m = this.slam;
+    if(m){
+      m.visible = true;
+      m.position.set(lv.x, (lv.y || 0) + 2.15, lv.z);
+      /* ตั้งตั้งฉาก (ไม่ราบ) แล้วหมุนเข้าหากล้องตาม yaw */
+      if(m.rotation.x !== 0){ m.rotation.set(0, 0, 0); }
+      m.rotation.y = lv.camYaw || 0;
+      const s = 0.9 + 0.14 * pulse;
+      m.scale.set(s, s, 1);
+      if(m.userData.mat) m.userData.mat.opacity = 0.66 + 0.3 * pulse;
+    }
+    if(this.attack) this.attack.visible = false;
   };
 
   AimMarkers.prototype.tick = function(dt){

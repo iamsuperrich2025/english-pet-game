@@ -115,6 +115,36 @@ assert(botsSrc.includes("bot.kind = 'steal'")&&botsSrc.includes('_carrierOf')&&b
 assert(botsSrc.includes("bot.kind = 'hide'")&&botsSrc.includes('_hideSpot')&&botsSrc.includes('_upperSpot')&&botsSrc.includes("'hideWait'"),'bots hide inside buildings (upstairs on two-story) when hurt');
 assert(botsSrc.includes('_route')&&botsSrc.includes('_segHitsBox')&&botsSrc.includes('_detour')&&botsSrc.includes('_stuckT'),'bots steer around buildings and sidestep when stuck');
 assert(botsSrc.includes('healPadNearest(ctl.x, ctl.z)')&&botsSrc.includes('healPadContainsSpot(ctl.x, ctl.z)'),'bots heal at the nearest of the 4 pads');
+/* รอบ 1608: ล็อกเป้าหมายกลางสำหรับ SLAM + ATTACK (แทนลูกศรเลื่อนบนพื้น) */
+const lockSrc=read('minigames/vocab-force/combat/target-lock.js');
+assert(ns.includes("'combat/target-lock.js'")&&htmlPreview.includes('combat/target-lock.js')&&build.includes('combat/target-lock.js'),'target lock module is loaded everywhere');
+assert(lockSrc.includes('VF.TargetLock')&&lockSrc.includes('ACQUIRE_DOT')&&lockSrc.includes('KEEP_DOT')&&lockSrc.includes('yawTo'),'target lock tune + manager + yawTo exist');
+assert(lockSrc.includes('p.local && !p.bot')&&lockSrc.includes("consider(en, 'zombie')")&&lockSrc.includes("consider(p, 'person')"),'lock candidates cover zombies + online players + bots (never self)');
+assert(read('minigames/vocab-force/combat/energy-attack-tune.js').includes('energyAimOverride')&&read('minigames/vocab-force/combat/energy-attack-tune.js').includes('dir.locked = true'),'energy aim honors the locked-target override (attack fires at the lock)');
+const lockMk=read('minigames/vocab-force/effects/aim-markers.js');
+assert(lockMk.includes('lockView')&&lockMk.includes('lv.camYaw')&&!lockMk.includes('const slamLen'),'aim markers render the lock reticle above the target head instead of sliding ground arrows');
+assert(runtime.includes('new VF.TargetLock')&&runtime.includes('targetLock.update')&&runtime.includes('targetLock.current')&&runtime.includes('VF._t.energyAimOverride ='),'runtime wires target lock (per-frame update + face-on-idle + attack override + slam pre-face)');
+{
+  /* รอบ 1608 (behavioral): ล็อกเลือกเป้าในกรวยทิศกล้อง · ไม่ล็อกตัวเอง · คงล็อกตามเฟรม · หลุดเมื่อหลุดกรวย */
+  const sandbox={window:{},console:{warn:function(){},log:function(){}}};
+  vm.createContext(sandbox);
+  vm.runInContext(ns,sandbox);
+  vm.runInContext(lockSrc,sandbox);
+  const VF3=sandbox.window.VocabForce;
+  const tl=new VF3.TargetLock();
+  const me={x:0,z:0,y:0,alive:true};
+  const deps={enemies:{list:[{id:'z1',x:5,z:8,y:0,alive:true}]},people:[{id:'me',x:0,z:0,local:true,alive:true},{id:'b1',x:30,z:0,local:true,bot:true,alive:true}]};
+  const t0=100000;
+  tl.update(0.016,me,Math.atan2(5,8),deps,t0,true);
+  assert(tl.current&&tl.current.id==='z1','target lock acquires the zombie inside the camera cone');
+  assert(tl.id&&tl.kind==='zombie','lock remembers the target id and kind');
+  tl.update(0.016,me,Math.atan2(5,8),deps,t0+16,false);
+  assert(tl.current&&tl.current.id==='z1','target lock keeps its target frame to frame');
+  tl.update(0.016,me,Math.atan2(-1,0),deps,t0+32,true);
+  assert(tl.current===null,'target lock releases when the camera leaves the target behind (no one in the new cone)');
+  tl.update(0.016,me,Math.PI/2,deps,t0+48,true);
+  assert(tl.current&&tl.current.id==='b1','target lock can lock onto bots standing in the cone');
+}
 {
   /* รอบ 1602 (behavioral): บอทโดนตี → เจ็บจริง · แค้นคนตี · ตายหลุดตัวอักษร + นัดเกิดใหม่ · findCarrier ชี้คนถือ */
   const sandbox={window:{},console:{warn:function(){},log:function(){}}};
@@ -1303,14 +1333,14 @@ assert(sedanSrc.includes('comboSkyPunt')&&sedanSrc.includes('_vanishSky')&&sedan
 assert(runtime.includes('grab.comboThrow')&&runtime.includes('grab.tryComboKick')&&runtime.includes('grab.reset()'),'runtime wires combo inputs and resets the combo each round');
 assert(runtime.includes('}else if(!(grab && grab.tryComboKick('),'KICK press while NOT carrying still offers the combo finisher first (round 1594 flow throws at press 1)');
 assert(runtime.includes('}else if(!grab.comboThrow(player, camRig, fx, VF.audio, hud, requestTankerHit')&&runtime.indexOf('}else if(!grab.comboThrow')<runtime.indexOf('grab.onLift(player'),'THROW press while NOT carrying tries the combo double-press before falling back to lift');
-assert(ui.includes('?v=1606'),'ui.js cache-bust bumped so browsers fetch the new vf modules');
+assert(ui.includes('?v=1608'),'ui.js cache-bust bumped so browsers fetch the new vf modules');
 
 /* รอบ 1588: เตะรถยนต์ = กระเด็นไกลเท่ารถน้ำมันโดนเตะ (h54/up39 grav22 ≈ วิถี h54/up34 grav19) + หมุนธรรมชาติ */
 assert(sedanSrc.includes("info.kind) === 'kick'")&&sedanSrc.indexOf('54, 39')>sedanSrc.indexOf('kickish'),'sedan kick launches as far as the kicked tanker trajectory');
 assert(sedanSrc.includes('this._flipSpeed *= (1 - 0.1 * dt)')&&sedanSrc.includes('หมุนช้าลงตามแรงเสียดอากาศ'),'sedan tumble spins decay in air like the tanker (natural spin)');
 const kickRangeTanker=54*(2*34/19), kickRangeSedan=54*(2*39/22);
 assert(Math.abs(kickRangeTanker-kickRangeSedan)/kickRangeTanker<0.02,'kicked sedan flies the same distance as the kicked tanker (same arc, grav-adjusted up)');
-assert(ui.includes('?v=1606'),'ui.js cache-bust bumped for the kick trajectory tune');
+assert(ui.includes('?v=1608'),'ui.js cache-bust bumped for the kick trajectory tune');
 /* รอบ 1590: มาร์กเกอร์ + บนพื้นบอกทิศพลัง (ฟ้า=SLAM · ส้ม=ATTACK) */
 assert(build.includes('effects/aim-markers.js')&&htmlPreview.includes('effects/aim-markers.js')&&ns.includes("'effects/aim-markers.js'"),'aim markers module is loaded');
 assert(read('minigames/vocab-force/effects/aim-markers.js').includes('0x4ec4ff')&&read('minigames/vocab-force/effects/aim-markers.js').includes('0xff9040'),'markers use slam blue + attack orange');

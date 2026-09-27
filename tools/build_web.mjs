@@ -974,6 +974,7 @@ async function sourceFiles() {
       'minigames/vocab-force/effects/overdrive-fire-trail.js',
       'minigames/vocab-force/effects/ground-slam-fx.js',
       'minigames/vocab-force/effects/aim-markers.js',
+      'minigames/vocab-force/combat/target-lock.js',
       'minigames/vocab-force/effects/energy-projectile-manager.js',
       'minigames/vocab-force/effects/energy-vortex-manager.js',
       'minigames/vocab-force/combat/heal-pad-tune.js',

@@ -4,7 +4,7 @@
   const VF = root.VocabForce = root.VocabForce || {};
   let opening = false, running = false, raf = 0, last = 0;
   let renderer = null, scene = null, camera = null, THREE = null;
-  let player, camRig, input, combat, enemies, arena, fx, hud, round, flyers, trails, fireTrail, secondary, energy, letters, net, healPad, healPads = [], oilTanker, sedan, grab, spectator, worldMelee, slam, slamFx, aimMarkers, orbs, deflect, spitTimer = 1.6, bots = null;
+  let player, camRig, input, combat, enemies, arena, fx, hud, round, flyers, trails, fireTrail, secondary, energy, letters, net, healPad, healPads = [], oilTanker, sedan, grab, spectator, worldMelee, slam, slamFx, aimMarkers, targetLock = null, orbs, deflect, spitTimer = 1.6, bots = null;
   let selfTag = null, selfBar = null;
   let winLock = false, ackOpen = false, pendingWord = null;
   let camTarget = null;
@@ -512,6 +512,24 @@
     }
     let active = !!(player && player.alive !== false);
     if(active && (poll.lookX || poll.lookY)) camRig.look(poll.lookX, poll.lookY);
+    /* รอบ 1608: ล็อกเป้าหมาย — หมุนกล้องซีกขวา (look) = อยากล็อกตามมุมใหม่ทันที (force)
+       · ตัวละครหันหน้าเข้าเป้าอัตโนมัติตอนนิ่ง → เส้นไฟ SLAM (ยิงตามทิศหน้าตัวละคร)
+       และพลัง ATTACK จึงปล่อยใส่เป้าที่ล็อกโดยธรรมชาติ */
+    if(active && targetLock && camRig){
+      targetLock.update(dt, player, camRig.yaw, {enemies: enemies, people: peopleSnap(), player: player}, now, !!(poll.lookX || poll.lookY));
+      const lt = targetLock.current;
+      if(lt){
+        VF._t.lockView = {x: lt.x, y: lt.y || 0, z: lt.z, camYaw: camRig.yaw};
+        const moving = Math.hypot(poll.moveX || 0, poll.moveZ || 0) > 0.15;
+        if(!moving && !(player.isDashing && player.isDashing()) && !(player.isPowerJumping && player.isPowerJumping())){
+          player.yaw = Math.atan2((lt.x || 0) - player.x, (lt.z || 0) - player.z);
+        }
+      }else{
+        VF._t.lockView = null;
+      }
+    }else if(VF._t){
+      VF._t.lockView = null;
+    }
     const paused = combat.hitStop > 0;
     if(secondary && !paused) secondary.tickClock(dt);
     const scale = paused ? 0 : (secondary ? secondary.simScale(combat.hitStop) : 1);
@@ -519,12 +537,24 @@
     if(active) combat.tick(dt, now, player, enemies, fx, camRig, VF.audio, secondary, peopleSnap(), worldMelee || oilTanker, botHit);
     if(active && !paused && poll.dash && !player.carrying) player.tryManualDash(poll, camRig, arena, fx, camRig, now);
     /* รอบ 1589: ปุ่ม SLAM กระแทกพื้น — เล่นท่า groundSlam แล้วปล่อยเส้นเปลวเพลิงสีฟ้า
-       เป็นแนวยาวบนพื้นตามทิศหน้าตัวละคร (คูลดาวน์ 6 วิ · ผู้เล่นในแนวเส้นเสีย 300 HP ต่อครั้งที่โดน) */
-    if(active && !paused && poll.slam && slam) slam.trySlam(player, now, camRig, VF.audio);
+       เป็นแนวยาวบนพื้นตามทิศหน้าตัวละคร (คูลดาวน์ 6 วิ · ผู้เล่นในแนวเส้นเสีย 300 HP ต่อครั้งที่โดน)
+       รอบ 1608: ถ้ามีเป้าล็อก หันหน้าเข้าเป้าก่อนเล่นท่า — เส้นไฟจึงพุ่งใส่เป้าเสมอ */
+    if(active && !paused && poll.slam && slam){
+      if(targetLock && targetLock.current) player.yaw = Math.atan2((targetLock.current.x || 0) - player.x, (targetLock.current.z || 0) - player.z);
+      slam.trySlam(player, now, camRig, VF.audio);
+    }
     /* รอบ 1593: ปุ่ม DEFLECT ปัดพลัง — เล่นท่า Shield_Push_Left แล้วตอน hitAt ลูกพลังในแนวหน้า
        (ของซอมบี้หรือของเพื่อน) จะถูกปัดให้พุ่งไปตามทิศหน้าตัวเรา */
     if(active && !paused && poll.deflect && deflect && !player.carrying) deflect.tryDeflect(player, now, camRig, VF.audio);
-    if(active && !paused && poll.punch && !player.carrying) combat.handleAttackPress('punch', player, now, enemies, camRig, arena, fx, energy, VF.audio, {hold: !!poll.punchHeld, people: peopleSnap(), world: worldMelee || oilTanker});
+    if(active && !paused && poll.punch && !player.carrying){
+      /* รอบ 1608: กด ATTACK ตอนมีเป้าล็อก → ลูกพลังยิงตรงใส่เป้า (override มีอายุ 1.2 วิ
+         ครอบทั้งแท็ป-เบิร์สท์และชาร์จปล่อย แต่โหมดเล็งเองด้วยสติกขณะชาร์จยังได้อยู่) */
+      if(targetLock && targetLock.current){
+        const lt = targetLock.current;
+        VF._t.energyAimOverride = {x: lt.x, y: (lt.y || 0) + 0.95, z: lt.z, until: now + 1200};
+      }
+      combat.handleAttackPress('punch', player, now, enemies, camRig, arena, fx, energy, VF.audio, {hold: !!poll.punchHeld, people: peopleSnap(), world: worldMelee || oilTanker});
+    }
     if(active && !paused && poll.kick){
       if(player.carrying){
         /* รอบ 1587/1594: KICK ตอนแบก = ลองจบคอมโบเตะ (THROW×2 แล้ว KICK) ใช้ได้ทุกตัวละคร */
@@ -863,8 +893,11 @@
       fireTrail = VF.OverdriveFireTrail ? new VF.OverdriveFireTrail().attach(scene) : null;
       slamFx = VF.GroundSlamFX ? new VF.GroundSlamFX().attach(scene) : null;
       slam = VF.GroundSlamController ? new VF.GroundSlamController() : null;
-      /* รอบ 1590: มาร์กเกอร์ + บนพื้นบอกทิศพลัง — ฟ้า=SLAM · ส้ม=ATTACK */
+      /* รอบ 1590: มาร์กเกอร์ + บนพื้นบอกทิศพลัง — ฟ้า=SLAM · ส้ม=ATTACK
+         รอบ 1608: กลายเป็น reticle ล็อกเป้าหมาย (วาดจาก VF._t.lockView) */
       aimMarkers = VF.AimMarkers ? new VF.AimMarkers().attach(scene) : null;
+      /* รอบ 1608: สมองล็อกเป้าหมายกลาง — ล็อกเป้าที่กล้องหันหน้าไปทางนั้น ใช้ร่วม SLAM+ATTACK */
+      targetLock = VF.TargetLock ? new VF.TargetLock() : null;
       /* รอบ 1593: สนามลูกพลังศัตรู/เพื่อน + ปุ่มปัดพลัง (DEFLECT) */
       orbs = VF.HostileOrbManager ? new VF.HostileOrbManager().attach(scene) : null;
       if(orbs && orbs.setVehicles) orbs.setVehicles(sedan, oilTanker);
@@ -992,6 +1025,8 @@
     healPads = [];
     if(healPad && healPad.dispose) healPad.dispose();
     healPad = null;
+    targetLock = null;
+    if(VF._t) VF._t.lockView = null;
     if(fx) fx.dispose();
     if(trails) trails.dispose();
     if(fireTrail && fireTrail.dispose) fireTrail.dispose();
