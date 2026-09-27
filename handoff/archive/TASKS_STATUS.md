@@ -6944,3 +6944,9 @@ efreshMechaLock
 
 - รอบ 1601 · แก้ตัวละครผู้เล่นหาย (รอบ 1599 regression) ทั้งตัวหญิงและตัวชาย: ต้นเหตุ NexAssets cache คืน `gltf.scene` ออบเจ็กต์เดิมทุกครั้ง — ผู้เล่น attach ก่อน แล้วบอท 9 ตัวแย่งโมเดลทีละตัว (Object3D.add ตัด scene จาก parent เดิม) ทิ้งผู้เล่นไร้โมเดล · controller attach จึง clone scene ด้วย VF._t.cloneSkinned (แบบซอมบี้/เพื่อนออนไลน์) ก่อน add ลง pivot โดยยังแชร์ geometry/material กับ template
 - ไฟล์: character/nex-character-controller.js (attach clone) + tools/test_vocab_force.js (regression assert) · unit 798 ผ่าน + check_undefined_calls 0
+
+
+## ⏬ ย้ายเมื่อ 2026-09-27 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- รอบ 1602 · Vocab Force PvP คน↔บอทเต็มรูปแบบ + ลูกศรไล่ชี้คนถือตัวอักษร: (1) จุดโจมตี PvP เดิม (หมัด/เตะ/SLAM/ลูกพลัง/รถเตะปลิว) ข้ามบอทเพราะ guard `peer.local` — ทุกจุดแยกสายบอทไป `botHit→bots.applyHit` ดาเมจจริงผ่าน controller (ระบบ strike บน hp string ถึงแค่คนออนไลน์) (2) บอทโดนตีแล้ว "แค้น" ตีกลับ (brawl: ไล่ตามคนแค้นไม่จำกัดระยะ 8 วิ / คนแนบตัวแล้วดุสุ่มตามนิสัย) ต่อยเรา takeHit ตรง เพื่อนออนไลน์แพ็ก strike ส่งถึงเครื่องเขา (3) บอทตาย → ตัวอักษรหลุดเป็นของรางวัลกลาง + เกิดใหม่ 6-10 วิ (4) ลูกศรคำศัพท์: ตัวอักษรถูกเก็บไปแล้ว → ชี้ตามบอทผู้ถือ ป้ายส้ม is-carry
+- ไฟล์: runtime/vocab-force-bots.js (applyHit/findCarrier/brawl/respawn/drop) + combat/combat-controller.js + combat/ground-slam-controller.js + combat/energy-attack-controller.js + effects/hostile-orb-manager.js + effects/energy-projectile-manager.js + map/sedan-controller.js + runtime/vocab-force-runtime.js (botHit/handlePlayerHurt wiring) + css (.vf-quest.is-carry) + test (static 10 + behavioral sandbox 7) · unit 814 ผ่าน + check_undefined_calls 0
