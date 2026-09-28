@@ -101,7 +101,7 @@ function camera(c,g,mode,p,dt){
   if(mode==='cockpit'){
     c.position.set(p.px+f*(-.42),p.py+2.22,p.pz+z*(-.42));
     c.lookAt(p.px+f*18,p.py+.95+Math.sin(p.pitch)*18,p.pz+z*18);c.rotateZ(p.roll*.5);
-    c.fov=74+Math.min(12,p.spd/4.4);c.near=.075;c.updateProjectionMatrix();return true;
+    c.fov=74+Math.min(16,p.spd/3.6);c.near=.075;c.updateProjectionMatrix();return true;
   }
   return false;
 }
@@ -319,7 +319,7 @@ function decorateDom(w){
   el('.garage-sub').textContent='รถกระบะเกาะสายรุ้ง · เลือกสีเดียวกันทั้งคันและมุมคนขับ';
   el('.garage-stage').innerHTML='<canvas class="pickup-preview" width="720" height="330" aria-label="รถกระบะสีที่เลือก"></canvas>';
   el('#pickup-intro h2').textContent='🛻 Vocab World Pick-Up Truck · Tropical Island';
-  const rules=el('.fi-rules');rules.innerHTML=rules.innerHTML.replace('Vocab Motors VR-X1 · Open-Wheel Racing · สนามกลางทะเลทราย 5.4 กม. 15 โค้งใต้แสงไฟ!','Island Star Pick-Up · เกาะเขตร้อน '+(profile.map.lengthKm).toFixed(1)+' กม. · สูงสุด 250 กม./ชม.').replace('80 กม./ชม.','55 กม./ชม.').replace('⚠️ ออกนอกแทร็ก ทรายลื่นและช้าลงมาก','🚧 ขอบสนามแข็ง ชนแล้วเด้งกลับ · ไม่มีระบบวาร์ป');
+  const rules=el('.fi-rules');rules.innerHTML=rules.innerHTML.replace('Vocab Motors VR-X1 · Open-Wheel Racing · สนามกลางทะเลทราย 5.4 กม. 15 โค้งใต้แสงไฟ!','Island Star Pick-Up · เกาะเขตร้อน '+(profile.map.lengthKm).toFixed(1)+' กม. · สูงสุด 290 กม./ชม.').replace('80 กม./ชม.','55 กม./ชม.').replace('⚠️ ออกนอกแทร็ก ทรายลื่นและช้าลงมาก','🚧 ขอบสนามแข็ง ชนแล้วเด้งกลับ · ไม่มีระบบวาร์ป');
   const style=document.createElement('style');style.textContent=`
   body:has(#pickup-wrap.on) > .toast, body:has(#pickup-wrap.on) > #toast-clear-all{display:none!important}
   #pickup-wrap.fp #pickup-hud{display:flex!important;bottom:8px}
@@ -351,13 +351,13 @@ const profile={
   id:'pickup',ns:'pickup',title:'Vocab World Pick-Up Truck',
   keys:{best:'pickupBest',rank:'pickupRank',rankStatus:'pickupRankOk',done:'pickupDone',recent:'pickupRecent',color:'vwPickupCarColor',ghost:'vwPickupGhost',map:'pickup'},
   map:{track:source.track.map(p=>p.map(v=>v*scale)),pit:source.pit.map(p=>p.map(v=>v*scale)),sf:source.sf,bld:[],lengthKm:2.7},
-  /* รอบ 1620 — แก้ชุดเดียวกับคาร์ท: top 250 กม./ชม. + power ให้ถึงจริง + grip 2 เท่า + ตากล้อง 2.22→1.85 + FOV แรงขึ้น */
-  physics:Object.freeze({top:250/3.6,accel:11,power:1250,drag:.0035,brake:22,coast:2.4,grip:26,wheelbase:2.9,steer:.44,steerHi:.065,pit:55/3.6}),
+  /* รอบ 1626 — ผู้ใช้บอก Truck อืด (หลังคืนตากล้องรอบ 1622 ความรู้สึกไวลดลง): ยก top 250→290 + power ให้ถึงจริง + อัตราออกตัว/เบรก/กริปตาม + coast ลดให้ไหล + FOV แรงขึ้น */
+  physics:Object.freeze({top:290/3.6,accel:13,power:1900,drag:.0035,brake:26,coast:1.8,grip:30,wheelbase:2.9,steer:.44,steerHi:.06,pit:55/3.6}),
   engineHz:(rpm,thr)=>52+rpm*rpm*260+thr*16,
   hitParts:[[0,.08,1.08,2.18],[0,1.0,1.04,.9],[0,-1.2,1.04,1.12],[-1.14,1.52,.2,.54],[1.14,1.52,.2,.54],[-1.14,-1.42,.2,.54],[1.14,-1.42,.2,.54]],
   environment:{id:'tropical-island',downloadBytes:0,shadows:0},
   authorized:()=>true,
-  gearOf:v=>v<12?1:v<24?2:v<36?3:v<48?4:v<60?5:6,
+  gearOf:v=>v<14?1:v<28?2:v<42?3:v<56?4:v<70?5:6,
   wallRadius:WALL_RADIUS,get boundaryWalls(){return boundaryWalls;},collideBoundary,buildCar,carView,steer,camera,buildTrack,applyEnvironment,animate,decorateDom,paintDom,preview,
 };
 root.PickupProfile=profile;root.PickupWorld=root.createVocabRacingWorld(profile);
