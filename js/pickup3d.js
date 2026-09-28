@@ -91,16 +91,17 @@ function buildCar(c){
   const flap=new T.Mesh(k.flap,paintMat(c));flap.position.set(0,1.12,-2.26);g.add(flap);
   g.userData={modelKind:'island-star-pickup',driver,steering,drsFlap:flap,front:[],wheels:[],kartFront:front,kartWheels:wheels,disposePeer(){},peerGpu:{drawCalls:10,textures:0,sharedGeometry:true}};return g;
 }
-function carView(g,mode){g.visible=mode!=='road';g.userData.driver.visible=mode!=='cockpit';}
+/* รอบ 1622 — ซ่อนพวงมาลัย 3D ตอนมุมคนขับ (ตากล้องรอบ 1620 ต่ำลงทำวงล้อบังถนนเกือบครึ่งจอ — ตำแหน่งตาเดิม 2.22/.85 ดีอยู่แล้ว ที่บังคือพวงมาลัย 3D จึงคืนค่าเดิม + ซ่อนล้อ) */
+function carView(g,mode){g.visible=mode!=='road';g.userData.driver.visible=mode!=='cockpit';if(g.userData.steering)g.userData.steering.visible=mode!=='cockpit';}
 function steer(g,angle){if(!g)return;lastSteer=angle;g.userData.steering.rotation.z=angle*2.2;g.userData.kartFront.forEach(w=>w.rotation.y=-angle);}
 function camera(c,g,mode,p,dt){
   if(!g)return false;carView(g,mode);steer(g,lastSteer);
   g.userData.kartWheels.forEach(w=>w.rotation.x+=p.spd*dt/.54);
   const f=Math.sin(p.yaw),z=Math.cos(p.yaw);
   if(mode==='cockpit'){
-    c.position.set(p.px+f*(-.42),p.py+1.85,p.pz+z*(-.42));
-    c.lookAt(p.px+f*18,p.py+.85+Math.sin(p.pitch)*18,p.pz+z*18);c.rotateZ(p.roll*.5);
-    c.fov=74+Math.min(14,p.spd/4);c.near=.075;c.updateProjectionMatrix();return true;
+    c.position.set(p.px+f*(-.42),p.py+2.22,p.pz+z*(-.42));
+    c.lookAt(p.px+f*18,p.py+.95+Math.sin(p.pitch)*18,p.pz+z*18);c.rotateZ(p.roll*.5);
+    c.fov=74+Math.min(12,p.spd/4.4);c.near=.075;c.updateProjectionMatrix();return true;
   }
   return false;
 }

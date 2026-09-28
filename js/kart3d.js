@@ -92,7 +92,8 @@ function buildCar(c){
   const flap=new T.Mesh(k.flap,paintMat(c));flap.position.set(0,1.4,-1.48);g.add(flap);
   g.userData={modelKind:'island-star-kart',driver,steering,drsFlap:flap,front:[],wheels:[],kartFront:front,kartWheels:wheels,disposePeer(){},peerGpu:{drawCalls:10,textures:0,sharedGeometry:true}};return g;
 }
-function carView(g,mode){g.visible=mode!=='road';g.userData.driver.visible=mode!=='cockpit';}
+/* รอบ 1622 — ซ่อนพวงมาลัย 3D ตอนมุมคนขับ (ตากล้องต่ำรอบ 1620 ทำวงล้อบังถนนเกือบครึ่งจอ) */
+function carView(g,mode){g.visible=mode!=='road';g.userData.driver.visible=mode!=='cockpit';if(g.userData.steering)g.userData.steering.visible=mode!=='cockpit';}
 function steer(g,angle){if(!g)return;lastSteer=angle;g.userData.steering.rotation.z=angle*2.2;g.userData.kartFront.forEach(w=>w.rotation.y=-angle);}
 function camera(c,g,mode,p,dt){
   if(!g)return false;carView(g,mode);steer(g,lastSteer);
