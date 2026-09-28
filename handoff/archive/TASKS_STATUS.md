@@ -6991,3 +6991,9 @@ efreshMechaLock
 
 - ไฟล์: runtime/vocab-force-bots.js (botFill) + tools/test_vocab_force.js (assert botFill 3 ตัว + ซ่อม 2 assert slam) · unit 833 ผ่านทั้งหมด (fail ค้าง 0)
 - รอบ 1609 · สัญลักษณ์ล็อกเป้าหมายชัดเจนขึ้น (ผู้ใช้สั่ง "ทำสัญลักษณ์ว่ากำลัง lock ตัวนั้นอยู่ชัดๆ"): reticle เฉพาะทาง `_makeLockReticle` — วงแหวนสีฟ้าสว่างหมุนรอบ + กากบาทกลาง + หัวลูกศร 2 แฉกชี้ลงเหนือวง · `depthTest: false` มองทะลุกำแพง/อาคารเห็นชัดเสมอ · opacity 0.82–1.0 กะพริบ + สเกลหายใจแรงขึ้น · renderOrder 999 · dispose ครบ (mat + geometry ทุกชิ้น) · ui.js ?v=1609
+
+
+## ⏬ ย้ายเมื่อ 2026-09-28 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- รอบ 1611 · ผู้ใช้สั่ง "โหลดนาน/ค้างที่การโหลดตัวละคร": ต้นตอ = บอดี้ GLB 3 ไฟล์ ~98MB + โหลด sequential ทุกขั้น · แก้: (1) firebase.json rule runtime-models/** cache 7 วัน (เดิม 3600) (2) BotManager.start โหลดบอทพร้อมกัน Promise.all — CRITICAL run/punch/kick/victory + LAZY jump/block fire-and-forget (3) runtime open(): loadClips+บอทพร้อมกัน Promise.all([clipsJob, botsJob]) · tanker/sedan await ทีหลัง · bootSetLoad เพดาน bootMax กันแถบถอยหลัง
+- รอบ 1610 · ผู้ใช้สั่ง "บอทเหลือแค่ 3 ตัว": VF._t.botFill จากเติมครบ 10 → cap สูงสุด 3 (min(3, 10-humans)) — เล่นคนเดียวเจอบอท 3 (รวม 4 คนในลาน) · ออนไลน์คนเยอะบอทลดตามจนหมดที่ 10 คน · ล็อบบี้/หน้ารอโหลดโชว์เท่าที่มีตามจริง (lobbySlots ไม่เปลี่ยน) · แถมซ่อม assert ค้าง WIP 1597 ที่ทุก session fail มาตลอด 2 อัน (เทสต์ค่าเดิม 23 เทียบ tune 560 ที่ commit ไปแล้ว → อัปเดตเป็น 560/full-map ให้ตรงของจริง)
