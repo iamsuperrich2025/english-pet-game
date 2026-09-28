@@ -770,6 +770,21 @@
     if(ev&&ev.total>0) shipLoadOverlay(true,ev.loaded/ev.total*100);
     else shipLoadOverlay(true,null);
   }
+  /* 🔄 รอบ 1625: หน้าพักตอนเตรียมเกม (เหมือน Vocab Force) — ครอบทั้งโหลด three.min.js + เรือ GLB */
+  function bootLoadingOverlay(show,text){
+    let el=document.getElementById('wsh-boot-load');
+    if(show){
+      if(!el){
+        el=document.createElement('div'); el.id='wsh-boot-load';
+        el.style.cssText='position:fixed;inset:0;z-index:2147483200;display:flex;flex-direction:column;gap:16px;align-items:center;justify-content:center;background:linear-gradient(180deg,#0a3d66,#062a47);color:#dff2ff;font-family:Kanit,system-ui,sans-serif;letter-spacing:.3px';
+        el.innerHTML='<div style="font-size:46px;line-height:1">⚓</div><div class="wsh-boot-txt" style="font-size:18px;font-weight:700;text-shadow:0 2px 8px rgba(0,0,0,.45)">กำลังเตรียมกองเรือ…</div><div style="width:190px;height:7px;border-radius:4px;background:rgba(255,255,255,.18);overflow:hidden"><div style="height:100%;width:45%;border-radius:4px;background:linear-gradient(90deg,#5ad0ff,#9be3ff);animation:wshBoot 1.05s ease-in-out infinite alternate"></div></div>';
+        const st=document.createElement('style'); st.textContent='@keyframes wshBoot{from{margin-left:-45%}to{margin-left:100%}}';
+        el.appendChild(st); document.body.appendChild(el);
+      }
+      if(text){ const t=el.querySelector('.wsh-boot-txt'); if(t) t.textContent=text; }
+      el.style.display='flex';
+    } else if(el) el.style.display='none';
+  }
   /* ==== 🚢 เรือ GLB จริง (รอบ 1623) — โหลดครั้งเดียว ทุกลำ clone จากแม่พิมพ์เดียว ==== */
   function loadShipGLB(){
     if(shipLoadP) return shipLoadP;
@@ -1892,6 +1907,17 @@
     }
     if(opening) return; opening=true;
     try{
+      bootLoadingOverlay(true,'กำลังเตรียมกองเรือ…');
+      if(!window.THREE){
+        /* รอบ 1625: หน้า classic ไม่ได้โหลด three.min.js ไว้ล่วงหน้า — โหลดเองเหมือน wordskirmish
+           (ก่อนแก้: โยน 'no THREE' ทิ้งทันที → toast แล้วเงียบ = "กดแล้วเปิดไม่ขึ้นเลย") */
+        if(typeof toast==='function') toast('⚓ กำลังออกทะเลคำศัพท์...');
+        if(typeof loadScriptOnce!=='function') throw new Error('no loader');
+        await Promise.race([
+          loadScriptOnce('js/vendor/three.min.js'),
+          new Promise((_,rej)=>setTimeout(()=>rej(new Error('three load timeout')),16000))
+        ]);
+      }
       THREE=window.THREE;
       if(!THREE) throw new Error('no THREE');
       buildDom();
@@ -1899,11 +1925,15 @@
       resize();
       let loadTO=0;
       try{
-        if(!shipSrc) shipLoadOverlay(true,null);
+        if(!shipSrc){
+          bootLoadingOverlay(false);
+          shipLoadOverlay(true,null);
+        }
         const timeoutP=new Promise((_,rej)=>{loadTO=setTimeout(()=>rej(new Error('ship glb timeout')),16000)});
         await Promise.race([loadShipGLB(),timeoutP]);
       }catch(e){ console.warn('WordShip GLB fallback to cute ship', e); shipStyle='cute'; }
       finally{ clearTimeout(loadTO); shipLoadOverlay(false); }
+      bootLoadingOverlay(false);
       if(!scene) buildWorld();
       resize(); resetRun();
       running=true; paused=false; last=0;
@@ -1913,6 +1943,7 @@
       renderHud();
       requestAnimationFrame(loop);
     }catch(e){
+      bootLoadingOverlay(false);
       console.error('WordShip open fail', e);
       if(typeof toast==='function') toast('⚠️ เปิดกองเรือไม่สำเร็จ');
     }
@@ -1920,6 +1951,7 @@
   }
   function close(){
     running=false; paused=true; settleCoinSession(); settleScoreRun();
+    bootLoadingOverlay(false);
     dropIceAll();
     if(raf) cancelAnimationFrame(raf); raf=0;
     clearTimers();

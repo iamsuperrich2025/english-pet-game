@@ -47,5 +47,19 @@ try{
   results.C=await state(); results.C.sawOverlay=sawOverlay; results.C.overlayText=overlayText; results.C.errors=errsC;
   await page.screenshot({path:path.join(out,'C-loaded.png')});
   await page.close();
+
+  // D: สมจริงหน้า classic — ไม่มี THREE ล่วงหน้า ต้องเจอหน้าพัก แล้วโหลด three.min.js เองจนเข้าเกมได้
+  let errsD=[]; page=await newPage(browser,errsD);
+  await page.route('**/three.min.js',async r=>{await new Promise(s=>setTimeout(s,1600));r.continue();}); // จำลองเน็ตช้าให้เห็นหน้าพัก
+  await page.goto('http://127.0.0.1:18770/tools/wordship_preview_classic.html',{waitUntil:'domcontentloaded'});
+  let sawBoot=false,bootText=null;
+  try{ await page.waitForSelector('#wsh-boot-load',{state:'visible',timeout:4000}); sawBoot=true; bootText=await page.$eval('#wsh-boot-load .wsh-boot-txt',el=>el.textContent); await page.screenshot({path:path.join(out,'D-boot.png')}); }catch(_){}
+  await page.waitForFunction(()=>window.WordShip&&WordShip._t.running===true,null,{timeout:20000});
+  await page.waitForTimeout(600);
+  results.D=await state(); results.D.sawBoot=sawBoot; results.D.bootText=bootText;
+  results.D.threeLoaded=await page.evaluate(()=>!!window.THREE);
+  results.D.errors=errsD;
+  await page.screenshot({path:path.join(out,'D-opened.png')});
+  await page.close();
 }finally{ await browser.close(); server.close(); }
 console.log(JSON.stringify(results,null,1));
