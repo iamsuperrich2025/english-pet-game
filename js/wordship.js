@@ -754,11 +754,27 @@
     return {root:rootG, turret:fore, turrets:[fore,aft]};
   }
 
-  /* ==== 🚢 เรือ GLB จริง (รอบ N) — โหลดครั้งเดียว ทุกลำ clone จากแม่พิมพ์เดียว ==== */
+  /* 🔄 รอบ 1624: โอเวอร์เลย์โหลดเรือ + progress — กันอาการ "กดแล้วนิ่ง" ตอนเน็ตช้า/มือถือ */
+  function shipLoadOverlay(show,pct){
+    if(!root) return;
+    let el=root.querySelector('#wsh-ship-load');
+    if(show){
+      if(!el){
+        el=document.createElement('div'); el.id='wsh-ship-load';
+        root.appendChild(el);
+      }
+      el.textContent='⚓ กำลังโหลดเรือ…'+(pct==null?'':' '+Math.min(99,Math.round(pct))+'%');
+    } else if(el) el.remove();
+  }
+  function shipLoadProgress(ev){
+    if(ev&&ev.total>0) shipLoadOverlay(true,ev.loaded/ev.total*100);
+    else shipLoadOverlay(true,null);
+  }
+  /* ==== 🚢 เรือ GLB จริง (รอบ 1623) — โหลดครั้งเดียว ทุกลำ clone จากแม่พิมพ์เดียว ==== */
   function loadShipGLB(){
     if(shipLoadP) return shipLoadP;
     shipLoadP=new Promise((resolve,reject)=>{
-      const boot=()=>{ new THREE.GLTFLoader().load(SHIP_GLB,g=>resolve(g.scene),undefined,reject); };
+      const boot=()=>{ new THREE.GLTFLoader().load(SHIP_GLB,g=>resolve(g.scene),shipLoadProgress,reject); };
       if(THREE.GLTFLoader) boot();
       else{
         const s=document.createElement('script');
@@ -895,7 +911,7 @@
     const builtPlayer=makeShip(0x5ad0ff,true);
     playerMesh=builtPlayer.root; playerTurret=builtPlayer.turret; playerTurrets=builtPlayer.turrets;
     scene.add(playerMesh);
-    if(SHIP_WATER_VFX.enabled&&shipStyle==='glb') waterVFX=new ShipWaterFX(player,{role:'player'});
+    if(SHIP_WATER_VFX.enabled&&shipStyle==='glb'){ try{ waterVFX=new ShipWaterFX(player,{role:'player'}); }catch(e){ console.warn('WordShip vfx off (player)',e); SHIP_WATER_VFX.enabled=false; waterVFX=null; } }
 
     aimMarker=makeAimCross();
     if(aimMarker){ aimMarker.position.y=.06; scene.add(aimMarker); }
@@ -932,7 +948,7 @@
       const built=makeShip(0xff8fab,false);
       s.mesh=built.root; s.turret=built.turret;
       scene.add(s.mesh);
-      if(SHIP_WATER_VFX.enabled&&shipStyle==='glb') s.vfx=new ShipWaterFX(s,{role:'bot'});
+      if(SHIP_WATER_VFX.enabled&&shipStyle==='glb'){ try{ s.vfx=new ShipWaterFX(s,{role:'bot'}); }catch(e){ console.warn('WordShip vfx off (bot)',e); SHIP_WATER_VFX.enabled=false; s.vfx=null; } }
     }
     applyShipScale(s);
     fleet.length=0; fleet.push(s);
@@ -1533,7 +1549,7 @@
         s.mesh.position.set(s.x, bob, s.z);
         s.mesh.rotation.y=s.yaw||0;
       }
-      if(s.vfx) s.vfx.update(dt);
+      if(s.vfx){ try{ s.vfx.update(dt); }catch(_){ s.vfx=null; } }
       if(s.label){
         fitWordLabel(s.label,s,camera);
         faceWordToCamera(s.label, camera);
@@ -1653,7 +1669,7 @@
   function step(dt){
     elapsed+=dt; tickPlayer(dt); tickLetters(); tickFleet(dt); shells.forEach(s=>tickShell(s,dt)); tickFx(dt);
     if(waterTimeU) waterTimeU.value=elapsed;
-    if(waterVFX) waterVFX.update(dt);
+    if(waterVFX){ try{ waterVFX.update(dt); }catch(_){ waterVFX=null; } }
   }
   function draw(){
     updateCamera();
@@ -1878,9 +1894,16 @@
     try{
       THREE=window.THREE;
       if(!THREE) throw new Error('no THREE');
-      try{ await loadShipGLB(); }catch(e){ console.warn('WordShip GLB fallback to cute ship', e); shipStyle='cute'; }
       buildDom();
       root.style.display='block';
+      resize();
+      let loadTO=0;
+      try{
+        if(!shipSrc) shipLoadOverlay(true,null);
+        const timeoutP=new Promise((_,rej)=>{loadTO=setTimeout(()=>rej(new Error('ship glb timeout')),16000)});
+        await Promise.race([loadShipGLB(),timeoutP]);
+      }catch(e){ console.warn('WordShip GLB fallback to cute ship', e); shipStyle='cute'; }
+      finally{ clearTimeout(loadTO); shipLoadOverlay(false); }
       if(!scene) buildWorld();
       resize(); resetRun();
       running=true; paused=false; last=0;
@@ -1909,6 +1932,7 @@
     if(typeof renderDashboard==='function') renderDashboard();
   }
 
+  try{ if(window.THREE){ THREE=window.THREE; loadShipGLB().catch(()=>{}); } }catch(_){ }
   window.WordShip={ open, close, refreshLock:typeof refreshWordShipLock==='function'?refreshWordShipLock:function(){}, _t:{
     MINLEN, MAXLEN, HIT_COIN, PERFECT_BONUS, HEARTS, MAX_FLEET, WATER_HORIZON, FAR_SCALE, NEAR_SCALE, SHIP_SPEED, SPEED_NAMES, SPEED_MUL, G, SHELL_MASS, MUZZLE, ELEV, ELEV_MIN, ELEV_MAX, ELEV_SWIPE, ELEV_SWIPE_FINE, NEAR_Z, FAR_Z, SEA_LEFT, SEA_RIGHT, SEA_BACK, SEA_MESH, BOW_LEN, FOV_N, FOV_Z, NO_GAME_OVER, STUCK_MSG, TURRET_SWIPE, TURRET_SWIPE_FINE, MAX_SHELLS, BARREL_COUNT, TURRET_FWD, TURRET_AFT, LETTER_REWARD, PICKUP_R, HOME_R, STORY_H, HOME, SPIRE, ALPHABET, ICE_SHOW, ICE_HIDE, CARD_W, CARD_H, CARD_FADE, MAX_SPLASH, SHIP_WATER_VFX,
     pool, takeWord, spawnWave, pickCourse, waterLimits, depthScale, applyShipScale, apparentHull, labelWorldScale, fitWordLabel, courseProgress, fire, hitShip, setViewport, setPlayer, resetRun, step, awardHit, adminAllowed, shipSpeed, playerDriveSpeed, setSpeedLevel,

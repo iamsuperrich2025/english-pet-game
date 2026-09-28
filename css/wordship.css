@@ -60,3 +60,4 @@
   .wsh-pad button{min-height:30px;font-size:8px}
   .wsh-attack button{min-height:32px}
 }
+#wsh-ship-load{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(3,22,42,.6);color:#dff2ff;font-size:18px;font-weight:700;z-index:70;pointer-events:none;text-shadow:0 2px 8px rgba(0,0,0,.55);letter-spacing:.3px}
