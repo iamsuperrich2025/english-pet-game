@@ -7014,3 +7014,9 @@ efreshMechaLock
 
 - ไฟล์: minigames/robot/badRobot_walking_2_inplace.glb (บีบ) + tools/compress_body_glb_textures.py (main + robot)
 - รอบ 1613 · โลกหุ่นยนต์นักรบ: ตัวโกงซอมบี้ → หุ่นยนต์ร้าย GLB (minigames/robot/badRobot_walking_2_inplace.glb · ผู้ใช้สั่ง) — โมดูล js/mecha-zombie-robot.js ใหม่: โหลด template ครั้งเดียว แชร์ geometry/วัสดุ · clone กระดูก + AnimationMixer ท่าเดิน (คลิปยาวสุด 1.25 วิ) ต่อตัว สุ่มจังหวะกันซ้ำ · หันหน้า -Z เหมือนซอมบี้เดิม (ยืนยันด้วยโหนด headfront) · เท้าแตะพื้นโลก · บอสเรือง emissive ตามสีสายพันธุ์ (clone วัสดุแยก คืนใน detach) · โหลด GLB พัง = fallback กล่องเดิม · วงจรครบ: makeAlien attach / removeAlien+ออกจากโลก detach (เช็ก mzShared กัน dispose ของแชร์) / tickMecha อัปเดต mixer ทุกเฟรม · ฉากโทนหนัง: โดมฟ้าพระอาทิตย์ตก+ดวงอาทิตย์+แสง key อุ่น/fill ฟ้า+หมอกอุ่น+เกรด vignette .mh-cine · คำในเกม "ล้มหุ่นยนต์ร้าย/บอสหุ่นยนต์ร้าย"
+
+
+## ⏬ ย้ายเมื่อ 2026-09-28 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- ไฟล์: js/mecha-zombie-robot.js + tools/test_mecha_1613.js
+- รอบต่อ 1613 · บีบเท็กซ์เจอร์หุ่นยนต์ร้าย GLB ต่อเนื่องจากเทคนิครอบ 1612: สแกนก่อน — 3 ภาพ PNG 2048² ทั้งหมด mode=RGB ไม่ใช้ alpha (material0 alphaMode=OPAQUE) ปลอดภัยแปลง JPEG · บีบผ่าน tools/compress_body_glb_textures.py — baseColor คง 2048 q86 / normal คง 2048 q92 / metallicRoughness ย่อ 1024 q85 · ผล badRobot_walking_2_inplace.glb 21.0→9.1MB (-56%, เท็กซ์เจอร์รวม 14.8→3.0MB) · เทียบภาพก่อน/หลังตาเปล่าแทบไม่ต่าง + PSNR baseColor 32.6dB / normal 26.8dB / metalRough 33.5dB · แถมลิสต์ไฟล์เข้า main() ของเครื่องมือ (idempotent — รันซ้ำ skip already JPEG ทั้ง 7 ไฟล์) · ยังไม่ได้เทสต์เรนเดอร์ในเบราว์เซอร์จริงหลังบีบ (โครง GLB parse ผ่าน + โหลดด้วยโค้ด/เครื่องมือชุดเดียวกับรอบ 1612 ที่ live อยู่)
