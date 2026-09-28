@@ -13,7 +13,7 @@ try{await page.goto('http://127.0.0.1:17481/__walls');await page.evaluate(()=>Ka
    for(const f of (old?[.5]:[.15,.5,.85]))for(const side of (old?[-1]:[-1,1])){
     const x=w.x+w.dx*f,z=w.z+w.dz*f,ax=x+nx*4*side,az=z+nz*4*side,bx=x-nx*5*side,bz=z-nz*5*side;
     if(!old&&walls.some(v=>distance(ax,az,v)<2.851))continue;
-    const v=110/3.6,hit=P.collideBoundary(ax,az,bx,bz,-nx*side*v,-nz*side*v);tests++;
+    const v=150/3.6,hit=P.collideBoundary(ax,az,bx,bz,-nx*side*v,-nz*side*v);tests++;
     if(!hit||(hit.x-x)*nx*side+(hit.z-z)*nz*side<2.79)failures.push({wall:n,f,side,x,z,hit});
    }
   }

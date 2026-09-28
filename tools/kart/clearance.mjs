@@ -44,7 +44,7 @@ try{
   const collision=await page.evaluate(()=>{
     const t=KartWorld._t,L=t.line;let hits=0;const sides=new Set();
     for(let i=0;i<L.n;i+=9)for(const side of [-1,1]){
-      const nx=L.nx[i]*side,nz=L.nz[i]*side,x=L.x[i],z=L.z[i],v=110/3.6;
+      const nx=L.nx[i]*side,nz=L.nz[i]*side,x=L.x[i],z=L.z[i],v=150/3.6;
       const hit=KartProfile.collideBoundary(x,z,x+nx*45,z+nz*45,nx*v,nz*v);
       if(!hit)continue;
       if(!Number.isFinite(hit.x+hit.z+hit.vx+hit.vz))throw Error('Non-finite collision');
@@ -54,7 +54,7 @@ try{
     }
     // A representative straight: real physics must bounce instead of starting a portal.
     const i=(t.sfIdx+40)%L.n,nx=L.nx[i],nz=L.nz[i];t.setHold(.7);t.step(.05,180);
-    t.pos={x:L.x[i]+nx*14.8,z:L.z[i]+nz*14.8,yaw:Math.atan2(nx,nz),spd:110/3.6};t.input={thr:1,steer:0,br:false};t.physTick(.05);
+    t.pos={x:L.x[i]+nx*14.8,z:L.z[i]+nz*14.8,yaw:Math.atan2(nx,nz),spd:150/3.6};t.input={thr:1,steer:0,br:false};t.physTick(.05);
     const p=t.pos,bounced=p.vx*nx+p.vz*nz<0;
     t.pos={x:L.x[i]+nx*50,z:L.z[i]+nz*50,spd:0};t.physTick(.016);
     return {hits,sides:[...sides],bounced,portal:t.portal.active};

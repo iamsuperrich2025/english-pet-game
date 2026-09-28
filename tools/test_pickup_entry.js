@@ -12,15 +12,18 @@ const entry=ui.slice(ui.indexOf('async function enterPickup3D(){'),ui.indexOf('a
   assert.equal(ctx.advLoading,false);checks+=3;
  }
  assert.equal(ctx.state.pickupPlayedV1,true);assert.equal(ctx.saves,2);checks+=2;
- for(const mode of ['hurt','busy','ticket']){
-  ctx.loads=[];ctx.state.advHurt=mode==='hurt';ctx.advLoading=mode==='busy';ctx.state.pickupTicket=mode!=='ticket';
+ for(const mode of ['hurt','busy']){
+  ctx.loads=[];ctx.state.advHurt=mode==='hurt';ctx.advLoading=mode==='busy';
   assert.equal((await ctx.enterPickup3D()).started,false);assert.equal(ctx.loads.length,0);checks+=2;
  }
+ // รอบ 1615 — Pick-Up เป็น public entry (ไม่มี ticket gate ตั้งแต่ระบบเปิดสาธารณะ): ไม่มีตั๋วยังเข้าได้
+ ctx.loads=[];ctx.state.advHurt=false;ctx.advLoading=false;ctx.state.pickupTicket=false;
+ assert.equal((await ctx.enterPickup3D()).started,true);assert.equal(ctx.loads.length,4);checks+=2;
  const pickup=fs.readFileSync('js/pickup3d.js','utf8'),kart=fs.readFileSync('js/kart3d.js','utf8'),engine=fs.readFileSync('js/f1_3d.js','utf8');
  assert(pickup.includes("id:'pickup'"));assert(pickup.includes('PickupWorld'));assert(pickup.includes('island-star-pickup'));
- assert(pickup.includes('top:170/3.6'));assert(kart.includes('top:110/3.6'));
+ assert(pickup.includes('top:200/3.6'));assert(kart.includes('top:150/3.6'));
  assert(pickup.includes("map:'pickup'"));assert(!pickup.includes("map:'kart'"));
- const kartTop=110,pickupTop=170,racingRef=85*3.6;
+ const kartTop=150,pickupTop=200,racingRef=85*3.6;
  assert(pickupTop>kartTop);assert(pickupTop<racingRef);checks+=8;
  assert(engine.includes("window.PickupWorld"));assert(engine.includes("P.keys&&P.keys.map||NS"));checks+=2;
  assert(ui.includes("mode:'pickup'"));assert(ui.includes('Vocab World Pick-Up Truck'));checks+=2;
