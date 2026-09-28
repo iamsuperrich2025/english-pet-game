@@ -7002,3 +7002,9 @@ efreshMechaLock
 ## ⏬ ย้ายเมื่อ 2026-09-28 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
 
 - ไฟล์: tools/compress_body_glb_textures.py (ใหม่) + body GLB 6 ไฟล์ (3 ต้นฉบับ + 3 runtime) + tools/test_vocab_force.js (assert magic+ขนาด 3 ไฟล์) · unit 840 ผ่าน · ยืนยันจาก live หลัง deploy: content-length ตรงไฟล์ที่บีบ + cache 7 วันใช้จริง + ดาวน์โหลด 3 ไฟล์รวม ~6 วิ ที่เน็ต ~11MB/s (เดิม ~10 วิ) · เทสต์เปิดเกมในบราวเซอร์ยังไม่ได้ทำ — WebBridge extension ยังไม่ติดตั้ง ถ้าผู้ใช้ติดตั้งแล้วสั่งทดสอบอีกทีได้ · **เหลือพื้นที่ต่อยอด: geometry/anim ~23MB ของ zom/ly (เดา morph target/skin) — ต้อง meshopt/quantization ซึ่ง GLTFLoader ปัจจุบันไม่มี decoder = งานใหญ่กว่านี้**
+
+
+## ⏬ ย้ายเมื่อ 2026-09-28 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- ไฟล์: js/mecha-zombie-robot.js (ใหม่) + js/adventure3d.js + js/adv3d_css.js + js/ui.js + index_classic.html (?v=1613) + minigames/robot/badRobot_walking_2_inplace.glb (21MB เพิ่มใหม่) + tools/test_mecha_1613.js (ใหม่) + test_mecha_1509/1511.js (copy assert รับคำใหม่) + docs/PROJECT_MAP.md · ยืนยัน: harness เรนเดอร์จริงในเบราว์เซอร์ (prepare/attach/detach/tick ผ่าน bbox สูง 3.30m พอดี) + node --check + เทสต์ 1509/1511/1613 ผ่าน (fx round ของ 1509 เป็น fail ค้างเดิมก่อนงานนี้ — ไม่เกี่ยว)
+- รอบ 1612 · บีบเท็กซ์เจอร์บอดี้ GLB (ต่อจาก 1611 cache 7 วัน): ตรวจสแกนจริงก่อน — ทั้ง 9 ภาพเป็น PNG 2048² (nex metallic 4096²) OPAQUE ไม่ใช้ alpha · บีบ PNG→JPEG ผ่าน tools/compress_body_glb_textures.py (idempotent ข้ามภาพที่เป็น JPEG แล้ว) — baseColor คง 2048 q86 / normal คง 2048 q92 / metallicRoughness ย่อ 1024 q85 · ผล: zom 38.2→26.3MB · ly 35.1→25.6MB · nex 29.3→12.6MB (รวม ~102.6→64.5MB หรือ ~37%) ทั้งต้นฉบับ characters/ และ runtime-models/ (pack script copy2 ต้นฉบับจึงไม่ทำ fat กลับ) · ตรวจ accessor 260/ไฟล์ + bufferView alignment + ภาพถอดรหัสได้ครบ · เทียบภาพหลังบีบกับต้นฉบับ — ตาเปล่าแทบต่างไม่ได้ที่ 2048
