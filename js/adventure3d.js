@@ -1560,7 +1560,7 @@ function buildDriveCity(sc){
   /* 🏙️ รอบ 831 (ผู้ใช้สั่ง): probe ภาพพื้นคอนกรีตจริง เหมือนระบบทางเท้า/หน้าตึก — มีไฟล์ = ปูแทนทันที ไม่มี = สีเทาคอนกรีตเดิม */
   const gndImg=new Image();
   gndImg.onload=()=>{ const tx=new THREE.Texture(gndImg); tx.wrapS=tx.wrapT=THREE.RepeatWrapping;
-    const rep=Math.round((RX*2+500)/6); tx.repeat.set(rep,rep); tx.needsUpdate=true;   // รอบ 1617: 22→6 ม./tile (แผ่นคอนกรีต ~2 ม. เดินเหยียบสมจริง ไม่โตเกิน)
+    const rep=Math.round((RX*2+500)/3); tx.repeat.set(rep,rep); tx.needsUpdate=true;   // รอบ 1617/1618: 22→6→3 ม./tile (แผ่นคอนกรีต ~1 ม. — ผู้ใช้เทสจริงบอก 6 ม. ยังใหญ่)
     groundMat.map=tx; groundMat.color.setHex(0x6e6e69); groundMat.needsUpdate=true; };
   gndImg.src='img/city/ground.png';
 
