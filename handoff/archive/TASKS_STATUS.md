@@ -7032,3 +7032,9 @@ efreshMechaLock
 
 - ไฟล์: js/adventure3d.js · ยืนยัน: node --check ผ่าน (ยังไม่ได้ถ่ายภาพจริง — ถ้ายังดูไม่สมจริง บอกได้ ปรับ tile ต่อทันที)
 - รอบ 1615 · ผู้ใช้สั่ง "ภาพถนนไหลอืด อึดอัด" ทั้ง Kart และ Pick-Up (ต้นตอ: โลกย่อ 0.5× แต่ top เดิมต่ำ — Kart 110 / Pick-Up 170 กม./ชม.): Kart top→150 (accel 7/power 320/brake 14/grip 12.5/เกียร์ใหม่/FOV +9°/ข้อความ intro) · Pick-Up top→200 (accel 8.5/power 640 เพราะเดิมวิ่งจริงแค่ ~139/brake 16/grip 13.5/เกียร์ใหม่/FOV +10°) · ซ่อม assert ค้าง ticket gate ใน test_kart_entry/test_pickup_entry (โหมด public ไม่มีตั๋วแล้ว — fail มาก่อนงานนี้)
+
+
+## ⏬ ย้ายเมื่อ 2026-09-29 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- รอบ 1618 · ต่อจาก 1617 — ผู้ใช้เทสจริงบอกกระเบื้องยังใหญ่ไปมาก: repeat 6→3 ม./tile (แผ่นละ ~1 ม.) จุดเดียวกัน adventure3d.js ~1563 · ยืนยัน: node --check (ถ้ายังไม่พอดีบอกได้ ปรับต่อได้อีก)
+- รอบ 1617 · ผู้ใช้สั่ง "พื้นดินโลกเฮลิฯดูขยายเกินไป": ต้นตอ = ภาพ img/city/ground.png (กระเบื้องคอนกรีต 3×3) ปูซ้ำทุก 22 ม./tile → แผ่นละ ~7 ม. เดินแล้วดูโตเทอะทะ · แก้ repeat 22→6 ม./tile (แผ่นละ ~2 ม.) ใน buildDriveCity (adventure3d.js ~1563) · ⚠️ เลข 1616 ถูก session คู่ขนาน (รอบ 1615) เผลอหิ้ว bullet นี้ขึ้น main ใน handoff commit 96c0ebdd ก่อน code commit จึงขยับมาเป็น 1617

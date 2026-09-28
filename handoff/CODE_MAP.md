@@ -2,7 +2,7 @@
 
 > วิธีใช้: หาชื่อฟังก์ชัน/ค่าคงที่/selector ในไฟล์นี้ (Grep หรือกวาดตา) → `Read` ไฟล์จริง `offset=<บรรทัด>` `limit=40`
 > 🗂️ ไฟล์อ้วนมี **สารบัญโซน** (`st-end ชื่อโซน`) — งานทั้งระบบ/โลก 3D: Grep ชื่อโซน → Read/Edit เฉพาะช่วงนั้น **ห้ามอ่านทั้งไฟล์** · เพิ่มระบบใหม่ในไฟล์อ้วนต้องครอบ banner `/* ==== */`+ชื่อโซน (สารบัญเจนเอง)
-> css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: 2026-09-28
+> css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: 2026-09-29
 
 ## js/account-deletion.js (235 บรรทัด · 0 รายการ)
 
@@ -1073,7 +1073,7 @@ vbRender:148 · vbCardHTML:194
 
 ## js/wordsearch.js (524 บรรทัด · 0 รายการ)
 
-## js/wordship.js (1,925 บรรทัด · 0 รายการ)
+## js/wordship.js (1,949 บรรทัด · 0 รายการ)
 
 ## js/wordskirmish-br.js (57 บรรทัด · 0 รายการ)
 
@@ -1472,12 +1472,12 @@ vbRender:148 · vbCardHTML:194
 .ph-tip:2496 · .ph-stage:2498,2502 · .ph-cv:2503 · .ph-ring:2504,2509 · .ph-zoom:2513 · .ph-foot:2514
 .ph-crop-box:2515
 
-## css/wordship.css (62 บรรทัด · 25 selector)
+## css/wordship.css (63 บรรทัด · 26 selector)
 #wsh-game:2,3 · .wsh-stage:4 · .wsh-cross:5 · .wsh-hud:6 · .wsh-glass:7 · .wsh-stats:8,9
 #wsh-hearts:10 · .wsh-word:11,12,13,14 · .wsh-bank:15 · .wsh-exit:16 · .wsh-hint:17 · .wsh-pad:18,19,23
 .wsh-left-controls:20 · .wsh-auto:21,22 · .wsh-attack:24,25 · #wsh-drop:26,27 · #wsh-scope:28 · .wsh-speed:29,30,31,32(+3)
 .wsh-speed-foot:36 · .wsh-toast:37 · #wsh-arrows:38 · .wsh-nav:39,40,41,42(+2) · .wsh-modal:45,46 · .wsh-card:47,48,49
-.wsh-buttons:50,51
+.wsh-buttons:50,51 · #wsh-ship-load:63
 
 ## css/wordskirmish.css (117 บรรทัด · 40 selector)
 #skm-game:2,3,72,87 · .skm-stage:4 · .skm-cross:6,7,8,9 · .skm-scope-view:10 · .skm-scoped:11,17,18 · .skm-scope-ring:12,13,14,15(+1)

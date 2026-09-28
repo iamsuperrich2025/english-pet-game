@@ -44,7 +44,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 
 
 <!-- AUTO-FILES:BEGIN -->
-### 🤖 ไฟล์ไหนทำอะไร — เจนอัตโนมัติจาก comment หัวไฟล์ (`tools/gen_code_map.py` · **ห้ามแก้มือในบล็อกนี้**) · อัปเดต 2026-09-28
+### 🤖 ไฟล์ไหนทำอะไร — เจนอัตโนมัติจาก comment หัวไฟล์ (`tools/gen_code_map.py` · **ห้ามแก้มือในบล็อกนี้**) · อัปเดต 2026-09-29
 - **js/account-deletion.js** (235 บรรทัด) — Account deletion — protected, re-authenticated, multi-path cleanup · Destructive writes begin only after typed confirmation + recent Google auth.
 - **js/adv3d_css.js** (1,349 บรรทัด) — adv3d_css.js — CSS ของ DOM overlay โลก 3D ทุกโหมด (adv/haunt/heli/drone/ · drive/soccer/mecha) — 🪓 รอบ 544 เฟส 1: ผ่าออกจาก js/adventure3d.js · ไฟล์นี้เป็น "ข้อมูลล้วน" ห้ามมี logic — ประกาศ window.ADV3D_CSS อย่างเดียว
 - **js/adv3d_intro.js** (86 บรรทัด) — ❓ ADV3D_INTRO — data การ์ด "วิธีเล่น" ทุกโลก (ผ่าจาก js/adventure3d.js เฟส 2 รอบ 545) · data ล้วน ไม่มี logic · โหลดผ่าน loadAdv3d() ใน js/ui.js ก่อนไฟล์หลักเสมอ
@@ -127,7 +127,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/util.js** (1,644 บรรทัด) — UTIL: เสียง / เอฟเฟกต์ / เครื่องมือทั่วไป
 - **js/vocabbook.js** (207 บรรทัด) — 📒 สมุดคำศัพท์ของฉัน + ข้อสอบทบทวนส่วนตัว (รอบ 288) · เก็บทุกคำที่เด็กเจอในเกมจับคู่/ข้อสอบทุกแบบ (รวม band) ลง state.vocabBook · ถาวรข้ามเซสชัน: {en: {th, c:ถูกกี่ครั้ง, w:ผิดกี่ครั้ง, t:เจอล่าสุด, lw:ครั้งล่าสุดผิด?}}
 - **js/wordsearch.js** (524 บรรทัด) — 🔎 wordsearch.js — เกมค้นหาคำศัพท์ (Word Search) รอบ 194 · แผงฟ้าล้ำยุคเลื่อนออกจากซ้าย · สุ่มคำไม่ซ้ำในแต่ละเกม · 🆕 รอบ 588: กระดานเกือบเต็มจอ · แถบ "หาคำเหล่านี้ให้เจอ" ย้ายขึ้นบนสุด จัดกึ่งกลาง
-- **js/wordship.js** (1,925 บรรทัด) — ⚓ wordship.js — กองเรือคำศัพท์ (Cute Word Fleet) รอบ 1477 · โลก 3D ของเล่นแบบ Vocab World Kart (Soft Cuboid) + ยิงวิถีโค้งแบบ World of Warships · คลังคำ = vocabForStudent() ชุดเดียวกับยิงเป้าคำ · ยิงใช้คลิปวงเพลิง Arena ชุดเดียว · ไม่ดึงคลังคำเน็ต
+- **js/wordship.js** (1,949 บรรทัด) — ⚓ wordship.js — กองเรือคำศัพท์ (Cute Word Fleet) รอบ 1477 · โลก 3D ของเล่นแบบ Vocab World Kart (Soft Cuboid) + ยิงวิถีโค้งแบบ World of Warships · คลังคำ = vocabForStudent() ชุดเดียวกับยิงเป้าคำ · ยิงใช้คลิปวงเพลิง Arena ชุดเดียว · ไม่ดึงคลังคำเน็ต
 - **js/wordskirmish-br.js** (57 บรรทัด) — Word Skirmish Battle Royale: deterministic rules and compact NetRoom protocol.
 - **js/wordskirmish-field.js** (31 บรรทัด) — Original low-cost tactical arena. Shared instanced geometry; no texture downloads.
 - **js/wordskirmish.js** (1,472 บรรทัด) — 🔫 wordskirmish.js — รบคำ Battle Royale + โหมดฝึก รอบ 1526 · กล้องไหล่ / SCOPE / อาวุธ / ท่าทาง / HUD · กติกาและสนามแยกโมดูล BR/Field · Soft Cuboid Chibi 3D น่ารัก · ออนไลน์ NetRoom map `skirmish` สูงสุด 8 คน
@@ -152,10 +152,11 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/rankgraph.css** (23 บรรทัด) — 📈 กราฟอันดับ Top 30
 - **css/skyplay3d.css** (38 บรรทัด) — ☁️🏫 รอบ 1235 — Vocab Sky Playground Phase 5 · additive Lesson Packs + Reports · landscape-first
 - **css/style.css** (2,539 บรรทัด) — Pet Vocab Adventure — สไตล์พื้นฐานรุ่นแรกทั้งเกม (โดน lobby.css โหลดทับบางส่วน — แก้หน้าตาโซนล็อบบี้/UI ใหม่ให้ไปที่ lobby.css ก่อน) · ครอบคลุม: screens/login/dashboard · เกมจับคู่ .word-card + แบบทดสอบ .quiz-* · shop/ที่พัก/หมวดคำศัพท์ · หิว-ป่วย/สภาพอากาศ · ตั้งค่า/วิธีเล่น/level-up overlay · คลังของฉัน/กล่องขาย · เอฟเฟกต์ลอย/เหรียญ/rotate-overlay
-- **css/wordship.css** (62 บรรทัด) — ⚓ กองเรือคำศัพท์ — HUD น่ารักจอเตี้ย 812×375 รอบ 1457
+- **css/wordship.css** (63 บรรทัด) — ⚓ กองเรือคำศัพท์ — HUD น่ารักจอเตี้ย 812×375 รอบ 1457
 - **css/wordskirmish.css** (117 บรรทัด) — 🔫 ยิงรบคำ — HUD น่ารักจอเตี้ย 812×375 รอบ 1480
 - **sw.js** (281 บรรทัด) — Vocab World service worker · Delivery contract: · - HTML navigations are network-first with the last valid shell as fallback.
 <!-- AUTO-FILES:END -->
+
 
 
 
