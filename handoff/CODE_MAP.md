@@ -706,7 +706,7 @@ tick:9788 · frame:9796 · build:9860 · start:9942 · exitWorld:10069
 ## js/kart-access.js (22 บรรทัด · 2 รายการ)
 valid:5 · authorize:6
 
-## js/kart3d.js (363 บรรทัด · 22 รายการ)
+## js/kart3d.js (364 บรรทัด · 22 รายการ)
 softBox:11 · merge:21 · box:34 · starGeo:35 · makeKit:38 · paintMat:83
 buildCar:84 · carView:95 · steer:96 · camera:97 · applyEnvironment:108 · boundaryPoint:120
 recoverCorridor:130 · WALL_RADIUS:144 · addBoundaryWall:145 · sweptWall:153 · collideBoundary:174 · buildTrack:187

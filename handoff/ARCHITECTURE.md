@@ -91,7 +91,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/images.js** (286 บรรทัด) — ระบบตรวจหาภาพเจนอัตโนมัติ (ใช้ new Image() probe — ใช้ได้ทั้ง · file:// และ http:// ต่างจาก fetch ที่ถูกบล็อกใน file://) · โฟลเดอร์ภาพ:
 - **js/invasion3d.js** (10,581 บรรทัด) — 🛸 invasion3d.js — โลก "ยานแม่บุกโลก" (Invasion · รอบ 413 · กติกาใหม่รอบ 556) · FPS สไตล์ Delta Force ในเมืองทะเลทรายตะวันออกกลาง — ยานแม่ลำมหึมาลอยเต็มท้องฟ้า (สไตล์ ID4) · 🔤 กติการอบ 556 (ผู้ใช้สั่ง — แทนระบบแผงตัวอักษร+แกนพลังงานเดิมทั้งหมด):
 - **js/kart-access.js** (22 บรรทัด) — 🔒 Kart private preview admission. A fresh server read is required on every entry.
-- **js/kart3d.js** (363 บรรทัด) — 🏝️ รอบ 1377 — Vocab World Kart: Soft Cuboid Chibi 3D island kart profile. · Geometry/materials are shared across all colours, preview and cockpit. No raster downloads. · This module owns presentation/tuning only; F1's racing, vocabulary, reward and input engine stays shared.
+- **js/kart3d.js** (364 บรรทัด) — 🏝️ รอบ 1377 — Vocab World Kart: Soft Cuboid Chibi 3D island kart profile. · Geometry/materials are shared across all colours, preview and cockpit. No raster downloads. · This module owns presentation/tuning only; F1's racing, vocabulary, reward and input engine stays shared.
 - **js/lettercannon.js** (482 บรรทัด) — 🔤💥🏆 รางวัลรายเดือนของกระดาน Letter Cannon / Dragon Sky Siege
 - **js/lobby.js** (52 บรรทัด) — LOBBY แนวนอน — ระบบแผงรายละเอียดกลางจอ (อัพเดท 5725691826) · คลิกเมนูซ้าย → เปิดแผง (panel) ทับฉาก Lobby · เนื้อหา scroll ในแผง · การ์ดเดิมทั้งหมด (home/phone/computer/farm/collect/rank) ย้ายเข้าแผง
 - **js/lobby3d.js** (811 บรรทัด) — lobby3d.js — โมเดล 3D ตัวละครในหน้า Lobby (รอบ 114) · โหลด GLB ผู้เลี้ยง + น้อง (img/models/*.glb) · idle เบาๆ (หายใจ/โยกตัว) + เล่น animation clip จากไฟล์ (Tripo ชื่อ NlaTrack → ใช้ clip แรก)
@@ -156,6 +156,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/wordskirmish.css** (117 บรรทัด) — 🔫 ยิงรบคำ — HUD น่ารักจอเตี้ย 812×375 รอบ 1480
 - **sw.js** (281 บรรทัด) — Vocab World service worker · Delivery contract: · - HTML navigations are network-first with the last valid shell as fallback.
 <!-- AUTO-FILES:END -->
+
 
 
 
