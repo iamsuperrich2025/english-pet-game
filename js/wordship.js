@@ -20,6 +20,10 @@
   const LABEL_AT=22, LABEL_W=4, LABEL_H=1.28, CARD_W=5.6, CARD_H=7.2, CARD_FADE=.20, CARD_SHADOW=0x284664, SEA_COLOR=0x003464;
   const BOW_LEN=4.5, G=8.4, SHELL_MASS=1.2, MUZZLE=62, ELEV=.16, ELEV_MIN=0, ELEV_MAX=.72, ELEV_SWIPE=.0048, ELEV_SWIPE_FINE=.0007, HIT_R=2.6, TURRET_FWD=3.05, TURRET_AFT=3.15, BARREL_LEN=1.85, BARREL_SEP=.26, BARREL_COUNT=4; // ELEV_MIN=0: no depression through the deck
   const TURN_RATE=1.05, TURRET_SWIPE=.0075, TURRET_SWIPE_FINE=.00095, CAM_SWIPE=.0062, FOV_N=52, FOV_Z=26;
+  /* ==== 🚢 เรือ GLB จริง + 🎥 กล้องหน้า-เฉียงขวา 45° (รอบ N) ==== */
+  const SHIP_GLB='/minigames/Warships/models/ship_1_web.glb', SHIP_LEN=13, SHIP_BEAM=1.76;
+  const GLB_GUN_FWD={along:2.7,y:.62}, GLB_GUN_AFT={along:-4.5,y:.55}, GLB_GUN_LEN=1.2;
+  const CAM_DIAG=Math.PI*.75, CAM_SWING=.5, CAM_DIST=20, CAM_H=9.2, CAM_LOOK=32;
   const NO_GAME_OVER=true, STUCK_MSG='เรือติดสิ่งกีดขวาง ให้กดถอยหลัง';
   const DPR_CAP=1.5, FRAME_MS=1000/60;
   const FALLBACK=[['CAT','แมว'],['DOG','สุนัข'],['BOOK','หนังสือ'],['FISH','ปลา'],['BIRD','นก']];
@@ -42,6 +46,7 @@
   let iceWalls={far:null,back:null,left:null,right:null};
   let shellFireMat=null, sparkMat=null, sparkGeo=null, stuckAt=-99, toastGen=0;
   let splashFx=[];
+  let shipStyle='cute',shipSrc=null,shipLoadP=null,shipEnemyMat=null,waterVFX=null,waterTimeU=null;
 
   function later(fn,ms){const id=setTimeout(()=>{timers.delete(id);fn();},ms);timers.add(id);return id;}
   function clearTimers(){timers.forEach(clearTimeout);timers.clear();}
@@ -421,7 +426,7 @@
     const sz=labelWorldScale(dist);
     if(label){
       if(label.scale&&label.scale.set) label.scale.set(sz.w,sz.h,1);
-      if(label.position&&label.position.set) label.position.set(ship.x, 3.55, ship.z);
+      if(label.position&&label.position.set) label.position.set(ship.x, shipStyle==='glb'?2.35:3.55, ship.z);
     }
     return sz;
   }
@@ -749,6 +754,64 @@
     return {root:rootG, turret:fore, turrets:[fore,aft]};
   }
 
+  /* ==== 🚢 เรือ GLB จริง (รอบ N) — โหลดครั้งเดียว ทุกลำ clone จากแม่พิมพ์เดียว ==== */
+  function loadShipGLB(){
+    if(shipLoadP) return shipLoadP;
+    shipLoadP=new Promise((resolve,reject)=>{
+      const boot=()=>{ new THREE.GLTFLoader().load(SHIP_GLB,g=>resolve(g.scene),undefined,reject); };
+      if(THREE.GLTFLoader) boot();
+      else{
+        const s=document.createElement('script');
+        s.src='/js/vendor/GLTFLoader.js';
+        s.onload=boot; s.onerror=()=>reject(new Error('GLTFLoader missing'));
+        document.head.appendChild(s);
+      }
+    }).then(src=>{
+      const box=new THREE.Box3().setFromObject(src);
+      const size=new THREE.Vector3(); box.getSize(size);
+      const s=SHIP_LEN/size.x;
+      const inner=new THREE.Group();
+      inner.rotation.y=-Math.PI*.5;            // หัวเรือ ( -X ใน GLB ) หันไปทาง -Z ตาม convention เกม
+      inner.scale.set(s,s,s);
+      inner.position.set(((box.max.z+box.min.z)*.5)*s, 0, -((box.max.x+box.min.x)*.5)*s);
+      src.traverse(o=>{
+        if(o.isMesh&&o.material){
+          o.frustumCulled=true;
+          if(o.material.isMeshStandardMaterial){
+            o.material.metalness=Math.min(.35,o.material.metalness);
+            o.material.roughness=Math.max(.55,o.material.roughness==null?.7:o.material.roughness);
+          }
+        }
+      });
+      inner.add(src);
+      const wrap=new THREE.Group();
+      wrap.add(inner);
+      shipSrc=wrap;
+      shipStyle='glb';
+      return wrap;
+    });
+    return shipLoadP;
+  }
+  function enemyShipMat(){
+    if(shipEnemyMat||!shipSrc) return shipEnemyMat;
+    shipSrc.traverse(o=>{
+      if(shipEnemyMat||!o.isMesh||!o.material) return;
+      const m=o.material.clone();
+      m.color=new THREE.Color(0xffb9c9); // ป้อมปืนฝูงเรือออกโทนชมพูอ่อนแทนการทาสี hull
+      shipEnemyMat=m;
+    });
+    return shipEnemyMat;
+  }
+  function makeShip(color, isPlayer){
+    if(shipStyle!=='glb'||!shipSrc) return makeCuteShip(color, isPlayer);
+    const rootG=shipSrc.clone(true);
+    if(!isPlayer){
+      const em=enemyShipMat();
+      if(em) rootG.traverse(o=>{ if(o.isMesh) o.material=em; });
+    }
+    return {root:rootG, turret:null, turrets:null};
+  }
+
   function addIslandHouse(x,z,y){
     addBox(scene,0xf3efe4,3.4,2.6,3.6,x,y+1.3,z,.18);
     addBox(scene,0xc45c78,3.8,1.1,4,x,y+2.85,z,.12);
@@ -787,6 +850,12 @@
     scene=new THREE.Scene();
     scene.background=new THREE.Color(0x1a5a8a);
     scene.fog=new THREE.Fog(0x1a5a8a,160,720);
+    const skyGeo=new THREE.SphereGeometry(820,16,10);
+    const skyMat=new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,fog:false,
+      uniforms:{top:{value:new THREE.Color(0x2a6cae)},bot:{value:new THREE.Color(0x74b2d4)}},
+      vertexShader:'varying float vY;void main(){vY=normalize(position).y;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+      fragmentShader:'varying float vY;uniform vec3 top,bot;void main(){float h=clamp(vY*1.7+0.22,0.0,1.0);gl_FragColor=vec4(mix(bot,top,h),1.0);}'});
+    const skyDome=new THREE.Mesh(skyGeo,skyMat); skyDome.renderOrder=-1; scene.add(skyDome);
     camera=new THREE.PerspectiveCamera(FOV_N, W/Math.max(1,H), .2, 900);
     renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
     renderer.setClearColor(0x1a5a8a,1);
@@ -797,12 +866,21 @@
     raycaster=new THREE.Raycaster();
     waterPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
 
-    const hemi=new THREE.HemisphereLight(0xf3efe4,0x003464,.92);
+    const hemi=new THREE.HemisphereLight(0xf3efe4,0x003464,1.08);
     scene.add(hemi);
-    const sun=new THREE.DirectionalLight(0xf0ead8,.62);
+    const sun=new THREE.DirectionalLight(0xf0ead8,.85);
     sun.position.set(18,28,12); scene.add(sun);
 
-    const sea=new THREE.Mesh(new THREE.PlaneGeometry(SEA_MESH,SEA_MESH,1,1), new THREE.MeshPhongMaterial({color:SEA_COLOR,shininess:28,specular:0x5eb0e0}));
+    const seaMat=new THREE.MeshPhongMaterial({color:SEA_COLOR,shininess:28,specular:0x5eb0e0});
+    waterTimeU={value:0};
+    seaMat.onBeforeCompile=sh=>{
+      sh.uniforms.uWTime=waterTimeU;
+      sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvWPos=(modelMatrix*vec4(position,1.0)).xyz;')
+        .replace('void main() {','varying vec3 vWPos;\nvoid main() {');
+      sh.fragmentShader=sh.fragmentShader.replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\n{ vec2 wp=vWPos.xz; float w1=sin(wp.x*.31+uWTime*1.1)+sin(wp.y*.23-uWTime*.8); float w2=sin((wp.x+wp.y)*.13+uWTime*.55); normal=normalize(normal+vec3(w1*.035,0.0,w2*.045)); }')
+        .replace('void main() {','varying vec3 vWPos;\nuniform float uWTime;\nvoid main() {');
+    };
+    const sea=new THREE.Mesh(new THREE.PlaneGeometry(SEA_MESH,SEA_MESH,1,1), seaMat);
     sea.rotation.x=-Math.PI/2; scene.add(sea);
     const rim=new THREE.Mesh(new THREE.CircleGeometry(9,24), mat(0x7ad08a));
     rim.rotation.x=-Math.PI/2; rim.position.set(-88,.02,-28); scene.add(rim);
@@ -814,9 +892,10 @@
     makeMesaHome();
     makeSpireIsland();
 
-    const builtPlayer=makeCuteShip(0x5ad0ff,true);
+    const builtPlayer=makeShip(0x5ad0ff,true);
     playerMesh=builtPlayer.root; playerTurret=builtPlayer.turret; playerTurrets=builtPlayer.turrets;
     scene.add(playerMesh);
+    if(SHIP_WATER_VFX.enabled&&shipStyle==='glb') waterVFX=new ShipWaterFX(player,{role:'player'});
 
     aimMarker=makeAimCross();
     if(aimMarker){ aimMarker.position.y=.06; scene.add(aimMarker); }
@@ -850,9 +929,10 @@
     };
     driveAlongHeading(s, 1, speed);
     if(scene){
-      const built=makeCuteShip(0xff8fab,false);
+      const built=makeShip(0xff8fab,false);
       s.mesh=built.root; s.turret=built.turret;
       scene.add(s.mesh);
+      if(SHIP_WATER_VFX.enabled&&shipStyle==='glb') s.vfx=new ShipWaterFX(s,{role:'bot'});
     }
     applyShipScale(s);
     fleet.length=0; fleet.push(s);
@@ -861,6 +941,7 @@
   }
   function disposeFleetMeshes(){
     fleet.forEach(s=>{
+      if(s.vfx){ s.vfx.dispose(); s.vfx=null; }
       if(s.mesh&&scene) scene.remove(s.mesh);
       if(s.label&&scene) scene.remove(s.label);
       if(s.label&&s.label.userData&&s.label.userData.tex) s.label.userData.tex.dispose();
@@ -871,12 +952,13 @@
   function muzzles(){
     const yaw=player.yaw||0, rel=player.turretRel||0;
     const dir=barrelDir(yaw, rel), hull=headingVec(yaw), right=turretRight(yaw+rel);
-    const guns=[
-      {along:TURRET_FWD, y:1.36, sep:BARREL_SEP, len:BARREL_LEN},
-      {along:TURRET_FWD, y:1.36, sep:-BARREL_SEP, len:BARREL_LEN},
-      {along:-TURRET_AFT, y:1.31, sep:BARREL_SEP*.92, len:BARREL_LEN*.92},
-      {along:-TURRET_AFT, y:1.31, sep:-BARREL_SEP*.92, len:BARREL_LEN*.92}
-    ];
+    const guns=shipStyle==='glb'
+      ? [{along:GLB_GUN_FWD.along,y:GLB_GUN_FWD.y,sep:0,len:GLB_GUN_LEN},
+         {along:GLB_GUN_AFT.along,y:GLB_GUN_AFT.y,sep:0,len:GLB_GUN_LEN*.9}]
+      : [{along:TURRET_FWD, y:1.36, sep:BARREL_SEP, len:BARREL_LEN},
+         {along:TURRET_FWD, y:1.36, sep:-BARREL_SEP, len:BARREL_LEN},
+         {along:-TURRET_AFT, y:1.31, sep:BARREL_SEP*.92, len:BARREL_LEN*.92},
+         {along:-TURRET_AFT, y:1.31, sep:-BARREL_SEP*.92, len:BARREL_LEN*.92}];
     return guns.map(g=>{
       const tx=player.x+hull.x*g.along+right.x*g.sep;
       const tz=player.z+hull.z*g.along+right.z*g.sep;
@@ -1066,6 +1148,344 @@
   }
   function burst(x,y,z,n){ fireSplash(x,y,z,n); }
 
+  /* ==== 🌊 Ship Water VFX — น้ำตอบสนองเรือ 4 ชั้น (รอบ N) ====
+     A bow V-foam / B hull contact foam / C stern churn / D persistent wake + spray
+     โครงเขียนเองทั้งหมดสำหรับ Vocab World: shader แชร์ตัวเดียว ตั้ง uniforms ราย mesh ผ่าน onBeforeRender
+     geometry/attribute สร้างครั้งเดียวตอน init ไม่ new Mesh/clone material/สร้าง texture ในลูป */
+  const SHIP_WATER_VFX={
+    enabled:true,
+    bow:{enabled:true,len:9,width:5.2},
+    hull:{enabled:true,len:11,width:.85,opacity:.42},
+    stern:{enabled:true,width:5.6,len:7},
+    wake:{enabled:true,sampleDist:2,maxSeg:56,lifetime:8.5,grow:.34,baseWidth:2.1,maxWidth:5.2},
+    spray:{enabled:true,max:40},
+    lod:{full:42,medium:105}
+  };
+  let shipWaterVFXDebug=false, foamMat=null, wakeMat=null, sprayMat=null;
+
+  function getFoamMat(){
+    if(foamMat||!THREE) return foamMat;
+    foamMat=new THREE.ShaderMaterial({
+      transparent:true, depthWrite:false, side:THREE.DoubleSide,
+      uniforms:{uTime:{value:0},uSeed:{value:0},uInt:{value:1},uFade:{value:1},uSpeed:{value:0},uMode:{value:0},uLen:{value:1},uWid:{value:1}},
+      vertexShader:'varying vec3 vL;void main(){vL=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+      fragmentShader:[
+        'varying vec3 vL;',
+        'uniform float uTime,uSeed,uInt,uFade,uSpeed,uLen,uWid;uniform int uMode;',
+        'float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}',
+        'float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*p);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}',
+        'float fbm(vec2 p){float v=.55*noise(p);p=mat2(1.6,-1.2,1.2,1.6)*p;v+=.3*noise(p);return v+.15*noise(mat2(1.6,-1.2,1.2,1.6)*p);}',
+        'void main(){',
+        ' float a=0.0;',
+        ' if(uMode==0){', // A: bow V-foam — หัว V อยู่โคนหัวเรือ แขนค่อยกว้างตามท้ายแผ่น
+        '  float v=clamp(vL.z/uLen,0.0,1.0);',
+        '  float arm=abs(vL.x)/(uWid*(0.10+v*0.72)+0.001);',
+        '  float n=fbm(vL.xz*0.85+vec2(uSeed,-uTime*1.35));',
+        '  float body=smoothstep(1.0,0.42,arm+n*0.38);',
+        '  float head=smoothstep(0.0,0.05,v)*smoothstep(1.0,0.5,v);',
+        '  a=body*head*(0.30+0.70*uSpeed);',
+        ' }else if(uMode==1){', // B: hull contact foam — แถวบางตาม waterline สองข้าง
+        '  float across=1.0-smoothstep(0.18,0.5,abs(vL.x)/(uWid*0.5));',
+        '  float vv=clamp(vL.z/uLen,0.0,1.0);',
+        '  float along=smoothstep(0.0,0.08,vv)*smoothstep(1.0,0.78,vv);',
+        '  float n=fbm(vec2(vL.x*3.1,vL.z*1.15-uTime*2.3)+uSeed);',
+        '  a=across*along*smoothstep(0.28,0.8,n)*(0.25+0.75*uSpeed)*0.8;',
+        ' }else{', // C: stern churn — วงกลมปั่นวุ่นหลังเรือ
+        '  vec2 p=vec2(vL.x/(uWid*0.5),vL.z/(uLen*0.5));',
+        '  float r=length(p);',
+        '  float n=fbm(vL.xz*0.8+vec2(uSeed,uTime*0.9));',
+        '  float churn=smoothstep(1.15,0.12,r+n*0.42);',
+        '  a=churn*(0.38+0.62*uSpeed);',
+        ' }',
+        ' a*=uInt*uFade;',
+        ' if(a<0.012) discard;',
+        ' gl_FragColor=vec4(0.88,0.95,0.98,a);',
+        '}'
+      ].join('\n')
+    });
+    return foamMat;
+  }
+  function foamBefore(){
+    if(!foamMat) return;
+    const d=this.userData, u=foamMat.uniforms;
+    u.uMode.value=d.mode; u.uLen.value=d.len; u.uWid.value=d.wid; u.uSeed.value=d.seed;
+    u.uTime.value=elapsed; u.uSpeed.value=d.fx.visSpeed; u.uInt.value=d.int; u.uFade.value=d.fade;
+  }
+  function flatFoamMesh(mode,w,len,seed,intensity){
+    const geo=new THREE.PlaneGeometry(w,len,1,4);
+    geo.rotateX(-Math.PI/2); geo.translate(0,0,len/2); // โคน z=0 อยู่ที่หัวแผ่น
+    const m=new THREE.Mesh(geo,getFoamMat());
+    m.renderOrder=3; m.visible=false;
+    m.userData={mode:mode,wid:w,len:len,seed:seed,int:intensity,fade:1,fx:null};
+    m.onBeforeRender=foamBefore;
+    return m;
+  }
+  function getWakeMat(){
+    if(wakeMat||!THREE) return wakeMat;
+    wakeMat=new THREE.ShaderMaterial({
+      transparent:true, depthWrite:false,
+      uniforms:{uTime:{value:0}},
+      vertexShader:'attribute float aAlpha;varying float vA;varying vec2 vUv;void main(){vA=aAlpha;vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+      fragmentShader:[
+        'varying float vA;varying vec2 vUv;uniform float uTime;',
+        'float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}',
+        'float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*p);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}',
+        'float fbm(vec2 p){float v=.55*noise(p);p=mat2(1.6,-1.2,1.2,1.6)*p;v+=.3*noise(p);return v+.15*noise(mat2(1.6,-1.2,1.2,1.6)*p);}',
+        'void main(){',
+        ' float n=fbm(vec2(vUv.x*3.0,vUv.y*22.0)+vec2(0.0,-uTime*0.22));',
+        ' float across=smoothstep(0.0,0.2,vUv.x)*smoothstep(1.0,0.8,vUv.x);',
+        ' float a=vA*across*(0.4+0.6*n);',
+        ' if(a<0.012) discard;',
+        ' gl_FragColor=vec4(0.88,0.95,0.98,a*0.85);',
+        '}'
+      ].join('\n')
+    });
+    return wakeMat;
+  }
+  function getSprayMat(){
+    if(sprayMat||!THREE) return sprayMat;
+    sprayMat=new THREE.ShaderMaterial({
+      transparent:true, depthWrite:false,
+      uniforms:{uSize:{value:9}},
+      vertexShader:'attribute float aAlpha;varying float vA;void main(){vA=aAlpha;vec4 mv=modelViewMatrix*vec4(position,1.0);gl_PointSize=min(46.0,5.5*(150.0/max(4.0,-mv.z)));gl_Position=projectionMatrix*mv;}',
+      fragmentShader:'varying float vA;void main(){float d=length(gl_PointCoord-vec2(0.5))*2.0;float a=vA*smoothstep(1.0,0.15,d);if(a<0.01)discard;gl_FragColor=vec4(0.92,0.97,1.0,a);}'
+    });
+    return sprayMat;
+  }
+
+  const WAKE_STRIDE=6; // x,z,dx,dz,age,strength
+  const SPRAY_STRIDE=8; // x,y,z,vx,vy,vz,life,maxLife
+  function ShipWaterFX(shipState, opts){
+    this.s=shipState;
+    this.role=(opts&&opts.role)||'bot';
+    this.group=new THREE.Group();
+    this.visSpeed=0; this.turnRate=0; this.lastYaw=shipState.yaw||0; this.acc=0; this.frame=0; this.lod=0;
+    this.bow=SHIP_WATER_VFX.bow; this.hull=SHIP_WATER_VFX.hull; this.stern=SHIP_WATER_VFX.stern; this.wake=SHIP_WATER_VFX.wake; this.spray=SHIP_WATER_VFX.spray;
+    this.maxSeg=this.role==='player'?this.wake.maxSeg:Math.round(this.wake.maxSeg*.5);
+    this.sprayMax=this.role==='player'?this.spray.max:Math.round(this.spray.max*.4);
+    const seed=Math.random()*40;
+    this.bowMesh=flatFoamMesh(0,this.bow.width,this.bow.len,seed,1.25);
+    this.bowMesh.position.set(0,.045,-(SHIP_LEN/2-.15));
+    this.hullL=flatFoamMesh(1,this.hull.width,this.hull.len,seed+3.1,this.hull.opacity);
+    this.hullR=flatFoamMesh(1,this.hull.width,this.hull.len,seed+7.7,this.hull.opacity);
+    this.hullL.position.set(-(SHIP_BEAM/2+.16),.04,.3);
+    this.hullR.position.set((SHIP_BEAM/2+.16),.04,.3);
+    this.sternMesh=flatFoamMesh(2,this.stern.width,this.stern.len,seed+11.3,1);
+    this.sternMesh.position.set(0,.05,SHIP_LEN/2-.35);
+    this.group.add(this.bowMesh); this.group.add(this.hullL); this.group.add(this.hullR); this.group.add(this.sternMesh);
+    [this.bowMesh,this.hullL,this.hullR,this.sternMesh].forEach(m=>{m.userData.fx=this;});
+    // D: persistent wake — สตริปโค้งตามเส้นทางจริง เก็บ sample ย้อนหลัง
+    this.wakeCount=0;
+    this.wakeArr=new Float32Array(this.maxSeg*WAKE_STRIDE);
+    const vcount=(this.maxSeg+1)*2;
+    this.wakePos=new Float32Array(vcount*3);
+    this.wakeAlpha=new Float32Array(vcount);
+    this.wakeUv=new Float32Array(vcount*2);
+    const idx=new Uint16Array(this.maxSeg*6);
+    for(let i=0;i<this.maxSeg;i++){
+      const a=i*2, o=i*6;
+      idx[o]=a; idx[o+1]=a+1; idx[o+2]=a+2; idx[o+3]=a+1; idx[o+4]=a+3; idx[o+5]=a+2;
+    }
+    const wg=new THREE.BufferGeometry();
+    this.wakePosAttr=new THREE.BufferAttribute(this.wakePos,3); this.wakePosAttr.setUsage(THREE.DynamicDrawUsage);
+    this.wakeAlphaAttr=new THREE.BufferAttribute(this.wakeAlpha,1); this.wakeAlphaAttr.setUsage(THREE.DynamicDrawUsage);
+    wg.setAttribute('position',this.wakePosAttr);
+    wg.setAttribute('aAlpha',this.wakeAlphaAttr);
+    wg.setAttribute('uv',new THREE.BufferAttribute(this.wakeUv,2));
+    wg.setIndex(new THREE.BufferAttribute(idx,1));
+    wg.setDrawRange(0,0);
+    this.wakeMesh=new THREE.Mesh(wg,getWakeMat());
+    this.wakeMesh.frustumCulled=false; this.wakeMesh.renderOrder=2;
+    // spray — เฉพาะโดนน้ำแตกที่หัวเรือ/ด้านนอกวงเลี้ยว
+    this.sprayArr=new Float32Array(this.sprayMax*SPRAY_STRIDE);
+    this.sprayPos=new Float32Array(this.sprayMax*3);
+    this.sprayAlpha=new Float32Array(this.sprayMax);
+    const sg=new THREE.BufferGeometry();
+    this.sprayPosAttr=new THREE.BufferAttribute(this.sprayPos,3); this.sprayPosAttr.setUsage(THREE.DynamicDrawUsage);
+    this.sprayAlphaAttr=new THREE.BufferAttribute(this.sprayAlpha,1); this.sprayAlphaAttr.setUsage(THREE.DynamicDrawUsage);
+    sg.setAttribute('position',this.sprayPosAttr);
+    sg.setAttribute('aAlpha',this.sprayAlphaAttr);
+    sg.setDrawRange(0,0);
+    this.sprayMesh=new THREE.Points(sg,getSprayMat());
+    this.sprayMesh.frustumCulled=false; this.sprayMesh.renderOrder=4;
+    // debug anchors
+    this.debugGroup=new THREE.Group();
+    const dbgGeo=new THREE.BoxGeometry(.5,.5,.5);
+    const dbgMat=new THREE.MeshBasicMaterial({color:0xff4fd8,depthTest:false});
+    [[0,0,-SHIP_LEN/2],[0,0,SHIP_LEN/2],[-SHIP_BEAM/2,0,0],[SHIP_BEAM/2,0,0]].forEach(p=>{
+      const d=new THREE.Mesh(dbgGeo,dbgMat); d.position.set(p[0],p[1]+.25,p[2]); this.debugGroup.add(d);
+    });
+    this.debugGroup.visible=false;
+    this.group.add(this.debugGroup);
+    if(scene){
+      scene.add(this.group); scene.add(this.wakeMesh); scene.add(this.sprayMesh);
+    }
+  }
+  ShipWaterFX.prototype.shipMotion=function(){
+    const s=this.s;
+    if(this.role==='player'){
+      const hv=headingVec(s.yaw||0);
+      const along=(s.vx||0)*hv.x+(s.vz||0)*hv.z;
+      return {x:s.x,z:s.z,yaw:s.yaw||0,speed:Math.hypot(s.vx||0,s.vz||0),reverse:along<-.01};
+    }
+    return {x:s.x,z:s.z,yaw:s.yaw||0,speed:s.alive===false?0:(s.speed||0),reverse:false};
+  };
+  ShipWaterFX.prototype.lodLevel=function(){
+    if(this.role==='player'||!camera) return 0;
+    const d=Math.hypot(camera.position.x-this.s.x,camera.position.z-this.s.z);
+    return d<SHIP_WATER_VFX.lod.full?0:(d<SHIP_WATER_VFX.lod.medium?1:2);
+  };
+  ShipWaterFX.prototype.dropWake=function(x,z,px,pz,str){
+    if(this.wakeCount>=this.maxSeg){ this.wakeArr.copyWithin(0,WAKE_STRIDE); this.wakeCount=this.maxSeg-1; }
+    const o=this.wakeCount*WAKE_STRIDE;
+    let dx=x-px, dz=z-pz;
+    const l=Math.hypot(dx,dz);
+    if(l<1e-4){ const h=headingVec(this.s.yaw||0); dx=-h.x; dz=-h.z; } else { dx/=l; dz/=l; }
+    this.wakeArr[o]=x; this.wakeArr[o+1]=z; this.wakeArr[o+2]=dx; this.wakeArr[o+3]=dz;
+    this.wakeArr[o+4]=0; this.wakeArr[o+5]=str;
+    this.wakeCount++;
+  };
+  ShipWaterFX.prototype.spawnSpray=function(x,z,vx,vy,vz){
+    for(let i=0;i<this.sprayMax;i++){
+      const o=i*SPRAY_STRIDE;
+      if(this.sprayArr[o+6]>0) continue;
+      this.sprayArr[o]=x; this.sprayArr[o+1]=.15; this.sprayArr[o+2]=z;
+      this.sprayArr[o+3]=vx; this.sprayArr[o+4]=vy; this.sprayArr[o+5]=vz;
+      this.sprayArr[o+6]=this.sprayArr[o+7]=.55+Math.random()*.45;
+      return;
+    }
+  };
+  ShipWaterFX.prototype.reset=function(){
+    this.wakeCount=0; this.acc=0; this.visSpeed=0; this.turnRate=0; this.lastYaw=this.s.yaw||0;
+    if(this.wakeMesh) this.wakeMesh.geometry.setDrawRange(0,0);
+    if(this.sprayMesh) this.sprayMesh.geometry.setDrawRange(0,0);
+    for(let i=0;i<this.sprayMax;i++) this.sprayArr[i*SPRAY_STRIDE+6]=0;
+    this.lastX=this.s.x; this.lastZ=this.s.z;
+  };
+  ShipWaterFX.prototype.update=function(dt){
+    if(!scene) return;
+    this.frame++;
+    const m=this.shipMotion();
+    const maxSp=this.role==='player'?SHIP_SPEED*SPEED_MUL[SPEED_MUL.length-1]:SHIP_SPEED;
+    const target=clamp(m.speed/Math.max(1,maxSp),0,1);
+    this.visSpeed+=(target-this.visSpeed)*Math.min(1,dt*3.2);
+    const dyaw=wrapPi(m.yaw-this.lastYaw); this.lastYaw=m.yaw;
+    this.turnRate+=(dyaw/Math.max(dt,1e-4)-this.turnRate)*Math.min(1,dt*4);
+    const lv=this.lodLevel();
+    if(lv===2&&this.frame%3!==0) return; // ไกลมาก: อัปเดตเว้นเฟรม
+    const vis=this.visSpeed, fwd=headingVec(m.yaw), rgt=turretRight(m.yaw);
+    this.group.position.set(m.x,0,m.z);
+    this.group.rotation.y=m.yaw;
+    this.debugGroup.visible=shipWaterVFXDebug;
+    const moving=m.speed>.8;
+    // A: bow V-foam ตามความเร็ว ถอยหลังจางลง (หัวเรือไม่ได้กดน้ำ)
+    this.bowMesh.visible=SHIP_WATER_VFX.bow.enabled&&moving&&!m.reverse&&vis>.05;
+    // B: hull contact foam สองข้าง
+    const hullOn=SHIP_WATER_VFX.hull.enabled&&moving&&lv<2;
+    this.hullL.visible=hullOn; this.hullR.visible=hullOn;
+    // C: stern churn — ถอยหลังโยกไปกดที่หัวเรือแทน
+    this.sternMesh.visible=SHIP_WATER_VFX.stern.enabled&&moving&&vis>.05;
+    if(this.sternMesh.visible){
+      this.sternMesh.position.z=m.reverse?-(SHIP_LEN/2-.35):(SHIP_LEN/2-.35);
+      this.sternMesh.rotation.y=m.reverse?Math.PI:0;
+      this.sternMesh.scale.set(1,1,.8+vis*1.3);
+    }
+    // D: persistent wake — หย่อน sample ตามระยะจริง เก็บโค้งตามเส้นทาง
+    if(SHIP_WATER_VFX.wake.enabled){
+      if(this.lastX==null){ this.lastX=m.x; this.lastZ=m.z; }
+      const stepD=Math.hypot(m.x-this.lastX,m.z-this.lastZ);
+      if(moving&&stepD>0){
+        this.acc+=stepD;
+        const sd=this.wake.sampleDist*(lv===2?2.2:1);
+        while(this.acc>=sd){
+          this.acc-=sd;
+          const back=m.reverse?1:-1;
+          const wx=m.x+fwd.x*back*(SHIP_LEN/2-.3), wz=m.z+fwd.z*back*(SHIP_LEN/2-.3);
+          this.dropWake(wx,wz,this.lastX,this.lastZ,.35+vis*.65);
+          this.lastX=m.x; this.lastZ=m.z;
+        }
+        if(stepD>this.wake.sampleDist*4){ this.lastX=m.x; this.lastZ=m.z; this.acc=0; } // เทเลพอร์ต/เกิดใหม่: ไม่ลากรอยข้ามแผนที่
+      } else if(!moving){ this.lastX=m.x; this.lastZ=m.z; }
+      const life=this.wake.lifetime*(lv===0?1:(lv===1?.7:.45));
+      const cap=Math.max(4,Math.round(this.maxSeg*(lv===0?1:(lv===1?.6:.3))));
+      let n=0;
+      for(let i=0;i<this.wakeCount;i++){
+        const o=i*WAKE_STRIDE;
+        this.wakeArr[o+4]+=dt;
+        if(this.wakeArr[o+4]<life) n++;
+      }
+      if(n<this.wakeCount){ // ตัดอันตายออก (shift)
+        let w=0;
+        for(let i=0;i<this.wakeCount;i++){
+          const o=i*WAKE_STRIDE;
+          if(this.wakeArr[o+4]<life){ if(w!==i) this.wakeArr.copyWithin(w*WAKE_STRIDE,o*WAKE_STRIDE,WAKE_STRIDE); w++; }
+        }
+        this.wakeCount=w;
+      }
+      const count=Math.min(this.wakeCount,cap);
+      for(let i=0;i<count;i++){
+        const o=i*WAKE_STRIDE;
+        const age=this.wakeArr[o+4], str=this.wakeArr[o+5];
+        const w=Math.min(this.wake.maxWidth,this.wake.baseWidth*(0.6+0.4*str)*(1+age*this.wake.grow));
+        const hx=w*.5, sx=-this.wakeArr[o+3], sz=this.wakeArr[o+2];
+        const x=this.wakeArr[o], z=this.wakeArr[o+1];
+        const p=i*6;
+        this.wakePos[p]=x+sx*hx; this.wakePos[p+1]=.03; this.wakePos[p+2]=z+sz*hx;
+        this.wakePos[p+3]=x-sx*hx; this.wakePos[p+4]=.03; this.wakePos[p+5]=z-sz*hx;
+        const a=str*(1-age/life)*.55;
+        this.wakeAlpha[i*2]=a; this.wakeAlpha[i*2+1]=a;
+        this.wakeUv[i*4]=0; this.wakeUv[i*4+1]=i/(this.maxSeg); this.wakeUv[i*4+2]=1; this.wakeUv[i*4+3]=i/(this.maxSeg);
+      }
+      this.wakePosAttr.needsUpdate=true; this.wakeAlphaAttr.needsUpdate=true;
+      this.wakeMesh.geometry.setDrawRange(0,Math.max(0,(count-1)*6));
+      this.wakeMesh.visible=count>1;
+    }
+    // spray: หัวแตกตอนเร็ว + ด้านนอกวงเลี้ยวตอนหักคม
+    if(SHIP_WATER_VFX.spray.enabled&&lv===0){
+      const rate=vis<.45?0:(vis-.45)*26*dt*(this.role==='player'?1:.5);
+      if(Math.random()<rate&&moving){
+        const side=Math.random()<.5?-1:1;
+        const bx=m.x+fwd.x*(SHIP_LEN/2)*(m.reverse?-1:1), bz=m.z+fwd.z*(SHIP_LEN/2)*(m.reverse?-1:1);
+        this.spawnSpray(bx+rgt.x*side*.7, bz+rgt.z*side*.7,
+          fwd.x*(1.5+vis*3)*(m.reverse?-1:1)+rgt.x*side*(0.8+vis*1.6),
+          1.6+vis*2.4+Math.random(),
+          fwd.z*(1.5+vis*3)*(m.reverse?-1:1)+rgt.z*side*(0.8+vis*1.6));
+      }
+      const turn=Math.abs(this.turnRate);
+      if(turn>.55&&moving&&vis>.3){
+        const side=this.turnRate>0?-1:1; // ด้านนอกของวงเลี้ยว
+        const bx=m.x-fwd.x*1.5+rgt.x*side*(SHIP_BEAM/2+.2), bz=m.z-fwd.z*1.5+rgt.z*side*(SHIP_BEAM/2+.2);
+        this.spawnSpray(bx,bz, rgt.x*side*(1.2+vis*2), 1.4+Math.random()*1.6, rgt.z*side*(1.2+vis*2));
+      }
+      let alive=0;
+      for(let i=0;i<this.sprayMax;i++){
+        const o=i*SPRAY_STRIDE;
+        if(this.sprayArr[o+6]<=0){ this.sprayAlpha[i]=0; continue; }
+        this.sprayArr[o+6]-=dt;
+        if(this.sprayArr[o+6]<=0){ this.sprayAlpha[i]=0; continue; }
+        this.sprayArr[o+3]*=(1-dt*1.6); this.sprayArr[o+5]*=(1-dt*1.6);
+        this.sprayArr[o+4]-=9.5*dt;
+        this.sprayArr[o]+=this.sprayArr[o+3]*dt; this.sprayArr[o+1]+=this.sprayArr[o+4]*dt; this.sprayArr[o+2]+=this.sprayArr[o+5]*dt;
+        if(this.sprayArr[o+1]<0){ this.sprayArr[o+6]=0; this.sprayAlpha[i]=0; continue; }
+        alive++;
+        this.sprayPos[i*3]=this.sprayArr[o]; this.sprayPos[i*3+1]=this.sprayArr[o+1]; this.sprayPos[i*3+2]=this.sprayArr[o+2];
+        const lf=this.sprayArr[o+6]/this.sprayArr[o+7];
+        this.sprayAlpha[i]=Math.min(1,lf*1.6)*.55;
+      }
+      this.sprayPosAttr.needsUpdate=true; this.sprayAlphaAttr.needsUpdate=true;
+      this.sprayMesh.geometry.setDrawRange(0,this.sprayMax);
+      this.sprayMesh.visible=alive>0;
+    } else this.sprayMesh.visible=false;
+  };
+  ShipWaterFX.prototype.dispose=function(){
+    if(this.group&&scene) scene.remove(this.group);
+    if(this.wakeMesh&&scene) scene.remove(this.wakeMesh);
+    if(this.sprayMesh&&scene) scene.remove(this.sprayMesh);
+    if(this.wakeMesh) this.wakeMesh.geometry.dispose();
+    if(this.sprayMesh) this.sprayMesh.geometry.dispose();
+    this.group=null; this.wakeMesh=null; this.sprayMesh=null;
+  };
+
   function tickShell(o,dt){
     if(!o.alive) return;
     o.vy-=G*SHELL_MASS*dt;
@@ -1113,6 +1533,7 @@
         s.mesh.position.set(s.x, bob, s.z);
         s.mesh.rotation.y=s.yaw||0;
       }
+      if(s.vfx) s.vfx.update(dt);
       if(s.label){
         fitWordLabel(s.label,s,camera);
         faceWordToCamera(s.label, camera);
@@ -1202,13 +1623,15 @@
     const wantFov=player.scope?FOV_Z:FOV_N;
     camera.fov+=(wantFov-camera.fov)*0.18;
     camera.updateProjectionMatrix();
-    const yaw=player.camYaw;
+    const phi=player.yaw+CAM_DIAG+(player.camYaw||0); // ฐานกล้อง: หน้า-เฉียงขวา 45° ของหัวเรือ ลากซีกซ้ายหมุนรอบเรือได้
     const zoom=player.scope?1.55:1;
-    const back=14.8/zoom, height=(6.2+shake*.08)/Math.sqrt(zoom);
-    const behind=headingVec(yaw);
-    camera.position.set(player.x-behind.x*back, height, player.z-behind.z*back);
+    const dist=CAM_DIST/zoom, height=(CAM_H+shake*.08)/Math.sqrt(zoom);
+    const off=headingVec(phi);
+    camera.position.set(player.x-off.x*dist, height, player.z-off.z*dist);
     const look=cameraLookTarget();
-    camera.lookAt(look.x, look.y, look.z);
+    const v=headingVec(phi-(player.scope?CAM_SWING*.42:CAM_SWING)); // มองเฉียงข้ามหัวเรือออกไปทางทะเลด้านหน้า เรือจึงอยู่ขอบเฟรม ไม่บังเป้า
+    const la=player.scope?CAM_LOOK*.5:CAM_LOOK;
+    camera.lookAt(look.x+v.x*la, look.y, look.z+v.z*la);
   }
 
   function renderHud(){
@@ -1229,6 +1652,8 @@
 
   function step(dt){
     elapsed+=dt; tickPlayer(dt); tickLetters(); tickFleet(dt); shells.forEach(s=>tickShell(s,dt)); tickFx(dt);
+    if(waterTimeU) waterTimeU.value=elapsed;
+    if(waterVFX) waterVFX.update(dt);
   }
   function draw(){
     updateCamera();
@@ -1255,6 +1680,7 @@
     stuckAt=-99;
     player.auto=0; player.camYaw=0; player.scope=false; player.aimX=0; player.aimZ=NEAR_Z-10;
     dropIceAll();
+    if(waterVFX) waterVFX.reset();
     if(root) root.classList.remove('wsh-scoped');
     if(hud.autoFwd) hud.autoFwd.setAttribute('aria-pressed','false');
     if(hud.autoBack) hud.autoBack.setAttribute('aria-pressed','false');
@@ -1292,7 +1718,7 @@
       <h2>⚓ กองเรือคำศัพท์</h2>
       <p>เก็บการ์ดตัวอักษรบนน้ำ ถือได้ครั้งละ 1 ใบ · เก็บผิดกด DROP ทิ้ง แล้วแล่นไปฝากที่บ้านตัวเอง (เกาะสูงวงทอง)</p>
       <p>กติกาคำและเหรียญเหมือน Frontline: สะกดคำจากตัวอักษรในบ้านได้ 1,000 เหรียญ เข้ากระเป๋าเหรียญส่วนกลาง</p>
-      <p>เดินหน้าจากท้ายไปหัวเรือ · ถอยได้ · ซีกซ้ายลากหมุนกล้อง · ซีกขวาลากซ้ายขวาหันป้อม ลากขึ้นลงยกกระบอก · FIRE จาก 4 กระบอก</p>
+      <p>เดินหน้าจากท้ายไปหัวเรือ · ถอยได้ · ซีกซ้ายลากหมุนกล้อง · ซีกขวาลากซ้ายขวาหันป้อม ลากขึ้นลงยกกระบอก · FIRE จากปืนหัว-ท้ายเรือ 2 จุดยิง</p>
       <button type="button">⚓ ออกทะเล!</button></div>`;
     hud.intro.querySelector('button').onclick=()=>{
       hud.intro.hidden=true; paused=false;
@@ -1452,6 +1878,7 @@
     try{
       THREE=window.THREE;
       if(!THREE) throw new Error('no THREE');
+      try{ await loadShipGLB(); }catch(e){ console.warn('WordShip GLB fallback to cute ship', e); shipStyle='cute'; }
       buildDom();
       root.style.display='block';
       if(!scene) buildWorld();
@@ -1483,14 +1910,16 @@
   }
 
   window.WordShip={ open, close, refreshLock:typeof refreshWordShipLock==='function'?refreshWordShipLock:function(){}, _t:{
-    MINLEN, MAXLEN, HIT_COIN, PERFECT_BONUS, HEARTS, MAX_FLEET, WATER_HORIZON, FAR_SCALE, NEAR_SCALE, SHIP_SPEED, SPEED_NAMES, SPEED_MUL, G, SHELL_MASS, MUZZLE, ELEV, ELEV_MIN, ELEV_MAX, ELEV_SWIPE, ELEV_SWIPE_FINE, NEAR_Z, FAR_Z, SEA_LEFT, SEA_RIGHT, SEA_BACK, SEA_MESH, BOW_LEN, FOV_N, FOV_Z, NO_GAME_OVER, STUCK_MSG, TURRET_SWIPE, TURRET_SWIPE_FINE, MAX_SHELLS, BARREL_COUNT, TURRET_FWD, TURRET_AFT, LETTER_REWARD, PICKUP_R, HOME_R, STORY_H, HOME, SPIRE, ALPHABET, ICE_SHOW, ICE_HIDE, CARD_W, CARD_H, CARD_FADE, MAX_SPLASH,
+    MINLEN, MAXLEN, HIT_COIN, PERFECT_BONUS, HEARTS, MAX_FLEET, WATER_HORIZON, FAR_SCALE, NEAR_SCALE, SHIP_SPEED, SPEED_NAMES, SPEED_MUL, G, SHELL_MASS, MUZZLE, ELEV, ELEV_MIN, ELEV_MAX, ELEV_SWIPE, ELEV_SWIPE_FINE, NEAR_Z, FAR_Z, SEA_LEFT, SEA_RIGHT, SEA_BACK, SEA_MESH, BOW_LEN, FOV_N, FOV_Z, NO_GAME_OVER, STUCK_MSG, TURRET_SWIPE, TURRET_SWIPE_FINE, MAX_SHELLS, BARREL_COUNT, TURRET_FWD, TURRET_AFT, LETTER_REWARD, PICKUP_R, HOME_R, STORY_H, HOME, SPIRE, ALPHABET, ICE_SHOW, ICE_HIDE, CARD_W, CARD_H, CARD_FADE, MAX_SPLASH, SHIP_WATER_VFX,
     pool, takeWord, spawnWave, pickCourse, waterLimits, depthScale, applyShipScale, apparentHull, labelWorldScale, fitWordLabel, courseProgress, fire, hitShip, setViewport, setPlayer, resetRun, step, awardHit, adminAllowed, shipSpeed, playerDriveSpeed, setSpeedLevel,
     shellLandingAngle, tickShell, faceWordToCamera, headingFromDelta, headingVec, barrelDir, bowOf, sternOf, driveAlongHeading, keelStep, pointerHalf, applyAimSwipe, yawOnKeel, setAuto, setScope, muzzle, muzzles, hurt, cameraLookTarget, wordMarks, hasWord, completeWord, tryPickup, tryDeposit, dropCarried, placeLetter, spawnLetters, setStored, setCarried, creditReward, settleCoinSession, beginCoinSession, walletCoins, remainNeeded, neededLetterHints, placeHint, playerLimits, iceWanted, tickIce, dropIceAll, shellSplashPoint, aimSplash, letterOccludesShip, fadeLetterCard, poseFireball, warnStuck, playFireClip, fireSplash,
     get word(){return word;}, get fleet(){return fleet;}, get shells(){return shells;},
+    get shipStyle(){return shipStyle;}, get waterDebug(){return shipWaterVFXDebug;},
     get score(){return score;}, get coinsRun(){return coinsRun;}, get hearts(){return hearts;},
     get wordsDone(){return wordsDone;}, get misses(){return misses;}, get wave(){return wave;},
     get stored(){return stored;}, get carried(){return carried;}, get letters(){return fieldLetters;},
     get player(){return player;}, get running(){return running;}, get iceWalls(){return iceWalls;},
-    setRunning(v){running=!!v;}, setPaused(v){paused=!!v;}, setHoldDrive(v){holdDrive=v||0;}, setHoldTurn(v){holdTurn=v||0;}, settleScoreRun
+    setRunning(v){running=!!v;}, setPaused(v){paused=!!v;}, setHoldDrive(v){holdDrive=v||0;}, setHoldTurn(v){holdTurn=v||0;}, settleScoreRun,
+    setWaterDebug(v){shipWaterVFXDebug=!!v; return shipWaterVFXDebug;}, getWaterVFX(){return waterVFX;}
   }};
 })();
