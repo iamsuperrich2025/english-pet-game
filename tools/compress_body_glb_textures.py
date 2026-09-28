@@ -3,7 +3,7 @@
 """รอบ 1612: บีบเท็กซ์เจอร์ฝังใน body GLB — PNG→JPEG (ทุกภาพ OPAQUE ไม่ใช้ alpha)
 - baseColor: คงมิติเดิม (2048) q86 · normal: คงมิติเดิม q92 (normal ไวต่ออาร์ทิแฟกต์)
 - metallicRoughness: ย่อเหลือ 1024 q85 (ข้อมูลความถี่ต่ำ ไม่จำเป็นต้องละเอียด)
-- กัน idempotent: ภาพที่เป็น JPEG แล้วจะข้าม · ใช้ได้กับทั้งต้นฉบับ characters/ และ runtime-models/
+- กัน idempotent: ภาพที่เป็น JPEG แล้วจะข้าม · ใช้ได้กับทั้งต้นฉบับ characters/ + runtime-models/ + minigames/robot/ (รอบต่อ 1613)
 """
 import struct, json, io, os, sys
 from PIL import Image
@@ -119,6 +119,12 @@ def main():
             print('  missing: %s' % p)
             continue
         compress(p)
+    # รอบต่อ 1613: หุ่นยนต์ร้ายในโลกหุ่นยนต์นักรบ (minigames/robot/)
+    robot = os.path.join(root, 'minigames', 'robot', 'badRobot_walking_2_inplace.glb')
+    if os.path.exists(robot):
+        compress(robot)
+    else:
+        print('  missing: %s' % robot)
 
 if __name__ == '__main__':
     main()
