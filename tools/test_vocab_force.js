@@ -103,6 +103,10 @@ assert(css.includes('.vf-quest.is-carry'),'carrier arrow styled differently from
 assert(combat.includes("onBotHit(peer.id, dmg, atk.kind === 'kick' ? 'K' : 'P')")&&combat.includes('peer.local && !peer.bot'),'melee hits bots directly instead of skipping them as local');
 assert(read('minigames/vocab-force/combat/ground-slam-controller.js').includes("deps.onBotHit(peer.id, pvpDmg, 'M')"),'slam fire line damages bots');
 assert(read('minigames/vocab-force/effects/hostile-orb-manager.js').includes("deps.onBotHit(peer.id, T.DEFLECTED_PVP_DMG || 300, 'G')"),'deflected orbs damage bots');
+/* รอบ 1611: โหลดไวขึ้น — คลิป/บอทโหลดพร้อมกัน (เดิม sequential) + คลิปเสริมบอท lazy + GLB cache 7 วัน */
+assert(botsSrc.includes('Promise.all')&&botsSrc.includes('CRITICAL')&&botsSrc.includes('LAZY')&&botsSrc.includes("'victory'"),'bots load in parallel with critical/lazy clip split (victory must be critical for onWin)');
+assert(runtime.includes('Promise.all([clipsJob, botsJob])')&&runtime.includes('bootSetLoad')&&runtime.includes('bootMax = 0'),'runtime overlaps clip+bot loading with a monotonic boot bar');
+assert(read('firebase.json').includes('runtime-models')&&read('firebase.json').includes('max-age=604800'),'GLB body files cached 7 days on hosting');
 assert(read('minigames/vocab-force/effects/energy-projectile-manager.js').includes('onBotHit(peer.id, dmg,')&&read('minigames/vocab-force/combat/energy-attack-controller.js').includes('input && input.onBotHit'),'ATTACK projectiles damage bots through the controller pass-through');
 assert(read('minigames/vocab-force/map/sedan-controller.js').includes("ctx.onBotHit(peer.id, dmg, 'kick')"),'punted car damages bots');
 /* รอบ 1606: ฮีลแพด 4 จุด (สูง 5 เท่า) + บอทหลบอาคาร/หลบซ่อน/แย่งตัวอักษร */
@@ -299,7 +303,7 @@ assert(build.includes('ui/loading/nex.avif')&&build.includes('ui/loading/lyravyn
 assert(read('minigames/vocab-force/character/playable-roster.js').includes("loading: 'ui/loading/nex.avif'")&&read('minigames/vocab-force/character/playable-roster.js').includes("loading: 'ui/loading/lyravyn.avif'"),'NEX and Lyravyn have AVIF loading images');
 assert(read('minigames/vocab-force/ui/vocab-force-hud.js').includes('vf-boot')&&read('minigames/vocab-force/ui/vocab-force-hud.js').includes('role="progressbar"'),'boot screen has a real progress bar');
 assert(css.includes('vfBootDrift')&&css.includes('vfBootPetal')&&read('minigames/vocab-force/ui/vocab-force-hud.js').includes('vf-boot-fx'),'loading art has a subtle motion overlay');
-assert(runtime.includes("hud.setLoad(0.18")&&runtime.includes("hud.setLoad(0.62"),'loading bar follows attach/clip/enter progress');
+assert(runtime.includes("hud.setLoad(0.18")&&runtime.includes("bootSetLoad(0.94"),'loading bar follows attach/clip/enter progress');
 assert(!build.includes('characters/Lyravyn/animations/ly_Run.glb')&&!build.includes('characters/Lyravyn/animations'),'Lyravyn 33MB duplicate GLBs are not in the production copy list');
 
 const animDir=path.join(root,'minigames/vocab-force/characters/next/animations');

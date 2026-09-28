@@ -196,15 +196,34 @@
 
   BotManager.prototype.start = async function(count, onProgress){
     count = Math.max(0, Math.min(9, count | 0));
-    const clips = ['run', 'punch', 'kick', 'jump', 'block', 'victory'];
+    /* รอบ 1611: โหลดบอทพร้อมกัน (เดิมทีละตัว sequential ทำให้ค้างหน้าโหลด)
+       CRITICAL = คลิปที่ต้องพร้อมก่อนเริ่มเกม · LAZY = เสริม โหลดตามหลังแบบไม่บล็อก */
+    const CRITICAL = ['run', 'punch', 'kick', 'victory'];
+    const LAZY = ['jump', 'block'];
+    let done = 0;
+    const total = count * (1 + CRITICAL.length);
+    const tick = function(){
+      done++;
+      if(onProgress) onProgress(done / total);
+    };
     for(let i = 0; i < count; i++){
       const bot = this._makeBot(i, count);
       this.bots.push(bot);
+    }
+    await Promise.all(this.bots.map(async function(bot){
       try{
         await bot.ctl.attach(this.scene, bot.def);
-        for(let c = 0; c < clips.length; c++){
-          try{ await bot.ctl.ingestClip(clips[c]); }catch(_){}
+        tick();
+        for(let c = 0; c < CRITICAL.length; c++){
+          try{ await bot.ctl.ingestClip(CRITICAL[c]); }catch(_){}
+          tick();
         }
+        /* คลิปเสริมโหลดตามหลัง ไม่บล็อกจังหวะเริ่มเกม */
+        (async function(){
+          for(let c = 0; c < LAZY.length; c++){
+            try{ await bot.ctl.ingestClip(LAZY[c]); }catch(_){}
+          }
+        })();
         bot.ctl.pivot.visible = false;
         /* รอบ 1603: ป้ายชื่อ + แถบ HP เหนือหัวบอท เหมือนผู้เล่นจริง */
         bot.tag = VF.NameTag ? new VF.NameTag(bot.name, {y: 2.58}) : null;
@@ -217,8 +236,7 @@
       }catch(err){
         console.warn('[VocabForce] bot load skip', bot.name, err);
       }
-      if(onProgress) onProgress((i + 1) / count);
-    }
+    }, this));
     return this.bots;
   };
 

@@ -31,18 +31,28 @@
     return {x: (v.x * 0.5 + 0.5) * w, y: (-v.y * 0.5 + 0.5) * h};
   }
 
+  /* รอบ 1611: แถบโหลดเดินหน้าอย่างเดียว (กันเด้งถอยหลังตอนโหลดทับซ้อน) — bootMax เป็นเพดาน */
+  let bootMax = 0;
+  function bootSetLoad(frac, label, picked){
+    bootMax = Math.max(bootMax, Math.min(frac, 1));
+    if(hud && hud.setLoad) hud.setLoad(bootMax, label, picked);
+  }
+
   async function loadClips(def){
     /* รอบ 1570: lift/throw ต้องถูก ingest เสมอ (ท่ายกค้าง+ขว้างของระบบแบกยานพาหนะ) — เดิมอยู่นอก core จึงไม่เคยถูกโหลด
-       รอบ 1589: groundSlam (ปุ่ม SLAM) ingest เสมอเหมือนกัน — GLB ท่ากระแทกพื้นของ NEX/Lyravyn */
+       รอบ 1589: groundSlam (ปุ่ม SLAM) ingest เสมอเหมือนกัน — GLB ท่ากระแทกพื้นของ NEX/Lyravyn
+       รอบ 1611: โหลดท่าพร้อมกัน (เดิมทีละคลิป sequential ช้า) */
     const states = ((def && def.core) || CORE).concat(['lift', 'throw', 'groundSlam', 'knockDown', 'deflect']);
     const extra = (def && def.optional) || ['victory', 'heavyKick'];
     const total = states.length;
     const label = (def && def.displayName) || 'NEX';
-    for(let i = 0; i < total; i++){
-      try{ await player.ingestClip(states[i]); }
-      catch(err){ console.warn('[VocabForce] clip skip', states[i], err); }
-      hud.setLoad((i + 1) / total * 0.4 + 0.22, 'กำลังโหลดท่า ' + label);
-    }
+    let done = 0;
+    await Promise.all(states.map(async function(state){
+      try{ await player.ingestClip(state); }
+      catch(err){ console.warn('[VocabForce] clip skip', state, err); }
+      done++;
+      bootSetLoad(done / total * 0.4 + 0.22, 'กำลังโหลดท่า ' + label + ' ' + done + '/' + total);
+    }));
     extra.forEach(function(state){
       player.ingestClip(state).catch(function(){});
     });
@@ -822,6 +832,7 @@
       picker.hide();
       hud.root.classList.remove('is-selecting');
       hud.root.classList.add('is-booting');
+      bootMax = 0; /* รอบ 1611: รีเซ็ตเพดานแถบโหลดทุกครั้งที่เปิดใหม่ */
       hud.setLoad(0.04, 'กำลังเตรียมโลก', picked);
       await loadThree();
       THREE = root.THREE;
@@ -917,13 +928,8 @@
       attachSelfLabel();
       if(trails) trails.bind(player);
       if(fireTrail && fireTrail.bind) fireTrail.bind(player);
-      hud.setLoad(0.22, 'กำลังโหลดแอนิเมชัน', picked);
-      await loadClips(picked);
-      hud.setLoad(0.58, 'กำลังเตรียมรถบรรทุกน้ำมัน', picked);
-      await tankerLoad;
-      hud.setLoad(0.60, 'กำลังเตรียมรถยนต์', picked);
-      await sedanLoad;
-      hud.setLoad(0.62, 'กำลังเข้าสนาม', picked);
+      /* รอบ 1611: สร้างระบบกลางก่อน แล้วโหลดคลิป+บอทพร้อมกัน (เดิมรอทีละขั้น sequential ทำให้ค้างหน้าโหลด)
+         tanker/sedan เริ่มโหลดตั้งแต่ 0.10 จึง await ทีหลังเพื่อให้โหลดทับซ้อนกัน */
       round = new VF.VocabularyRoundController();
       combat = new VF.CombatController();
       input = new VF.VocabForceInput();
@@ -958,12 +964,17 @@
         });
       };
       if(hud.setBootPlayers && VF._t.lobbySlots) hud.setBootPlayers(VF._t.lobbySlots({net: net, picked: picked, bots: [], selfName: playerName()}));
-      if(botCount > 0){
-        hud.setLoad(0.64, 'กำลังรวมผู้เล่น ' + Math.min(10, humanHere + botCount) + ' คน', picked);
-        await bots.start(botCount, function(frac){
-          if(hud.setLoad) hud.setLoad(0.64 + frac * 0.2, 'กำลังโหลดผู้เล่น ' + Math.round(frac * botCount) + '/' + botCount, picked);
-        });
-      }
+      hud.setLoad(0.22, 'กำลังโหลดแอนิเมชัน', picked);
+      const clipsJob = loadClips(picked);
+      const botsJob = botCount > 0 ? bots.start(botCount, function(frac){
+        bootSetLoad(0.64 + frac * 0.2, 'กำลังโหลดผู้เล่น ' + Math.round(frac * botCount) + '/' + botCount, picked);
+      }) : Promise.resolve();
+      await Promise.all([clipsJob, botsJob]);
+      bootSetLoad(0.86, 'กำลังเตรียมรถบรรทุกน้ำมัน', picked);
+      await tankerLoad;
+      bootSetLoad(0.90, 'กำลังเตรียมรถยนต์', picked);
+      await sedanLoad;
+      bootSetLoad(0.94, 'กำลังเข้าสนาม', picked);
       if(hud.setBootPlayers && VF._t.lobbySlots) hud.setBootPlayers(VF._t.lobbySlots({net: net, picked: picked, bots: bots.bots, selfName: playerName()}));
       beginRound();
       if(hud.setNet) hud.setNet(net.roomHud ? net.roomHud() : net.statusText());
