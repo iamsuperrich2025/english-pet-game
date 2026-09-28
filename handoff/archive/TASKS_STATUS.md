@@ -6967,3 +6967,9 @@ efreshMechaLock
 ## ⏬ ย้ายเมื่อ 2026-09-28 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
 
 - รอบ 1604 · Vocab Force อาคารหลบในสนาม (1 ชั้น×4 + 2 ชั้น×2): `map/buildings.js` ใหม่ — ผนัง/หลังคาลงกล่องชนมาตรฐาน arena (คน/บอท/ซอมบี้/ลูกพลังโดนกันครบผ่าน collide กลาง) · แผ่นชั้นสอง = กล่อง ceiling (เดินใต้ได้ ชั้นสูง 3.2 กว่าหัวกระโดด ~2.95) + walkSlabs/floorY ให้ controller กลาง (คน+บอท) และ dash ยืนชั้นบนต่อเนื่อง · บันไดเต็มแนวผนัง 4 ขั้น platform สูงพ้นแผ่นชั้นสอง 3.5 · ซอมบี้ขึ้นชั้นสองไม่ได้ = หลบบนดาดฟ้าชั้น 2 ปลอดภัยจากซอมบี้ (คนอื่นยังตีได้) · ตัวอักษรเลี่ยงฟุตปริ้นท์อาคารอัตโนมัติ (scatter เช็ก boxes)
+
+
+## ⏬ ย้ายเมื่อ 2026-09-28 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- ไฟล์: combat/heal-pad-tune.js + effects/heal-pad.js (constructor opts.x/z) + runtime/vocab-force-runtime.js (healPads[] + playerBag ใน deps) + runtime/vocab-force-bots.js (steal/hide/_route/_detour/_carrierOf) + js/ui.js + tools/test_vocab_force.js (asserts ใหม่ 8 + แก้ 3 เดิม) · unit 819 ผ่าน (fail เฉพาะ 2 ของ WIP 1597 เหมือนเดิม) · **ค้างรอบ 1607: lock เป้าหมาย slam/attack จากมุมกล้อง (งานใหญ่สุด ต้องอ่าน input/aim-markers/slam/energy ก่อน — ไฟล์ slam ชุด WIP 1597 ห้าม commit)**
+- รอบ 1605 · แก้บั๊กมองเห็นอาคารตอนอยู่ในบ้าน (ผู้ใช้ยืนยันภาพ: บ้านกลายเป็นแผ่นแบน เพราะรอบ 1604 ซ่อน shell ทั้งหลัง): แยกกลุ่ม `roofG` — ซ่อนเฉพาะหลังคาเมื่อเป้ากล้องอยู่ในอาคารต่ำกว่าระดับหลังคา · ผนัง/หน้าต่าง/กรอบประตู/พื้นชั้นสองคงอยู่ครบเหมือนยืนในบ้านจริง · update 2 จุด loop เดิม · เทสต์ 25 ผ่าน (assert roof toggle + shell คงที่) · ui.js ?v=1605
