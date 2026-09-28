@@ -7020,3 +7020,9 @@ efreshMechaLock
 
 - ไฟล์: js/mecha-zombie-robot.js + tools/test_mecha_1613.js
 - รอบต่อ 1613 · บีบเท็กซ์เจอร์หุ่นยนต์ร้าย GLB ต่อเนื่องจากเทคนิครอบ 1612: สแกนก่อน — 3 ภาพ PNG 2048² ทั้งหมด mode=RGB ไม่ใช้ alpha (material0 alphaMode=OPAQUE) ปลอดภัยแปลง JPEG · บีบผ่าน tools/compress_body_glb_textures.py — baseColor คง 2048 q86 / normal คง 2048 q92 / metallicRoughness ย่อ 1024 q85 · ผล badRobot_walking_2_inplace.glb 21.0→9.1MB (-56%, เท็กซ์เจอร์รวม 14.8→3.0MB) · เทียบภาพก่อน/หลังตาเปล่าแทบไม่ต่าง + PSNR baseColor 32.6dB / normal 26.8dB / metalRough 33.5dB · แถมลิสต์ไฟล์เข้า main() ของเครื่องมือ (idempotent — รันซ้ำ skip already JPEG ทั้ง 7 ไฟล์) · ยังไม่ได้เทสต์เรนเดอร์ในเบราว์เซอร์จริงหลังบีบ (โครง GLB parse ผ่าน + โหลดด้วยโค้ด/เครื่องมือชุดเดียวกับรอบ 1612 ที่ live อยู่)
+
+
+## ⏬ ย้ายเมื่อ 2026-09-28 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- ไฟล์: js/kart3d.js + js/pickup3d.js + tools/test_kart_entry.js + tools/test_pickup_entry.js + tools/kart/clearance.mjs + tools/kart/walls.mjs · ยืนยัน: node --check ผ่าน + test_kart_entry/test_pickup_entry/test_f1_lobby_lock PASS + walls.mjs 12,404 tests/0 failures ที่ 150 กม./ชม. (ยังไม่ได้เล่นจริงบนจอ — ถ้ายังอืดหรือเร็วเกิน บอกได้ ปรับต่อทันที)
+- รอบ 1614 · ผู้ใช้สั่ง "badRobot สูงเท่าหุ่นผู้เล่นที่บังคับ": TARGET_H 3.3→4.7m (เท่าสเกลหุ่นเรา ~4.7m/MECHA_EYE 5.0) · ตัวอักษรลอย y=3.5 ยังเหนือหัวพอดี (เท้า local -1.55 → หัวแตะ 3.15) · บอสคูณสเกลสายพันธุ์เดิมจึงใหญ่ขึ้นตาม (titan ~9.6m) · test_mecha_1613.js เพิ่ม assert TARGET_H=4.7 · ยืนยันเบราว์เซอร์จริง: GLB ฉบับบีบ 9.1MB (รอบต่อ 1613) โหลด+แนบผ่าน bbox สูง 4.70m พอดี + node check + เทสต์ผ่าน

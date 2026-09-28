@@ -91,7 +91,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/images.js** (286 บรรทัด) — ระบบตรวจหาภาพเจนอัตโนมัติ (ใช้ new Image() probe — ใช้ได้ทั้ง · file:// และ http:// ต่างจาก fetch ที่ถูกบล็อกใน file://) · โฟลเดอร์ภาพ:
 - **js/invasion3d.js** (10,581 บรรทัด) — 🛸 invasion3d.js — โลก "ยานแม่บุกโลก" (Invasion · รอบ 413 · กติกาใหม่รอบ 556) · FPS สไตล์ Delta Force ในเมืองทะเลทรายตะวันออกกลาง — ยานแม่ลำมหึมาลอยเต็มท้องฟ้า (สไตล์ ID4) · 🔤 กติการอบ 556 (ผู้ใช้สั่ง — แทนระบบแผงตัวอักษร+แกนพลังงานเดิมทั้งหมด):
 - **js/kart-access.js** (22 บรรทัด) — 🔒 Kart private preview admission. A fresh server read is required on every entry.
-- **js/kart3d.js** (364 บรรทัด) — 🏝️ รอบ 1377 — Vocab World Kart: Soft Cuboid Chibi 3D island kart profile. · Geometry/materials are shared across all colours, preview and cockpit. No raster downloads. · This module owns presentation/tuning only; F1's racing, vocabulary, reward and input engine stays shared.
+- **js/kart3d.js** (365 บรรทัด) — 🏝️ รอบ 1377 — Vocab World Kart: Soft Cuboid Chibi 3D island kart profile. · Geometry/materials are shared across all colours, preview and cockpit. No raster downloads. · This module owns presentation/tuning only; F1's racing, vocabulary, reward and input engine stays shared.
 - **js/lettercannon.js** (482 บรรทัด) — 🔤💥🏆 รางวัลรายเดือนของกระดาน Letter Cannon / Dragon Sky Siege
 - **js/lobby.js** (52 บรรทัด) — LOBBY แนวนอน — ระบบแผงรายละเอียดกลางจอ (อัพเดท 5725691826) · คลิกเมนูซ้าย → เปิดแผง (panel) ทับฉาก Lobby · เนื้อหา scroll ในแผง · การ์ดเดิมทั้งหมด (home/phone/computer/farm/collect/rank) ย้ายเข้าแผง
 - **js/lobby3d.js** (811 บรรทัด) — lobby3d.js — โมเดล 3D ตัวละครในหน้า Lobby (รอบ 114) · โหลด GLB ผู้เลี้ยง + น้อง (img/models/*.glb) · idle เบาๆ (หายใจ/โยกตัว) + เล่น animation clip จากไฟล์ (Tripo ชื่อ NlaTrack → ใช้ clip แรก)
@@ -110,7 +110,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/petshopping3d.js** (570 บรรทัด) — 🚗🐾 PET SHOPPING 3D — รอบ 1169 · โลกสั้น first-person แยกจาก Adventure3D: ร้านใกล้, GPS ชัด, · ร้านสร้างเป็นองค์ประกอบสถาปัตย์จริง ไม่ใช่กล่องแปะภาพ
 - **js/photo.js** (363 บรรทัด) — 📷 photo.js — รูปโปรไฟล์ของผู้เล่นเอง (อัปโหลดรูปแบบ Facebook) — รอบ 709 · เก็บที่ไหน: localStorage แยกก้อน (`petVocabAdventure_photo`) + RTDB `/pphoto/<uid>` · ตั้งใจ **ไม่ยัดลง state** เพราะ state ถูกเซฟขึ้น cloud ทั้งก้อนทุกครั้ง (รูป ~20KB จะทำให้เซฟบวมทุกครั้ง)
 - **js/picdict.js** (413 บรรทัด) — 🖼️ Picture Dictionary — single-page card gallery (รอบ 1123) · ยกเลิกหนังสือกาง 2 หน้า/การพลิกกระดาษ แล้วแสดงการ์ด 18 คำต่อหน้า · (6 คอลัมน์ × 3 แถว) เพื่อให้ภาพและคำอ่านใหญ่ชัดบนจอเล็ก
-- **js/pickup3d.js** (363 บรรทัด) — 🛻 Vocab World Pick-Up Truck: Kart clone with a cuboid pickup, mid speed (170 km/h). · Same island track, walls, vocabulary and rewards. No extra raster downloads.
+- **js/pickup3d.js** (364 บรรทัด) — 🛻 Vocab World Pick-Up Truck: Kart clone with a cuboid pickup, mid speed (170 km/h). · Same island track, walls, vocabulary and rewards. No extra raster downloads.
 - **js/picmatch.js** (692 บรรทัด) — 🖼️ picmatch.js — เกม "จับคู่ภาพ" (รอบ 977 · เชื่อม Picture Dictionary รอบ 1053) · 2 โหมด สลับด้วยปุ่มบนกระดาน: · "pic"  = ภาพจาก Picture Dictionary ↔ ภาพเดียวกัน
 - **js/picquiz_online.js** (608 บรรทัด) — 🌐🎧 PICQUIZ ONLINE — แข่งครูถามศัพท์จากหนังสือ · ห้องส่วนตัวด้วยรหัส 6 ตัว · สูงสุด 50 คน · เจ้าของกดเริ่ม · 10 คำ/รอบ · ฟังเสียงแล้วแตะการ์ด · คะแนนตามความเร็ว
 - **js/pmaward.js** (28 บรรทัด) — 🏆 pmaward.js — รางวัลรายเดือนของกระดานอันดับ 🖼️ จับคู่ภาพ (รอบ 979) · ผู้ใช้สั่ง 3 ส.ค. 2026: ทำแท็บ+รางวัลรายเดือน Top 10 ให้เกมจับคู่ภาพ · ใช้กติกา/โครงเดียวกับ 🔎 ค้นหาคำ (js/wsaward.js) ทุกประการ — ต่างแค่ field/ชื่อเกม
@@ -127,7 +127,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/util.js** (1,644 บรรทัด) — UTIL: เสียง / เอฟเฟกต์ / เครื่องมือทั่วไป
 - **js/vocabbook.js** (207 บรรทัด) — 📒 สมุดคำศัพท์ของฉัน + ข้อสอบทบทวนส่วนตัว (รอบ 288) · เก็บทุกคำที่เด็กเจอในเกมจับคู่/ข้อสอบทุกแบบ (รวม band) ลง state.vocabBook · ถาวรข้ามเซสชัน: {en: {th, c:ถูกกี่ครั้ง, w:ผิดกี่ครั้ง, t:เจอล่าสุด, lw:ครั้งล่าสุดผิด?}}
 - **js/wordsearch.js** (524 บรรทัด) — 🔎 wordsearch.js — เกมค้นหาคำศัพท์ (Word Search) รอบ 194 · แผงฟ้าล้ำยุคเลื่อนออกจากซ้าย · สุ่มคำไม่ซ้ำในแต่ละเกม · 🆕 รอบ 588: กระดานเกือบเต็มจอ · แถบ "หาคำเหล่านี้ให้เจอ" ย้ายขึ้นบนสุด จัดกึ่งกลาง
-- **js/wordship.js** (1,496 บรรทัด) — ⚓ wordship.js — กองเรือคำศัพท์ (Cute Word Fleet) รอบ 1477 · โลก 3D ของเล่นแบบ Vocab World Kart (Soft Cuboid) + ยิงวิถีโค้งแบบ World of Warships · คลังคำ = vocabForStudent() ชุดเดียวกับยิงเป้าคำ · ยิงใช้คลิปวงเพลิง Arena ชุดเดียว · ไม่ดึงคลังคำเน็ต
+- **js/wordship.js** (1,919 บรรทัด) — ⚓ wordship.js — กองเรือคำศัพท์ (Cute Word Fleet) รอบ 1477 · โลก 3D ของเล่นแบบ Vocab World Kart (Soft Cuboid) + ยิงวิถีโค้งแบบ World of Warships · คลังคำ = vocabForStudent() ชุดเดียวกับยิงเป้าคำ · ยิงใช้คลิปวงเพลิง Arena ชุดเดียว · ไม่ดึงคลังคำเน็ต
 - **js/wordskirmish-br.js** (57 บรรทัด) — Word Skirmish Battle Royale: deterministic rules and compact NetRoom protocol.
 - **js/wordskirmish-field.js** (31 บรรทัด) — Original low-cost tactical arena. Shared instanced geometry; no texture downloads.
 - **js/wordskirmish.js** (1,472 บรรทัด) — 🔫 wordskirmish.js — รบคำ Battle Royale + โหมดฝึก รอบ 1526 · กล้องไหล่ / SCOPE / อาวุธ / ท่าทาง / HUD · กติกาและสนามแยกโมดูล BR/Field · Soft Cuboid Chibi 3D น่ารัก · ออนไลน์ NetRoom map `skirmish` สูงสุด 8 คน
@@ -156,6 +156,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/wordskirmish.css** (117 บรรทัด) — 🔫 ยิงรบคำ — HUD น่ารักจอเตี้ย 812×375 รอบ 1480
 - **sw.js** (281 บรรทัด) — Vocab World service worker · Delivery contract: · - HTML navigations are network-first with the last valid shell as fallback.
 <!-- AUTO-FILES:END -->
+
 
 
 

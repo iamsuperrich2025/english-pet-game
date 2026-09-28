@@ -706,11 +706,11 @@ tick:9788 · frame:9796 · build:9860 · start:9942 · exitWorld:10069
 ## js/kart-access.js (22 บรรทัด · 2 รายการ)
 valid:5 · authorize:6
 
-## js/kart3d.js (364 บรรทัด · 22 รายการ)
+## js/kart3d.js (365 บรรทัด · 22 รายการ)
 softBox:11 · merge:21 · box:34 · starGeo:35 · makeKit:38 · paintMat:83
-buildCar:84 · carView:95 · steer:96 · camera:97 · applyEnvironment:108 · boundaryPoint:120
-recoverCorridor:130 · WALL_RADIUS:144 · addBoundaryWall:145 · sweptWall:153 · collideBoundary:174 · buildTrack:187
-animate:315 · decorateDom:316 · paintDom:339 · preview:341
+buildCar:84 · carView:96 · steer:97 · camera:98 · applyEnvironment:109 · boundaryPoint:121
+recoverCorridor:131 · WALL_RADIUS:145 · addBoundaryWall:146 · sweptWall:154 · collideBoundary:175 · buildTrack:188
+animate:316 · decorateDom:317 · paintDom:340 · preview:342
 
 ## js/lettercannon.js (482 บรรทัด · 0 รายการ)
 
@@ -839,11 +839,11 @@ openPhotoCrop:224
 
 ## js/picdict.js (413 บรรทัด · 0 รายการ)
 
-## js/pickup3d.js (363 บรรทัด · 22 รายการ)
+## js/pickup3d.js (364 บรรทัด · 22 รายการ)
 softBox:10 · merge:20 · box:33 · starGeo:34 · makeKit:37 · paintMat:82
-buildCar:83 · carView:94 · steer:95 · camera:96 · applyEnvironment:107 · boundaryPoint:119
-recoverCorridor:129 · WALL_RADIUS:143 · addBoundaryWall:144 · sweptWall:152 · collideBoundary:173 · buildTrack:186
-animate:314 · decorateDom:315 · paintDom:338 · preview:340
+buildCar:83 · carView:95 · steer:96 · camera:97 · applyEnvironment:108 · boundaryPoint:120
+recoverCorridor:130 · WALL_RADIUS:144 · addBoundaryWall:145 · sweptWall:153 · collideBoundary:174 · buildTrack:187
+animate:315 · decorateDom:316 · paintDom:339 · preview:341
 
 ## js/picmatch.js (692 บรรทัด · 0 รายการ)
 
@@ -1073,7 +1073,7 @@ vbRender:148 · vbCardHTML:194
 
 ## js/wordsearch.js (524 บรรทัด · 0 รายการ)
 
-## js/wordship.js (1,496 บรรทัด · 0 รายการ)
+## js/wordship.js (1,919 บรรทัด · 0 รายการ)
 
 ## js/wordskirmish-br.js (57 บรรทัด · 0 รายการ)
 
