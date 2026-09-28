@@ -305,6 +305,13 @@ assert(read('minigames/vocab-force/ui/vocab-force-hud.js').includes('vf-boot')&&
 assert(css.includes('vfBootDrift')&&css.includes('vfBootPetal')&&read('minigames/vocab-force/ui/vocab-force-hud.js').includes('vf-boot-fx'),'loading art has a subtle motion overlay');
 assert(runtime.includes("hud.setLoad(0.18")&&runtime.includes("bootSetLoad(0.94"),'loading bar follows attach/clip/enter progress');
 assert(!build.includes('characters/Lyravyn/animations/ly_Run.glb')&&!build.includes('characters/Lyravyn/animations'),'Lyravyn 33MB duplicate GLBs are not in the production copy list');
+/* รอบ 1612: บีบเท็กซ์เจอร์บอดี้ GLB (PNG→JPEG ทุกภาพ OPAQUE ไม่ใช้ alpha — ตรวจแล้ว) — ลดดาวน์โหลดครั้งแรก ~38% */
+assert(exists('tools/compress_body_glb_textures.py'),'GLB texture compressor script exists');
+[['zom/zom_Elderly_Shaky_Walk_in.glb',28e6],['lyravyn/ly_Run.glb',27e6],['nex/nex_walk.glb',14e6]].forEach(function(pair){
+  const p='minigames/vocab-force/runtime-models/'+pair[0];
+  const buf=fs.readFileSync(path.join(root,p));
+  assert(buf.readUInt32LE(0)===0x46546C67&&buf.length<pair[1],'compressed body GLB '+pair[0]+' ('+Math.round(buf.length/1e6)+'MB under '+Math.round(pair[1]/1e6)+'MB, valid glTF magic)');
+});
 
 const animDir=path.join(root,'minigames/vocab-force/characters/next/animations');
 const glbs=fs.readdirSync(animDir).filter(f=>/\.glb$/i.test(f)).sort();
