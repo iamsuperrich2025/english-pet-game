@@ -8201,6 +8201,7 @@ function entLerp(E,target,k){
   E.pR.position.x=.64+E.open*1.06;
 }
 let wSpd=12, wP=0, wBank=0, _footHintAt=0, _stridePh=0;
+let _bobPh=0, _bobAmp=0, _smF=0, _smS=0;             // 🚶 รอบ 1619: จังหวะก้องก้าวกล้อง (head-bob) + อินพุตนุ่ม (กันอาการลอย)
 /* 👟 เสียงฝีเท้าสังเคราะห์ (รอบ 376) — hard=คอนกรีตดาดฟ้า/ล็อบบี้ (ก้องสั้นแหลม) · false=ถนนยางมะตอย (ทุ้มนุ่ม) */
 function footStepSfx(hard){
   if(!state.sound) return;
@@ -9018,9 +9019,12 @@ function tickHeliFoot(dt,now){
   let fw=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0);
   let sd=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);
   if(joy.on){ fw=-joy.dy; sd=joy.dx; }
+  /* 🚶 รอบ 1619 (ผู้ใช้สั่ง "เดินเหมือนลอย"): อินพุตนุ่ม — ออกตัว/หยุดไม่กระชาก + head-bob ตามจังหวะก้าว */
+  _smF+=(fw-_smF)*Math.min(1,dt*8); _smS+=(sd-_smS)*Math.min(1,dt*8);
+  const uF=Math.abs(_smF)<.03?0:_smF, uS=Math.abs(_smS)<.03?0:_smS;
   const sin=Math.sin(yaw),cos=Math.cos(yaw);
-  let nx=p.x+(-sin*fw+cos*sd)*FOOT_SPD*dt;
-  let nz=p.z+(-cos*fw-sin*sd)*FOOT_SPD*dt;
+  let nx=p.x+(-sin*uF+cos*uS)*FOOT_SPD*dt;
+  let nz=p.z+(-cos*uF-sin*uS)*FOOT_SPD*dt;
   nx=Math.max(-HALF+1,Math.min(HALF-1,nx)); nz=Math.max(-HALF+1,Math.min(HALF-1,nz));
   const curFloor=footFloorAt(p.x,p.z,p.y), onRoof=p.y>curFloor-1&&curFloor>2;
   for(const b of buildings){
@@ -9039,8 +9043,15 @@ function tickHeliFoot(dt,now){
   }
   const newFloor=footFloorAt(nx,nz,p.y);
   if(onRoof && curFloor-newFloor>2){ nx=p.x; nz=p.z; }              // ราวกันตกที่ขอบดาดฟ้า
-  camera.position.set(nx,footFloorAt(nx,nz,p.y)+FOOT_EYE,nz);
-  camera.rotation.set(0,0,0); camera.rotateY(yaw); camera.rotateX(pitch*.9);
+  /* 🚶 รอบ 1619: head-bob — กล้องก้ม-เงยสองจังหวะต่อวงจรก้าว 1.55 ม. + แกว่งซ้าย-ขวา/เอียงตามจังหวะ
+     แอมפ์ลิจูดค่อย ๆ ขึ้นเมื่อกำลังเดิน ค่อย ๆ ดับเมื่อหยุด (ไม่สะดุ้ง) */
+  const moved=Math.hypot(nx-p.x,nz-p.z);
+  _bobPh+=moved;
+  _bobAmp+=((moved>1e-4?1:0)-_bobAmp)*Math.min(1,dt*5.5);
+  const bt=_bobPh*(Math.PI*2/1.55), bobA=.052*_bobAmp;
+  const bobY=Math.sin(bt*2)*bobA*.55, bobX=Math.cos(bt)*bobA*.45, bobR=Math.sin(bt)*.016*_bobAmp;
+  camera.position.set(nx+cos*bobX, footFloorAt(nx,nz,p.y)+FOOT_EYE+bobY, nz-sin*bobX);
+  camera.rotation.set(0,0,0); camera.rotateY(yaw); camera.rotateX(pitch*.9+Math.sin(bt*2)*.007*_bobAmp); camera.rotateZ(bobR);
   // 👟 รอบ 376: เสียงฝีเท้าตามจังหวะก้าวจริง — ดาดฟ้า/ล็อบบี้=คอนกรีตก้อง · พื้นเมือง=ยางมะตอยทุ้ม
   _stridePh+=Math.hypot(nx-p.x,nz-p.z);
   if(_stridePh>1.55){ _stridePh=0; footStepSfx(onRoof||insideTerm(nx,nz,0)); }
