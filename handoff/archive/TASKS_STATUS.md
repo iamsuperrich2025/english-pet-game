@@ -6962,3 +6962,8 @@ efreshMechaLock
 
 - ไฟล์: map/buildings.js (ใหม่) + map/prototype-arena.js (ceiling + floorY) + character/nex-character-controller.js (พื้น 2 จุด tick/dash) + runtime/vocab-force-runtime.js (camTarget + updateBuildings) + vocab-force-namespace.js + index.html + tools/build_web.mjs + js/ui.js ?v=1604 + tools/test_vocab_force_buildings.js (sandbox 25) + PROJECT_MAP · อาคาร 25 ผ่าน · ชุดเดิม 813 รันครบ (fail 2 เดิมของ WIP 1597)
 - ⚠️ งานค้าง uncommitted จากรอบ 1597 (fullmap-slam WIP): `combat/ground-slam-controller.js`/`ground-slam-tune.js`/`effects/ground-slam-fx.js` + `tools/test_mecha_1492.js` คืนมาจาก stash แล้ว — test_vocab_force fail 2 asserts ด้าน SLAM ("slam line … 6s cooldown"/"blue line runs 23 units") คือสถานะปกติของ WIP ชุดนี้ ไม่ใช่บั๊กรอบใหม่ · สำรอง diff ไว้ `_t/vf_parallel_groundslam.patch` · ตัดสินใจแล้วไม่ adopt เข้า main
+
+
+## ⏬ ย้ายเมื่อ 2026-09-28 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- รอบ 1604 · Vocab Force อาคารหลบในสนาม (1 ชั้น×4 + 2 ชั้น×2): `map/buildings.js` ใหม่ — ผนัง/หลังคาลงกล่องชนมาตรฐาน arena (คน/บอท/ซอมบี้/ลูกพลังโดนกันครบผ่าน collide กลาง) · แผ่นชั้นสอง = กล่อง ceiling (เดินใต้ได้ ชั้นสูง 3.2 กว่าหัวกระโดด ~2.95) + walkSlabs/floorY ให้ controller กลาง (คน+บอท) และ dash ยืนชั้นบนต่อเนื่อง · บันไดเต็มแนวผนัง 4 ขั้น platform สูงพ้นแผ่นชั้นสอง 3.5 · ซอมบี้ขึ้นชั้นสองไม่ได้ = หลบบนดาดฟ้าชั้น 2 ปลอดภัยจากซอมบี้ (คนอื่นยังตีได้) · ตัวอักษรเลี่ยงฟุตปริ้นท์อาคารอัตโนมัติ (scatter เช็ก boxes)
