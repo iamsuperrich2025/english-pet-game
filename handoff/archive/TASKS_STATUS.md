@@ -6997,3 +6997,8 @@ efreshMechaLock
 
 - รอบ 1611 · ผู้ใช้สั่ง "โหลดนาน/ค้างที่การโหลดตัวละคร": ต้นตอ = บอดี้ GLB 3 ไฟล์ ~98MB + โหลด sequential ทุกขั้น · แก้: (1) firebase.json rule runtime-models/** cache 7 วัน (เดิม 3600) (2) BotManager.start โหลดบอทพร้อมกัน Promise.all — CRITICAL run/punch/kick/victory + LAZY jump/block fire-and-forget (3) runtime open(): loadClips+บอทพร้อมกัน Promise.all([clipsJob, botsJob]) · tanker/sedan await ทีหลัง · bootSetLoad เพดาน bootMax กันแถบถอยหลัง
 - รอบ 1610 · ผู้ใช้สั่ง "บอทเหลือแค่ 3 ตัว": VF._t.botFill จากเติมครบ 10 → cap สูงสุด 3 (min(3, 10-humans)) — เล่นคนเดียวเจอบอท 3 (รวม 4 คนในลาน) · ออนไลน์คนเยอะบอทลดตามจนหมดที่ 10 คน · ล็อบบี้/หน้ารอโหลดโชว์เท่าที่มีตามจริง (lobbySlots ไม่เปลี่ยน) · แถมซ่อม assert ค้าง WIP 1597 ที่ทุก session fail มาตลอด 2 อัน (เทสต์ค่าเดิม 23 เทียบ tune 560 ที่ commit ไปแล้ว → อัปเดตเป็น 560/full-map ให้ตรงของจริง)
+
+
+## ⏬ ย้ายเมื่อ 2026-09-28 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- ไฟล์: tools/compress_body_glb_textures.py (ใหม่) + body GLB 6 ไฟล์ (3 ต้นฉบับ + 3 runtime) + tools/test_vocab_force.js (assert magic+ขนาด 3 ไฟล์) · unit 840 ผ่าน · ยืนยันจาก live หลัง deploy: content-length ตรงไฟล์ที่บีบ + cache 7 วันใช้จริง + ดาวน์โหลด 3 ไฟล์รวม ~6 วิ ที่เน็ต ~11MB/s (เดิม ~10 วิ) · เทสต์เปิดเกมในบราวเซอร์ยังไม่ได้ทำ — WebBridge extension ยังไม่ติดตั้ง ถ้าผู้ใช้ติดตั้งแล้วสั่งทดสอบอีกทีได้ · **เหลือพื้นที่ต่อยอด: geometry/anim ~23MB ของ zom/ly (เดา morph target/skin) — ต้อง meshopt/quantization ซึ่ง GLTFLoader ปัจจุบันไม่มี decoder = งานใหญ่กว่านี้**
