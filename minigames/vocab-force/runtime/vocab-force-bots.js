@@ -42,9 +42,9 @@
     }
   };
 
-  /* จำนวนบอทที่ต้องเติมให้ครบ 10 (humans นับขั้นต่ำ 1) */
+  /* รอบ 1610: ผู้ใช้สั่งเหลือบอทสูงสุด 3 ตัว (เดิมเติมให้ครบ 10 คน) */
   VF._t.botFill = function(humans){
-    return VF.clamp(10 - Math.max(1, Math.floor(Number(humans) || 1)), 0, 9);
+    return VF.clamp(Math.min(3, 10 - Math.max(1, Math.floor(Number(humans) || 1))), 0, 3);
   };
 
   /* รายชื่อผู้เล่นบนหน้ารอโหลด — ตัวจริงก่อน (รู้ชื่อจาก net rec) แล้วค่อยเติมบอท */

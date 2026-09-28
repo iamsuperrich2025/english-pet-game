@@ -1399,7 +1399,7 @@ assert(read('minigames/vocab-force/runtime/vocab-force-runtime.js').includes('ai
 }
 /* รอบ 1589: Ground Slam — ปุ่ม SLAM ท่ากระแทกพื้น + เส้นเปลวเพลิงสีฟ้า (300 HP/ครั้งที่โดนแนวเส้น) */
 assert(VF.GroundSlamTune && VF.GroundSlamTune.PVP_DAMAGE===300,'slam PvP damage is 300 per hit');
-assert(VF.GroundSlamTune.LINE_LENGTH===23 && VF.GroundSlamTune.COOLDOWN===6,'slam line is as long as the overdrive dash with a 6s cooldown');
+assert(VF.GroundSlamTune.LINE_LENGTH===560 && VF.GroundSlamTune.COOLDOWN===6,'slam line now runs the full map (560 = arena diameter) with a 6s cooldown');
 {
   const slamMan=new VF.GroundSlamController();
   const played=[];
@@ -1431,7 +1431,7 @@ assert(VF.GroundSlamTune.LINE_LENGTH===23 && VF.GroundSlamTune.COOLDOWN===6,'sla
   slamMan.tick(0.016,10000,p2,{fx:fakeFx,people:[],enemies:{list:[]}});
   assert(fxCast.length===0,'the fire line waits for the hitAt beat');
   slamMan.tick(0.016,10600,p2,{fx:fakeFx,people:[{id:'ab12',x:0.5,z:10,y:0,alive:true,local:false}],enemies:{list:[]}});
-  assert(fxCast.length===1&&fxCast[0].bx===0&&Math.abs(fxCast[0].bz-23)<1e-6,'blue line runs 23 units straight along facing');
+  assert(fxCast.length===1&&fxCast[0].bx===0&&Math.abs(fxCast[0].bz-VF.GroundSlamTune.LINE_LENGTH)<1e-6,'blue line runs the full map length straight along facing');
   assert(strikes.length===1&&strikes[0].dmg===300&&strikes[0].targetId==='ab12','a peer on the line takes exactly 300');
   slamMan.tick(0.016,11000,p2,{fx:fakeFx,people:[{id:'ab12',x:0.5,z:10,y:0,alive:true,local:false}],enemies:{list:[]}});
   assert(strikes.length===1,'the same cast cannot hit the same peer twice');
@@ -1487,7 +1487,7 @@ assert(VF.GroundSlamTune.LINE_LENGTH===23 && VF.GroundSlamTune.COOLDOWN===6,'sla
   for(let i=0;i<50;i++){const nm=VF.BotNames.pick('male',allM);if(nm)allM.push(nm);}
   assert(allM.length===VF.BotNames.male.length&&VF.BotNames.pick('male',allM)===null,'the pool exhausts to null — names can never repeat');
   assert(VF.BotNames.genderFor('nex')==='male'&&VF.BotNames.genderFor('lyravyn')==='female','gender map matches the two characters');
-  assert(VF._t.botFill(1)===9&&VF._t.botFill(5)===5&&VF._t.botFill(10)===0&&VF._t.botFill(14)===0&&VF._t.botFill(0)===9,'bot fill completes exactly ten players');
+  assert(VF._t.botFill(1)===3&&VF._t.botFill(2)===3&&VF._t.botFill(5)===3&&VF._t.botFill(9)===1&&VF._t.botFill(10)===0&&VF._t.botFill(0)===3,'bot fill caps at three bots (รอบ 1610)');
   const fakeBots=[];
   const used=[];
   for(let i=0;i<9;i++){
