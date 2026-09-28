@@ -7492,6 +7492,7 @@ async function loadAdv3d(){
   await loadScriptOnce('js/hauntedhotelghost.js'); // 👻 PNG-only chase + lightweight hair/lighting shader
   await loadScriptOnce('js/mecha-combat-fx.js'); // pooled cute projectile styles
   await loadScriptOnce('js/mecha-models.js'); // selected chibi GLBs; lazy asset loading
+  await loadScriptOnce('js/mecha-zombie-robot.js'); // 🤖 รอบ 1613: หุ่นยนต์ร้าย GLB แทนตัวโกงซอมบี้
   await loadScriptOnce('js/adventure3d.js');
 }
 /* ============================================================

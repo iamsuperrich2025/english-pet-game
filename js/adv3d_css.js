@@ -1224,6 +1224,11 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
   @keyframes mhSweep{0%{background-position:180% 0}100%{background-position:-90% 0}}
   #mecha-hud .mh-scan{position:absolute;inset:0;opacity:.12;
     background:repeating-linear-gradient(0deg,transparent 0 2px,#000 2px 3px)}
+  /* 🎬 รอบ 1613: เกรดสีแบบหนัง — มุมมืดวิญญาณ + อบอุ่นขอบบนอมชมพู/ขอบล่างส้ม · อยู่ใต้ชิป/เรดาร์เสมอ */
+  #mecha-hud .mh-cine{position:absolute;inset:0;mix-blend-mode:multiply;opacity:.42;
+    background:
+      radial-gradient(ellipse 130% 110% at 50% 44%,transparent 55%,rgba(6,4,16,.95) 100%),
+      linear-gradient(180deg,rgba(38,20,52,.34) 0%,transparent 26%,transparent 70%,rgba(58,24,8,.40) 100%)}
   html.no-anim #mecha-hud .mh-sweep{animation:none;opacity:.28}
   /* แถบเทเลเมทรีบาง ๆ กลางล่าง (โซนเดียวที่ปลอดปุ่มทุกจอ — ต่ำกว่าปุ่มยิงกลาง เหนือ ◀▶/▲▼ ไม่ชน) */
   #mecha-hud .mh-tele{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);

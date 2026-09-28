@@ -84,7 +84,7 @@ const MODES = {
   mecha: {
     label:'โลกหุ่นยนต์นักรบ', emoji:'🤖', reward:35, doneKey:'mechaDone',
     shoot:false, ghost:false, mecha:true,
-    sky:0xa8d4f0, fogN:42, fogF:240, ground:0x5ec652,   // 🤖 รอบ 1519: ทุ่งหญ้า+ขุนเขาไกลแบบการ์ตูน
+    sky:0xf0a877, fogN:42, fogF:240, ground:0x74b34a,   // 🤖 รอบ 1519: ทุ่งหญ้า+ขุนเขาไกล · 🎬 รอบ 1613: หมอกโทนเย็นย่ำสีพระอาทิตย์ตก (ฟ้าโดมสวยขึ้น)
     intro:'🤖 <b>หุ่นยนต์นักรบ!</b><br><small>มุมมองในหุ่นยักษ์สูง 5 เมตร — เดินบุกยิง<b>เอเลี่ยนตัวอักษร</b><br>ยิงตัวอักษร<b>เรียงตามลำดับในคำ</b> ครบคำ = เอเลี่ยนระเบิด! · เอเลี่ยนเคลื่อนที่ตลอด เล็งดีๆ</small>',
     hint:'W/S เดินหน้า-ถอย · A/D หันตัว · คลิก/ปุ่มยิง = ยิงตัวอักษร (ต้องเรียงลำดับ!) · เมาส์/ลากขวา = เล็ง',
     koTitle:'🤖💥 หุ่นยนต์ถูกทำลาย!',
@@ -2495,14 +2495,16 @@ const MSKY_R=198;                          // 198+85≈283 < camera.far 320
 function buildMechaSky(sc){
   const domeTex=hskyTex(8,512,c=>{
     const g=c.createLinearGradient(0,0,0,512);
-    g.addColorStop(0,'#5eb8ef');
-    g.addColorStop(.18,'#8fd0f8');
-    g.addColorStop(.36,'#b8e4ff');
-    g.addColorStop(.46,'#ffe8cc');
-    g.addColorStop(.50,'#ffd4a0');
-    g.addColorStop(.54,'#c8ddf5');
-    g.addColorStop(.72,'#9ec4e8');
-    g.addColorStop(1,'#a8d4f0');
+    /* 🎬 รอบ 1613: ฟ้าโทนหนังตอนเย็น — ฟ้าสีครามไล่ลงสู่ขอบฟ้าสีทองอมส้ม */
+    g.addColorStop(0,'#2f4f96');
+    g.addColorStop(.14,'#4a6fb4');
+    g.addColorStop(.28,'#7fa3d4');
+    g.addColorStop(.40,'#c9b49a');
+    g.addColorStop(.47,'#ffb877');
+    g.addColorStop(.52,'#ff9e5e');
+    g.addColorStop(.58,'#d98f6e');
+    g.addColorStop(.74,'#8fa8c8');
+    g.addColorStop(1,'#93a8c4');
     c.fillStyle=g; c.fillRect(0,0,8,512);
   });
   const dome=new THREE.Mesh(new THREE.SphereGeometry(MSKY_R,28,20),
@@ -2529,6 +2531,17 @@ function buildMechaSky(sc){
     p.lookAt(0,EYE_H,0); cloudGrp.add(p);
   }
   sc.add(cloudGrp);
+  /* 🎬 รอบ 1613: พระอาทิตย์โล่ง ๆ ต่ำขอบฟ้า (แผ่นโปร่ง + ลูกเดียวกับเมฆ) — จุดสว่างสุดของเฟรมแบบหนัง */
+  const sunTex=hskyTex(128,128,c=>{
+    const g=c.createRadialGradient(64,64,4,64,64,62);
+    g.addColorStop(0,'rgba(255,246,216,1)');g.addColorStop(.32,'rgba(255,214,148,.9)');
+    g.addColorStop(.66,'rgba(255,168,88,.28)');g.addColorStop(1,'rgba(255,158,78,0)');
+    c.fillStyle=g;c.fillRect(0,0,128,128);
+  });
+  const sun=new THREE.Mesh(new THREE.PlaneGeometry(64,64),
+    new THREE.MeshBasicMaterial({map:sunTex,transparent:true,depthWrite:false,fog:false}));
+  sun.position.set(-.55,0,.82).normalize().multiplyScalar(MSKY_R*.9);
+  sun.lookAt(0,EYE_H,0); sc.add(sun);
 }
 function buildMechaScenery(sc, tr){
   const hillA=new THREE.MeshLambertMaterial({color:0x8eb4d8});
@@ -2629,7 +2642,7 @@ function buildScene(md){
   /* 🌑 รอบ 694: หม่นลงอีกจาก 0x7d8490 — พื้นสว่างโพลนทำให้สวนกลางคืนดูเหมือนกลางวัน
      (ทั้งที่ฟ้ามืด) เป็นอีกต้นเหตุที่ผู้ใช้บอกว่า "ข้างนอกไม่น่ากลัว" */
   else if(md==='haunt') applyTex(ground.material,'tex_ground',20,20,0x4d525c);
-  else if(md==='mecha') applyTex(ground.material,'tex_ground',34,34,0x7ad858);
+  else if(md==='mecha') applyTex(ground.material,'tex_ground',34,34,0x86b250);   // 🎬 รอบ 1613: หญ้าโทนอุ่นเข้ากับแสงเย็น
 
   // รั้วรอบแผนที่ (mecha ใช้หน้าผาหญ้าแทน — รั้นเทาเดิมดูเป็นบล็อกหินขวางวิว)
   if(md!=='mecha'){
@@ -2893,9 +2906,10 @@ function buildScene(md){
   }else if(md==='mecha'){
     // 🤖 รอบ 1519: ทุ่งหญ้าสด+ฟ้าอุ่น+ขุนเขาไกล+หน้าผาขวา (เอเลี่ยนสร้างตอน start)
     buildMechaSky(sc);
-    sc.add(new THREE.HemisphereLight(0xfff8ec,0x58a842,1.05));
-    const key=new THREE.DirectionalLight(0xfff0c0,1.08); key.position.set(36,72,28); sc.add(key);
-    const fill=new THREE.DirectionalLight(0xc5e4ff,.38); fill.position.set(-28,40,-22); sc.add(fill);
+    /* 🎬 รอบ 1613: ไล่แสงหนัง — พระอาทิตย์ต่ำสีทองอมส้ม (key) + ฟิล์บลูอ่อน (fill) ตัดกัน */
+    sc.add(new THREE.HemisphereLight(0xffe3c0,0x4a7a3a,.95));
+    const key=new THREE.DirectionalLight(0xffb36b,1.14); key.position.set(52,30,26); sc.add(key);
+    const fill=new THREE.DirectionalLight(0x7fa8d0,.34); fill.position.set(-28,40,-22); sc.add(fill);
     const tr=[];
     buildMechaScenery(sc, tr);
     const flG=new THREE.SphereGeometry(.16,6,5);
@@ -5700,6 +5714,7 @@ function buildDom(){
       <div class="mh-tint"></div>        <!-- ไล่เฉดสีตามสีอาวุธ -->
       <div class="mh-sweep"></div>       <!-- ลำแสงกวาดไล่เฉด -->
       <div class="mh-scan"></div>        <!-- เส้นสแกน -->
+      <div class="mh-cine"></div>        <!-- 🎬 รอบ 1613: เกรดสีหนัง + มุมมืด vignette -->
       <div class="mh-tele">
         <div class="mh-chip mh-wavechip"><span>WAVE</span><b id="mh-wave">1</b></div>
         <div class="mh-chip"><span>RNG</span><b id="mh-rng">--</b><i>m</i></div>
@@ -12813,34 +12828,36 @@ function emojiSprite(emoji){
   return new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv),transparent:true,depthTest:false}));
 }
 function makeAlien(bossArg){
-  /* 🧟 รอบ 1511: ซอมบี้เลือดแดง · หันหน้า -Z · ตอนโจมตีหันหาผู้เล่นใน tickMecha */
+  /* 🧟 รอบ 1511: ซอมบี้เลือดแดง · หันหน้า -Z · ตอนโจมตีหันหาผู้เล่นใน tickMecha
+     🤖 รอบ 1613: ตัวละครเปลี่ยนเป็น "หุ่นยนต์ร้าย" GLB (เดินได้จริง) — โครงกล่องนี้เป็น fallback ตอนโหลด GLB ไม่สำเร็จ */
   const boss=!!bossArg;
   const sp = boss ? (typeof bossArg==='object' ? bossArg : pickBossSpecies()) : null;
   const grp=new THREE.Group();
+  const body=new THREE.Group(); grp.add(body);          // 🤖 รอบ 1613: โครง fallback แยกกลุ่ม ถอดออกเมื่อหุ่น GLB พร้อม
   const skin=boss?sp.body:0x6e8f52, skinDark=boss?((sp.body&0xfefefe)>>>1):0x3d4f2e;
   const blood=0xc41e1e, bloodDeep=0x7a0a0a, eyeCol=boss?sp.eye:0xff1a1a;
   const torso=new THREE.Mesh(boss?sp.geo():new THREE.BoxGeometry(1.8,2.2,1.1),
     new THREE.MeshLambertMaterial({color:skin,emissive:boss?sp.emis:0x1a2208}));
-  torso.position.y=1.15; grp.add(torso);
+  torso.position.y=1.15; body.add(torso);
   const head=new THREE.Mesh(new THREE.SphereGeometry(.82,10,8),new THREE.MeshLambertMaterial({color:skin,emissive:0x110800}));
-  head.position.set(0,2.55,0); head.scale.set(1,1.05,.92); grp.add(head);
+  head.position.set(0,2.55,0); head.scale.set(1,1.05,.92); body.add(head);
   for(const sx of [-.3,.3]){
     const e=new THREE.Mesh(new THREE.SphereGeometry(.15,8,6),new THREE.MeshBasicMaterial({color:eyeCol}));
-    e.position.set(sx,2.58,-.7); grp.add(e);
+    e.position.set(sx,2.58,-.7); body.add(e);
   }
   for(let i=0;i<5;i++){
     const blot=new THREE.Mesh(new THREE.SphereGeometry(.2+.08*(i%2),6,5),
       new THREE.MeshLambertMaterial({color:i%2?blood:bloodDeep,emissive:0x2a0000}));
-    blot.position.set((i-2)*.32,.85+(i%2)*.45,.56); blot.scale.set(1.15,.55,.35); grp.add(blot);
+    blot.position.set((i-2)*.32,.85+(i%2)*.45,.56); blot.scale.set(1.15,.55,.35); body.add(blot);
   }
   const limbM=new THREE.MeshLambertMaterial({color:skinDark});
   for(const side of [-1,1]){
     const arm=new THREE.Mesh(new THREE.CylinderGeometry(.17,.13,1.75,6),limbM);
-    arm.position.set(side*1.12,1.55,-.65); arm.rotation.x=-Math.PI/2.35; arm.rotation.z=side*.12; grp.add(arm);
+    arm.position.set(side*1.12,1.55,-.65); arm.rotation.x=-Math.PI/2.35; arm.rotation.z=side*.12; body.add(arm);
     const hand=new THREE.Mesh(new THREE.SphereGeometry(.26,6,5),limbM);
-    hand.position.set(side*1.12,1.4,-1.5); grp.add(hand);
+    hand.position.set(side*1.12,1.4,-1.5); body.add(hand);
     const leg=new THREE.Mesh(new THREE.CylinderGeometry(.26,.2,1.55,6),limbM);
-    leg.position.set(side*.38,-.05,.05); grp.add(leg);
+    leg.position.set(side*.38,-.05,.05); body.add(leg);
   }
   let word;
   if(boss){ const c=pickWords(sp.wordPick); word=(c.slice().sort((a,b)=>b.en.length-a.en.length)[0])||{en:'dragon',th:'มังกร'}; }
@@ -12859,7 +12876,8 @@ function makeAlien(bossArg){
   const al={grp,word,letters,nextIdx:0,tgt:{x:p.x,z:p.z},wanderAt:0,born:performance.now(),
             boss:!!boss, species:sp, gs:scl, shotAt:performance.now()+1400+Math.random()*1600, baseY:1.55};
   aliens.push(al);
-  if(boss) showBanner(`${sp.emoji} <b>บอสซอมบี้${escapeHTML(sp.th)} มาแล้ว!</b><br>คำยาวพิเศษ — ยิงให้ครบรับโบนัส 🪙`);
+  if(typeof MechaZombieRobot!=='undefined') MechaZombieRobot.attach(grp,{boss,species:sp,fallback:body}); // 🤖 รอบ 1613: สลับเป็นหุ่นยนต์ร้าย GLB (fallback ถ้าโหลดไม่สำเร็จ)
+  if(boss) showBanner(`${sp.emoji} <b>บอสหุ่นยนต์ร้าย${escapeHTML(sp.th)} มาแล้ว!</b><br>คำยาวพิเศษ — ยิงให้ครบรับโบนัส 🪙`);
   return al;
 }
 /* 🌊 รอบ 229: Endless Wave — เริ่มเวฟใหม่ (ตั้งเป้า/จำนวน/ความยาก) แล้วปล่อยเอเลี่ยนให้ครบ */
@@ -12870,7 +12888,7 @@ function startWave(w){
   if(w>(state.mechaWaveBest||0)) state.mechaWaveBest=w;              // 🏅 สถิติเวฟสูงสุด
   updateWaveHud();
   if(cfg.boss) showBanner(`🌊 <b>เวฟ ${w}</b> · 👾 <b>Boss Wave!</b><br>ล้มบอสให้ได้เพื่อไปต่อ 💪`);
-  else showBanner(`🌊 <b>เวฟ ${w}</b> — ล้มซอมบี้ ${cfg.goal} ตัว!`);
+  else showBanner(`🌊 <b>เวฟ ${w}</b> — ล้มหุ่นยนต์ร้าย ${cfg.goal} ตัว!`);
   waveSpawnFill();
 }
 /* เติมเอเลี่ยนบนสนามให้ครบจำนวนพร้อมกัน (ไม่เกินเป้าเวฟ) · Boss Wave: บอสมาเป็นตัวสุดท้าย */
@@ -12910,8 +12928,9 @@ function alienSpawnPos(){
   return {x:0,z:-30};
 }
 function removeAlien(a){
+  if(typeof MechaZombieRobot!=='undefined') MechaZombieRobot.detach(a.grp);   // 🤖 รอบ 1613: ถอน mixer + คืนวัสดุบอส
   scene.remove(a.grp);
-  a.grp.traverse(o=>{ if(o.material){ if(o.material.map&&o.material.map!==null&&o.geometry) {} o.material.dispose&&o.material.dispose(); } if(o.geometry) o.geometry.dispose&&o.geometry.dispose(); });
+  a.grp.traverse(o=>{ if(o.userData&&o.userData.mzShared) return; if(o.material){ if(o.material.map&&o.material.map!==null&&o.geometry) {} o.material.dispose&&o.material.dispose(); } if(o.geometry) o.geometry.dispose&&o.geometry.dispose(); });
   const i=aliens.indexOf(a); if(i>=0) aliens.splice(i,1);
 }
 function mechaBankCoins(n){
@@ -13277,6 +13296,7 @@ function tickMecha(dt,now){
     a.letters.forEach(l=>{ if(!l.done && l.spr.material){ const nx2=(l.idx===a.nextIdx);
       l.spr.scale.setScalar(nx2?2.5:1.9); l.spr.material.opacity=nx2?1:.8; } });
   });
+  if(typeof MechaZombieRobot!=='undefined') MechaZombieRobot.tick(dt);   // 🤖 รอบ 1613: อัปเดตท่าเดินหุ่นยนต์ร้ายทุกตัว
   // โฟกัสเอเลี่ยนที่เล็งอยู่ → อัปเดต HUD คำ
   let fa=null, fd=0.55;
   aliens.forEach(a=>{ const l=a.letters[a.nextIdx]; if(!l||l.done) return;
@@ -13373,7 +13393,7 @@ function clearEntities(){
   hotelGhostFx=null;
   monsters=[];
   shots.forEach(s=>{ scene.remove(s.mesh); s.mesh.geometry.dispose(); s.mesh.material.dispose(); }); shots=[];
-  aliens.forEach(a=>scene.remove(a.grp)); aliens=[];                          // 🤖 เอเลี่ยน
+  aliens.forEach(a=>{ if(typeof MechaZombieRobot!=='undefined') MechaZombieRobot.detach(a.grp); scene.remove(a.grp); }); aliens=[];   // 🤖 เอเลี่ยน (รอบ 1613: ถอน mixer หุ่นยนต์ร้ายด้วย)
   mechaTracers.forEach(t=>{ scene.remove(t.line); }); mechaTracers=[];
   mechaShells=[];                                                             // 🤖 รอบ 1482: กระสุนวิถีโค้ง
   while(alienShots.length) removeAlienShot(0);                                // 👾 รอบ 226: กระสุนเอเลี่ยน
@@ -13567,6 +13587,7 @@ function start(md,opt){
     mCombo=0; mShieldUntil=0;   // 🔥🛡️ รอบ 227: รีเซ็ตคอมโบ + โล่
     mComboMax=0; mBossKills=0; mShotsFired=0; mShotsHit=0;   // 📊 รอบ 228: รีเซ็ตสถิติรอบ
     mWave=0; mWaveKilled=0; mWaveSpawned=0; mWaveBoss=false; mWaveBossDone=false; mWaveSpd=1; mBossSpeciesIdx=0;   // 🌊 รอบ 229: รีเซ็ต Endless Wave
+    if(typeof MechaZombieRobot!=='undefined') MechaZombieRobot.prepare().catch(()=>{});   // 🤖 รอบ 1613: อุ่นเครื่องโหลดหุ่นยนต์ร้ายก่อนซอมบี้ตัวแรกเกิด
     const rid=MechaModels.resolveSelection(state.mechaRobot,state.robots);
     mechaRobotId=rid;
     if(mechaFX)mechaFX.dispose();
