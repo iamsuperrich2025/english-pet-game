@@ -23,8 +23,6 @@
 - ไฟล์: js/adventure3d.js · ยืนยัน: node --check (ยังไม่ได้เทสจริง — ถ้า bob แรง/เบาไป บอกได้ ปรับ bobA ต่อทันที)
 - รอบ 1618 · ต่อจาก 1617 — ผู้ใช้เทสจริงบอกกระเบื้องยังใหญ่ไปมาก: repeat 6→3 ม./tile (แผ่นละ ~1 ม.) จุดเดียวกัน adventure3d.js ~1563 · ยืนยัน: node --check (ถ้ายังไม่พอดีบอกได้ ปรับต่อได้อีก)
 - รอบ 1617 · ผู้ใช้สั่ง "พื้นดินโลกเฮลิฯดูขยายเกินไป": ต้นตอ = ภาพ img/city/ground.png (กระเบื้องคอนกรีต 3×3) ปูซ้ำทุก 22 ม./tile → แผ่นละ ~7 ม. เดินแล้วดูโตเทอะทะ · แก้ repeat 22→6 ม./tile (แผ่นละ ~2 ม.) ใน buildDriveCity (adventure3d.js ~1563) · ⚠️ เลข 1616 ถูก session คู่ขนาน (รอบ 1615) เผลอหิ้ว bullet นี้ขึ้น main ใน handoff commit 96c0ebdd ก่อน code commit จึงขยับมาเป็น 1617
-- ไฟล์: js/adventure3d.js · ยืนยัน: node --check ผ่าน (ยังไม่ได้ถ่ายภาพจริง — ถ้ายังดูไม่สมจริง บอกได้ ปรับ tile ต่อทันที)
-- รอบ 1615 · ผู้ใช้สั่ง "ภาพถนนไหลอืด อึดอัด" ทั้ง Kart และ Pick-Up (ต้นตอ: โลกย่อ 0.5× แต่ top เดิมต่ำ — Kart 110 / Pick-Up 170 กม./ชม.): Kart top→150 (accel 7/power 320/brake 14/grip 12.5/เกียร์ใหม่/FOV +9°/ข้อความ intro) · Pick-Up top→200 (accel 8.5/power 640 เพราะเดิมวิ่งจริงแค่ ~139/brake 16/grip 13.5/เกียร์ใหม่/FOV +10°) · ซ่อม assert ค้าง ticket gate ใน test_kart_entry/test_pickup_entry (โหมด public ไม่มีตั๋วแล้ว — fail มาก่อนงานนี้)
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 - **รอบ 1376 · แก้กดเข้า Vocab World Racing จาก Home V2 ไม่ได้:** ต้นเหตุ Home V2 เรียก `enterF1_3D()` ตรง ๆ จึงข้าม pipeline ที่ตั้ง `f1Ticket` และทิ้งผล async ทำให้ปุ่มดูเหมือนไม่ตอบสนอง; เปลี่ยนให้ delegate ไป `#btn-world-f1` ซึ่งเป็นทางเข้ากลางของ Classic
 - เพิ่ม regression guard ใน `test_f1_lobby_lock.js` และ `test_home_v2_mobile_preview.js`; syntax + free-entry + F1 ทั้ง 19 ไฟล์ + Home V2 ผ่าน
