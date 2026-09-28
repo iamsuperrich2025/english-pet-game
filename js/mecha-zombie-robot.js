@@ -5,7 +5,7 @@
 (function(root){
   'use strict';
   const URL='minigames/robot/badRobot_walking_2_inplace.glb';
-  const TARGET_H=3.3;                      // สูงพอ ๆ กับซอมบี้เดิม (หัว ~4.9 ใน world)
+  const TARGET_H=4.7;                      // 🤖 รอบ 1614: สูงเท่าหุ่นผู้เล่นที่บังคับ (~4.7m เท่า MECHA_EYE 5.0 — เดิม 3.3 เท่าซอมบี้)
   let template=null, pending=null;
   const mixers=new Set();                  // mixer ทุกตัวที่ยังอยู่ในสนาม
 

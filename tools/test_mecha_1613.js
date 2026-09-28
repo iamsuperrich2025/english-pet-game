@@ -16,6 +16,7 @@ assert(a.includes('MechaZombieRobot.attach'),'attach wired in makeAlien');
 assert(a.includes('MechaZombieRobot.detach'),'detach wired in removeAlien');
 assert(a.includes('MechaZombieRobot.tick'),'tick wired in tickMecha');
 assert(a.includes('MechaZombieRobot.prepare'),'warm loader on mecha entry');
+assert(z.includes('TARGET_H=4.7'),'robot height = player mecha (รอบ 1614)');
 assert(a.includes('mzShared')===false||true,'sanity');
 assert(a.match(/userData&&o\.userData\.mzShared/)||a.includes('o.userData.mzShared'),'removeAlien skips shared meshes');
 assert(a.includes('const body=new THREE.Group()'),'fallback body group');
