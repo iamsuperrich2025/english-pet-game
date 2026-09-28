@@ -11,6 +11,8 @@
 > ประวัติ Frontline 1372–1373: `handoff/archive/frontline-1372-1373.md`
 
 ### 📌 สรุปสถานะล่าสุด
+- รอบ 1616 · ผู้ใช้สั่ง "พื้นดินโลกเฮลิฯดูขยายเกินไป": ต้นตอ = ภาพ img/city/ground.png (กระเบื้องคอนกรีต 3×3) ปูซ้ำทุก 22 ม./tile → แผ่นละ ~7 ม. เดินแล้วดูโตเทอะทะ · แก้ repeat 22→6 ม./tile (แผ่นละ ~2 ม. สมจริง) ใน buildDriveCity (adventure3d.js ~1563)
+- ไฟล์: js/adventure3d.js · ยืนยัน: node --check ผ่าน (ยังไม่ได้ถ่ายภาพจริง — ถ้ายังดูไม่สมจริง บอกได้ ปรับ tile ต่อทันที)
 - รอบ 1615 · ผู้ใช้สั่ง "ภาพถนนไหลอืด อึดอัด" ทั้ง Kart และ Pick-Up (ต้นตอ: โลกย่อ 0.5× แต่ top เดิมต่ำ — Kart 110 / Pick-Up 170 กม./ชม.): Kart top→150 (accel 7/power 320/brake 14/grip 12.5/เกียร์ใหม่/FOV +9°/ข้อความ intro) · Pick-Up top→200 (accel 8.5/power 640 เพราะเดิมวิ่งจริงแค่ ~139/brake 16/grip 13.5/เกียร์ใหม่/FOV +10°) · ซ่อม assert ค้าง ticket gate ใน test_kart_entry/test_pickup_entry (โหมด public ไม่มีตั๋วแล้ว — fail มาก่อนงานนี้)
 - ไฟล์: js/kart3d.js + js/pickup3d.js + tools/test_kart_entry.js + tools/test_pickup_entry.js + tools/kart/clearance.mjs + tools/kart/walls.mjs · ยืนยัน: node --check ผ่าน + test_kart_entry/test_pickup_entry/test_f1_lobby_lock PASS + walls.mjs 12,404 tests/0 failures ที่ 150 กม./ชม. (ยังไม่ได้เล่นจริงบนจอ — ถ้ายังอืดหรือเร็วเกิน บอกได้ ปรับต่อทันที)
 - รอบ 1614 · ผู้ใช้สั่ง "badRobot สูงเท่าหุ่นผู้เล่นที่บังคับ": TARGET_H 3.3→4.7m (เท่าสเกลหุ่นเรา ~4.7m/MECHA_EYE 5.0) · ตัวอักษรลอย y=3.5 ยังเหนือหัวพอดี (เท้า local -1.55 → หัวแตะ 3.15) · บอสคูณสเกลสายพันธุ์เดิมจึงใหญ่ขึ้นตาม (titan ~9.6m) · test_mecha_1613.js เพิ่ม assert TARGET_H=4.7 · ยืนยันเบราว์เซอร์จริง: GLB ฉบับบีบ 9.1MB (รอบต่อ 1613) โหลด+แนบผ่าน bbox สูง 4.70m พอดี + node check + เทสต์ผ่าน
