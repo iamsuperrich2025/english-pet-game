@@ -99,9 +99,9 @@ function camera(c,g,mode,p,dt){
   g.userData.kartWheels.forEach(w=>w.rotation.x+=p.spd*dt/.46);
   const f=Math.sin(p.yaw),z=Math.cos(p.yaw);
   if(mode==='cockpit'){
-    c.position.set(p.px+f*(-.78),p.py+1.95,p.pz+z*(-.78));
+    c.position.set(p.px+f*(-.78),p.py+1.6,p.pz+z*(-.78));
     c.lookAt(p.px+f*18,p.py+.7+Math.sin(p.pitch)*18,p.pz+z*18);c.rotateZ(p.roll*.5);
-    c.fov=76+Math.min(9,p.spd/4.6);c.near=.075;c.updateProjectionMatrix();return true;
+    c.fov=76+Math.min(13,p.spd/3.8);c.near=.075;c.updateProjectionMatrix();return true;
   }
   return false;
 }
@@ -319,7 +319,7 @@ function decorateDom(w){
   el('.garage-sub').textContent='รถคาร์ตเกาะสายรุ้ง · เลือกสีเดียวกันทั้งคันและมุมคนขับ';
   el('.garage-stage').innerHTML='<canvas class="kart-preview" width="720" height="330" aria-label="รถคาร์ตสีที่เลือก"></canvas>';
   el('#kart-intro h2').textContent='🏝️ Vocab World Kart · Tropical Island';
-  const rules=el('.fi-rules');rules.innerHTML=rules.innerHTML.replace('Vocab Motors VR-X1 · Open-Wheel Racing · สนามกลางทะเลทราย 5.4 กม. 15 โค้งใต้แสงไฟ!','Island Star Kart · เกาะเขตร้อน '+(profile.map.lengthKm).toFixed(1)+' กม. · สูงสุด 150 กม./ชม.').replace('80 กม./ชม.','40 กม./ชม.').replace('⚠️ ออกนอกแทร็ก ทรายลื่นและช้าลงมาก','🚧 ขอบสนามแข็ง ชนแล้วเด้งกลับ · ไม่มีระบบวาร์ป');
+  const rules=el('.fi-rules');rules.innerHTML=rules.innerHTML.replace('Vocab Motors VR-X1 · Open-Wheel Racing · สนามกลางทะเลทราย 5.4 กม. 15 โค้งใต้แสงไฟ!','Island Star Kart · เกาะเขตร้อน '+(profile.map.lengthKm).toFixed(1)+' กม. · สูงสุด 220 กม./ชม.').replace('80 กม./ชม.','40 กม./ชม.').replace('⚠️ ออกนอกแทร็ก ทรายลื่นและช้าลงมาก','🚧 ขอบสนามแข็ง ชนแล้วเด้งกลับ · ไม่มีระบบวาร์ป');
   const style=document.createElement('style');style.textContent=`
   body:has(#kart-wrap.on) > .toast, body:has(#kart-wrap.on) > #toast-clear-all{display:none!important}
   #kart-wrap.fp #kart-hud{display:flex!important;bottom:8px}
@@ -351,12 +351,13 @@ const profile={
   id:'kart',ns:'kart',title:'Vocab World Kart',
   keys:{best:'kartBest',rank:'kartRank',rankStatus:'kartRankOk',done:'kartDone',recent:'kartRecent',color:'vwKartCarColor',ghost:'vwKartGhost',map:'kart'},
   map:{track:source.track.map(p=>p.map(v=>v*scale)),pit:source.pit.map(p=>p.map(v=>v*scale)),sf:source.sf,bld:[],lengthKm:2.7},
-  /* รอบ 1615 — ถนนไหลอืด (โลกย่อ 0.5× แต่ top เดิม 110 กม./ชม.): ยก top 150 กม./ชม. + เกียร์/กริป/เบรกตามสัดส่วน */
-  physics:Object.freeze({top:150/3.6,accel:7,power:320,drag:.0041,brake:14,coast:2.8,grip:12.5,wheelbase:2.16,steer:.49,steerHi:.092,pit:40/3.6}),
+  /* รอบ 1620 — ผู้ใช้ยังรู้สึกอืด (ไมล์โชว์ 150 แต่ภาพไหลไม่สมเหตุสมผล): ตาสูง 1.95 ม.+โค้งแคบ 0.5× ทำไหลจริงต่ำกว่าไมล์มาก
+     แก้ชุดใหญ่: top 220 กม./ชม. + power ให้วิ่งถึงจริง + grip 2 เท่าเข้าโค้งเร็ว + ตากล้องลง 1.95→1.6 (ไหลภาพ ∝ v/ตา) + FOV แรงขึ้น */
+  physics:Object.freeze({top:220/3.6,accel:10,power:980,drag:.0041,brake:18,coast:2.8,grip:24,wheelbase:2.16,steer:.49,steerHi:.07,pit:40/3.6}),
   hitParts:[[0,.05,.94,1.4],[0,1.65,1.2,.2],[0,-1.58,1.12,.2],[-1.02,1.12,.17,.46],[1.02,1.12,.17,.46],[-1.02,-1.04,.17,.46],[1.02,-1.04,.17,.46]],
   environment:{id:'tropical-island',downloadBytes:0,shadows:0},
   authorized:()=>true, // Public solo entry, matching Racing; multiplayer still uses authenticated rules.
-  gearOf:v=>v<7?1:v<15?2:v<23?3:v<32?4:5,
+  gearOf:v=>v<11?1:v<22?2:v<33?3:v<45?4:5,
   wallRadius:WALL_RADIUS,get boundaryWalls(){return boundaryWalls;},collideBoundary,buildCar,carView,steer,camera,buildTrack,applyEnvironment,animate,decorateDom,paintDom,preview,
 };
 root.KartProfile=profile;root.KartWorld=root.createVocabRacingWorld(profile);

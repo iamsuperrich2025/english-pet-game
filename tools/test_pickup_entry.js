@@ -21,9 +21,9 @@ const entry=ui.slice(ui.indexOf('async function enterPickup3D(){'),ui.indexOf('a
  assert.equal((await ctx.enterPickup3D()).started,true);assert.equal(ctx.loads.length,4);checks+=2;
  const pickup=fs.readFileSync('js/pickup3d.js','utf8'),kart=fs.readFileSync('js/kart3d.js','utf8'),engine=fs.readFileSync('js/f1_3d.js','utf8');
  assert(pickup.includes("id:'pickup'"));assert(pickup.includes('PickupWorld'));assert(pickup.includes('island-star-pickup'));
- assert(pickup.includes('top:200/3.6'));assert(kart.includes('top:150/3.6'));
+ assert(pickup.includes('top:250/3.6'));assert(kart.includes('top:220/3.6'));
  assert(pickup.includes("map:'pickup'"));assert(!pickup.includes("map:'kart'"));
- const kartTop=150,pickupTop=200,racingRef=85*3.6;
+ const kartTop=220,pickupTop=250,racingRef=85*3.6;
  assert(pickupTop>kartTop);assert(pickupTop<racingRef);checks+=8;
  assert(engine.includes("window.PickupWorld"));assert(engine.includes("P.keys&&P.keys.map||NS"));checks+=2;
  assert(ui.includes("mode:'pickup'"));assert(ui.includes('Vocab World Pick-Up Truck'));checks+=2;
