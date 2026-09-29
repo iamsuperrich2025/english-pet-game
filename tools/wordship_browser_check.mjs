@@ -23,6 +23,10 @@ try{
   await page.waitForFunction(()=>window.WordShip&&WordShip._t.running===true,null,{timeout:15000});
   await page.waitForTimeout(600);
   results.A=await state(); results.A.errors=errsA;
+  await page.click('#wsh-intro button'); // กด "ออกทะเล!" จริง — เกมถึงจะ unpause (ซ่อนแผงอย่างเดียวคือสาเหตุเรือค้างที่จุดเริ่ม)
+  await page.waitForTimeout(400);
+  await page.evaluate(()=>WordShip._t.setPaused(true)); // หยุดนิ่งเพื่อถ่ายภาพ
+  await page.waitForTimeout(300);
   await page.screenshot({path:path.join(out,'A-normal.png')});
   await page.close();
 

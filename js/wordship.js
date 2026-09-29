@@ -23,7 +23,10 @@
   /* ==== 🚢 เรือ GLB จริง + 🎥 กล้องหน้า-เฉียงขวา 45° (รอบ N) ==== */
   const SHIP_GLB='/minigames/Warships/models/ship_1_web.glb', SHIP_LEN=13, SHIP_BEAM=1.76;
   const GLB_GUN_FWD={along:2.7,y:.62}, GLB_GUN_AFT={along:-4.5,y:.55}, GLB_GUN_LEN=1.2;
-  const CAM_DIAG=Math.PI*.75, CAM_SWING=.5, CAM_DIST=20, CAM_H=9.2, CAM_LOOK=32;
+  /* รอบ 1627: โมเดล ship_1_web.glb เรนเดอร์เล็กกว่าสเกลโลก ~3 เท่า (วัดจากพิกเซลจริง — box ทดสอบขนาดเดียวกันเรนเดอร์ตรงสเกล มีแค่เมชเรือที่หด) ชดเชยสเกลให้ลำที่เห็นตรง SHIP_LEN
+     ที่ระบบยิง/เอฟเฟกต์ใช้อยู่ — กล้อง/แสง/ระดับน้ำอ้างอิงขนาดจริงหมด จุดยิง-จุดกระเด็นจึงตรงกับตัวเรือที่เห็นพอดี */
+  const SHIP_VIS_CAL=3.05;
+  const CAM_DIAG=-Math.PI*.75, CAM_SWING=.5, CAM_DIST=12.5, CAM_H=5.4, CAM_LOOK=32, CAM_LEAD=2.4, SHIP_SINK=0; /* รอบ 1627: CAM_DIAG ติดลบ = กล้องอยู่หน้า-เฉียงขวาของหัวเรือจริง (เดิม +135° ทำให้ไปอยู่เฉียงซ้าย — พิสูจน์ด้วยมาร์กเกอร์หัว/ท้ายบนภาพเรนเดอร์) ระดับน้ำ = origin พอดี แถบแดงจมใต้น้ำ */
   const NO_GAME_OVER=true, STUCK_MSG='เรือติดสิ่งกีดขวาง ให้กดถอยหลัง';
   const DPR_CAP=1.5, FRAME_MS=1000/60;
   const FALLBACK=[['CAT','แมว'],['DOG','สุนัข'],['BOOK','หนังสือ'],['FISH','ปลา'],['BIRD','นก']];
@@ -41,7 +44,7 @@
   let stored='', carried='', fieldLetters=[], coinSession={id:'',total:0,paid:0}, hintEls=[];
   let holdDrive=0,holdTurn=0,keyFwd=false,keyBack=false,keyLeft=false,keyRight=false,pointers=new Map();
   let audio=null,saveTimer=0,timers=new Set();
-  let THREE=null,scene=null,camera=null,renderer=null,raycaster=null,waterPlane=null;
+  let THREE=null,scene=null,camera=null,renderer=null,raycaster=null,waterPlane=null,camFill=null;
   let playerMesh=null,playerTurret=null,playerTurrets=null,aimMarker=null,geoCache=null,tmpV=null,tmpV2=null;
   let iceWalls={far:null,back:null,left:null,right:null};
   let shellFireMat=null, sparkMat=null, sparkGeo=null, stuckAt=-99, toastGen=0;
@@ -770,19 +773,19 @@
     if(ev&&ev.total>0) shipLoadOverlay(true,ev.loaded/ev.total*100);
     else shipLoadOverlay(true,null);
   }
-  /* 🔄 รอบ 1625: หน้าพักตอนเตรียมเกม (เหมือน Vocab Force) — ครอบทั้งโหลด three.min.js + เรือ GLB */
+  /* 🔄 รอบ 1625: หน้าพักตอนเตรียมเกม — พื้นหลังภาพกองเรือ (ผู้ใช้ส่งมา) + แถบ progress จริงที่ขอบล่าง */
   function bootLoadingOverlay(show,text){
     let el=document.getElementById('wsh-boot-load');
     if(show){
       if(!el){
         el=document.createElement('div'); el.id='wsh-boot-load';
-        el.style.cssText='position:fixed;inset:0;z-index:2147483200;display:flex;flex-direction:column;gap:16px;align-items:center;justify-content:center;background:linear-gradient(180deg,#0a3d66,#062a47);color:#dff2ff;font-family:Kanit,system-ui,sans-serif;letter-spacing:.3px';
-        el.innerHTML='<div style="font-size:46px;line-height:1">⚓</div><div class="wsh-boot-txt" style="font-size:18px;font-weight:700;text-shadow:0 2px 8px rgba(0,0,0,.45)">กำลังเตรียมกองเรือ…</div><div style="width:190px;height:7px;border-radius:4px;background:rgba(255,255,255,.18);overflow:hidden"><div style="height:100%;width:45%;border-radius:4px;background:linear-gradient(90deg,#5ad0ff,#9be3ff);animation:wshBoot 1.05s ease-in-out infinite alternate"></div></div>';
+        el.style.cssText='position:fixed;inset:0;z-index:2147483200;background:url(/minigames/Warships/loading_page.jpg) center bottom/cover no-repeat #062a47;font-family:Kanit,system-ui,sans-serif;letter-spacing:.3px';
+        el.innerHTML='<div class="wsh-boot-txt" style="position:absolute;top:3.5vh;left:0;right:0;text-align:center;color:#eaf7ff;font-size:14px;font-weight:700;text-shadow:0 2px 8px rgba(0,20,40,.9)"></div><div style="position:absolute;left:50%;top:81.5%;transform:translateX(-50%);width:min(507px,64vw);height:10px;border-radius:6px;background:rgba(6,26,48,.45);overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.35)"><div style="height:100%;width:45%;border-radius:6px;background:linear-gradient(90deg,#5ad0ff,#c8f1ff);animation:wshBoot 1.05s ease-in-out infinite alternate"></div></div>';
         const st=document.createElement('style'); st.textContent='@keyframes wshBoot{from{margin-left:-45%}to{margin-left:100%}}';
         el.appendChild(st); document.body.appendChild(el);
       }
-      if(text){ const t=el.querySelector('.wsh-boot-txt'); if(t) t.textContent=text; }
-      el.style.display='flex';
+      const t=el.querySelector('.wsh-boot-txt'); if(t) t.textContent=text||'';
+      el.style.display='block';
     } else if(el) el.style.display='none';
   }
   /* ==== 🚢 เรือ GLB จริง (รอบ 1623) — โหลดครั้งเดียว ทุกลำ clone จากแม่พิมพ์เดียว ==== */
@@ -800,16 +803,17 @@
     }).then(src=>{
       const box=new THREE.Box3().setFromObject(src);
       const size=new THREE.Vector3(); box.getSize(size);
-      const s=SHIP_LEN/size.x;
+      const s=SHIP_LEN/size.x*SHIP_VIS_CAL;
       const inner=new THREE.Group();
       inner.rotation.y=-Math.PI*.5;            // หัวเรือ ( -X ใน GLB ) หันไปทาง -Z ตาม convention เกม
       inner.scale.set(s,s,s);
-      inner.position.set(((box.max.z+box.min.z)*.5)*s, 0, -((box.max.x+box.min.x)*.5)*s);
+      inner.position.set(((box.max.z+box.min.z)*.5)*s, -SHIP_SINK, -((box.max.x+box.min.x)*.5)*s); // รอบ 1626: จมลำให้แถบแดงใต้ท้องเรืออยู่ใต้ระดับน้ำ
       src.traverse(o=>{
         if(o.isMesh&&o.material){
           o.frustumCulled=true;
           if(o.material.isMeshStandardMaterial){
-            o.material.metalness=Math.min(.35,o.material.metalness);
+            // รอบ 1627: ลดความเป็นโลหะ (ไม่มี envMap โลหะจึงมืด) ให้แสงสีขาว/ท้องฟ้าสะท้อนด้านข้างที่เห็นได้ชัดแบบภาพต้นฉบับ
+            o.material.metalness=Math.min(.12,o.material.metalness);
             o.material.roughness=Math.max(.55,o.material.roughness==null?.7:o.material.roughness);
           }
         }
@@ -897,12 +901,15 @@
     raycaster=new THREE.Raycaster();
     waterPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
 
-    const hemi=new THREE.HemisphereLight(0xf3efe4,0x003464,1.08);
+    const hemi=new THREE.HemisphereLight(0xf3efe4,0x003464,1.45);
     scene.add(hemi);
-    const sun=new THREE.DirectionalLight(0xf0ead8,.85);
+    const sun=new THREE.DirectionalLight(0xf0ead8,1.0);
     sun.position.set(18,28,12); scene.add(sun);
+    // รอบ 1627: ไฟ fill ตามตำแหน่งกล้อง สว่างเฉพาะด้านที่ผู้เล่นมองเห็น ทำให้ลำเรือเทาสว่างใกล้ภาพต้นฉบับโดยไม่ต้องเพิ่มไฟประจำฉาก (ไม่มีเงา ถูกกว่ามาก)
+    camFill=new THREE.DirectionalLight(0xfff2df,.55);
+    scene.add(camFill); scene.add(camFill.target);
 
-    const seaMat=new THREE.MeshPhongMaterial({color:SEA_COLOR,shininess:28,specular:0x5eb0e0});
+    const seaMat=new THREE.MeshPhongMaterial({color:SEA_COLOR,shininess:16,specular:0x2e5878});
     waterTimeU={value:0};
     seaMat.onBeforeCompile=sh=>{
       sh.uniforms.uWTime=waterTimeU;
@@ -1185,9 +1192,9 @@
      geometry/attribute สร้างครั้งเดียวตอน init ไม่ new Mesh/clone material/สร้าง texture ในลูป */
   const SHIP_WATER_VFX={
     enabled:true,
-    bow:{enabled:true,len:9,width:5.2},
-    hull:{enabled:true,len:11,width:.85,opacity:.42},
-    stern:{enabled:true,width:5.6,len:7},
+    bow:{enabled:true,len:10.5,width:5.8},
+    hull:{enabled:true,len:12.6,width:.95,opacity:.42},
+    stern:{enabled:true,width:6.2,len:8},
     wake:{enabled:true,sampleDist:2,maxSeg:56,lifetime:8.5,grow:.34,baseWidth:2.1,maxWidth:5.2},
     spray:{enabled:true,max:40},
     lod:{full:42,medium:105}
@@ -1654,15 +1661,29 @@
     const wantFov=player.scope?FOV_Z:FOV_N;
     camera.fov+=(wantFov-camera.fov)*0.18;
     camera.updateProjectionMatrix();
-    const phi=player.yaw+CAM_DIAG+(player.camYaw||0); // ฐานกล้อง: หน้า-เฉียงขวา 45° ของหัวเรือ ลากซีกซ้ายหมุนรอบเรือได้
     const zoom=player.scope?1.55:1;
-    const dist=CAM_DIST/zoom, height=(CAM_H+shake*.08)/Math.sqrt(zoom);
+    const phi=player.yaw+CAM_DIAG+(player.camYaw||0); // ตำแหน่งกล้อง: หน้า-เฉียงขวา 45° ของหัวเรือ (สเปกเดิม) ลากซีกซ้ายหมุนรอบเรือได้
     const off=headingVec(phi);
+    // รอบ 1626: โหมดปกติมองกลับมาที่เรือให้เห็นทั้งลำแบบภาพต้นฉบับ (เดิมมองข้ามหัวเรือออกทะเล = เรือเล็กมุมขอบจอ)
+    // ระยะปรับอัตโนมัติตาม hFOV ของจอปัจจุบัน กันเรือหลุดเฟรมบนจอแคบ/มือถือตั้ง
+    const aspect=Math.max(.4,camera.aspect||1);
+    const hFov=2*Math.atan(Math.tan(camera.fov*Math.PI/360)*aspect);
+    const need=(SHIP_LEN*.62)/Math.tan(hFov/2);
+    // รอบ 1627: โหมด SCOPE ถอยไกลขึ้นตามขนาดจริงของลำ (เดิมถอยแค่ /1.55 = ติดเกาะปลาเรือพอลำใหญ่ขึ้น)
+    const dist=(player.scope?Math.max(CAM_DIST*2.2,need*2.2):Math.max(CAM_DIST,need))/zoom, height=(CAM_H+shake*.08)/Math.sqrt(zoom);
     camera.position.set(player.x-off.x*dist, height, player.z-off.z*dist);
     const look=cameraLookTarget();
-    const v=headingVec(phi-(player.scope?CAM_SWING*.42:CAM_SWING)); // มองเฉียงข้ามหัวเรือออกไปทางทะเลด้านหน้า เรือจึงอยู่ขอบเฟรม ไม่บังเป้า
-    const la=player.scope?CAM_LOOK*.5:CAM_LOOK;
-    camera.lookAt(look.x+v.x*la, look.y, look.z+v.z*la);
+    if(player.scope){
+      const v=headingVec(phi-CAM_SWING*.42); // โหมดเล็ง: มองเฉียงข้ามหัวเรือออกไปทางทะเลด้านหน้า เรืออยู่ขอบเฟรม ไม่บังเป้า
+      camera.lookAt(look.x+v.x*CAM_LOOK*.5, look.y, look.z+v.z*CAM_LOOK*.5);
+    }else{
+      const fwd=headingVec(player.yaw); // โหมดปกติ: จุดโฟกัสที่ตัวเรือ + นำหน้าเล็กน้อย เห็นทะเลด้านหน้าด้วย
+      camera.lookAt(look.x+fwd.x*CAM_LEAD, 1.9, look.z+fwd.z*CAM_LEAD);
+    }
+    if(camFill){
+      camFill.position.set(camera.position.x, camera.position.y+2, camera.position.z);
+      camFill.target.position.set(player.x, .6, player.z);
+    }
   }
 
   function renderHud(){
@@ -1907,7 +1928,7 @@
     }
     if(opening) return; opening=true;
     try{
-      bootLoadingOverlay(true,'กำลังเตรียมกองเรือ…');
+      bootLoadingOverlay(true,'กำลังโหลดระบบ 3D…');
       if(!window.THREE){
         /* รอบ 1625: หน้า classic ไม่ได้โหลด three.min.js ไว้ล่วงหน้า — โหลดเองเหมือน wordskirmish
            (ก่อนแก้: โยน 'no THREE' ทิ้งทันที → toast แล้วเงียบ = "กดแล้วเปิดไม่ขึ้นเลย") */
@@ -1976,6 +1997,7 @@
     get stored(){return stored;}, get carried(){return carried;}, get letters(){return fieldLetters;},
     get player(){return player;}, get running(){return running;}, get iceWalls(){return iceWalls;},
     setRunning(v){running=!!v;}, setPaused(v){paused=!!v;}, setHoldDrive(v){holdDrive=v||0;}, setHoldTurn(v){holdTurn=v||0;}, settleScoreRun,
-    setWaterDebug(v){shipWaterVFXDebug=!!v; return shipWaterVFXDebug;}, getWaterVFX(){return waterVFX;}
+    setWaterDebug(v){shipWaterVFXDebug=!!v; return shipWaterVFXDebug;}, getWaterVFX(){return waterVFX;},
+    get cam(){return camera;}, get scene(){return scene;}, get pMesh(){return playerMesh;}, get rdr(){return renderer;}
   }};
 })();
