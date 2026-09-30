@@ -901,12 +901,14 @@
     raycaster=new THREE.Raycaster();
     waterPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
 
-    const hemi=new THREE.HemisphereLight(0xf3efe4,0x003464,1.45);
+    // รอบ 1628: ลดแสงรวมจาก 1.45/1.0/.55 (ไฮไลต์ตัดขอบเป็นขาวชอล์ก ต่างจากต้นแบบ) เหลือ .9/1.1/.25
+    // — วัดเทียบภาพต้นแบบ: เทาลำเรือ ~rgb(127,132,140) ไม่มีพิกเซลตัดขอบ >245 · rig นี้ได้ใกล้สุดโดยไม่เปลี่ยนสีทะเล/ท้องฟ้า (ไม่ใช้ tone mapping)
+    const hemi=new THREE.HemisphereLight(0xf3efe4,0x003464,.9);
     scene.add(hemi);
-    const sun=new THREE.DirectionalLight(0xf0ead8,1.0);
+    const sun=new THREE.DirectionalLight(0xf0ead8,1.1);
     sun.position.set(18,28,12); scene.add(sun);
-    // รอบ 1627: ไฟ fill ตามตำแหน่งกล้อง สว่างเฉพาะด้านที่ผู้เล่นมองเห็น ทำให้ลำเรือเทาสว่างใกล้ภาพต้นฉบับโดยไม่ต้องเพิ่มไฟประจำฉาก (ไม่มีเงา ถูกกว่ามาก)
-    camFill=new THREE.DirectionalLight(0xfff2df,.55);
+    // ไฟ fill ตามตำแหน่งกล้อง เบา ๆ พอให้ด้านที่มองไม่ดำสนิท (ไม่มีเงา ถูกกว่ามาก)
+    camFill=new THREE.DirectionalLight(0xfff2df,.25);
     scene.add(camFill); scene.add(camFill.target);
 
     const seaMat=new THREE.MeshPhongMaterial({color:SEA_COLOR,shininess:16,specular:0x2e5878});

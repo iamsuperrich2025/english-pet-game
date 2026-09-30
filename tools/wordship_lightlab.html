@@ -1,0 +1,75 @@
+<!doctype html><meta charset="utf-8"><title>wsh light lab</title>
+<style>html,body{margin:0;height:100%;background:#222}canvas{display:block;width:100vw;height:100vh}</style>
+<canvas id="c"></canvas>
+<div id="rev" style="position:fixed;top:4px;left:8px;color:#fff;font:12px monospace;z-index:9"></div>
+<script src="/js/vendor/three.min.js"></script>
+<script src="/js/vendor/GLTFLoader.js"></script>
+<script>
+// Light lab: render ship_1_web.glb twice side-by-side (scissor) —
+// ซ้าย: rig ปัจจุบันของเกม (รอบ 1627) · ขวา: rig ทดลอง (tone map + แสงพอดี)
+document.getElementById('rev').textContent='THREE r'+THREE.REVISION+' | legacyLights='+(THREE.ColorManagement? 'cm':'');
+const canvas=document.getElementById('c');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(1);
+const W=innerWidth,H=innerHeight; renderer.setSize(W,H,false);
+
+const params=new URLSearchParams(location.search);
+const METAL=parseFloat(params.get('metal')??'0.12');
+const RIGB={ // ปรับผ่าน query ได้
+  hemi:parseFloat(params.get('hemi')??'0.9'),
+  sun:parseFloat(params.get('sun')??'2.2'),
+  fill:parseFloat(params.get('fill')??'0.35'),
+  tone:params.get('tone')??'aces',
+  exp:parseFloat(params.get('exp')??'1.0')
+};
+
+const sceneA=new THREE.Scene(); sceneA.background=new THREE.Color(0x74b2d4);
+const sceneB=new THREE.Scene(); sceneB.background=new THREE.Color(0x74b2d4);
+const cam=new THREE.PerspectiveCamera(40,W/2/H,.1,1000);
+
+function rigGame(sc){
+  sc.add(new THREE.HemisphereLight(0xf3efe4,0x003464,1.45));
+  const sun=new THREE.DirectionalLight(0xf0ead8,1.0); sun.position.set(18,28,12); sc.add(sun);
+  const fill=new THREE.DirectionalLight(0xfff2df,.55); fill.position.set(-30,10,-40); sc.add(fill);
+}
+function rigNew(sc){
+  sc.add(new THREE.HemisphereLight(0xe8f0f8,0x2a4a66,RIGB.hemi));
+  const sun=new THREE.DirectionalLight(0xfff2e0,RIGB.sun); sun.position.set(18,28,12); sc.add(sun);
+  const fill=new THREE.DirectionalLight(0xdfeaff,RIGB.fill); fill.position.set(-30,10,-40); sc.add(fill);
+}
+rigGame(sceneA); rigNew(sceneB);
+
+new THREE.GLTFLoader().load('/minigames/Warships/models/ship_1_web.glb',g=>{
+  const box=new THREE.Box3().setFromObject(g.scene);
+  const size=new THREE.Vector3(); box.getSize(size);
+  const center=new THREE.Vector3(); box.getCenter(center);
+  function prep(){
+    const m=g.scene.clone(true);
+    m.traverse(o=>{ if(o.isMesh&&o.material&&o.material.isMeshStandardMaterial){
+      o.material=o.material.clone();
+      o.material.metalness=METAL;
+      o.material.roughness=Math.max(.55,o.material.roughness==null?.7:o.material.roughness);
+    }});
+    m.position.sub(center); return m;
+  }
+  sceneA.add(prep()); sceneB.add(prep());
+  const L=size.x;
+  // มุมเดียวกับภาพต้นแบบ: เห็นหัวเรือ + กราบขวา
+  cam.position.set(-L*.55,L*.32,-L*.95);
+  cam.lookAt(0,L*.04,0);
+  window.__ready=true;
+});
+function draw(){
+  renderer.setScissorTest(true);
+  // A: game rig, no tone mapping (ตามโค้ดเกม)
+  renderer.toneMapping=THREE.NoToneMapping;
+  renderer.setViewport(0,0,W/2,H); renderer.setScissor(0,0,W/2,H);
+  renderer.render(sceneA,cam);
+  // B: rig ทดลอง
+  renderer.toneMapping=RIGB.tone==='aces'?THREE.ACESFilmicToneMapping:THREE.NoToneMapping;
+  renderer.toneMappingExposure=RIGB.exp;
+  renderer.setViewport(W/2,0,W/2,H); renderer.setScissor(W/2,0,W/2,H);
+  renderer.render(sceneB,cam);
+}
+renderer.setAnimationLoop(draw);
+</script>
