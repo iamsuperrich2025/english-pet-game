@@ -5,6 +5,20 @@
    Soft Cuboid Chibi 3D น่ารัก · ออนไลน์ NetRoom map `skirmish` สูงสุด 8 คน
    แอดมินเท่านั้นจนกว่าจะอนุมัติเผยแพร่ · THREE โหลดตอนกดเข้า
    ============================================================ */
+/* 📇 สารบัญ (รอบ 1629 — Grep ชื่อฟังก์ชันเจอทันที ไม่ต้องไล่อ่านทั้งไฟล์)
+   ─ ค่าคงที่:      MINLEN…BR_PAD @9–70 (ดามเมจ/ความเร็ว/กล้อง/บ้าน 4 หลัง/จุดวางปุ่ม)
+   ─ ปุ่ม/สโคป:    controlKey 72 · loadPad/savePad 76/82 · placeCtl 85 · layoutPad 98 · placeScope 111 · setScope 124 · toggleScope 137
+   ─ ยิง/เอฟเฟกต์:  collectShotTargets 138 · resolveShot 144 · shotTrails 166–190 · paintAuto 191 · autoHome 197–225
+   ─ ท่าทาง:       stanceSpec 226 · paintPose 233 · setStance/toggleStance 241/246 · poseTag/packAv/parseAv 249–255 · dodge 262–279
+   ─ คำศัพท์/เงิน:   grade 283 · adminAllowed 284 · pool 291 · takeWord 302 · wordMarks/hasWord 311/315 · coin 316–323
+   ─ โมเดล 3D:     mat/box/cyl 333–353 · makeChibi 355 · poseChibi 432 · makeHouse 507 · letterTex/makeLetterCard 522/531
+   ─ ตัวอักษร/คลัง:  remainNeeded 540 · spawnLetters/placeLetter 546/555 · hideLetter 565 · syncVault 572 · pickup/deposit/drop/complete 586–624
+   ─ เสียง:         ac 637 · beep 645 · shotSound 655
+   ─ เครือข่าย/HP:  emitEvent 665 · packHp/parseHp 670/674 · ชน 682–694 · applyDamage 704 · fire 728 · peer 767 · netSend/syncPeers 785/795 · seat/room 827/834
+   ─ บอท/ลูป:      tickBots 850 · tickLetters 866 · applyLook 880 · aim 885/889 · cameraTick 899 · walkAnim 926 · step 943 · renderHud 999 · showToast 1018
+   ─ อินพุต/DOM:   bind 1024 · onKey(Up) 1124/1146 · buildWorld 1155 · buildDom 1190 · resize 1242 · loop 1250 · disposeWorld 1258
+   ─ Battle Royale: HUD 1262 · startBattle 1278 · resetBattleRound 1286 · battleDamage 1295 · reload/heal/jump/selectWeapon 1304–1307 · events 1308–1319 · tickBattle(บอท) 1331/1352 · renderBattleHud/drawBattleMap 1378/1397 · resetRun 1407
+   ─ เปิด/ปิด/API:  open 1415 · close 1448 · window.WordSkirmish + _t (debug/เทส) 1464 */
 (function(){
   const MINLEN=3, MAXLEN=8, LETTER_REWARD=1000, COOLDOWN=310, BODY_DMG=35, MAX_HP=100;
   /* HOME_R กว้างกว่ามุมบ้าน (ทแยง ~4.1) จึงฝากตัวอักษรจากที่ยืนข้างบ้านได้ทุกด้าน
