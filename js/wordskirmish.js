@@ -238,16 +238,17 @@
   }
   const _hitMat=()=>new THREE.MeshBasicMaterial({colorWrite:false,depthWrite:false});
   function normalizeGun(src,i){
-    // หมุนแกนยาวสุดชี้ +Z · สเกลให้ยาวเท่ากระบอกจริง · จับกึ่งกลางที่จุดยึด (กันไฟล์ต้นฉบับทรงเบี้ยวคนละแกน)
-    const m=src.clone(true), g=new THREE.Group();
+    // หมุนแกนยาวสุดชี้ +Z · กลับปลาย 180° ให้ปากกระบอกจริงชี้ +Z (asset กลับหัว — ภาพสดรอบ 1632) · สเกลให้ยาวเท่ากระบอกจริง · จับกึ่งกลางที่จุดยึด (กันไฟล์ต้นฉบับทรงเบี้ยวคนละแกน)
+    const m=src.clone(true), f=new THREE.Group(), g=new THREE.Group();
     const size=new THREE.Box3().setFromObject(m).getSize(new THREE.Vector3());
     if(size.x>=size.y&&size.x>=size.z) m.rotation.y=-Math.PI/2; else if(size.y>=size.x&&size.y>=size.z) m.rotation.x=Math.PI/2;
-    m.updateMatrixWorld(true);
-    const s2=new THREE.Box3().setFromObject(m).getSize(new THREE.Vector3());
+    f.rotation.y=Math.PI; f.add(m); g.add(f);
+    g.updateMatrixWorld(true);
+    const s2=new THREE.Box3().setFromObject(g).getSize(new THREE.Vector3());
     m.scale.setScalar(GUN_LEN[i]/Math.max(s2.x,s2.y,s2.z));
-    m.updateMatrixWorld(true);
-    m.position.sub(new THREE.Box3().setFromObject(m).getCenter(new THREE.Vector3()));
-    g.add(m);
+    g.updateMatrixWorld(true);
+    const c=new THREE.Box3().setFromObject(g).getCenter(new THREE.Vector3());
+    f.position.sub(c);
     return g;
   }
   function makeSoldier(withGun, weaponIndex){
@@ -279,7 +280,10 @@
       gun.traverse(o=>{o.userData.hit='body';});
       muzzle=new THREE.Object3D(); muzzle.position.set(0,0,GUN_LEN[wi]/2); gun.add(muzzle);
     }
-    g.userData.rig={mixer,actions,current:'',forceUntil:0,forceClip:'',model,spineB,gun,muzzle};
+    // ถ่ายผีเสื่อง bind pose ไว้ ตอนตายจะได้คืนกระดูกสู่ท่านอนตรงแทนการค้างท่าเดิน (รอบ 1632)
+    const bindPose=[];
+    model.traverse(n=>{ if(n.isBone) bindPose.push([n, n.position.clone(), n.quaternion.clone(), n.scale.clone()]); });
+    g.userData.rig={mixer,actions,current:'',forceUntil:0,forceClip:'',model,spineB,gun,muzzle,bindPose,deadPosed:false};
     if(!muzzle){ muzzle=new THREE.Object3D(); muzzle.position.set(0,1.35,.4); model.add(muzzle); g.userData.rig.muzzle=muzzle; } // กัน resolveShot พังถ้าหามือไม่เจอ
     g.userData.gun=gun; g.userData.isSoldier=true;
     mixer._rig=g.userData.rig;
@@ -299,18 +303,26 @@
   function poseSoldier(mesh, st){
     const r=mesh&&mesh.userData&&mesh.userData.rig; if(!r||!r.actions) return;
     if(st.alive===false){
-      if(r.current!==''){ Object.values(r.actions).forEach(a=>a.fadeOut(.2)); r.current=''; }
+      if(r.current!==''){ Object.values(r.actions).forEach(a=>a.stop()); r.current=''; }
+      if(r.bindPose&&!r.deadPosed){ r.deadPosed=true; for(const [b,p,q,s] of r.bindPose){ b.position.copy(p); b.quaternion.copy(q); b.scale.copy(s); } }
       return;
     }
+    r.deadPosed=false;
     const moving=!!st.moving, pose=st.pose||'stand';
     let want='idle';
     if(r.forceClip&&elapsed<r.forceUntil) want=r.forceClip;
     else if(st.reload) want='reload';
     else if(pose==='crouch'||pose==='kneel'||pose==='prone') want='crouch';
-    else if(moving) want=st.sprint?'sprint':(st.aim?'aim':'walk');
+    else if(moving){
+      const v=(typeof st.speed==='number')?st.speed:(st.sprint?8:4);
+      want=v<3.2?'walk':(v<6.8?'run':'sprint');   // เลือกคลิปตามความเร็วจริง (รอบ 1632)
+    }
     if(want==='idle'&&r.gun) want='aim';   // ทหารถือปืน: idle ยืนเฝ้าท่าเล็งแทน tightrope (รอบ 1632)
     soldierPlay(r, want);
-    r.mixer.timeScale=(pose==='prone'&&!moving)?.35:1;
+    // จังหวะขาให้ตรงระยะเลื่อนจริง: timeScale = ความเร็ว/ก้าวธรรมชาติคลิป (กัน slide ลื่นบนพื้น)
+    const NAT={walk:2,run:3.6,sprint:6.5,aim:1,idle:1,fire:1,reload:1,crouch:1};
+    if(moving&&NAT[want]){ const v=(typeof st.speed==='number')?st.speed:(st.sprint?8:4); r.mixer.timeScale=Math.min(2.6,Math.max(.6,v/NAT[want])); }
+    else r.mixer.timeScale=(pose==='prone'&&!moving)?.35:1;
   }
   function poseActor(mesh, st){
     if(mesh&&mesh.userData&&mesh.userData.isSoldier) return poseSoldier(mesh, st);
@@ -321,7 +333,7 @@
       if(!m.getRoot().parent) return;
       m.update(dt);
       const r=m._rig;
-      if(r&&r.spineB&&r.aimPitch) r.spineB.rotation.x+=r.aimPitch; // เอียงอกตามการเล็ง (ทำหลัง mixer จะได้ไม่ถูกแอนิเมชันทับ)
+      if(r&&r.spineB&&r.aimPitch&&r.current) r.spineB.rotation.x+=r.aimPitch; // เอียงอกตามการเล็ง (ทำหลัง mixer) · r.current ว่างตอนตาย = ไม่เอียงค้าง
     });
   }
   let muzzleLight=null, muzzleTex=null, smokeTex=null;
@@ -990,7 +1002,7 @@
       if(vis.lastX!=null&&Math.hypot(vis.mesh.position.x-vis.lastX,vis.mesh.position.z-vis.lastZ)>.001) vis.movingUntil=elapsed+.2;
       const moving=!lean&&elapsed<(vis.movingUntil||0);
       vis.lastX=vis.mesh.position.x; vis.lastZ=vis.mesh.position.z;
-      poseActor(vis.mesh,{moving,bob:elapsed*7,alive:st.hp>0,pose:pose.pose,dodge:lean});
+      poseActor(vis.mesh,{moving,bob:elapsed*7,alive:st.hp>0,pose:pose.pose,dodge:lean,speed:moving?5:0});
     });
     Object.keys(peersVis).forEach(uid=>{
       if(!peers[uid]){
@@ -1115,6 +1127,7 @@
       moving, bob:player.bob, recoil:player.recoil||0,
       lookX:(PITCH_DEF-lookPitch)*0.9, alive:player.alive,
       pose:stance, dodge:lean, sprint:sprinting&&moving, aim:scoped,
+      speed:moving?SPEED*spec.spd*(battle?(scoped?.6:sprinting&&stance==='stand'?1.5:1):1):0,
       reload:battle&&inv&&inv.action&&inv.action.kind==='reload'
     });
   }
@@ -1124,6 +1137,7 @@
     elapsed+=dt;
     if(battle)tickBattle(dt);
     if(!player.alive){
+      if(playerMesh) poseActor(playerMesh,{alive:false});   // สั่งศพทหารคืน bind pose (รอบ 1632)
       if(!battle&&player.respawnAt && elapsed>=player.respawnAt) spawnAtHome();
     }else if(!battle||(!hudEdit&&(!hud.intro||hud.intro.hidden))){
       const fx=clamp(((keys.f?1:0)+(joy.z<0?-joy.z:0)) - ((keys.b?1:0)+(joy.z>0?joy.z:0)),-1,1);
@@ -1549,7 +1563,7 @@
       if(!homeBlocked(nx,nz)){b.x=nx;b.z=nz;}else if(!homeBlocked(nx,b.z))b.x=nx;else if(!homeBlocked(b.x,nz))b.z=nz;
       else{const side=Math.sin(elapsed*.5+b.id)>0?1:-1;const sx=b.x-dz/len*speed*dt*side,sz=b.z+dx/len*speed*dt*side;if(!homeBlocked(sx,sz)){b.x=sx;b.z=sz;}}
       b.mesh.position.set(b.x,0,b.z);b.mesh.rotation.y=Math.atan2(b.x-target.x,b.z-target.z);b.mesh.visible=true;
-      poseActor(b.mesh,{moving:true,bob:elapsed*8+b.id,alive:true});
+      poseActor(b.mesh,{moving:true,bob:elapsed*8+b.id,alive:true,speed});
       if(elapsed<b.shotAt||distance>42)continue;b.shotAt=elapsed+1.1+(b.id%3)*.3;
       const from=new THREE.Vector3(b.x,1.35,b.z),to=new THREE.Vector3(target.x,target===player?Math.max(.28,stance==='prone'?.35:stance==='crouch'?.75:1.05)+jumpY:1.05,target.z),dir=to.clone().sub(from),length=dir.length();
       raycaster.set(from,dir.normalize());raycaster.far=length;const blocks=raycaster.intersectObjects(shotBlockers,true);if(blocks.length)continue;
