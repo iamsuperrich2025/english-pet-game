@@ -1299,7 +1299,7 @@
       pointers.delete(e.pointerId);
     };
     root.addEventListener('pointerup', up); root.addEventListener('pointercancel', up);
-    if(hud.exit) hud.exit.addEventListener('click', ()=>{ close(); });
+    if(hud.exit) hud.exit.addEventListener('click', ()=>{ if(scoped) setScope(false); else close(); });   // scoped = ออกจากสโคป ไม่ใช่ออกเกม (รอบ 1634)
     if(hud.introOk) hud.introOk.addEventListener('click', ()=>{ startBattle(); });
     root.querySelector('#skm-edit').addEventListener('click',()=>{hudEdit=!hudEdit;fireHeld=false;clearInput();setScope(false);root.classList.toggle('skm-editing',hudEdit);root.querySelector('#skm-edit').textContent=hudEdit?'บันทึก HUD':'จัดปุ่ม';});
     root.querySelectorAll('[data-weapon]').forEach(el=>el.addEventListener('click',()=>selectWeapon(Number(el.dataset.weapon))));
@@ -1335,7 +1335,7 @@
     if(e.code==='KeyC'){ e.preventDefault(); toggleStance('crouch'); }
     if(e.code==='KeyZ'){ e.preventDefault(); toggleStance('prone'); }
     if(e.code==='KeyX'||e.code==='ControlLeft'){ e.preventDefault(); startDodge(); }
-    if(e.code==='Escape') close();
+    if(e.code==='Escape'){ if(scoped) setScope(false); else close(); }   // สัมพันธ์กับปุ่มออก (รอบ 1634)
   }
   function onKeyUp(e){
     if(e.code==='KeyF')fireHeld=false;
