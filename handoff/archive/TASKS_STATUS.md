@@ -7062,3 +7062,9 @@ efreshMechaLock
 
 - รอบ 1622 · ผู้ใช้ส่งภาพ "พวงมาลัย Kart บังทาง / Pick-Up บังจนมองไม่เห็นทาง": ต้นตอ = โมเดลพวงมาลัย 3D ที่โผล่เต็มจอเพราะตากล้องต่ำจากรอบ 1620 (ค็อกพิท DOM ถูกซ่อนอยู่แล้ว — วงกลม+โค้งดำในภาพคือล้อ 3D) · แก้: carView ทั้ง 2 ไฟล์ซ่อน g.userData.steering ตอน mode=cockpit (มุมอื่นโชว์เหมือนเดิม) · Pick-Up คืนตาเดิม 2.22/.85 (ทดลอง 2.0/1.85/เลื่อนหน้าแล้วหลังคาบังกว่าเดิม — ตำแหน่งเดิมดีสุด) + FOV ผ่อนเป็น +12°/spd4.4 · สร้าง tools/kart/cockpit-shot.mjs ถ่ายภาพมุมคนขับจริงผ่าน Playwright ยืนยันด้วยตา (เคสสั้น แก้จบในรอบเดียว)
 - ไฟล์: js/kart3d.js + js/pickup3d.js + tools/kart/cockpit-shot.mjs (ใหม่) · ยืนยัน: node --check + test_kart_entry/test_pickup_entry/test_f1_lobby_lock PASS + ภาพจริง cockpit ทั้ง 2 โหมด (คาร์ทเห็นถนนเต็มตา/กระบะฝาท้ายล่าง ~ครึ่งล่าง เห็นโค้ง+ถนนชัด — ถ้ายังบังเกินไป ทางต่อไปคือย่อสเกลหัวเก๋ง/ฝากระบะ 3D)
+
+
+## ⏬ ย้ายเมื่อ 2026-10-03 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- รอบ 1623 · กองเรือคำศัพท์ยกเครื่อง GLB: ใช้ `minigames/Warships/models/ship_1.glb` ทุกลำ (บีบเป็น `ship_1_web.glb` 10→2.3MB ด้วย gltf-transform resize 1024 + webp เมชมี boundary edges เยอะจึงคง doubleSided — ต้นฉบับห้ามแตะ; fallback เรือ cuboid เดิมถ้าโหลดพลาด) · ปากกระบอก 2 จุดบนโมเดลจริง (หัว along 2.7 / ท้าย -4.5) ระบบยิงเดิมทั้งหมด · กล้องย้ายมาหน้า-เฉียงขวา 45° ของหัวเรือ (มองข้ามหัวเรือ SCOPE=มุมเล็ง — ถ้ามองเส้นแนวนอนจะมองไม่เห็นทั้งเรือ+ทะเล) + แกว่งนุ่มตามความเร็ว · แสง hemi 1.08/sun .85 + sky dome ไล่สี + คลื่น onBeforeCompile · ระบบฟอง ShipWaterVFX 4 ชั้นตามสเปก (bow V-foam/hull contact/stern churn/persistent wake) shader แชร์ pooled ไม่ new mesh ในลูป + LOD ตามระยะกล้อง + debug flag `WordShip._t.setWaterDebug(true)` + config กลาง SHIP_WATER_VFX ปรับได้
+- ไฟล์: js/wordship.js + minigames/Warships/models/ship_1_web.glb (ใหม่) · ยืนยัน: node --check + test_wordship PASS + พรีวิวภาพสดผ่าน (แล่น/ถอย/เลี้ยว/FIRE/ฟองตามเส้นทาง — ยังไม่ได้เทสมือถือจริง ถ้าฟองแรง/เบาไป บอกได้ ปรับ SHIP_WATER_VFX ต่อทันที)
