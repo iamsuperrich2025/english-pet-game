@@ -7098,3 +7098,9 @@ efreshMechaLock
 
 - รอบ 1628 · ผู้ใช้บอก "เรือยังไม่เหมือนต้นแบบเลย" (ส่งภาพต้นแบบ+ภาพในเกม): texture ใน ship_1_web.glb รอดครบ (ดึงออกมาเทียบ pixel ใกล้ต้นฉบับ) — ต้นตอจริง = **แสงรวมเกิน ไฮไลต์ตัดขอบเป็นขาวชอล์ก** (hemi 1.45+sun 1.0+fill .55 จากรอบ 1627 หันเข้าด้านที่กล้องมองพอดี) · พิสูจน์ด้วยการวัด pixel: เทาลำต้นแบบ rgb(127,132,140) ไม่มี clip >245 · แก้: hemi .9 / sun 1.1 / camFill .25 (ไม่ใช้ tone mapping เพราะ ACES เปลี่ยนสีทะเล-ฟ้าทั้งฉาก) · เพิ่ม tools จูนแสง: wordship_lightlab.html/.mjs (เรนเดอร์ GLB ซ้าย-ขวาเทียบ rig), wordship_lighttune.mjs (ปรับแสงสดในเกมผ่าน _t.scene ถ่ายหลายชุดในเซสชันเดียว), wordship_gameshot.mjs (ถ่ายเกมจริงขนาดจอผู้ใช้)
 - ไฟล์: js/wordship.js + tools/wordship_lightlab.html + tools/wordship_lightlab.mjs + tools/wordship_lighttune.mjs + tools/wordship_gameshot.mjs (ใหม่) · ยืนยัน: node --check + test_wordship + browser check 4 เคส PASS + ภาพสดก่อน/หลัง (เรือเทามีมิติ เห็นรายละเอียด texture+จุดแดง ทะเลยังฟ้าเหมือนเดิม) — ถ้าอยากเข้ม/อ่อนกว่านี้ จูนสดด้วย wordship_lighttune.mjs ได้ทันที
+
+
+## ⏬ ย้ายเมื่อ 2026-10-04 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- รอบ 1629 · เพิ่ม "📇 สารบัญ" กลางไฟล์ js/wordskirmish.js (เกมรบคำ) — 14 โซน พร้อมเลขบรรทัดจริงทุกกลุ่ม (ค่าคงที่/ปุ่ม/ยิง/ท่าทาง/คำศัพท์/โมเดล/เครือข่าย/ลูป/DOM/BR/API) → AI รุ่นหลัง Grep ชื่อฟังก์ชันแล้ว Read offset ได้ทันที ไม่ต้องไล่ทั้ง 1,486 บรรทัด · แก้เฉพาะ comment ไม่แตะโค้ด
+- ไฟล์: js/wordskirmish.js · ยืนยัน: node --check ผ่าน + เทียบเลขบรรทัดจริง 7 จุดตรงทั้งหมด (makeChibi 355 / fire 728 / step 943 / bind 1024 / tickBattle 1331 / open 1415 / WordSkirmish 1464)
