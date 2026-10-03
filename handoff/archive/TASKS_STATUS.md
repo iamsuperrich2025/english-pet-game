@@ -7068,3 +7068,9 @@ efreshMechaLock
 
 - รอบ 1623 · กองเรือคำศัพท์ยกเครื่อง GLB: ใช้ `minigames/Warships/models/ship_1.glb` ทุกลำ (บีบเป็น `ship_1_web.glb` 10→2.3MB ด้วย gltf-transform resize 1024 + webp เมชมี boundary edges เยอะจึงคง doubleSided — ต้นฉบับห้ามแตะ; fallback เรือ cuboid เดิมถ้าโหลดพลาด) · ปากกระบอก 2 จุดบนโมเดลจริง (หัว along 2.7 / ท้าย -4.5) ระบบยิงเดิมทั้งหมด · กล้องย้ายมาหน้า-เฉียงขวา 45° ของหัวเรือ (มองข้ามหัวเรือ SCOPE=มุมเล็ง — ถ้ามองเส้นแนวนอนจะมองไม่เห็นทั้งเรือ+ทะเล) + แกว่งนุ่มตามความเร็ว · แสง hemi 1.08/sun .85 + sky dome ไล่สี + คลื่น onBeforeCompile · ระบบฟอง ShipWaterVFX 4 ชั้นตามสเปก (bow V-foam/hull contact/stern churn/persistent wake) shader แชร์ pooled ไม่ new mesh ในลูป + LOD ตามระยะกล้อง + debug flag `WordShip._t.setWaterDebug(true)` + config กลาง SHIP_WATER_VFX ปรับได้
 - ไฟล์: js/wordship.js + minigames/Warships/models/ship_1_web.glb (ใหม่) · ยืนยัน: node --check + test_wordship PASS + พรีวิวภาพสดผ่าน (แล่น/ถอย/เลี้ยว/FIRE/ฟองตามเส้นทาง — ยังไม่ได้เทสมือถือจริง ถ้าฟองแรง/เบาไป บอกได้ ปรับ SHIP_WATER_VFX ต่อทันที)
+
+
+## ⏬ ย้ายเมื่อ 2026-10-03 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- รอบ 1624 · แก้บั๊ก "กดปุ่มกองเรือแล้วนิ่ง ไม่เข้าเกม" จากรอบ 1623: ต้นตอ = open() ไป await loadShipGLB() ก่อนสร้าง DOM ใด ๆ — มือถือ/เน็ตช้าโหลด GLB 2.3MB นานแถมหน้าจอมืดไร้สัญญาณ ดูเหมือนค้าง (ถ้า fetch/loader ค้าง = ค้างถาวร) · แก้: buildDom+โชว์จอเกมก่อน แล้วค่อยรอ GLB ใต้โอเวอร์เลย์ "⚓ กำลังโหลดเรือ… %" + timeout 16 วิ → fallback เรือ cute เข้าเกมได้เสมอ · preload GLB ตั้งแต่โหลดสคริปต์ (ครั้งถัดไปเข้าทันที) · กัน vfx พังเพจค้าง: try/catch รอบสร้าง/อัปเดต ShipWaterFX ทุกจุด ผิดปกติปิดเอง · เพิ่ม tools/wordship_browser_check.mjs (playwright 3 เคส: ปกติ/glb โดนบล็อก/เน็ตช้า — ผ่านทั้งหมด)
+- ไฟล์: js/wordship.js + css/wordship.css + tools/wordship_browser_check.mjs (ใหม่) · ยืนยัน: node --check + test_wordship + browser check 3 เคส PASS (ถ้าบนมือถือยังนิ่งอยู่ บอกได้ ไล่ต่อทันที)
