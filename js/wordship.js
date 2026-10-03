@@ -7,6 +7,21 @@
    ป้ายคำแยกจากลำเรือ ขยายตามระยะให้อ่านชัด · หัว/ท้ายเรือ · แล่นท้าย→หัว (ถอยได้เฉพาะผู้เล่น)
    ไม่มี Game Over · SCOPE แล้วลากซ้ายขวา = หมุนกระบอกแบบละเอียด · เลี้ยวยึดแกนหัว–ท้าย
    ============================================================ */
+/* 📇 สารบัญ (รอบ 1630 — Grep ชื่อฟังก์ชันเจอทันที ไม่ต้องไล่อ่านทั้งไฟล์ ~2,000 บรรทัด)
+   ─ ค่าคงที่/ช่วย:  MINLEN…FALLBACK @27–47 · clamp/shuffle/pick/wrapPi @48–51 · later/clearTimers/queueSave @69–74 (ความเร็ว/กล้อง/ทะเล/น้ำแข็ง/ปืน/GLB)
+   ─ คำศัพท์/เงิน:   grade 75 · pool 77 · takeWord 88 · wordMarks/hasWord 98/102 · remainNeeded 103 · neededLetterHints 109 · walletCoins…settleCoinSession 173–185
+   ─ ตัวอักษรสนาม:   letterClearOfLand 194 · randomLetterPoint 198 · disposeLetterMeshes 207 · spawnLetters 213 · relocateLetter 227 · placeLetter 235 · tryPickup 244 · tryDeposit 256 · dropCarried 266 · completeWord 284 · tickLetters 297 · setStored/setCarried 308/309
+   ─ ป้าย/ลูกศร:     placeHint 121 · worldToScreen 134 · ensureHintEl 141 · renderNavArrows 154
+   ─ เสียง:         ac 311 · fireSoundOn 318 · loadFireClip/prepareFireClip 321/342 · stopFireClip 343 · playFireClip 348 · beep 365
+   ─ ทิศ/ขับ/เล็ง:  headingFromDelta/headingVec 377/378 · barrelDir 379 · bowOf/sternOf 385/386 · driveAlongHeading 387 · keelStep 393 · pointerHalf 404 · applyAimSwipe 408 · yawOnKeel 415 · waterLimits 420 · apparentHull/depthScale 423/427 · applyShipScale 428 · labelWorldScale 434 · fitWordLabel 439 · shipSpeed 451 · playerDriveSpeed/setSpeedLevel 452/456
+   ─ วิถีกระสุน:     shellLandingAngle 466 · shellSplashPoint 471 · aimSplash 481 · makeAimCross 492
+   ─ จอ/น้ำแข็ง:    setViewport 503 · resize 513 · playerLimits 519 · iceWanted 520 · makeIceCliff 531 · poseIce 542 · dropIce/dropIceAll 551/558 · tickIce 559 · setPlayer 577 · setAuto 582 · setScope 589
+   ─ การ์ด/สไปรต์:  makeWordSprite 596 · makeLetterCard 616 · poseLetterCard 651 · letterOccludesShip 663 · fadeLetterCard 678 · faceWordToCamera 683
+   ─ โมเดลเรือ:    softBox 690 · mat/addBox 704/705 · makeGunHouse 710 · makeCuteShip 737 · overlay shipLoadOverlay/shipLoadProgress/bootLoadingOverlay 776/787/792 · GLB loadShipGLB 807 · enemyShipMat 845 · makeShip 855
+   ─ โลก/กองเรือ:   addIslandHouse 865 · makeMesaHome 871 · makeSpireIsland 883 · buildWorld 896 · pickCourse 960 · spawnWave 971 · disposeFleetMeshes 997 · turretRight 1006 · muzzles/muzzle 1007/1024
+   ─ ยิง/สแปลช/น้ำ: getShellFireMat 1025 · shellFireBefore 1055 · makeFireball/poseFireball 1061/1076 · spawnShell 1090 · fire 1104 · awardHit/awardWord 1115/1120 · sinkShip/hitShip 1129/1134 · hurt 1139 · toast/warnStuck 1144/1150 · สแปลช getSparkMat…burst 1158–1204 · น้ำตามเรือ ShipWaterFX 1313 (+getFoamMat/getWakeMat/getSprayMat 1221/1278/1300)
+   ─ ลูปหลัก:      tickShell 1544 · courseProgress 1569 · tickFleet 1573 · aimFromScreen 1604 · tickPlayer 1621 · tickFx 1651 · cameraLookTarget/updateCamera 1673/1676 · renderHud 1706 · step/draw/loop 1722/1727/1732 · resetRun 1742 · settleScoreRun 1765 · endRun 1772 · showIntro 1781
+   ─ อินพุต/API:    bind 1798 · buildDom 1877 · adminAllowed 1934 · open 1941 · close 1990 · window.WordShip + _t (debug/เทส) 2006 */
 (function(){
   const MINLEN=3, MAXLEN=8;
   const HIT_COIN=5, PERFECT_BONUS=5, PT_PER_LETTER=2, LETTER_REWARD=1000;
