@@ -7,20 +7,20 @@
    ============================================================ */
 /* 📇 สารบัญ (รอบ 1631 — Grep ชื่อฟังก์ชันเจอทันที ไม่ต้องไล่อ่านทั้งไฟล์)
    ─ ค่าคงที่:      MINLEN…BR_PAD @23–68 (ดามเมจ/ความเร็ว/กล้อง/บ้าน 4 หลัง/จุดวางปุ่ม)
-   ─ ปุ่ม/สโคป:    controlKey 72 · loadPad/savePad 76/82 · placeCtl 85 · layoutPad 98 · placeScope 111 · setScope 124 · toggleScope 137
-   ─ ยิง/เอฟเฟกต์:  collectShotTargets 138 · resolveShot 144 · shotTrails 167–191 · 🪖 โซน GLB+MuzzleFX 193–352 · paintAuto 354 · autoHome 360–388
-   ─ ท่าทาง:       stanceSpec 389 · paintPose 396 · setStance/toggleStance 404/409 · poseTag/packAv/parseAv 412–423 · dodge 425–437
-   ─ คำศัพท์/เงิน:   grade 446 · adminAllowed 447 · pool 454 · takeWord 465 · wordMarks/hasWord 474/478 · coin 479–494
-   ─ GLB ทหาร:     loadSoldierLib 202 · cloneSkinned 223 · normalizeGun 235 · makeSoldier 248 · spawnActor 282 · poseSoldier 293 · poseActor 308 · tickSoldierMixers 312
-   ─ Muzzle FX:    flashTexture 322 · buildMuzzleFx 329 · muzzleFlash 336 · tickMuzzleFx 349
-   ─ โมเดล 3D:     mat/box/cyl 496–514 · makeChibi 518 (fallback) · poseChibi 595 · makeHouse 670 · letterTex/makeLetterCard 685/694
-   ─ ตัวอักษร/คลัง:  remainNeeded 703 · spawnLetters/placeLetter 709/718 · hideLetter 728 · syncVault 735 · pickup/deposit/drop/complete 749–799
-   ─ เสียง:         ac 800 · beep 808 · shotSound 818
-   ─ เครือข่าย/HP:  emitEvent 828 · packHp/parseHp 833/837 · ชน 845–857 · applyDamage 867 · fire 891 · peer 932 · netSend/syncPeers 950/960 · seat/room 996/1003
-   ─ บอท/ลูป:      tickBots 1019 · tickLetters 1035 · applyLook 1049 · aim 1054/1058 · cameraTick 1068 · walkAnim 1095 · step 1115 · renderHud 1173 · showToast 1192
-   ─ อินพุต/DOM:   bind 1198 · onKey(Up) 1297/1319 · buildWorld 1328 · buildDom 1363 · resize 1414 · loop 1422 · disposeWorld 1430
-   ─ Battle Royale: HUD 1435 · startBattle 1451 · resetBattleRound 1463 · battleDamage 1472 · reload/heal/jump/selectWeapon 1481–1484 · events 1490–1507 · tickBattle(บอท) 1508/1529 · renderBattleHud/drawBattleMap 1557/1576 · resetRun 1586
-   ─ เปิด/ปิด/API:  open 1594 · close 1627 · window.WordSkirmish + _t (debug/เทส) 1643 */
+   ─ ปุ่ม/สโคป:    controlKey 74 · loadPad/savePad 78/84 · placeCtl 87 · layoutPad 100 · placeScope 113 · setScope 126 · toggleScope 139
+   ─ ยิง/เอฟเฟกต์:  collectShotTargets 140 · resolveShot 146 · shotTrails 169–192 · 🪖 โซน GLB+MuzzleFX 194–359 · paintAuto 361 · autoHome 367–395
+   ─ ท่าทาง:       stanceSpec 396 · paintPose 403 · setStance/toggleStance 411/416 · poseTag/packAv/parseAv 419–425 · dodge 432–451
+   ─ คำศัพท์/เงิน:   grade 453 · adminAllowed 454 · pool 461 · takeWord 472 · wordMarks/hasWord 481/485 · coin 486–502
+   ─ GLB ทหาร:     loadSoldierLib 204 · cloneSkinned 228 · normalizeGun 240 · makeSoldier 253 · spawnActor 288 · soldierPlay 292 · poseSoldier 299 (idle→aim ถือปืน รอบ 1632) · poseActor 315 · tickSoldierMixers 319
+   ─ Muzzle FX:    flashTexture 329 · buildMuzzleFx 336 · muzzleFlash 343 · tickMuzzleFx 356
+   ─ โมเดล 3D:     mat/box/cyl 503/507/518 · makeChibi 525 (fallback) · poseChibi 602 · makeHouse 677 · letterTex/makeLetterCard 692/701
+   ─ ตัวอักษร/คลัง:  remainNeeded 710 · spawnLetters/placeLetter 716/725 · hideLetter 735 · syncVault 742 · pickup/deposit/drop/complete 756–806
+   ─ เสียง:         ac 807 · beep 815 · shotSound 825
+   ─ เครือข่าย/HP:  emitEvent 835 · packHp/parseHp 840/844 · ชน 852–873 · applyDamage 874 · fire 898 · applyPeerEvent 939 · netSend/syncPeers 957/967 · assignSeat/startNet 1003/1010
+   ─ บอท/ลูป:      tickBots 1026 · tickLetters 1042 · applyLook 1056 · aimPoint 1065 · cameraTick 1075 · walkAnim 1102 · step 1122 · renderHud 1180 · showToast 1199
+   ─ อินพุต/DOM:   bind 1205 · onKey(Up) 1304/1326 · buildWorld 1335 · buildDom 1370 · resize 1421 · loop 1429 · disposeWorld 1437
+   ─ Battle Royale: buildBattleHud 1442 · startBattle 1458 · resetBattleRound 1470 · battleDamage 1479 · reload/heal/jump/selectWeapon 1488–1491 · events 1497–1514 · tickBattle(บอท) 1515/1536 · renderBattleHud/drawBattleMap 1564/1583 · resetRun 1593
+   ─ เปิด/ปิด/API:  open 1601 · close 1638 · window.WordSkirmish + _t (debug/เทส) 1654 */
 (function(){
   const MINLEN=3, MAXLEN=8, LETTER_REWARD=1000, COOLDOWN=310, BODY_DMG=35, MAX_HP=100;
   /* HOME_R กว้างกว่ามุมบ้าน (ทแยง ~4.1) จึงฝากตัวอักษรจากที่ยืนข้างบ้านได้ทุกด้าน
@@ -198,7 +198,7 @@
   const SKM_MODELS='minigames/VocabSkirmish/models/';
   const CLIP_ALIAS={Tightrope_Walk_inplace:'idle'};
   const GUN_LEN=[.95,.62,1.25];                    // ความยาวกระบอกจริง ไรเฟิล/SMG/สไนเปอร์
-  const GUN_POS=[0,.09,.04], GUN_ROT=[0,0,0];      // จุดยึดที่กระดูกมือขวา (จูนสดด้วย _t.gunTune)
+  const GUN_POS=[0,.09,.04], GUN_ROT=[-1.8228,-0.207,2.4634]; // จุดยึดที่กระดูกมือขวา · หมุนลำกล้องชี้ทิศเล็ง (จูนจากภาพสด รอบ 1632)
   let soldierLib=null, soldierLibP=null;
   const soldierMixers=new Set();
   function loadSoldierLib(){
@@ -308,6 +308,7 @@
     else if(st.reload) want='reload';
     else if(pose==='crouch'||pose==='kneel'||pose==='prone') want='crouch';
     else if(moving) want=st.sprint?'sprint':(st.aim?'aim':'walk');
+    if(want==='idle'&&r.gun) want='aim';   // ทหารถือปืน: idle ยืนเฝ้าท่าเล็งแทน tightrope (รอบ 1632)
     soldierPlay(r, want);
     r.mixer.timeScale=(pose==='prone'&&!moving)?.35:1;
   }
