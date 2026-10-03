@@ -1079,7 +1079,7 @@ vbRender:148 · vbCardHTML:194
 
 ## js/wordskirmish-field.js (141 บรรทัด · 0 รายการ)
 
-## js/wordskirmish.js (1,679 บรรทัด · 0 รายการ)
+## js/wordskirmish.js (1,680 บรรทัด · 0 รายการ)
 
 ## js/wsaward.js (32 บรรทัด · 0 รายการ)
 

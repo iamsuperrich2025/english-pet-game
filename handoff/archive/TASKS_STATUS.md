@@ -7080,3 +7080,9 @@ efreshMechaLock
 
 - รอบ 1625 · แก้ "กดแล้วเปิดไม่ขึ้นเลย" (1624 ยังไม่หาย): ต้นตอจริง = หน้า **index_classic ไม่ได้โหลด three.min.js ไว้ล่วงหน้า** (โหลด dynamic เฉพาะตอนเข้าโลก 3D เท่านั้น) — open() เช็ก `!window.THREE` แล้วโยนทิ้ง เหลือแค่ toast เล็ก ๆ แล้วเงียบ · อาการต่างกันตามทางเข้า: จากหน้า classic → "เปิดไม่ขึ้นเลย" / จาก city3d (มี THREE อยู่แล้ว) → เจออาการ "นิ่ง" ของรอบ 1623 แทน · แก้: open() โหลด three.min.js เองผ่าน loadScriptOnce + timeout 16 วิ (ยกสูตรจาก wordskirmish.js) + **หน้ารอโหลดเต็มจอจากภาพที่ผู้ใช้ส่ง** (minigames/Warships/LoadingPage.png → บีบเป็น loading_page.jpg 2.7MB→339KB, ยึดขอบล่าง background-position, แถบ progress จริงวางทับแถบในภาพ, สไตล์ inline ไม่พึ่ง css) ครอบทั้งช่วงโหลด three + GLB · เพิ่ม tools/wordship_preview_classic.html (จำลองหน้า classic ไม่มี THREE) + เคส D ในสคริปต์เช็ก
 - ไฟล์: js/wordship.js + minigames/Warships/loading_page.jpg (ใหม่) + minigames/Warships/LoadingPage.png (ต้นฉบับผู้ใช้ส่ง) + tools/wordship_browser_check.mjs + tools/wordship_preview_classic.html (ใหม่) · ยืนยัน: node --check + test_wordship + browser check 4 เคส PASS (A ปกติ / B GLB โดนบล็อก / C เน็ตช้า / D classic ไม่มี THREE — เห็นหน้าพักภาพจริงแล้วเข้าเกม glb ปกติ)
+
+
+## ⏬ ย้ายเมื่อ 2026-10-04 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- รอบ 1626 · ผู้ใช้บอก "Truck อืด" (คาร์ทไม่บ่น = โอเค แตะเฉพาะ Pick-Up): top 250→290 กม./ชม. + power 1900 ให้ถึงจริง (สมดุล drag ที่ 80.6 ม./วิ) + accel 13/brake 26/grip 30/steerHi .06/coast 1.8 (ไหลยาวขึ้น) + เกียร์ใหม่ 6 สปีด + FOV แรงขึ้น (+16° ที่ spd/3.6) + ข้อความ intro 290 · ตำแหน่งกล้องไม่แตะ (เพิ่งจูน 1622)
+- ไฟล์: js/pickup3d.js + tools/test_pickup_entry.js · ยืนยัน: node --check + test_pickup_entry/test_kart_entry PASS (ยังไม่ได้เล่นจริง — ถ้ายังอืดหรือเร็วเกิน บอกได้ ปรับต่อทันที)
