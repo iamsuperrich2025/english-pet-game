@@ -293,11 +293,13 @@
     if(soldierLib){ const s=makeSoldier(withGun,weaponIndex); if(s) return s; }
     return makeChibi(fallbackPalette||{shirt:0xb3a787,pants:0x3f545e,skin:0xffcf9e,hair:0x3b2a24}, withGun);
   }
+  const FIRE_AT=1.55;                 // คลิป Side_Shot 4 วิ: 0–1.4 หมอบลมตัว · 1.5+ ท่ายิงสองมือจริง (รอบ 1635)
   function soldierPlay(r, name){
     if(!r.actions[name]||r.current===name) return;
     const prev=r.actions[r.current];
     if(prev) prev.fadeOut(.15);
     r.actions[name].reset().fadeIn(.15).play();
+    if(name==='fire') r.actions.fire.time=FIRE_AT;   // ข้ามช่วง windup เริ่มที่เฟรมยิง
     r.current=name;
   }
   function poseSoldier(mesh, st){
