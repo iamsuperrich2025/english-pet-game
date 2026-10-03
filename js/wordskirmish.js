@@ -293,13 +293,11 @@
     if(soldierLib){ const s=makeSoldier(withGun,weaponIndex); if(s) return s; }
     return makeChibi(fallbackPalette||{shirt:0xb3a787,pants:0x3f545e,skin:0xffcf9e,hair:0x3b2a24}, withGun);
   }
-  const FIRE_AT=1.55;                 // คลิป Side_Shot 4 วิ: 0–1.4 หมอบลมตัว · 1.5+ ท่ายิงสองมือจริง (รอบ 1635)
   function soldierPlay(r, name){
     if(!r.actions[name]||r.current===name) return;
     const prev=r.actions[r.current];
     if(prev) prev.fadeOut(.15);
     r.actions[name].reset().fadeIn(.15).play();
-    if(name==='fire') r.actions.fire.time=FIRE_AT;   // ข้ามช่วง windup เริ่มที่เฟรมยิง
     r.current=name;
   }
   function poseSoldier(mesh, st){
@@ -312,7 +310,7 @@
     r.deadPosed=false;
     const moving=!!st.moving, pose=st.pose||'stand';
     let want='idle';
-    if(r.forceClip&&elapsed<r.forceUntil) want=r.forceClip;
+    if(r.forceClip&&elapsed<r.forceUntil) want=r.forceClip==='fire'?'aim':r.forceClip;   // คลิป Side_Shot ทั้งคลิปหมอบก้มหน้า ไม่มีเฟรมยืนยิง → ช่วงยิงใช้ท่า aim แทน (รอบ 1636)
     else if(st.reload) want='reload';
     else if(pose==='crouch'||pose==='kneel'||pose==='prone') want='crouch';
     else if(moving){
@@ -336,6 +334,7 @@
       m.update(dt);
       const r=m._rig;
       if(r&&r.spineB&&r.aimPitch&&r.current) r.spineB.rotation.x+=r.aimPitch; // เอียงอกตามการเล็ง (ทำหลัง mixer) · r.current ว่างตอนตาย = ไม่เอียงค้าง
+      if(r&&r.spineB&&r.forceClip==='fire'&&elapsed<r.forceUntil) r.spineB.rotation.x-=.08*((r.forceUntil-elapsed)/.32); // ถีบอกถอยหลังตอนยิง (รอบ 1636)
     });
   }
   let muzzleLight=null, muzzleTex=null, smokeTex=null;
