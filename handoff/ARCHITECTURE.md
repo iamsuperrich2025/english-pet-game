@@ -130,7 +130,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/wordship.js** (2,020 บรรทัด) — ⚓ wordship.js — กองเรือคำศัพท์ (Cute Word Fleet) รอบ 1477 · โลก 3D ของเล่นแบบ Vocab World Kart (Soft Cuboid) + ยิงวิถีโค้งแบบ World of Warships · คลังคำ = vocabForStudent() ชุดเดียวกับยิงเป้าคำ · ยิงใช้คลิปวงเพลิง Arena ชุดเดียว · ไม่ดึงคลังคำเน็ต
 - **js/wordskirmish-br.js** (57 บรรทัด) — Word Skirmish Battle Royale: deterministic rules and compact NetRoom protocol.
 - **js/wordskirmish-field.js** (141 บรรทัด) — Original tactical arena — รอบ 1631 ยกระดับภาพ: ท้องฟ้าไล่สี+ภูเขาแนวขอบฟ้า+พื้นผิววาด canvas · (หญ้า/ดิน/ถนน/โลหะ/คอนกรีต/ไม้) + กระสอบทราย/ถัง/หิน/พุ่มไม้ · โหลด texture 0 ไฟล์จากเน็ต · ⚠️ colliders/blocked()/supplies/zone คงพิกัดเดิมเป๊ะ — เกมเพลย์+แผนที่ย่อยไม่เปลี่ยน
-- **js/wordskirmish.js** (1,680 บรรทัด) — 🔫 wordskirmish.js — รบคำ Battle Royale + โหมดฝึก รอบ 1526 · กล้องไหล่ / SCOPE / อาวุธ / ท่าทาง / HUD · กติกาและสนามแยกโมดูล BR/Field · Soft Cuboid Chibi 3D น่ารัก · ออนไลน์ NetRoom map `skirmish` สูงสุด 8 คน
+- **js/wordskirmish.js** (1,694 บรรทัด) — 🔫 wordskirmish.js — รบคำ Battle Royale + โหมดฝึก รอบ 1526 · กล้องไหล่ / SCOPE / อาวุธ / ท่าทาง / HUD · กติกาและสนามแยกโมดูล BR/Field · Soft Cuboid Chibi 3D น่ารัก · ออนไลน์ NetRoom map `skirmish` สูงสุด 8 คน
 - **js/wsaward.js** (32 บรรทัด) — 🏆 wsaward.js — รางวัลรายเดือนของกระดานอันดับ 🔎 ค้นหาคำ (รอบ 592) · ผู้ใช้สั่ง 26 ก.ค. 2026: · ① Top 10 ได้เหรียญรางวัลทุกวันที่ 1 ของเดือน (10,000 ลดหลั่นถึง 1,000)
 - **css/account-deletion.css** (15 บรรทัด) — Protected account deletion — compact landscape-first dialogs
 - **css/arena-heroes.css** (20 บรรทัด) — Round 1381 — full-body hero selection. Portrait owns a single animation context.
@@ -156,6 +156,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/wordskirmish.css** (117 บรรทัด) — 🔫 ยิงรบคำ — HUD น่ารักจอเตี้ย 812×375 รอบ 1480
 - **sw.js** (281 บรรทัด) — Vocab World service worker · Delivery contract: · - HTML navigations are network-first with the last valid shell as fallback.
 <!-- AUTO-FILES:END -->
+
 
 
 
