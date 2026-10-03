@@ -5,20 +5,22 @@
    Soft Cuboid Chibi 3D น่ารัก · ออนไลน์ NetRoom map `skirmish` สูงสุด 8 คน
    แอดมินเท่านั้นจนกว่าจะอนุมัติเผยแพร่ · THREE โหลดตอนกดเข้า
    ============================================================ */
-/* 📇 สารบัญ (รอบ 1629 — Grep ชื่อฟังก์ชันเจอทันที ไม่ต้องไล่อ่านทั้งไฟล์)
-   ─ ค่าคงที่:      MINLEN…BR_PAD @9–70 (ดามเมจ/ความเร็ว/กล้อง/บ้าน 4 หลัง/จุดวางปุ่ม)
+/* 📇 สารบัญ (รอบ 1631 — Grep ชื่อฟังก์ชันเจอทันที ไม่ต้องไล่อ่านทั้งไฟล์)
+   ─ ค่าคงที่:      MINLEN…BR_PAD @23–68 (ดามเมจ/ความเร็ว/กล้อง/บ้าน 4 หลัง/จุดวางปุ่ม)
    ─ ปุ่ม/สโคป:    controlKey 72 · loadPad/savePad 76/82 · placeCtl 85 · layoutPad 98 · placeScope 111 · setScope 124 · toggleScope 137
-   ─ ยิง/เอฟเฟกต์:  collectShotTargets 138 · resolveShot 144 · shotTrails 166–190 · paintAuto 191 · autoHome 197–225
-   ─ ท่าทาง:       stanceSpec 226 · paintPose 233 · setStance/toggleStance 241/246 · poseTag/packAv/parseAv 249–255 · dodge 262–279
-   ─ คำศัพท์/เงิน:   grade 283 · adminAllowed 284 · pool 291 · takeWord 302 · wordMarks/hasWord 311/315 · coin 316–323
-   ─ โมเดล 3D:     mat/box/cyl 333–353 · makeChibi 355 · poseChibi 432 · makeHouse 507 · letterTex/makeLetterCard 522/531
-   ─ ตัวอักษร/คลัง:  remainNeeded 540 · spawnLetters/placeLetter 546/555 · hideLetter 565 · syncVault 572 · pickup/deposit/drop/complete 586–624
-   ─ เสียง:         ac 637 · beep 645 · shotSound 655
-   ─ เครือข่าย/HP:  emitEvent 665 · packHp/parseHp 670/674 · ชน 682–694 · applyDamage 704 · fire 728 · peer 767 · netSend/syncPeers 785/795 · seat/room 827/834
-   ─ บอท/ลูป:      tickBots 850 · tickLetters 866 · applyLook 880 · aim 885/889 · cameraTick 899 · walkAnim 926 · step 943 · renderHud 999 · showToast 1018
-   ─ อินพุต/DOM:   bind 1024 · onKey(Up) 1124/1146 · buildWorld 1155 · buildDom 1190 · resize 1242 · loop 1250 · disposeWorld 1258
-   ─ Battle Royale: HUD 1262 · startBattle 1278 · resetBattleRound 1286 · battleDamage 1295 · reload/heal/jump/selectWeapon 1304–1307 · events 1308–1319 · tickBattle(บอท) 1331/1352 · renderBattleHud/drawBattleMap 1378/1397 · resetRun 1407
-   ─ เปิด/ปิด/API:  open 1415 · close 1448 · window.WordSkirmish + _t (debug/เทส) 1464 */
+   ─ ยิง/เอฟเฟกต์:  collectShotTargets 138 · resolveShot 144 · shotTrails 167–191 · 🪖 โซน GLB+MuzzleFX 193–352 · paintAuto 354 · autoHome 360–388
+   ─ ท่าทาง:       stanceSpec 389 · paintPose 396 · setStance/toggleStance 404/409 · poseTag/packAv/parseAv 412–423 · dodge 425–437
+   ─ คำศัพท์/เงิน:   grade 446 · adminAllowed 447 · pool 454 · takeWord 465 · wordMarks/hasWord 474/478 · coin 479–494
+   ─ GLB ทหาร:     loadSoldierLib 202 · cloneSkinned 223 · normalizeGun 235 · makeSoldier 248 · spawnActor 282 · poseSoldier 293 · poseActor 308 · tickSoldierMixers 312
+   ─ Muzzle FX:    flashTexture 322 · buildMuzzleFx 329 · muzzleFlash 336 · tickMuzzleFx 349
+   ─ โมเดล 3D:     mat/box/cyl 496–514 · makeChibi 518 (fallback) · poseChibi 595 · makeHouse 670 · letterTex/makeLetterCard 685/694
+   ─ ตัวอักษร/คลัง:  remainNeeded 703 · spawnLetters/placeLetter 709/718 · hideLetter 728 · syncVault 735 · pickup/deposit/drop/complete 749–799
+   ─ เสียง:         ac 800 · beep 808 · shotSound 818
+   ─ เครือข่าย/HP:  emitEvent 828 · packHp/parseHp 833/837 · ชน 845–857 · applyDamage 867 · fire 891 · peer 932 · netSend/syncPeers 950/960 · seat/room 996/1003
+   ─ บอท/ลูป:      tickBots 1019 · tickLetters 1035 · applyLook 1049 · aim 1054/1058 · cameraTick 1068 · walkAnim 1095 · step 1115 · renderHud 1173 · showToast 1192
+   ─ อินพุต/DOM:   bind 1198 · onKey(Up) 1297/1319 · buildWorld 1328 · buildDom 1363 · resize 1414 · loop 1422 · disposeWorld 1430
+   ─ Battle Royale: HUD 1435 · startBattle 1451 · resetBattleRound 1463 · battleDamage 1472 · reload/heal/jump/selectWeapon 1481–1484 · events 1490–1507 · tickBattle(บอท) 1508/1529 · renderBattleHud/drawBattleMap 1557/1576 · resetRun 1586
+   ─ เปิด/ปิด/API:  open 1594 · close 1627 · window.WordSkirmish + _t (debug/เทส) 1643 */
 (function(){
   const MINLEN=3, MAXLEN=8, LETTER_REWARD=1000, COOLDOWN=310, BODY_DMG=35, MAX_HP=100;
   /* HOME_R กว้างกว่ามุมบ้าน (ทแยง ~4.1) จึงฝากตัวอักษรจากที่ยืนข้างบ้านได้ทุกด้าน
@@ -152,7 +154,8 @@
     shotHits.length=0; raycaster.intersectObjects(shotTargets,true,shotHits);
     const target=shotHits.length?shotHits[0].point.clone():raycaster.ray.at(SHOT_RANGE,new THREE.Vector3());
     const rig=playerMesh.userData.rig;
-    rig.gun.lookAt(target); playerMesh.updateWorldMatrix(true,true);
+    if(rig.gun&&!playerMesh.userData.isSoldier) rig.gun.lookAt(target); // ทหาร GLB กระบอกตามท่าแอนิเมชัน ไม่หันเอง
+    playerMesh.updateWorldMatrix(true,true);
     const muzzle=rig.muzzle.getWorldPosition(new THREE.Vector3());
     const direction=target.clone().sub(muzzle),distance=direction.length();
     if(distance<.001) return null;
@@ -188,6 +191,172 @@
     }
   }
   function clearShotTrails(){for(const t of shotTrails)t.mesh.visible=false;lastShotTrace=null;}
+  /* ==== 🪖 GLB Tactical Character + Weapons + Muzzle FX · รอบ 1631 ====
+     ตัวละครละมั่งค์กะมะกริด (soldier_web.glb 8 คลิป) + ปืน VF 3 กระบอกติดกระดูกมือขวา
+     กล่องล่องหน head/body ติดกระดูกให้ระบบยิงเดิมทำงาน · แสงกระบอกปืน+ควันแบบ Delta Force
+     โหลดพลาด → ตกกลับไป chibi เดิมอัตโนมัติ */
+  const SKM_MODELS='minigames/VocabSkirmish/models/';
+  const CLIP_ALIAS={Tightrope_Walk_inplace:'idle'};
+  const GUN_LEN=[.95,.62,1.25];                    // ความยาวกระบอกจริง ไรเฟิล/SMG/สไนเปอร์
+  const GUN_POS=[0,.09,.04], GUN_ROT=[0,0,0];      // จุดยึดที่กระดูกมือขวา (จูนสดด้วย _t.gunTune)
+  let soldierLib=null, soldierLibP=null;
+  const soldierMixers=new Set();
+  function loadSoldierLib(){
+    if(!soldierLibP){
+      soldierLibP=(async()=>{
+        try{
+          if(!THREE||!THREE.GLTFLoader) return null;
+          const loader=new THREE.GLTFLoader();
+          const load=url=>new Promise((res,rej)=>loader.load(url,res,undefined,rej));
+          // ตำแหน่งรากจาก <script src=…/js/wordskirmish.js> จะได้ path ถูกทั้งจากหน้า root และ /tools
+          const base=(()=>{ const s=document.querySelector('script[src*="wordskirmish.js"]'); if(!s) return SKM_MODELS;
+            const dir=s.src.slice(0,s.src.lastIndexOf('/')); return dir.replace(/\/js$/,'')+'/'+SKM_MODELS; })();
+          const [ch,g0,g1,g2]=await Promise.all([load(base+'soldier_web.glb'),load(base+'gun0_web.glb'),load(base+'gun1_web.glb'),load(base+'gun2_web.glb')]);
+          const clips={};
+          for(const c of ch.animations) clips[CLIP_ALIAS[c.name]||c.name]=c;
+          for(const key of ['idle','walk','run','sprint','aim','fire','reload','crouch']) if(!clips[key]) console.warn('skm ไม่มีคลิป',key);
+          // ธง persist: disposeWorld จะได้ไม่ทำลาย geometry/วัสดุที่แชร์กันหลายตัวละคร
+          const mark=o=>{ if(o.geometry)o.geometry.userData.persist=true; if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m2=>m2.userData.persist=true); };
+          ch.scene.traverse(mark); [g0,g1,g2].forEach(gl=>gl.scene.traverse(mark));
+          soldierLib={scene:ch.scene,clips,guns:[g0.scene,g1.scene,g2.scene]};
+          return soldierLib;
+        }catch(err){ console.warn('skm glb:',err); return null; }
+      })();
+    }
+    return soldierLibP;
+  }
+  function cloneSkinned(source){
+    const clone=source.clone(true), nodes={};
+    clone.traverse(n=>{nodes[n.name]=n;});
+    clone.traverse(n=>{
+      if(n.isSkinnedMesh){
+        n.bind(new THREE.Skeleton(n.skeleton.bones.map(b=>nodes[b.name]||b), n.skeleton.boneInverses.map(m=>m.clone())), n.bindMatrix.clone());
+        n.frustumCulled=false;   // ขอบเขต skinned เพี้ยนตอนเล่นแอนิเมชัน ปิด culling ป้องกันกระพริบหาย
+      }
+    });
+    return clone;
+  }
+  const _hitMat=()=>new THREE.MeshBasicMaterial({colorWrite:false,depthWrite:false});
+  function normalizeGun(src,i){
+    // หมุนแกนยาวสุดชี้ +Z · สเกลให้ยาวเท่ากระบอกจริง · จับกึ่งกลางที่จุดยึด (กันไฟล์ต้นฉบับทรงเบี้ยวคนละแกน)
+    const m=src.clone(true), g=new THREE.Group();
+    const size=new THREE.Box3().setFromObject(m).getSize(new THREE.Vector3());
+    if(size.x>=size.y&&size.x>=size.z) m.rotation.y=-Math.PI/2; else if(size.y>=size.x&&size.y>=size.z) m.rotation.x=Math.PI/2;
+    m.updateMatrixWorld(true);
+    const s2=new THREE.Box3().setFromObject(m).getSize(new THREE.Vector3());
+    m.scale.setScalar(GUN_LEN[i]/Math.max(s2.x,s2.y,s2.z));
+    m.updateMatrixWorld(true);
+    m.position.sub(new THREE.Box3().setFromObject(m).getCenter(new THREE.Vector3()));
+    g.add(m);
+    return g;
+  }
+  function makeSoldier(withGun, weaponIndex){
+    const lib=soldierLib; if(!lib) return null;
+    const g=new THREE.Group();
+    const model=cloneSkinned(lib.scene);
+    model.rotation.y=Math.PI;            // Mixamo หันหน้า +Z · เกมใช้ทิศ -Z
+    g.add(model);
+    const mixer=new THREE.AnimationMixer(model);
+    soldierMixers.add(mixer);
+    const actions={};
+    for(const k in lib.clips) actions[k]=mixer.clipAction(lib.clips[k]);
+    const find=n=>model.getObjectByName(n);
+    const handB=find('mixamorigRightHand')||find('mixamorig:RightHand');
+    const headB=find('mixamorigHead')||find('mixamorig:Head');
+    const spineB=find('mixamorigSpine2')||find('mixamorigSpine1')||find('mixamorigSpine');
+    const hipsB=find('mixamorigHips')||find('mixamorig:Hips');
+    const hm=_hitMat();
+    if(headB){const hb=new THREE.Mesh(new THREE.BoxGeometry(.36,.38,.36),hm); hb.userData.hit='head'; headB.add(hb);}
+    if(spineB){const bb2=new THREE.Mesh(new THREE.BoxGeometry(.62,.85,.46),hm); bb2.userData.hit='body'; bb2.position.y=.15; spineB.add(bb2);}
+    if(hipsB){const pb=new THREE.Mesh(new THREE.BoxGeometry(.52,.45,.42),hm); pb.userData.hit='body'; hipsB.add(pb);}
+    let gun=null,muzzle=null;
+    if(withGun&&handB){
+      const wi=(weaponIndex||0)%3;
+      gun=normalizeGun(lib.guns[wi],wi);
+      gun.position.set(GUN_POS[0],GUN_POS[1],GUN_POS[2]);
+      gun.rotation.set(GUN_ROT[0],GUN_ROT[1],GUN_ROT[2]);
+      handB.add(gun);
+      gun.traverse(o=>{o.userData.hit='body';});
+      muzzle=new THREE.Object3D(); muzzle.position.set(0,0,GUN_LEN[wi]/2); gun.add(muzzle);
+    }
+    g.userData.rig={mixer,actions,current:'',forceUntil:0,forceClip:'',model,spineB,gun,muzzle};
+    if(!muzzle){ muzzle=new THREE.Object3D(); muzzle.position.set(0,1.35,.4); model.add(muzzle); g.userData.rig.muzzle=muzzle; } // กัน resolveShot พังถ้าหามือไม่เจอ
+    g.userData.gun=gun; g.userData.isSoldier=true;
+    mixer._rig=g.userData.rig;
+    return g;
+  }
+  function spawnActor(withGun, weaponIndex, fallbackPalette){
+    if(soldierLib){ const s=makeSoldier(withGun,weaponIndex); if(s) return s; }
+    return makeChibi(fallbackPalette||{shirt:0xb3a787,pants:0x3f545e,skin:0xffcf9e,hair:0x3b2a24}, withGun);
+  }
+  function soldierPlay(r, name){
+    if(!r.actions[name]||r.current===name) return;
+    const prev=r.actions[r.current];
+    if(prev) prev.fadeOut(.15);
+    r.actions[name].reset().fadeIn(.15).play();
+    r.current=name;
+  }
+  function poseSoldier(mesh, st){
+    const r=mesh&&mesh.userData&&mesh.userData.rig; if(!r||!r.actions) return;
+    if(st.alive===false){
+      if(r.current!==''){ Object.values(r.actions).forEach(a=>a.fadeOut(.2)); r.current=''; }
+      return;
+    }
+    const moving=!!st.moving, pose=st.pose||'stand';
+    let want='idle';
+    if(r.forceClip&&elapsed<r.forceUntil) want=r.forceClip;
+    else if(st.reload) want='reload';
+    else if(pose==='crouch'||pose==='kneel'||pose==='prone') want='crouch';
+    else if(moving) want=st.sprint?'sprint':(st.aim?'aim':'walk');
+    soldierPlay(r, want);
+    r.mixer.timeScale=(pose==='prone'&&!moving)?.35:1;
+  }
+  function poseActor(mesh, st){
+    if(mesh&&mesh.userData&&mesh.userData.isSoldier) return poseSoldier(mesh, st);
+    return poseChibi(mesh, st);
+  }
+  function tickSoldierMixers(dt){
+    soldierMixers.forEach(m=>{
+      if(!m.getRoot().parent) return;
+      m.update(dt);
+      const r=m._rig;
+      if(r&&r.spineB&&r.aimPitch) r.spineB.rotation.x+=r.aimPitch; // เอียงอกตามการเล็ง (ทำหลัง mixer จะได้ไม่ถูกแอนิเมชันทับ)
+    });
+  }
+  let muzzleLight=null, muzzleTex=null, smokeTex=null;
+  const muzzleSparks=[], smokePuffs=[];
+  function flashTexture(inner, outer){
+    const c=document.createElement('canvas'); c.width=c.height=64;
+    const q=c.getContext('2d'), grad=q.createRadialGradient(32,32,2,32,32,30);
+    grad.addColorStop(0,inner); grad.addColorStop(.35,outer); grad.addColorStop(1,'rgba(0,0,0,0)');
+    q.fillStyle=grad; q.fillRect(0,0,64,64);
+    return new THREE.CanvasTexture(c);
+  }
+  function buildMuzzleFx(){
+    if(!scene) return;
+    if(!muzzleTex){ muzzleTex=flashTexture('rgba(255,240,200,1)','rgba(255,150,60,.85)'); smokeTex=flashTexture('rgba(205,205,205,.55)','rgba(160,160,160,.3)'); muzzleTex.userData.persist=true; smokeTex.userData.persist=true; }
+    muzzleLight=new THREE.PointLight(0xffb46b,0,10,2); scene.add(muzzleLight);
+    for(let i=0;i<8;i++){ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:muzzleTex,blending:THREE.AdditiveBlending,depthWrite:false,transparent:true})); s.visible=false; scene.add(s); muzzleSparks.push({s,life:0,max:1}); }
+    for(let i=0;i<10;i++){ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:smokeTex,depthWrite:false,transparent:true,opacity:.4})); s.visible=false; scene.add(s); smokePuffs.push({s,life:0,max:1,vy:0,vx:0}); }
+  }
+  function muzzleFlash(pos, big){
+    if(!scene) return;
+    if(!muzzleLight) buildMuzzleFx();
+    if(!muzzleLight) return;
+    const p=muzzleSparks.find(q=>q.life<=0);
+    if(p){ p.life=p.max=.055; p.s.visible=true; p.s.material.opacity=1; p.s.material.rotation=Math.random()*Math.PI*2; p.s.position.copy(pos); p.s.scale.setScalar((big?1.15:.75)*(0.85+Math.random()*.3)); }
+    muzzleLight.position.copy(pos); muzzleLight.intensity=big?34:22;
+    for(let i=0;i<2;i++){
+      const q=smokePuffs.find(q2=>q2.life<=0); if(!q) break;
+      q.life=q.max=.55+Math.random()*.2; q.s.visible=true; q.s.position.copy(pos);
+      q.vy=.9+Math.random()*.5; q.vx=(Math.random()-.5)*.5; q.s.scale.setScalar(.25); q.s.material.opacity=.4;
+    }
+  }
+  function tickMuzzleFx(dt){
+    if(muzzleLight&&muzzleLight.intensity>0) muzzleLight.intensity=Math.max(0,muzzleLight.intensity-dt*340);
+    for(const p of muzzleSparks){ if(p.life<=0) continue; p.life-=dt; if(p.life<=0){p.s.visible=false; continue;} p.s.scale.multiplyScalar(.92); p.s.material.opacity=p.life/p.max; }
+    for(const q of smokePuffs){ if(q.life<=0) continue; q.life-=dt; if(q.life<=0){q.s.visible=false; continue;} q.s.position.y+=q.vy*dt; q.s.position.x+=q.vx*dt; q.s.scale.setScalar(q.s.scale.x+dt*1.6); q.s.material.opacity=.4*(q.life/q.max); }
+  }
   function paintAuto(){
     if(!hud.auto) return;
     hud.auto.classList.toggle('skm-on', autoRun);
@@ -738,6 +907,8 @@
     if(weapon) inv.ammo[inv.weapon]--;
     lastShot=now; shotSound(); shake=scoped?0:.035; player.recoil=1;
     lastShotTrace=shot; showShotTrail(shot);
+    muzzleFlash(shot.muzzle, scoped||(weapon&&weapon.id===2));
+    const pr=playerMesh&&playerMesh.userData.rig; if(pr&&pr.actions){pr.forceClip='fire'; pr.forceUntil=elapsed+.32;}
     const h=shot.hit;
     if(!h) return true;
     const part=hitPartFromObject(h.object)||'body';
@@ -802,9 +973,9 @@
       let vis=peersVis[uid];
       if(!vis){
         const st=parseHp(rec.hp);
-        const mesh=makeChibi({shirt:PAL[st.seat%PAL.length], pants:0x3949ab, skin:0xffcf9e, hair:0x4e342e}, true);
+        const mesh=spawnActor(true, 0, {shirt:PAL[st.seat%PAL.length], pants:0x3949ab, skin:0xffcf9e, hair:0x4e342e});
         mesh.userData.skirmish=true; mesh.userData.uid=uid;
-        scene.add(mesh); vis=peersVis[uid]={mesh,uid}; 
+        scene.add(mesh); vis=peersVis[uid]={mesh,uid};
       }
       const st=parseHp(rec.hp);
       if(battle&&vis.lastHp>0&&st.hp<=0&&String(rec.hp).split('|')[5]===BR.token(myUid))kills++;
@@ -818,10 +989,14 @@
       if(vis.lastX!=null&&Math.hypot(vis.mesh.position.x-vis.lastX,vis.mesh.position.z-vis.lastZ)>.001) vis.movingUntil=elapsed+.2;
       const moving=!lean&&elapsed<(vis.movingUntil||0);
       vis.lastX=vis.mesh.position.x; vis.lastZ=vis.mesh.position.z;
-      poseChibi(vis.mesh,{moving,bob:elapsed*7,alive:st.hp>0,pose:pose.pose,dodge:lean});
+      poseActor(vis.mesh,{moving,bob:elapsed*7,alive:st.hp>0,pose:pose.pose,dodge:lean});
     });
     Object.keys(peersVis).forEach(uid=>{
-      if(!peers[uid]){ scene.remove(peersVis[uid].mesh); delete peersVis[uid]; }
+      if(!peers[uid]){
+        const rig=peersVis[uid].mesh.userData.rig;
+        if(rig&&rig.mixer) soldierMixers.delete(rig.mixer);
+        scene.remove(peersVis[uid].mesh); delete peersVis[uid];
+      }
     });
   }
   function assignSeat(){
@@ -859,7 +1034,7 @@
       b.x=h.x+Math.sin(b.t*.6+i)*5; b.z=h.z+Math.cos(b.t*.6+i)*5;
       if(b.mesh){
         b.mesh.position.set(b.x,0,b.z); b.mesh.rotation.y=b.t; b.mesh.visible=true;
-        poseChibi(b.mesh,{moving:true,bob:b.t*8,alive:true});
+        poseActor(b.mesh,{moving:true,bob:b.t*8,alive:true});
       }
     });
   }
@@ -919,7 +1094,7 @@
       playerMesh.updateWorldMatrix(true,true);
       tmpV.set(0,0,-1).applyQuaternion(camera.quaternion);
       tmpV2.copy(camera.position).addScaledVector(tmpV,SHOT_RANGE);
-      if(gun) gun.lookAt(tmpV2);
+      if(gun&&!playerMesh.userData.isSoldier) gun.lookAt(tmpV2);
     }
   }
 
@@ -933,10 +1108,13 @@
     playerMesh.visible=!scoped;
     player.bob+=dt*(moving?10:2);
     if(player.recoil>0) player.recoil=Math.max(0, player.recoil-dt*8);
-    poseChibi(playerMesh,{
+    const rig=playerMesh.userData.rig;
+    if(rig&&rig.spineB) rig.aimPitch=scoped?(PITCH_DEF-lookPitch)*.5:0;
+    poseActor(playerMesh,{
       moving, bob:player.bob, recoil:player.recoil||0,
       lookX:(PITCH_DEF-lookPitch)*0.9, alive:player.alive,
-      pose:stance, dodge:lean
+      pose:stance, dodge:lean, sprint:sprinting&&moving, aim:scoped,
+      reload:battle&&inv&&inv.action&&inv.action.kind==='reload'
     });
   }
 
@@ -993,6 +1171,8 @@
     syncPeers();
     netSend();
     tickShotTrails(dt);
+    tickSoldierMixers(dt);
+    tickMuzzleFx(dt);
     if(playerMesh && !player.alive) playerMesh.rotation.z=Math.PI/2;
   }
 
@@ -1105,8 +1285,7 @@
     };
     root.addEventListener('pointerup', up); root.addEventListener('pointercancel', up);
     if(hud.exit) hud.exit.addEventListener('click', ()=>{ close(); });
-    if(hud.introOk) hud.introOk.addEventListener('click', startBattle);
-    root.querySelector('#skm-training').addEventListener('click',()=>{hud.intro.hidden=true;});
+    if(hud.introOk) hud.introOk.addEventListener('click', ()=>{ startBattle(); });
     root.querySelector('#skm-edit').addEventListener('click',()=>{hudEdit=!hudEdit;fireHeld=false;clearInput();setScope(false);root.classList.toggle('skm-editing',hudEdit);root.querySelector('#skm-edit').textContent=hudEdit?'บันทึก HUD':'จัดปุ่ม';});
     root.querySelectorAll('[data-weapon]').forEach(el=>el.addEventListener('click',()=>selectWeapon(Number(el.dataset.weapon))));
 
@@ -1156,8 +1335,8 @@
     scene=new THREE.Scene(); scene.background=new THREE.Color(0x9be7ff); scene.fog=new THREE.Fog(0x9be7ff, 28, 70);
     camera=new THREE.PerspectiveCamera(FOV, 16/9, .1, 120);
     raycaster=new THREE.Raycaster(); tmpV=new THREE.Vector3(); tmpV2=new THREE.Vector3(); aimNdc=new THREE.Vector2(0,0);
-    scene.add(new THREE.HemisphereLight(battle?0xdde8e4:0xfff6e8, battle?0x35484b:0x7cb342, battle?.62:1.05));
-    const sun=new THREE.DirectionalLight(battle?0xffddb0:0xfff3c4, battle?.72:.55); sun.position.set(8,14,6); scene.add(sun);
+    scene.add(new THREE.HemisphereLight(battle?0xcfe0ec:0xfff6e8, battle?0x46523f:0x7cb342, battle?.75:1.05));
+    const sun=new THREE.DirectionalLight(battle?0xffd2a0:0xfff3c4, battle?1.05:.55); sun.position.set(battle?14:8,battle?12:14,battle?9:6); scene.add(sun);
     const ground=new THREE.Mesh(new THREE.CircleGeometry(ARENA+6, 36), mat(0x8ee08a));
     ground.rotation.x=-Math.PI/2; scene.add(ground);
     const rim=new THREE.Mesh(new THREE.TorusGeometry(ARENA+1.2,.35,8,48), mat(0xfff59d));
@@ -1179,9 +1358,9 @@
       {shirt:0xff8fab,pants:0x5b8def,skin:0xffcf9e,hair:0x3b2a24},
       {shirt:0x7c4dff,pants:0x3949ab,skin:0xffd9ae,hair:0x6d4c2f}
     ];
-    playerMesh=makeChibi(battle?{shirt:0xb3a787,pants:0x3f545e,skin:0xffcf9e,hair:0x3b2a24}:palettes[0], true); playerMesh.userData.skirmish=true; scene.add(playerMesh);
+    playerMesh=spawnActor(true, 0, battle?{shirt:0xb3a787,pants:0x3f545e,skin:0xffcf9e,hair:0x3b2a24}:palettes[0]); playerMesh.userData.skirmish=true; scene.add(playerMesh);
     bots=(battle?Array.from({length:7},(_,i)=>({shirt:[0x586f73,0x938566,0x806f7e][i%3],pants:0x344652,skin:0xffcf9e,hair:0x3b2a24})):palettes.slice(1)).map((p,i)=>{
-      const mesh=makeChibi(p, true); mesh.userData.skirmish=true;
+      const mesh=spawnActor(true, battle?i%3:0, p); mesh.userData.skirmish=true;
       const bot={mesh,x:8,z:8,hp:MAX_HP,armor:25,alive:true,respawnAt:0,t:i,id:i,shotAt:0};
       mesh.userData.bot=bot; scene.add(mesh); return bot;
     });
@@ -1221,7 +1400,6 @@
           <p>เก็บอักษรฝากบ้าน สะกดคำรับ 1,000 เหรียญ พร้อมเติมเกราะและกระสุน</p>
           <p class="skm-keys">WASD เดิน · Shift วิ่ง · Space กระโดด · F ยิงค้าง · V SCOPE<br>R บรรจุ · H รักษา · 1–3 เลือกปืน · C ย่อ · Z หมอบ · X หลบ</p>
           <button type="button" id="skm-intro-ok">ลงสนาม BATTLE ROYALE</button>
-          <button type="button" id="skm-training">ฝึกเก็บคำ / เกิดใหม่ได้</button>
         </div>
       </div>`;
     document.body.appendChild(root);
@@ -1256,8 +1434,9 @@
   }
   /* ==== 🪂 Battle Royale runtime · rounds / inventory / touch HUD · รอบ 1526 ==== */
   function disposeWorld(){
-    if(scene){const geometries=new Set(),materials=new Set(),textures=new Set();scene.traverse(m=>{if(m.geometry)geometries.add(m.geometry);for(const a of (Array.isArray(m.material)?m.material:[m.material]))if(a){materials.add(a);if(a.map)textures.add(a.map);}});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());}
+    if(scene){const geometries=new Set(),materials=new Set(),textures=new Set();scene.traverse(m=>{if(m.geometry&&!m.geometry.userData.persist)geometries.add(m.geometry);for(const a of (Array.isArray(m.material)?m.material:[m.material]))if(a&&!a.userData.persist){materials.add(a);if(a.map&&!a.map.userData.persist)textures.add(a.map);}});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());}
     roundedGeometry.clear();scene=null;peersVis={};fieldLetters=[];vaultMeshes=[];shotTrails=[];field=null;
+    soldierMixers.clear(); muzzleLight=null; muzzleSparks.length=0; smokePuffs.length=0;
   }
   function buildBattleHud(){
     const wrap=document.createElement('div');wrap.className='skm-br-ui';
@@ -1275,8 +1454,12 @@
     for(const id of ['map','phase','zone-time','alive','health-number','armor-number','health-fill','armor-fill','action','ammo','result','result-kicker','result-title','result-copy','zone-warning'])brUI[id]=root.querySelector('#skm-'+id);
     brUI.weapons=[...root.querySelectorAll('[data-weapon]')];
   }
-  function startBattle(){
+  async function startBattle(){
+    if(battle&&scene) return;                 // กัน double-click สร้างโลกซ้ำ
     if(!BR||!window.WordSkirmishField){showToast('โหลดโหมดแข่งขันไม่ครบ กรุณาเปิดเกมใหม่');return;}
+    if(hud.introOk){hud.introOk.disabled=true; hud.introOk.textContent='กำลังโหลดตัวละคร…';}
+    await loadSoldierLib();                   // โหลดมาตั้งแต่ open() อยู่แล้วส่วนมาก — อันนี้คือเผื่อเคสแรก
+    if(hud.introOk){hud.introOk.disabled=false; hud.introOk.textContent='ลงสนาม BATTLE ROYALE';}
     battle=true;inv=BR.inventory();roundEpoch=0;roundRoster='';roundState=null;lastRoundPhase='';lastAttacker='';jumpY=jumpV=0;hudEdit=false;
     myUid=myUid||('local-'+Math.random().toString(36).slice(2,10));match=BR.controller(myUid);match.request(Date.now());
     combatQueue=[];eventFlush=0;seenShot={};lastEvent='-';root.classList.add('skm-battle');hud.intro.hidden=true;
@@ -1365,13 +1548,15 @@
       if(!homeBlocked(nx,nz)){b.x=nx;b.z=nz;}else if(!homeBlocked(nx,b.z))b.x=nx;else if(!homeBlocked(b.x,nz))b.z=nz;
       else{const side=Math.sin(elapsed*.5+b.id)>0?1:-1;const sx=b.x-dz/len*speed*dt*side,sz=b.z+dx/len*speed*dt*side;if(!homeBlocked(sx,sz)){b.x=sx;b.z=sz;}}
       b.mesh.position.set(b.x,0,b.z);b.mesh.rotation.y=Math.atan2(b.x-target.x,b.z-target.z);b.mesh.visible=true;
-      poseChibi(b.mesh,{moving:true,bob:elapsed*8+b.id,alive:true});
+      poseActor(b.mesh,{moving:true,bob:elapsed*8+b.id,alive:true});
       if(elapsed<b.shotAt||distance>42)continue;b.shotAt=elapsed+1.1+(b.id%3)*.3;
       const from=new THREE.Vector3(b.x,1.35,b.z),to=new THREE.Vector3(target.x,target===player?Math.max(.28,stance==='prone'?.35:stance==='crouch'?.75:1.05)+jumpY:1.05,target.z),dir=to.clone().sub(from),length=dir.length();
       raycaster.set(from,dir.normalize());raycaster.far=length;const blocks=raycaster.intersectObjects(shotBlockers,true);if(blocks.length)continue;
       // Aim has reaction time and misses moving/jumping targets. AI never shoots through cover.
       const chance=target===player?(jumpY>.2?.18:player.moving?.42:.68):.7;
       const hit=Math.random()<chance;showShotTrail({muzzle:from,point:hit?to:to.clone().add(new THREE.Vector3(.8,1,0))});
+      muzzleFlash(from,false);
+      const br=b.mesh.userData.rig; if(br&&br.actions){br.forceClip='fire'; br.forceUntil=elapsed+.32;}
       if(hit){if(target===player)battleDamage(12,'bot'+b.id);else{const d=BR.damage(target.hp,target.armor,18);target.hp=d.hp;target.armor=d.armor;if(!target.hp){target.alive=false;target.mesh.visible=false;}}}
     }
   }
@@ -1425,6 +1610,10 @@
         await loadScriptOnce('js/vendor/three.min.js');
       }
       THREE=window.THREE;
+      if(!THREE.GLTFLoader){
+        if(typeof loadScriptOnce!=='function') throw new Error('no loader');
+        await loadScriptOnce('js/vendor/GLTFLoader.js');   // โหลด GLB ทหาร/ปืน (รอบ 1631)
+      }
       if(battle){disposeWorld();battle=false;field=null;match=null;padPos=JSON.parse(JSON.stringify(trainingPad));}
       buildDom();root.classList.remove('skm-battle','skm-editing');hud.intro.hidden=false;
       if(!renderer){
@@ -1432,7 +1621,7 @@
         renderer.setPixelRatio(Math.min(DPR_CAP, devicePixelRatio||1));
         root.querySelector('.skm-stage').appendChild(renderer.domElement);
       }
-      if(!scene) buildWorld();
+      if(!scene) { await loadSoldierLib(); buildWorld(); }
       root.style.display='block';
       resize(); resetRun();
       running=true; paused=false; last=0;
@@ -1480,6 +1669,10 @@
     setStored(s){ stored=String(s||''); syncVault(); return stored; }, setCarried(s){ carried=String(s||''); return carried; },
     setPlayer(p){ Object.assign(player,p||{}); return player; },
     renderHud, startBattle, tickBattle, battleDamage, selectWeapon, reloadBattle, healBattle, jumpBattle, applyBattleEvent, flushBattleEvents,
+    loadSoldierLib, makeSoldier, spawnActor, soldierLoaded:()=>!!soldierLib,
+    gunTune(i,pos,rot){ if(pos){GUN_POS[0]=pos[0];GUN_POS[1]=pos[1];GUN_POS[2]=pos[2];} if(rot){GUN_ROT[0]=rot[0];GUN_ROT[1]=rot[1];GUN_ROT[2]=rot[2];}
+      const rig=playerMesh&&playerMesh.userData.rig; if(rig&&rig.gun){rig.gun.position.set(GUN_POS[0],GUN_POS[1],GUN_POS[2]); rig.gun.rotation.set(GUN_ROT[0],GUN_ROT[1],GUN_ROT[2]);} },
+    muzzleTest(){ if(player) muzzleFlash(new THREE.Vector3(player.x,1.45,player.z),true); },
     get battle(){return battle;},get inventory(){return inv;},get roundState(){return roundState;},get field(){return field;},get jumpY(){return jumpY;},get kills(){return kills;},get match(){return match;},get myUid(){return myUid;},
     setRunning(v){ running=!!v; }
   }};
