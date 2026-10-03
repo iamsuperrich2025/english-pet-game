@@ -2,7 +2,7 @@
 
 > วิธีใช้: หาชื่อฟังก์ชัน/ค่าคงที่/selector ในไฟล์นี้ (Grep หรือกวาดตา) → `Read` ไฟล์จริง `offset=<บรรทัด>` `limit=40`
 > 🗂️ ไฟล์อ้วนมี **สารบัญโซน** (`st-end ชื่อโซน`) — งานทั้งระบบ/โลก 3D: Grep ชื่อโซน → Read/Edit เฉพาะช่วงนั้น **ห้ามอ่านทั้งไฟล์** · เพิ่มระบบใหม่ในไฟล์อ้วนต้องครอบ banner `/* ==== */`+ชื่อโซน (สารบัญเจนเอง)
-> css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: 2026-10-03
+> css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: 2026-10-04
 
 ## js/account-deletion.js (235 บรรทัด · 0 รายการ)
 
@@ -1077,9 +1077,9 @@ vbRender:148 · vbCardHTML:194
 
 ## js/wordskirmish-br.js (57 บรรทัด · 0 รายการ)
 
-## js/wordskirmish-field.js (31 บรรทัด · 0 รายการ)
+## js/wordskirmish-field.js (141 บรรทัด · 0 รายการ)
 
-## js/wordskirmish.js (1,486 บรรทัด · 0 รายการ)
+## js/wordskirmish.js (1,679 บรรทัด · 0 รายการ)
 
 ## js/wsaward.js (32 บรรทัด · 0 รายการ)
 
